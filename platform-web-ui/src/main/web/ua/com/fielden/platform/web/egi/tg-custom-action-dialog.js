@@ -31,8 +31,10 @@ import { tearDownEvent, isInHierarchy, allDefined, FOCUSABLE_ELEMENTS_SELECTOR, 
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 
-const ST_HEIGHT = '-height';
 const ST_WIDTH = '-width';
+const ST_HEIGHT = '-height';
+const ST_TOP = '-top';
+const ST_LEFT = '-left';
 
 const template = html`
     <style>
@@ -306,14 +308,6 @@ Polymer({
         },
         
         /////////////////////////////////////////////////////////////////////////////////////////
-
-        /**
-         * Indicates whether dialog was moved using title bar dragging. This will be reset after dialog closes.
-         */
-        _wasMoved: {
-            type: Boolean,
-            value: false
-        },
         
         /**
          * Indicates whether data was loaded or not.
@@ -972,15 +966,19 @@ Polymer({
                     break;
                 case 'track':
                     const _titleBarDimensions = this.$.titleBar.getBoundingClientRect();
-                    if (_titleBarDimensions.right + e.detail.ddx >= 44 && _titleBarDimensions.left + e.detail.ddx <= this._windowWidth - 44) {
+                    const leftNeedsChange = _titleBarDimensions.right + e.detail.ddx >= 44 && _titleBarDimensions.left + e.detail.ddx <= this._windowWidth - 44;
+                    if (leftNeedsChange) {
                         this.style.left = parseInt(this.style.left) + e.detail.ddx + 'px';
                         this.persistedLeft = this.style.left;
-                        this._wasMoved = true;
                     }
-                    if (_titleBarDimensions.top + e.detail.ddy >= 0 && _titleBarDimensions.bottom + e.detail.ddy <= this._windowHeight) {
+                    const topNeedsChange = _titleBarDimensions.top + e.detail.ddy >= 0 && _titleBarDimensions.bottom + e.detail.ddy <= this._windowHeight;
+                    if (topNeedsChange) {
                         this.style.top = parseInt(this.style.top) + e.detail.ddy + 'px';
                         this.persistedTop = this.style.top;
-                        this._wasMoved = true;
+                    }
+                    if (leftNeedsChange || topNeedsChange) {
+                        this._setCustomProp(ST_LEFT, this.style.left);
+                        this._setCustomProp(ST_TOP, this.style.top);
                     }
                     break;
                 case 'end':
@@ -1195,10 +1193,8 @@ Polymer({
         if (!_masterVisibilityChanges && !_masterLayoutChanges) {
             //Animate dialog dimensions even if it was resized.
             this._updateDialogDimensions(this.prefDim, this._minimised, this._maximised);
-            //Animate dialog position if it wasn't moved.
-            if (!this._wasMoved) {
-                this._updateDialogPosition(this.prefDim, this._minimised, this._maximised);
-            }
+            //Animate dialog position even if it was moved.
+            this._updateDialogPosition(this.prefDim, this._minimised, this._maximised);
             //Indicates that dialog is resized and moved after the resizing animation will be finished.
             this.async(this._dialogResized, 500);
         }
@@ -1218,24 +1214,30 @@ Polymer({
     
     //Updates dialog position for potentialy new loaded master.
     _updateDialogPosition: function (prefDim, _minimised, _maximised) {
-        if (!_minimised && !_maximised && prefDim) {
-            const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
-            const isWidthPercentage = width.endsWith('%');
-            const widthNum = parseFloat(width);
-            const windowWidth = this._fitWidth;
-            if (!isNaN(widthNum) && !isWidthPercentage && windowWidth < widthNum) {
-                this.style.left = "0px";
-            } else {
-                this.style.left = "calc(" + windowWidth + "px / 2  - " + width + " / 2)";
-            }
-            const height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
-            const isHeightPercentage = height.endsWith('%');
-            const heightNum = parseFloat(height);
-            const windowHeight = this._fitHeight;
-            if (!isNaN(heightNum) && !isHeightPercentage && windowHeight < heightNum + 44) {
-                this.style.top = "0px";
-            } else {
-                this.style.top = "calc(" + windowHeight + "px / 2  - " + height + " / 2" + (isHeightPercentage ? ")" : " - 44px / 2)");
+        if (!_minimised && !_maximised) {
+            const customPosition = this._customPosition();
+            if (customPosition) {
+                this.style.top = customPosition[0];
+                this.style.left = customPosition[1];
+            } else if (prefDim) {
+                const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
+                const isWidthPercentage = width.endsWith('%');
+                const widthNum = parseFloat(width);
+                const windowWidth = this._fitWidth;
+                if (!isNaN(widthNum) && !isWidthPercentage && windowWidth < widthNum) {
+                    this.style.left = "0px";
+                } else {
+                    this.style.left = "calc(" + windowWidth + "px / 2  - " + width + " / 2)";
+                }
+                const height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
+                const isHeightPercentage = height.endsWith('%');
+                const heightNum = parseFloat(height);
+                const windowHeight = this._fitHeight;
+                if (!isNaN(heightNum) && !isHeightPercentage && windowHeight < heightNum + 44) {
+                    this.style.top = "0px";
+                } else {
+                    this.style.top = "calc(" + windowHeight + "px / 2  - " + height + " / 2" + (isHeightPercentage ? ")" : " - 44px / 2)");
+                }
             }
         }
     },
@@ -1371,16 +1373,6 @@ Polymer({
         
         this.open();
         this._showBlockingPane();
-        this.async(function() {
-            const customDim = this._customDim();
-            if (customDim) {
-                if (!this.prefDim) { // define prefDim if it was not defined using action configuration
-                    this.prefDim = this._lastElement.makeResizable(); // _lastElement must be defined for non-empty _customDim()
-                }
-                this.style.width = customDim[0];
-                this.style.height = customDim[1];
-            }
-        }.bind(this), 50);
     },
     
     //Makes blocking pane visible via the animation. If the blocking pane is already visible then just increase _blockingPaneCounter.
@@ -1459,7 +1451,20 @@ Polymer({
     _refit: function() {
         this.async(function() {
             this.refit();
-        }.bind(this), 50);
+            const customDim = this._customDim();
+            if (customDim) {
+                if (!this.prefDim) { // define prefDim if it was not defined using action configuration
+                    this.prefDim = this._lastElement.makeResizable(); // _lastElement must be defined for non-empty _customDim()
+                }
+                this.style.width = customDim[0];
+                this.style.height = customDim[1];
+            }
+            const customPosition = this._customPosition();
+            if (customPosition) {
+                this.style.top = customPosition[0];
+                this.style.left = customPosition[1];
+            }
+        }.bind(this), 80);
     },
 
     _dialogOpened: function (e) {
@@ -1470,7 +1475,9 @@ Polymer({
         const target = e.composedPath()[0];
         if (target === this) {
             this.async(function() {
-                this.refit();
+                if (!this._customPosition()) {
+                    this.refit();
+                }
                 // focuses dialog view in case if it has recently been opened and re-fitting started (which will be followed by reflow process and scrolling to the top);
                 //  (e.g. in master dialog view it focuses input in error, preferred input or first input -- see 'focusView' in 'tg-entity-master-behavior') 
                 this._focusDialogView();
@@ -1489,7 +1496,6 @@ Polymer({
             }
             this._resetState();
             this._subscriptions.length = 0;
-            this._wasMoved = false;
             this._minimised = false;
             this._maximised = false;
             this.$.menuToggler.hidden = true; // allows to use the same custom action dialog instance for the masters without menu after compound master was open previously
@@ -1524,7 +1530,7 @@ Polymer({
     },
 
     _onIronResize: function() {
-        if (!this._wasMoved && !this._customDim() && !this._minimised) {
+        if (!this._customPosition() && !this._customDim() && !this._minimised) {
             IronOverlayBehaviorImpl._onIronResize.call(this);
         }
     },
@@ -1682,15 +1688,28 @@ Polymer({
     },
     
     /**
-     * Loads and returns custom dimensions for this dialog's Entity Master from local storage. Returns 'null' if current user never resized it on this device.
+     * Loads and returns custom [width; height] dimensions for this dialog's Entity Master from local storage. Returns 'null' if current user never resized it on this device.
      */
     _customDim: function () {
         if (this._lastElement) {
             const customWidth = localStorage.getItem(this._embeddedMasterTypeKey() + ST_WIDTH);
             const customHeight = localStorage.getItem(this._embeddedMasterTypeKey() + ST_HEIGHT);
             if (customWidth && customHeight) {
-                //console.error('customDim =', [customWidth, customHeight]);
                 return [customWidth, customHeight];
+            }
+        }
+        return null;
+    },
+    
+    /**
+     * Loads and returns custom [top; left] position for this dialog's Entity Master from local storage. Returns 'null' if current user never moved it on this device.
+     */
+    _customPosition: function () {
+        if (this._lastElement) {
+            const customTop = localStorage.getItem(this._embeddedMasterTypeKey() + ST_TOP);
+            const customLeft = localStorage.getItem(this._embeddedMasterTypeKey() + ST_LEFT);
+            if (customTop && customLeft) {
+                return [customTop, customLeft];
             }
         }
         return null;
