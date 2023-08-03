@@ -39,8 +39,8 @@ public class DomainMetadataTest extends BaseEntQueryTCase1 {
         return DOMAIN_METADATA.generateUnionedEntityMetadata(eti(type));
     }
     
-    private static <ET extends AbstractEntity<?>> EntityTypeInfo<ET> eti(Class<ET> entityType) {
-        return new EntityTypeInfo<>(entityType);
+    private static <ET extends AbstractEntity<?>> EntityTypeInfo<? super ET> eti(Class<ET> entityType) {
+        return EntityTypeInfo.getEntityTypeInfo(entityType);
     }
 
     @Test
