@@ -43,11 +43,19 @@ const template = html`
             /* paper-listbox */
             --paper-listbox-background-color: #fff;
         }
+        #menu ::slotted(paper-item) {
+            margin-left: -8px;
+            padding-left: 0;
+            --icon-display: inherit;
+            --icon-visibility: hidden;
+        }
+        #menu ::slotted(paper-item.notDraggable) {
+            margin-left: 0;
+            padding-left: 16px;
+            --icon-display: none;
+        }
         #menu ::slotted(paper-item.dragging) {
             opacity: 0;
-        }
-        #menu ::slotted(paper-item) {
-            --icon-visibility: hidden;
         }
         #menu:not(.dragging) ::slotted(paper-item:hover){
             --icon-visibility: visible;
@@ -499,7 +507,7 @@ Polymer({
 
     _saveMenuOrder: function () {
         if (this.userName && this.entityType) {
-            const menuItems = [...this.querySelectorAll("paper-item")].map(item => item.getAttribute("item-title"));
+            const menuItems = [...this.querySelectorAll("paper-item:not(.notDraggable)")].map(item => item.getAttribute("item-title"));
             localStorage[this._menuStorageKey(this.userName, this.entityType)] = JSON.stringify(menuItems);
         }
     },

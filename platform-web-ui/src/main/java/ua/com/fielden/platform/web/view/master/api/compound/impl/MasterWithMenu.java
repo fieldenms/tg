@@ -84,21 +84,19 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                     .attr("slot", "menu-item-section")
                     .attr("data-route", el.getDataRoute())
                     .attr("section-title", el.getShortDesc()));
-            menuItemsDom.add(
-                    new DomElement("paper-item")
-                            .attr("slot", "menu-item").attr("data-route", el.getDataRoute())
-                            .attr("tooltip-text", el.conf().longDesc.orElse("NOT SPECIFIED"))
-                            .attr("item-title", el.getShortDesc())
-                            .clazz(el.numberOfAction == 0 ? "notDraggable" : "")
-                            .style("padding: 0 16px 0 0", "margin-left:-8px;")
+            menuItemsDom.add(new DomElement("paper-item")
+                    .attr("slot", "menu-item").attr("data-route", el.getDataRoute())
+                    .attr("tooltip-text", el.conf().longDesc.orElse("NOT SPECIFIED"))
+                    .attr("item-title", el.getShortDesc())
+                    .clazz(el.numberOfAction == 0 ? "notDraggable" : "")
+                    .style("padding-right: 16px")
                     .add(new DomElement("iron-icon")
-                            .attr("draggable", el.numberOfAction == 0 ? "false": "true")
+                            .attr("draggable", "true")
                             .attr("icon", "tg-icons:dragVertical")
                             .clazz("drag-anchor")
-                            .style("cursor: grab" ,String.format("visibility: %s", el.numberOfAction == 0 ? "hidden" : "var(--icon-visibility)")))
+                            .style("cursor: grab", "visibility: var(--icon-visibility)", "display: var(--icon-display)"))
                     .add(new DomElement("iron-icon").attr("icon", el.getIcon()).attr("style", "margin-right: 32px"))
-                    .add(new DomElement("span").add(new InnerTextElement(el.getShortDesc())))
-                    );
+                    .add(new DomElement("span").add(new InnerTextElement(el.getShortDesc()))));
         }
 
         // generate the final master with menu
