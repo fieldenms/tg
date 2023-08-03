@@ -17,10 +17,11 @@ import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation.TableStru
 import ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
 import ua.com.fielden.platform.eql.stage3.Table;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 
 public class EqlEntityMetadataHolder {
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EqlEntityMetadata<?>> entityPropsMetadata;
-    private final ConcurrentMap<String, Table> tables = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, Table> tables = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, TableStructForBatchInsertion> tableStructsForBatchInsertion = new ConcurrentHashMap<>();
 
     private final EqlEntityMetadataGenerator eemg;
@@ -36,7 +37,7 @@ public class EqlEntityMetadataHolder {
                     entityPropsMetadata.put(pd.entityType(), pd.eqlEntityMetadata());    
                     
                     if (parentInfo.category == PERSISTENT) {
-                        tables.put(entityType.getName(), generateTable(parentInfo.tableName, pd.eqlEntityMetadata().props()));
+                        tables.put(entityType, generateTable(parentInfo.tableName, pd.eqlEntityMetadata().props()));
                         tableStructsForBatchInsertion.put(entityType.getName(), generateTableWithPropColumnInfo(parentInfo.tableName, pd.eqlEntityMetadata().props()));
                     }
                 }
@@ -50,8 +51,8 @@ public class EqlEntityMetadataHolder {
         return unmodifiableMap(entityPropsMetadata);
     }
     
-    public Map<String, Table> getTables() {
-        return unmodifiableMap(tables);
+    public Table getTableForEntityType(final Class<? extends AbstractEntity<?>> entityType) {
+        return tables.get(DynamicEntityClassLoader.getOriginalType(entityType));
     }
 
     public TableStructForBatchInsertion getTableStructsForBatchInsertion(final Class<? extends AbstractEntity<?>> entityType) {

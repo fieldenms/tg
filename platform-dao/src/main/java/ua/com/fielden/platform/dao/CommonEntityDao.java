@@ -134,7 +134,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 this::getSession,
                 entityType,
                 this::newQueryExecutionContext,
-                () -> new EntityBatchDeleteByIdsOperation<>(getSession(), getDomainMetadata().eqlDomainMetadata.getTables().get(DynamicEntityClassLoader.getOriginalType(entityType).getName())));
+                () -> new EntityBatchDeleteByIdsOperation<>(getSession(), getDomainMetadata().eqlDomainMetadata.entityMetadataHolder.getTableForEntityType(entityType)));
         
         entitySaver = new PersistentEntitySaver<>(
                 this::getSession,

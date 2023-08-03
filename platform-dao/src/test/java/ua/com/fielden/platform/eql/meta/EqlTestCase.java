@@ -93,8 +93,6 @@ public abstract class EqlTestCase {
     private static final DomainMetadata DOMAIN_METADATA;
     protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER;
 
-    public static final Map<String, Table> tables = new HashMap<>();
-    
     static {
         hibTypeDefaults.put(boolean.class, YesNoType.class);
         hibTypeDefaults.put(Boolean.class, YesNoType.class);
@@ -109,11 +107,6 @@ public abstract class EqlTestCase {
                 PlatformTestDomainTypes.entityTypes, 
                 H2);
         DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
-        try {
-            tables.putAll(DOMAIN_METADATA.eqlDomainMetadata.getTables());
-        } catch (final Exception e) {
-            e.printStackTrace();
-        }
     }
     
     protected static final EntQueryGenerator qb() {

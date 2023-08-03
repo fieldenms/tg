@@ -32,7 +32,6 @@ import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.queries.SourceQuery1;
 import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage2.operands.queries.SourceQuery2;
-import ua.com.fielden.platform.eql.stage3.Table;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -43,7 +42,7 @@ public class EqlDomainMetadata {
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, List<SourceQuery1>> seModels;
     private final ConcurrentMap<String, List<String>> entityTypesDependentCalcPropsOrder = new ConcurrentHashMap<>();
     private final EntQueryGenerator gen;
-    private final EqlEntityMetadataHolder entityMetadataHolder;
+    public final EqlEntityMetadataHolder entityMetadataHolder;
     public final DbVersion dbVersion;
 
     public EqlDomainMetadata(//
@@ -148,10 +147,6 @@ public class EqlDomainMetadata {
                 }
             }
         }
-    }
-
-    public Map<String, Table> getTables() {
-        return entityMetadataHolder.getTables();
     }
 
     public TableStructForBatchInsertion getTableForEntityType(final Class<? extends AbstractEntity<?>> entityType) {
