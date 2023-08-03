@@ -435,6 +435,11 @@ Polymer({
             value: null // should not be 'undefined' because hidden="[[!_mainEntityType]]" binding will not work
         },
         
+        _embeddedMasterType: {
+            type: Object,
+            value: null
+        },
+        
         /**
          * Represents the ID of the currently bound persisted entity (of type derived from _mainEntityType) or 'null' if the entity is not yet persisted or not yet loaded.
          * Should only be used if '_mainEntityType' is present.
@@ -903,6 +908,10 @@ Polymer({
                     this.style.width = width;
                     this.style.height = prefDim.heightUnit === '%' ? height : ('calc(' + height + ' + 44px)'); // +44px - height of the title bar please see styles for .title-bar selector; applicable only for non-relative units of measure
                     this.style.overflow = 'auto';
+                } else {
+                    this.style.width = '';
+                    this.style.height = '';
+                    this.style.overflow = 'auto';
                 }
             } else if (!minimised && maximised) {
                 this.style.top = this.mobile ? '0%' : '2%';
@@ -967,18 +976,24 @@ Polymer({
                 case 'track':
                     const _titleBarDimensions = this.$.titleBar.getBoundingClientRect();
                     const leftNeedsChange = _titleBarDimensions.right + e.detail.ddx >= 44 && _titleBarDimensions.left + e.detail.ddx <= this._windowWidth - 44;
+                    let left;
                     if (leftNeedsChange) {
-                        this.style.left = parseInt(this.style.left) + e.detail.ddx + 'px';
-                        this.persistedLeft = this.style.left;
+                        const parsed = parseInt(this.style.left);
+                        left = (isNaN(parsed) ? _titleBarDimensions.left : parsed) + e.detail.ddx + 'px';
+                        this.style.left = left;
+                        this.persistedLeft = left;
                     }
                     const topNeedsChange = _titleBarDimensions.top + e.detail.ddy >= 0 && _titleBarDimensions.bottom + e.detail.ddy <= this._windowHeight;
+                    let top;
                     if (topNeedsChange) {
-                        this.style.top = parseInt(this.style.top) + e.detail.ddy + 'px';
-                        this.persistedTop = this.style.top;
+                        const parsed = parseInt(this.style.top);
+                        top = (isNaN(parsed) ? _titleBarDimensions.top : parsed) + e.detail.ddy + 'px';
+                        this.style.top = top;
+                        this.persistedTop = top;
                     }
                     if (leftNeedsChange || topNeedsChange) {
-                        this._setCustomProp(ST_LEFT, this.style.left);
-                        this._setCustomProp(ST_TOP, this.style.top);
+                        this._setCustomProp(ST_LEFT, leftNeedsChange ? left : this.style.left);
+                        this._setCustomProp(ST_TOP, topNeedsChange ? top : this.style.top);
                     }
                     break;
                 case 'end':
@@ -1567,6 +1582,9 @@ Polymer({
         const entityMaster = event.detail;
         const entityType = entityMaster.entityType ? this._reflector.getType(entityMaster.entityType) : null;
         if (entityType) {
+            if (this._embeddedMasterType === null && !entityType.isCompoundMenuItem() && entityType._simpleClassName() !== 'EntityEditAction' && entityType._simpleClassName() !== 'EntityNewAction') {
+                this._embeddedMasterType = entityType;
+            }
             if (this._mainEntityType === null && (entityType.compoundOpenerType() || entityType.isPersistent())) {
                 this._mainEntityType = entityType;
             } else if (this._compoundMenuItemType === null && entityType.isCompoundMenuItem() && entityType._simpleClassName() !== this._masterMenu._originalDefaultRoute) { // use only non-default menu item
@@ -1588,6 +1606,9 @@ Polymer({
         const entityMaster = event.detail;
         const entityType = entityMaster.entityType ? this._reflector.getType(entityMaster.entityType) : null;
         if (entityType) {
+            if (this._embeddedMasterType !== null && entityType === this._embeddedMasterType) {
+                this._embeddedMasterType = null;
+            }
             if (this._mainEntityType !== null && entityType === this._mainEntityType) {
                 this._mainEntityType = null;
                 this._mainEntityId = null;
@@ -1663,17 +1684,14 @@ Polymer({
     },
     
     _embeddedMasterTypeKey: function () {
-        if (this._lastElement) {
-            return this._mainEntityType ? this._mainEntityType.fullClassName() : (this._lastElement.entityType || this._lastElement.is);
-        }
-        return 'unknown';
+        return this._embeddedMasterType ? this._embeddedMasterType.fullClassName() : null;
     },
     
     /**
      * Persists custom property for this dialog's Entity Master into local storage. Does nothing if no Entity Master was loaded.
      */
     _setCustomProp: function (name, value) {
-        if (this._lastElement) {
+        if (this._embeddedMasterTypeKey()) {
             localStorage.setItem(this._embeddedMasterTypeKey() + name, value);
         }
     },
@@ -1682,7 +1700,7 @@ Polymer({
      * Removes custom property for this dialog's Entity Master from local storage. Does nothing if no Entity Master was loaded.
      */
     _removeCustomProp: function (name) {
-        if (this._lastElement) {
+        if (this._embeddedMasterTypeKey()) {
             localStorage.removeItem(this._embeddedMasterTypeKey() + name);
         }
     },
@@ -1691,7 +1709,7 @@ Polymer({
      * Loads and returns custom [width; height] dimensions for this dialog's Entity Master from local storage. Returns 'null' if current user never resized it on this device.
      */
     _customDim: function () {
-        if (this._lastElement) {
+        if (this._embeddedMasterTypeKey()) {
             const customWidth = localStorage.getItem(this._embeddedMasterTypeKey() + ST_WIDTH);
             const customHeight = localStorage.getItem(this._embeddedMasterTypeKey() + ST_HEIGHT);
             if (customWidth && customHeight) {
@@ -1705,7 +1723,7 @@ Polymer({
      * Loads and returns custom [top; left] position for this dialog's Entity Master from local storage. Returns 'null' if current user never moved it on this device.
      */
     _customPosition: function () {
-        if (this._lastElement) {
+        if (this._embeddedMasterTypeKey()) {
             const customTop = localStorage.getItem(this._embeddedMasterTypeKey() + ST_TOP);
             const customLeft = localStorage.getItem(this._embeddedMasterTypeKey() + ST_LEFT);
             if (customTop && customLeft) {
