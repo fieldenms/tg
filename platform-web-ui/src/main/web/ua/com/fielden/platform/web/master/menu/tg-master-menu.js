@@ -479,6 +479,7 @@ Polymer({
         if (this._menuItemToDrag !== null) {
             this._menuItemToDrag.classList.remove("dragging");
             this.$.menu.classList.remove("dragging");
+            this._saveMenuOrder();
         }
     },
 
@@ -491,7 +492,6 @@ Polymer({
                 return e.clientY <= siblingRect.y + siblingRect.height / 2;
             });
             this.insertBefore(this._menuItemToDrag, nextSibling);
-            this._saveMenuOrder();
         }
     },
 
