@@ -114,6 +114,19 @@ const findMenuItemSection = function (path) {
     return path.find(element => element.tagName === "TG-MASTER-MENU-ITEM-SECTION");
 };
 
+const _updateMenuOrder = function (menuOrder, container) {
+    const menuItems = [...container.querySelectorAll("paper-item:not(.notDraggable)")];
+
+    let nextSibling = menuItems[0];
+    for (let menuIdx = menuOrder.length - 1; menuIdx >= 0; menuIdx--) {
+        const menuItemIdxToAdd = menuItems.findIndex(menuItem => menuItem.getAttribute("item-title") === menuOrder[menuIdx]);
+        if (menuItemIdxToAdd >= 0) {
+            container.insertBefore(menuItems[menuItemIdxToAdd], nextSibling);
+            nextSibling = menuItems[menuItemIdxToAdd];
+        }
+    }
+};
+
 Polymer({
     _template: template,
 
@@ -200,6 +213,22 @@ Polymer({
         },
 
         /**
+         * The name of user that opened compound master with this menu. That is needed to restore and save.
+         */
+        userName: {
+            type: String,
+            value: null
+        },
+
+        /**
+         * The type of entity for which compound master with this menu is opened.
+         */
+        entityType: {
+            type: String,
+            value: null
+        },
+
+        /**
          * The open compound master entity.
          */
         entity: {
@@ -252,7 +281,9 @@ Polymer({
         }
     },
 
-    behaviors: [ IronA11yKeysBehavior, TgFocusRestorationBehavior, IronResizableBehavior],
+    behaviors: [IronA11yKeysBehavior, TgFocusRestorationBehavior, IronResizableBehavior],
+
+    observers: ["_loadMenuOrder(userName, entityType)"],
 
     listeners: {
         transitionend: '_onTransitionEnd'
@@ -442,11 +473,29 @@ Polymer({
                 return e.clientY <= siblingRect.y + siblingRect.height / 2;
             });
             this.insertBefore(this._menuItemToDrag, nextSibling);
+            this._saveMenuOrder();
         }
     },
 
     dragEntered: function (dropToEvent) {
         tearDownEvent(dropToEvent);
+    },
+
+    _loadMenuOrder: function (userName, entityType) {
+        if (userName && entityType) {
+            _updateMenuOrder(JSON.parse(localStorage[this._menuStorageKey(userName, entityType)] || "[]"), this);
+        }
+    },
+
+    _saveMenuOrder: function () {
+        if (this.userName && this.entityType) {
+            const menuItems = [...this.querySelectorAll("paper-item")].map(item => item.getAttribute("item-title"));
+            localStorage[this._menuStorageKey(this.userName, this.entityType)] = JSON.stringify(menuItems);
+        }
+    },
+
+    _menuStorageKey: function (userName, entityType) {
+        return `${userName}_menu_for_${entityType}`;
     },
 
     _entityChanged: function (newBindingEntity, oldOne) {
@@ -456,6 +505,8 @@ Polymer({
                 Object.keys(newEntity.get("entityPresence")).forEach(prop => {
                     this._setHighlightMenuItem(prop, newEntity.get("entityPresence")[prop]);
                 });
+                this.userName = newEntity.get("userName");
+                this.entityType = newEntity.get("key").type().fullClassName();
             }
         }
     },
