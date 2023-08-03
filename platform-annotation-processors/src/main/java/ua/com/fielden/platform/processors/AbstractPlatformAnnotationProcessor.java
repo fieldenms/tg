@@ -1,31 +1,24 @@
 package ua.com.fielden.platform.processors;
 
-import static java.lang.Boolean.parseBoolean;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.stream.Collectors.joining;
-import static javax.tools.Diagnostic.Kind.NOTE;
+import com.google.common.base.Stopwatch;
+import org.joda.time.DateTime;
+import ua.com.fielden.platform.processors.metamodel.elements.utils.TypeElementCache;
 
-import java.util.Map;
-import java.util.Set;
-
-import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.Filer;
-import javax.annotation.processing.Messager;
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.annotation.processing.RoundEnvironment;
+import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringJoiner;
 
-import org.joda.time.DateTime;
-
-import com.google.common.base.Stopwatch;
-
-import ua.com.fielden.platform.processors.metamodel.elements.utils.TypeElementCache;
+import static java.lang.Boolean.parseBoolean;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static javax.tools.Diagnostic.Kind.NOTE;
 
 /**
  * An abstract platform-level annotation processor to be extended by specific implementations. 
@@ -130,8 +123,8 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
                 printNote("Processing affected sources.");
             }
         }
-        printNote("annotations: [%s]", annotations.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", ")));
-        printNote("rootElements: [%s]", roundEnv.getRootElements().stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", ")));
+        printNote(formatSequence("annotations", annotations.stream().map(Element::getSimpleName).iterator()));
+        printNote(formatSequence("rootElements", roundEnv.getRootElements().stream().map(Element::getSimpleName).iterator()));
 
         final boolean claimAnnotations = processRound(annotations, roundEnv);
 
@@ -208,6 +201,30 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
 
     protected int getRoundNumber() {
         return roundNumber;
+    }
+
+    protected static String formatSequence(String name, final Iterator<?> iterator, final String separator) {
+        final StringJoiner sj = new StringJoiner(",");
+
+        int size = 0;
+        while (iterator.hasNext()) {
+            sj.add(iterator.next().toString());
+            size += 1;
+        }
+
+        return "%s[%s]: [%s]".formatted(name, size, sj);
+    }
+
+    protected static String formatSequence(String name, final Iterator<?> iterator) {
+        return formatSequence(name, iterator, ",");
+    }
+
+    protected static String formatSequence(String name, final Iterable<?> iterable, final String separator) {
+        return formatSequence(name, iterable.iterator(), separator);
+    }
+
+    protected static String formatSequence(String name, final Iterable<?> iterable) {
+        return formatSequence(name, iterable.iterator(), ",");
     }
 
 }

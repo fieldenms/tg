@@ -166,8 +166,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
             printNote("There are no subjects for meta-modeling.");
             return Stream.empty();
         }
-        printNote("annotatedElements: [%s]",
-                annotatedElements.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", ")));
+        printNote(formatSequence("annotatedElements", annotatedElements.stream().map(Element::getSimpleName).iterator()));
 
         // let's process each type element representing a domain entity
         // all relevant types will have a meta-model concept created for them and their properties explored for the purpose of meta-modelling
@@ -187,7 +186,8 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
             }
         }
 
-        printNote("metaModelConcepts: [%s]", metaModelConcepts.stream().map(MetaModelConcept::getSimpleName).sorted().collect(joining(", ")));
+        printNote(formatSequence("metaModelConcepts", metaModelConcepts.stream().map(MetaModelConcept::getSimpleName).iterator()));
+
         return metaModelConcepts.stream();
     }
 
