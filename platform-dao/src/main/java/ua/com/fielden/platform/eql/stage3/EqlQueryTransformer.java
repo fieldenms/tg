@@ -14,7 +14,7 @@ import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.queries.ResultQuery1;
-import ua.com.fielden.platform.eql.stage2.TablesAndSourceTreeResult;
+import ua.com.fielden.platform.eql.stage2.TreeResultBySources;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Expression2;
@@ -56,7 +56,7 @@ public class EqlQueryTransformer {
         final PathsToTreeTransformer p2tt = new PathsToTreeTransformer(eqlDomainMetadata, gen);
         final TreeResult treeResult = p2tt.transform(query2.collectProps());
         final TransformationContext2 context2 = new TransformationContext2(
-                new TablesAndSourceTreeResult(treeResult.implicitNodesMap(), processExpressionsData(treeResult.expressionsData()), processPropsResolutionData(treeResult.propsData())), 
+                new TreeResultBySources(treeResult.implicitNodesMap(), processExpressionsData(treeResult.expressionsData()), processPropsResolutionData(treeResult.propsData())), 
                 eqlDomainMetadata.entityMetadataHolder);
 		return query2.transform(context2);
     }

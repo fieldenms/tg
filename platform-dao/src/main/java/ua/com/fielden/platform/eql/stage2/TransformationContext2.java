@@ -15,12 +15,11 @@ import ua.com.fielden.platform.eql.stage2.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.sources.ImplicitNode;
 import ua.com.fielden.platform.eql.stage3.Table;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.types.tuples.T2;
 
 public class TransformationContext2 {
 
-    private final TablesAndSourceTreeResult tablesAndSourceChildren;
+    private final TreeResultBySources treeResultBySources;
     private final EqlEntityMetadataHolder eqlEntityMetadataHolder;
     private final Map<Integer, ISource3> sourcesByIds = new HashMap<>();
     private final Map<String, Object> paramValuesByNames = new HashMap<>();
@@ -28,17 +27,17 @@ public class TransformationContext2 {
     public final int sqlId;
     private final int paramId; //incremented after each new param name generation
 
-    public TransformationContext2(final TablesAndSourceTreeResult tablesAndSourceChildren, final EqlEntityMetadataHolder eqlEntityMetadataHolder) {
-        this(tablesAndSourceChildren, eqlEntityMetadataHolder, emptyMap(), emptyMap(), emptyMap(), 0, 1);
+    public TransformationContext2(final TreeResultBySources treeResultBySources, final EqlEntityMetadataHolder eqlEntityMetadataHolder) {
+        this(treeResultBySources, eqlEntityMetadataHolder, emptyMap(), emptyMap(), emptyMap(), 0, 1);
     }
 
-    private TransformationContext2(final TablesAndSourceTreeResult tablesAndSourceChildren,
+    private TransformationContext2(final TreeResultBySources treeResultBySources,
             final EqlEntityMetadataHolder eqlEntityMetadataHolder,
             final Map<Integer, ISource3> sourcesByIds,
             final Map<String, Object> paramValuesByNames,
             final Map<Object, String> paramNamesByValues,
             final int sqlId, final int paramId) {
-        this.tablesAndSourceChildren = tablesAndSourceChildren;
+        this.treeResultBySources = treeResultBySources;
         this.eqlEntityMetadataHolder = eqlEntityMetadataHolder;
         this.sourcesByIds.putAll(sourcesByIds);
         this.paramValuesByNames.putAll(paramValuesByNames);
@@ -61,7 +60,7 @@ public class TransformationContext2 {
             return t2(existingParamName, this);
         } else {
             final String paramName = "P_" + paramId;
-            final TransformationContext2 result = new TransformationContext2(tablesAndSourceChildren, eqlEntityMetadataHolder, sourcesByIds, paramValuesByNames, paramNamesByValues, sqlId, paramId + 1);
+            final TransformationContext2 result = new TransformationContext2(treeResultBySources, eqlEntityMetadataHolder, sourcesByIds, paramValuesByNames, paramNamesByValues, sqlId, paramId + 1);
             result.paramValuesByNames.put(paramName, paramValue);
             result.paramNamesByValues.put(paramValue, paramName);
 
@@ -70,27 +69,27 @@ public class TransformationContext2 {
     }
 
     public List<ImplicitNode> getSourceImplicitNodes(final Integer sourceId) {
-        final List<ImplicitNode> result = tablesAndSourceChildren.implicitNodesMap().get(sourceId);
+        final List<ImplicitNode> result = treeResultBySources.implicitNodesMap().get(sourceId);
         // result may be null due to count(*) or yield const only queries
         return result != null ? result : emptyList();
     }
 
     public TransformationContext2 cloneWithNextSqlId() {
-        return new TransformationContext2(tablesAndSourceChildren, eqlEntityMetadataHolder, sourcesByIds, paramValuesByNames, paramNamesByValues, sqlId + 1, paramId);
+        return new TransformationContext2(treeResultBySources, eqlEntityMetadataHolder, sourcesByIds, paramValuesByNames, paramNamesByValues, sqlId + 1, paramId);
     }
 
     public TransformationContext2 cloneWithSource(final ISource3 source) {
-        final TransformationContext2 result = new TransformationContext2(tablesAndSourceChildren, eqlEntityMetadataHolder, sourcesByIds, paramValuesByNames, paramNamesByValues, sqlId, paramId);
+        final TransformationContext2 result = new TransformationContext2(treeResultBySources, eqlEntityMetadataHolder, sourcesByIds, paramValuesByNames, paramNamesByValues, sqlId, paramId);
         result.sourcesByIds.put(source.id(), source);
         return result;
     }
 
     public T2<String, ISource3> resolve(final Integer sourceId, final String path) {
-        final T2<String, Integer> propAndSourceId = tablesAndSourceChildren.plainPropsResolutions().get(sourceId).get(path);
+        final T2<String, Integer> propAndSourceId = treeResultBySources.plainPropsResolutions().get(sourceId).get(path);
         return t2(propAndSourceId._1, sourcesByIds.get(propAndSourceId._2));
     }
     
     public Expression2 resolveExpression(final Integer sourceId, final String path) {
-        return tablesAndSourceChildren.calcPropsResolutions().get(sourceId).get(path);
+        return treeResultBySources.calcPropsResolutions().get(sourceId).get(path);
     }
 }
