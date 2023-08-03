@@ -90,7 +90,7 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                             .attr("tooltip-text", el.conf().longDesc.orElse("NOT SPECIFIED"))
                             .attr("item-title", el.getShortDesc())
                             .clazz(el.numberOfAction == 0 ? "notDraggable" : "")
-                            .style("padding: 0 16px 0 0")
+                            .style("padding: 0 16px 0 0", "margin-left:-8px;")
                     .add(new DomElement("iron-icon")
                             .attr("draggable", el.numberOfAction == 0 ? "false": "true")
                             .attr("icon", "tg-icons:dragVertical")
