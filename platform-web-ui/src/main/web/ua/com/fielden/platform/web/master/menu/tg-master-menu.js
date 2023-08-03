@@ -49,7 +49,7 @@ const template = html`
         #menu ::slotted(paper-item) {
             --icon-visibility: hidden;
         }
-        #menu ::slotted(paper-item:hover){
+        #menu:not(.dragging) ::slotted(paper-item:hover){
             --icon-visibility: visible;
         }
         :host {
@@ -453,6 +453,7 @@ Polymer({
         this._menuItemToDrag = dragEvent.target.parentElement;
         this.async(() => {
             this._menuItemToDrag.classList.add("dragging");
+            this.$.menu.classList.add("dragging");
         }, 1);
         dragEvent.dataTransfer.effectAllowed = "copyMove";
         dragEvent.dataTransfer.setDragImage(this._menuItemToDrag, 0, 0);
@@ -461,6 +462,7 @@ Polymer({
     endDrag: function (dragEvent) {
         if (this._menuItemToDrag !== null) {
             this._menuItemToDrag.classList.remove("dragging");
+            this.$.menu.classList.remove("dragging");
         }
     },
 
