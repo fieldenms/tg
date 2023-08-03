@@ -1,14 +1,9 @@
 package ua.com.fielden.platform.eql.meta;
 
 import static java.util.Collections.emptyMap;
-import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.toList;
-import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PERSISTENT;
-import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PURE;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
 import static ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo.getEntityTypeInfo;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.generateTable;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.generateTableWithPropColumnInfo;
 import static ua.com.fielden.platform.eql.meta.utils.TopologicalSort.sortTopologically;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
@@ -44,14 +39,11 @@ import ua.com.fielden.platform.utils.EntityUtils;
 
 public class EqlDomainMetadata {
 
-    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EqlEntityMetadata<?>> entityPropsMetadata;
-    private final ConcurrentMap<String, Table> tables = new ConcurrentHashMap<>();
-    private final ConcurrentMap<String, TableStructForBatchInsertion> tableStructsForBatchInsertion = new ConcurrentHashMap<>();
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo;
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, List<SourceQuery1>> seModels;
     private final ConcurrentMap<String, List<String>> entityTypesDependentCalcPropsOrder = new ConcurrentHashMap<>();
     private final EntQueryGenerator gen;
-    private final EqlEntityMetadataGenerator eemg;
+    private final EqlEntityMetadataHolder entityMetadataHolder;
     public final DbVersion dbVersion;
 
     public EqlDomainMetadata(//
@@ -60,34 +52,16 @@ public class EqlDomainMetadata {
             final List<Class<? extends AbstractEntity<?>>> entityTypes, //
             final DbVersion dbVersion) {
         this.dbVersion = dbVersion;
-        this.eemg = new EqlEntityMetadataGenerator(hibTypesDefaults, hibTypesInjector, dbVersion);
-        this.entityPropsMetadata = new ConcurrentHashMap<>(entityTypes.size());
+        this.entityMetadataHolder = new EqlEntityMetadataHolder(entityTypes, new EqlEntityMetadataGenerator(hibTypesDefaults, hibTypesInjector, dbVersion));
         this.seModels = new ConcurrentHashMap<>(entityTypes.size());
         this.gen = new EntQueryGenerator(null, null, null, emptyMap());
 
-        entityTypes.parallelStream().forEach(entityType -> {
-            try {
-                final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = getEntityTypeInfo(entityType);
-                if (parentInfo.category != PURE) {
-                    final EqlEntityMetadataPair<? extends AbstractEntity<?>> pd = eemg.generate(getEntityTypeInfo(entityType), entityType);
-                    entityPropsMetadata.put(entityType, pd.eqlEntityMetadata());
-                    if (parentInfo.category == PERSISTENT) {
-                        tables.put(entityType.getName(), generateTable(parentInfo.tableName, pd.eqlEntityMetadata().props()));
-                        tableStructsForBatchInsertion.put(entityType.getName(), generateTableWithPropColumnInfo(parentInfo.tableName, pd.eqlEntityMetadata().props()));
-                    }
-                }
-            } catch (final Exception ex) {
-                throw new EqlMetadataGenerationException("Couldn't generate persistence metadata for entity [" + entityType + "].", ex);
-            }
-        });
-
-        domainInfo = entityPropsMetadata.entrySet().stream().collect(Collectors.toConcurrentMap(k -> k.getKey(), k -> new EntityInfo<>(k.getKey(), true))); 
-        domainInfo.values().stream().forEach(ei -> addProps(ei, domainInfo, entityPropsMetadata.get(ei.javaType()).props()));
-
+        domainInfo = entityMetadataHolder.entityPropsMetadata().entrySet().stream().collect(Collectors.toConcurrentMap(k -> k.getKey(), k -> new EntityInfo<>(k.getKey(), true))); 
+        domainInfo.values().stream().forEach(ei -> addProps(ei, domainInfo, entityMetadataHolder.entityPropsMetadata().get(ei.javaType()).props()));
         
         // generating models and dependencies info for SE types (UE types also as they are implicit SE types)
         final Map<Class<? extends AbstractEntity<?>>, Set<Class<? extends AbstractEntity<?>>>> seDependencies = new HashMap<>();
-        for (final EqlEntityMetadata<?> el : entityPropsMetadata.values()) {
+        for (final EqlEntityMetadata<?> el : entityMetadataHolder.entityPropsMetadata().values()) {
             if (el.typeInfo.category == QUERY_BASED) {
                 final T2<List<SourceQuery1>, Set<Class<? extends AbstractEntity<?>>>> res = generateModelsAndDependenciesForSyntheticType(el.typeInfo);
                 seModels.put(el.entityType, res._1);
@@ -177,15 +151,15 @@ public class EqlDomainMetadata {
     }
 
     public Map<String, Table> getTables() {
-        return unmodifiableMap(tables);
+        return entityMetadataHolder.getTables();
     }
 
     public TableStructForBatchInsertion getTableForEntityType(final Class<? extends AbstractEntity<?>> entityType) {
-        return tableStructsForBatchInsertion.get(entityType.getName());
+        return entityMetadataHolder.getTableStructsForBatchInsertion(entityType);
     }
 
     public Map<Class<? extends AbstractEntity<?>>, EqlEntityMetadata<?>> entityPropsMetadata() {
-        return unmodifiableMap(entityPropsMetadata);
+        return entityMetadataHolder.entityPropsMetadata();
     }
 
     public EntityInfo<?> getEntityInfo(final Class<? extends AbstractEntity<?>> type) {
@@ -194,7 +168,7 @@ public class EqlDomainMetadata {
             return existing;
         }
         
-        final List<EqlPropertyMetadata> propsMetadatas = eemg.generate(getEntityTypeInfo(type), type).eqlEntityMetadata().props();
+        final List<EqlPropertyMetadata> propsMetadatas = entityMetadataHolder.obtainEqlEntityMetadata(type).props();
         //entityPropsMetadata.put(type, t2(eti.category, propsMetadatas));
         final EntityInfo<?> created = new EntityInfo<>(type, true);
         //domainInfo.put(type, created);
