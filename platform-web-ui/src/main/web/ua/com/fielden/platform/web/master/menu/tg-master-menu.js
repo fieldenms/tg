@@ -127,6 +127,13 @@ const _updateMenuOrder = function (menuOrder, container) {
     }
 };
 
+const hideTooltip = function () {
+    const tooltipElement = document.getElementsByTagName('tg-tooltip')[0];
+    if (tooltipElement) {
+        tooltipElement.hide();
+    }
+};
+
 Polymer({
     _template: template,
 
@@ -457,6 +464,7 @@ Polymer({
         }, 1);
         dragEvent.dataTransfer.effectAllowed = "copyMove";
         dragEvent.dataTransfer.setDragImage(this._menuItemToDrag, 0, 0);
+        hideTooltip();
     },
 
     endDrag: function (dragEvent) {
