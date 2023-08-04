@@ -662,7 +662,7 @@ public class ElementFinder {
     }
 
     public static boolean isTopLevelClass(final Element element) {
-        return element.getKind() == ElementKind.CLASS && element.getEnclosingElement().getKind() == ElementKind.PACKAGE;
+        return element.getKind() == ElementKind.CLASS && ((TypeElement) element).getNestingKind() == NestingKind.TOP_LEVEL;
     }
 
     /**
