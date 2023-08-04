@@ -471,7 +471,7 @@ Polymer({
             this.$.menu.classList.add("dragging");
         }, 1);
         dragEvent.dataTransfer.effectAllowed = "copyMove";
-        dragEvent.dataTransfer.setDragImage(this._menuItemToDrag, 0, 0);
+        dragEvent.dataTransfer.setDragImage(this._menuItemToDrag, 12, 24);
         hideTooltip();
     },
 
