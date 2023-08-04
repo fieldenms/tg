@@ -35,6 +35,7 @@ const ST_WIDTH = '-width';
 const ST_HEIGHT = '-height';
 const ST_TOP = '-top';
 const ST_LEFT = '-left';
+const ST_PREF_DIM = '-pref-dim';
 
 const template = html`
     <style>
@@ -739,10 +740,22 @@ Polymer({
         }
     },
 
-    _invertMaximiseState: function() {
-        if (!this.prefDim) { // define prefDim (maximise action) if it was not defined using action configuration
+    /**
+     * For dimensionless Entity Master, need to it resizable and assign prefDim from current calculated dimensions.
+     * This is necessary, for example, for later resetDimensions (and other prefDim usages).
+     */
+    _definePrefDim: function () {
+        if (!this.prefDim) { // define prefDim if it was not defined using action configuration
             this.prefDim = this._lastElement.makeResizable();
+            localStorage.setItem(this._embeddedMasterTypeKey() + ST_PREF_DIM, JSON.stringify(this.prefDim)); // store calculated prefDim for later use; i.e. dialog (with cached info) closed, app reloaded, dialog opened again and resetDimensions performed
         }
+    },
+
+    /**
+     * Switches between maximised / normal states of the dialog.
+     */
+    _invertMaximiseState: function() {
+        this._definePrefDim(); // define prefDim (maximise action) if it was not defined using action configuration
         this._invertDialogState('_maximised');
     },
 
@@ -758,9 +771,7 @@ Polymer({
                     break;
                 case 'track':
                     if (!this._customDim()) {
-                        if (!this.prefDim) { // define prefDim (resize action) if it was not defined using action configuration
-                            this.prefDim = this._lastElement.makeResizable();
-                        }
+                        this._definePrefDim(); // define prefDim (resize action) if it was not defined using action configuration
                     }
                     const resizedHeight = this.offsetHeight + event.detail.ddy;
                     const heightNeedsResize = resizedHeight >= 44 /* toolbar height*/ + 14 /* resizer image height */ ;
@@ -801,6 +812,7 @@ Polymer({
             }
             this._removeCustomProp(ST_WIDTH);
             this._removeCustomProp(ST_HEIGHT);
+            this._removeCustomProp(ST_PREF_DIM);
         }
     },
 
@@ -1338,6 +1350,22 @@ Polymer({
         // This is necessary to make dialog being able to 'maximise' to large dimensions.
         this.style.maxHeight = '100%';
         this.style.maxWidth = '100%';
+
+        const customDim = this._customDim();
+        if (customDim) {
+            if (!this.prefDim) { // define prefDim if it was not defined using action configuration
+                const calculatedPrefDim = this._lastElement.makeResizable(); // _lastElement must be defined for non-empty _customDim()
+                const storedPrefDim = this._dimensionlessMasterPrefDim();
+                this.prefDim = storedPrefDim || calculatedPrefDim; // as the last resort use calculated dimensions from current Entity Master, however beware that they may be [0px; 0px] for not yet constructed UI
+            }
+            this.style.width = customDim[0];
+            this.style.height = customDim[1];
+        }
+        const customPosition = this._customPosition();
+        if (customPosition) {
+            this.style.top = customPosition[0];
+            this.style.left = customPosition[1];
+        }
     },
 
     /**
@@ -1466,20 +1494,7 @@ Polymer({
     _refit: function() {
         this.async(function() {
             this.refit();
-            const customDim = this._customDim();
-            if (customDim) {
-                if (!this.prefDim) { // define prefDim if it was not defined using action configuration
-                    this.prefDim = this._lastElement.makeResizable(); // _lastElement must be defined for non-empty _customDim()
-                }
-                this.style.width = customDim[0];
-                this.style.height = customDim[1];
-            }
-            const customPosition = this._customPosition();
-            if (customPosition) {
-                this.style.top = customPosition[0];
-                this.style.left = customPosition[1];
-            }
-        }.bind(this), 80);
+        }.bind(this), 50);
     },
 
     _dialogOpened: function (e) {
@@ -1490,9 +1505,7 @@ Polymer({
         const target = e.composedPath()[0];
         if (target === this) {
             this.async(function() {
-                if (!this._customPosition()) {
-                    this.refit();
-                }
+                this.refit();
                 // focuses dialog view in case if it has recently been opened and re-fitting started (which will be followed by reflow process and scrolling to the top);
                 //  (e.g. in master dialog view it focuses input in error, preferred input or first input -- see 'focusView' in 'tg-entity-master-behavior') 
                 this._focusDialogView();
@@ -1728,6 +1741,21 @@ Polymer({
             const customLeft = localStorage.getItem(this._embeddedMasterTypeKey() + ST_LEFT);
             if (customTop && customLeft) {
                 return [customTop, customLeft];
+            }
+        }
+        return null;
+    },
+    
+    /**
+     * Loads and returns stored prefDim dimensions for this dialog's Entity Master from local storage, if it was dimensionless at the time of resizing / maximizing.
+     * Returns 'null' if current user never resized / maximized dimensionless Entity Master it on this device.
+     * Also returns 'null' had defined dimensions in Entity Master.
+     */
+    _dimensionlessMasterPrefDim: function () {
+        if (this._embeddedMasterTypeKey()) {
+            const prefDim = localStorage.getItem(this._embeddedMasterTypeKey() + ST_PREF_DIM);
+            if (prefDim) {
+                return JSON.parse(prefDim);
             }
         }
         return null;
