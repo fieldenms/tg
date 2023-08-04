@@ -1,8 +1,11 @@
 package ua.com.fielden.platform.processors;
 
 import com.google.common.base.Stopwatch;
+import com.squareup.javapoet.AnnotationSpec;
 import org.joda.time.DateTime;
+import ua.com.fielden.platform.processors.metamodel.MetaModelProcessor;
 import ua.com.fielden.platform.processors.metamodel.elements.utils.TypeElementCache;
+import ua.com.fielden.platform.processors.utils.CodeGenerationUtils;
 
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
@@ -225,6 +228,10 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
 
     protected static String formatSequence(String name, final Iterable<?> iterable) {
         return formatSequence(name, iterable.iterator(), ",");
+    }
+
+    protected AnnotationSpec buildAtGenerated(String date) {
+        return CodeGenerationUtils.buildAnnotationGenerated(this.getClass().getCanonicalName(), date);
     }
 
 }

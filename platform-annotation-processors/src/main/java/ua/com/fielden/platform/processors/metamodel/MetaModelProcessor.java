@@ -77,6 +77,7 @@ import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
+import ua.com.fielden.platform.processors.utils.CodeGenerationUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -229,10 +230,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
 
         // @Generated annotation
         final String dateString = DateTimeUtils.toIsoFormat(DateTimeUtils.zonedNow());
-        final AnnotationSpec annotGenerated = AnnotationSpec.builder(Generated.class)
-                .addMember("value", "$S", this.getClass().getCanonicalName())
-                .addMember("date", "$S", dateString)
-                .build();
+        final AnnotationSpec annotGenerated = buildAtGenerated(dateString);
 
          emptyMetaModelBuilder
                 .addJavadoc("INACTIVE auto-generated meta-model.\n<p>\n")
@@ -538,10 +536,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
 
         // @Generated annotation
         final String dateString = DateTimeUtils.toIsoFormat(DateTimeUtils.zonedNow());
-        final AnnotationSpec annotGenerated = AnnotationSpec.builder(Generated.class)
-                .addMember("value", "$S", this.getClass().getCanonicalName())
-                .addMember("date", "$S", dateString)
-                .build();
+        final AnnotationSpec annotGenerated = buildAtGenerated(dateString);
 
         final TypeSpec metaModelSpec = metaModelBuilder.addJavadoc("Auto-generated meta-model for {@link $T}.\n<p>\n", entityClassName)
                  .addJavadoc(format("Generation datetime: %s\n<p>\n", dateString))
@@ -850,10 +845,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
 
         // @Generated annotation
         final String dateString = DateTimeUtils.toIsoFormat(DateTimeUtils.zonedNow());
-        final AnnotationSpec annotGenerated = AnnotationSpec.builder(Generated.class)
-                .addMember("value", "$S", this.getClass().getCanonicalName())
-                .addMember("date", "$S", dateString)
-                .build();
+        final AnnotationSpec annotGenerated = buildAtGenerated(dateString);
 
         final TypeSpec metaModelsTypeSpec = TypeSpec.classBuilder(METAMODELS_CLASS_SIMPLE_NAME)
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
