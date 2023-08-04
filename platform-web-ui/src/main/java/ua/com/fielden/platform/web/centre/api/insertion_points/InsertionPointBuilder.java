@@ -58,7 +58,6 @@ public class InsertionPointBuilder implements IRenderable, IExecutable {
         insertionPointConfig.getToolbar().ifPresent(toolbar -> insertionPointDom.add(toolbar.render()));
         if (whereToInsert() == ALTERNATIVE_VIEW) {
             insertionPointDom.attr("alternative-view", true);
-            insertionPointDom.attr("hide-margins", true);
             insertionPointDom.attr("slot", "alternative-view-insertion-point");
         } else {
             insertionPointDom.attr("without-resizing", insertionPointConfig.isNoResizing());

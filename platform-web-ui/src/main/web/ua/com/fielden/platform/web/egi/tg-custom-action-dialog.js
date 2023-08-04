@@ -645,8 +645,9 @@ Polymer({
         });
     },
 
-    _skipNext: function() {
+    _skipNext: function(e) {
         if (this._lastAction && this._lastAction.continuous && typeof this._lastAction.skipNext === 'function') {
+            tearDownEvent(e);
             this._lastAction.skipNext();
         }
     },
@@ -834,6 +835,9 @@ Polymer({
             this._closeChildren(true);
             this._closeDialogAndIndicateActionCompletion();
         } else {
+            if (forceClosing && forceClosing.target) { // check whether forceClosing is not null or empty and it is an event object
+                tearDownEvent(forceClosing);
+            }
             //Try to close children first.
             const canClose = this.canClose();
             if (canClose === true) {
@@ -906,10 +910,10 @@ Polymer({
                 this.style.height = prefDim.heightUnit === '%' ? height : ('calc(' + height + ' + 44px)'); // +44px - height of the title bar please see styles for .title-bar selector; applicable only for non-relative units of measure
                 this.style.overflow = 'auto';
             } else if (!minimised && maximised) {
-                this.style.top = this.mobile ? '0%' : '2%';
-                this.style.left = this.mobile ? '0%' : '2%';
-                this.style.width = this.mobile ? '100%' : '96%';
-                this.style.height = this.mobile ? '100%' : '96%';
+                this.style.top = this.mobile ? '0%' : '0%';
+                this.style.left = this.mobile ? '0%' : '0%';
+                this.style.width = this.mobile ? '100%' : '100%';
+                this.style.height = this.mobile ? '100%' : '100%';
                 this.style.overflow = 'auto';
             } else if (minimised && !maximised) {
                 this.style.height = '44px';

@@ -24,7 +24,7 @@ import ua.com.fielden.platform.entity.query.model.ConditionModel;
  */
 public class FallbackValueMatcherWithContext<CONTEXT extends AbstractEntity<?>, T extends AbstractEntity<?>> extends AbstractSearchEntityByKeyWithContext<CONTEXT, T> {
 
-    private final boolean activeOnly;
+    protected final boolean activeOnly;
 
     public FallbackValueMatcherWithContext(final IEntityDao<T> co, final boolean activeOnly) {
         super(co);
