@@ -57,6 +57,7 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.WildcardTypeName;
 
+import org.joda.time.DateTime;
 import ua.com.fielden.platform.annotations.metamodel.MetaModelForType;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.NoKey;
@@ -534,11 +535,10 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
             .addMember("value", "$T.class", entityClassName)
             .build();
 
-
         // @Generated annotation
         final AnnotationSpec annotGenerated = AnnotationSpec.builder(Generated.class)
                 .addMember("value", "$S", this.getClass().getCanonicalName())
-                .addMember("date", "$S", initDateTime.toString())
+                .addMember("date", "$S", DateTime.now())
                 .build();
 
         final String datetime = initDateTime.toString("dd-MM-YYYY HH:mm:ss.SSS z");
@@ -580,6 +580,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
          */
         final String thisMetaModelAliasedName = mmc.getAliasedSimpleName();
         final TypeSpec metaModelAliasedSpec = TypeSpec.classBuilder(thisMetaModelAliasedName)
+                .addAnnotation(annotGenerated)
                 .addAnnotation(annotMetaModelForType)
                 .addModifiers(Modifier.PUBLIC)
                 .superclass(ClassName.get(thisMetaModelPkgName, thisMetaModelName))
