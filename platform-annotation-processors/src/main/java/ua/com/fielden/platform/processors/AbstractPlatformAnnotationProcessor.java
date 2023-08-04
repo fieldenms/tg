@@ -2,8 +2,6 @@ package ua.com.fielden.platform.processors;
 
 import com.google.common.base.Stopwatch;
 import com.squareup.javapoet.AnnotationSpec;
-import org.joda.time.DateTime;
-import ua.com.fielden.platform.processors.metamodel.MetaModelProcessor;
 import ua.com.fielden.platform.processors.metamodel.elements.utils.TypeElementCache;
 import ua.com.fielden.platform.processors.utils.CodeGenerationUtils;
 
@@ -44,7 +42,6 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
     protected Filer filer;
     protected Elements elementUtils;
     protected Types typeUtils;
-    protected DateTime initDateTime;
 
     // logging-related
     private final String classSimpleName = this.getClass().getSimpleName();
@@ -63,7 +60,6 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
         super.init(processingEnv); 
-        this.initDateTime = DateTime.now();
         this.messager = processingEnv.getMessager();
         this.filer = processingEnv.getFiler();
         this.elementUtils = processingEnv.getElementUtils();
