@@ -36,6 +36,7 @@ const ST_HEIGHT = '-height';
 const ST_TOP = '-top';
 const ST_LEFT = '-left';
 const ST_PREF_DIM = '-pref-dim';
+const ST_MAXIMISED = '-maximised';
 
 const template = html`
     <style>
@@ -182,7 +183,7 @@ const template = html`
                 <paper-icon-button hidden="[[mobile]]" class="default-button title-bar-button" icon="[[_minimisedIcon(_minimised)]]" on-tap="_invertMinimiseState" tooltip-text$="[[_minimisedTooltip(_minimised)]]" disabled="[[_maximised]]"></paper-icon-button>
 
                 <!-- maximize/restore buttons -->
-                <paper-icon-button hidden="[[mobile]]" class="default-button title-bar-button" icon="[[_maximisedIcon(_maximised)]]" on-tap="_invertMaximiseState" tooltip-text$="[[_maximisedTooltip(_maximised)]]" disabled=[[_minimised]]></paper-icon-button>
+                <paper-icon-button hidden="[[mobile]]" class="default-button title-bar-button" icon="[[_maximisedIcon(_maximised)]]" on-tap="_invertMaximiseStateAndStore" tooltip-text$="[[_maximisedTooltip(_maximised)]]" disabled=[[_minimised]]></paper-icon-button>
 
                 <!-- close/next buttons -->
                 <paper-icon-button id="closeButton" hidden="[[_closerHidden(_lastAction, mobile)]]" class="close-button title-bar-button" icon="icons:cancel"  on-tap="closeDialog" tooltip-text="Close, Alt&nbsp+&nbspx"></paper-icon-button>
@@ -477,7 +478,7 @@ Polymer({
 
     keyBindings: {
         'alt+c': '_invertMinimiseState',
-        'alt+m': '_invertMaximiseState',
+        'alt+m': '_invertMaximiseStateAndStore',
         'alt+x': 'closeDialog',
         'ctrl+up': '_firstEntry',
         'ctrl+left': '_previousEntry',
@@ -748,6 +749,18 @@ Polymer({
         if (!this.prefDim) { // define prefDim if it was not defined using action configuration
             this.prefDim = this._lastElement.makeResizable();
             localStorage.setItem(this._embeddedMasterTypeKey() + ST_PREF_DIM, JSON.stringify(this.prefDim)); // store calculated prefDim for later use; i.e. dialog (with cached info) closed, app reloaded, dialog opened again and resetDimensions performed
+        }
+    },
+
+    /**
+     * Switches between maximised / normal states of the dialog. Stores _maximised state into local storage.
+     */
+    _invertMaximiseStateAndStore: function() {
+        this._invertMaximiseState();
+        if (this._maximised) {
+            this._setCustomProp(ST_MAXIMISED, true);
+        } else {
+            this._removeCustomProp(ST_MAXIMISED);
         }
     },
 
@@ -1366,6 +1379,14 @@ Polymer({
             this.style.top = customPosition[0];
             this.style.left = customPosition[1];
         }
+        if (this._customMaximised()) {
+            this.style.top = this.mobile ? '0%' : '2%';
+            this.style.left = this.mobile ? '0%' : '2%';
+            this.style.width = this.mobile ? '100%' : '96%';
+            this.style.height = this.mobile ? '100%' : '96%';
+            this.style.overflow = 'auto';
+            this._maximised = true;
+        }
     },
 
     /**
@@ -1745,6 +1766,13 @@ Polymer({
         }
         return null;
     },
+    
+    _customMaximised: function () {
+        if (this._embeddedMasterTypeKey()) {
+            return localStorage.getItem(this._embeddedMasterTypeKey() + ST_MAXIMISED) !== null;
+        }
+        return false;
+    }, 
     
     /**
      * Loads and returns stored prefDim dimensions for this dialog's Entity Master from local storage, if it was dimensionless at the time of resizing / maximizing.
