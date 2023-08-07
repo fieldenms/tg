@@ -24,7 +24,7 @@ import ua.com.fielden.platform.entity.query.model.ConditionModel;
  */
 public class FallbackValueMatcherWithContext<CONTEXT extends AbstractEntity<?>, T extends AbstractEntity<?>> extends AbstractSearchEntityByKeyWithContext<CONTEXT, T> {
 
-    private final boolean activeOnly;
+    private boolean activeOnly;
 
     public FallbackValueMatcherWithContext(final IEntityDao<T> co, final boolean activeOnly) {
         super(co);
@@ -48,4 +48,13 @@ public class FallbackValueMatcherWithContext<CONTEXT extends AbstractEntity<?>, 
         final ConditionModel originalSearchCriteria = super.makeSearchCriteriaModel(context, searchString);
         return activeOnly ? cond().condition(originalSearchCriteria).and().prop(ACTIVE).eq().val(true).model() : originalSearchCriteria;
     }
+
+    public boolean isActiveOnly() {
+        return activeOnly;
+    }
+
+    public void setActiveOnly(final boolean activeOnly) {
+        this.activeOnly = activeOnly;
+    }
+
 }
