@@ -556,7 +556,8 @@ const TgEntityMasterBehaviorImpl = {
                         "require-selection-criteria='false' " +
                         "require-selected-entities='NONE' " +
                         "require-master-entity='true' " +
-                        "class='primary-action'> " +
+                        "class='primary-action' " +
+                        "skip-automatic-action-completion> " +
                         "</tg-ui-action></template>";
 
                     this.shadowRoot.appendChild(actionModel);
@@ -595,6 +596,10 @@ const TgEntityMasterBehaviorImpl = {
                     action.isActionInProgressChanged = (function (newValue, oldValue) {
                         oldIsActionInProgressChanged(newValue, oldValue);
                         if (newValue === false && !action.success) { // only enable parent master if action has failed (perhaps during retrieval or on save), otherwise leave enabling logic to the parent master itself (saving of parent master should govern that)
+                            const saveButton = queryElements(self, "tg-action[role='save']")[0];
+                            if (saveButton) {
+                                saveButton.cancelContinuation();
+                            }
                             _self.restoreAfterSave();
                             _self.fire('continuation-completed-without-success', action);
                         }

@@ -939,10 +939,10 @@ Polymer({
                     this.style.overflow = 'auto';
                 }
             } else if (!minimised && maximised) {
-                this.style.top = this.mobile ? '0%' : '2%';
-                this.style.left = this.mobile ? '0%' : '2%';
-                this.style.width = this.mobile ? '100%' : '96%';
-                this.style.height = this.mobile ? '100%' : '96%';
+                this.style.top = this.mobile ? '0%' : '0%';
+                this.style.left = this.mobile ? '0%' : '0%';
+                this.style.width = this.mobile ? '100%' : '100%';
+                this.style.height = this.mobile ? '100%' : '100%';
                 this.style.overflow = 'auto';
             } else if (minimised && !maximised) {
                 this.style.height = '44px';
