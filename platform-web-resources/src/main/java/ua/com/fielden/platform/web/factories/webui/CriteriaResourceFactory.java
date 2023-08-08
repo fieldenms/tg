@@ -13,6 +13,8 @@ import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.security.IAuthorisationModel;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -41,6 +43,8 @@ public class CriteriaResourceFactory extends Restlet {
     private final IDates dates;
     private final EntityFactory entityFactory;
     private final ICentreConfigSharingModel sharingModel;
+    private final IAuthorisationModel authorisationModel;
+    private final ISecurityTokenProvider securityTokenProvider;
 
     /**
      * Instantiates a factory for criteria entity resource.
@@ -57,6 +61,8 @@ public class CriteriaResourceFactory extends Restlet {
         this.dates = injector.getInstance(IDates.class);
         this.entityFactory = injector.getInstance(EntityFactory.class);
         this.sharingModel = injector.getInstance(ICentreConfigSharingModel.class);
+        this.authorisationModel = injector.getInstance(IAuthorisationModel.class);
+        this.securityTokenProvider = injector.getInstance(ISecurityTokenProvider.class);
     }
     
     @Override
@@ -76,6 +82,8 @@ public class CriteriaResourceFactory extends Restlet {
                     critGenerator,
                     entityFactory,
                     sharingModel,
+                    authorisationModel,
+                    securityTokenProvider,
                     getContext(),
                     request,
                     response //
