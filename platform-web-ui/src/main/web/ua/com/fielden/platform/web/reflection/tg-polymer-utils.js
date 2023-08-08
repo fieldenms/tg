@@ -324,3 +324,10 @@ export const escapeHtmlText = function(text) {
     });
     return escapedStr;
 };
+
+/**
+ * Returns name of currently authenticated user.
+ */
+export const userName = function () {
+    return document.body.querySelector('tg-app-template').menuConfig.userName;
+};
