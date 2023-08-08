@@ -811,21 +811,13 @@ Polymer({
     },
 
     resetDimensions: function (event) {
-        if (this._customDim() && event.detail.sourceEvent.detail && event.detail.sourceEvent.detail === 2) {
-            if (this.prefDim) {
-                const width = (typeof this.prefDim.width === 'function' ? this.prefDim.width() : this.prefDim.width) + this.prefDim.widthUnit;
-                const height = (typeof this.prefDim.height === 'function' ? this.prefDim.height() : this.prefDim.height) + this.prefDim.heightUnit;
-                this.style.width = width;
-                this.style.height = this.prefDim.heightUnit === '%' ? height : ('calc(' + height + ' + 44px)'); // +44px - height of the title bar please see styles for .title-bar selector; applicable only for non-relative units of measure
-                this.style.overflow = 'auto';
-            } else {
-                this.style.width = '';
-                this.style.height = '';
-                this.style.overflow = 'auto';
-            }
+        if ((this._customDim() || this._customPosition()) && event.detail.sourceEvent.detail && event.detail.sourceEvent.detail === 2) {
             this._removeCustomProp(ST_WIDTH);
             this._removeCustomProp(ST_HEIGHT);
+            this._removeCustomProp(ST_TOP);
+            this._removeCustomProp(ST_LEFT);
             this._removeCustomProp(ST_PREF_DIM);
+            this.refit();
         }
     },
 
