@@ -312,6 +312,14 @@ Polymer({
         /////////////////////////////////////////////////////////////////////////////////////////
         
         /**
+         * Indicates whether dialog was moved using title bar dragging. This will be reset after dialog closes.
+         */
+        _wasMoved: {
+            type: Boolean,
+            value: false
+        },
+
+        /**
          * Indicates whether data was loaded or not.
          */
         _dataLoaded: {
@@ -907,58 +915,6 @@ Polymer({
     },
     
     /**
-     * Updates dimensions and position of the dialog based on minimised / maximised state and prefDim appearance. This method changes the dialog's dimension and position only when dialog is not animating anything.
-     */
-    _updateDialogDimensions: function(prefDim, minimised, maximised) {
-        if (!allDefined(arguments)) {
-            return;
-        }
-        if (!this._masterVisibilityChanges && !this._masterLayoutChanges) {
-            this._setDialogDimensions(prefDim, minimised, maximised);
-        }
-    },
-
-    /**
-     * Sets the dialog dimensions bassed on preferred dimension minimised and maximised state.
-     * 
-     * @param {Object} prefDim preferred dimension to set if there are no persisted one or minimised or maximised state aren't set.
-     * @param {Boolean} minimised determines whether collapsed state is set or not.
-     * @param {Boolean} maximised determines whether miximised state is set or not.
-     */
-    _setDialogDimensions: function (prefDim, minimised, maximised) {
-        if (!minimised && !maximised) {
-            const customDim = this._customDim();
-            if (customDim) {
-                this.style.width = customDim[0];
-                this.style.height = customDim[1];
-            } else if (prefDim) {
-                const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
-                const height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
-                this.style.width = width;
-                this.style.height = prefDim.heightUnit === '%' ? height : ('calc(' + height + ' + 44px)'); // +44px - height of the title bar please see styles for .title-bar selector; applicable only for non-relative units of measure
-                this.style.overflow = 'auto';
-            } else {
-                this.style.width = '';
-                this.style.height = '';
-                this.style.overflow = 'auto';
-            }
-        } else if (!minimised && maximised) {
-            this.style.top = '0%';
-            this.style.left = '0%';
-            this.style.width = '100%';
-            this.style.height = '100%';
-            this.style.overflow = 'auto';
-        } else if (minimised && !maximised) {
-            this.style.height = '44px';
-            this.style.overflow = 'hidden';
-        } else {
-            this.style.width = '';
-            this.style.height = '';
-            this.style.overflow = 'auto';
-        }
-    },
-
-    /**
      * Indicates whether maximising / collapsing / resizing interaction buttons should be disabled (or even hidden) depending on minimised / normal / maximised state of the dialog.
      */
     _dialogInteractionsDisabled: function(minimised, maximised) {
@@ -1010,6 +966,7 @@ Polymer({
                         left = (isNaN(parsed) ? _titleBarDimensions.left : parsed) + e.detail.ddx + 'px';
                         this.style.left = left;
                         this.persistedLeft = left;
+                        this._wasMoved = true;
                     }
                     const topNeedsChange = _titleBarDimensions.top + e.detail.ddy >= 0 && _titleBarDimensions.bottom + e.detail.ddy <= this._windowHeight;
                     let top;
@@ -1018,6 +975,7 @@ Polymer({
                         top = (isNaN(parsed) ? _titleBarDimensions.top : parsed) + e.detail.ddy + 'px';
                         this.style.top = top;
                         this.persistedTop = top;
+                        this._wasMoved = true;
                     }
                     if (leftNeedsChange || topNeedsChange) {
                         this._setCustomProp(ST_LEFT, leftNeedsChange ? left : this.style.left);
@@ -1236,10 +1194,56 @@ Polymer({
         if (!_masterVisibilityChanges && !_masterLayoutChanges) {
             //Animate dialog dimensions even if it was resized.
             this._updateDialogDimensions(this.prefDim, this._minimised, this._maximised);
-            //Animate dialog position even if it was moved.
-            this._updateDialogPosition(this.prefDim, this._minimised, this._maximised);
+            //Animate dialog position even if dialog wasn't moved yet.
+            if (!this._wasMoved) {
+                this._updateDialogPositionForPrefDim(this.prefDim, this._minimised, this._maximised);
+            }
+            //Delete _previousMasterMoved to ensure that previous state won't cause any problems in the future.
+            delete this._previousMasterMoved;
             //Indicates that dialog is resized and moved after the resizing animation will be finished.
             this.async(this._dialogResized, 500);
+        }
+    },
+
+    /**
+     * Updates dimensions and position of the dialog based on minimised / maximised state and prefDim appearance. This method changes the dialog's dimension only when dialog is not animating anything.
+     */
+    _updateDialogDimensions: function(prefDim, minimised, maximised) {
+        if (!allDefined(arguments)) {
+            return;
+        }
+        if (!this._masterVisibilityChanges && !this._masterLayoutChanges) {
+            this._setDialogDimensions(prefDim, minimised, maximised);
+        }
+    },
+
+    /**
+     * Updates the position of dialog if it's size is preffered. Used for animation between two different masters.
+     * 
+     * @param {Object} prefDim prefferred dimension of the loaded master
+     * @param {Boolean} _minimised determines whether dialog is in minimised state or not
+     * @param {Boolean} _maximised determines whether dialog is in maximised state or not
+     */
+    _updateDialogPositionForPrefDim: function (prefDim, _minimised, _maximised) {
+        if (!_minimised && !_maximised && prefDim) {
+            const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
+            const isWidthPercentage = width.endsWith('%');
+            const widthNum = parseFloat(width);
+            const windowWidth = this._fitWidth;
+            if (!isNaN(widthNum) && !isWidthPercentage && windowWidth < widthNum) {
+                this.style.left = "0px";
+            } else {
+                this.style.left = "calc(" + windowWidth + "px / 2  - " + width + " / 2)";
+            }
+            const height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
+            const isHeightPercentage = height.endsWith('%');
+            const heightNum = parseFloat(height);
+            const windowHeight = this._fitHeight;
+            if (!isNaN(heightNum) && !isHeightPercentage && windowHeight < heightNum + 44) {
+                this.style.top = "0px";
+            } else {
+                this.style.top = "calc(" + windowHeight + "px / 2  - " + height + " / 2" + (isHeightPercentage ? ")" : " - 44px / 2)");
+            }
         }
     },
     
@@ -1253,36 +1257,6 @@ Polymer({
         //  (e.g. in master dialog view it focuses input in error, preferred input or first input -- see 'focusView' in 'tg-entity-master-behavior') 
         this._focusDialogView();
         this._hideBlockingPane();
-    },
-    
-    //Updates dialog position for potentialy new loaded master.
-    _updateDialogPosition: function (prefDim, _minimised, _maximised) {
-        if (!_minimised && !_maximised) {
-            const customPosition = this._customPosition();
-            if (customPosition) {
-                this.style.top = customPosition[0];
-                this.style.left = customPosition[1];
-            } else if (prefDim) {
-                const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
-                const isWidthPercentage = width.endsWith('%');
-                const widthNum = parseFloat(width);
-                const windowWidth = this._fitWidth;
-                if (!isNaN(widthNum) && !isWidthPercentage && windowWidth < widthNum) {
-                    this.style.left = "0px";
-                } else {
-                    this.style.left = "calc(" + windowWidth + "px / 2  - " + width + " / 2)";
-                }
-                const height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
-                const isHeightPercentage = height.endsWith('%');
-                const heightNum = parseFloat(height);
-                const windowHeight = this._fitHeight;
-                if (!isNaN(heightNum) && !isHeightPercentage && windowHeight < heightNum + 44) {
-                    this.style.top = "0px";
-                } else {
-                    this.style.top = "calc(" + windowHeight + "px / 2  - " + height + " / 2" + (isHeightPercentage ? ")" : " - 44px / 2)");
-                }
-            }
-        }
     },
     
     //Invoked when master is about to change it's type.
@@ -1374,7 +1348,61 @@ Polymer({
             this.prefDim = storedPrefDim || calculatedPrefDim; // as the last resort use calculated dimensions from current Entity Master, however beware that they may be [0px; 0px] for not yet constructed UI
         }
         this._setDialogDimensions(this.prefDim, this._minimised, this._maximised);
-        this._updateDialogPosition(this.prefDim, this._minimised, this._maximised);
+        this._setDialogPosition(this.prefDim, this._minimised, this._maximised);
+        this._wasMoved = !!this._customPosition();
+    },
+
+    /**
+     * Sets the dialog dimensions bassed on preferred dimension minimised and maximised state.
+     * 
+     * @param {Object} prefDim preferred dimension to set if there are no persisted one or minimised or maximised state aren't set.
+     * @param {Boolean} minimised determines whether collapsed state is set or not.
+     * @param {Boolean} maximised determines whether miximised state is set or not.
+     */
+    _setDialogDimensions: function (prefDim, minimised, maximised) {
+        if (!minimised && !maximised) {
+            const customDim = this._customDim();
+            if (customDim) {
+                this.style.width = customDim[0];
+                this.style.height = customDim[1];
+            } else if (prefDim) {
+                const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
+                const height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
+                this.style.width = width;
+                this.style.height = prefDim.heightUnit === '%' ? height : ('calc(' + height + ' + 44px)'); // +44px - height of the title bar please see styles for .title-bar selector; applicable only for non-relative units of measure
+                this.style.overflow = 'auto';
+            } else {
+                this.style.width = '';
+                this.style.height = '';
+                this.style.overflow = 'auto';
+            }
+        } else if (!minimised && maximised) {
+            this.style.top = '0%';
+            this.style.left = '0%';
+            this.style.width = '100%';
+            this.style.height = '100%';
+            this.style.overflow = 'auto';
+        } else if (minimised && !maximised) {
+            this.style.height = '44px';
+            this.style.overflow = 'hidden';
+        } else {
+            this.style.width = '';
+            this.style.height = '';
+            this.style.overflow = 'auto';
+        }
+    },
+
+    //Updates dialog position for loaded master.
+    _setDialogPosition: function (prefDim, _minimised, _maximised) {
+        if (!_minimised && !_maximised) {
+            const customPosition = this._customPosition();
+            if (customPosition) {
+                this.style.top = customPosition[0];
+                this.style.left = customPosition[1];
+            } else if (prefDim) {
+                this._updateDialogPositionForPrefDim(prefDim, _minimised, _maximised);
+            }
+        }
     },
 
     /**
@@ -1533,6 +1561,7 @@ Polymer({
             }
             this._resetState();
             this._subscriptions.length = 0;
+            this._wasMoved = false;
             this._minimised = false;
             this._maximised = false;
             this.$.menuToggler.hidden = true; // allows to use the same custom action dialog instance for the masters without menu after compound master was open previously
