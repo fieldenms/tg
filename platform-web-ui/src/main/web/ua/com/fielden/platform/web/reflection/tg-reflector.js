@@ -255,7 +255,7 @@ var _createEntityInstancePropPrototype = function () {
     }
 
     /**
-     * Returns original value in case when the property is changed from original and the entity is persisted.
+     * Returns original value in case where the property is changed from original and the entity is persisted.
      *
      * IMPORTANT: do not use '_originalVal' field directly!
      */
@@ -381,7 +381,7 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
     Entity.prototype.prop = function (name) {
         this.get(name); // ensures that the instance prop of the 'fetched' property is accessed
         if (this._isObjectUndefined("@" + name)) {
-            this["@" + name] = new EntityInstanceProp(); // lazily initialise entity instance prop in case when it was not JSON-serialised (all information was 'default')
+            this["@" + name] = new EntityInstanceProp(); // lazily initialise entity instance prop in case where it was not JSON-serialised (all information was 'default')
         }
         return this["@" + name];
     }
@@ -574,11 +574,11 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
     }
 
     /**
-     * Determines whether the entity is valid (which means that there are no invalid properties) and no exception has been occured during some server-side process behind the entity (master entity saving, centre selection-crit entity running etc.).
+     * Determines whether the entity is valid (which means that there are no invalid properties) and no exception has been occurred during some server-side process behind the entity (master entity saving, centre selection-crit entity running etc.).
      *
      */
     Entity.prototype.isValidWithoutException = function () {
-        return this.isValid() && !this.exceptionOccured();
+        return this.isValid() && !this.exceptionOccurred();
     }
 
     /**
@@ -596,19 +596,19 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
     }
 
     /**
-     * Determines whether the top-level result, that wraps this entity was invalid, which means that some exception on server has been occured (e.g. saving exception).
+     * Determines whether the top-level result, that wraps this entity was invalid, which means that some exception on server has been occurred (e.g. saving exception).
      *
      */
-    Entity.prototype.exceptionOccured = function () {
-        return (typeof this['@@___exception-occured'] === 'undefined') ? null : this['@@___exception-occured'];
+    Entity.prototype.exceptionOccurred = function () {
+        return (typeof this['@@___exception-occurred'] === 'undefined') ? null : this['@@___exception-occurred'];
     }
 
     /**
-     * Provides a value 'exceptionOccured' flag, which determines whether the top-level result, that wraps this entity was invalid, which means that some exception on server has been occured (e.g. saving exception).
+     * Provides a value 'exceptionOccurred' flag, which determines whether the top-level result, that wraps this entity was invalid, which means that some exception on server has been occurred (e.g. saving exception).
      *
      */
-    Entity.prototype._setExceptionOccured = function (exceptionOccured) {
-        return this['@@___exception-occured'] = exceptionOccured;
+    Entity.prototype._setExceptionOccurred = function (exceptionOccurred) {
+        return this['@@___exception-occurred'] = exceptionOccurred;
     }
 
     /**
@@ -1742,8 +1742,10 @@ export const TgReflector = Polymer({
 
             const touchedProps = bindingView['@@touchedProps'];
             const touchedPropIndex = touchedProps.names.indexOf(propertyName);
-            if (touchedPropIndex > -1 && !this.equalsEx(bindingView.get(propertyName), touchedProps.values[touchedPropIndex])) {
-                // make the property untouched in case where its value was sucessfully mutated through definer of other property (it means that the value is valid and different from the value originated from user's touch)
+            // #1992 reset @@touchedProps only for non-compound-master-opener types, because opener's 'key' property needs to remain touched
+            // this ensures correct server-side restoration of the opener in cases where its produced 'key' (no id) equals to the saved version of the 'key' (with id)
+            if (touchedPropIndex > -1 && !this.equalsEx(bindingView.get(propertyName), touchedProps.values[touchedPropIndex]) && !entity.type().compoundOpenerType()) {
+                // make the property untouched in cases where its value was successfully mutated through definer of another property (it means that the value is valid and different to the value originated from the user's touch)
                 touchedProps.names.splice(touchedPropIndex, 1);
                 touchedProps.counts.splice(touchedPropIndex, 1);
                 touchedProps.values.splice(touchedPropIndex, 1);

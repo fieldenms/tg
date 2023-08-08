@@ -18,6 +18,8 @@
     <properties>
         <jackson.version>2.15.0</jackson.version>
         <log4j.version>2.17.2</log4j.version>
+        <guava.version>32.0.1-jre</guava.version>
+        <poi.verstion>5.2.3</poi.verstion>
     </properties>
 
     <dependencies>
@@ -31,7 +33,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>31.1-jre</version>
+            <version>${guava.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>
@@ -124,12 +126,12 @@
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi</artifactId>
-            <version>4.1.2</version>
+            <version>${poi.verstion}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
-            <version>4.1.2</version>
+            <version>${poi.verstion}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>

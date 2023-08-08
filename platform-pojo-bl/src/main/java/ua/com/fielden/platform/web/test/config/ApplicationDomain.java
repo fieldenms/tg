@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.test.config;
 
+import static java.util.Collections.unmodifiableSet;
+
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -21,6 +23,7 @@ import ua.com.fielden.platform.sample.domain.EntityThree;
 import ua.com.fielden.platform.sample.domain.EntityTwo;
 import ua.com.fielden.platform.sample.domain.EntityWithUnionEntityWithSkipExistsValidation;
 import ua.com.fielden.platform.sample.domain.ExportAction;
+import ua.com.fielden.platform.sample.domain.MoreDataForDeleteEntity;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
 import ua.com.fielden.platform.sample.domain.TeVehicleFinDetails;
 import ua.com.fielden.platform.sample.domain.TeVehicleFuelUsage;
@@ -159,6 +162,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgGeneratedEntityForTrippleDecAnalysisInsertionPoint.class);
         add(TgOpenTrippleDecDetails.class);
         add(OtherEntity.class);
+        add(MoreDataForDeleteEntity.class);
 
         add(TgVehicle.class);
         add(TgVehicleFinDetails.class);
@@ -210,7 +214,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem.class);
         add(TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem.class);
         add(TgFuelType.class);
-        
+
         add(TgEntityStringKey.class);
         add(TgEntityBooleanKey.class);
         add(TgEntityDateKey.class);
@@ -221,17 +225,17 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgEntityCompositeBooleanKey.class);
         add(TgEntityTwoEntityKeys.class);
         add(TgEntityBigDecimalKey.class);
-        
+
         add(TgWebApiEntity.class);
         add(TgWebApiEntitySyntheticSingle.class);
         add(TgWebApiEntitySyntheticMulti.class);
-        
+
         add(TgUnionHolder.class);
         add(TgUnion.class);
         add(TgUnionType1.class);
         add(TgUnionType2.class);
         add(TgUnionCommonType.class);
-        
+
         add(TgSynBogie.class);
         add(MakeCompletedAction.class);
     }
@@ -244,4 +248,9 @@ public class ApplicationDomain implements IApplicationDomainProvider {
     public static List<Class<? extends AbstractEntity<?>>> domainTypes() {
         return Collections.unmodifiableList(domainTypes.stream().collect(Collectors.toList()));
     }
+
+    public static Set<Class<? extends AbstractEntity<?>>> entityTypesSet() {
+        return unmodifiableSet(entityTypes);
+    }
+
 }

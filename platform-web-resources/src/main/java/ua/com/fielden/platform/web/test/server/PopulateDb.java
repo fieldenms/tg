@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.web.test.server;
 
 import static java.lang.String.format;
-import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
 
@@ -13,7 +12,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.SortedSet;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
@@ -86,7 +84,7 @@ import ua.com.fielden.platform.web.test.config.ApplicationDomain;
  */
 public class PopulateDb extends DomainDrivenDataPopulation {
     private static final Logger LOGGER = getLogger(PopulateDb.class);
-    
+
     private final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
 
     private PopulateDb(final IDomainDrivenTestCaseConfiguration config, final Properties props) {
@@ -139,15 +137,15 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         LOGGER.info(format("Running with dialect %s...", dialect));
         final DataPopulationConfig config = new DataPopulationConfig(props);
         LOGGER.info("Generating DDL and running it against the target DB...");
-        
-        // use TG DDL generation or 
+
+        // use TG DDL generation or
         // Hibernate DDL generation final List<String> createDdl = DbUtils.generateSchemaByHibernate()
         final List<String> createDdl = config.getDomainMetadata().generateDatabaseDdl(dialect);
         final List<String> ddl = dialect instanceof H2Dialect ?           DbUtils.prependDropDdlForH2(createDdl) :
                                  dialect instanceof PostgreSQL82Dialect ? DbUtils.prependDropDdlForPostgresql(createDdl) :
                                                                           DbUtils.prependDropDdlForSqlServer(createDdl);
         DbUtils.execSql(ddl, config.getInstance(HibernateUtil.class).getSessionFactory().getCurrentSession());
-        
+
         final PopulateDb popDb = new PopulateDb(config, props);
         popDb.populateDomain();
     }
@@ -182,7 +180,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(ent2.setEntityProp(ent3));
         save(new_(TgPersistentEntityWithProperties.class, "KEY4").setIntegerProp(63).setMoneyProp(new Money("23.0", Currency.getInstance("USD"))).setDesc("Description for entity with key 4.").setRequiredValidatedProp(30));
         save(new_(TgPersistentEntityWithProperties.class, "KEY5").setBigDecimalProp(new BigDecimal(23.0)).setDesc("Description for entity with key 5.").setRequiredValidatedProp(30));
-        save(new_(TgPersistentEntityWithProperties.class, "KEY6").setIntegerProp(61).setStringProp("ok").setDesc("Description for entity with key 6.").setRequiredValidatedProp(30));
+        save(new_(TgPersistentEntityWithProperties.class, "KEY6").setIntegerProp(61).setStringProp("ok").setDesc("Description for entity with key 6.").setRequiredValidatedProp(30).setBigDecimalProp(new BigDecimal("12"))); // id = 10L
         save(new_(TgPersistentEntityWithProperties.class, "KEY7").setBooleanProp(true).setDesc("Description for entity with key 7.").setRequiredValidatedProp(30));
         save(new_(TgPersistentEntityWithProperties.class, "KEY8").setDateProp(new DateTime(3609999L).toDate()).setDesc("Description for entity with key 8.").setRequiredValidatedProp(30));
         final TgPersistentEntityWithProperties de = new_(TgPersistentEntityWithProperties.class, "DEFAULT_KEY")
@@ -246,30 +244,40 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_(TgGeneratedEntity.class).setEntityKey("KEY1").setCreatedBy(su));
 
         final TgPersistentEntityWithProperties filteredEntity = save(new_(TgPersistentEntityWithProperties.class, "FILTERED").setIntegerProp(43).setRequiredValidatedProp(30).setDesc("Description for filtered entity.").setStatus(co$(TgPersistentStatus.class).findByKey("DR")));
-        save(defaultEnt.setEntityProp(filteredEntity));
-        
+        final TgPersistentEntityWithProperties savedDefaultEntity = save(defaultEnt.setEntityProp(filteredEntity));
+
         save(new_(TgCloseLeaveExample.class, "KEY1").setDesc("desc 1"));
         save(new_(TgCloseLeaveExample.class, "KEY2").setDesc("desc 2"));
         save(new_(TgCloseLeaveExample.class, "KEY3").setDesc("desc 3"));
         save(new_(TgCloseLeaveExample.class, "KEY4").setDesc("desc 4"));
         save(new_(TgCloseLeaveExample.class, "KEY5").setDesc("desc 5"));
-        
+
         save(new_(TgCompoundEntity.class, "KEY1").setActive(true).setDesc("desc 1"));
         save(new_(TgCompoundEntity.class, "KEY2").setActive(true).setDesc("desc 2"));
         save(new_(TgCompoundEntity.class, "KEY3").setActive(true).setDesc("desc 3"));
         save(new_(TgCompoundEntity.class, "KEY4").setActive(true).setDesc("desc 4"));
         save(new_(TgCompoundEntity.class, "KEY5").setActive(true).setDesc("desc 5"));
-        
+
         save(new_(TgCompoundEntity.class, "FILTERED1").setActive(true).setDesc("Description for filtered TgCompoundEntity entity."));
         final TgCompoundEntity filteredEntity2 = save(new_(TgCompoundEntity.class, "FILTERED2").setActive(true).setDesc("Description for TgCompoundEntity entity, for which TgCompoundEntityDetail is filtered."));
         save(new_composite(TgCompoundEntityChild.class, filteredEntity2, new Date()).setDesc("Description for filtered TgCompoundEntityChild entity."));
-        
+
+        final TgCompoundEntity test1 = save(new_(TgCompoundEntity.class, "1TEST").setActive(true).setDesc("1TEST (1TEST detail)"));
+        save(new_composite(TgCompoundEntityChild.class, test1, new Date()).setDesc("Description for TgCompoundEntityChild entity of 1TEST."));
+
+        final TgPersistentCompositeEntity ceWith0 = new_composite(TgPersistentCompositeEntity.class, savedDefaultEntity, 0);
+        final TgPersistentCompositeEntity compWith0Saved = save(ceWith0);
+
+        final TgPersistentEntityWithProperties entWith0CompKeyToBeSaved = new_(TgPersistentEntityWithProperties.class, "KEY12").setStringProp("ok").setIntegerProp(43).setEntityProp(savedDefaultEntity).setBigDecimalProp(new BigDecimal(23).setScale(5)).setDateProp(new DateTime(960000L).toDate()).setBooleanProp(true).setCompositeProp(compWith0Saved).setDesc("Description for entity with key 12.").setRequiredValidatedProp(30);
+        save(entWith0CompKeyToBeSaved);
+
         final User _demo2 = co$(User.class).save(new_(User.class, "DEMO2").setBasedOnUser(su).setEmail("DEMO2@demoapp.com").setActive(true));
         final User demo2 = coUser.resetPasswd(_demo2, _demo2.getKey()).getKey();
         save(new_composite(UserAndRoleAssociation.class, demo2, admin));
 
         LOGGER.info("\tPopulating GraphQL data...");
         populateGraphQlData();
+
 
         try {
             final ISecurityTokenProvider provider = config.getInstance(ISecurityTokenProvider.class); //  IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.path"), IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.package")
@@ -285,7 +293,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
             throw new IllegalStateException(e);
         }
     }
-    
+
     private void populateGraphQlData() {
         final TgFuelType unleadedFuelType = save(new_(TgFuelType.class, "U", "Unleaded"));
         final TgFuelType petrolFuelType = save(new_(TgFuelType.class, "P", "Petrol"));

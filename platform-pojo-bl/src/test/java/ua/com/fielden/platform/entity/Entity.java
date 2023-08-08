@@ -69,7 +69,7 @@ public class Entity extends AbstractEntity<String> {
 
     @IsProperty
     @Invisible
-    @Final(persistentOnly = false)
+    @Final(persistedOnly = false)
     private Double finalProperty;
     
     @IsProperty(value = Double.class, linkProperty = "--stub to pass tests--")

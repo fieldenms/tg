@@ -24,7 +24,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -36,8 +35,10 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity_centre.review.criteria.DynamicColumnForExport;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.serialisation.GZipOutputStreamEx;
+import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.utils.Pair;
 
 /**
  * A set of utility methods for exporting data into MS Excel.
@@ -53,7 +54,17 @@ public class WorkbookExporter {
 
     private WorkbookExporter() {}
 
-    public static <M extends AbstractEntity<?>> SXSSFWorkbook export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles, final List<List<DynamicColumnForExport>> dynamicProperties) {
+    public static <M extends AbstractEntity<?>> SXSSFWorkbook export(final List<Stream<M>> entities, final List<Pair<String[], String[]>> propTitles, final List<List<List<DynamicColumnForExport>>> dynamicProperties, final List<String> sheetTitles) {
+        final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData = new ArrayList<>();
+        if (entities.size() == propTitles.size() && entities.size() == dynamicProperties.size()) {
+            for (int sheetIdx = 0; sheetIdx < entities.size(); sheetIdx++) {
+                sheetsData.add(export(entities.get(sheetIdx), propTitles.get(sheetIdx).getKey(), propTitles.get(sheetIdx).getValue(), dynamicProperties.get(sheetIdx), sheetTitles.get(sheetIdx)));
+            }
+        }
+        return export(sheetsData);
+    }
+
+    private static <M extends AbstractEntity<?>> DataForWorkbookSheet<M> export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles, final List<List<DynamicColumnForExport>> dynamicProperties, final String sheetTitle) {
         final List<T2<String, String>> propNamesAndTitles = new ArrayList<>();
 
         for (int index = 0; index < propertyNames.length && index < propertyTitles.length; index++) {
@@ -69,10 +80,7 @@ public class WorkbookExporter {
             });
         });
 
-        final DataForWorkbookSheet<M> dataForWorkbookSheet = new DataForWorkbookSheet<>(DEFAULT_SHEET_TITLE, entities, propNamesAndTitles, collectionalProps);
-        final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData = new ArrayList<>();
-        sheetsData.add(dataForWorkbookSheet);
-        return export(sheetsData);
+        return new DataForWorkbookSheet<>(sheetTitle, entities, propNamesAndTitles, collectionalProps);
     }
 
     public static <M extends AbstractEntity<?>> SXSSFWorkbook export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles) {
@@ -164,16 +172,26 @@ public class WorkbookExporter {
         // freezing first row
         sheet.createFreezePane(0, 1);
 
+        // define cell styles for different data types
         final CellStyle dateCellStyle = wb.createCellStyle();
-        final CreationHelper createHelper = wb.getCreationHelper();
-        dateCellStyle.setDataFormat(createHelper.createDataFormat().getFormat("dd/mm/yyyy hh:mm"));
+        dateCellStyle.setDataFormat(wb.createDataFormat().getFormat("dd/mm/yyyy hh:mm"));
+
+        final CellStyle integerCellStyle = wb.createCellStyle();
+        integerCellStyle.setDataFormat((short) 3); // refer BuiltinFormats
+
+        final CellStyle decimalCellStyle = wb.createCellStyle();
+        decimalCellStyle.setDataFormat((short) 4); // refer BuiltinFormats
+
+        final CellStyle moneyCellStyle = wb.createCellStyle();
+        moneyCellStyle.setDataFormat((short) 8); // refer BuiltinFormats
 
         // let's make cell style to handle borders
-        final Map<String, String> shortCollectionalProps = new HashMap<>();
         final CellStyle dataCellStyle = wb.createCellStyle();
         dataCellStyle.setBorderRight(BorderStyle.HAIR);
+
         final AtomicInteger index = new AtomicInteger(0);
-        sheetData.getEntities().forEach(entity -> addRow(index, entity, sheetData, sheet, dateCellStyle, shortCollectionalProps, dataCellStyle));
+        final Map<String, String> shortCollectionalProps = new HashMap<>();
+        sheetData.getEntities().forEach(entity -> addRow(index, entity, sheetData, sheet, shortCollectionalProps, dateCellStyle, integerCellStyle, decimalCellStyle, moneyCellStyle, dataCellStyle));
 
         // adjusting columns widths
         for (int propIndex = 0; propIndex < sheetData.getPropNames().size(); propIndex++) {
@@ -184,7 +202,17 @@ public class WorkbookExporter {
         }
     }
 
-    private static <M extends AbstractEntity<?>> void addRow(final AtomicInteger index, final M entity, final DataForWorkbookSheet<M> sheetData, final Sheet sheet, final CellStyle dateCellStyle, final Map<String, String> shortCollectionalProps, final CellStyle dataCellStyle) {
+    private static <M extends AbstractEntity<?>> void addRow(
+            final AtomicInteger index,
+            final M entity,
+            final DataForWorkbookSheet<M> sheetData,
+            final Sheet sheet,
+            final Map<String, String> shortCollectionalProps,
+            final CellStyle dateCellStyle,
+            final CellStyle integerCellStyle,
+            final CellStyle decimalCellStyle,
+            final CellStyle moneyCellStyle,
+            final CellStyle dataCellStyle) {
         final Row row = sheet.createRow(index.incrementAndGet()); // new row starting with 1
         // iterate through values in the current table row and populate the sheet row
         for (int propIndex = 0; propIndex < sheetData.getPropNames().size(); propIndex++) {
@@ -203,8 +231,15 @@ public class WorkbookExporter {
             } else if (value instanceof DateTime) {
                 cell.setCellValue(((DateTime) value).toDate());
                 cell.setCellStyle(dateCellStyle);
-            } else if (value instanceof Number) {
+            } else if (value instanceof Integer) {
+                cell.setCellValue(((Integer) value).intValue());
+                cell.setCellStyle(integerCellStyle);
+            } else if (value instanceof Number) { // covers BigDecimal
                 cell.setCellValue(((Number) value).doubleValue());
+                cell.setCellStyle(decimalCellStyle);
+            } else if (value instanceof Money) {
+                cell.setCellValue(((Money) value).getAmount().doubleValue());
+                cell.setCellStyle(moneyCellStyle);
             } else if (value instanceof Boolean) {
                 cell.setCellValue((Boolean) value);
             } else if (value == null) { // if null then leave the cell blank

@@ -1,0 +1,744 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>compound master tests</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+    <script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/filesaver/FileSaver.min.js"></script>
+    <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
+</head>
+
+<body>
+    <test-fixture id="CentreFixture">
+        <template>
+            <tg-MiTgCompoundEntity-centre id="centre"></tg-MiTgCompoundEntity-centre>
+        </template>
+    </test-fixture>
+
+    <script type="module">
+        import '/centre_ui/fielden.test_app.main.menu.compound.MiTgCompoundEntity';
+
+        /**
+         * Finds dialog containing compound master.
+         */
+        const dialog = () => document.body
+            .querySelector('tg-custom-action-dialog');
+
+        /**
+         * Finds entity master for compound master opener functional entity.
+         */
+        const openerMaster = () => dialog().shadowRoot
+            .querySelector('tg-OpenTgCompoundEntityMasterAction-master');
+
+        /**
+         * Finds entity master for compound master main entity.
+         */
+        const entityMaster = () => openerMaster().shadowRoot
+            .querySelector('tg-master-menu-item-section[data-route="TgCompoundEntityMaster_OpenMain_MenuItem"]').shadowRoot
+            .querySelector('tg-tgcompoundentitymaster_openmain_menuitem-master').shadowRoot
+            .querySelector('tg-tgcompoundentity-master');
+
+        /**
+         * Finds entity master for compound master detail entity.
+         */
+        const detailMaster = () => openerMaster().shadowRoot
+            .querySelector('tg-master-menu-item-section[data-route="TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem"]').shadowRoot
+            .querySelector('tg-tgcompoundentitymaster_openTgCompoundEntityDetail_menuitem-master').shadowRoot
+            .querySelector('tg-tgcompoundentitydetail-master');
+
+        /**
+         * Finds master menu for compound master.
+         */
+        const masterMenu = () => openerMaster().shadowRoot
+            .querySelector('tg-master-menu');
+
+        /**
+         * Saves entity master by tapping SAVE button. Saving through button is important because corresponding tg-action sends postal events (see createEntityActionThenCallback in 'tg-entity-master-closing-utils').
+         */
+        const save = (master) => {
+            const saveButton = master.shadowRoot.querySelector('tg-action[role="save"]');
+            saveButton._asyncRun();
+        };
+
+        /**
+         * Changes some property 'prop' on entity 'master' with new 'val' value; then triggers validation and saving.
+         */
+        const changePropAndSave = (master, prop, val) => {
+            const edProperty = master.$[`editor_4_${prop}`];
+            edProperty._editingValue = val;
+            edProperty.commit();
+            save(master);
+        };
+
+        /**
+         * Creates standalone entity centre with type TgCompoundEntity for testing. Need to remove _entityReceived callback in its action dialog to facilitate events propagation.
+         */
+        const createCentre = () => {
+            const centre = fixture('CentreFixture');
+            const old_showDialog = centre._showDialog;
+            centre._showDialog = (function (action) {
+                old_showDialog(action);
+                centre.async(() => {
+                    if (centre.actionDialog !== null) {
+                        centre.actionDialog._entityReceived = entity => {}; // avoid tearDownEvent() for 'tg-entity-received' to propagate it to <body> (see tg-custom-action-dialog._entityReceived)
+                    }
+                }, 1);
+            });
+            return centre;
+        }
+
+        /**
+         * Checks 'entity' on existence and persistence.
+         */
+        const assertPersisted = (entity) => {
+            assert.isOk(entity);
+            let entityStr;
+            try {
+                entityStr = entity.toString();
+            } catch (e) {}
+            assert.isNumber(entity.get('id'), `Entity${entityStr ? ' [' + entityStr + ']' : ''} with type [${entity.type()._simpleClassName()}] is not persisted; its id is not a number.`);
+        };
+
+        /**
+         * Checks 'entity' on existence and persistence; also check its 'key' property.
+         */
+         const assertPersistedWithKey = (entity, expectedKey) => {
+            assertPersisted(entity);
+            assert.strictEqual(entity.get('key'), expectedKey);
+        };
+
+        /**
+         * Checks 'entity' on existence and persistence; also check its 'desc' property.
+         */
+         const assertPersistedWithDesc = (entity, expectedDesc) => {
+            assertPersisted(entity);
+            assert.strictEqual(entity.get('desc'), expectedDesc);
+        };
+
+        /**
+         * Checks 'entity' on existence and persistence; also check its 'date' property.
+         */
+        const assertPersistedWithDate = (entity) => {
+            assertPersisted(entity);
+            assert.isNumber(entity.get('date'));
+        };
+
+        /**
+         * Contains testing listeners for <body>. Each entry is a pair [name; listener].
+         */
+        const listeners = [];
+
+        /**
+         * Adds listener to <body> and registers it in 'listeners'.
+         */
+        const addListener = (name, listener) => {
+            listeners.push([name, listener]);
+            document.body.addEventListener(name, listener);
+        };
+
+        /**
+         * Performs cleanup of 'listeners' and closes compound master dialog forcibly.
+         */
+        const cleanUp = () => {
+            dialog().closeDialog(true);
+            listeners.forEach(nameAndListener => document.body.removeEventListener(nameAndListener[0], nameAndListener[1]));
+            listeners.splice(0); // clear array mutably
+        };
+
+        suite('PERSISTED case', function () {
+            let centre;
+
+            setup(() => centre = createCentre());
+            teardown(cleanUp);
+
+            /**
+             * Invokes EDIT action on first entity in entity centre (1TEST).
+             */
+            const editFirstEntity = () => {
+                const editAction = centre.$.egi.$.primary_action_selector.assignedNodes()[0].actions[0];
+                editAction.currentEntity = () => centre.$.egi.entities[0];
+                editAction._run();
+            };
+
+            test('tapping edit action opens compound master with main menu item and fetches entity and updates dialog title', function (done) {
+                // 1. retrieve 2. save OpenTgCompoundEntityMasterAction
+                // 1. retrieve 2. save TgCompoundEntityMaster_OpenMain_MenuItem
+                // 1. retrieve         TgCompoundEntity
+                centre.retrieve().then(() => centre.run()).then(() => {
+                    addListener('tg-entity-received', event => {
+                        const entity = event.detail;
+                        setTimeout(() => { // do the listener on microtask once _postEntityReceived and other retrieve / validate / save code is completed
+                            if (entity.type()._simpleClassName() === 'OpenTgCompoundEntityMasterAction') { // both retrieval and save here
+                                assertPersistedWithKey(entity.get('key'), '1TEST');
+                                assert.strictEqual(entity.get('sectionTitle'), '1TEST: 1TEST (1TEST detail)');
+                                assert.strictEqual(entity.get('menuToOpen'), null);
+                            } else if (entity.type()._simpleClassName() === 'TgCompoundEntityMaster_OpenMain_MenuItem') { // both retrieval and save here
+                                assertPersistedWithKey(entity.get('key'), '1TEST');
+                            } else if (entity.type()._simpleClassName() === 'TgCompoundEntity') { // retrieval only
+                                assertPersistedWithKey(entity, '1TEST');
+                                done();
+                            }
+                        });
+                    });
+                    editFirstEntity();
+                });
+            });
+
+            test('changing entity and saving it leads to dialog title update', function (done) {
+                let openerCount = 0, entityCount = 0;
+                // PREPARE
+                // 1. retrieve 2. save OpenTgCompoundEntityMasterAction
+                // 1. retrieve 2. save TgCompoundEntityMaster_OpenMain_MenuItem
+                // 1. retrieve         TgCompoundEntity
+
+                // CHANGE => ASSERT 1 => ASSERT 2
+                // 2. validate 3. save TgCompoundEntity
+                // 3. save             OpenTgCompoundEntityMasterAction
+
+                // change state back
+                // 4. validate 5. save TgCompoundEntity
+                // 4. save             OpenTgCompoundEntityMasterAction
+                centre.retrieve().then(() => centre.run()).then(() => {
+                    addListener('tg-entity-received', event => {
+                        const entity = event.detail;
+                        setTimeout(() => { // do the listener on microtask once _postEntityReceived and other retrieve / validate / save code is completed
+                            if (entity.type()._simpleClassName() === 'TgCompoundEntity') {
+                                entityCount++;
+                                if (entityCount === 1) {
+                                    changePropAndSave(entityMaster(), 'key', '1TEST_CHANGED'); // CHANGE =>
+                                } else if (entityCount === 3) {
+                                    assertPersistedWithKey(entity, '1TEST_CHANGED'); // => ASSERT 1 =>
+                                    changePropAndSave(entityMaster(), 'key', '1TEST'); // change state back
+                                }
+                            } else if (entity.type()._simpleClassName() === 'OpenTgCompoundEntityMasterAction') {
+                                openerCount++;
+                                if (openerCount === 3) {
+                                    assertPersistedWithKey(entity.get('key'), '1TEST_CHANGED'); // => ASSERT 2
+                                    assert.strictEqual(entity.get('sectionTitle'), '1TEST_CHANGED: 1TEST (1TEST detail)');
+                                    assert.strictEqual(entity.get('menuToOpen'), null);
+                                } else if (openerCount === 4) {
+                                    assert.strictEqual(entityCount, 5);
+                                    done();
+                                }
+                            }
+                        });
+                    });
+                    editFirstEntity();
+                });
+            });
+
+            test('moving to detail menu item fetches detail entity and moving back to main menu item fetches entity', function (done) {
+                let entityCount = 0;
+                // PREPARE
+                // 1. retrieve 2. save OpenTgCompoundEntityMasterAction
+                // 1. retrieve 2. save TgCompoundEntityMaster_OpenMain_MenuItem
+                // 1. retrieve         TgCompoundEntity
+
+                // CHANGE 1 => ASSERT 1 => ASSERT 2 =>
+                // 1. retrieve 2. save TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem
+                // 1. retrieve         TgCompoundEntityDetail
+
+                // => CHANGE 2 => ASSERT 3 => ASSERT 4
+                // 3. retrieve 4. save TgCompoundEntityMaster_OpenMain_MenuItem
+                // 2. retrieve         TgCompoundEntity
+                centre.retrieve().then(() => centre.run()).then(() => {
+                    addListener('tg-entity-received', event => {
+                        const entity = event.detail;
+                        setTimeout(() => { // do the listener on microtask once _postEntityReceived and other retrieve / validate / save code is completed
+                            if (entity.type()._simpleClassName() === 'TgCompoundEntityMaster_OpenMain_MenuItem') {
+                                assertPersistedWithKey(entity.get('key'), '1TEST'); // => ASSERT 3 =>
+                            } else if (entity.type()._simpleClassName() === 'TgCompoundEntity') {
+                                entityCount++;
+                                if (entityCount === 1) {
+                                    masterMenu().route = 'TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem'; // CHANGE 1 =>
+                                } else if (entityCount === 2) {
+                                    assertPersistedWithKey(entity, '1TEST'); // => ASSERT 4
+                                    done();
+                                }
+                            } else if (entity.type()._simpleClassName() === 'TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem') { // both retrieval and save here
+                                assertPersistedWithKey(entity.get('key'), '1TEST'); // => ASSERT 1 =>
+                            } else if (entity.type()._simpleClassName() === 'TgCompoundEntityDetail') {
+                                assertPersistedWithDesc(entity, '1TEST detail'); // => ASSERT 2 =>
+                                masterMenu().route = 'TgCompoundEntityMaster_OpenMain_MenuItem'; // => CHANGE 2 =>
+                            }
+                        });
+                    });
+                    editFirstEntity();
+                });
+            });
+
+            test('changing detail entity and saving it leads to dialog title update', function (done) {
+                let openerCount = 0, detailCount = 0;
+                // PREPARE
+                // 1. retrieve 2. save OpenTgCompoundEntityMasterAction
+                // 1. retrieve 2. save TgCompoundEntityMaster_OpenMain_MenuItem
+                // 1. retrieve         TgCompoundEntity
+                // 1. retrieve 2. save TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem
+                // 1. retrieve         TgCompoundEntityDetail
+
+
+                // CHANGE => ASSERT 1 => ASSERT 2
+                // 2. validate 3. save TgCompoundEntityDetail
+                // 3. save             OpenTgCompoundEntityMasterAction
+
+                // change state back
+                // 4. validate 5. save TgCompoundEntityDetail
+                // 4. save             OpenTgCompoundEntityMasterAction
+                centre.retrieve().then(() => centre.run()).then(() => {
+                    addListener('tg-entity-received', event => {
+                        const entity = event.detail;
+                        setTimeout(() => { // do the listener on microtask once _postEntityReceived and other retrieve / validate / save code is completed
+                            if (entity.type()._simpleClassName() === 'TgCompoundEntity') {
+                                masterMenu().route = 'TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem';
+                            } else if (entity.type()._simpleClassName() === 'TgCompoundEntityDetail') {
+                                detailCount++;
+                                if (detailCount === 1) {
+                                    changePropAndSave(detailMaster(), 'desc', '1TEST detail_CHANGED'); // CHANGE =>
+                                } else if (detailCount === 3) {
+                                    assertPersistedWithDesc(entity, '1TEST detail_CHANGED'); // => ASSERT 1 =>
+                                    changePropAndSave(detailMaster(), 'desc', '1TEST detail'); // change state back
+                                }
+                            } else if (entity.type()._simpleClassName() === 'OpenTgCompoundEntityMasterAction') {
+                                openerCount++;
+                                if (openerCount === 3) {
+                                    assertPersistedWithKey(entity.get('key'), '1TEST'); // => ASSERT 2
+                                    assert.strictEqual(entity.get('sectionTitle'), '1TEST: 1TEST (1TEST detail_CHANGED)');
+                                    assert.strictEqual(entity.get('menuToOpen'), null);
+                                } else if (openerCount === 4) {
+                                    assert.strictEqual(detailCount, 5);
+                                    done();
+                                }
+                            }
+                        });
+                    });
+                    editFirstEntity();
+                });
+            });
+
+            test('moving to children menu item fetches children entities and moving back to main menu item fetches entity', function (done) {
+                let entityCount = 0;
+                // PREPARE
+                // 1. retrieve 2. save OpenTgCompoundEntityMasterAction
+                // 1. retrieve 2. save TgCompoundEntityMaster_OpenMain_MenuItem
+                // 1. retrieve         TgCompoundEntity
+
+                // CHANGE 1 => ASSERT 1 => ASSERT 2
+                // 1. retrieve 2. save TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem
+                // 1. run              TgCompoundEntityChild
+
+                // CHANGE 2 => ASSERT 3 => ASSERT 4
+                // 3. retrieve 4. save TgCompoundEntityMaster_OpenMain_MenuItem
+                // 2. retrieve         TgCompoundEntity
+                centre.retrieve().then(() => centre.run()).then(() => {
+                    addListener('tg-entity-centre-refreshed', event => {
+                        const entity = event.detail.entities[0];
+                        setTimeout(() => { // do the listener on microtask once _postRun and other run code is completed
+                            if (entity && entity.type()._notEnhancedSimpleClassName() === 'TgCompoundEntityChild') {
+                                assertPersistedWithDate(entity); // => ASSERT 2
+                                masterMenu().route = 'TgCompoundEntityMaster_OpenMain_MenuItem'; // CHANGE 2 =>
+                            }
+                        });
+                    });
+                    addListener('tg-entity-received', event => {
+                        const entity = event.detail;
+                        setTimeout(() => { // do the listener on microtask once _postEntityReceived and other retrieve / validate / save code is completed
+                            if (entity.type()._simpleClassName() === 'TgCompoundEntity') {
+                                entityCount++;
+                                if (entityCount === 1) {
+                                    masterMenu().route = 'TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem'; // CHANGE 1 =>
+                                } else if (entityCount === 2) {
+                                    done();
+                                }
+                            } else if (entity.type()._simpleClassName() === 'TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem') { // both retrieval and save here
+                                assertPersistedWithKey(entity.get('key'), '1TEST'); // => ASSERT 1 =>
+                            }
+                        });
+                    });
+                    editFirstEntity();
+                });
+            });
+
+            test('tapping property action opens compound master with detail menu item and fetches detail entity and updates dialog title', function (done) {
+                // 1. retrieve 2. save OpenTgCompoundEntityMasterAction
+                // 1. retrieve 2. save TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem
+                // 1. retrieve         TgCompoundEntityDetail
+                centre.retrieve().then(() => centre.run()).then(() => {
+                    addListener('tg-entity-received', event => {
+                        const entity = event.detail;
+                        setTimeout(() => { // do the listener on microtask once _postEntityReceived and other retrieve / validate / save code is completed
+                            if (entity.type()._simpleClassName() === 'OpenTgCompoundEntityMasterAction') { // both retrieval and save here
+                                assertPersistedWithKey(entity.get('key'), '1TEST');
+                                assert.strictEqual(entity.get('sectionTitle'), '1TEST: 1TEST (1TEST detail)');
+                                assert.strictEqual(entity.get('menuToOpen'), 'ua.com.fielden.platform.sample.domain.compound.master.menu.actions.TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem');
+                            } else if (entity.type()._simpleClassName() === 'TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem') { // both retrieval and save here
+                                assertPersistedWithKey(entity.get('key'), '1TEST');
+                            } else if (entity.type()._simpleClassName() === 'TgCompoundEntityDetail') { // retrieval only
+                                assertPersistedWithDesc(entity, '1TEST detail');
+                                done();
+                            }
+                        });
+                    });
+                    const propAction = centre.shadowRoot.querySelector('tg-ui-action[element-alias="tg-OpenTgCompoundEntityMasterAction-master_1_PROP"]');
+                    propAction.currentEntity = () => centre.$.egi.entities[0];
+                    propAction._run();
+                });
+            });
+
+        });
+
+        suite('NEW case', function () {
+            let centre;
+
+            setup(() => centre = createCentre());
+            teardown(cleanUp);
+
+            /**
+             * Invokes NEW top action in entity centre, which opens compound master with NEWXX key'ed entity.
+             */
+            const createNewEntity = () => {
+                const newAction = centre.shadowRoot.querySelector('tg-ui-action[element-alias="tg-OpenTgCompoundEntityMasterAction-master_0_TOP_LEVEL"]');
+                newAction._run();
+            };
+
+            /**
+             * Checks 'entity' on existence and persistence.
+             */
+            const assertNew = (entity) => {
+                assert.isOk(entity);
+                let entityStr;
+                try {
+                    entityStr = entity.toString();
+                } catch (e) {}
+                assert.isNull(entity.get('id'), `Entity${entityStr ? ' [' + entityStr + ']' : ''} with type [${entity.type()._simpleClassName()}] is not new; its id is not null.`);
+            };
+
+            /**
+             * Checks 'entity' on existence and persistence; also check its 'key' property.
+             */
+            const assertNewWithKey = (entity, expectedKey) => {
+                assertNew(entity);
+                assert.strictEqual(entity.get('key'), expectedKey);
+            };
+
+            /**
+             * Checks 'entity' on existence and persistence; also check its 'desc' property.
+             */
+            const assertNewWithDesc = (entity, expectedDesc) => {
+                assertNew(entity);
+                assert.strictEqual(entity.get('desc'), expectedDesc);
+            };
+
+            /**
+             * Checks 'entity' on existence and persistence; also check its 'date' property.
+             */
+            const assertNewWithDate = (entity) => {
+                assertNew(entity);
+                assert.isNumber(entity.get('date'));
+            };
+
+            test('tapping new action opens compound master with main menu item and produces entity with NEWXX key and updates dialog title', function (done) {
+                let key, openerCount = 0;
+                // 1. retrieve 2. save OpenTgCompoundEntityMasterAction
+                // 1. retrieve 2. save TgCompoundEntityMaster_OpenMain_MenuItem
+                // 1. retrieve         TgCompoundEntity
+                centre.retrieve().then(() => centre.run()).then(() => {
+                    addListener('tg-entity-received', event => {
+                        const entity = event.detail;
+                        setTimeout(() => { // do the listener on microtask once _postEntityReceived and other retrieve / validate / save code is completed
+                            if (entity.type()._simpleClassName() === 'OpenTgCompoundEntityMasterAction') { // both retrieval and save here
+                                openerCount++;
+                                if (openerCount === 1) {
+                                    key = entity.get('key').get('key');
+                                }
+                                assertNewWithKey(entity.get('key'), key);
+                                assert.strictEqual(entity.get('sectionTitle'), 'Add new Tg Compound Entity');
+                                assert.strictEqual(entity.get('menuToOpen'), null);
+                            } else if (entity.type()._simpleClassName() === 'TgCompoundEntityMaster_OpenMain_MenuItem') { // both retrieval and save here
+                                assertNewWithKey(entity.get('key'), key);
+                            } else if (entity.type()._simpleClassName() === 'TgCompoundEntity') { // retrieval only
+                                assertNewWithKey(entity, key);
+                                assert.strictEqual(openerCount, 2);
+                                done();
+                            }
+                        });
+                    });
+                    createNewEntity();
+                });
+            });
+
+            test('moving to detail menu item does not succeed for newly produced NEWXX entity', function (done) {
+                // PREPARE
+                // 1. retrieve 2. save OpenTgCompoundEntityMasterAction
+                // 1. retrieve 2. save TgCompoundEntityMaster_OpenMain_MenuItem
+                // 1. retrieve         TgCompoundEntity
+
+                // CHANGE => ASSERT
+                centre.retrieve().then(() => centre.run()).then(() => {
+                    addListener('tg-entity-received', event => {
+                        const entity = event.detail;
+                        setTimeout(() => { // do the listener on microtask once _postEntityReceived and other retrieve / validate / save code is completed
+                            if (entity.type()._simpleClassName() === 'TgCompoundEntity') { // retrieval only
+                                masterMenu().route = 'TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem'; // CHANGE =>
+
+                                assert.strictEqual(masterMenu().route, 'TgCompoundEntityMaster_OpenMain_MenuItem'); // ASSERT
+                                assert.strictEqual(masterMenu().sectionRoute, 'TgCompoundEntityMaster_OpenMain_MenuItem');
+                                assert.isOk(masterMenu().currentSection());
+                                assert.isOk(masterMenu().currentSection().canLeave());
+                                assert.strictEqual(masterMenu().currentSection().canLeave().msg, 'Please save or cancel your changes.'); // toast shows 'Cannot leave "Main".'
+                                done();
+                            }
+                        });
+                    });
+                    createNewEntity();
+                });
+            });
+
+            test('changing NEWXX entity key and saving it leads to dialog title update', function (done) {
+                let key, openerCount = 0, entityCount = 0;
+                // PREPARE
+                // 1. retrieve 2. save OpenTgCompoundEntityMasterAction
+                // 1. retrieve 2. save TgCompoundEntityMaster_OpenMain_MenuItem
+                // 1. retrieve         TgCompoundEntity
+
+                // CHANGE => ASSERT 1 => ASSERT 2
+                // 2. validate 3. save TgCompoundEntity
+                // 3. save             OpenTgCompoundEntityMasterAction
+                centre.retrieve().then(() => centre.run()).then(() => {
+                    addListener('tg-entity-received', event => {
+                        const entity = event.detail;
+                        setTimeout(() => { // do the listener on microtask once _postEntityReceived and other retrieve / validate / save code is completed
+                            if (entity.type()._simpleClassName() === 'OpenTgCompoundEntityMasterAction') {
+                                openerCount++;
+                                if (openerCount === 1) {
+                                    key = entity.get('key').get('key');
+                                } else if (openerCount === 3) {
+                                    assertPersistedWithKey(entity.get('key'), `${key}_CHANGED`); // => ASSERT 2
+                                    assert.strictEqual(entity.get('sectionTitle'), `${key}_CHANGED: ${key} (${key} detail)`);
+                                    assert.strictEqual(entity.get('menuToOpen'), null);
+                                    assert.strictEqual(entityCount, 3);
+                                    done();
+                                }
+                            } else if (entity.type()._simpleClassName() === 'TgCompoundEntity') {
+                                entityCount++;
+                                if (entityCount === 1) {
+                                    changePropAndSave(entityMaster(), 'key', `${key}_CHANGED`); // CHANGE =>
+                                } else if (entityCount === 3) {
+                                    assertPersistedWithKey(entity, `${key}_CHANGED`); // => ASSERT 1 =>
+                                }
+                            }
+                        });
+                    });
+                    createNewEntity();
+                });
+            });
+
+            test('NEWXX entity saving without changes leads to dialog title update', function (done) {
+                let key, openerCount = 0, entityCount = 0;
+                // PREPARE
+                // 1. retrieve 2. save OpenTgCompoundEntityMasterAction
+                // 1. retrieve 2. save TgCompoundEntityMaster_OpenMain_MenuItem
+                // 1. retrieve         TgCompoundEntity
+
+                // CHANGE => ASSERT 1 => ASSERT 2
+                // 2. save             TgCompoundEntity
+                // 3. save             OpenTgCompoundEntityMasterAction
+                centre.retrieve().then(() => centre.run()).then(() => {
+                    addListener('tg-entity-received', event => {
+                        const entity = event.detail;
+                        setTimeout(() => { // do the listener on microtask once _postEntityReceived and other retrieve / validate / save code is completed
+                            if (entity.type()._simpleClassName() === 'OpenTgCompoundEntityMasterAction') {
+                                openerCount++;
+                                if (openerCount === 1) {
+                                    key = entity.get('key').get('key');
+                                } else if (openerCount === 3) {
+                                    assertPersistedWithKey(entity.get('key'), key); // => ASSERT 2
+                                    assert.strictEqual(entity.get('sectionTitle'), `${key}: ${key} (${key} detail)`);
+                                    assert.strictEqual(entity.get('menuToOpen'), null);
+                                    assert.strictEqual(entityCount, 2);
+                                    done();
+                                }
+                            } else if (entity.type()._simpleClassName() === 'TgCompoundEntity') {
+                                entityCount++;
+                                if (entityCount === 1) {
+                                    save(entityMaster()); // CHANGE =>
+                                } else if (entityCount === 2) {
+                                    assertPersistedWithKey(entity, key); // => ASSERT 1 =>
+                                }
+                            }
+                        });
+                    });
+                    createNewEntity();
+                });
+            });
+
+            test('moving to detail menu item for recently persisted NEWXX entity fetches detail entity and moving back to main menu item fetches recently persisted NEWXX entity', function (done) {
+                let key, openerCount = 0, itemCount = 0, entityCount = 0;
+                // PREPARE
+                // 1. retrieve 2. save OpenTgCompoundEntityMasterAction
+                // 1. retrieve 2. save TgCompoundEntityMaster_OpenMain_MenuItem
+                // 1. retrieve 2. save TgCompoundEntity
+                // 3. save             OpenTgCompoundEntityMasterAction
+
+                // CHANGE 1 => ASSERT 1 => ASSERT 2 =>
+                // 1. retrieve 2. save TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem
+                // 1. retrieve         TgCompoundEntityDetail
+
+                // => CHANGE 2 => ASSERT 3 => ASSERT 4
+                // 3. retrieve 4. save TgCompoundEntityMaster_OpenMain_MenuItem
+                // 3. retrieve         TgCompoundEntity
+                centre.retrieve().then(() => centre.run()).then(() => {
+                    addListener('tg-entity-received', event => {
+                        const entity = event.detail;
+                        setTimeout(() => { // do the listener on microtask once _postEntityReceived and other retrieve / validate / save code is completed
+                            if (entity.type()._simpleClassName() === 'OpenTgCompoundEntityMasterAction') {
+                                openerCount++;
+                                if (openerCount === 1) {
+                                    key = entity.get('key').get('key');
+                                } else if (openerCount === 3) {
+                                    masterMenu().route = 'TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem'; // CHANGE 1 =>
+                                }
+                            } else if (entity.type()._simpleClassName() === 'TgCompoundEntityMaster_OpenMain_MenuItem') {
+                                itemCount++;
+                                if (itemCount === 3 || itemCount === 4) {
+                                    assertPersistedWithKey(entity.get('key'), key); // => ASSERT 3 =>
+                                }
+                            } else if (entity.type()._simpleClassName() === 'TgCompoundEntity') {
+                                entityCount++;
+                                if (entityCount === 1) {
+                                    save(entityMaster());
+                                } else if (entityCount === 3) {
+                                    assertPersistedWithKey(entity, key); // => ASSERT 4
+                                    assert.strictEqual(openerCount, 3);
+                                    assert.strictEqual(itemCount, 4);
+                                    done();
+                                }
+                            } else if (entity.type()._simpleClassName() === 'TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem') { // both retrieval and save here
+                                assertPersistedWithKey(entity.get('key'), key); // => ASSERT 1 =>
+                            } else if (entity.type()._simpleClassName() === 'TgCompoundEntityDetail') {
+                                assertPersistedWithDesc(entity, `${key} detail`); // => ASSERT 2 =>
+                                masterMenu().route = 'TgCompoundEntityMaster_OpenMain_MenuItem'; // => CHANGE 2 =>
+                            }
+                        });
+                    });
+                    createNewEntity();
+                });
+            });
+
+            test('changing detail entity for recently persisted NEWXX entity and saving it leads to dialog title update', function (done) {
+                let key, openerCount = 0, entityCount = 0, detailCount = 0;
+                // PREPARE
+                // 1. retrieve 2. save OpenTgCompoundEntityMasterAction
+                // 1. retrieve 2. save TgCompoundEntityMaster_OpenMain_MenuItem
+                // 1. retrieve 2. save TgCompoundEntity
+                // 3. save             OpenTgCompoundEntityMasterAction
+                // 1. retrieve 2. save TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem
+                // 1. retrieve         TgCompoundEntityDetail
+
+                // CHANGE => ASSERT 1 => ASSERT 2
+                // 2. validate 3. save TgCompoundEntityDetail
+                // 4. save             OpenTgCompoundEntityMasterAction
+                centre.retrieve().then(() => centre.run()).then(() => {
+                    addListener('tg-entity-received', event => {
+                        const entity = event.detail;
+                        setTimeout(() => { // do the listener on microtask once _postEntityReceived and other retrieve / validate / save code is completed
+                            if (entity.type()._simpleClassName() === 'OpenTgCompoundEntityMasterAction') {
+                                openerCount++;
+                                if (openerCount === 1) {
+                                    key = entity.get('key').get('key');
+                                } else if (openerCount === 3) {
+                                    masterMenu().route = 'TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem';
+                                } else if (openerCount === 4) {
+                                    assertPersistedWithKey(entity.get('key'), key); // => ASSERT 2
+                                    assert.strictEqual(entity.get('sectionTitle'), `${key}: ${key} (${key} detail_CHANGED)`);
+                                    assert.strictEqual(entity.get('menuToOpen'), null);
+                                    assert.strictEqual(entityCount, 2);
+                                    assert.strictEqual(detailCount, 3);
+                                    done();
+                                }
+                            } else if (entity.type()._simpleClassName() === 'TgCompoundEntity') {
+                                entityCount++;
+                                if (entityCount === 1) {
+                                    save(entityMaster());
+                                }
+                            } else if (entity.type()._simpleClassName() === 'TgCompoundEntityDetail') {
+                                detailCount++;
+                                if (detailCount === 1) {
+                                    changePropAndSave(detailMaster(), 'desc', `${key} detail_CHANGED`); // CHANGE =>
+                                } else if (detailCount === 3) {
+                                    assertPersistedWithDesc(entity, `${key} detail_CHANGED`); // => ASSERT 1 =>
+                                }
+                            }
+                        });
+                    });
+                    createNewEntity();
+                });
+            });
+
+            test('moving to children menu item for recently persisted NEWXX entity fetches children entities and moving back to main menu item fetches recently persisted NEWXX entity', function (done) {
+                let key, openerCount = 0, entityCount = 0, itemCount = 0;
+                // PREPARE
+                // 1. retrieve 2. save OpenTgCompoundEntityMasterAction
+                // 1. retrieve 2. save TgCompoundEntityMaster_OpenMain_MenuItem
+                // 1. retrieve 2. save TgCompoundEntity
+                // 3. save             OpenTgCompoundEntityMasterAction
+
+                // CHANGE 1 => ASSERT 1 => ASSERT 2
+                // 1. retrieve 2. save TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem
+                // 1. run              TgCompoundEntityChild
+
+                // CHANGE 2 => ASSERT 3 => ASSERT 4
+                // 3. retrieve 4. save TgCompoundEntityMaster_OpenMain_MenuItem
+                // 3. retrieve         TgCompoundEntity
+                centre.retrieve().then(() => centre.run()).then(() => {
+                    addListener('tg-entity-centre-refreshed', event => {
+                        const entity = event.detail.entities[0];
+                        setTimeout(() => { // do the listener on microtask once _postRun and other run code is completed
+                            if (entity && entity.type()._notEnhancedSimpleClassName() === 'TgCompoundEntityChild') {
+                                assertPersistedWithDate(entity); // => ASSERT 2
+                                masterMenu().route = 'TgCompoundEntityMaster_OpenMain_MenuItem'; // CHANGE 2 =>
+                            }
+                        });
+                    });
+                    addListener('tg-entity-received', event => {
+                        const entity = event.detail;
+                        setTimeout(() => { // do the listener on microtask once _postEntityReceived and other retrieve / validate / save code is completed
+                            if (entity.type()._simpleClassName() === 'OpenTgCompoundEntityMasterAction') {
+                                openerCount++;
+                                if (openerCount === 1) {
+                                    key = entity.get('key').get('key');
+                                } else if (openerCount === 3) {
+                                    masterMenu().route = 'TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem'; // CHANGE 1 =>
+                                }
+                            } else if (entity.type()._simpleClassName() === 'TgCompoundEntityMaster_OpenMain_MenuItem') {
+                                itemCount++;
+                                if (itemCount === 3 || itemCount === 4) {
+                                    assertPersistedWithKey(entity.get('key'), key); // => ASSERT 3 =>
+                                }
+                            } else if (entity.type()._simpleClassName() === 'TgCompoundEntity') {
+                                entityCount++;
+                                if (entityCount === 1) {
+                                    save(entityMaster());
+                                } else if (entityCount === 3) {
+                                    assertPersistedWithKey(entity, key); // => ASSERT 4
+                                    assert.strictEqual(openerCount, 3);
+                                    assert.strictEqual(itemCount, 4);
+                                    done();
+                                }
+                            } else if (entity.type()._simpleClassName() === 'TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem') { // both retrieval and save here
+                                assertPersistedWithKey(entity.get('key'), key); // => ASSERT 1 =>
+                            }
+                        });
+                    });
+                    createNewEntity();
+                });
+            });
+
+        });
+
+    </script>
+</body>
+</html>

@@ -64,10 +64,10 @@ public class EntityCentreBuilderSelectionCritTest {
         assertEquals("orgUnit1", config.getSelectionCriteria().get().get(1));
         assertTrue(config.getValueMatchersForSelectionCriteria().isPresent());
         assertEquals(2, config.getValueMatchersForSelectionCriteria().get().size());
-        assertEquals(CustomVehicleMatcher.class, config.getValueMatchersForSelectionCriteria().get().get("vehicle").getKey());
-        assertFalse(config.getValueMatchersForSelectionCriteria().get().get("vehicle").getValue().isPresent());
-        assertEquals(CustomOrgUnit1Matcher.class, config.getValueMatchersForSelectionCriteria().get().get("orgUnit1").getKey());
-        assertTrue(config.getValueMatchersForSelectionCriteria().get().get("orgUnit1").getValue().isPresent());
+        assertEquals(CustomVehicleMatcher.class, config.getValueMatchersForSelectionCriteria().get().get("vehicle")._1);
+        assertFalse(config.getValueMatchersForSelectionCriteria().get().get("vehicle")._2.isPresent());
+        assertEquals(CustomOrgUnit1Matcher.class, config.getValueMatchersForSelectionCriteria().get().get("orgUnit1")._1);
+        assertTrue(config.getValueMatchersForSelectionCriteria().get().get("orgUnit1")._2.isPresent());
     }
 
     @Test
@@ -138,8 +138,8 @@ public class EntityCentreBuilderSelectionCritTest {
         assertEquals("orgUnit1", config.getSelectionCriteria().get().get(1));
         assertTrue(config.getValueMatchersForSelectionCriteria().isPresent());
         assertEquals(1, config.getValueMatchersForSelectionCriteria().get().size());
-        assertEquals(CustomOrgUnit1Matcher.class, config.getValueMatchersForSelectionCriteria().get().get("orgUnit1").getKey());
-        assertTrue(config.getValueMatchersForSelectionCriteria().get().get("orgUnit1").getValue().isPresent());
+        assertEquals(CustomOrgUnit1Matcher.class, config.getValueMatchersForSelectionCriteria().get().get("orgUnit1")._1);
+        assertTrue(config.getValueMatchersForSelectionCriteria().get().get("orgUnit1")._2.isPresent());
     }
 
     @Test

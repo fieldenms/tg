@@ -16,7 +16,7 @@ public class EntityInvalidDefinition extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
     @IsProperty
-    @Final(persistentOnly = true)
+    @Final(persistedOnly = true)
     private Integer firstProperty = null;
     
     public Integer getFirstProperty() {

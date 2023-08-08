@@ -263,6 +263,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                .withTopPanelStyle(ofNullable(envTopPanelColour), ofNullable(envWatermarkText), ofNullable(envWatermarkCss));
 
         // Add entity centres
+        MoreDataForDeleteEntityWebUiConfig.register(injector(), configApp());
         final TgCompoundEntityWebUiConfig tgCompoundEntityWebUiConfig = TgCompoundEntityWebUiConfig.register(injector(), configApp());
         final EntityActionConfig mkTgCompoundEntityLocator = mkLocator(configApp(), injector(), TgCompoundEntityLocator.class, "tgCompoundEntity", "color: #0d4b8a");
 
@@ -286,7 +287,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 shortcut("alt+d").
                                 build())
                         .addProp("this").also()
-                        .addProp("desc")
+                        .addEditableProp("desc")
+                        .addPrimaryAction(EDIT_ACTION.mkAction(TgDeletionTestEntity.class))
                         // .addProp("additionalProp")
                         .build(), injector(), null);
         configApp().addCentre(deletionTestCentre);
@@ -710,7 +712,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addAction(MasterActions.VIEW)
                 .addAction(action(MakeCompletedAction.class)
                         .withContext(context().withMasterEntity().build())
-                        .postActionSuccess(() -> new JsCode(new BindSavedPropertyPostActionSuccess("masterEntity").build().toString() + "self.publishCloseForcibly();"))
+                        // .postActionSuccess(() -> new JsCode(new BindSavedPropertyPostActionSuccess("masterEntity").build().toString() + "self.publishCloseForcibly();")) // use this for additional manual testing of forced closing
+                        .postActionSuccess(new BindSavedPropertyPostActionSuccess("masterEntity"))
                         .postActionError(new BindSavedPropertyPostActionError("masterEntity"))
                         .shortDesc("Complete")
                         .longDesc("Complete this entity.")
@@ -1466,7 +1469,13 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 )
                 .addGroupAction(
                         action(EntityExportAction.class)
-                                .withContext(context().withSelectionCrit().withSelectedEntities().build())
+                                .withContext(context().withSelectionCrit().withSelectedEntities()
+                                        .extendWithParentCentreContext(
+                                                context().withSelectionCrit().withSelectedEntities()
+                                                .extendWithInsertionPointContext(TgCentreInvokerWithCentreContext.class,
+                                                        context().withSelectionCrit().withSelectedEntities().withMasterEntity().build()).build())
+                                        .extendWithInsertionPointContext(TgCentreInvokerWithCentreContext.class,
+                                                context().withSelectionCrit().withSelectedEntities().withMasterEntity().build()).build())
                                 .postActionSuccess(new FileSaverPostAction())
                                 .icon("icons:save")
                                 .shortDesc("Export Data")

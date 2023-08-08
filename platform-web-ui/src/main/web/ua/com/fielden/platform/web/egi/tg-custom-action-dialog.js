@@ -645,8 +645,9 @@ Polymer({
         });
     },
 
-    _skipNext: function() {
+    _skipNext: function(e) {
         if (this._lastAction && this._lastAction.continuous && typeof this._lastAction.skipNext === 'function') {
+            tearDownEvent(e);
             this._lastAction.skipNext();
         }
     },
@@ -834,6 +835,9 @@ Polymer({
             this._closeChildren(true);
             this._closeDialogAndIndicateActionCompletion();
         } else {
+            if (forceClosing && forceClosing.target) { // check whether forceClosing is not null or empty and it is an event object
+                tearDownEvent(forceClosing);
+            }
             //Try to close children first.
             const canClose = this.canClose();
             if (canClose === true) {
@@ -906,10 +910,10 @@ Polymer({
                 this.style.height = prefDim.heightUnit === '%' ? height : ('calc(' + height + ' + 44px)'); // +44px - height of the title bar please see styles for .title-bar selector; applicable only for non-relative units of measure
                 this.style.overflow = 'auto';
             } else if (!minimised && maximised) {
-                this.style.top = this.mobile ? '0%' : '2%';
-                this.style.left = this.mobile ? '0%' : '2%';
-                this.style.width = this.mobile ? '100%' : '96%';
-                this.style.height = this.mobile ? '100%' : '96%';
+                this.style.top = this.mobile ? '0%' : '0%';
+                this.style.left = this.mobile ? '0%' : '0%';
+                this.style.width = this.mobile ? '100%' : '100%';
+                this.style.height = this.mobile ? '100%' : '100%';
                 this.style.overflow = 'auto';
             } else if (minimised && !maximised) {
                 this.style.height = '44px';
@@ -1440,8 +1444,8 @@ Polymer({
     },
 
     /**
-     * Refits this dialog on async after 50 millis and focuses its input in case where 'binding-entity-appered' event has occured earlier than dialog .
-     * A named function was used in favoir of an anonymous one in order to avoid accumulation of event listeners.
+     * Refits this dialog on async after 50 millis and focuses its input in case where 'binding-entity-appered' event has occurred earlier than dialog.
+     * A named function was used in favour of an anonymous one in order to avoid accumulation of event listeners.
      */
     _refit: function() {
         this.async(function() {
@@ -1635,7 +1639,7 @@ Polymer({
             url.hash = `/master/${type.fullClassName()}/${this._mainEntityId}${compoundItemSuffix}`;
             const link = url.href;
             // Writing into clipboard is always permitted for currently open tab (https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/writeText) -- that's why promise error should never occur;
-            // if for some reason the promise will be rejected then 'Unexpected error occured.' will be shown to the user and global handler will report that to the server.
+            // if for some reason the promise will be rejected then 'Unexpected error occurred.' will be shown to the user and global handler will report that to the server.
             navigator.clipboard.writeText(link).then(() => {
                 this.$.toaster.text = 'Copied to clipboard.';
                 this.$.toaster.hasMore = true;
