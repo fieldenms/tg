@@ -54,13 +54,12 @@ const template = html`
             min-width: fit-content;
             @apply --shadow-elevation-2dp;
         }
-
         #pm[detached] {
             position: fixed;
-            top: 2%;
-            left: 2%;
-            width: 96%;
-            height: 96%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             z-index: 1;
         }
         .title-bar {
@@ -178,16 +177,6 @@ Polymer({
         withoutResizing: {
             type: Boolean,
             value: false
-        },
-        
-        /**
-         * Indicates whether to hide margins around insertion point.
-         * This is typically needed for the case where this insertion point is separate alternative view.
-         */
-        hideMargins: {
-            type: Boolean,
-            value: false,
-            observer: "_hideMarginsChanged"
         },
         
         activated: {
@@ -422,14 +411,6 @@ Polymer({
         }
     },
 
-    _hideMarginsChanged: function (newValue, oldValue) {
-        if (newValue) {
-            this.$.pm.style.removeProperty("margin");
-        } else {
-            this.$.pm.style["margin"] = "10px";
-        }
-    },
-
     /**
      * customAction -- an action that was actioned by user and may require showing a diglog (e.g. with master)
      */
@@ -520,6 +501,7 @@ Polymer({
         this.$.loadableContent.style.removeProperty("height");
         this.$.loadableContent.style.removeProperty("min-width");
         this.$.loadableContent.style.removeProperty("min-height");
+        this.$.pm.style.removeProperty("margin");
         this.style.removeProperty("width");
         this.style.removeProperty("height");
         if (!detachedView) {
@@ -531,6 +513,8 @@ Polymer({
             if (alternativeView) {
                 this.style.width = "100%";
                 this.style.height = "100%";
+            } else {
+                this.$.pm.style["margin"] = "10px";
             }
         } else {
             this.$.loadableContent.style.width = "100%";
