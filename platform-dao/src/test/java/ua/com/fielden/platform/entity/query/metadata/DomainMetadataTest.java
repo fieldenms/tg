@@ -4,13 +4,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo.getEntityTypeInfoPair;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.EXPRESSION;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.SYNTHETIC;
-import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.UNION_ENTITY_DETAILS;
-import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.UNION_ENTITY_HEADER;
-
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
@@ -28,15 +24,15 @@ import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
 public class DomainMetadataTest extends BaseEntQueryTCase1 {
 
     private static <ET extends AbstractEntity<?>> PersistedEntityMetadata<ET> pem(Class<ET> type) throws Exception {
-        return DOMAIN_METADATA.generatePersistedEntityMetadata(eti(type));
+        return DOMAIN_METADATA.generatePersistedEntityMetadata(type, eti(type));
     }
     
     private static <ET extends AbstractEntity<?>> ModelledEntityMetadata<ET> mem(Class<ET> type) throws Exception {
-        return DOMAIN_METADATA.generateModelledEntityMetadata(eti(type));
+        return DOMAIN_METADATA.generateModelledEntityMetadata(getEntityTypeInfoPair(type));
     }
     
     private static <ET extends AbstractEntity<?>> ModelledEntityMetadata<ET> uem(Class<ET> type) throws Exception {
-        return DOMAIN_METADATA.generateUnionedEntityMetadata(eti(type));
+        return DOMAIN_METADATA.generateUnionedEntityMetadata(getEntityTypeInfoPair(type));
     }
     
     private static <ET extends AbstractEntity<?>> EntityTypeInfo<? super ET> eti(Class<ET> entityType) {

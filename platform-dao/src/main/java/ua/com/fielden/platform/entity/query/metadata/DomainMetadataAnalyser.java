@@ -2,6 +2,8 @@ package ua.com.fielden.platform.entity.query.metadata;
 
 import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo.getEntityTypeInfo;
+import static ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo.getEntityTypeInfoPair;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -39,19 +41,18 @@ public class DomainMetadataAnalyser {
         } else {
             try {
                 final AbstractEntityMetadata<ET> newOne;
-                final EntityTypeInfo<ET> parentInfo = new EntityTypeInfo<>(entityType);
-                switch (parentInfo.category) {
+                switch (getEntityTypeInfo(entityType).category) {
                 case PERSISTENT:
-                    newOne = domainMetadata.generatePersistedEntityMetadata(parentInfo);
+                    newOne = domainMetadata.generatePersistedEntityMetadata(entityType, getEntityTypeInfo(entityType));
                     break;
                 case QUERY_BASED:
-                    newOne = domainMetadata.generateModelledEntityMetadata(parentInfo);
+                    newOne = domainMetadata.generateModelledEntityMetadata(getEntityTypeInfoPair(entityType));
                     break;
                 case UNION:
-                    newOne = domainMetadata.generateUnionedEntityMetadata(parentInfo);
+                    newOne = domainMetadata.generateUnionedEntityMetadata(getEntityTypeInfoPair(entityType));
                     break;
                 default:
-                    newOne = domainMetadata.generatePureEntityMetadata(parentInfo);
+                    newOne = domainMetadata.generatePureEntityMetadata(entityType);
                 }
 
                 entityMetadataMap.put(entityType, newOne);
