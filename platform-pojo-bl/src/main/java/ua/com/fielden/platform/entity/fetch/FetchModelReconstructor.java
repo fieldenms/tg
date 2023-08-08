@@ -24,6 +24,7 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  *
@@ -110,7 +111,7 @@ public class FetchModelReconstructor {
                     // fetch cannot be identified from null, so the fetch id only strategy is the most suitable
                     @SuppressWarnings("unchecked")
                     final Class<AbstractEntity<?>> valueType = (Class<AbstractEntity<?>>) propField.getType();
-                    if (propField.isAnnotationPresent(Calculated.class)) {
+                    if (propField.isAnnotationPresent(Calculated.class) || EntityUtils.isOneToOne(valueType)) {
                         // fetch id-only is not applicable for calculated entity-typed properties if they are used in Entity Masters
                         // however, at this stage, there is no way to identify that and the default fetch model should be used
                         fetchModel = fetchModel.with(propName);
