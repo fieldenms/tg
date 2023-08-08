@@ -329,5 +329,6 @@ export const escapeHtmlText = function(text) {
  * Returns name of currently authenticated user.
  */
 export const userName = function () {
-    return document.body.querySelector('tg-app-template').menuConfig.userName;
+    const appTemplate = document.body.querySelector('tg-app-template');
+    return appTemplate && appTemplate.menuConfig && appTemplate.menuConfig.userName;
 };
