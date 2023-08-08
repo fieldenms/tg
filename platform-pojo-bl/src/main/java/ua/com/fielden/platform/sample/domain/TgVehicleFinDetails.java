@@ -24,7 +24,7 @@ import ua.com.fielden.platform.entity.annotation.UpperCase;
 @MapEntityTo
 @CompanionObject(ITgVehicleFinDetails.class)
 public class TgVehicleFinDetails extends AbstractEntity<TgVehicle> {
-    
+
     @IsProperty
     @MapTo
     @UpperCase
