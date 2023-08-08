@@ -742,7 +742,7 @@ Polymer({
     },
 
     /**
-     * For dimensionless Entity Master, need to it resizable and assign prefDim from current calculated dimensions.
+     * For dimensionless Entity Master, need to resizable it and assign prefDim from current calculated dimensions.
      * This is necessary, for example, for later resetDimensions (and other prefDim usages).
      */
     _definePrefDim: function () {
@@ -922,36 +922,47 @@ Polymer({
             return;
         }
         if (!this._masterVisibilityChanges && !this._masterLayoutChanges) {
-            if (!minimised && !maximised) {
-                const customDim = this._customDim();
-                if (customDim) {
-                    this.style.width = customDim[0];
-                    this.style.height = customDim[1];
-                } else if (prefDim) {
-                    const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
-                    const height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
-                    this.style.width = width;
-                    this.style.height = prefDim.heightUnit === '%' ? height : ('calc(' + height + ' + 44px)'); // +44px - height of the title bar please see styles for .title-bar selector; applicable only for non-relative units of measure
-                    this.style.overflow = 'auto';
-                } else {
-                    this.style.width = '';
-                    this.style.height = '';
-                    this.style.overflow = 'auto';
-                }
-            } else if (!minimised && maximised) {
-                this.style.top = this.mobile ? '0%' : '0%';
-                this.style.left = this.mobile ? '0%' : '0%';
-                this.style.width = this.mobile ? '100%' : '100%';
-                this.style.height = this.mobile ? '100%' : '100%';
+            this._setDialogDimensions(prefDim, minimised, maximised);
+        }
+    },
+
+    /**
+     * Sets the dialog dimensions bassed on preferred dimension minimised and maximised state.
+     * 
+     * @param {Object} prefDim preferred dimension to set if there are no persisted one or minimised or maximised state aren't set.
+     * @param {Boolean} minimised determines whether collapsed state is set or not.
+     * @param {Boolean} maximised determines whether miximised state is set or not.
+     */
+    _setDialogDimensions: function (prefDim, minimised, maximised) {
+        if (!minimised && !maximised) {
+            const customDim = this._customDim();
+            if (customDim) {
+                this.style.width = customDim[0];
+                this.style.height = customDim[1];
+            } else if (prefDim) {
+                const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
+                const height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
+                this.style.width = width;
+                this.style.height = prefDim.heightUnit === '%' ? height : ('calc(' + height + ' + 44px)'); // +44px - height of the title bar please see styles for .title-bar selector; applicable only for non-relative units of measure
                 this.style.overflow = 'auto';
-            } else if (minimised && !maximised) {
-                this.style.height = '44px';
-                this.style.overflow = 'hidden';
             } else {
                 this.style.width = '';
                 this.style.height = '';
                 this.style.overflow = 'auto';
             }
+        } else if (!minimised && maximised) {
+            this.style.top = '0%';
+            this.style.left = '0%';
+            this.style.width = '100%';
+            this.style.height = '100%';
+            this.style.overflow = 'auto';
+        } else if (minimised && !maximised) {
+            this.style.height = '44px';
+            this.style.overflow = 'hidden';
+        } else {
+            this.style.width = '';
+            this.style.height = '';
+            this.style.overflow = 'auto';
         }
     },
 
@@ -1364,29 +1375,14 @@ Polymer({
         this.style.maxHeight = '100%';
         this.style.maxWidth = '100%';
 
-        const customDim = this._customDim();
-        if (customDim) {
-            if (!this.prefDim) { // define prefDim if it was not defined using action configuration
-                const calculatedPrefDim = this._lastElement.makeResizable(); // _lastElement must be defined for non-empty _customDim()
-                const storedPrefDim = this._dimensionlessMasterPrefDim();
-                this.prefDim = storedPrefDim || calculatedPrefDim; // as the last resort use calculated dimensions from current Entity Master, however beware that they may be [0px; 0px] for not yet constructed UI
-            }
-            this.style.width = customDim[0];
-            this.style.height = customDim[1];
+        this._maximised = this._customMaximised();
+        if (!this.prefDim) { // define prefDim if it was not defined using action configuration
+            const calculatedPrefDim = this._lastElement.makeResizable(); // _lastElement must be defined for non-empty _customDim()
+            const storedPrefDim = this._dimensionlessMasterPrefDim();
+            this.prefDim = storedPrefDim || calculatedPrefDim; // as the last resort use calculated dimensions from current Entity Master, however beware that they may be [0px; 0px] for not yet constructed UI
         }
-        const customPosition = this._customPosition();
-        if (customPosition) {
-            this.style.top = customPosition[0];
-            this.style.left = customPosition[1];
-        }
-        if (this._customMaximised()) {
-            this.style.top = this.mobile ? '0%' : '2%';
-            this.style.left = this.mobile ? '0%' : '2%';
-            this.style.width = this.mobile ? '100%' : '96%';
-            this.style.height = this.mobile ? '100%' : '96%';
-            this.style.overflow = 'auto';
-            this._maximised = true;
-        }
+        this._setDialogDimensions(this.prefDim, this._minimised, this._maximised);
+        this._updateDialogPosition(this.prefDim, this._minimised, this._maximised);
     },
 
     /**
@@ -1408,7 +1404,7 @@ Polymer({
             }
         }
         this.updateStyles();
-        this.refit();
+        //this.refit(); //Commented out as it seams that there is no need to call this.
         
         const actionsDialog = findParentDialog(action);
         if (actionsDialog) {
@@ -1776,7 +1772,7 @@ Polymer({
     
     /**
      * Loads and returns stored prefDim dimensions for this dialog's Entity Master from local storage, if it was dimensionless at the time of resizing / maximizing.
-     * Returns 'null' if current user never resized / maximized dimensionless Entity Master it on this device.
+     * Returns 'null' if current user never resized / maximized dimensionless Entity Master on this device.
      * Also returns 'null' had defined dimensions in Entity Master.
      */
     _dimensionlessMasterPrefDim: function () {
