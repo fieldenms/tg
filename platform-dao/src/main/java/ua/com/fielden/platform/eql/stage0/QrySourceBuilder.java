@@ -5,7 +5,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QR
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QRY_SOURCE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QRY_SOURCE_ALIAS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VALUES_AS_QRY_SOURCE;
-import static ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo.getEntityTypeInfo;
+import static ua.com.fielden.platform.eql.meta.EntityTypeInfo.getEntityTypeInfo;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
@@ -17,10 +17,10 @@ import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
-import ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
+import ua.com.fielden.platform.eql.meta.EntityTypeInfo;
 import ua.com.fielden.platform.eql.stage1.operands.queries.SourceQuery1;
 import ua.com.fielden.platform.eql.stage1.sources.JoinLeaf1;
 import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnPersistentType;

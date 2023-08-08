@@ -2,8 +2,8 @@ package ua.com.fielden.platform.entity.query.metadata;
 
 import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo.getEntityTypeInfo;
-import static ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo.getEntityTypeInfoPair;
+import static ua.com.fielden.platform.eql.meta.EntityTypeInfo.getEntityTypeInfo;
+import static ua.com.fielden.platform.eql.meta.EntityTypeInfo.getEntityTypeInfoPair;
 
 import java.util.Collection;
 import java.util.HashMap;

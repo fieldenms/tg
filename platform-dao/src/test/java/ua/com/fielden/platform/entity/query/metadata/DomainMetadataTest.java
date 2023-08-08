@@ -4,9 +4,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo.getEntityTypeInfoPair;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.EXPRESSION;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.SYNTHETIC;
+import static ua.com.fielden.platform.eql.meta.EntityTypeInfo.getEntityTypeInfoPair;
 
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
@@ -14,6 +14,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.BaseEntQueryTCase1;
+import ua.com.fielden.platform.eql.meta.EntityTypeInfo;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;

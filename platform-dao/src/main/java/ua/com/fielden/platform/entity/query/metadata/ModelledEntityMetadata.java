@@ -6,9 +6,9 @@ import java.util.Objects;
 import java.util.SortedMap;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo.EntityTypeInfoPair;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
+import ua.com.fielden.platform.eql.meta.EntityTypeInfo.EntityTypeInfoPair;
 
 public class ModelledEntityMetadata<ET extends AbstractEntity<?>> extends AbstractEntityMetadata<ET> {
     private final List<EntityResultQueryModel<? super ET>> models = new ArrayList<>();

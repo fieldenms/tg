@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity.query.metadata;
+package ua.com.fielden.platform.eql.meta;
 
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableList;

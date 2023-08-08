@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo;
 
 public class EqlEntityMetadata<ET extends AbstractEntity<?>> {
     public final EntityTypeInfo<? super ET> typeInfo;
