@@ -560,6 +560,17 @@ export class TgEntityEditor extends TgEditor {
         }.bind(this);
     }
 
+    ready() {
+        super.ready();
+
+        if (this.multi === false && this.asPartOfEntityMaster) {
+            const storedActiveOnly = localStorage.getItem(this._userName() + ':' + this.autocompletionType + ':' + this.propertyName + ':activeOnly');
+            if (storedActiveOnly !== null) {
+                this._activeOnly = storedActiveOnly === 'true';
+            }
+        }
+    }
+
     /**
      * Handles tap events on entity editor label.
      * 
@@ -704,12 +715,22 @@ export class TgEntityEditor extends TgEditor {
     }
 
     /**
+     * Returns name of currently authenticated user.
+     */
+    _userName () {
+        return document.body.querySelector('tg-app-template').menuConfig.userName;
+    }
+
+    /**
      * Changes _activeOnly to new value and starts searching with new option applied.
      * Skips this action if previous searching is still in progress.
      */
     _changeActiveOnly (new_activeOnly) {
         if (!this.searching) {
             this._activeOnly = new_activeOnly;
+            if (this.multi === false && this.asPartOfEntityMaster) {
+                localStorage.setItem(this._userName() + ':' + this.autocompletionType + ':' + this.propertyName + ':activeOnly', '' + this._activeOnly /* string value*/);
+            }
             this._dataPage = 1;
             this._search(this._searchQuery, null /* dataPage */, this._ignoreInputText, true /* 'active only' changed */);
         }
