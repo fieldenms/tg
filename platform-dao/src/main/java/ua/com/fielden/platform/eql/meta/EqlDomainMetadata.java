@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.meta;
 
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
-import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
+import static ua.com.fielden.platform.eql.meta.EntityCategory.QUERY_BASED;
 import static ua.com.fielden.platform.eql.meta.EntityTypeInfo.getEntityTypeInfo;
 import static ua.com.fielden.platform.eql.meta.utils.TopologicalSort.sortTopologically;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;

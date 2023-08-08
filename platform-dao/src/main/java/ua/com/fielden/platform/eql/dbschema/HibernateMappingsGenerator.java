@@ -5,7 +5,7 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
-import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PERSISTENT;
+import static ua.com.fielden.platform.eql.meta.EntityCategory.PERSISTENT;
 import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.specialProps;
 import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;

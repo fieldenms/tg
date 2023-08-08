@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.eql.meta;
 
 import static java.util.Collections.unmodifiableMap;
-import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PERSISTENT;
-import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PURE;
+import static ua.com.fielden.platform.eql.meta.EntityCategory.PERSISTENT;
+import static ua.com.fielden.platform.eql.meta.EntityCategory.PURE;
 import static ua.com.fielden.platform.eql.meta.EntityTypeInfo.getEntityTypeInfo;
 import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.generateTable;
 import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.generateTableWithPropColumnInfo;

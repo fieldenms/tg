@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity.query.metadata;
+package ua.com.fielden.platform.eql.meta;
 
 public enum EntityCategory {
     PERSISTENT,

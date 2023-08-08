@@ -16,7 +16,6 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator.generateCompositeKeyEqlExpression;
 import static ua.com.fielden.platform.entity.query.metadata.DomainMetadataUtils.extractExpressionModelFromCalculatedProperty;
 import static ua.com.fielden.platform.entity.query.metadata.DomainMetadataUtils.generateUnionEntityPropertyExpression;
-import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PERSISTENT;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.COLLECTIONAL;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.COMPONENT_HEADER;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.ENTITY;
@@ -30,6 +29,7 @@ import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.SYN
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.SYNTHETIC_COMPONENT_HEADER;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.UNION_ENTITY_HEADER;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.VIRTUAL_OVERRIDE;
+import static ua.com.fielden.platform.eql.meta.EntityCategory.PERSISTENT;
 import static ua.com.fielden.platform.eql.meta.EntityTypeInfo.getEntityTypeInfo;
 import static ua.com.fielden.platform.eql.meta.EntityTypeInfo.getEntityTypeInfoPair;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
@@ -92,6 +92,7 @@ import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.dbschema.ColumnDefinitionExtractor;
 import ua.com.fielden.platform.eql.dbschema.TableDdl;
+import ua.com.fielden.platform.eql.meta.EntityCategory;
 import ua.com.fielden.platform.eql.meta.EntityTypeInfo;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.EntityTypeInfo.EntityTypeInfoPair;

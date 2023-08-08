@@ -15,11 +15,11 @@ import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator.generateCompositeKeyEqlExpression;
-import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PERSISTENT;
-import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
-import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.UNION;
 import static ua.com.fielden.platform.eql.meta.DomainMetadataUtils.extractExpressionModelFromCalculatedProperty;
 import static ua.com.fielden.platform.eql.meta.DomainMetadataUtils.generateUnionEntityPropertyContextualExpression;
+import static ua.com.fielden.platform.eql.meta.EntityCategory.PERSISTENT;
+import static ua.com.fielden.platform.eql.meta.EntityCategory.QUERY_BASED;
+import static ua.com.fielden.platform.eql.meta.EntityCategory.UNION;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;

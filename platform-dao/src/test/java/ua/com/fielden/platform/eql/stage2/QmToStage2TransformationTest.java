@@ -3,7 +3,7 @@ package ua.com.fielden.platform.eql.stage2;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
+import static ua.com.fielden.platform.eql.meta.EntityCategory.QUERY_BASED;
 
 import org.junit.Ignore;
 import org.junit.Test;
