@@ -15,17 +15,15 @@ import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
  */
 public class UnionTypePropInfo<T extends AbstractUnionEntity> extends AbstractPropInfo<T> {
     public final QuerySourceInfo<T> propEntityInfo;
-    public final boolean required;
 
-    public UnionTypePropInfo(final String name, final QuerySourceInfo<T> propEntityInfo, final Object hibType, final boolean required) {
+    public UnionTypePropInfo(final String name, final QuerySourceInfo<T> propEntityInfo, final Object hibType) {
         super(name, hibType, null);
         this.propEntityInfo = propEntityInfo;
-        this.required = required;
     }
     
     @Override
     public AbstractPropInfo<T> cloneWithoutExpression() {
-        return new UnionTypePropInfo<T>(name, propEntityInfo, hibType, required);
+        return new UnionTypePropInfo<T>(name, propEntityInfo, hibType);
     }
 
     @Override
@@ -48,7 +46,6 @@ public class UnionTypePropInfo<T extends AbstractUnionEntity> extends AbstractPr
         final int prime = 31;
         int result = super.hashCode();
         result = prime * result + propEntityInfo.hashCode();
-        result = prime * result + (required ? 1231 : 1237);
         return result;
     }
 
@@ -68,6 +65,6 @@ public class UnionTypePropInfo<T extends AbstractUnionEntity> extends AbstractPr
 
         final UnionTypePropInfo<?> other = (UnionTypePropInfo<?>) obj;
 
-        return Objects.equals(propEntityInfo, other.propEntityInfo) && Objects.equals(required, other.required);
+        return Objects.equals(propEntityInfo, other.propEntityInfo);
     }
 }

@@ -127,7 +127,7 @@ public class EqlDomainMetadata {
                             }
                         }
                     }
-                    querySourceInfo.addProp(new UnionTypePropInfo<>(name, ef, hibType, false));
+                    querySourceInfo.addProp(new UnionTypePropInfo<>(name, ef, hibType));
                 } else if (isPersistedEntityType(javaType)) {
                     querySourceInfo.addProp(new EntityTypePropInfo<>(name, allEntitiesInfo.get(javaType), hibType, el.required, expr, el.implicit));
                     //                } else if (ID.equals(name)){
