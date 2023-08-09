@@ -78,7 +78,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
         if (mainSource.sourceType().equals(fetchModel.getEntityType())) {
             allAggregated = true;
             for (final String primProp : fetchModel.getPrimProps()) {
-                final AbstractPropInfo<?> fetchedProp = mainSource.entityInfo().getProps().get(primProp.split("\\.")[0]);
+                final AbstractPropInfo<?> fetchedProp = mainSource.querySourceInfo().getProps().get(primProp.split("\\.")[0]);
                 if (fetchedProp != null) {
                     allAggregated = allAggregated && fetchedProp.hasAggregation();
                 }
@@ -113,7 +113,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
 
             final boolean isNotTopFetch = fetchModel == null ? false : !fetchModel.topLevel();
             
-            for (final Entry<String, AbstractPropInfo<?>> l1Prop : mainSource.entityInfo().getProps().entrySet()) {
+            for (final Entry<String, AbstractPropInfo<?>> l1Prop : mainSource.querySourceInfo().getProps().entrySet()) {
             	// FIXME condition for {@code id} should be removed once the default fetch strategies are adjusted to recognise the presence of {@code id} in synthetic entities.
                 if (fetchModel == null || fetchModel.containsProp(l1Prop.getValue().name) || (!allAggregated && ID.equals(l1Prop.getValue().name) && isSyntheticEntityType(resultType))) {
                     final EntityRetrievalModel<? extends AbstractEntity<?>> l1PropFm = fetchModel == null ? null : fetchModel.getRetrievalModels().get(l1Prop.getValue().name);
@@ -135,7 +135,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
                         }
                     } else {
                         final EntityTypePropInfo<?> l1PropMd = ((EntityTypePropInfo<?>) l1Prop.getValue());
-                        for (final Entry<String, AbstractPropInfo<?>> l2Prop : l1PropMd.propEntityInfo.getProps().entrySet()) {
+                        for (final Entry<String, AbstractPropInfo<?>> l2Prop : l1PropMd.propQuerySourceInfo.getProps().entrySet()) {
                             if (l1PropFm.containsProp(l2Prop.getValue().name)) {
                                 if (l2Prop.getValue() instanceof UnionTypePropInfo) {
                                     for (final Entry<String, AbstractPropInfo<?>> sub : ((UnionTypePropInfo<?>) l2Prop.getValue()).propEntityInfo.getProps().entrySet()) {

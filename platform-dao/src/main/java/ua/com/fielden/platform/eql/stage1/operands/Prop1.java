@@ -63,10 +63,10 @@ public class Prop1 implements ISingleOperand1<Prop2> {
     }
     
     public static PropResolution resolvePropAgainstSource(final ISource2<? extends ISource3> source, final Prop1 prop) {
-        final PropResolutionProgress asIsResolution = source.entityInfo().resolve(new PropResolutionProgress(prop.name));
+        final PropResolutionProgress asIsResolution = source.querySourceInfo().resolve(new PropResolutionProgress(prop.name));
         if (source.alias() != null && (prop.name.startsWith(source.alias() + ".") || prop.name.equals(source.alias()))) {
             final String aliaslessPropName = prop.name.equals(source.alias()) ? ID : prop.name.substring(source.alias().length() + 1);
-            final PropResolutionProgress aliaslessResolution = source.entityInfo().resolve(new PropResolutionProgress(aliaslessPropName));
+            final PropResolutionProgress aliaslessResolution = source.querySourceInfo().resolve(new PropResolutionProgress(aliaslessPropName));
             if (aliaslessResolution.isSuccessful()) {
                 if (!asIsResolution.isSuccessful()) {
                     return new PropResolution(source, aliaslessResolution.getResolved());

@@ -9,7 +9,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.meta.EntityInfo;
+import ua.com.fielden.platform.eql.meta.QuerySourceInfo;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
@@ -21,15 +21,15 @@ public class Source2BasedOnSubqueries extends AbstractSource2 implements ISource
     private final List<SourceQuery2> models = new ArrayList<>();
     public final boolean isSyntheticEntity;
     
-    public Source2BasedOnSubqueries(final List<SourceQuery2> models, final String alias, final Integer id, final EntityInfo<?> entityInfo, final boolean isSyntheticEntity) {
-        super(id, alias, entityInfo);
+    public Source2BasedOnSubqueries(final List<SourceQuery2> models, final String alias, final Integer id, final QuerySourceInfo<?> querySourceInfo, final boolean isSyntheticEntity) {
+        super(id, alias, querySourceInfo);
         this.models.addAll(models);
         this.isSyntheticEntity = isSyntheticEntity;
     }
     
     @Override
     public Class<? extends AbstractEntity<?>> sourceType() {
-        return entityInfo.javaType();
+        return querySourceInfo.javaType();
     }
 
     @Override

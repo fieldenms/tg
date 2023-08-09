@@ -58,8 +58,8 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
     
     private static Yields2 enhanceYields(final Yields2 yields, final IJoinNode2<? extends IJoinNode3> joinRoot2) {
         if (yields.getYields().isEmpty()) {
-            final ISingleOperand2<?> yieldedOperand = joinRoot2.mainSource().entityInfo().getProps().containsKey(ID)
-                    ? new Prop2(joinRoot2.mainSource(), listOf(joinRoot2.mainSource().entityInfo().getProps().get(ID)))
+            final ISingleOperand2<?> yieldedOperand = joinRoot2.mainSource().querySourceInfo().getProps().containsKey(ID)
+                    ? new Prop2(joinRoot2.mainSource(), listOf(joinRoot2.mainSource().querySourceInfo().getProps().get(ID)))
                     : new Value2(0);
             return new Yields2(listOf(new Yield2(yieldedOperand, "", false)));
         }

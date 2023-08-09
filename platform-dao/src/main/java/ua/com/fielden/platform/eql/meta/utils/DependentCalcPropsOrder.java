@@ -18,7 +18,7 @@ import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.eql.exceptions.EqlStage2ProcessingException;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
-import ua.com.fielden.platform.eql.meta.EntityInfo;
+import ua.com.fielden.platform.eql.meta.QuerySourceInfo;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.UnionTypePropInfo;
 import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
@@ -44,7 +44,7 @@ import ua.com.fielden.platform.types.tuples.T3;
  */
 public class DependentCalcPropsOrder {
 
-    public static List<String> orderDependentCalcProps(final EqlDomainMetadata dmd, final EntQueryGenerator gen, final EntityInfo<?> et) {
+    public static List<String> orderDependentCalcProps(final EqlDomainMetadata dmd, final EntQueryGenerator gen, final QuerySourceInfo<?> et) {
         final Source2BasedOnPersistentType source = new Source2BasedOnPersistentType(et.javaType(), et, gen.nextSourceId());
         final Map<String, T2<Set<String>, Set<String>>> propDependencies = new HashMap<>();
         final List<String> calcPropsOfEntityType = new ArrayList<>();
@@ -80,7 +80,7 @@ public class DependentCalcPropsOrder {
      * @param et
      * @return
      */
-    private static List<PropChunk> determineCalcPropChunks(final EntityInfo<?> et) {
+    private static List<PropChunk> determineCalcPropChunks(final QuerySourceInfo<?> et) {
         final List<PropChunk> result = new ArrayList<>();
         for (final AbstractPropInfo<?> prop : et.getProps().values()) {
             if (prop.expression != null && !prop.name.equals(KEY)) {

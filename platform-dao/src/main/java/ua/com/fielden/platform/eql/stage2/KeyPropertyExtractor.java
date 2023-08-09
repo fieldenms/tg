@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
-import ua.com.fielden.platform.eql.meta.EntityInfo;
+import ua.com.fielden.platform.eql.meta.QuerySourceInfo;
 import ua.com.fielden.platform.eql.meta.EntityTypePropInfo;
 import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
@@ -20,7 +20,7 @@ public class KeyPropertyExtractor {
         final AbstractPropInfo<?> operandPropLastMember = original.lastPart();
         if (needsExtraction(operandPropLastMember)) {
             final int pathSize = original.getPath().size();
-            final EntityInfo<?> ei = pathSize == 1 ? original.source.entityInfo() : ((EntityTypePropInfo<?>) original.getPath().get(pathSize - 2)).propEntityInfo;
+            final QuerySourceInfo<?> ei = pathSize == 1 ? original.source.querySourceInfo() : ((EntityTypePropInfo<?>) original.getPath().get(pathSize - 2)).propQuerySourceInfo;
             final List<String> keyTreeLeaves = keyPaths(ei.javaType());
             final List<Prop2> result = new ArrayList<>();
             for (final String keyTreeLeaf : keyTreeLeaves) {

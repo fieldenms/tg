@@ -15,44 +15,44 @@ import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
  * @param <PARENT>
  */
 public class EntityTypePropInfo<T extends AbstractEntity<?>> extends AbstractPropInfo<T> {
-    public final EntityInfo<T> propEntityInfo;
+    public final QuerySourceInfo<T> propQuerySourceInfo;
     public final boolean required;
 
-    public EntityTypePropInfo(final String name, final EntityInfo<T> propEntityInfo, final Object hibType, final boolean required) {
-        this(name, propEntityInfo, hibType, required, null, false);
+    public EntityTypePropInfo(final String name, final QuerySourceInfo<T> propQuerySourceInfo, final Object hibType, final boolean required) {
+        this(name, propQuerySourceInfo, hibType, required, null, false);
     }
 
-    public EntityTypePropInfo(final String name, final EntityInfo<T> propEntityInfo, final Object hibType, final boolean required, final ExpressionModel expression, final boolean implicit) {
+    public EntityTypePropInfo(final String name, final QuerySourceInfo<T> propQuerySourceInfo, final Object hibType, final boolean required, final ExpressionModel expression, final boolean implicit) {
         super(name, hibType, expression, implicit);
-        this.propEntityInfo = propEntityInfo;
+        this.propQuerySourceInfo = propQuerySourceInfo;
         this.required = required;
     }
     
     @Override
     public AbstractPropInfo<T> cloneWithoutExpression() {
-        return new EntityTypePropInfo<T>(name, propEntityInfo, hibType, required);
+        return new EntityTypePropInfo<T>(name, propQuerySourceInfo, hibType, required);
     }    
     
     @Override
     public PropResolutionProgress resolve(final PropResolutionProgress context) {
-        return propEntityInfo.resolve(context);
+        return propQuerySourceInfo.resolve(context);
     }
 
     @Override
     public Class<T> javaType() {
-        return propEntityInfo.javaType();
+        return propQuerySourceInfo.javaType();
     }
 
     @Override
     public String toString() {
-        return String.format("%20s %20s", name, propEntityInfo.javaType().getSimpleName());
+        return String.format("%20s %20s", name, propQuerySourceInfo.javaType().getSimpleName());
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
-        result = prime * result + propEntityInfo.hashCode();
+        result = prime * result + propQuerySourceInfo.hashCode();
         result = prime * result + (required ? 1231 : 1237);
         return result;
     }
@@ -73,6 +73,6 @@ public class EntityTypePropInfo<T extends AbstractEntity<?>> extends AbstractPro
 
         final EntityTypePropInfo<?> other = (EntityTypePropInfo<?>) obj;
 
-        return Objects.equals(propEntityInfo, other.propEntityInfo) && Objects.equals(required, other.required);
+        return Objects.equals(propQuerySourceInfo, other.propQuerySourceInfo) && Objects.equals(required, other.required);
     }
 }

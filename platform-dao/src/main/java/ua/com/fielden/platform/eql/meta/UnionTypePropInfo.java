@@ -14,10 +14,10 @@ import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
  * @param <PARENT>
  */
 public class UnionTypePropInfo<T extends AbstractUnionEntity> extends AbstractPropInfo<T> {
-    public final EntityInfo<T> propEntityInfo;
+    public final QuerySourceInfo<T> propEntityInfo;
     public final boolean required;
 
-    public UnionTypePropInfo(final String name, final EntityInfo<T> propEntityInfo, final Object hibType, final boolean required) {
+    public UnionTypePropInfo(final String name, final QuerySourceInfo<T> propEntityInfo, final Object hibType, final boolean required) {
         super(name, hibType, null);
         this.propEntityInfo = propEntityInfo;
         this.required = required;

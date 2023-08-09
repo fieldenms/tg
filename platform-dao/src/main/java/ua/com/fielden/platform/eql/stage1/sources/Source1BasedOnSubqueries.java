@@ -20,7 +20,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
-import ua.com.fielden.platform.eql.meta.EntityInfo;
+import ua.com.fielden.platform.eql.meta.QuerySourceInfo;
 import ua.com.fielden.platform.eql.meta.EntityTypePropInfo;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PrimTypePropInfo;
@@ -64,7 +64,7 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
     @Override
     public Source2BasedOnSubqueries transform(final TransformationContext1 context) {
         final List<SourceQuery2> transformedQueries = models.stream().map(m -> m.transform(context)).collect(toList());
-        final EntityInfo<?> ei = obtainEntityInfo(context.domainInfo, transformedQueries, sourceType(), isSyntheticEntity);
+        final QuerySourceInfo<?> ei = obtainQuerySourceInfo(context.domainInfo, transformedQueries, sourceType(), isSyntheticEntity);
         return new Source2BasedOnSubqueries(transformedQueries, alias, id, ei, isSyntheticEntity);
     }
     
@@ -73,9 +73,9 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
         return sourceType;
     }
 
-    public static <T extends AbstractEntity<?>> EntityInfo<T> produceEntityInfoForEntityType(final EqlDomainMetadata domainInfo, final List<SourceQuery2> models, final Class<T> sourceType, final boolean isComprehensive) {
-        final EntityInfo<T> entityInfo = new EntityInfo<>(sourceType, isComprehensive);
-        final SortedMap<String, AbstractPropInfo<?>> declaredProps = EntityAggregates.class.equals(sourceType) ? emptySortedMap() : domainInfo.getEntityInfo(sourceType).getProps();
+    public static <T extends AbstractEntity<?>> QuerySourceInfo<T> produceQuerySourceInfoForEntityType(final EqlDomainMetadata domainInfo, final List<SourceQuery2> models, final Class<T> sourceType, final boolean isComprehensive) {
+        final QuerySourceInfo<T> querySourceInfo = new QuerySourceInfo<>(sourceType, isComprehensive);
+        final SortedMap<String, AbstractPropInfo<?>> declaredProps = EntityAggregates.class.equals(sourceType) ? emptySortedMap() : domainInfo.getQuerySourceInfo(sourceType).getProps();
         final Collection<YieldInfoNode> yieldInfoNodes = YieldInfoNodesGenerator.generate(models);
         for (final YieldInfoNode yield : yieldInfoNodes) {
             final AbstractPropInfo<?> declaredProp = declaredProps.get(yield.name);
@@ -86,16 +86,16 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
                     if (!(yield.javaType == null || isEntityType(yield.javaType) && yield.javaType.equals(declaredEntityTypePropInfo.javaType()) || Long.class.equals(yield.javaType))) {
                         throw new EqlStage1ProcessingException(format(ERR_CONFLICT_BETWEEN_YIELDED_AND_DECLARED_PROP_TYPE, declaredEntityTypePropInfo.name, sourceType.getName(), declaredEntityTypePropInfo.javaType().getName(), yield.javaType.getName()));
                     }
-                    entityInfo.addProp(new EntityTypePropInfo<>(yield.name, declaredEntityTypePropInfo.propEntityInfo, declaredEntityTypePropInfo.hibType, yield.required));
+                    querySourceInfo.addProp(new EntityTypePropInfo<>(yield.name, declaredEntityTypePropInfo.propQuerySourceInfo, declaredEntityTypePropInfo.hibType, yield.required));
                 } else {
                     // TODO need to ensure that in case of UE or complex value all declared subprops match yielded ones.
                     // TODO need actual (based on yield) rather than declared info (similar to not declared props section below).
-                    entityInfo.addProp(declaredProp.hasExpression() ? declaredProp.cloneWithoutExpression() : declaredProp);
+                    querySourceInfo.addProp(declaredProp.hasExpression() ? declaredProp.cloneWithoutExpression() : declaredProp);
                 }
             } else {
                 // adding not declared props
-                entityInfo.addProp(isEntityType(yield.javaType)
-                        ? new EntityTypePropInfo(yield.name, domainInfo.getEntityInfo((Class<? extends AbstractEntity<?>>) yield.javaType), LongType.INSTANCE, yield.required)
+                querySourceInfo.addProp(isEntityType(yield.javaType)
+                        ? new EntityTypePropInfo(yield.name, domainInfo.getQuerySourceInfo((Class<? extends AbstractEntity<?>>) yield.javaType), LongType.INSTANCE, yield.required)
                         : new PrimTypePropInfo(yield.name, null/*yield.getValue().hibType*/, yield.javaType));
             }
         }
@@ -104,19 +104,19 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
 
         // In case of ad-hoc added calc props (e.g. totals) -- they should be included here
         for (final AbstractPropInfo<?> prop : declaredProps.values()) {
-            if (prop.hasExpression() && !entityInfo.getProps().containsKey(prop.name)) {
-                entityInfo.addProp(prop);
+            if (prop.hasExpression() && !querySourceInfo.getProps().containsKey(prop.name)) {
+                querySourceInfo.addProp(prop);
             }
         }
 
-        return entityInfo;
+        return querySourceInfo;
     }
     
-    private static EntityInfo<?> obtainEntityInfo(final EqlDomainMetadata domainInfo, final List<SourceQuery2> models, final Class<? extends AbstractEntity<?>> sourceType, final boolean isSyntheticEntity) {
+    private static QuerySourceInfo<?> obtainQuerySourceInfo(final EqlDomainMetadata domainInfo, final List<SourceQuery2> models, final Class<? extends AbstractEntity<?>> sourceType, final boolean isSyntheticEntity) {
         if (isSyntheticEntity || allGenerated(models)) {
-            return domainInfo.getEnhancedEntityInfo(sourceType);
+            return domainInfo.getEnhancedQuerySourceInfo(sourceType);
         } else {
-            return produceEntityInfoForEntityType(domainInfo, models, sourceType, false);
+            return produceQuerySourceInfoForEntityType(domainInfo, models, sourceType, false);
         }
     }
     

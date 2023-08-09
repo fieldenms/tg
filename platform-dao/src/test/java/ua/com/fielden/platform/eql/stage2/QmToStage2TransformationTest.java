@@ -13,7 +13,7 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
-import ua.com.fielden.platform.eql.meta.EntityInfo;
+import ua.com.fielden.platform.eql.meta.QuerySourceInfo;
 import ua.com.fielden.platform.eql.meta.EqlStage2TestCase;
 import ua.com.fielden.platform.eql.meta.PrimTypePropInfo;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
@@ -54,10 +54,10 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
 
         final SourceQuery2 vehSourceSubQry = srcqry(vehSources, vehConditions, vehYields);
         
-        final EntityInfo<EntityAggregates> entityInfo = new EntityInfo<>(EntityAggregates.class, false);
-        entityInfo.addProp(new PrimTypePropInfo<>("qty", null, INTEGER));
+        final QuerySourceInfo<EntityAggregates> querySourceInfo = new QuerySourceInfo<>(EntityAggregates.class, false);
+        querySourceInfo.addProp(new PrimTypePropInfo<>("qty", null, INTEGER));
         
-        final Source2BasedOnSubqueries qtyQrySource = source(entityInfo, 2, vehSourceSubQry);
+        final Source2BasedOnSubqueries qtyQrySource = source(querySourceInfo, 2, vehSourceSubQry);
         final IJoinNode2<? extends IJoinNode3> qtyQrySources = sources(qtyQrySource);
         final Yields2 qtyQryYields = mkYields(QmToStage2TransformationTest.mkYield(prop(qtyQrySource, new PrimTypePropInfo<>("qty", null, INTEGER)), ""));
         
@@ -98,10 +98,10 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
 
         final SourceQuery2 vehSourceSubQry2 = srcqry(vehSources2, vehConditions2, vehYields2);
 
-        final EntityInfo<EntityAggregates> entityInfo = new EntityInfo<>(EntityAggregates.class, false);
-        entityInfo.addProp(new PrimTypePropInfo<>("qty", null, INTEGER));
+        final QuerySourceInfo<EntityAggregates> querySourceInfo = new QuerySourceInfo<>(EntityAggregates.class, false);
+        querySourceInfo.addProp(new PrimTypePropInfo<>("qty", null, INTEGER));
         
-        final Source2BasedOnSubqueries qtyQrySource = source(entityInfo, 3, vehSourceSubQry1, vehSourceSubQry2);
+        final Source2BasedOnSubqueries qtyQrySource = source(querySourceInfo, 3, vehSourceSubQry1, vehSourceSubQry2);
         final IJoinNode2<? extends IJoinNode3> qtyQrySources = sources(qtyQrySource);
         final Yields2 qtyQryYields = mkYields(mkYield(prop(qtyQrySource, new PrimTypePropInfo<>("qty", null, INTEGER)), ""));
         

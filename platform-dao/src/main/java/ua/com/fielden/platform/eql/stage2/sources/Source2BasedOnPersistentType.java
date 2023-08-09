@@ -7,7 +7,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.meta.EntityInfo;
+import ua.com.fielden.platform.eql.meta.QuerySourceInfo;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
@@ -16,13 +16,13 @@ import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnTable;
 public class Source2BasedOnPersistentType extends AbstractSource2 implements ISource2<Source3BasedOnTable> {
     private final Class<? extends AbstractEntity<?>> sourceType;
 
-    public Source2BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final EntityInfo<?> entityInfo, final String alias, final Integer id) {
-        super(id, alias, entityInfo);
+    public Source2BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final QuerySourceInfo<?> querySourceInfo, final String alias, final Integer id) {
+        super(id, alias, querySourceInfo);
         this.sourceType = sourceType;
     }
 
-    public Source2BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final EntityInfo<?> entityInfo, final Integer id) {
-        this(sourceType, entityInfo, null, id);               
+    public Source2BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final QuerySourceInfo<?> querySourceInfo, final Integer id) {
+        this(sourceType, querySourceInfo, null, id);               
     }
 
     @Override

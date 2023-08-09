@@ -25,7 +25,7 @@ import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
-import ua.com.fielden.platform.eql.meta.EntityInfo;
+import ua.com.fielden.platform.eql.meta.QuerySourceInfo;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.retrieval.records.EntityTree;
 import ua.com.fielden.platform.eql.retrieval.records.HibernateScalar;
@@ -56,7 +56,7 @@ public final class EntityResultTreeBuilder {
         Class<? extends AbstractEntity<?>> currentResultType = null;
         ComponentTypePropInfo<?> currentComponentInfo = null;
         List<YieldedColumn> currentGroupDetails = new ArrayList<>();
-        final EntityInfo<?> entityInfo = resultType.equals(EntityAggregates.class) ? null : md.getEntityInfo(resultType);
+        final QuerySourceInfo<?> querySourceInfo = resultType.equals(EntityAggregates.class) ? null : md.getQuerySourceInfo(resultType);
         
         for (final YieldedColumn yc : yieldedColumns) {
             if (yc.name().contains(".")) {
@@ -93,7 +93,7 @@ public final class EntityResultTreeBuilder {
                         currentResultType = EntityAggregates.class;
                         currentGroupDetails.add(new YieldedColumn(remainingProp, yc.javaType(), yc.column())); 
                     } else {
-                        final AbstractPropInfo<?> propInfo = entityInfo.getProps().get(currentGroup);
+                        final AbstractPropInfo<?> propInfo = querySourceInfo.getProps().get(currentGroup);
                         if (propInfo != null) {
                             if (EntityUtils.isEntityType(propInfo.javaType())) {
                                 currentResultType = (Class<? extends AbstractEntity<?>>) propInfo.javaType();
@@ -140,11 +140,11 @@ public final class EntityResultTreeBuilder {
                     currentGroup = null; // no group is actually created for simple prop
                     localIndex = localIndex + 1;
                     
-                    if (entityInfo == null) { // the case of EntityAggregates
+                    if (querySourceInfo == null) { // the case of EntityAggregates
                         final Object derivedHibType = yc.javaType() == null ? null : hibTypeFromJavaType(yc.javaType());
                         leaves.add(new QueryResultLeaf(localIndex, yc.name(), new HibernateScalar(yc.column(), getHibTypeAsType(derivedHibType)), getHibTypeAsUserType(derivedHibType)));
                     } else { 
-                        final AbstractPropInfo<?> propInfo = entityInfo.getProps().get(yc.name());
+                        final AbstractPropInfo<?> propInfo = querySourceInfo.getProps().get(yc.name());
                         if (propInfo != null) {
                             final Object declaredHibType = propInfo.hibType;
                             leaves.add(new QueryResultLeaf(localIndex, yc.name(), new HibernateScalar(yc.column(), getHibTypeAsType(declaredHibType)), getHibTypeAsUserType(declaredHibType)));

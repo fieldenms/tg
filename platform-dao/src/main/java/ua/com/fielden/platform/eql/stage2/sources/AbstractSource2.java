@@ -2,17 +2,17 @@ package ua.com.fielden.platform.eql.stage2.sources;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.meta.EntityInfo;
+import ua.com.fielden.platform.eql.meta.QuerySourceInfo;
 
 public abstract class AbstractSource2 {
     public final Integer id;
     public final String alias;
-    public final EntityInfo<?> entityInfo;
+    public final QuerySourceInfo<?> querySourceInfo;
     
-    protected AbstractSource2(final Integer id, final String alias, final EntityInfo<?> entityInfo) {
+    protected AbstractSource2(final Integer id, final String alias, final QuerySourceInfo<?> querySourceInfo) {
         this.id = Objects.requireNonNull(id);
         this.alias = alias;
-        this.entityInfo = Objects.requireNonNull(entityInfo);
+        this.querySourceInfo = Objects.requireNonNull(querySourceInfo);
     }
     
     public String alias() {
@@ -23,8 +23,8 @@ public abstract class AbstractSource2 {
         return id;
     }
     
-    public EntityInfo<?> entityInfo() {
-        return entityInfo;
+    public QuerySourceInfo<?> querySourceInfo() {
+        return querySourceInfo;
     }
     
     @Override
@@ -33,7 +33,7 @@ public abstract class AbstractSource2 {
         int result = 1;
         result = prime * result + id.hashCode();
         result = prime * result + ((alias == null) ? 0 : alias.hashCode());
-        result = prime * result + entityInfo.hashCode();
+        result = prime * result + querySourceInfo.hashCode();
         return result;
     }
 
@@ -49,6 +49,6 @@ public abstract class AbstractSource2 {
         
         final AbstractSource2 other = (AbstractSource2) obj;
 
-        return Objects.equals(id, other.id) && Objects.equals(alias, other.alias) && Objects.equals(entityInfo, other.entityInfo);
+        return Objects.equals(id, other.id) && Objects.equals(alias, other.alias) && Objects.equals(querySourceInfo, other.querySourceInfo);
    }
 }

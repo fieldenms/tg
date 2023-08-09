@@ -9,12 +9,12 @@ import java.util.TreeMap;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 
-public class EntityInfo<T extends AbstractEntity<?>> implements IResolvable<T> {
+public class QuerySourceInfo<T extends AbstractEntity<?>> implements IResolvable<T> {
     private final Class<T> javaType;
     private final SortedMap<String, AbstractPropInfo<?>> props = new TreeMap<>();
     public final boolean isComprehensive; //indicates that all data-backed props from PE/SE are present
 
-    public EntityInfo(final Class<T> javaType, final boolean isComprehensive) {
+    public QuerySourceInfo(final Class<T> javaType, final boolean isComprehensive) {
         this.javaType = javaType;
         this.isComprehensive = isComprehensive;
     }
@@ -29,7 +29,7 @@ public class EntityInfo<T extends AbstractEntity<?>> implements IResolvable<T> {
         }
     }
 
-    public EntityInfo<T> addProp(final AbstractPropInfo<?> propInfo) { 
+    public QuerySourceInfo<T> addProp(final AbstractPropInfo<?> propInfo) { 
         props.put(propInfo.name, propInfo);
         return this;
     }
@@ -64,11 +64,11 @@ public class EntityInfo<T extends AbstractEntity<?>> implements IResolvable<T> {
             return true;
         }
 
-        if (!(obj instanceof EntityInfo)) {
+        if (!(obj instanceof QuerySourceInfo)) {
             return false;
         }
 
-        final EntityInfo<?> other = (EntityInfo<?>) obj;
+        final QuerySourceInfo<?> other = (QuerySourceInfo<?>) obj;
 
         return Objects.equals(javaType, other.javaType) && Objects.equals(props.keySet(), other.props.keySet()) && isComprehensive == other.isComprehensive;
     }

@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.sources;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.meta.EntityInfo;
+import ua.com.fielden.platform.eql.meta.QuerySourceInfo;
 import ua.com.fielden.platform.eql.stage2.ITransformableToS3;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
@@ -14,7 +14,7 @@ public interface ISource2<S3 extends ISource3> extends ITransformableToS3<S3> {
      */
     Class<? extends AbstractEntity<?>> sourceType();
     
-    EntityInfo<?> entityInfo();
+    QuerySourceInfo<?> querySourceInfo();
     
     String alias();
     

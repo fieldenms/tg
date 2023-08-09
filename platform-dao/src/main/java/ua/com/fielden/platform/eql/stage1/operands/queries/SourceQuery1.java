@@ -67,7 +67,7 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
     private Yields2 enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource, final boolean shouldIncludeCalcProps) {
         if (yields.getYields().isEmpty() || yieldAll) {
             final List<Yield2> enhancedYields = new ArrayList<>(yields.getYields());
-            for (final Entry<String, AbstractPropInfo<?>> el : mainSource.entityInfo().getProps().entrySet()) {
+            for (final Entry<String, AbstractPropInfo<?>> el : mainSource.querySourceInfo().getProps().entrySet()) {
                 if (!el.getValue().hasExpression() || shouldIncludeCalcProps && !(el.getValue().hasAggregation() || el.getValue().implicit)) {
                     
                     if (el.getValue() instanceof UnionTypePropInfo) {
@@ -85,8 +85,8 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
                     }
                 }
             }
-            final boolean allGenerated = mainSource.entityInfo().isComprehensive && yields.getYields().isEmpty() && !shouldIncludeCalcProps;
-            // generated yields with shouldIncludeCalcProps=true will produce different EntityInfo from the canonical one (calc props will be yielded, thus turned from calc to persistent)
+            final boolean allGenerated = mainSource.querySourceInfo().isComprehensive && yields.getYields().isEmpty() && !shouldIncludeCalcProps;
+            // generated yields with shouldIncludeCalcProps=true will produce different QuerySourceInfo from the canonical one (calc props will be yielded, thus turned from calc to persistent)
             // if necessary additional separate cache can be created for such cases (allGeneratedButWithCalcPropsMaterialised)
             return new Yields2(enhancedYields, allGenerated);
         }
