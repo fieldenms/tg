@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.meta;
+package ua.com.fielden.platform.eql.meta.query;
 
 import java.util.SortedMap;
 

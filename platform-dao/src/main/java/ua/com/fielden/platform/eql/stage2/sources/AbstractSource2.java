@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.stage2.sources;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.meta.QuerySourceInfo;
+import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
 
 public abstract class AbstractSource2 {
     public final Integer id;

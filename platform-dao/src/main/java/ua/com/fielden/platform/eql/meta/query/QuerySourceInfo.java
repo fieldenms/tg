@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.meta;
+package ua.com.fielden.platform.eql.meta.query;
 
 import static java.util.Collections.unmodifiableSortedMap;
 

@@ -8,7 +8,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
+import ua.com.fielden.platform.eql.meta.query.AbstractPropInfo;
 
 public class PropResolutionProgress {
     private final List<AbstractPropInfo<?>> resolved = new ArrayList<>();

@@ -8,9 +8,9 @@ import static ua.com.fielden.platform.utils.EntityUtils.keyPaths;
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
-import ua.com.fielden.platform.eql.meta.QuerySourceInfo;
-import ua.com.fielden.platform.eql.meta.EntityTypePropInfo;
+import ua.com.fielden.platform.eql.meta.query.AbstractPropInfo;
+import ua.com.fielden.platform.eql.meta.query.EntityTypePropInfo;
+import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
 import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 
