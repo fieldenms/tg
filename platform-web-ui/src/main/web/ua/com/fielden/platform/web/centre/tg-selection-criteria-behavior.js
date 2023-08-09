@@ -270,7 +270,9 @@ const TgSelectionCriteriaBehaviorImpl = {
          */
         _updateCentreDirty: {
             type: Function
-        }
+        },
+
+        moveToSelectionCrit: Function
 
     },
 
@@ -318,12 +320,16 @@ const TgSelectionCriteriaBehaviorImpl = {
                 };
 
                 self._postRunDefault(criteriaEntity, result);
+                if (criteriaEntity !== null && !criteriaEntity.isValidWithoutException()) {
+                    self.moveToSelectionCrit();
+                }
             });
         };
 
         self._processRunnerError = function (e) {
             self._processError(e, "run", function (errorResult) {
                 self._postRunDefaultError(errorResult);
+                self.moveToSelectionCrit();
             });
         };
 

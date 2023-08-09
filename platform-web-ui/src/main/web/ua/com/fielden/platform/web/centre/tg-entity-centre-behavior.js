@@ -577,6 +577,7 @@ const TgEntityCentreBehaviorImpl = {
          * Initiates auto run for this centre. This function is intended to be bound to child elements.
          */
         initiateAutoRun: Function,
+        moveToSelectionCrit: Function,
 
         /**
          * Resets the state of centre autocompleters, specifically 'active only' state.
@@ -775,6 +776,11 @@ const TgEntityCentreBehaviorImpl = {
                     }, 100);
                 }
                 centre.run(true); // identify autoRunning situation only in case where centre has autoRun as true but does not represent 'link' centre (has no URI criteria values)
+            }
+        };
+        this.moveToSelectionCrit = () => {
+            if (this._selectedView === this.preferredView) {
+                this.async(() => this._selectedView = 0, 100);
             }
         };
         this._resetAutocompleterState = () => this.$.selection_criteria._resetAutocompleterState();
