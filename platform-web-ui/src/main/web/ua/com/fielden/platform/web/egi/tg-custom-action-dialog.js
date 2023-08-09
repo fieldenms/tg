@@ -805,8 +805,7 @@ Polymer({
                         this.style.width = resizedWidth + 'px';
                     }
                     if (heightNeedsResize || widthNeedsResize) {
-                        this._setCustomProp(ST_WIDTH, this.style.width);
-                        this._setCustomProp(ST_HEIGHT, this.style.height);
+                        this._saveCustomDim(this.style.width, this.style.height);
                         this.notifyResize();
                     }
                     break;
@@ -978,8 +977,7 @@ Polymer({
                         this._wasMoved = true;
                     }
                     if (leftNeedsChange || topNeedsChange) {
-                        this._setCustomProp(ST_LEFT, leftNeedsChange ? left : this.style.left);
-                        this._setCustomProp(ST_TOP, topNeedsChange ? top : this.style.top);
+                        this._saveCustomPosition(topNeedsChange ? top : this.style.top, leftNeedsChange ? left : this.style.left);
                     }
                     break;
                 case 'end':
@@ -1760,28 +1758,50 @@ Polymer({
      * Loads and returns custom [width; height] dimensions for this dialog's Entity Master from local storage. Returns 'null' if current user never resized it on this device.
      */
     _customDim: function () {
-        if (this._embeddedMasterTypeKey()) {
-            const customWidth = localStorage.getItem(this._embeddedMasterTypeKey() + ST_WIDTH);
-            const customHeight = localStorage.getItem(this._embeddedMasterTypeKey() + ST_HEIGHT);
-            if (customWidth && customHeight) {
-                return [customWidth, customHeight];
+        const windowWidth = this._fitWidth;
+        const windowHeight = this._fitHeight;
+        if (this._embeddedMasterTypeKey() && !isNaN(windowWidth) && !isNaN(windowHeight)) {
+            const savedWidth = localStorage.getItem(this._embeddedMasterTypeKey() + ST_WIDTH);
+            const savedHeight = localStorage.getItem(this._embeddedMasterTypeKey() + ST_HEIGHT);
+            if (savedWidth && savedHeight) {
+                return [parseFloat(savedWidth) * windowWidth + "px", parseFloat(savedHeight) * windowHeight + "px"];
             }
         }
         return null;
+    },
+
+    _saveCustomDim: function(customWidth, customHeight) {
+        const windowWidth = this._fitWidth;
+        const windowHeight = this._fitHeight;
+        if (this._embeddedMasterTypeKey() && !isNaN(windowWidth) && !isNaN(windowHeight)) {
+            this._setCustomProp(ST_WIDTH, parseFloat(customWidth) / windowWidth);
+            this._setCustomProp(ST_HEIGHT, parseFloat(customHeight) / windowHeight);
+        }
     },
     
     /**
      * Loads and returns custom [top; left] position for this dialog's Entity Master from local storage. Returns 'null' if current user never moved it on this device.
      */
     _customPosition: function () {
-        if (this._embeddedMasterTypeKey()) {
-            const customTop = localStorage.getItem(this._embeddedMasterTypeKey() + ST_TOP);
-            const customLeft = localStorage.getItem(this._embeddedMasterTypeKey() + ST_LEFT);
-            if (customTop && customLeft) {
-                return [customTop, customLeft];
+        const windowWidth = this._fitWidth;
+        const windowHeight = this._fitHeight;
+        if (this._embeddedMasterTypeKey() && !isNaN(windowWidth) && !isNaN(windowHeight)) {
+            const savedTop = localStorage.getItem(this._embeddedMasterTypeKey() + ST_TOP);
+            const savedLeft = localStorage.getItem(this._embeddedMasterTypeKey() + ST_LEFT);
+            if (savedTop && savedLeft) {
+                return [parseFloat(savedTop) * windowHeight + "px", parseFloat(savedLeft) * windowWidth + "px"];
             }
         }
         return null;
+    },
+
+    _saveCustomPosition: function (customTop, customLeft) {
+        const windowWidth = this._fitWidth;
+        const windowHeight = this._fitHeight;
+        if (this._embeddedMasterTypeKey() && !isNaN(windowWidth) && !isNaN(windowHeight)) {
+            this._setCustomProp(ST_TOP, parseFloat(customTop) / windowHeight);
+            this._setCustomProp(ST_LEFT, parseFloat(customLeft) / windowWidth);
+        }
     },
     
     _customMaximised: function () {
