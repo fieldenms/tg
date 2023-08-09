@@ -8,18 +8,18 @@ import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 public class PrimTypePropInfo<T> extends AbstractPropInfo<T> {
     private final Class<T> propType;
 
-    public PrimTypePropInfo(final String name, final Object hibType, final Class<T> propType) {
-        this(name, hibType, propType, null, false);
+    public PrimTypePropInfo(final String name, final Class<T> propType, final Object hibType) {
+        this(name, propType, hibType, null, false);
     }
     
-    public PrimTypePropInfo(final String name, final Object hibType, final Class<T> propType, final ExpressionModel expression, final boolean implicit) {
+    public PrimTypePropInfo(final String name, final Class<T> propType, final Object hibType, final ExpressionModel expression, final boolean implicit) {
         super(name, hibType, expression, implicit);
         this.propType = propType;
     }
 
     @Override
     public AbstractPropInfo<T> cloneWithoutExpression() {
-        return new PrimTypePropInfo<T>(name, hibType, propType);
+        return new PrimTypePropInfo<T>(name, propType, hibType);
     }
     
     @Override

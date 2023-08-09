@@ -125,7 +125,7 @@ public class EqlDomainMetadata {
                             if (EntityUtils.isEntityType(sub.javaType)) {
                                 subprops.put(sub.name, new EntityTypePropInfo<>(sub.name, allEntitiesInfo.get(sub.javaType), sub.hibType, false, subExpr, sub.implicit));
                             } else {
-                                subprops.put(sub.name, new PrimTypePropInfo<>(sub.name, sub.hibType, sub.javaType, subExpr, sub.implicit));
+                                subprops.put(sub.name, new PrimTypePropInfo<>(sub.name, sub.javaType, sub.hibType, subExpr, sub.implicit));
                             }
                         }
                     }
@@ -136,12 +136,12 @@ public class EqlDomainMetadata {
                     //                    querySourceInfo.addProp(new EntityTypePropInfo(name, allEntitiesInfo.get(querySourceInfo.javaType()), hibType, required, expr));
                 } else {
                     if (el.subitems().isEmpty()) {
-                        querySourceInfo.addProp(new PrimTypePropInfo<>(name, hibType, javaType, expr, el.implicit));
+                        querySourceInfo.addProp(new PrimTypePropInfo<>(name, javaType, hibType, expr, el.implicit));
                     } else {
                         final ComponentTypePropInfo<?> propTpi = new ComponentTypePropInfo<>(name, javaType, hibType);
                         for (final EqlPropertyMetadata sub : el.subitems()) {
                             final ExpressionModel subExpr = sub.expressionModel;
-                            propTpi.addProp(new PrimTypePropInfo<>(sub.name, sub.hibType, sub.javaType, subExpr, sub.implicit));
+                            propTpi.addProp(new PrimTypePropInfo<>(sub.name, sub.javaType, sub.hibType, subExpr, sub.implicit));
                         }
                         querySourceInfo.addProp(propTpi);
                     }

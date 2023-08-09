@@ -55,11 +55,11 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final SourceQuery2 vehSourceSubQry = srcqry(vehSources, vehConditions, vehYields);
         
         final QuerySourceInfo<EntityAggregates> querySourceInfo = new QuerySourceInfo<>(EntityAggregates.class, false);
-        querySourceInfo.addProp(new PrimTypePropInfo<>("qty", null, INTEGER));
+        querySourceInfo.addProp(new PrimTypePropInfo<>("qty", INTEGER, null));
         
         final Source2BasedOnSubqueries qtyQrySource = source(querySourceInfo, 2, vehSourceSubQry);
         final IJoinNode2<? extends IJoinNode3> qtyQrySources = sources(qtyQrySource);
-        final Yields2 qtyQryYields = mkYields(QmToStage2TransformationTest.mkYield(prop(qtyQrySource, new PrimTypePropInfo<>("qty", null, INTEGER)), ""));
+        final Yields2 qtyQryYields = mkYields(QmToStage2TransformationTest.mkYield(prop(qtyQrySource, new PrimTypePropInfo<>("qty", INTEGER, null)), ""));
         
         
         final Yields2 modelQryYields = mkYields(QmToStage2TransformationTest.mkYield(subqry(qtyQrySources, qtyQryYields, INTEGER), "qty"));
@@ -99,11 +99,11 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final SourceQuery2 vehSourceSubQry2 = srcqry(vehSources2, vehConditions2, vehYields2);
 
         final QuerySourceInfo<EntityAggregates> querySourceInfo = new QuerySourceInfo<>(EntityAggregates.class, false);
-        querySourceInfo.addProp(new PrimTypePropInfo<>("qty", null, INTEGER));
+        querySourceInfo.addProp(new PrimTypePropInfo<>("qty", INTEGER, null));
         
         final Source2BasedOnSubqueries qtyQrySource = source(querySourceInfo, 3, vehSourceSubQry1, vehSourceSubQry2);
         final IJoinNode2<? extends IJoinNode3> qtyQrySources = sources(qtyQrySource);
-        final Yields2 qtyQryYields = mkYields(mkYield(prop(qtyQrySource, new PrimTypePropInfo<>("qty", null, INTEGER)), ""));
+        final Yields2 qtyQryYields = mkYields(mkYield(prop(qtyQrySource, new PrimTypePropInfo<>("qty", INTEGER, null)), ""));
         
         
         final Yields2 modelQryYields = mkYields(mkYield(subqry(qtyQrySources, qtyQryYields, INTEGER), "qty"));
