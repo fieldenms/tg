@@ -324,3 +324,11 @@ export const escapeHtmlText = function(text) {
     });
     return escapedStr;
 };
+
+const _userName = function () {
+    return document.body.querySelector("tg-app-template").menuConfig.userName;
+}
+
+export const localStorageKey = function (subject) {
+    return `${_userName()}_${subject}`;
+}

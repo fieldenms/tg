@@ -27,16 +27,16 @@ import { TgReflector } from '/app/tg-reflector.js';
 import {TgFocusRestorationBehavior} from '/resources/actions/tg-focus-restoration-behavior.js'
 import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
 import {TgBackButtonBehavior} from '/resources/views/tg-back-button-behavior.js'
-import { tearDownEvent, isInHierarchy, allDefined, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, isIPhoneOs } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, isInHierarchy, allDefined, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, isIPhoneOs, localStorageKey } from '/resources/reflection/tg-polymer-utils.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 
-const ST_WIDTH = '-width';
-const ST_HEIGHT = '-height';
-const ST_TOP = '-top';
-const ST_LEFT = '-left';
-const ST_PREF_DIM = '-pref-dim';
-const ST_MAXIMISED = '-maximised';
+const ST_WIDTH = '_width';
+const ST_HEIGHT = '_height';
+const ST_TOP = '_top';
+const ST_LEFT = '_left';
+const ST_PREF_DIM = '_pref-dim';
+const ST_MAXIMISED = '_maximised';
 
 const template = html`
     <style>
@@ -756,7 +756,7 @@ Polymer({
     _definePrefDim: function () {
         if (!this.prefDim) { // define prefDim if it was not defined using action configuration
             this.prefDim = this._lastElement.makeResizable();
-            localStorage.setItem(this._embeddedMasterTypeKey() + ST_PREF_DIM, JSON.stringify(this.prefDim)); // store calculated prefDim for later use; i.e. dialog (with cached info) closed, app reloaded, dialog opened again and resetDimensions performed
+            localStorage.setItem(localStorageKey(this._embeddedMasterTypeKey() + ST_PREF_DIM), JSON.stringify(this.prefDim)); // store calculated prefDim for later use; i.e. dialog (with cached info) closed, app reloaded, dialog opened again and resetDimensions performed
         }
     },
 
@@ -1741,7 +1741,7 @@ Polymer({
      */
     _setCustomProp: function (name, value) {
         if (this._embeddedMasterTypeKey()) {
-            localStorage.setItem(this._embeddedMasterTypeKey() + name, value);
+            localStorage.setItem(localStorageKey(this._embeddedMasterTypeKey() + name), value);
         }
     },
     
@@ -1750,7 +1750,7 @@ Polymer({
      */
     _removeCustomProp: function (name) {
         if (this._embeddedMasterTypeKey()) {
-            localStorage.removeItem(this._embeddedMasterTypeKey() + name);
+            localStorage.removeItem(localStorageKey(this._embeddedMasterTypeKey() + name));
         }
     },
     
@@ -1761,8 +1761,8 @@ Polymer({
         const windowWidth = this._fitWidth;
         const windowHeight = this._fitHeight;
         if (this._embeddedMasterTypeKey() && !isNaN(windowWidth) && !isNaN(windowHeight)) {
-            const savedWidth = localStorage.getItem(this._embeddedMasterTypeKey() + ST_WIDTH);
-            const savedHeight = localStorage.getItem(this._embeddedMasterTypeKey() + ST_HEIGHT);
+            const savedWidth = localStorage.getItem(localStorageKey(this._embeddedMasterTypeKey() + ST_WIDTH));
+            const savedHeight = localStorage.getItem(localStorageKey(this._embeddedMasterTypeKey() + ST_HEIGHT));
             if (savedWidth && savedHeight) {
                 return [parseFloat(savedWidth) * windowWidth + "px", parseFloat(savedHeight) * windowHeight + "px"];
             }
@@ -1786,8 +1786,8 @@ Polymer({
         const windowWidth = this._fitWidth;
         const windowHeight = this._fitHeight;
         if (this._embeddedMasterTypeKey() && !isNaN(windowWidth) && !isNaN(windowHeight)) {
-            const savedTop = localStorage.getItem(this._embeddedMasterTypeKey() + ST_TOP);
-            const savedLeft = localStorage.getItem(this._embeddedMasterTypeKey() + ST_LEFT);
+            const savedTop = localStorage.getItem(localStorageKey(this._embeddedMasterTypeKey() + ST_TOP));
+            const savedLeft = localStorage.getItem(localStorageKey(this._embeddedMasterTypeKey() + ST_LEFT));
             if (savedTop && savedLeft) {
                 return [parseFloat(savedTop) * windowHeight + "px", parseFloat(savedLeft) * windowWidth + "px"];
             }
@@ -1806,7 +1806,7 @@ Polymer({
     
     _customMaximised: function () {
         if (this._embeddedMasterTypeKey()) {
-            return localStorage.getItem(this._embeddedMasterTypeKey() + ST_MAXIMISED) !== null;
+            return localStorage.getItem(localStorageKey(this._embeddedMasterTypeKey() + ST_MAXIMISED)) !== null;
         }
         return false;
     }, 
@@ -1818,7 +1818,7 @@ Polymer({
      */
     _dimensionlessMasterPrefDim: function () {
         if (this._embeddedMasterTypeKey()) {
-            const prefDim = localStorage.getItem(this._embeddedMasterTypeKey() + ST_PREF_DIM);
+            const prefDim = localStorage.getItem(localStorageKey(this._embeddedMasterTypeKey() + ST_PREF_DIM));
             if (prefDim) {
                 return JSON.parse(prefDim);
             }
