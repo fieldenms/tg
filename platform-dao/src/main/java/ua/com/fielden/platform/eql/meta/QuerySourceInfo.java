@@ -21,12 +21,7 @@ public class QuerySourceInfo<T extends AbstractEntity<?>> implements IResolvable
 
     @Override
     public PropResolutionProgress resolve(final PropResolutionProgress context) {
-        if (context.isSuccessful()) {
-            return context;
-        } else {
-            final AbstractPropInfo<?> foundPart = props.get(context.getNextPending());
-            return foundPart == null ? context : foundPart.resolve(context.registerResolutionAndClone(foundPart));
-        }
+        return IResolvable.resolve(context, props);
     }
 
     public QuerySourceInfo<T> addProp(final AbstractPropInfo<?> propInfo) { 

@@ -34,12 +34,7 @@ public class UnionTypePropInfo<T extends AbstractUnionEntity> extends AbstractPr
 
     @Override
     public PropResolutionProgress resolve(final PropResolutionProgress context) {
-        if (context.isSuccessful()) {
-            return context;
-        } else {
-            final AbstractPropInfo<?> foundPart = props.get(context.getNextPending());
-            return foundPart == null ? context : foundPart.resolve(context.registerResolutionAndClone(foundPart));
-        }
+        return IResolvable.resolve(context, props);
     }
     
     public SortedMap<String, AbstractPropInfo<?>> getProps() {

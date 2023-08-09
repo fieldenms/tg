@@ -29,12 +29,7 @@ public class ComponentTypePropInfo<T> extends AbstractPropInfo<T> {
 
     @Override
     public PropResolutionProgress resolve(final PropResolutionProgress context) {
-        if (context.isSuccessful()) {
-            return context;
-        } else {
-            final AbstractPropInfo<?> foundPart = props.get(context.getNextPending());
-            return foundPart == null ? context : foundPart.resolve(context.registerResolutionAndClone(foundPart));
-        }
+        return IResolvable.resolve(context, props);
     }
     
     public ComponentTypePropInfo<T> addProp(final AbstractPropInfo<?> propInfo) { 
