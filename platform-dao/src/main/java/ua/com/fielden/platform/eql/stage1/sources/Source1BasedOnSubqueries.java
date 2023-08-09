@@ -95,8 +95,8 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
             } else {
                 // adding not declared props
                 querySourceInfo.addProp(isEntityType(yield.javaType)
-                        ? new EntityTypePropInfo(yield.name, domainInfo.getQuerySourceInfo((Class<? extends AbstractEntity<?>>) yield.javaType), LongType.INSTANCE, yield.required)
-                        : new PrimTypePropInfo(yield.name, null/*yield.getValue().hibType*/, yield.javaType));
+                        ? new EntityTypePropInfo<>(yield.name, domainInfo.getQuerySourceInfo((Class<? extends AbstractEntity<?>>) yield.javaType), LongType.INSTANCE, yield.required)
+                        : new PrimTypePropInfo<>(yield.name, null/*yield.getValue().hibType*/, yield.javaType));
             }
         }
 

@@ -37,7 +37,7 @@ public class NullTest1 implements ICondition1<ICondition2<?>> {
             final UnionTypePropInfo<?> lastResolutionItem = (UnionTypePropInfo<?>) prop.getPath().get(prop.getPath().size() - 1);
             final List<ICondition2<?>> nullTests = new ArrayList<>();
 
-            for (final AbstractPropInfo<?> propInfo : lastResolutionItem.propEntityInfo.getProps().values()) {
+            for (final AbstractPropInfo<?> propInfo : lastResolutionItem.getProps().values()) {
                 if (!propInfo.hasExpression()) {
                     final List<AbstractPropInfo<?>> subPropPath = new ArrayList<>(prop.getPath());
                     subPropPath.add(propInfo);

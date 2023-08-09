@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
@@ -114,20 +116,20 @@ public class EqlDomainMetadata {
                 final ExpressionModel expr = el.expressionModel;
 
                 if (isUnionEntityType(javaType)) {
-                    final QuerySourceInfo<? extends AbstractUnionEntity> ef = new QuerySourceInfo<>((Class<? extends AbstractUnionEntity>) javaType, false); // TODO need to move props to holder and not create QuerySourceInfo for this
+                    final SortedMap<String, AbstractPropInfo<?>> subprops = new TreeMap<>();
                     for (final EqlPropertyMetadata sub : el.subitems()) {
                         if (sub.expressionModel == null) {
-                            ef.addProp(new EntityTypePropInfo<>(sub.name, allEntitiesInfo.get(sub.javaType), sub.hibType, false, null, sub.implicit));
+                            subprops.put(sub.name, new EntityTypePropInfo<>(sub.name, allEntitiesInfo.get(sub.javaType), sub.hibType, false, null, sub.implicit));
                         } else {
                             final ExpressionModel subExpr = sub.expressionModel;
                             if (EntityUtils.isEntityType(sub.javaType)) {
-                                ef.addProp(new EntityTypePropInfo<>(sub.name, allEntitiesInfo.get(sub.javaType), sub.hibType, false, subExpr, sub.implicit));
+                                subprops.put(sub.name, new EntityTypePropInfo<>(sub.name, allEntitiesInfo.get(sub.javaType), sub.hibType, false, subExpr, sub.implicit));
                             } else {
-                                ef.addProp(new PrimTypePropInfo<>(sub.name, sub.hibType, sub.javaType, subExpr, sub.implicit));
+                                subprops.put(sub.name, new PrimTypePropInfo<>(sub.name, sub.hibType, sub.javaType, subExpr, sub.implicit));
                             }
                         }
                     }
-                    querySourceInfo.addProp(new UnionTypePropInfo<>(name, ef, hibType));
+                    querySourceInfo.addProp(new UnionTypePropInfo(name, javaType, hibType, subprops));
                 } else if (isPersistedEntityType(javaType)) {
                     querySourceInfo.addProp(new EntityTypePropInfo<>(name, allEntitiesInfo.get(javaType), hibType, el.required, expr, el.implicit));
                     //                } else if (ID.equals(name)){

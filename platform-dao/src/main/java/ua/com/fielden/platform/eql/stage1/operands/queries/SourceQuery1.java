@@ -71,7 +71,7 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
                 if (!el.getValue().hasExpression() || shouldIncludeCalcProps && !(el.getValue().hasAggregation() || el.getValue().implicit)) {
                     
                     if (el.getValue() instanceof UnionTypePropInfo) {
-                        for (final Entry<String, AbstractPropInfo<?>> sub : ((UnionTypePropInfo<?>) el.getValue()).propEntityInfo.getProps().entrySet()) {
+                        for (final Entry<String, AbstractPropInfo<?>> sub : ((UnionTypePropInfo<?>) el.getValue()).getProps().entrySet()) {
                             if (isEntityType(sub.getValue().javaType()) && !sub.getValue().hasExpression()) {
                                 enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(el.getValue(), sub.getValue())), el.getKey() + "." + sub.getValue().name, false));
                             }

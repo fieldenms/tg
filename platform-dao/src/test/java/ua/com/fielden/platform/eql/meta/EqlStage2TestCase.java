@@ -69,7 +69,7 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
         if (propInfo instanceof ComponentTypePropInfo) {
             return (AbstractPropInfo<?>) ((ComponentTypePropInfo<?>) propInfo).getProps().get(subPropName);
         } else if (propInfo instanceof UnionTypePropInfo) {
-            return (AbstractPropInfo<?>) ((UnionTypePropInfo<?>) propInfo).propEntityInfo.getProps().get(subPropName);
+            return (AbstractPropInfo<?>) ((UnionTypePropInfo<?>) propInfo).getProps().get(subPropName);
         } else {
             throw new EqlException("Can't obtain metadata for property " + propName + " and subproperty " + subPropName + " within type " + type);
         }

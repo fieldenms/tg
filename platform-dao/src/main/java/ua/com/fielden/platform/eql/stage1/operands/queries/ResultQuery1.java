@@ -121,7 +121,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
                     
                     if (!yieldSubprops) {
                         if (l1Prop.getValue() instanceof UnionTypePropInfo) {
-                            for (final Entry<String, AbstractPropInfo<?>> sub : ((UnionTypePropInfo<?>) l1Prop.getValue()).propEntityInfo.getProps().entrySet()) {
+                            for (final Entry<String, AbstractPropInfo<?>> sub : ((UnionTypePropInfo<?>) l1Prop.getValue()).getProps().entrySet()) {
                                 if (isEntityType(sub.getValue().javaType()) && !sub.getValue().hasExpression()) {
                                     enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(l1Prop.getValue(), sub.getValue())), l1Prop.getKey() + "." + sub.getValue().name, false));
                                 }
@@ -138,7 +138,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
                         for (final Entry<String, AbstractPropInfo<?>> l2Prop : l1PropMd.propQuerySourceInfo.getProps().entrySet()) {
                             if (l1PropFm.containsProp(l2Prop.getValue().name)) {
                                 if (l2Prop.getValue() instanceof UnionTypePropInfo) {
-                                    for (final Entry<String, AbstractPropInfo<?>> sub : ((UnionTypePropInfo<?>) l2Prop.getValue()).propEntityInfo.getProps().entrySet()) {
+                                    for (final Entry<String, AbstractPropInfo<?>> sub : ((UnionTypePropInfo<?>) l2Prop.getValue()).getProps().entrySet()) {
                                         if (isEntityType(sub.getValue().javaType()) && !sub.getValue().hasExpression()) {
                                             enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(l1Prop.getValue(), l2Prop.getValue(), sub.getValue())), l1Prop.getKey() + "." + l2Prop.getKey() + "." + sub.getValue().name, false));
                                         }
