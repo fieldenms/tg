@@ -622,9 +622,6 @@ const TgSelectionCriteriaBehaviorImpl = {
     _canLast: function (pageNumber, pageCount) {
         return !(pageNumber + 1 >= pageCount);
     },
-    _canCurrent: function (pageNumber, pageCount) {
-        return !(pageCount <= 0);
-    },
 
     _calculateCentreDirtyOrEdited: function (centreDirty, _editedPropsExist) {
         return _editedPropsExist || (centreDirty === true);
