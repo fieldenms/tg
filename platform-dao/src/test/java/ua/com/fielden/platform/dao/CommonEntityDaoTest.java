@@ -390,17 +390,13 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
                 .setActive(true)
                 .setLeased(false));
 
-        final TgVehicleFinDetails savedOne2One = save(new_(TgVehicleFinDetails.class, car1).setCapitalWorksNo("CAP_NO1"));
-        assertTrue(savedOne2One.isPersisted());
-        
         final TgVehicleFinDetailsDao co = co(TgVehicleFinDetails.class);
         final TgVehicleFinDetails foundOne2OneByKeyValue = co.findByKey(car1);
         assertNotNull(foundOne2OneByKeyValue);
-        assertEquals(savedOne2One, foundOne2OneByKeyValue);
 
-        final TgVehicleFinDetails foundOne2OneByKeyAsString = co.findByKey(savedOne2One.toString());
+        final TgVehicleFinDetails foundOne2OneByKeyAsString = co.findByKey(foundOne2OneByKeyValue.toString());
         assertNotNull(foundOne2OneByKeyAsString);
-        assertEquals(savedOne2One, foundOne2OneByKeyAsString);
+        assertEquals(foundOne2OneByKeyValue, foundOne2OneByKeyAsString);
     }
 
     @Test
@@ -629,7 +625,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void new_one_2_one_entities_become_persisted_and_not_dirty_once_saved() {
+    public void new_one_2_one_entities_get_save_upon_saving_of_the_main_entityd() {
         assertTrue("Expecting a one-2-one association for this test.", isOneToOne(TgVehicleFinDetails.class));
 
         final TgVehicleMake audi = save(new_(TgVehicleMake.class, "AUDI", "Audi"));
@@ -641,12 +637,9 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
                 .setActive(true)
                 .setLeased(false));
 
-        final TgVehicleFinDetails newOne2One = new_(TgVehicleFinDetails.class, car1).setCapitalWorksNo("CAP_NO1");
-        final TgVehicleFinDetails savedOne2One = save(newOne2One);
+        final TgVehicleFinDetails savedOne2One = car1.getFinDetails();
+        assertNotNull(savedOne2One.isPersisted());
         assertTrue(savedOne2One.isPersisted());
-        assertFalse(savedOne2One.isDirty());
-        assertFalse(newOne2One.isPersisted());
-        assertTrue(newOne2One.isDirty());
     }
 
     @Test
