@@ -15,7 +15,7 @@ import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import {microTask} from '/resources/polymer/@polymer/polymer/lib/utils/async.js';
 
 import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js';
-import { tearDownEvent, allDefined, isMobileApp, userName } from '/resources/reflection/tg-polymer-utils.js'
+import { tearDownEvent, allDefined, isMobileApp, localStorageKey } from '/resources/reflection/tg-polymer-utils.js'
 import { composeEntityValue, composeDefaultEntityValue } from '/resources/editors/tg-entity-formatter.js'; 
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
@@ -564,7 +564,7 @@ export class TgEntityEditor extends TgEditor {
         super.ready();
 
         if (this.multi === false && this.asPartOfEntityMaster) {
-            const storedActiveOnly = localStorage.getItem(userName() + ':' + this.autocompletionType + ':' + this.propertyName + ':activeOnly');
+            const storedActiveOnly = localStorage.getItem(localStorageKey(`${this.autocompletionType}_${this.propertyName}_activeOnly`));
             if (storedActiveOnly !== null) {
                 this._activeOnly = storedActiveOnly === 'true';
             }
@@ -722,7 +722,7 @@ export class TgEntityEditor extends TgEditor {
         if (!this.searching) {
             this._activeOnly = new_activeOnly;
             if (this.multi === false && this.asPartOfEntityMaster) {
-                localStorage.setItem(userName() + ':' + this.autocompletionType + ':' + this.propertyName + ':activeOnly', '' + this._activeOnly /* string value*/);
+                localStorage.setItem(localStorageKey(`${this.autocompletionType}_${this.propertyName}_activeOnly`), '' + this._activeOnly /* string value */);
             }
             this._dataPage = 1;
             this._search(this._searchQuery, null /* dataPage */, this._ignoreInputText, true /* 'active only' changed */);
