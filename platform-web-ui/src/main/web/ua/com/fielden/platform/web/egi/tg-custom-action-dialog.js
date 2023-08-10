@@ -818,12 +818,12 @@ Polymer({
     },
 
     resetDimensions: function (event) {
-        if ((this._customDim() || this._customPosition()) && event.detail.sourceEvent.detail && event.detail.sourceEvent.detail === 2) {
+        if (event.detail.sourceEvent.detail && event.detail.sourceEvent.detail === 2) {
             this._removeCustomProp(ST_WIDTH);
             this._removeCustomProp(ST_HEIGHT);
             this._removeCustomProp(ST_TOP);
             this._removeCustomProp(ST_LEFT);
-            this._removeCustomProp(ST_PREF_DIM);
+            this._removeCustomProp(ST_PREF_DIM);   
             this.refit();
         }
     },
