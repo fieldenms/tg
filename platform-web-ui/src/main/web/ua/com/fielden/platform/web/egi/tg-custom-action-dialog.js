@@ -310,14 +310,6 @@ Polymer({
         },
         
         /////////////////////////////////////////////////////////////////////////////////////////
-        
-        /**
-         * Indicates whether dialog was moved using title bar dragging. This will be reset after dialog closes.
-         */
-        _wasMoved: {
-            type: Boolean,
-            value: false
-        },
 
         /**
          * Indicates whether data was loaded or not.
@@ -732,13 +724,12 @@ Polymer({
         if (!this[stateName]) {
             this.persistActiveElement();
             this.focus();
-            this.persistDialogLocationAndDimensions();
         }
         this[stateName] = !this[stateName];
         this.notifyResize(); // notify children about resize of action dialog (for e.g. to re-draw shadow of tg-entity-master's actionContainer)
         if (!this[stateName]) {
             this.restoreActiveElement();
-            this.restoreDialogLocationAndDimensions();
+            this._restoreLocallyPersistedDialogPositionAndDimension();
             this.notifyResize(); // notify children about resize of action dialog (for e.g. to re-draw shadow of tg-entity-master's actionContainer)
         }
     },
@@ -821,31 +812,34 @@ Polymer({
         if (event.detail.sourceEvent.detail && event.detail.sourceEvent.detail === 2) {
             this._removeCustomProp(ST_WIDTH);
             this._removeCustomProp(ST_HEIGHT);
-            this._removeCustomProp(ST_TOP);
-            this._removeCustomProp(ST_LEFT);
-            this._removeCustomProp(ST_PREF_DIM);   
+            this._removeCustomProp(ST_PREF_DIM);
+            this._removeCustomPosition();
             this.refit();
         }
     },
 
     /**
+     * Resets the locally persisted dialog position.
+     */
+    _deleteLocallyPersistedDialogPosition: function () {
+        delete this.persistedTop;
+        delete this.persistedLeft;
+    },
+
+    /**
      * Persists current dialog location (top, left) and dimensions (height, width) to be restored later.
      */
-    persistDialogLocationAndDimensions: function() {
-        this.persistedTop = this.style.top;
-        this.persistedLeft = this.style.left;
-        this.persistedHeight = this.style.height;
-        this.persistedWidth = this.style.width;
+    _persistDialogPositionLocally: function() {
+        this.persistedTop = localStorage.getItem(localStorageKey(this._embeddedMasterTypeKey() + ST_TOP));
+        this.persistedLeft = localStorage.getItem(localStorageKey(this._embeddedMasterTypeKey() + ST_LEFT));
     },
 
     /**
      * Restores previously persisted dialog location (top, left) and dimensions (height, width).
      */
-    restoreDialogLocationAndDimensions: function() {
-        this.style.top = this.persistedTop;
-        this.style.left = this.persistedLeft;
-        this.style.height = this.persistedHeight;
-        this.style.width = this.persistedWidth;
+    _restoreLocallyPersistedDialogPositionAndDimension: function() {
+        this._setDialogPosition(this.prefDim, this._minimised, this._maximised);
+        this._setDialogDimensions(this.prefDim, this.minimised, this._maximised);
     },
 
     closeDialog: function(forceClosing) {
@@ -964,8 +958,6 @@ Polymer({
                         const parsed = parseInt(this.style.left);
                         left = (isNaN(parsed) ? _titleBarDimensions.left : parsed) + e.detail.ddx + 'px';
                         this.style.left = left;
-                        this.persistedLeft = left;
-                        this._wasMoved = true;
                     }
                     const topNeedsChange = _titleBarDimensions.top + e.detail.ddy >= 0 && _titleBarDimensions.bottom + e.detail.ddy <= this._windowHeight;
                     let top;
@@ -973,8 +965,6 @@ Polymer({
                         const parsed = parseInt(this.style.top);
                         top = (isNaN(parsed) ? _titleBarDimensions.top : parsed) + e.detail.ddy + 'px';
                         this.style.top = top;
-                        this.persistedTop = top;
-                        this._wasMoved = true;
                     }
                     if (leftNeedsChange || topNeedsChange) {
                         this._saveCustomPosition(topNeedsChange ? top : this.style.top, leftNeedsChange ? left : this.style.left);
@@ -1193,7 +1183,7 @@ Polymer({
             //Animate dialog dimensions even if it was resized.
             this._updateDialogDimensions(this.prefDim, this._minimised, this._maximised);
             //Animate dialog position even if dialog wasn't moved yet.
-            if (!this._wasMoved) {
+            if (!this._hasCustomPosition()) {
                 this._updateDialogPositionForPrefDim(this.prefDim, this._minimised, this._maximised);
             }
             //Delete _previousMasterMoved to ensure that previous state won't cause any problems in the future.
@@ -1347,7 +1337,6 @@ Polymer({
         }
         this._setDialogDimensions(this.prefDim, this._minimised, this._maximised);
         this._setDialogPosition(this.prefDim, this._minimised, this._maximised);
-        this._wasMoved = !!this._customPosition();
     },
 
     /**
@@ -1393,10 +1382,11 @@ Polymer({
     //Updates dialog position for loaded master.
     _setDialogPosition: function (prefDim, _minimised, _maximised) {
         if (!_minimised && !_maximised) {
-            const customPosition = this._customPosition();
-            if (customPosition) {
-                this.style.top = customPosition[0];
-                this.style.left = customPosition[1];
+            const windowWidth = this._fitWidth;
+            const windowHeight = this._fitHeight;
+            if (this._hasCustomPosition() && !isNaN(windowWidth) && !isNaN(windowHeight)) {
+                this.style.top = this.persistedTop * windowHeight + 'px';
+                this.style.left = this.persistedLeft * windowWidth + 'px'
             } else if (prefDim) {
                 this._updateDialogPositionForPrefDim(prefDim, _minimised, _maximised);
             }
@@ -1443,6 +1433,7 @@ Polymer({
     },
     
     _openAndRefit: function () {
+        this._persistDialogPositionLocally(); //Should save position locally to track dialog movement and switching between different types of master.
         this._refit(); // this is a legacy support
 
         if (this.mobile) { // mobile app specific: open all custom action dialogs in maximised state
@@ -1559,7 +1550,6 @@ Polymer({
             }
             this._resetState();
             this._subscriptions.length = 0;
-            this._wasMoved = false;
             this._minimised = false;
             this._maximised = false;
             this.$.menuToggler.hidden = true; // allows to use the same custom action dialog instance for the masters without menu after compound master was open previously
@@ -1577,6 +1567,7 @@ Polymer({
         this._hasPrev = false;
         this._errorMsg = null;
         this._masterVisibilityChanges = undefined;
+        this._deleteLocallyPersistedDialogPosition();
         this._resetAnimationBlockingSpinnerState();
         this.$.loadingPanel.classList.remove("visible");
         this.$.dialogLoader.classList.remove("hidden");
@@ -1594,9 +1585,13 @@ Polymer({
     },
 
     _onIronResize: function() {
-        if (!this._customPosition() && !this._customDim() && !this._minimised) {
+        if (!this._hasCustomPosition() && !this._customDim() && !this._minimised) {
             IronOverlayBehaviorImpl._onIronResize.call(this);
         }
+    },
+
+    _hasCustomPosition: function() {
+        return this.persistedTop && this.persistedLeft;
     },
 
     /**
@@ -1779,29 +1774,22 @@ Polymer({
         }
     },
     
-    /**
-     * Loads and returns custom [top; left] position for this dialog's Entity Master from local storage. Returns 'null' if current user never moved it on this device.
-     */
-    _customPosition: function () {
-        const windowWidth = this._fitWidth;
-        const windowHeight = this._fitHeight;
-        if (this._embeddedMasterTypeKey() && !isNaN(windowWidth) && !isNaN(windowHeight)) {
-            const savedTop = localStorage.getItem(localStorageKey(this._embeddedMasterTypeKey() + ST_TOP));
-            const savedLeft = localStorage.getItem(localStorageKey(this._embeddedMasterTypeKey() + ST_LEFT));
-            if (savedTop && savedLeft) {
-                return [parseFloat(savedTop) * windowHeight + "px", parseFloat(savedLeft) * windowWidth + "px"];
-            }
-        }
-        return null;
-    },
-
     _saveCustomPosition: function (customTop, customLeft) {
         const windowWidth = this._fitWidth;
         const windowHeight = this._fitHeight;
         if (this._embeddedMasterTypeKey() && !isNaN(windowWidth) && !isNaN(windowHeight)) {
-            this._setCustomProp(ST_TOP, parseFloat(customTop) / windowHeight);
-            this._setCustomProp(ST_LEFT, parseFloat(customLeft) / windowWidth);
+            this.persistedTop = parseFloat(customTop) / windowHeight + "";
+            this.persistedLeft = parseFloat(customLeft) / windowWidth + "";
+            this._setCustomProp(ST_TOP, this.persistedTop);
+            this._setCustomProp(ST_LEFT, this.persistedLeft);
         }
+    },
+
+    _removeCustomPosition: function () {
+        this._removeCustomProp(ST_TOP);
+        this._removeCustomProp(ST_LEFT);
+        //Next call should delete locally persisted position for dialog in order to properly restore dialog position. 
+        this._deleteLocallyPersistedDialogPosition();
     },
     
     _customMaximised: function () {
