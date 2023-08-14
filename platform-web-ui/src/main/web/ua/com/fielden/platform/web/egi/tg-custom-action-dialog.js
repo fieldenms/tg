@@ -279,8 +279,8 @@ Polymer({
         //Undefined - means that blocking layer has become invisible and master container has become visible. This indicates also that all animations have finished.
         //            This value is applied in _handleBodyTransitionEnd method when master container is visible and in _resetState method to ensure that all animation is finished 
         //            in case when master was closed during animation process.
-        //This property is checked in three methods: _updateDialogDimensions, _updateDialogAnimation and _handleMasterBeforeChange.
-        //_updateDialogDimensions - this method checks the value of this property to find out whether master dimensions can be changed or not. Please note that if this property
+        //This property is checked in three methods: _updateDialogDimensionsIfNotAnimating, _updateDialogAnimation and _handleMasterBeforeChange.
+        //_updateDialogDimensionsIfNotAnimating - this method checks the value of this property to find out whether master dimensions can be changed or not. Please note that if this property
         //                          is true then master dimensions in this method can not be changed. Dimensions will be changed later in _updateDialogAnimation method.
         //_updateDialogAnimation - this method checks this property to find out when to play dialog resize animation. Dialog is being resized smoothly when blocking layer is visible
         //                          and master container is invisible also _masterLayoutChanges is false.
@@ -298,8 +298,8 @@ Polymer({
         //Undefined - means that dialog has changed it's size and blocking layer has become invisible. This indicates also that all animations have finished.
         //            This value is applied in _handleBodyTransitionEnd method when master container is visible and in _resetAnimationBlockingSpinnerState method to ensure 
         //            that all animation is finished in case when master was closed during animation process or error happend when navigating to another entity. 
-        //This property is checked in three methods: _updateDialogDimensions, _updateDialogAnimation and _handleBodyTransitionEnd.
-        //_updateDialogDimensions - this method checks the value of this property to find out whether master dimensions can be changed or not. Please note that if this property
+        //This property is checked in three methods: _updateDialogDimensionsIfNotAnimating, _updateDialogAnimation and _handleBodyTransitionEnd.
+        //_updateDialogDimensionsIfNotAnimating - this method checks the value of this property to find out whether master dimensions can be changed or not. Please note that if this property
         //                          is true then master dimensions in this method can not be changed. Dimensions will be changed later in _updateDialogAnimation method.
         //_updateDialogAnimation - this method checks this property to find out when to play dialog resize animation. Dialog is being resized smoothly when blocking layer is visible
         //                          and master container is invisible also this property value should be false.
@@ -474,7 +474,7 @@ Polymer({
         }
     },
 
-    observers: ["_updateDialogDimensions(prefDim, _minimised, _maximised)", "_updateDialogAnimation(_masterVisibilityChanges, _masterLayoutChanges)"],
+    observers: ["_updateDialogDimensionsIfNotAnimating(prefDim, _minimised, _maximised)", "_updateDialogAnimation(_masterVisibilityChanges, _masterLayoutChanges)"],
 
     keyBindings: {
         'alt+c': '_invertMinimiseState',
@@ -726,28 +726,16 @@ Polymer({
             this.focus();
         }
         this[stateName] = !this[stateName];
-        this.notifyResize(); // notify children about resize of action dialog (for e.g. to re-draw shadow of tg-entity-master's actionContainer)
         if (!this[stateName]) {
             this.restoreActiveElement();
             this._restoreLocallyPersistedDialogPositionAndDimension();
-            this.notifyResize(); // notify children about resize of action dialog (for e.g. to re-draw shadow of tg-entity-master's actionContainer)
         }
+        this.notifyResize(); // notify children about resize of action dialog (for e.g. to re-draw shadow of tg-entity-master's actionContainer)
     },
 
     _invertMinimiseState: function() {
         if (!this._maximised) { // need to skip the action if dialog is in maximised state: this is needed for alt+m collapsing
             this._invertDialogState('_minimised');
-        }
-    },
-
-    /**
-     * For dimensionless Entity Master, need to resizable it and assign prefDim from current calculated dimensions.
-     * This is necessary, for example, for later resetDimensions (and other prefDim usages).
-     */
-    _definePrefDim: function () {
-        if (!this.prefDim) { // define prefDim if it was not defined using action configuration
-            this.prefDim = this._lastElement.makeResizable();
-            localStorage.setItem(localStorageKey(this._embeddedMasterTypeKey() + ST_PREF_DIM), JSON.stringify(this.prefDim)); // store calculated prefDim for later use; i.e. dialog (with cached info) closed, app reloaded, dialog opened again and resetDimensions performed
         }
     },
 
@@ -769,6 +757,17 @@ Polymer({
     _invertMaximiseState: function() {
         this._definePrefDim(); // define prefDim (maximise action) if it was not defined using action configuration
         this._invertDialogState('_maximised');
+    },
+
+    /**
+     * For dimensionless Entity Master, need to resizable it and assign prefDim from current calculated dimensions.
+     * This is necessary, for example, for later resetDimensions (and other prefDim usages).
+     */
+    _definePrefDim: function () {
+        if (!this.prefDim) { // define prefDim if it was not defined using action configuration
+            this.prefDim = this._lastElement.makeResizable();
+            //localStorage.setItem(localStorageKey(this._embeddedMasterTypeKey() + ST_PREF_DIM), JSON.stringify(this.prefDim)); // store calculated prefDim for later use; i.e. dialog (with cached info) closed, app reloaded, dialog opened again and resetDimensions performed
+        }
     },
 
     /**
@@ -812,9 +811,10 @@ Polymer({
         if (event.detail.sourceEvent.detail && event.detail.sourceEvent.detail === 2) {
             this._removeCustomProp(ST_WIDTH);
             this._removeCustomProp(ST_HEIGHT);
-            this._removeCustomProp(ST_PREF_DIM);
+            //this._removeCustomProp(ST_PREF_DIM);
             this._removeCustomPosition();
             this.refit();
+            this.notifyResizeWithoutItselfAndAncestors();
         }
     },
 
@@ -1181,10 +1181,10 @@ Polymer({
         }
         if (!_masterVisibilityChanges && !_masterLayoutChanges) {
             //Animate dialog dimensions even if it was resized.
-            this._updateDialogDimensions(this.prefDim, this._minimised, this._maximised);
+            this._updateDialogDimensionsIfNotAnimating(this.prefDim, this._minimised, this._maximised);
             //Animate dialog position even if dialog wasn't moved yet.
-            if (!this._hasCustomPosition()) {
-                this._updateDialogPositionForPrefDim(this.prefDim, this._minimised, this._maximised);
+            if (!this._wasMoved()) {
+                this._updateDialogPositionWithPrefDim(this.prefDim, this._minimised, this._maximised);
             }
             //Delete _previousMasterMoved to ensure that previous state won't cause any problems in the future.
             delete this._previousMasterMoved;
@@ -1196,7 +1196,7 @@ Polymer({
     /**
      * Updates dimensions and position of the dialog based on minimised / maximised state and prefDim appearance. This method changes the dialog's dimension only when dialog is not animating anything.
      */
-    _updateDialogDimensions: function(prefDim, minimised, maximised) {
+    _updateDialogDimensionsIfNotAnimating: function(prefDim, minimised, maximised) {
         if (!allDefined(arguments)) {
             return;
         }
@@ -1206,13 +1206,13 @@ Polymer({
     },
 
     /**
-     * Updates the position of dialog if it's size is preffered. Used for animation between two different masters.
+     * Updates the position of dialog with preffered one if it exists. Used for animation between two different masters.
      * 
      * @param {Object} prefDim prefferred dimension of the loaded master
      * @param {Boolean} _minimised determines whether dialog is in minimised state or not
      * @param {Boolean} _maximised determines whether dialog is in maximised state or not
      */
-    _updateDialogPositionForPrefDim: function (prefDim, _minimised, _maximised) {
+    _updateDialogPositionWithPrefDim: function (prefDim, _minimised, _maximised) {
         if (!_minimised && !_maximised && prefDim) {
             const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
             const isWidthPercentage = width.endsWith('%');
@@ -1332,8 +1332,8 @@ Polymer({
         this._maximised = this._customMaximised();
         if (!this.prefDim) { // define prefDim if it was not defined using action configuration
             const calculatedPrefDim = this._lastElement.makeResizable(); // _lastElement must be defined for non-empty _customDim()
-            const storedPrefDim = this._dimensionlessMasterPrefDim();
-            this.prefDim = storedPrefDim || calculatedPrefDim; // as the last resort use calculated dimensions from current Entity Master, however beware that they may be [0px; 0px] for not yet constructed UI
+            //const storedPrefDim = this._dimensionlessMasterPrefDim();
+            this.prefDim = /*storedPrefDim ||*/ calculatedPrefDim; // as the last resort use calculated dimensions from current Entity Master, however beware that they may be [0px; 0px] for not yet constructed UI
         }
         this._setDialogDimensions(this.prefDim, this._minimised, this._maximised);
         this._setDialogPosition(this.prefDim, this._minimised, this._maximised);
@@ -1384,11 +1384,11 @@ Polymer({
         if (!_minimised && !_maximised) {
             const windowWidth = this._fitWidth;
             const windowHeight = this._fitHeight;
-            if (this._hasCustomPosition() && !isNaN(windowWidth) && !isNaN(windowHeight)) {
+            if (this._wasMoved() && !isNaN(windowWidth) && !isNaN(windowHeight)) {
                 this.style.top = this.persistedTop * windowHeight + 'px';
-                this.style.left = this.persistedLeft * windowWidth + 'px'
+                this.style.left = this.persistedLeft * windowWidth + 'px';
             } else if (prefDim) {
-                this._updateDialogPositionForPrefDim(prefDim, _minimised, _maximised);
+                this._updateDialogPositionWithPrefDim(prefDim, _minimised, _maximised);
             }
         }
     },
@@ -1585,12 +1585,12 @@ Polymer({
     },
 
     _onIronResize: function() {
-        if (!this._hasCustomPosition() && !this._customDim() && !this._minimised) {
+        if (!this._wasMoved() && !this._customDim() && !this._minimised) {
             IronOverlayBehaviorImpl._onIronResize.call(this);
         }
     },
 
-    _hasCustomPosition: function() {
+    _wasMoved: function() {
         return this.persistedTop && this.persistedLeft;
     },
 
@@ -1626,7 +1626,7 @@ Polymer({
         const entityMaster = event.detail;
         const entityType = entityMaster.entityType ? this._reflector.getType(entityMaster.entityType) : null;
         if (entityType) {
-            if (this._embeddedMasterType === null && !entityType.isCompoundMenuItem() && entityType._simpleClassName() !== 'EntityEditAction' && entityType._simpleClassName() !== 'EntityNewAction') {
+            if (this._embeddedMasterType === null && !entityType.isCompoundMenuItem() && !entityMaster.masterWithMaster) {
                 this._embeddedMasterType = entityType;
             }
             if (this._mainEntityType === null && (entityType.compoundOpenerType() || entityType.isPersistent())) {
