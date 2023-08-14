@@ -35,7 +35,6 @@ const ST_WIDTH = '_width';
 const ST_HEIGHT = '_height';
 const ST_TOP = '_top';
 const ST_LEFT = '_left';
-const ST_PREF_DIM = '_pref-dim';
 const ST_MAXIMISED = '_maximised';
 
 const template = html`
@@ -766,7 +765,6 @@ Polymer({
     _definePrefDim: function () {
         if (!this.prefDim) { // define prefDim if it was not defined using action configuration
             this.prefDim = this._lastElement.makeResizable();
-            //localStorage.setItem(localStorageKey(this._embeddedMasterTypeKey() + ST_PREF_DIM), JSON.stringify(this.prefDim)); // store calculated prefDim for later use; i.e. dialog (with cached info) closed, app reloaded, dialog opened again and resetDimensions performed
         }
     },
 
@@ -811,7 +809,6 @@ Polymer({
         if (event.detail.sourceEvent.detail && event.detail.sourceEvent.detail === 2) {
             this._removeCustomProp(ST_WIDTH);
             this._removeCustomProp(ST_HEIGHT);
-            //this._removeCustomProp(ST_PREF_DIM);
             this._removeCustomPosition();
             this.refit();
             this.notifyResizeWithoutItselfAndAncestors();
@@ -827,7 +824,7 @@ Polymer({
     },
 
     /**
-     * Persists current dialog location (top, left) and dimensions (height, width) to be restored later.
+     * Reads the entity master position from local storage and into dialog position properties in order to remain the dialog position when switching between different types of entity master.
      */
     _persistDialogPositionLocally: function() {
         this.persistedTop = localStorage.getItem(localStorageKey(this._embeddedMasterTypeKey() + ST_TOP));
@@ -835,7 +832,7 @@ Polymer({
     },
 
     /**
-     * Restores previously persisted dialog location (top, left) and dimensions (height, width).
+     * Restores previously persisted dialog position (top, left) and dimensions (height, width).
      */
     _restoreLocallyPersistedDialogPositionAndDimension: function() {
         this._setDialogPosition(this.prefDim, this._minimised, this._maximised);
@@ -953,21 +950,17 @@ Polymer({
                 case 'track':
                     const _titleBarDimensions = this.$.titleBar.getBoundingClientRect();
                     const leftNeedsChange = _titleBarDimensions.right + e.detail.ddx >= 44 && _titleBarDimensions.left + e.detail.ddx <= this._windowWidth - 44;
-                    let left;
                     if (leftNeedsChange) {
-                        const parsed = parseInt(this.style.left);
-                        left = (isNaN(parsed) ? _titleBarDimensions.left : parsed) + e.detail.ddx + 'px';
-                        this.style.left = left;
+                        this.style.left = _titleBarDimensions.left + e.detail.ddx + 'px';
                     }
                     const topNeedsChange = _titleBarDimensions.top + e.detail.ddy >= 0 && _titleBarDimensions.bottom + e.detail.ddy <= this._windowHeight;
-                    let top;
                     if (topNeedsChange) {
-                        const parsed = parseInt(this.style.top);
-                        top = (isNaN(parsed) ? _titleBarDimensions.top : parsed) + e.detail.ddy + 'px';
-                        this.style.top = top;
+                        this.style.top = _titleBarDimensions.top + e.detail.ddy + 'px';
                     }
                     if (leftNeedsChange || topNeedsChange) {
-                        this._saveCustomPosition(topNeedsChange ? top : this.style.top, leftNeedsChange ? left : this.style.left);
+                        this._saveCustomPosition(
+                            topNeedsChange ? this.style.top : _titleBarDimensions.top + "px", 
+                            leftNeedsChange ? this.style.left : _titleBarDimensions.left + "px");
                     }
                     break;
                 case 'end':
@@ -1182,12 +1175,10 @@ Polymer({
         if (!_masterVisibilityChanges && !_masterLayoutChanges) {
             //Animate dialog dimensions even if it was resized.
             this._updateDialogDimensionsIfNotAnimating(this.prefDim, this._minimised, this._maximised);
-            //Animate dialog position even if dialog wasn't moved yet.
+            //Animate dialog position if it wasn't moved.
             if (!this._wasMoved()) {
                 this._updateDialogPositionWithPrefDim(this.prefDim, this._minimised, this._maximised);
             }
-            //Delete _previousMasterMoved to ensure that previous state won't cause any problems in the future.
-            delete this._previousMasterMoved;
             //Indicates that dialog is resized and moved after the resizing animation will be finished.
             this.async(this._dialogResized, 500);
         }
@@ -1330,11 +1321,7 @@ Polymer({
         this.style.maxWidth = '100%';
 
         this._maximised = this._customMaximised();
-        if (!this.prefDim) { // define prefDim if it was not defined using action configuration
-            const calculatedPrefDim = this._lastElement.makeResizable(); // _lastElement must be defined for non-empty _customDim()
-            //const storedPrefDim = this._dimensionlessMasterPrefDim();
-            this.prefDim = /*storedPrefDim ||*/ calculatedPrefDim; // as the last resort use calculated dimensions from current Entity Master, however beware that they may be [0px; 0px] for not yet constructed UI
-        }
+        this._definePrefDim();
         this._setDialogDimensions(this.prefDim, this._minimised, this._maximised);
         this._setDialogPosition(this.prefDim, this._minimised, this._maximised);
     },
@@ -1412,7 +1399,6 @@ Polymer({
             }
         }
         this.updateStyles();
-        //this.refit(); //Commented out as it seams that there is no need to call this.
         
         const actionsDialog = findParentDialog(action);
         if (actionsDialog) {
@@ -1797,21 +1783,6 @@ Polymer({
             return localStorage.getItem(localStorageKey(this._embeddedMasterTypeKey() + ST_MAXIMISED)) !== null;
         }
         return false;
-    }, 
-    
-    /**
-     * Loads and returns stored prefDim dimensions for this dialog's Entity Master from local storage, if it was dimensionless at the time of resizing / maximizing.
-     * Returns 'null' if current user never resized / maximized dimensionless Entity Master on this device.
-     * Also returns 'null' had defined dimensions in Entity Master.
-     */
-    _dimensionlessMasterPrefDim: function () {
-        if (this._embeddedMasterTypeKey()) {
-            const prefDim = localStorage.getItem(localStorageKey(this._embeddedMasterTypeKey() + ST_PREF_DIM));
-            if (prefDim) {
-                return JSON.parse(prefDim);
-            }
-        }
-        return null;
     }
     
 });
