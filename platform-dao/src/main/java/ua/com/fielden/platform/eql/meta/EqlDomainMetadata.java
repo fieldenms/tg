@@ -45,7 +45,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 
 public class EqlDomainMetadata {
 
-    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, QuerySourceInfo<?>> domainInfo;
+    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, QuerySourceInfo<?>> querySourceInfoMap;
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, List<SourceQuery1>> seModels;
     private final ConcurrentMap<String, List<String>> entityTypesDependentCalcPropsOrder = new ConcurrentHashMap<>();
     private final EntQueryGenerator gen;
@@ -62,8 +62,8 @@ public class EqlDomainMetadata {
         this.seModels = new ConcurrentHashMap<>(entityTypes.size());
         this.gen = new EntQueryGenerator(null, null, null, emptyMap());
 
-        domainInfo = entityMetadataHolder.entityPropsMetadata().entrySet().stream().collect(Collectors.toConcurrentMap(k -> k.getKey(), k -> new QuerySourceInfo<>(k.getKey(), true))); 
-        domainInfo.values().stream().forEach(ei -> addProps(ei, domainInfo, entityMetadataHolder.entityPropsMetadata().get(ei.javaType()).props()));
+        querySourceInfoMap = entityMetadataHolder.entityPropsMetadata().entrySet().stream().collect(Collectors.toConcurrentMap(k -> k.getKey(), k -> new QuerySourceInfo<>(k.getKey(), true))); 
+        querySourceInfoMap.values().stream().forEach(ei -> addProps(ei, querySourceInfoMap, entityMetadataHolder.entityPropsMetadata().get(ei.javaType()).props()));
         
         // generating models and dependencies info for SE types (UE types also as they are implicit SE types)
         final Map<Class<? extends AbstractEntity<?>>, Set<Class<? extends AbstractEntity<?>>>> seDependencies = new HashMap<>();
@@ -78,22 +78,22 @@ public class EqlDomainMetadata {
         for (final Class<? extends AbstractEntity<?>> seType : sortTopologically(seDependencies)) {
             try {
                 final QuerySourceInfo<? extends AbstractEntity<?>> enhancedQuerySourceInfo = generateEnhancedQuerySourceInfoForSyntheticType(seType, seModels.get(seType));
-                domainInfo.put(enhancedQuerySourceInfo.javaType(), enhancedQuerySourceInfo);
+                querySourceInfoMap.put(enhancedQuerySourceInfo.javaType(), enhancedQuerySourceInfo);
             } catch (final Exception e) {
                 e.printStackTrace();
                 throw new EqlMetadataGenerationException("Couldn't generate enhanced entity info for synthetic entity [" + seType + "] due to: " + e);
             }
         }
 
-        for (final QuerySourceInfo<?> querySourceInfo : domainInfo.values()) {
+        for (final QuerySourceInfo<?> querySourceInfo : querySourceInfoMap.values()) {
             entityTypesDependentCalcPropsOrder.put(querySourceInfo.javaType().getName(), DependentCalcPropsOrder.orderDependentCalcProps(this, gen, querySourceInfo));
         }
     }
     
-    private <T extends AbstractEntity<?>> T2<List<SourceQuery1>, Set<Class<? extends AbstractEntity<?>>>> generateModelsAndDependenciesForSyntheticType(final EntityTypeInfo<T> parentInfo) {
-        final List<SourceQuery1> queries = parentInfo.entityModels.stream().map(model -> gen.generateAsUncorrelatedSourceQuery(model)).collect(toList());
-        final Set<Class<? extends AbstractEntity<?>>> result = queries.stream().map(qry -> qry.collectEntityTypes()).flatMap(Set::stream).collect(Collectors.toSet());
-        return T2.t2(queries, result);
+    private <T extends AbstractEntity<?>> T2<List<SourceQuery1>, Set<Class<? extends AbstractEntity<?>>>> generateModelsAndDependenciesForSyntheticType(final EntityTypeInfo<T> entityTypeInfo) {
+        final List<SourceQuery1> queries = entityTypeInfo.entityModels.stream().map(model -> gen.generateAsUncorrelatedSourceQuery(model)).collect(toList());
+        final Set<Class<? extends AbstractEntity<?>>> dependencies = queries.stream().map(qry -> qry.collectEntityTypes()).flatMap(Set::stream).collect(Collectors.toSet());
+        return T2.t2(queries, dependencies);
     }
 
     /**
@@ -165,22 +165,20 @@ public class EqlDomainMetadata {
     }
 
     public QuerySourceInfo<?> getQuerySourceInfo(final Class<? extends AbstractEntity<?>> type) {
-        final QuerySourceInfo<?> existing = domainInfo.get(type);
+        final QuerySourceInfo<?> existing = querySourceInfoMap.get(type);
         if (existing != null) {
             return existing;
         }
         
-        final List<EqlPropertyMetadata> propsMetadatas = entityMetadataHolder.obtainEqlEntityMetadata(type).props();
-        //entityPropsMetadata.put(type, t2(eti.category, propsMetadatas));
         final QuerySourceInfo<?> created = new QuerySourceInfo<>(type, true);
-        //domainInfo.put(type, created);
-        addProps(created, domainInfo, propsMetadatas);
+        final List<EqlPropertyMetadata> propsMetadatas = entityMetadataHolder.obtainEqlEntityMetadata(type).props();
+        addProps(created, querySourceInfoMap, propsMetadatas);
 
         return created;
     }
 
     public QuerySourceInfo<?> getEnhancedQuerySourceInfo(final Class<? extends AbstractEntity<?>> type) {
-        final QuerySourceInfo<?> existing = domainInfo.get(type);
+        final QuerySourceInfo<?> existing = querySourceInfoMap.get(type);
         if (existing != null) {
             return existing;
         }
