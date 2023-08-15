@@ -576,7 +576,7 @@ public class CriteriaResource extends AbstractWebResource {
             userCompanion = companionFinder.find(User.class);
             miType = centre.getMenuItemType();
 
-            authoriseReading(getEntityType(miType).getSimpleName(), READ, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime); // authorisationModel is singleton and thread-safe
+            authoriseReading(getEntityType(miType).getSimpleName(), READ, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime); // reading of entities should be authorised when running / refreshing
 
             final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
             final Map<String, Object> customObject = new LinkedHashMap<>(centreContextHolder.getCustomObject());
