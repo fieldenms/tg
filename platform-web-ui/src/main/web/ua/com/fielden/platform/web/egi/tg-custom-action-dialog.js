@@ -1320,7 +1320,9 @@ Polymer({
         this.style.maxHeight = '100%';
         this.style.maxWidth = '100%';
 
-        this._maximised = this._customMaximised();
+        if (!this.mobile) {
+            this._maximised = this._customMaximised();
+        }
         this._definePrefDim();
         this._setDialogDimensions(this.prefDim, this._minimised, this._maximised);
         this._setDialogPosition(this.prefDim, this._minimised, this._maximised);
@@ -1399,6 +1401,7 @@ Polymer({
             }
         }
         this.updateStyles();
+        this.refit();//Needed to make dialog position fixed.
         
         const actionsDialog = findParentDialog(action);
         if (actionsDialog) {
@@ -1420,12 +1423,12 @@ Polymer({
     
     _openAndRefit: function () {
         this._persistDialogPositionLocally(); //Should save position locally to track dialog movement and switching between different types of master.
-        this._refit(); // this is a legacy support
 
         if (this.mobile) { // mobile app specific: open all custom action dialogs in maximised state
             this._invertMaximiseState();
         }
-        
+
+        this._refit();
         this.open();
         this._showBlockingPane();
     },
