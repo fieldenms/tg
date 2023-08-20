@@ -79,7 +79,6 @@ import ua.com.fielden.platform.sample.domain.ITgWorkshop;
 import ua.com.fielden.platform.sample.domain.TeAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TeFuelUsageByType;
 import ua.com.fielden.platform.sample.domain.TeFuelUsageByTypeCo;
-import ua.com.fielden.platform.sample.domain.TeVehicle;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgAuthorship;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
@@ -1928,6 +1927,14 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         final fetch<TgFuelUsage> fetch = fetch(TgFuelUsage.class).with("vehicle", fetchAndInstrument(TgVehicle.class));
         final TgFuelUsage fuelUsage = fuelUsageDao.getEntity(from(qry).with(fetch).model());
         assertTrue(isEntityInstrumented(fuelUsage.getVehicle()));
+    }
+    
+    @Test
+    public void fetching_entity_with_only_id_property_works() {
+        final EntityResultQueryModel<TgVehicleMake> qry = select(TgVehicleMake.class).where().prop("key").eq().val("AUDI").model();
+        final fetch<TgVehicleMake> fetch = fetchNone(TgVehicleMake.class).with("id");
+        final TgVehicleMake vehicleMake = vehicleMakeDao.getEntity(from(qry).with(fetch).model());
+        assertNotNull(vehicleMake.getId());
     }
 
     public static boolean isPropertyInstrumented(final AbstractEntity<?> entity, final String propName) {
