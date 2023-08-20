@@ -4,6 +4,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.stage1.QueryComponents1;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.TransformationResult1;
@@ -14,14 +15,14 @@ import ua.com.fielden.platform.eql.stage2.etc.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.etc.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.etc.Yield2;
 import ua.com.fielden.platform.eql.stage2.etc.Yields2;
-import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
-import ua.com.fielden.platform.eql.stage2.operands.Value2;
 import ua.com.fielden.platform.eql.stage2.operands.queries.SubQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 
 public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuery2> {
+
+    public static final String ERR_AUTO_YIELD_IMPOSSIBLE_FOR_QUERY_WITH_MAIN_SOURCE_HAVING_NO_ID = "Auto-yield is not possible when the main source of the query doesn't contain ID property.";
 
     public SubQuery1(final QueryComponents1 queryComponents, final Class<? extends AbstractEntity<?>> resultType) {
         super(queryComponents, resultType);
@@ -57,13 +58,13 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
     }
     
     private static Yields2 enhanceYields(final Yields2 yields, final IJoinNode2<? extends IJoinNode3> joinRoot2) {
-        if (yields.getYields().isEmpty()) {
-            final ISingleOperand2<?> yieldedOperand = joinRoot2.mainSource().querySourceInfo().getProps().containsKey(ID)
-                    ? new Prop2(joinRoot2.mainSource(), listOf(joinRoot2.mainSource().querySourceInfo().getProps().get(ID)))
-                    : new Value2(0);
-            return new Yields2(listOf(new Yield2(yieldedOperand, "", false)));
+        if (!yields.getYields().isEmpty()) {
+            return yields;
+        } else if (joinRoot2.mainSource().querySourceInfo().getProps().containsKey(ID)) {
+            return new Yields2(listOf(new Yield2(new Prop2(joinRoot2.mainSource(), listOf(joinRoot2.mainSource().querySourceInfo().getProps().get(ID))), "", false)));
+        } else {
+            throw new EqlStage1ProcessingException(ERR_AUTO_YIELD_IMPOSSIBLE_FOR_QUERY_WITH_MAIN_SOURCE_HAVING_NO_ID);
         }
-        return yields;
     }
 
     @Override
