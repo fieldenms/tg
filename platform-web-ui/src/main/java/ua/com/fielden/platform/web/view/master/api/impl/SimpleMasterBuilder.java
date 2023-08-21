@@ -3,7 +3,6 @@ package ua.com.fielden.platform.web.view.master.api.impl;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
@@ -13,7 +12,6 @@ import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -27,7 +25,6 @@ import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.UI_ROLE;
@@ -43,7 +40,6 @@ import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.ISimpleMasterBuilder;
-import ua.com.fielden.platform.web.view.master.api.MatcherOptions;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig0;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig5;
@@ -71,7 +67,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     private final FlexLayout layout = new FlexLayout("editors");
     private final FlexLayout actionBarLayout = new FlexLayout("actions");
 
-    private final Map<String, T2<Class<? extends IValueMatcherWithContext<T, ?>>, List<MatcherOptions>>> valueMatcherForProps = new HashMap<>();
+    private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
 
     private Class<T> entityType;
     private Optional<PrefDim> prefDim = empty();
@@ -189,8 +185,8 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
      *
      */
     public class WithMatcherCallback {
-        public void assign(final String propName, final Class<? extends IValueMatcherWithContext<T, ?>> matcher, final List<MatcherOptions> matcherOptions) {
-            valueMatcherForProps.put(propName, t2(matcher, matcherOptions));
+        public void assign(final String propName, final Class<? extends IValueMatcherWithContext<T, ?>> matcher) {
+            valueMatcherForProps.put(propName, matcher);
         }
     }
 
@@ -353,11 +349,11 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     private class SimpleMaster implements IMaster<T> {
 
         private final IRenderable renderableRepresentation;
-        private final Map<String, T2<Class<? extends IValueMatcherWithContext<T, ?>>, List<MatcherOptions>>> valueMatcherForProps;
+        private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps;
 
         public SimpleMaster(
                 final IRenderable renderableRepresentation,
-                final Map<String, T2<Class<? extends IValueMatcherWithContext<T, ?>>, List<MatcherOptions>>> valueMatcherForProps) {
+                final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps) {
             this.renderableRepresentation = renderableRepresentation;
             this.valueMatcherForProps = valueMatcherForProps;
         }
@@ -369,12 +365,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
         @Override
         public Optional<Class<? extends IValueMatcherWithContext<T, ?>>> matcherTypeFor(final String propName) {
-            return ofNullable(valueMatcherForProps.get(propName)).map(t2 -> t2._1);
-        }
-
-        @Override
-        public List<MatcherOptions> matcherOptionsFor(final String propName) {
-            return ofNullable(valueMatcherForProps.get(propName)).map(t2 -> t2._2).orElseGet(Collections::emptyList);
+            return Optional.ofNullable(valueMatcherForProps.get(propName));
         }
 
         @Override

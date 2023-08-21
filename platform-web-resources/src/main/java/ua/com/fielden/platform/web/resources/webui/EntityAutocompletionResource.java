@@ -112,25 +112,21 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
             final T2<String, Integer> searchStringAndDataPageNo = prepSearchString(centreContextHolder, shouldUpperCase);
             final Map<String, Object> customObject = linkedMapOf(t2(LOAD_MORE_DATA_KEY, searchStringAndDataPageNo._2 > 1));
 
-            // in master autocompleter, find out whether it is for activatable property and explicitly shown
-            if (isActivatableEntityType(propType) && master.isActiveOnlyActionShown(propertyName)) {
-                // determine data from client-side for further processing
-                final Optional<Boolean> activeOnlyFromClientOpt = ofNullable((Boolean) centreContextHolder.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_KEY)); // empty only for first time loading
-                final Optional<Boolean> activeOnlyChangedFromClientOpt = ofNullable((Boolean) centreContextHolder.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY)); // non-empty only for 'active only' button tap (always with 'true' value inside)
+            // in master autocompleter, find out whether it is for activatable property ...
+            if (isActivatableEntityType(propType) && valueMatcher instanceof FallbackValueMatcherWithContext) {
+                final FallbackValueMatcherWithContext fallbackMatcher = (FallbackValueMatcherWithContext) valueMatcher;
+                if (!fallbackMatcher.originalActiveOnly) { // ... and shows inactive values by default
+                    // determine data from client-side for further processing
+                    final Optional<Boolean> activeOnlyFromClientOpt = ofNullable((Boolean) centreContextHolder.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_KEY)); // empty only for first time loading
+                    final Optional<Boolean> activeOnlyChangedFromClientOpt = ofNullable((Boolean) centreContextHolder.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY)); // non-empty only for 'active only' button tap (always with 'true' value inside)
 
-                final boolean activeOnly = activeOnlyFromClientOpt.orElseGet(() -> {
-                    if (valueMatcher instanceof FallbackValueMatcherWithContext) {
-                        return ((FallbackValueMatcherWithContext) valueMatcher).isActiveOnly();
-                    }
-                    return false;
-                });
-                if (valueMatcher instanceof FallbackValueMatcherWithContext) {
-                    ((FallbackValueMatcherWithContext) valueMatcher).setActiveOnly(activeOnly);
+                    final boolean activeOnly = activeOnlyFromClientOpt.orElseGet(() -> fallbackMatcher.originalActiveOnly);
+                    fallbackMatcher.setActiveOnly(activeOnly);
+
+                    // return all the necessary custom data back to the client
+                    customObject.put(AUTOCOMPLETE_ACTIVE_ONLY_KEY, activeOnly);
+                    activeOnlyChangedFromClientOpt.ifPresent(activeOnlyChanged -> customObject.put(AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY, activeOnlyChanged));
                 }
-
-                // return all the necessary custom data back to the client
-                customObject.put(AUTOCOMPLETE_ACTIVE_ONLY_KEY, activeOnly);
-                activeOnlyChangedFromClientOpt.ifPresent(activeOnlyChanged -> customObject.put(AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY, activeOnlyChanged));
             }
 
             final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchStringAndDataPageNo._1, searchStringAndDataPageNo._2);

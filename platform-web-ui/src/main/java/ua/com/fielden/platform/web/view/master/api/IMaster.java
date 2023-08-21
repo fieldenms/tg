@@ -1,11 +1,8 @@
 package ua.com.fielden.platform.web.view.master.api;
 
-import static java.util.Collections.emptyList;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
-import static ua.com.fielden.platform.web.view.master.api.MatcherOptions.SHOW_ACTIVE_ONLY_ACTION;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -16,7 +13,6 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.IEntityMultiActionSelector;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
-import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.IAutocompleterConfig0;
 
 /**
  *
@@ -28,6 +24,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.IAutoco
  */
 public interface IMaster<T extends AbstractEntity<?>> {
 
+
     /**
      * Entity masters may or may not provide information about specific entity value matchers.
      *
@@ -35,24 +32,6 @@ public interface IMaster<T extends AbstractEntity<?>> {
      * @return
      */
     Optional<Class<? extends IValueMatcherWithContext<T, ?>>> matcherTypeFor(final String propName);
-
-    /**
-     * Returns a list of {@link MatcherOptions} for custom Entity Master matcher, if there is one. Otherwise, returns empty list.
-     */
-    default List<MatcherOptions> matcherOptionsFor(final String propName) {
-        return emptyList();
-    }
-
-    /**
-     * Indicates whether 'active only' action was deliberately shown by specifying {@link MatcherOptions#SHOW_ACTIVE_ONLY_ACTION} option
-     * in {@link IAutocompleterConfig0#withMatcher(Class, ua.com.fielden.platform.web.view.master.api.MatcherOptions, ua.com.fielden.platform.web.view.master.api.MatcherOptions...)} method.
-     * 
-     * @param property
-     * @return
-     */
-    default boolean isActiveOnlyActionShown(final String property) {
-        return matcherOptionsFor(property).contains(SHOW_ACTIVE_ONLY_ACTION);
-    }
 
     /**
      * Should be implemented by concrete entity master, returning an instance of IRenderable that is capable of rendering a completer master view.

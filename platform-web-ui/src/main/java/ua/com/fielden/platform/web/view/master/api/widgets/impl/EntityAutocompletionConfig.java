@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.impl;
 
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -10,8 +7,6 @@ import java.util.List;
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.Pair;
-import ua.com.fielden.platform.utils.StreamUtils;
-import ua.com.fielden.platform.web.view.master.api.MatcherOptions;
 import ua.com.fielden.platform.web.view.master.api.helpers.IPropertySelector;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.widgets.IAutocompleterConfig;
@@ -38,16 +33,9 @@ public class EntityAutocompletionConfig<T extends AbstractEntity<?>>
     }
 
     @Override
-    public IAutocompleterConfig1<T> withMatcher(final Class<? extends IValueMatcherWithContext<T, ?>> matcherType, final MatcherOptions option, final MatcherOptions... additionalOptions) {
-        widget().setMatcherType(matcherType);
-        withMatcherCallbank.assign(widget().propertyName(), matcherType, StreamUtils.of(option, additionalOptions).collect(toList()));
-        return this;
-    }
-
-    @Override
     public IAutocompleterConfig1<T> withMatcher(final Class<? extends IValueMatcherWithContext<T, ?>> matcherType) {
         widget().setMatcherType(matcherType);
-        withMatcherCallbank.assign(widget().propertyName(), matcherType, emptyList());
+        withMatcherCallbank.assign(widget().propertyName() , matcherType);
         return this;
     }
 

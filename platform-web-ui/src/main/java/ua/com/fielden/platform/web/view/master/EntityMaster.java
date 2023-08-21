@@ -36,14 +36,12 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.centre.EntityCentre;
-import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.MatcherOptions;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.IEntityMultiActionSelector;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
-import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.IAutocompleterConfig0;
 import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentre;
 
 /**
@@ -312,17 +310,6 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         return masterConfig.propertyActionSelectors().entrySet().stream()
                 .map(entry -> t2(entry.getKey(), injector.getInstance(entry.getValue())))
                 .collect(toMap(tt -> tt._1, tt -> tt._2));
-    }
-
-    /**
-     * Indicates whether 'active only' action was deliberately shown by specifying {@link MatcherOptions#SHOW_ACTIVE_ONLY_ACTION} option
-     * in {@link IAutocompleterConfig0#withMatcher(Class, ua.com.fielden.platform.web.view.master.api.MatcherOptions, ua.com.fielden.platform.web.view.master.api.MatcherOptions...)} method.
-     * 
-     * @param property
-     * @return
-     */
-    public boolean isActiveOnlyActionShown(final String property) {
-        return masterConfig.isActiveOnlyActionShown(property);
     }
 
 }
