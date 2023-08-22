@@ -10,6 +10,7 @@ import ua.com.fielden.platform.entity.query.QueryProcessingModel;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.meta.EqlTestCase;
+import ua.com.fielden.platform.eql.retrieval.records.EntityTree;
 import ua.com.fielden.platform.eql.retrieval.records.QueryModelResult;
 
 public abstract class AbstractEqlShortcutTest extends EqlTestCase {
@@ -40,5 +41,15 @@ public abstract class AbstractEqlShortcutTest extends EqlTestCase {
     
     protected static final QueryModelResult<EntityAggregates> transformToModelResult(final AggregatedResultQueryModel queryModel) {
         return transformToModelResult(new QueryProcessingModel<EntityAggregates, AggregatedResultQueryModel>(queryModel, null, null, emptyMap(), true));
+    }
+    
+    protected static <T extends AbstractEntity<?>> EntityTree<T> buildResultTree(final EntityResultQueryModel<T> act) {
+        final QueryModelResult<T> modelResult = transformToModelResult(act);
+        return EntityResultTreeBuilder.build(modelResult.resultType(), modelResult.yieldedColumns(), metadata());
+    }
+    
+    protected static EntityTree<EntityAggregates> buildResultTree(final AggregatedResultQueryModel act) {
+        final QueryModelResult<EntityAggregates> modelResult = transformToModelResult(act);
+        return EntityResultTreeBuilder.build(modelResult.resultType(), modelResult.yieldedColumns(), metadata());
     }
 }
