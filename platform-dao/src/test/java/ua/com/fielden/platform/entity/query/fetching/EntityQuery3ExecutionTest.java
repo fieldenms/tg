@@ -1087,7 +1087,7 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
 
     @Override
     public boolean saveDataPopulationScriptToFile() {
-        return true;
+        return false;
     }
 
     @Override
