@@ -560,17 +560,6 @@ export class TgEntityEditor extends TgEditor {
         }.bind(this);
     }
 
-    ready() {
-        super.ready();
-
-        if (this.multi === false && this.asPartOfEntityMaster) {
-            const storedActiveOnly = localStorage.getItem(localStorageKey(`${this.autocompletionType}_${this.propertyName}_activeOnly`));
-            if (storedActiveOnly !== null) {
-                this._activeOnly = storedActiveOnly === 'true';
-            }
-        }
-    }
-
     /**
      * Handles tap events on entity editor label.
      * 
@@ -721,7 +710,7 @@ export class TgEntityEditor extends TgEditor {
     _changeActiveOnly (new_activeOnly) {
         if (!this.searching) {
             this._activeOnly = new_activeOnly;
-            if (this.multi === false && this.asPartOfEntityMaster) {
+            if (this.asPartOfEntityMaster) {
                 localStorage.setItem(localStorageKey(`${this.autocompletionType}_${this.propertyName}_activeOnly`), '' + this._activeOnly /* string value */);
             }
             this._dataPage = 1;
@@ -738,6 +727,13 @@ export class TgEntityEditor extends TgEditor {
      * @param activeOnlyChanged -- 'true' only for the case where 'active only' button tapped, falsy value (e.g. undefined) otherwise
      */
     _search (defaultSearchQuery, dataPage, ignoreInputText, activeOnlyChanged) {
+        // before we initiate the search, let's initialise this._activeOnly if this autocompletion happens from an Entity Master
+        if (this.asPartOfEntityMaster) {
+            const storedActiveOnly = localStorage.getItem(localStorageKey(`${this.autocompletionType}_${this.propertyName}_activeOnly`));
+            if (storedActiveOnly !== null) {
+                this._activeOnly = storedActiveOnly === 'true';
+            }
+        }
         // cancel any other search
         this._cancelSearchByOtherEditor();
         // What is the query string?
@@ -919,7 +915,7 @@ export class TgEntityEditor extends TgEditor {
      */
     createContextHolder (inputText, dataPage) {
         let contextHolder = null;
-        if (this.multi === false && this.asPartOfEntityMaster) {
+        if (this.asPartOfEntityMaster) {
             const modifHolder = this.createModifiedPropertiesHolder();
             const originallyProducedEntity = this.reflector()._validateOriginallyProducedEntity(this.originallyProducedEntity, modifHolder.id);
             contextHolder = this.reflector().createContextHolder(
