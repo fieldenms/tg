@@ -112,20 +112,25 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
             final T2<String, Integer> searchStringAndDataPageNo = prepSearchString(centreContextHolder, shouldUpperCase);
             final Map<String, Object> customObject = linkedMapOf(t2(LOAD_MORE_DATA_KEY, searchStringAndDataPageNo._2 > 1));
 
-            // in master autocompleter, find out whether it is for activatable property ...
+            // for a master autocompleter, we need to determine whether it is for an activatable property and can match inactive values
+            // if that is the case, we need to show the "exclude inactive values" action
             if (isActivatableEntityType(propType) && valueMatcher instanceof FallbackValueMatcherWithContext) {
-                final FallbackValueMatcherWithContext fallbackMatcher = (FallbackValueMatcherWithContext) valueMatcher;
-                if (!fallbackMatcher.originalActiveOnly) { // ... and shows inactive values by default
-                    // determine data from client-side for further processing
-                    final Optional<Boolean> activeOnlyFromClientOpt = ofNullable((Boolean) centreContextHolder.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_KEY)); // empty only for first time loading
-                    final Optional<Boolean> activeOnlyChangedFromClientOpt = ofNullable((Boolean) centreContextHolder.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY)); // non-empty only for 'active only' button tap (always with 'true' value inside)
+                final FallbackValueMatcherWithContext<?,?> matcher = (FallbackValueMatcherWithContext<?,?>) valueMatcher; // this could be either a custom or the default fallback matcher
+                if (!matcher.activeOnlyByDefault) { // match inactive values?
+                    // read the client-side user configuration for an autocompleter
+                    // AUTOCOMPLETE_ACTIVE_ONLY_KEY is empty only for the loading the data for the first time
+                    final Optional<Boolean> activeOnlyFromClientOpt = ofNullable((Boolean) centreContextHolder.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_KEY));
+                    // AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY is non-empty only if the current request is the result of user tapping "exclude inactive values" button, and its values is always "true"
+                    final Optional<Boolean> activeOnlyChangedFromClientOpt = ofNullable((Boolean) centreContextHolder.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY));
 
-                    final boolean activeOnly = activeOnlyFromClientOpt.orElseGet(() -> fallbackMatcher.originalActiveOnly);
-                    fallbackMatcher.setActiveOnly(activeOnly);
+                    // instruct the matcher to match active only based on the current user preference AUTOCOMPLETE_ACTIVE_ONLY_KEY, if present
+                    // otherwise, match both active and inactive
+                    final boolean activeOnly = activeOnlyFromClientOpt.orElse(false);
+                    matcher.setActiveOnly(activeOnly);
 
-                    // return all the necessary custom data back to the client
+                    // return the autocompleter configuration back to the client
                     customObject.put(AUTOCOMPLETE_ACTIVE_ONLY_KEY, activeOnly);
-                    activeOnlyChangedFromClientOpt.ifPresent(activeOnlyChanged -> customObject.put(AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY, activeOnlyChanged));
+                    activeOnlyChangedFromClientOpt.ifPresent(activeOnlyChanged -> customObject.put(AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY, true));
                 }
             }
 

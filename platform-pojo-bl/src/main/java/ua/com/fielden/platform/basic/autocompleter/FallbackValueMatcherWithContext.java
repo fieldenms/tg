@@ -24,15 +24,15 @@ import ua.com.fielden.platform.entity.query.model.ConditionModel;
  */
 public class FallbackValueMatcherWithContext<CONTEXT extends AbstractEntity<?>, T extends AbstractEntity<?>> extends AbstractSearchEntityByKeyWithContext<CONTEXT, T> {
 
-    public final boolean originalActiveOnly;
+    public final boolean activeOnlyByDefault;
     private boolean activeOnly;
 
-    public FallbackValueMatcherWithContext(final IEntityDao<T> co, final boolean activeOnly) {
+    public FallbackValueMatcherWithContext(final IEntityDao<T> co, final boolean activeOnlyByDefault) {
         super(co);
         final Class<T> entityType = co.getEntityType();
-        this.originalActiveOnly = activeOnly;
-        this.activeOnly = activeOnly;
-        if (activeOnly && !ActivatableAbstractEntity.class.isAssignableFrom(entityType)) {
+        this.activeOnlyByDefault = activeOnlyByDefault;
+        this.activeOnly = activeOnlyByDefault;
+        if (activeOnlyByDefault && !ActivatableAbstractEntity.class.isAssignableFrom(entityType)) {
             final String entityTitle = getEntityTitleAndDesc(entityType).getKey();
             throw new EntityException(format("Activatable type is expected. Entity [%s] is not activatable.", entityTitle));
         }
