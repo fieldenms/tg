@@ -24,6 +24,12 @@ import ua.com.fielden.platform.entity.query.model.ConditionModel;
  */
 public class FallbackValueMatcherWithContext<CONTEXT extends AbstractEntity<?>, T extends AbstractEntity<?>> extends AbstractSearchEntityByKeyWithContext<CONTEXT, T> {
 
+    /**
+     * The default setting to configure the matching logic for including/excluding inactive activatable entity values.
+     * It should be set to {@code true} only for activatable entities.
+     * Users have the ability to control inclusion/exclusion of inactive values by means of setting value for attribute {@code activeOnly}, which is exposed via UI.
+     * Refer {@code EntityAutocompletionResource.post} for more details.
+     */
     public final boolean activeOnlyByDefault;
     private boolean activeOnly;
 
