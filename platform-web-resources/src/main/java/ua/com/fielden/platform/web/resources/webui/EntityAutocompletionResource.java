@@ -1,11 +1,14 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static java.util.Optional.ofNullable;
+import static ua.com.fielden.platform.entity.IContextDecomposer.AUTOCOMPLETE_ACTIVE_ONLY_KEY;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
+import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
 import static ua.com.fielden.platform.utils.MiscUtilities.prepare;
+import static ua.com.fielden.platform.web.resources.webui.CriteriaEntityAutocompletionResource.AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaEntityAutocompletionResource.LOAD_MORE_DATA_KEY;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
@@ -24,6 +27,7 @@ import org.restlet.resource.Post;
 
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
+import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithContext;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.IEntityProducer;
@@ -106,10 +110,34 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
             final boolean shouldUpperCase = !Attachment.class.isAssignableFrom(propType);
             // prepare the search string and perform value matching
             final T2<String, Integer> searchStringAndDataPageNo = prepSearchString(centreContextHolder, shouldUpperCase);
+            final Map<String, Object> customObject = linkedMapOf(t2(LOAD_MORE_DATA_KEY, searchStringAndDataPageNo._2 > 1));
+
+            // for a master autocompleter, we need to determine whether it is for an activatable property and can match inactive values
+            // if that is the case, we need to show the "exclude inactive values" action
+            if (isActivatableEntityType(propType) && valueMatcher instanceof FallbackValueMatcherWithContext) {
+                final FallbackValueMatcherWithContext<?,?> matcher = (FallbackValueMatcherWithContext<?,?>) valueMatcher; // this could be either a custom or the default fallback matcher
+                if (!matcher.activeOnlyByDefault) { // match inactive values?
+                    // read the client-side user configuration for an autocompleter
+                    // AUTOCOMPLETE_ACTIVE_ONLY_KEY is empty only for the loading the data for the first time
+                    final Optional<Boolean> activeOnlyFromClientOpt = ofNullable((Boolean) centreContextHolder.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_KEY));
+                    // AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY is non-empty only if the current request is the result of user tapping "exclude inactive values" button, and its values is always "true"
+                    final Optional<Boolean> activeOnlyChangedFromClientOpt = ofNullable((Boolean) centreContextHolder.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY));
+
+                    // instruct the matcher to match active only based on the current user preference AUTOCOMPLETE_ACTIVE_ONLY_KEY, if present
+                    // otherwise, match both active and inactive
+                    final boolean activeOnly = activeOnlyFromClientOpt.orElse(false);
+                    matcher.setActiveOnly(activeOnly);
+
+                    // return the autocompleter configuration back to the client
+                    customObject.put(AUTOCOMPLETE_ACTIVE_ONLY_KEY, activeOnly);
+                    activeOnlyChangedFromClientOpt.ifPresent(activeOnlyChanged -> customObject.put(AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY, true));
+                }
+            }
+
             final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchStringAndDataPageNo._1, searchStringAndDataPageNo._2);
 
             // logger.debug("ENTITY_AUTOCOMPLETION_RESOURCE: search finished.");
-            return restUtil.listJsonRepresentationWithoutIdAndVersion(entities, linkedMapOf(t2(LOAD_MORE_DATA_KEY, searchStringAndDataPageNo._2 > 1)));
+            return restUtil.listJsonRepresentationWithoutIdAndVersion(entities, customObject);
         }, restUtil);
     }
 
