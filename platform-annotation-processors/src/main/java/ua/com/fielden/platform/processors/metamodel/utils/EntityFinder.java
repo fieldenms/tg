@@ -15,13 +15,12 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.*;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Elements;
 import javax.lang.model.util.TypeKindVisitor14;
-import javax.lang.model.util.Types;
 import java.lang.annotation.Annotation;
 import java.util.Optional;
 import java.util.*;
@@ -40,8 +39,8 @@ public class EntityFinder extends ElementFinder {
     public static final Class<?> ROOT_ENTITY_CLASS = AbstractEntity.class;
     public static final Class<?> UNION_ENTITY_CLASS = AbstractUnionEntity.class;
 
-    public EntityFinder(final Elements elements, final Types types) {
-        super(elements, types);
+    public EntityFinder(final ProcessingEnvironment procEnv) {
+        super(procEnv);
     }
 
     /**

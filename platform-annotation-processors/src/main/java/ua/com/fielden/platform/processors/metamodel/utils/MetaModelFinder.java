@@ -10,12 +10,11 @@ import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderExce
 import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
 import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
 
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -31,8 +30,8 @@ import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.*;
  */
 public class MetaModelFinder extends ElementFinder {
 
-    public MetaModelFinder(final Elements elements, final Types types) {
-        super(elements, types);
+    public MetaModelFinder(final ProcessingEnvironment procEnv) {
+        super(procEnv);
     }
 
     /**

@@ -100,9 +100,9 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
-        this.elementFinder = new ElementFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
-        this.entityFinder = new EntityFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
-        this.metaModelFinder = new MetaModelFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
+        this.elementFinder = new ElementFinder(processingEnv);
+        this.entityFinder = new EntityFinder(processingEnv);
+        this.metaModelFinder = new MetaModelFinder(processingEnv);
     }
 
     @Override

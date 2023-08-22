@@ -78,9 +78,9 @@ public class MetaModelStructureTest {
     public static void setupOnce() {
         // these values are guaranteed to have been initialized since the class rule will evaluate this method during the last round of processing
         typeUtils = rule.getTypes();
-        elementFinder = new ElementFinder(rule.getElements(), rule.getTypes());
-        entityFinder = new EntityFinder(rule.getElements(), rule.getTypes());
-        metaModelFinder = new MetaModelFinder(rule.getElements(), rule.getTypes());
+        elementFinder = new ElementFinder(rule.getProcessingEnvironment());
+        entityFinder = new EntityFinder(rule.getProcessingEnvironment());
+        metaModelFinder = new MetaModelFinder(rule.getProcessingEnvironment());
         validateSetup();
     }
     

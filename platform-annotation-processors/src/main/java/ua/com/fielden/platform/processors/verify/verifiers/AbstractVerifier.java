@@ -1,16 +1,15 @@
 package ua.com.fielden.platform.processors.verify.verifiers;
 
-import java.util.List;
+import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
+import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
+import ua.com.fielden.platform.processors.verify.AbstractRoundEnvironment;
+import ua.com.fielden.platform.processors.verify.ViolatingElement;
 
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.util.Types;
-
-import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
-import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
-import ua.com.fielden.platform.processors.verify.AbstractRoundEnvironment;
-import ua.com.fielden.platform.processors.verify.ViolatingElement;
+import java.util.List;
 
 /**
  * Abstract base verifier type providing common behaviour.
@@ -31,8 +30,8 @@ public abstract class AbstractVerifier<RE extends AbstractRoundEnvironment> impl
         this.processingEnv = processingEnv;
         this.messager = processingEnv.getMessager();
         this.typeUtils = processingEnv.getTypeUtils();
-        this.elementFinder = new ElementFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
-        this.entityFinder = new EntityFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
+        this.elementFinder = new ElementFinder(processingEnv);
+        this.entityFinder = new EntityFinder(processingEnv);
     }
 
     /**

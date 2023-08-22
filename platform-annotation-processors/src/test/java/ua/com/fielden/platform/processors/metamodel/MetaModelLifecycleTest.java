@@ -147,8 +147,8 @@ public class MetaModelLifecycleTest {
         final boolean success = compile(compilationTargets,
                 procEnv -> {
                     // setup
-                    final EntityFinder entityFinder = new EntityFinder(procEnv.getElementUtils(), procEnv.getTypeUtils());
-                    final MetaModelFinder mmFinder = new MetaModelFinder(procEnv.getElementUtils(), procEnv.getTypeUtils());
+                    final EntityFinder entityFinder = new EntityFinder(procEnv);
+                    final MetaModelFinder mmFinder = new MetaModelFinder(procEnv);
 
                     // sanity check: entity must be present in the current environment, since its meta-model must be active
                     final TypeElement te = procEnv.getElementUtils().getTypeElement(entityQualName);
@@ -178,7 +178,7 @@ public class MetaModelLifecycleTest {
         final boolean success = compile(compilationTargets,
                 procEnv -> {
                     // setup
-                    final MetaModelFinder mmFinder = new MetaModelFinder(procEnv.getElementUtils(), procEnv.getTypeUtils());
+                    final MetaModelFinder mmFinder = new MetaModelFinder(procEnv);
 
                     // find meta-model by its name, since its entity may not exist
                     final String metaModelQualName = MetaModelFinder.resolveMetaModelName(entityPkgName, entitySimpleName);

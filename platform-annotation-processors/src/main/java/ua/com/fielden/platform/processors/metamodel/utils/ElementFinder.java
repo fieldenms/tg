@@ -6,6 +6,8 @@ import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderExce
 import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelException;
 import ua.com.fielden.platform.utils.StreamUtils;
 
+import javax.annotation.processing.Messager;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.AnnotatedConstruct;
 import javax.lang.model.element.*;
 import javax.lang.model.type.*;
@@ -34,17 +36,15 @@ public class ElementFinder {
 
     public final Elements elements;
     public final Types types;
+    protected final Messager messager;
 
-    public ElementFinder(final Elements elements, final Types types) {
-        if (elements == null) {
-            throw new ElementFinderException("Argument elements cannot be null.");
+    public ElementFinder(final ProcessingEnvironment procEnv) {
+        if (procEnv == null) {
+            throw new ElementFinderException("Argument procEnv cannot be null.");
         }
-        if (types == null) {
-            throw new ElementFinderException("Argument types cannot be null.");
-        }
-
-        this.elements = elements;
-        this.types = types;
+        this.elements = procEnv.getElementUtils();
+        this.types = procEnv.getTypeUtils();
+        this.messager = procEnv.getMessager();
     }
 
     /**
