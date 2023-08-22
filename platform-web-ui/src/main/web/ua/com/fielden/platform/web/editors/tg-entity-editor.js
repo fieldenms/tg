@@ -15,7 +15,7 @@ import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import {microTask} from '/resources/polymer/@polymer/polymer/lib/utils/async.js';
 
 import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js';
-import { tearDownEvent, allDefined, isMobileApp } from '/resources/reflection/tg-polymer-utils.js'
+import { tearDownEvent, allDefined, isMobileApp, localStorageKey } from '/resources/reflection/tg-polymer-utils.js'
 import { composeEntityValue, composeDefaultEntityValue } from '/resources/editors/tg-entity-formatter.js'; 
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
@@ -747,6 +747,9 @@ export class TgEntityEditor extends TgEditor {
     _changeActiveOnly (new_activeOnly) {
         if (!this.searching) {
             this._activeOnly = new_activeOnly;
+            if (this.asPartOfEntityMaster) {
+                localStorage.setItem(localStorageKey(`${this.autocompletionType}_${this.propertyName}_activeOnly`), '' + this._activeOnly /* string value */);
+            }
             this._dataPage = 1;
             this._search(this._searchQuery, null /* dataPage */, this._ignoreInputText, true /* 'active only' changed */);
         }
@@ -761,6 +764,13 @@ export class TgEntityEditor extends TgEditor {
      * @param activeOnlyChanged -- 'true' only for the case where 'active only' button tapped, falsy value (e.g. undefined) otherwise
      */
     _search (defaultSearchQuery, dataPage, ignoreInputText, activeOnlyChanged) {
+        // before we initiate the search, let's initialise this._activeOnly if this autocompletion happens from an Entity Master
+        if (this.asPartOfEntityMaster) {
+            const storedActiveOnly = localStorage.getItem(localStorageKey(`${this.autocompletionType}_${this.propertyName}_activeOnly`));
+            if (storedActiveOnly !== null) {
+                this._activeOnly = storedActiveOnly === 'true';
+            }
+        }
         // cancel any other search
         this._cancelSearchByOtherEditor();
         // What is the query string?
@@ -942,7 +952,7 @@ export class TgEntityEditor extends TgEditor {
      */
     createContextHolder (inputText, dataPage) {
         let contextHolder = null;
-        if (this.multi === false && this.asPartOfEntityMaster) {
+        if (this.asPartOfEntityMaster) {
             const modifHolder = this.createModifiedPropertiesHolder();
             const originallyProducedEntity = this.reflector()._validateOriginallyProducedEntity(this.originallyProducedEntity, modifHolder.id);
             contextHolder = this.reflector().createContextHolder(
