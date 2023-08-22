@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.fetch;
 
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAndInstrument;
@@ -26,7 +27,6 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
-import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
@@ -75,7 +75,7 @@ public class FetchModelReconstructionTest extends AbstractDaoTestCase {
         final fetch<TgVehicle> reconFetch = FetchModelReconstructor.reconstruct(vehicle);
         assertSuperSet(fetch, reconFetch);
     }
-    
+
     @Test
     public void fetch_model_reconstruction_recognizes_properties_of_type_AbstractUnionEntity() {
         final TgWorkshop workshop = save(new_(TgWorkshop.class, "WSHOP1", "Workshop 1"));
@@ -87,6 +87,19 @@ public class FetchModelReconstructionTest extends AbstractDaoTestCase {
         final fetch<TgBogie> reconFetch = FetchModelReconstructor.reconstruct(bogie);
         
         assertSuperSet(expectedFetch, reconFetch);
+    }
+
+    @Test
+    public void fetch_model_reconstruction_applies_the_default_fetch_strategy_for_one_2_one_properties() {
+        final TgVehicleModel m316 = co(TgVehicleModel.class).findByKey("316");
+        assertNotNull(m316);
+        final TgVehicle car42 = save(new_(TgVehicle.class, "CAR42", "CAR24 DESC")
+                               .setInitDate(date("2001-01-01 00:00:00"))
+                               .setModel(m316)
+                               .setActive(true));
+        assertNotNull(car42.getFinDetails());
+        // the following assertion would fail with StrictProxyException if FetchModelReconstructor would not have been modified to use the default fetch model for one-2-one properties
+        assertEquals("CAP_NO1", car42.getFinDetails().getCapitalWorksNo());
     }
 
     public void assertSuperSet(final fetch<?> origModel, final fetch<?> superModel) {
@@ -103,7 +116,23 @@ public class FetchModelReconstructionTest extends AbstractDaoTestCase {
     }
 
     @Override
+    public boolean saveDataPopulationScriptToFile() {
+        return false;
+    }
+
+    @Override
+    public boolean useSavedDataPopulationScript() {
+        return false;
+    }
+
+    @Override
     protected void populateDomain() {
+        super.populateDomain();
+
+        if (useSavedDataPopulationScript()) {
+            return;
+        }
+
         final TgFuelType unleadedFuelType = save(new_(TgFuelType.class, "U", "Unleaded"));
         final TgFuelType petrolFuelType = save(new_(TgFuelType.class, "P", "Petrol"));
 
@@ -142,15 +171,14 @@ public class FetchModelReconstructionTest extends AbstractDaoTestCase {
                 setActive(true).
                 setLeased(false).
                 setReplacedBy(car2));
-        save(new_(TgVehicleFinDetails.class, car1).setCapitalWorksNo("CAP_NO1"));
 
         save(new_composite(TgFuelUsage.class, car2, date("2006-02-09 00:00:00")).setQty(new BigDecimal("100")).setFuelType(unleadedFuelType));
         save(new_composite(TgFuelUsage.class, car2, date("2008-02-10 00:00:00")).setQty(new BigDecimal("120")).setFuelType(petrolFuelType));
-
     }
 
     @Override
     protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
         return PlatformTestDomainTypes.entityTypes;
     }
+
 }

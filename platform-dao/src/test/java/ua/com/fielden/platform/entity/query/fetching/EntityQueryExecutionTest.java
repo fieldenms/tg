@@ -89,20 +89,19 @@ import ua.com.fielden.platform.sample.domain.TgPersonName;
 import ua.com.fielden.platform.sample.domain.TgPublishedYearly;
 import ua.com.fielden.platform.sample.domain.TgTimesheet;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
-import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
 import ua.com.fielden.platform.sample.domain.TgVehicleFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgWagon;
 import ua.com.fielden.platform.sample.domain.TgWagonSlot;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
 import ua.com.fielden.platform.security.user.IUser;
-import ua.com.fielden.platform.security.user.UserAndRoleAssociationCo;
-import ua.com.fielden.platform.security.user.UserRoleCo;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
+import ua.com.fielden.platform.security.user.UserAndRoleAssociationCo;
 import ua.com.fielden.platform.security.user.UserRole;
+import ua.com.fielden.platform.security.user.UserRoleCo;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
@@ -1717,10 +1716,11 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
 
     @Test
     public void check_for_correct_formula_for_121_prop() {
-        final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("finDetails").isNull().model();
+        final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("finDetails").isNotNull().model();
         final List<TgVehicle> vehicles = coVehicle.getAllEntities(from(model).model());
-        assertEquals("Only 1 car without finDetails should be found", 1, vehicles.size());
-        assertEquals("Incorrect car", "CAR2", vehicles.get(0).getKey());
+        assertEquals("Fin details for all cars should be found.", 2, vehicles.size());
+        assertEquals("Incorrect car", "CAR1", vehicles.get(0).getKey());
+        assertEquals("Incorrect car", "CAR2", vehicles.get(1).getKey());
     }
 
     ///////////////////////////////////////////// DEPRECATED FEATURE IN NEXT EQL //////////////////////////////////////////
@@ -1935,8 +1935,6 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
 
         final TgVehicle car1 = save(new_(TgVehicle.class, "CAR1", "CAR1 DESC").setInitDate(date("2001-01-01 00:00:00")).setModel(m318).setPrice(new Money("20")).setPurchasePrice(new Money("10")).setActive(true).setLeased(false));
         final TgVehicle car2 = save(new_(TgVehicle.class, "CAR2", "CAR2 DESC").setInitDate(date("2007-01-01 00:00:00")).setModel(m316).setPrice(new Money("200")).setPurchasePrice(new Money("100")).setActive(false).setLeased(true).setLastMeterReading(new BigDecimal("105")).setStation(orgUnit5).setReplacedBy(car1));
-
-        save(new_(TgVehicleFinDetails.class, car1).setCapitalWorksNo("CAP_NO1"));
 
         save(new_composite(TgFuelUsage.class, car2, date("2006-02-09 00:00:00")).setQty(new BigDecimal("100")).setFuelType(unleadedFuelType));
         save(new_composite(TgFuelUsage.class, car2, date("2008-02-10 00:00:00")).setQty(new BigDecimal("120")).setFuelType(petrolFuelType));
