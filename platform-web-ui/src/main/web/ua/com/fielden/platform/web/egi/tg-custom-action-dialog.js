@@ -807,12 +807,16 @@ Polymer({
 
     resetDimensions: function (event) {
         if (event.detail.sourceEvent.detail && event.detail.sourceEvent.detail === 2) {
-            this._removeCustomProp(ST_WIDTH);
-            this._removeCustomProp(ST_HEIGHT);
-            this._removeCustomPosition();
+            this._removePersistedPositionAndDimensions()
             this.refit();
             this.notifyResizeWithoutItselfAndAncestors();
         }
+    },
+
+    _removePersistedPositionAndDimensions: function () {
+        this._removeCustomProp(ST_WIDTH);
+        this._removeCustomProp(ST_HEIGHT);
+        this._removeCustomPosition();
     },
 
     /**
@@ -1324,8 +1328,20 @@ Polymer({
             this._maximised = this._customMaximised();
         }
         this._definePrefDim();
+
+        if (this._dialogIsOutOfTheWindow()) {
+            this._removePersistedPositionAndDimensions();
+        }
+
         this._setDialogDimensions(this.prefDim, this._minimised, this._maximised);
         this._setDialogPosition(this.prefDim, this._minimised, this._maximised);
+    },
+
+    _dialogIsOutOfTheWindow: function () {
+        const windowWidth = this._fitWidth;
+        const windowHeight = this._fitHeight;
+
+        return this._wasMoved() && !isNaN(windowWidth) && !isNaN(windowHeight) && (parseInt(this.persistedTop) >= windowHeight || parseInt(this.persistedLeft) >= windowWidth);
     },
 
     /**
@@ -1371,11 +1387,9 @@ Polymer({
     //Updates dialog position for loaded master.
     _setDialogPosition: function (prefDim, _minimised, _maximised) {
         if (!_minimised && !_maximised) {
-            const windowWidth = this._fitWidth;
-            const windowHeight = this._fitHeight;
-            if (this._wasMoved() && !isNaN(windowWidth) && !isNaN(windowHeight)) {
-                this.style.top = this.persistedTop * windowHeight + 'px';
-                this.style.left = this.persistedLeft * windowWidth + 'px';
+            if (this._wasMoved()) {
+                this.style.top = this.persistedTop;
+                this.style.left = this.persistedLeft;
             } else if (prefDim) {
                 this._updateDialogPositionWithPrefDim(prefDim, _minimised, _maximised);
             }
@@ -1742,33 +1756,27 @@ Polymer({
      * Loads and returns custom [width; height] dimensions for this dialog's Entity Master from local storage. Returns 'null' if current user never resized it on this device.
      */
     _customDim: function () {
-        const windowWidth = this._fitWidth;
-        const windowHeight = this._fitHeight;
-        if (this._embeddedMasterTypeKey() && !isNaN(windowWidth) && !isNaN(windowHeight)) {
+        if (this._embeddedMasterTypeKey()) {
             const savedWidth = localStorage.getItem(localStorageKey(this._embeddedMasterTypeKey() + ST_WIDTH));
             const savedHeight = localStorage.getItem(localStorageKey(this._embeddedMasterTypeKey() + ST_HEIGHT));
             if (savedWidth && savedHeight) {
-                return [parseFloat(savedWidth) * windowWidth + "px", parseFloat(savedHeight) * windowHeight + "px"];
+                return [savedWidth, savedHeight];
             }
         }
         return null;
     },
 
     _saveCustomDim: function(customWidth, customHeight) {
-        const windowWidth = this._fitWidth;
-        const windowHeight = this._fitHeight;
-        if (this._embeddedMasterTypeKey() && !isNaN(windowWidth) && !isNaN(windowHeight)) {
-            this._setCustomProp(ST_WIDTH, parseFloat(customWidth) / windowWidth);
-            this._setCustomProp(ST_HEIGHT, parseFloat(customHeight) / windowHeight);
+        if (this._embeddedMasterTypeKey()) {
+            this._setCustomProp(ST_WIDTH, customWidth);
+            this._setCustomProp(ST_HEIGHT, customHeight);
         }
     },
     
     _saveCustomPosition: function (customTop, customLeft) {
-        const windowWidth = this._fitWidth;
-        const windowHeight = this._fitHeight;
-        if (this._embeddedMasterTypeKey() && !isNaN(windowWidth) && !isNaN(windowHeight)) {
-            this.persistedTop = parseFloat(customTop) / windowHeight + "";
-            this.persistedLeft = parseFloat(customLeft) / windowWidth + "";
+        if (this._embeddedMasterTypeKey()) {
+            this.persistedTop = customTop;
+            this.persistedLeft = customLeft;
             this._setCustomProp(ST_TOP, this.persistedTop);
             this._setCustomProp(ST_LEFT, this.persistedLeft);
         }
