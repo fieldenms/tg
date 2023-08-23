@@ -8,6 +8,8 @@ import static java.util.UUID.randomUUID;
 import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
 import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
 import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.security.tokens.Template.READ;
+import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 import static ua.com.fielden.platform.types.either.Either.left;
 import static ua.com.fielden.platform.types.either.Either.right;
@@ -103,6 +105,8 @@ import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.security.IAuthorisationModel;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
@@ -157,6 +161,8 @@ public class CriteriaResource extends AbstractWebResource {
     private final EntityFactory entityFactory;
     private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final ICentreConfigSharingModel sharingModel;
+    private final IAuthorisationModel authorisationModel;
+    private final ISecurityTokenProvider securityTokenProvider;
     private User user;
     private EntityCentreConfigCo eccCompanion;
     private MainMenuItemCo mmiCompanion;
@@ -175,6 +181,8 @@ public class CriteriaResource extends AbstractWebResource {
             final ICriteriaGenerator critGenerator,
             final EntityFactory entityFactory,
             final ICentreConfigSharingModel sharingModel,
+            final IAuthorisationModel authorisationModel,
+            final ISecurityTokenProvider securityTokenProvider,
             final Context context,
             final Request request,
             final Response response) {
@@ -191,6 +199,8 @@ public class CriteriaResource extends AbstractWebResource {
         this.userProvider = userProvider;
         this.entityFactory = entityFactory;
         this.sharingModel = sharingModel;
+        this.authorisationModel = authorisationModel;
+        this.securityTokenProvider = securityTokenProvider;
     }
 
     /**
@@ -565,6 +575,8 @@ public class CriteriaResource extends AbstractWebResource {
             mmiCompanion = companionFinder.find(MainMenuItem.class);
             userCompanion = companionFinder.find(User.class);
             miType = centre.getMenuItemType();
+
+            authoriseReading(getEntityType(miType).getSimpleName(), READ, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime); // reading of entities should be authorised when running / refreshing
 
             final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
             final Map<String, Object> customObject = new LinkedHashMap<>(centreContextHolder.getCustomObject());
