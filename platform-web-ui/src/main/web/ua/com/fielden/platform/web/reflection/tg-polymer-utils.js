@@ -324,3 +324,21 @@ export const escapeHtmlText = function(text) {
     });
     return escapedStr;
 };
+
+/**
+ * Returns name of currently authenticated user.
+ */
+const _userName = function () {
+    const appTemplate = document.body.querySelector('tg-app-template');
+    return appTemplate && appTemplate.menuConfig && appTemplate.menuConfig.userName;
+};
+
+/**
+ * Returns generated key for local storage and specified subject to save and retrieve data.
+ * 
+ * @param {String} subject - subject that should be appended to user name to create key for local storage data.
+ * @returns 
+ */
+export const localStorageKey = function (subject) {
+    return `${_userName()}_${subject}`;
+};
