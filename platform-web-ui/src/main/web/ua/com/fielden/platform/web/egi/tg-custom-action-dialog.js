@@ -27,9 +27,15 @@ import { TgReflector } from '/app/tg-reflector.js';
 import {TgFocusRestorationBehavior} from '/resources/actions/tg-focus-restoration-behavior.js'
 import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
 import {TgBackButtonBehavior} from '/resources/views/tg-back-button-behavior.js'
-import { tearDownEvent, isInHierarchy, allDefined, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, isIPhoneOs } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, isInHierarchy, allDefined, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, isIPhoneOs, localStorageKey } from '/resources/reflection/tg-polymer-utils.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
+
+const ST_WIDTH = '_width';
+const ST_HEIGHT = '_height';
+const ST_TOP = '_top';
+const ST_LEFT = '_left';
+const ST_MAXIMISED = '_maximised';
 
 const template = html`
     <style>
@@ -176,7 +182,7 @@ const template = html`
                 <paper-icon-button hidden="[[mobile]]" class="default-button title-bar-button" icon="[[_minimisedIcon(_minimised)]]" on-tap="_invertMinimiseState" tooltip-text$="[[_minimisedTooltip(_minimised)]]" disabled="[[_maximised]]"></paper-icon-button>
 
                 <!-- maximize/restore buttons -->
-                <paper-icon-button hidden="[[mobile]]" class="default-button title-bar-button" icon="[[_maximisedIcon(_maximised)]]" on-tap="_invertMaximiseState" tooltip-text$="[[_maximisedTooltip(_maximised)]]" disabled=[[_minimised]]></paper-icon-button>
+                <paper-icon-button hidden="[[mobile]]" class="default-button title-bar-button" icon="[[_maximisedIcon(_maximised)]]" on-tap="_invertMaximiseStateAndStore" tooltip-text$="[[_maximisedTooltip(_maximised)]]" disabled=[[_minimised]]></paper-icon-button>
 
                 <!-- close/next buttons -->
                 <paper-icon-button id="closeButton" hidden="[[_closerHidden(_lastAction, mobile)]]" class="close-button title-bar-button" icon="icons:cancel"  on-tap="closeDialog" tooltip-text="Close, Alt&nbsp+&nbspx"></paper-icon-button>
@@ -272,8 +278,8 @@ Polymer({
         //Undefined - means that blocking layer has become invisible and master container has become visible. This indicates also that all animations have finished.
         //            This value is applied in _handleBodyTransitionEnd method when master container is visible and in _resetState method to ensure that all animation is finished 
         //            in case when master was closed during animation process.
-        //This property is checked in three methods: _updateDialogDimensions, _updateDialogAnimation and _handleMasterBeforeChange.
-        //_updateDialogDimensions - this method checks the value of this property to find out whether master dimensions can be changed or not. Please note that if this property
+        //This property is checked in three methods: _updateDialogDimensionsIfNotAnimating, _updateDialogAnimation and _handleMasterBeforeChange.
+        //_updateDialogDimensionsIfNotAnimating - this method checks the value of this property to find out whether master dimensions can be changed or not. Please note that if this property
         //                          is true then master dimensions in this method can not be changed. Dimensions will be changed later in _updateDialogAnimation method.
         //_updateDialogAnimation - this method checks this property to find out when to play dialog resize animation. Dialog is being resized smoothly when blocking layer is visible
         //                          and master container is invisible also _masterLayoutChanges is false.
@@ -291,8 +297,8 @@ Polymer({
         //Undefined - means that dialog has changed it's size and blocking layer has become invisible. This indicates also that all animations have finished.
         //            This value is applied in _handleBodyTransitionEnd method when master container is visible and in _resetAnimationBlockingSpinnerState method to ensure 
         //            that all animation is finished in case when master was closed during animation process or error happend when navigating to another entity. 
-        //This property is checked in three methods: _updateDialogDimensions, _updateDialogAnimation and _handleBodyTransitionEnd.
-        //_updateDialogDimensions - this method checks the value of this property to find out whether master dimensions can be changed or not. Please note that if this property
+        //This property is checked in three methods: _updateDialogDimensionsIfNotAnimating, _updateDialogAnimation and _handleBodyTransitionEnd.
+        //_updateDialogDimensionsIfNotAnimating - this method checks the value of this property to find out whether master dimensions can be changed or not. Please note that if this property
         //                          is true then master dimensions in this method can not be changed. Dimensions will be changed later in _updateDialogAnimation method.
         //_updateDialogAnimation - this method checks this property to find out when to play dialog resize animation. Dialog is being resized smoothly when blocking layer is visible
         //                          and master container is invisible also this property value should be false.
@@ -305,25 +311,9 @@ Polymer({
         /////////////////////////////////////////////////////////////////////////////////////////
 
         /**
-         * Indicates whether dialog was moved using title bar dragging. This will be reset after dialog closes.
-         */
-        _wasMoved: {
-            type: Boolean,
-            value: false
-        },
-        
-        /**
          * Indicates whether data was loaded or not.
          */
         _dataLoaded: {
-            type: Boolean,
-            value: false
-        },
-
-        /**
-         * Indicates whether dialog was resized using bottom right corner's resizer. This will be reset after dialog closes.
-         */
-        _wasResized: {
             type: Boolean,
             value: false
         },
@@ -446,6 +436,11 @@ Polymer({
             value: null // should not be 'undefined' because hidden="[[!_mainEntityType]]" binding will not work
         },
         
+        _embeddedMasterType: {
+            type: Object,
+            value: null
+        },
+        
         /**
          * Represents the ID of the currently bound persisted entity (of type derived from _mainEntityType) or 'null' if the entity is not yet persisted or not yet loaded.
          * Should only be used if '_mainEntityType' is present.
@@ -478,11 +473,11 @@ Polymer({
         }
     },
 
-    observers: ["_updateDialogDimensions(prefDim, _minimised, _maximised)", "_updateDialogAnimation(_masterVisibilityChanges, _masterLayoutChanges)"],
+    observers: ["_updateDialogDimensionsIfNotAnimating(prefDim, _minimised, _maximised)", "_updateDialogAnimation(_masterVisibilityChanges, _masterLayoutChanges)"],
 
     keyBindings: {
         'alt+c': '_invertMinimiseState',
-        'alt+m': '_invertMaximiseState',
+        'alt+m': '_invertMaximiseStateAndStore',
         'alt+x': 'closeDialog',
         'ctrl+up': '_firstEntry',
         'ctrl+left': '_previousEntry',
@@ -728,15 +723,13 @@ Polymer({
         if (!this[stateName]) {
             this.persistActiveElement();
             this.focus();
-            this.persistDialogLocationAndDimensions();
         }
         this[stateName] = !this[stateName];
-        this.notifyResize(); // notify children about resize of action dialog (for e.g. to re-draw shadow of tg-entity-master's actionContainer)
         if (!this[stateName]) {
             this.restoreActiveElement();
-            this.restoreDialogLocationAndDimensions();
-            this.notifyResize(); // notify children about resize of action dialog (for e.g. to re-draw shadow of tg-entity-master's actionContainer)
+            this._restoreLocallyPersistedDialogPositionAndDimension();
         }
+        this.notifyResize(); // notify children about resize of action dialog (for e.g. to re-draw shadow of tg-entity-master's actionContainer)
     },
 
     _invertMinimiseState: function() {
@@ -745,11 +738,34 @@ Polymer({
         }
     },
 
+    /**
+     * Switches between maximised / normal states of the dialog. Stores _maximised state into local storage.
+     */
+    _invertMaximiseStateAndStore: function() {
+        this._invertMaximiseState();
+        if (this._maximised) {
+            this._setCustomProp(ST_MAXIMISED, true);
+        } else {
+            this._removeCustomProp(ST_MAXIMISED);
+        }
+    },
+
+    /**
+     * Switches between maximised / normal states of the dialog.
+     */
     _invertMaximiseState: function() {
-        if (!this.prefDim) { // define prefDim (maximise action) if it was not defined using action configuration
+        this._definePrefDim(); // define prefDim (maximise action) if it was not defined using action configuration
+        this._invertDialogState('_maximised');
+    },
+
+    /**
+     * For dimensionless Entity Master, need to resizable it and assign prefDim from current calculated dimensions.
+     * This is necessary, for example, for later resetDimensions (and other prefDim usages).
+     */
+    _definePrefDim: function () {
+        if (!this.prefDim) { // define prefDim if it was not defined using action configuration
             this.prefDim = this._lastElement.makeResizable();
         }
-        this._invertDialogState('_maximised');
     },
 
     /**
@@ -763,13 +779,8 @@ Polymer({
                     document.styleSheets[0].insertRule('* { cursor: nwse-resize !important; }', 0); // override custom cursors in all application with resizing cursor
                     break;
                 case 'track':
-                    if (!this._wasResized) {
-                        this._wasResized = true;
-                        this.heightBeforeResizing = this.style.height;
-                        this.widthBeforeResizing = this.style.width;
-                        if (!this.prefDim) { // define prefDim (resize action) if it was not defined using action configuration
-                            this.prefDim = this._lastElement.makeResizable();
-                        }
+                    if (!this._customDim()) {
+                        this._definePrefDim(); // define prefDim (resize action) if it was not defined using action configuration
                     }
                     const resizedHeight = this.offsetHeight + event.detail.ddy;
                     const heightNeedsResize = resizedHeight >= 44 /* toolbar height*/ + 14 /* resizer image height */ ;
@@ -782,6 +793,7 @@ Polymer({
                         this.style.width = resizedWidth + 'px';
                     }
                     if (heightNeedsResize || widthNeedsResize) {
+                        this._saveCustomDim(this.style.width, this.style.height);
                         this.notifyResize();
                     }
                     break;
@@ -794,40 +806,41 @@ Polymer({
     },
 
     resetDimensions: function (event) {
-        if (this._wasResized &&  event.detail.sourceEvent.detail && event.detail.sourceEvent.detail === 2) {
-            if (this.prefDim) {
-                const width = (typeof this.prefDim.width === 'function' ? this.prefDim.width() : this.prefDim.width) + this.prefDim.widthUnit;
-                const height = (typeof this.prefDim.height === 'function' ? this.prefDim.height() : this.prefDim.height) + this.prefDim.heightUnit;
-                this.style.width = width;
-                this.style.height = this.prefDim.heightUnit === '%' ? height : ('calc(' + height + ' + 44px)'); // +44px - height of the title bar please see styles for .title-bar selector; applicable only for non-relative units of measure
-                this.style.overflow = 'auto';
-            } else {
-                this.style.width = '';
-                this.style.height = '';
-                this.style.overflow = 'auto';
-            }
-            this._wasResized = false;
+        if (event.detail.sourceEvent.detail && event.detail.sourceEvent.detail === 2) {
+            this._removePersistedPositionAndDimensions()
+            this.refit();
+            this.notifyResizeWithoutItselfAndAncestors();
         }
     },
 
-    /**
-     * Persists current dialog location (top, left) and dimensions (height, width) to be restored later.
-     */
-    persistDialogLocationAndDimensions: function() {
-        this.persistedTop = this.style.top;
-        this.persistedLeft = this.style.left;
-        this.persistedHeight = this.style.height;
-        this.persistedWidth = this.style.width;
+    _removePersistedPositionAndDimensions: function () {
+        this._removeCustomProp(ST_WIDTH);
+        this._removeCustomProp(ST_HEIGHT);
+        this._removeCustomPosition();
     },
 
     /**
-     * Restores previously persisted dialog location (top, left) and dimensions (height, width).
+     * Resets the locally persisted dialog position.
      */
-    restoreDialogLocationAndDimensions: function() {
-        this.style.top = this.persistedTop;
-        this.style.left = this.persistedLeft;
-        this.style.height = this.persistedHeight;
-        this.style.width = this.persistedWidth;
+    _deleteLocallyPersistedDialogPosition: function () {
+        delete this.persistedTop;
+        delete this.persistedLeft;
+    },
+
+    /**
+     * Reads the entity master position from local storage and into dialog position properties in order to remain the dialog position when switching between different types of entity master.
+     */
+    _persistDialogPositionLocally: function() {
+        this.persistedTop = localStorage.getItem(localStorageKey(this._embeddedMasterTypeKey() + ST_TOP));
+        this.persistedLeft = localStorage.getItem(localStorageKey(this._embeddedMasterTypeKey() + ST_LEFT));
+    },
+
+    /**
+     * Restores previously persisted dialog position (top, left) and dimensions (height, width).
+     */
+    _restoreLocallyPersistedDialogPositionAndDimension: function() {
+        this._setDialogPosition(this.prefDim, this._minimised, this._maximised);
+        this._setDialogDimensions(this.prefDim, this.minimised, this._maximised);
     },
 
     closeDialog: function(forceClosing) {
@@ -896,37 +909,6 @@ Polymer({
     },
     
     /**
-     * Updates dimensions and position of the dialog based on minimised / maximised state and prefDim appearance. This method changes the dialog's dimension and position only when dialog is not animating anything.
-     */
-    _updateDialogDimensions: function(prefDim, minimised, maximised) {
-        if (!allDefined(arguments)) {
-            return;
-        }
-        if (!this._masterVisibilityChanges && !this._masterLayoutChanges) {
-            if (!minimised && !maximised && prefDim) {
-                const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
-                const height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
-                this.style.width = width;
-                this.style.height = prefDim.heightUnit === '%' ? height : ('calc(' + height + ' + 44px)'); // +44px - height of the title bar please see styles for .title-bar selector; applicable only for non-relative units of measure
-                this.style.overflow = 'auto';
-            } else if (!minimised && maximised) {
-                this.style.top = this.mobile ? '0%' : '0%';
-                this.style.left = this.mobile ? '0%' : '0%';
-                this.style.width = this.mobile ? '100%' : '100%';
-                this.style.height = this.mobile ? '100%' : '100%';
-                this.style.overflow = 'auto';
-            } else if (minimised && !maximised) {
-                this.style.height = '44px';
-                this.style.overflow = 'hidden';
-            } else {
-                this.style.width = '';
-                this.style.height = '';
-                this.style.overflow = 'auto';
-            }
-        }
-    },
-
-    /**
      * Indicates whether maximising / collapsing / resizing interaction buttons should be disabled (or even hidden) depending on minimised / normal / maximised state of the dialog.
      */
     _dialogInteractionsDisabled: function(minimised, maximised) {
@@ -971,15 +953,18 @@ Polymer({
                     break;
                 case 'track':
                     const _titleBarDimensions = this.$.titleBar.getBoundingClientRect();
-                    if (_titleBarDimensions.right + e.detail.ddx >= 44 && _titleBarDimensions.left + e.detail.ddx <= this._windowWidth - 44) {
-                        this.style.left = parseInt(this.style.left) + e.detail.ddx + 'px';
-                        this.persistedLeft = this.style.left;
-                        this._wasMoved = true;
+                    const leftNeedsChange = _titleBarDimensions.right + e.detail.ddx >= 44 && _titleBarDimensions.left + e.detail.ddx <= this._windowWidth - 44;
+                    if (leftNeedsChange) {
+                        this.style.left = _titleBarDimensions.left + e.detail.ddx + 'px';
                     }
-                    if (_titleBarDimensions.top + e.detail.ddy >= 0 && _titleBarDimensions.bottom + e.detail.ddy <= this._windowHeight) {
-                        this.style.top = parseInt(this.style.top) + e.detail.ddy + 'px';
-                        this.persistedTop = this.style.top;
-                        this._wasMoved = true;
+                    const topNeedsChange = _titleBarDimensions.top + e.detail.ddy >= 0 && _titleBarDimensions.bottom + e.detail.ddy <= this._windowHeight;
+                    if (topNeedsChange) {
+                        this.style.top = _titleBarDimensions.top + e.detail.ddy + 'px';
+                    }
+                    if (leftNeedsChange || topNeedsChange) {
+                        this._saveCustomPosition(
+                            topNeedsChange ? this.style.top : _titleBarDimensions.top + "px", 
+                            leftNeedsChange ? this.style.left : _titleBarDimensions.left + "px");
                     }
                     break;
                 case 'end':
@@ -1192,33 +1177,37 @@ Polymer({
             return;
         }
         if (!_masterVisibilityChanges && !_masterLayoutChanges) {
-            //Animate dialog dimensons if it wasn't resized.
-            if (!this._wasResized) {
-                this._updateDialogDimensions(this.prefDim, this._minimised, this._maximised);
-            }
+            //Animate dialog dimensions even if it was resized.
+            this._updateDialogDimensionsIfNotAnimating(this.prefDim, this._minimised, this._maximised);
             //Animate dialog position if it wasn't moved.
-            if (!this._wasMoved) {
-                this._updateDialogPosition(this.prefDim, this._minimised, this._maximised);
+            if (!this._wasMoved()) {
+                this._updateDialogPositionWithPrefDim(this.prefDim, this._minimised, this._maximised);
             }
             //Indicates that dialog is resized and moved after the resizing animation will be finished.
             this.async(this._dialogResized, 500);
         }
     },
-    
-    //Removes animation properties and hides blocking pane. (Please note that blocking layer was shown twice if master changed it's type that's why _hideBlockingLayer invokaction is needed here)
-    _dialogResized: function () {
-        this.style.removeProperty("transition-property");
-        this.style.removeProperty("transition-duration");
-        //Removes the optimisation hook if master size or position was changed.
-        this.$.elementLoader.style.removeProperty("display");
-        // focuses dialog view after dialog resizing transition is completed;
-        //  (e.g. in master dialog view it focuses input in error, preferred input or first input -- see 'focusView' in 'tg-entity-master-behavior') 
-        this._focusDialogView();
-        this._hideBlockingPane();
+
+    /**
+     * Updates dimensions and position of the dialog based on minimised / maximised state and prefDim appearance. This method changes the dialog's dimension only when dialog is not animating anything.
+     */
+    _updateDialogDimensionsIfNotAnimating: function(prefDim, minimised, maximised) {
+        if (!allDefined(arguments)) {
+            return;
+        }
+        if (!this._masterVisibilityChanges && !this._masterLayoutChanges) {
+            this._setDialogDimensions(prefDim, minimised, maximised);
+        }
     },
-    
-    //Updates dialog position for potentialy new loaded master.
-    _updateDialogPosition: function (prefDim, _minimised, _maximised) {
+
+    /**
+     * Updates the position of dialog with preffered one if it exists. Used for animation between two different masters.
+     * 
+     * @param {Object} prefDim prefferred dimension of the loaded master
+     * @param {Boolean} _minimised determines whether dialog is in minimised state or not
+     * @param {Boolean} _maximised determines whether dialog is in maximised state or not
+     */
+    _updateDialogPositionWithPrefDim: function (prefDim, _minimised, _maximised) {
         if (!_minimised && !_maximised && prefDim) {
             const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
             const isWidthPercentage = width.endsWith('%');
@@ -1239,6 +1228,18 @@ Polymer({
                 this.style.top = "calc(" + windowHeight + "px / 2  - " + height + " / 2" + (isHeightPercentage ? ")" : " - 44px / 2)");
             }
         }
+    },
+    
+    //Removes animation properties and hides blocking pane. (Please note that blocking layer was shown twice if master changed it's type that's why _hideBlockingLayer invokaction is needed here)
+    _dialogResized: function () {
+        this.style.removeProperty("transition-property");
+        this.style.removeProperty("transition-duration");
+        //Removes the optimisation hook if master size or position was changed.
+        this.$.elementLoader.style.removeProperty("display");
+        // focuses dialog view after dialog resizing transition is completed;
+        //  (e.g. in master dialog view it focuses input in error, preferred input or first input -- see 'focusView' in 'tg-entity-master-behavior') 
+        this._focusDialogView();
+        this._hideBlockingPane();
     },
     
     //Invoked when master is about to change it's type.
@@ -1322,6 +1323,77 @@ Polymer({
         // This is necessary to make dialog being able to 'maximise' to large dimensions.
         this.style.maxHeight = '100%';
         this.style.maxWidth = '100%';
+
+        if (!this.mobile) {
+            this._maximised = this._customMaximised();
+        }
+        this._definePrefDim();
+
+        if (this._dialogIsOutOfTheWindow()) {
+            this._removePersistedPositionAndDimensions();
+        }
+
+        this._setDialogDimensions(this.prefDim, this._minimised, this._maximised);
+        this._setDialogPosition(this.prefDim, this._minimised, this._maximised);
+    },
+
+    _dialogIsOutOfTheWindow: function () {
+        const windowWidth = this._fitWidth;
+        const windowHeight = this._fitHeight;
+
+        return this._wasMoved() && !isNaN(windowWidth) && !isNaN(windowHeight) && (parseInt(this.persistedTop) >= windowHeight || parseInt(this.persistedLeft) >= windowWidth);
+    },
+
+    /**
+     * Sets the dialog dimensions bassed on preferred dimension minimised and maximised state.
+     * 
+     * @param {Object} prefDim preferred dimension to set if there are no persisted one or minimised or maximised state aren't set.
+     * @param {Boolean} minimised determines whether collapsed state is set or not.
+     * @param {Boolean} maximised determines whether miximised state is set or not.
+     */
+    _setDialogDimensions: function (prefDim, minimised, maximised) {
+        if (!minimised && !maximised) {
+            const customDim = this._customDim();
+            if (customDim) {
+                this.style.width = customDim[0];
+                this.style.height = customDim[1];
+            } else if (prefDim) {
+                const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
+                const height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
+                this.style.width = width;
+                this.style.height = prefDim.heightUnit === '%' ? height : ('calc(' + height + ' + 44px)'); // +44px - height of the title bar please see styles for .title-bar selector; applicable only for non-relative units of measure
+                this.style.overflow = 'auto';
+            } else {
+                this.style.width = '';
+                this.style.height = '';
+                this.style.overflow = 'auto';
+            }
+        } else if (!minimised && maximised) {
+            this.style.top = '0%';
+            this.style.left = '0%';
+            this.style.width = '100%';
+            this.style.height = '100%';
+            this.style.overflow = 'auto';
+        } else if (minimised && !maximised) {
+            this.style.height = '44px';
+            this.style.overflow = 'hidden';
+        } else {
+            this.style.width = '';
+            this.style.height = '';
+            this.style.overflow = 'auto';
+        }
+    },
+
+    //Updates dialog position for loaded master.
+    _setDialogPosition: function (prefDim, _minimised, _maximised) {
+        if (!_minimised && !_maximised) {
+            if (this._wasMoved()) {
+                this.style.top = this.persistedTop;
+                this.style.left = this.persistedLeft;
+            } else if (prefDim) {
+                this._updateDialogPositionWithPrefDim(prefDim, _minimised, _maximised);
+            }
+        }
     },
 
     /**
@@ -1343,7 +1415,7 @@ Polymer({
             }
         }
         this.updateStyles();
-        this.refit();
+        this.refit();//Needed to make dialog position fixed.
         
         const actionsDialog = findParentDialog(action);
         if (actionsDialog) {
@@ -1364,12 +1436,13 @@ Polymer({
     },
     
     _openAndRefit: function () {
-        this._refit(); // this is a legacy support
+        this._persistDialogPositionLocally(); //Should save position locally to track dialog movement and switching between different types of master.
 
         if (this.mobile) { // mobile app specific: open all custom action dialogs in maximised state
             this._invertMaximiseState();
         }
-        
+
+        this._refit();
         this.open();
         this._showBlockingPane();
     },
@@ -1480,14 +1553,6 @@ Polymer({
             }
             this._resetState();
             this._subscriptions.length = 0;
-            this._wasMoved = false;
-            this._wasResized = false;
-            if (typeof this.heightBeforeResizing !== 'undefined' && typeof this.widthBeforeResizing !== 'undefined') { // restore original height / width after closing the dialog
-                this.style.height = this.heightBeforeResizing;
-                this.style.width = this.widthBeforeResizing;
-                delete this.heightBeforeResizing;
-                delete this.widthBeforeResizing;
-            }
             this._minimised = false;
             this._maximised = false;
             this.$.menuToggler.hidden = true; // allows to use the same custom action dialog instance for the masters without menu after compound master was open previously
@@ -1505,6 +1570,7 @@ Polymer({
         this._hasPrev = false;
         this._errorMsg = null;
         this._masterVisibilityChanges = undefined;
+        this._deleteLocallyPersistedDialogPosition();
         this._resetAnimationBlockingSpinnerState();
         this.$.loadingPanel.classList.remove("visible");
         this.$.dialogLoader.classList.remove("hidden");
@@ -1522,9 +1588,13 @@ Polymer({
     },
 
     _onIronResize: function() {
-        if (!this._wasMoved && !this._wasResized && !this._minimised) {
+        if (!this._wasMoved() && !this._customDim() && !this._minimised) {
             IronOverlayBehaviorImpl._onIronResize.call(this);
         }
+    },
+
+    _wasMoved: function() {
+        return this.persistedTop && this.persistedLeft;
     },
 
     /**
@@ -1559,6 +1629,9 @@ Polymer({
         const entityMaster = event.detail;
         const entityType = entityMaster.entityType ? this._reflector.getType(entityMaster.entityType) : null;
         if (entityType) {
+            if (this._embeddedMasterType === null && !entityType.isCompoundMenuItem() && !entityMaster.masterWithMaster) {
+                this._embeddedMasterType = entityType;
+            }
             if (this._mainEntityType === null && (entityType.compoundOpenerType() || entityType.isPersistent())) {
                 this._mainEntityType = entityType;
             } else if (this._compoundMenuItemType === null && entityType.isCompoundMenuItem() && entityType._simpleClassName() !== this._masterMenu._originalDefaultRoute) { // use only non-default menu item
@@ -1580,6 +1653,9 @@ Polymer({
         const entityMaster = event.detail;
         const entityType = entityMaster.entityType ? this._reflector.getType(entityMaster.entityType) : null;
         if (entityType) {
+            if (this._embeddedMasterType !== null && entityType === this._embeddedMasterType) {
+                this._embeddedMasterType = null;
+            }
             if (this._mainEntityType !== null && entityType === this._mainEntityType) {
                 this._mainEntityType = null;
                 this._mainEntityId = null;
@@ -1652,6 +1728,72 @@ Polymer({
             this.$.toaster.msgText = '';
             showNonCritical(this.$.toaster);
         }
+    },
+    
+    _embeddedMasterTypeKey: function () {
+        return this._embeddedMasterType ? this._embeddedMasterType.fullClassName() : null;
+    },
+    
+    /**
+     * Persists custom property for this dialog's Entity Master into local storage. Does nothing if no Entity Master was loaded.
+     */
+    _setCustomProp: function (name, value) {
+        if (this._embeddedMasterTypeKey()) {
+            localStorage.setItem(localStorageKey(this._embeddedMasterTypeKey() + name), value);
+        }
+    },
+    
+    /**
+     * Removes custom property for this dialog's Entity Master from local storage. Does nothing if no Entity Master was loaded.
+     */
+    _removeCustomProp: function (name) {
+        if (this._embeddedMasterTypeKey()) {
+            localStorage.removeItem(localStorageKey(this._embeddedMasterTypeKey() + name));
+        }
+    },
+    
+    /**
+     * Loads and returns custom [width; height] dimensions for this dialog's Entity Master from local storage. Returns 'null' if current user never resized it on this device.
+     */
+    _customDim: function () {
+        if (this._embeddedMasterTypeKey()) {
+            const savedWidth = localStorage.getItem(localStorageKey(this._embeddedMasterTypeKey() + ST_WIDTH));
+            const savedHeight = localStorage.getItem(localStorageKey(this._embeddedMasterTypeKey() + ST_HEIGHT));
+            if (savedWidth && savedHeight) {
+                return [savedWidth, savedHeight];
+            }
+        }
+        return null;
+    },
+
+    _saveCustomDim: function(customWidth, customHeight) {
+        if (this._embeddedMasterTypeKey()) {
+            this._setCustomProp(ST_WIDTH, customWidth);
+            this._setCustomProp(ST_HEIGHT, customHeight);
+        }
+    },
+    
+    _saveCustomPosition: function (customTop, customLeft) {
+        if (this._embeddedMasterTypeKey()) {
+            this.persistedTop = customTop;
+            this.persistedLeft = customLeft;
+            this._setCustomProp(ST_TOP, this.persistedTop);
+            this._setCustomProp(ST_LEFT, this.persistedLeft);
+        }
+    },
+
+    _removeCustomPosition: function () {
+        this._removeCustomProp(ST_TOP);
+        this._removeCustomProp(ST_LEFT);
+        //Next call should delete locally persisted position for dialog in order to properly restore dialog position. 
+        this._deleteLocallyPersistedDialogPosition();
+    },
+    
+    _customMaximised: function () {
+        if (this._embeddedMasterTypeKey()) {
+            return localStorage.getItem(localStorageKey(this._embeddedMasterTypeKey() + ST_MAXIMISED)) !== null;
+        }
+        return false;
     }
     
 });
