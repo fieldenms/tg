@@ -7,6 +7,8 @@ import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getDefaultEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+import static ua.com.fielden.platform.security.tokens.Template.READ;
+import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 
@@ -28,6 +30,8 @@ import ua.com.fielden.platform.entity_centre.review.criteria.DynamicColumnForExp
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
+import ua.com.fielden.platform.security.IAuthorisationModel;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
@@ -40,11 +44,15 @@ import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 @EntityType(EntityExportAction.class)
 public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> implements EntityExportActionCo {
     private final ICriteriaEntityRestorer criteriaEntityRestorer;
+    private final IAuthorisationModel authorisationModel;
+    private final ISecurityTokenProvider securityTokenProvider;
 
     @Inject
-    public EntityExportActionDao(final IFilter filter, final ICriteriaEntityRestorer criteriaEntityRestorer) {
+    public EntityExportActionDao(final IFilter filter, final ICriteriaEntityRestorer criteriaEntityRestorer, final IAuthorisationModel authorisationModel, final ISecurityTokenProvider securityTokenProvider) {
         super(filter);
         this.criteriaEntityRestorer = criteriaEntityRestorer;
+        this.authorisationModel = authorisationModel;
+        this.securityTokenProvider = securityTokenProvider;
     }
 
     @Override
@@ -130,6 +138,7 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
     }
 
     private Stream<AbstractEntity<?>> exportEntities(final EntityExportAction entity, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final String sheetTitle) {
+        authoriseReading(selectionCrit.getEntityClass().getSimpleName(), READ, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime); // reading of entities should be authorised when exporting
         if (entity.isExportAll()) {
             return selectionCrit.export(new LinkedHashMap<>());
         } else if (entity.isExportTop()) {
