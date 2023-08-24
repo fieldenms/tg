@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage3.operands.CompoundSingleOperand3;
@@ -67,8 +68,8 @@ public class Expression2 extends AbstractSingleOperand2 implements ISingleOperan
         return items.isEmpty() ? first.isNonnullableEntity() : false;
     }
 
-    private static Set<Class<?>> extractTypes(final ISingleOperand2<? extends ISingleOperand3> first, final List<CompoundSingleOperand2> items) {
-        final Set<Class<?>> types = new HashSet<>();
+    private static Set<PropType> extractTypes(final ISingleOperand2<? extends ISingleOperand3> first, final List<CompoundSingleOperand2> items) {
+        final Set<PropType> types = new HashSet<>();
         types.add(first.type());
         for (final CompoundSingleOperand2 item : items) {
             types.add(item.operand.type());

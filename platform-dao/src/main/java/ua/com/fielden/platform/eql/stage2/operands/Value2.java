@@ -3,11 +3,13 @@ package ua.com.fielden.platform.eql.stage2.operands;
 import static java.util.Collections.emptySet;
 import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.N;
 import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.Y;
+import static ua.com.fielden.platform.eql.retrieval.EntityResultTreeBuilder.hibTypeFromJavaType;
 
 import java.util.Objects;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage3.operands.Value3;
@@ -40,8 +42,8 @@ public class Value2 implements ISingleOperand2<Value3> {
     }
 
     @Override
-    public Class<?> type() {
-        return value != null ? value.getClass() : null;
+    public PropType type() {
+        return value == null ? null : new PropType(value.getClass(), hibTypeFromJavaType(value.getClass())); // TODO provide proper hibType once value original (not converted) will be taken into account.
     }
     
     @Override
@@ -53,10 +55,10 @@ public class Value2 implements ISingleOperand2<Value3> {
     public TransformationResult2<Value3> transform(final TransformationContext2 context) {
         if (needsParameter()) {
             final T2<String, TransformationContext2> paramTr = context.obtainParamNameAndUpdateContext(value);
-            final Value3 transformed = new Value3(value, paramTr._1);
+            final Value3 transformed = new Value3(value, paramTr._1, type());
             return new TransformationResult2<>(transformed, paramTr._2);
         } else {
-            return new TransformationResult2<>(new Value3(value, null), context);
+            return new TransformationResult2<>(new Value3(value, null, type()), context);
         }
     }
 

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.operands.functions;
 
+import static ua.com.fielden.platform.eql.meta.PropType.INTEGER_PROP_TYPE;
+
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
@@ -10,7 +12,7 @@ public class CountOf2 extends SingleOperandFunction2<CountOf3> {
     private final boolean distinct;
 
     public CountOf2(final ISingleOperand2<? extends ISingleOperand3> operand, final boolean distinct) {
-        super(operand, Integer.class);
+        super(operand, INTEGER_PROP_TYPE);
         this.distinct = distinct;
     }
 

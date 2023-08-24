@@ -19,10 +19,6 @@ public class Yield2 {
         this.hasRequiredHint = hasRequiredHint;
     }
 
-    public Class<?> javaType() {
-        return operand.type();
-    }
-
     public TransformationResult2<Yield3> transform(final TransformationContext2 context) {
         final TransformationContext2 newContext = context.cloneWithNextSqlId();
         final TransformationResult2<? extends ISingleOperand3> operandTransformationResult = operand.transform(newContext);

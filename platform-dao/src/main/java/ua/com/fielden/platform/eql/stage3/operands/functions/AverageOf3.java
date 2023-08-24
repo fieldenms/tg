@@ -3,12 +3,13 @@ package ua.com.fielden.platform.eql.stage3.operands.functions;
 import static java.lang.String.format;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
 public class AverageOf3 extends SingleOperandFunction3 {
     private final boolean distinct;
     
-    public AverageOf3(final ISingleOperand3 operand, final boolean distinct, final Class<?> type) {
+    public AverageOf3(final ISingleOperand3 operand, final boolean distinct, final PropType type) {
         super(operand, type);
         this.distinct = distinct;
     }

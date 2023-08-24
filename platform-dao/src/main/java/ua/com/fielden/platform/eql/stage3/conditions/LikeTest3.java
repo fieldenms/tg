@@ -30,9 +30,9 @@ public class LikeTest3 implements ICondition3 {
     }
     
     private String leftOperandWithTypecastingSql(final DbVersion dbVersion) {
-        if (Integer.class == leftOperand.type()) {
+        if (leftOperand.type() != null && Integer.class == leftOperand.type().javaType()) {
             return format("CAST(%s AS VARCHAR(11))", leftOperand.sql(dbVersion));
-        } else if (leftOperand.type() == null || String.class == leftOperand.type()) {
+        } else if (leftOperand.type() == null || String.class == leftOperand.type().javaType()) {
             return leftOperand.sql(dbVersion);
         } else {
             throw new EqlStage3ProcessingException(format("Left operand type [%s] is not supported for operand LIKE.", leftOperand.type()));

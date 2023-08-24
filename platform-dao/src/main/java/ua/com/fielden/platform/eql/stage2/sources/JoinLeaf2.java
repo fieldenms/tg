@@ -5,12 +5,16 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
+import static ua.com.fielden.platform.eql.meta.PropType.LONG_PROP_TYPE;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import org.hibernate.type.LongType;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
@@ -74,14 +78,14 @@ public class JoinLeaf2 implements IJoinNode2<IJoinNode3> {
         final ISingleOperand3 lo;
         
         if (implicitNode.expr == null) {
-            lo = new Prop3(implicitNode.name, rootSource, implicitNode.source.sourceType());
+            lo = new Prop3(implicitNode.name, rootSource, new PropType(implicitNode.source.sourceType(), LongType.INSTANCE));
         } else {
             final TransformationResult2<Expression3> expTr = implicitNode.expr.transform(currentContext);
             lo = expTr.item.isSingle() ? expTr.item.first : expTr.item;
             currentContext = expTr.updatedContext;
         }
         
-        final Prop3 ro = new Prop3(ID, addedSource, Long.class);
+        final Prop3 ro = new Prop3(ID, addedSource, LONG_PROP_TYPE);
         final ComparisonTest3 ct = new ComparisonTest3(lo, EQ, ro);
         final Conditions3 jc = new Conditions3(false, asList(asList(ct)));
         final TransformationResult2<IJoinNode3> implicitJoinNodeTr = generateJoinNode(addedSource, implicitNode.subnodes(), currentContext);

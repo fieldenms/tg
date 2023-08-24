@@ -3,8 +3,11 @@ package ua.com.fielden.platform.eql.stage1.operands.queries;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
+import org.hibernate.type.LongType;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
+import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage1.QueryComponents1;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.TransformationResult1;
@@ -49,8 +52,11 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
         return new SubQuery2(queryComponents2, enhance(resultType, enhancedYields2), isRefetchOnlyQuery());
     }
 
-    private static Class<?> enhance(final Class<?> resultType, final Yields2 yields) {
-        return resultType == null ? yields.getYields().iterator().next().javaType() : resultType;
+    private static PropType enhance(final Class<?> resultType, final Yields2 yields) {
+        return resultType == null ? 
+                yields.getYields().iterator().next().operand.type() // the case of modelAsPrimitive() no ResultType provided 
+                :
+                    new PropType(resultType, LongType.INSTANCE); // the case of modelAsEntity(..)
     }
     
     private boolean isRefetchOnlyQuery() {

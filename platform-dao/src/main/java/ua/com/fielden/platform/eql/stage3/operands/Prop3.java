@@ -3,13 +3,14 @@ package ua.com.fielden.platform.eql.stage3.operands;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
 public class Prop3 extends AbstractSingleOperand3 {
     public final String name;
-    public final ISource3 source; // can be null for prop headers
+    public final ISource3 source;
 
-    public Prop3(final String name, final ISource3 source, final Class<?> type) {
+    public Prop3(final String name, final ISource3 source, final PropType type) {
         super(type);
         this.name = name;
         this.source = source;

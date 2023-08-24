@@ -7,13 +7,14 @@ import java.util.Objects;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit;
 import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
+import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
 public class CountDateInterval3 extends TwoOperandsFunction3 {
 
     private DateIntervalUnit intervalUnit;
 
-    public CountDateInterval3(final DateIntervalUnit intervalUnit, final ISingleOperand3 periodEndDate, final ISingleOperand3 periodStartDate, final Class<?> type) {
+    public CountDateInterval3(final DateIntervalUnit intervalUnit, final ISingleOperand3 periodEndDate, final ISingleOperand3 periodStartDate, final PropType type) {
         super(periodEndDate, periodStartDate, type);
         this.intervalUnit = intervalUnit;
     }

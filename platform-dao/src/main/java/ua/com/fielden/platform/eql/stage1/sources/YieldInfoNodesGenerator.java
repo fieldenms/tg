@@ -14,6 +14,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
+import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.conditions.NullTest2;
 import ua.com.fielden.platform.eql.stage2.etc.Yield2;
@@ -24,7 +25,7 @@ public class YieldInfoNodesGenerator {
     public static Collection<YieldInfoNode> generate(final List<SourceQuery2> models) {
         final List<YieldInfoTail> yieldsInfo = new ArrayList<>();
         for (final YieldInfo yield : generateYieldInfos(models)) {
-            yieldsInfo.add(new YieldInfoTail(asList(yield.name().split("\\.")), yield.javaType(), yield.required()));
+            yieldsInfo.add(new YieldInfoTail(asList(yield.name().split("\\.")), yield.propType(), yield.required()));
         }
 
         return group(yieldsInfo).values();
@@ -32,13 +33,13 @@ public class YieldInfoNodesGenerator {
     
     private static List<YieldInfo> generateYieldInfos(final List<SourceQuery2> models) {
         if (models.size() == 1) {
-            return models.get(0).yields.getYields().stream().map(yield -> new YieldInfo(yield.alias, yield.javaType(), determineRequiredness(new YieldAndConditions(yield, models.get(0).conditions)))).collect(toList());
+            return models.get(0).yields.getYields().stream().map(yield -> new YieldInfo(yield.alias, yield.operand.type(), determineRequiredness(new YieldAndConditions(yield, models.get(0).conditions)))).collect(toList());
         } else {
             final List<YieldInfo> result = new ArrayList<>(); 
             final Map<String, List<YieldAndConditions>> yieldMatrix = generateYieldMatrixFromQueryModels(models);
             validateYieldsMatrix(yieldMatrix, models.size());
             for (final Entry<String, List<YieldAndConditions>> yieldEntry : yieldMatrix.entrySet()) {
-                result.add(new YieldInfo(yieldEntry.getKey(), determineJavaType(yieldEntry), determineRequiredness(yieldEntry.getValue())));
+                result.add(new YieldInfo(yieldEntry.getKey(), determinePropType(yieldEntry), determineRequiredness(yieldEntry.getValue())));
             }
             return result;
         }
@@ -57,20 +58,20 @@ public class YieldInfoNodesGenerator {
         return true;
     }
 
-    private static Class<?> determineJavaType(final Entry<String, List<YieldAndConditions>> yieldVariantsEntry) {
-        final Set<Class<?>> javaTypes = new HashSet<>();
+    private static PropType determinePropType(final Entry<String, List<YieldAndConditions>> yieldVariantsEntry) {
+        final Set<PropType> propTypes = new HashSet<>();
         for (final YieldAndConditions yield : yieldVariantsEntry.getValue()) {
-            if (yield.yield.javaType() != null) {
-                javaTypes.add(yield.yield.javaType());
+            if (yield.yield.operand.type() != null) {
+                propTypes.add(yield.yield.operand.type());
             }
         }
         
-        if (javaTypes.isEmpty()) {
+        if (propTypes.isEmpty()) {
             return null;
-        } else if (javaTypes.size() == 1) {
-            return javaTypes.iterator().next();
+        } else if (propTypes.size() == 1) {
+            return propTypes.iterator().next();
         } else {
-            return AbstractSingleOperand2.getTypeHighestPrecedence(javaTypes);
+            return AbstractSingleOperand2.getTypeHighestPrecedence(propTypes);
         }
     }
     
@@ -114,9 +115,9 @@ public class YieldInfoNodesGenerator {
             }
 
             if (yieldData.name.size() == 1) {
-                yieldsWithoutSubprops.put(first, new YieldInfo(first, yieldData.javaType, yieldData.required));
+                yieldsWithoutSubprops.put(first, new YieldInfo(first, yieldData.propType, yieldData.required));
             } else {
-                existing.add(new YieldInfoTail(yieldData.name.subList(1, yieldData.name.size()), yieldData.javaType, yieldData.required));
+                existing.add(new YieldInfoTail(yieldData.name.subList(1, yieldData.name.size()), yieldData.propType, yieldData.required));
             }
         }
 
@@ -124,7 +125,7 @@ public class YieldInfoNodesGenerator {
 
         for (final Entry<String, List<YieldInfoTail>> yieldTree : yieldsTreeData.entrySet()) {
             final YieldInfo yieldWithoutSubprops = yieldsWithoutSubprops.get(yieldTree.getKey());
-            result.put(yieldTree.getKey(), new YieldInfoNode(yieldTree.getKey(), yieldWithoutSubprops == null ? null : yieldWithoutSubprops.javaType, yieldWithoutSubprops == null ? false : yieldWithoutSubprops.required, yieldTree.getValue().isEmpty() ? emptyMap() : group(yieldTree.getValue())));
+            result.put(yieldTree.getKey(), new YieldInfoNode(yieldTree.getKey(), yieldWithoutSubprops == null ? null : yieldWithoutSubprops.propType, yieldWithoutSubprops == null ? false : yieldWithoutSubprops.required, yieldTree.getValue().isEmpty() ? emptyMap() : group(yieldTree.getValue())));
         }
 
         return result;
@@ -132,7 +133,7 @@ public class YieldInfoNodesGenerator {
     
     private static record YieldAndConditions(Yield2 yield, Conditions2 conditions) {}
     
-    private static record YieldInfo(String name, Class<?> javaType, boolean required) {}
+    private static record YieldInfo(String name, PropType propType, boolean required) {}
     
-    private static record YieldInfoTail(List<String> name, Class<?> javaType, boolean required) {}
+    private static record YieldInfoTail(List<String> name, PropType propType, boolean required) {}
 }

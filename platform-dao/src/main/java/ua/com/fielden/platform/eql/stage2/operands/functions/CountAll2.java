@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.operands.functions;
 
 import static java.util.Collections.emptySet;
+import static ua.com.fielden.platform.eql.meta.PropType.INTEGER_PROP_TYPE;
 
 import java.util.Set;
 
@@ -15,7 +16,7 @@ public class CountAll2 extends AbstractFunction2<CountAll3> {
     public static CountAll2 INSTANCE = new CountAll2();
     
     private CountAll2() {
-        super(Integer.class);
+        super(INTEGER_PROP_TYPE);
     }
 
     @Override

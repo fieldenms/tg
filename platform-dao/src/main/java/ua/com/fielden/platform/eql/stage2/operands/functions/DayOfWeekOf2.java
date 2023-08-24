@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.operands.functions;
 
+import static ua.com.fielden.platform.eql.meta.PropType.INTEGER_PROP_TYPE;
+
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
@@ -9,7 +11,7 @@ import ua.com.fielden.platform.eql.stage3.operands.functions.DayOfWeekOf3;
 public class DayOfWeekOf2 extends SingleOperandFunction2<DayOfWeekOf3> {
 
     public DayOfWeekOf2(final ISingleOperand2<? extends ISingleOperand3> operand) {
-        super(operand, Integer.class);
+        super(operand, INTEGER_PROP_TYPE);
     }
 
     @Override

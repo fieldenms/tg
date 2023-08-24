@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.operands.functions;
 
+import static ua.com.fielden.platform.eql.meta.PropType.INTEGER_PROP_TYPE;
+
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit;
@@ -14,7 +16,7 @@ public class CountDateInterval2 extends TwoOperandsFunction2<CountDateInterval3>
     private DateIntervalUnit intervalUnit;
 
     public CountDateInterval2(final DateIntervalUnit intervalUnit, final ISingleOperand2<? extends ISingleOperand3> periodEndDate, final ISingleOperand2<? extends ISingleOperand3> periodStartDate) {
-        super(periodEndDate, periodStartDate, Integer.class);
+        super(periodEndDate, periodStartDate, INTEGER_PROP_TYPE);
         this.intervalUnit = intervalUnit;
     }
 

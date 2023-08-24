@@ -3,11 +3,12 @@ package ua.com.fielden.platform.eql.stage3.operands.functions;
 import static java.lang.String.format;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
 public class SecondOf3 extends SingleOperandFunction3 {
 
-    public SecondOf3(final ISingleOperand3 operand, final Class<?> type) {
+    public SecondOf3(final ISingleOperand3 operand, final PropType type) {
         super(operand, type);
     }
 

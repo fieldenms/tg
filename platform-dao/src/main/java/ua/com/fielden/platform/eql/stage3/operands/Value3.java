@@ -3,14 +3,17 @@ package ua.com.fielden.platform.eql.stage3.operands;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.meta.PropType;
 
 public class Value3 implements ISingleOperand3 {
     public final Object value; // can be 'null' in case of yield stmt
     public final String paramName;
+    public final PropType type;
 
-    public Value3(final Object value, final String paramName) {
+    public Value3(final Object value, final String paramName, PropType type) {
         this.value = value;
         this.paramName = paramName;
+        this.type = type;
     }
 
     @Override
@@ -46,7 +49,7 @@ public class Value3 implements ISingleOperand3 {
     }
 
     @Override
-    public Class<?> type() {
-        return value != null ? value.getClass() : null;
+    public PropType type() {
+        return type;
     }
 }

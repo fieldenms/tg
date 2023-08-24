@@ -10,6 +10,7 @@ import org.hibernate.type.Type;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
 import ua.com.fielden.platform.eql.retrieval.records.EntityTree;
 import ua.com.fielden.platform.eql.retrieval.records.HibernateScalar;
 import ua.com.fielden.platform.eql.retrieval.records.QueryResultLeaf;
@@ -28,7 +29,7 @@ public class EntityResultTreeBuilderTest extends AbstractEqlShortcutTest {
         
         final List<QueryResultLeaf> leaves = List.of(
                 qrl(0, "dob", "C_2", DateTimeType.INSTANCE),
-                qrl(1, "utcDob", "C_3", UtcDateTimeType.INSTANCE));
+                qrl(1, "utcDob", "C_3", UtcDateTimeType.INSTANCE, UtcDateTimeType.INSTANCE));
         
         final EntityTree<EntityAggregates> exp = new EntityTree<>(EntityAggregates.class, leaves, emptyMap(), emptyMap());
         assertEquals(exp, act);
@@ -36,5 +37,13 @@ public class EntityResultTreeBuilderTest extends AbstractEqlShortcutTest {
 
     private static QueryResultLeaf qrl(final int position, final String name, final String column, final Type hibType) {
         return new QueryResultLeaf(position, name, new HibernateScalar(column, hibType), null);
+    }
+    
+    private static QueryResultLeaf qrl(final int position, final String name, final String column, final IUserTypeInstantiate hibUserType) {
+        return new QueryResultLeaf(position, name, new HibernateScalar(column, null), hibUserType);
+    }
+    
+    private static QueryResultLeaf qrl(final int position, final String name, final String column, final Type hibType, final IUserTypeInstantiate hibUserType) {
+        return new QueryResultLeaf(position, name, new HibernateScalar(column, hibType), hibUserType);
     }
 }

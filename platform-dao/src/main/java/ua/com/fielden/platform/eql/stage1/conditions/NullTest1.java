@@ -32,7 +32,7 @@ public class NullTest1 implements ICondition1<ICondition2<?>> {
     @Override
     public ICondition2<?> transform(final TransformationContext1 context) {
         final ISingleOperand2<?> transformedOperand = operand.transform(context);
-        if (transformedOperand instanceof Prop2 && isUnionEntityType(((Prop2) transformedOperand).type)) {
+        if (transformedOperand instanceof Prop2 && isUnionEntityType(((Prop2) transformedOperand).type.javaType())) {
             final Prop2 prop = (Prop2) transformedOperand;
             final UnionTypePropInfo<?> lastResolutionItem = (UnionTypePropInfo<?>) prop.getPath().get(prop.getPath().size() - 1);
             final List<ICondition2<?>> nullTests = new ArrayList<>();

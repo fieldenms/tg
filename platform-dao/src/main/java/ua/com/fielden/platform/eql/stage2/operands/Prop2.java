@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.stage2.operands;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.eql.meta.PropType.LONG_PROP_TYPE;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.meta.query.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.query.EntityTypePropInfo;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
@@ -47,10 +49,15 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
     }
 
     public Prop2(final ISource2<? extends ISource3> source, final List<AbstractPropInfo<?>> path, final boolean shouldBeTreatedAsId) {
-        super(shouldBeTreatedAsId ? Long.class : path.stream().reduce((first, second) -> second).orElse(null).javaType());
+        super(shouldBeTreatedAsId ? LONG_PROP_TYPE : obtainPropType(path));
         this.source = source;
         this.path = path;
         this.name = path.stream().map(k -> k.name).collect(Collectors.joining("."));
+    }
+    
+    private static PropType obtainPropType(final List<AbstractPropInfo<?>> path) {
+        final AbstractPropInfo<?> lastElement = path.stream().reduce((first, second) -> second).orElse(null);
+        return new PropType(lastElement.javaType(), lastElement.hibType);
     }
 
     @Override

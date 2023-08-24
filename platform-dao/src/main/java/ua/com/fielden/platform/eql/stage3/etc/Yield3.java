@@ -5,15 +5,16 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
 public class Yield3 {
     public final ISingleOperand3 operand;
     public final String alias;
     public final String column;
-    public final Class<?> type;
+    public final PropType type;
 
-    public Yield3(final ISingleOperand3 operand, final String alias, final int columnId, final Class<?> type) {
+    public Yield3(final ISingleOperand3 operand, final String alias, final int columnId, final PropType type) {
         this.operand = operand;
         this.alias = alias;
         this.column = isEmpty(alias) ? null : "C_" + columnId;

@@ -6,12 +6,13 @@ import java.util.Date;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
+import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.AbstractSingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
 public abstract class AbstractFunction3 extends AbstractSingleOperand3 {
     
-    public AbstractFunction3(Class<?> type) {
+    public AbstractFunction3(PropType type) {
         super(type);
     }
 
@@ -36,9 +37,9 @@ public abstract class AbstractFunction3 extends AbstractSingleOperand3 {
     }
 
     private String getConvertToStringSqlForOracle(final DbVersion dbVersion, final ISingleOperand3 operand) {
-        if (Date.class.equals(operand.type())) {
+        if (operand.type() != null && Date.class.equals(operand.type().javaType())) {
             return "TO_CHAR(" + operand.sql(dbVersion) + ", 'YYYY-MM-dd hh24:mm:ss')";
-        } else if (String.class.equals(operand.type())) {
+        } else if (operand.type() != null && String.class.equals(operand.type().javaType())) {
             return operand.sql(dbVersion);
         } else {
             return "CAST(" + operand.sql(dbVersion) + " AS VARCHAR2(255))";
@@ -46,9 +47,9 @@ public abstract class AbstractFunction3 extends AbstractSingleOperand3 {
     }
 
     private String getConvertToStringSqlForH2(final DbVersion dbVersion, final ISingleOperand3 operand) {
-        if (Date.class.equals(operand.type())) {
+        if (operand.type() != null && Date.class.equals(operand.type().javaType())) {
             return "FORMATDATETIME(" + operand.sql(dbVersion) + ", 'YYYY-MM-dd hh:mm:ss')";
-        } else if (String.class.equals(operand.type())) {
+        } else if (operand.type() != null && String.class.equals(operand.type().javaType())) {
             return operand.sql(dbVersion);
         } else {
             return "CAST(" + operand.sql(dbVersion) + " AS VARCHAR(255))";
@@ -56,9 +57,9 @@ public abstract class AbstractFunction3 extends AbstractSingleOperand3 {
     }
 
     private String getConvertToStringSqlForMsSql2005(final DbVersion dbVersion, final ISingleOperand3 operand) {
-        if (Date.class.equals(operand.type())) {
+        if (operand.type() != null && Date.class.equals(operand.type().javaType())) {
             return "CONVERT(VARCHAR(19), " + operand.sql(dbVersion) + ", 120)";
-        } else if (String.class.equals(operand.type())) {
+        } else if (operand.type() != null && String.class.equals(operand.type().javaType())) {
             return operand.sql(dbVersion);
         } else {
             return "CAST(" + operand.sql(dbVersion) + " AS VARCHAR(255))";
@@ -66,9 +67,9 @@ public abstract class AbstractFunction3 extends AbstractSingleOperand3 {
     }
 
     private String getConvertToStringSqlForPostgresql(final DbVersion dbVersion, final ISingleOperand3 operand) {
-        if (Date.class.equals(operand.type())) {
+        if (operand.type() != null && Date.class.equals(operand.type().javaType())) {
             return "TO_CHAR(" + operand.sql(dbVersion) + ", 'YYYY-MM-DD HH24:MI:SS')";
-        } else if (String.class.equals(operand.type())) {
+        } else if (operand.type() != null && String.class.equals(operand.type().javaType())) {
             return operand.sql(dbVersion);
         } else {
             return "CAST(" + operand.sql(dbVersion) + " AS VARCHAR(255))";

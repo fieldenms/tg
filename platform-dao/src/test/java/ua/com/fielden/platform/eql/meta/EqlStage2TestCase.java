@@ -50,16 +50,16 @@ import ua.com.fielden.platform.eql.stage2.operands.queries.ResultQuery2;
 import ua.com.fielden.platform.eql.stage2.operands.queries.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.operands.queries.SubQuery2;
 import ua.com.fielden.platform.eql.stage2.operands.queries.TypelessSubQuery2;
-import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
+import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.JoinBranch2;
 import ua.com.fielden.platform.eql.stage2.sources.JoinLeaf2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
-import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
+import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.types.tuples.T2;
 
 public abstract class EqlStage2TestCase extends EqlTestCase {
@@ -301,14 +301,14 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static SubQuery2 subqry(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType) {
-        return new SubQuery2(qc2(sources, conditions, yields), resultType, false);
+        return new SubQuery2(qc2(sources, conditions, yields), new PropType(resultType, H_LONG), false);
     }
 
     protected static TypelessSubQuery2 typelessSubqry(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions) {
         return new TypelessSubQuery2(new QueryComponents2(sources, conditions, nullYields, emptyGroupBys, emptyOrderBys));
     }
 
-    protected static SubQuery2 subqry(final IJoinNode2<? extends IJoinNode3> sources, final Yields2 yields, final Class<?> resultType) {
+    protected static SubQuery2 subqry(final IJoinNode2<? extends IJoinNode3> sources, final Yields2 yields, final PropType resultType) {
         return new SubQuery2(qc2(sources, emptyConditions, yields), resultType, false);
     }
 }

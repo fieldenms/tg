@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.retrieval;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.eql.meta.PropType.LONG_PROP_TYPE;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 import java.math.BigDecimal;
@@ -65,7 +66,7 @@ public final class EntityResultTreeBuilder {
                 final String remainingProp = yc.name().substring(firstDotIndex + 1);
                 
                 if (propGroup.equals(currentGroup)) {
-                    currentGroupDetails.add(new YieldedColumn(remainingProp, yc.javaType(), yc.column()));
+                    currentGroupDetails.add(new YieldedColumn(remainingProp, yc.propType(), yc.column()));
                 } else { // no explicit group header -- either composite value type or EA in SE result yields 
                     if (currentGroup != null) {
                         // finalise current group
@@ -91,16 +92,16 @@ public final class EntityResultTreeBuilder {
 
                     if (resultType == EntityAggregates.class) {
                         currentResultType = EntityAggregates.class;
-                        currentGroupDetails.add(new YieldedColumn(remainingProp, yc.javaType(), yc.column())); 
+                        currentGroupDetails.add(new YieldedColumn(remainingProp, yc.propType(), yc.column())); 
                     } else {
                         final AbstractPropInfo<?> propInfo = querySourceInfo.getProps().get(currentGroup);
                         if (propInfo != null) {
                             if (EntityUtils.isEntityType(propInfo.javaType())) {
                                 currentResultType = (Class<? extends AbstractEntity<?>>) propInfo.javaType();
-                                currentGroupDetails.add(new YieldedColumn(remainingProp, yc.javaType(), yc.column())); 
+                                currentGroupDetails.add(new YieldedColumn(remainingProp, yc.propType(), yc.column())); 
                             } else {
                                 currentComponentInfo = (ComponentTypePropInfo<?>) propInfo;
-                                currentGroupDetails.add(new YieldedColumn(remainingProp, yc.javaType(), yc.column()));
+                                currentGroupDetails.add(new YieldedColumn(remainingProp, yc.propType(), yc.column()));
                             }
                         } else {
                             throw new IllegalStateException("Can't find prop metadata: " + yc.name());
@@ -133,15 +134,15 @@ public final class EntityResultTreeBuilder {
                 currentGroup = yc.name();
                 
                 // can be either ET prop, or primitive prop
-                if (EntityUtils.isPersistedEntityType(yc.javaType())) {
-                    currentResultType = (Class<? extends AbstractEntity<?>>) yc.javaType();
-                    currentGroupDetails.add(new YieldedColumn(ID, Long.class, yc.column()));
+                if (yc.propType() != null && EntityUtils.isPersistedEntityType(yc.propType().javaType())) {
+                    currentResultType = (Class<? extends AbstractEntity<?>>) yc.propType().javaType();
+                    currentGroupDetails.add(new YieldedColumn(ID, LONG_PROP_TYPE, yc.column()));
                 } else {
                     currentGroup = null; // no group is actually created for simple prop
                     localIndex = localIndex + 1;
                     
                     if (querySourceInfo == null) { // the case of EntityAggregates
-                        final Object derivedHibType = yc.javaType() == null ? null : hibTypeFromJavaType(yc.javaType());
+                        final Object derivedHibType = yc.propType() == null ? null : yc.propType().hibType(); // taking actual original prop hibType (if available)
                         leaves.add(new QueryResultLeaf(localIndex, yc.name(), new HibernateScalar(yc.column(), getHibTypeAsType(derivedHibType)), getHibTypeAsUserType(derivedHibType)));
                     } else { 
                         final AbstractPropInfo<?> propInfo = querySourceInfo.getProps().get(yc.name());
@@ -149,7 +150,7 @@ public final class EntityResultTreeBuilder {
                             final Object declaredHibType = propInfo.hibType;
                             leaves.add(new QueryResultLeaf(localIndex, yc.name(), new HibernateScalar(yc.column(), getHibTypeAsType(declaredHibType)), getHibTypeAsUserType(declaredHibType)));
                         } else {
-                            final Object deducedHibType = hibTypeFromJavaType(yc.javaType());
+                            final Object deducedHibType = yc.propType() == null ? null : hibTypeFromJavaType(yc.propType().javaType());
                             leaves.add(new QueryResultLeaf(localIndex, yc.name(), new HibernateScalar(yc.column(), getHibTypeAsType(deducedHibType)), getHibTypeAsUserType(deducedHibType)));
                         }
                     }
@@ -192,7 +193,7 @@ public final class EntityResultTreeBuilder {
         return new ValueTreeResult(new ValueTree((ICompositeUserTypeInstantiate) propInfo.hibType, unmodifiableList(singles)), localIndex);
     }
     
-    private static Object hibTypeFromJavaType(final Class<?> type) {
+    public static Object hibTypeFromJavaType(final Class<?> type) {
         // TODO need to have the same logic as in EqlEntityMetadataGenerator.getHibernateType (i.e. use hibTypeDefaults)
         
         if (Date.class.equals(type)) {

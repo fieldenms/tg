@@ -6,13 +6,14 @@ import java.util.List;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.meta.PropType;
 
 public class Expression3 extends AbstractSingleOperand3 {
 
     public final ISingleOperand3 first;
     private final List<CompoundSingleOperand3> items;
 
-    public Expression3(final ISingleOperand3 first, final List<CompoundSingleOperand3> items, final Class<?> type) {
+    public Expression3(final ISingleOperand3 first, final List<CompoundSingleOperand3> items, final PropType type) {
         super(type);
         this.first = first;
         this.items = items;

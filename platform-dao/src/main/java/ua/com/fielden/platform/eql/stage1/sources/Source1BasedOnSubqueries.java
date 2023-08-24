@@ -83,8 +83,8 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
                 // The only thing that has to be taken from declared is its structure (in case of UE or complex value)
                 if (declaredProp instanceof EntityTypePropInfo<?>) { // TODO here we assume that yield is of ET (this will help to handle the case of yielding ID, which currently is just long only.
                     final EntityTypePropInfo<?> declaredEntityTypePropInfo = (EntityTypePropInfo<?>) declaredProp;
-                    if (!(yield.javaType == null || isEntityType(yield.javaType) && yield.javaType.equals(declaredEntityTypePropInfo.javaType()) || Long.class.equals(yield.javaType))) {
-                        throw new EqlStage1ProcessingException(format(ERR_CONFLICT_BETWEEN_YIELDED_AND_DECLARED_PROP_TYPE, declaredEntityTypePropInfo.name, sourceType.getName(), declaredEntityTypePropInfo.javaType().getName(), yield.javaType.getName()));
+                    if (!(yield.propType == null || isEntityType(yield.propType.javaType()) && yield.propType.javaType().equals(declaredEntityTypePropInfo.javaType()) || Long.class.equals(yield.propType.javaType()))) {
+                        throw new EqlStage1ProcessingException(format(ERR_CONFLICT_BETWEEN_YIELDED_AND_DECLARED_PROP_TYPE, declaredEntityTypePropInfo.name, sourceType.getName(), declaredEntityTypePropInfo.javaType().getName(), yield.propType.javaType().getName()));
                     }
                     querySourceInfo.addProp(new EntityTypePropInfo<>(yield.name, declaredEntityTypePropInfo.propQuerySourceInfo, declaredEntityTypePropInfo.hibType, yield.required));
                 } else {
@@ -94,9 +94,9 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
                 }
             } else {
                 // adding not declared props
-                querySourceInfo.addProp(isEntityType(yield.javaType)
-                        ? new EntityTypePropInfo<>(yield.name, domainInfo.getQuerySourceInfo((Class<? extends AbstractEntity<?>>) yield.javaType), LongType.INSTANCE, yield.required)
-                        : new PrimTypePropInfo<>(yield.name, yield.javaType, null/*yield.getValue().hibType*/));
+                querySourceInfo.addProp(yield.propType != null && isEntityType(yield.propType.javaType())
+                        ? new EntityTypePropInfo<>(yield.name, domainInfo.getQuerySourceInfo((Class<? extends AbstractEntity<?>>) yield.propType.javaType()), LongType.INSTANCE, yield.required)
+                        : new PrimTypePropInfo<>(yield.name, yield.propType != null ? yield.propType.javaType() : null, yield.propType != null ? yield.propType.hibType() : null));
             }
         }
 

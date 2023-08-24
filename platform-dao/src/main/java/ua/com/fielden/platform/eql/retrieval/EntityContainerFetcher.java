@@ -29,11 +29,11 @@ import ua.com.fielden.platform.entity.query.EntityContainer;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.QueryExecutionContext;
 import ua.com.fielden.platform.entity.query.QueryProcessingModel;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.entity.query.stream.ScrollableResultStream;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
+import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.retrieval.records.EntityTree;
 import ua.com.fielden.platform.eql.retrieval.records.QueryModelResult;
 import ua.com.fielden.platform.eql.retrieval.records.YieldedColumn;
@@ -134,7 +134,7 @@ public class EntityContainerFetcher {
     private static List<YieldedColumn> getYieldedColumns(final Yields3 model) {
         final List<YieldedColumn> result = new ArrayList<>();
         for (final Yield3 yield : model.getYields()) {
-            final Class<?> yieldType = yield.type != null ? yield.type : yield.operand.type();
+            final PropType yieldType = yield.type != null ? yield.type : yield.operand.type();
             result.add(new YieldedColumn(yield.alias, yieldType, yield.column));
         }
         return Collections.unmodifiableList(result);

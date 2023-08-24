@@ -3,7 +3,7 @@ package ua.com.fielden.platform.eql.stage2;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.eql.meta.EntityCategory.QUERY_BASED;
+import static ua.com.fielden.platform.eql.meta.PropType.INTEGER_PROP_TYPE;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -59,10 +59,10 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         
         final Source2BasedOnSubqueries qtyQrySource = source(querySourceInfo, 2, vehSourceSubQry);
         final IJoinNode2<? extends IJoinNode3> qtyQrySources = sources(qtyQrySource);
-        final Yields2 qtyQryYields = mkYields(QmToStage2TransformationTest.mkYield(prop(qtyQrySource, new PrimTypePropInfo<>("qty", INTEGER, null)), ""));
+        final Yields2 qtyQryYields = mkYields(QmToStage2TransformationTest.mkYield(prop(qtyQrySource, new PrimTypePropInfo<>("qty", INTEGER, H_INTEGER)), ""));
         
         
-        final Yields2 modelQryYields = mkYields(QmToStage2TransformationTest.mkYield(subqry(qtyQrySources, qtyQryYields, INTEGER), "qty"));
+        final Yields2 modelQryYields = mkYields(QmToStage2TransformationTest.mkYield(subqry(qtyQrySources, qtyQryYields, INTEGER_PROP_TYPE), "qty"));
         
         final ResultQuery2 expQry = qry(sources(modelSource), modelQryYields);
         assertEquals(expQry, actQry);
@@ -103,10 +103,10 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         
         final Source2BasedOnSubqueries qtyQrySource = source(querySourceInfo, 3, vehSourceSubQry1, vehSourceSubQry2);
         final IJoinNode2<? extends IJoinNode3> qtyQrySources = sources(qtyQrySource);
-        final Yields2 qtyQryYields = mkYields(mkYield(prop(qtyQrySource, new PrimTypePropInfo<>("qty", INTEGER, null)), ""));
+        final Yields2 qtyQryYields = mkYields(mkYield(prop(qtyQrySource, new PrimTypePropInfo<>("qty", INTEGER, H_INTEGER)), ""));
         
         
-        final Yields2 modelQryYields = mkYields(mkYield(subqry(qtyQrySources, qtyQryYields, INTEGER), "qty"));
+        final Yields2 modelQryYields = mkYields(mkYield(subqry(qtyQrySources, qtyQryYields, INTEGER_PROP_TYPE), "qty"));
         
         final ResultQuery2 expQry = qry(sources(modelSource), modelQryYields);
         assertEquals(expQry, actQry);

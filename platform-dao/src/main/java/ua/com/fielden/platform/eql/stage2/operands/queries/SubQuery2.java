@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.eql.stage2.operands.queries;
 
+import java.util.Objects;
+
+import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage2.QueryComponents2;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
@@ -14,9 +17,12 @@ import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 
 public class SubQuery2 extends AbstractQuery2 implements ISingleOperand2<SubQuery3> {
     public final boolean isRefetchOnly;
-    public SubQuery2(final QueryComponents2 queryComponents, final Class<?> resultType, final boolean isRefetchOnly) {
-        super(queryComponents, resultType);
+    public final PropType type;
+    
+    public SubQuery2(final QueryComponents2 queryComponents, final PropType type, final boolean isRefetchOnly) {
+        super(queryComponents, type.javaType());
         this.isRefetchOnly = isRefetchOnly;
+        this.type = type;
     }
 
     @Override
@@ -29,12 +35,12 @@ public class SubQuery2 extends AbstractQuery2 implements ISingleOperand2<SubQuer
 
         final QueryComponents3 queryComponents3 = new QueryComponents3(joinRootTr.item, conditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item);
 
-        return new TransformationResult2<>(new SubQuery3(queryComponents3, resultType), orderingsTr.updatedContext);
+        return new TransformationResult2<>(new SubQuery3(queryComponents3, type), orderingsTr.updatedContext);
     }
 
     @Override
-    public Class<?> type() {
-        return resultType;
+    public PropType type() {
+        return type;
     }
 
     @Override
@@ -51,11 +57,27 @@ public class SubQuery2 extends AbstractQuery2 implements ISingleOperand2<SubQuer
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
+        result = prime * result + type.hashCode();
+        result = prime * result + (isRefetchOnly ? 1231 : 1237);
         return prime * result + SubQuery2.class.getName().hashCode();
     }
 
     @Override
     public boolean equals(final Object obj) {
-        return this == obj || super.equals(obj) && obj instanceof SubQuery2;
+        if (this == obj) {
+            return true;
+        }
+        
+        if (!super.equals(obj)) {
+            return false;
+        }
+        
+        if (!(obj instanceof SubQuery2)) {
+            return false;
+        }
+        
+        final SubQuery2 other = (SubQuery2) obj;
+        
+        return Objects.equals(type, other.type) && (isRefetchOnly == other.isRefetchOnly);
     }
 }

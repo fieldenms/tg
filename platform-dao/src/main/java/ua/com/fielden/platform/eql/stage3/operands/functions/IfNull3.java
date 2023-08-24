@@ -3,11 +3,12 @@ package ua.com.fielden.platform.eql.stage3.operands.functions;
 import static java.lang.String.format;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
 public class IfNull3 extends TwoOperandsFunction3 {
 
-    public IfNull3(final ISingleOperand3 operand1, final ISingleOperand3 operand2, final Class<?> type) {
+    public IfNull3(final ISingleOperand3 operand1, final ISingleOperand3 operand2, final PropType type) {
         super(operand1, operand2, type);
     }
 

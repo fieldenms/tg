@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.operands.functions;
 
 
-import java.util.Date;
+import static ua.com.fielden.platform.eql.meta.PropType.DATE_PROP_TYPE;
 
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
@@ -12,7 +12,7 @@ import ua.com.fielden.platform.eql.stage3.operands.functions.DateOf3;
 public class DateOf2 extends SingleOperandFunction2<DateOf3> {
 
     public DateOf2(final ISingleOperand2<? extends ISingleOperand3> operand) {
-        super(operand, Date.class);
+        super(operand, DATE_PROP_TYPE);
     }
 
     @Override

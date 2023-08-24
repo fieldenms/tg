@@ -2,14 +2,17 @@ package ua.com.fielden.platform.eql.stage3.operands;
 
 import java.util.Objects;
 
+import ua.com.fielden.platform.eql.meta.PropType;
+
 public abstract class AbstractSingleOperand3 implements ISingleOperand3 {
-    public final Class<?> type;
+    public final PropType type;
     
-    public AbstractSingleOperand3(final Class<?> type) {
+    public AbstractSingleOperand3(final PropType type) {
         this.type = type;
     }
     
-    public Class<?> type() {
+    @Override
+    public PropType type() {
         return type;
     }
 

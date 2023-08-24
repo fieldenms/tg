@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.operands.functions;
 
 import static java.util.stream.Collectors.toSet;
+import static ua.com.fielden.platform.eql.meta.PropType.STRING_PROP_TYPE;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -21,7 +22,7 @@ public class Concat2 extends AbstractFunction2<Concat3> {
     private final List<ISingleOperand2<? extends ISingleOperand3>> operands;
 
     public Concat2(final List<ISingleOperand2<? extends ISingleOperand3>> operands) {
-        super(String.class);
+        super(STRING_PROP_TYPE);
         this.operands = operands;
     }
 
