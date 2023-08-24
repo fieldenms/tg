@@ -205,7 +205,11 @@ public class EqlEntityMetadataGenerator {
                 }
                 return result;
             } else if (hibTypesInjector != null && !Void.class.equals(hibernateUserTypeImplementor)) { // Hibernate type is definitely either IUserTypeInstantiate or ICompositeUserTypeInstantiate
-                return hibTypesInjector.getInstance(hibernateUserTypeImplementor);
+                try {
+                    return hibTypesInjector.getInstance(hibernateUserTypeImplementor).getClass().getDeclaredField("INSTANCE").get(null); // need to have the same instance in use for the unit tests sake
+                } catch (final Exception e) {
+                    throw new EqlMetadataGenerationException("Couldn't obtain instance of hibernate type [" + hibernateUserTypeImplementor + "] due to: " + e);
+                }
             } else {
                 throw new EqlMetadataGenerationException("Persistent annotation doesn't provide intended information.");
             }
