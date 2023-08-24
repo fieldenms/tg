@@ -16,6 +16,7 @@ import '/resources/images/tg-icons.js';
 import '/resources/components/postal-lib.js';
 
 import {IronOverlayBehavior, IronOverlayBehaviorImpl} from '/resources/polymer/@polymer/iron-overlay-behavior/iron-overlay-behavior.js';
+import { IronOverlayManager } from '/resources/polymer/@polymer/iron-overlay-behavior/iron-overlay-manager.js';
 import {IronA11yKeysBehavior} from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
 import {IronFitBehavior} from '/resources/polymer/@polymer/iron-fit-behavior/iron-fit-behavior.js';
 
@@ -204,7 +205,21 @@ const findParentDialog = function(action) {
         parent = parent.parentElement || parent.getRootNode().host;
     }
     return parent;
-}
+};
+
+const hasPreviousMaximisedOverlay = function (overlay) {
+    const overlayIdx = IronOverlayManager._overlays.indexOf(overlay);
+    if (overlayIdx >= 0) {
+        for (let i = overlayIdx - 1; i >= 0; i--) {
+            if (!!IronOverlayManager._overlays[i]._maximised){
+                return true;
+            }
+        }
+    }
+    return false;
+};
+
+
 Polymer({
 
     _template: template,
@@ -546,7 +561,11 @@ Polymer({
         this.removeEventListener('focus', this._onCaptureFocus, true);
         this.removeEventListener('keydown', this._onCaptureKeyDown);
     },
-    
+
+    skipHistoryAction: function () {
+        return !isMobileApp() && !this._maximised && !hasPreviousMaximisedOverlay(this);
+    },
+
     _getCurrentFocusableElements: function() {
         //Retrieve title's bar element to focus.
         const componentsToFocus = Array.from(this.$.titleBar.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR));

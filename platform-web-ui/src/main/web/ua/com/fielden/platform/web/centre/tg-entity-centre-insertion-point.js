@@ -17,6 +17,7 @@ import '/resources/egi/tg-responsive-toolbar.js';
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
+import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
 
 import '/resources/polymer/@polymer/paper-styles/color.js';
 import '/resources/polymer/@polymer/paper-styles/shadow.js';
@@ -332,16 +333,22 @@ Polymer({
         }
     },
 
-    _showDialog: function () {
+    showDialog: function () {
         this.detachedView = true;
+        InsertionPointManager.addInsertionPoint(this);
         this.$.insertionPointContent.focus();
     },
 
-    _closeDialog: function () {
+    closeDialog: function () {
         this.detachedView = false;
+        InsertionPointManager.removeInsertionPoint(this);
         if (this.contextRetriever && this.contextRetriever().$.centreResultContainer) {
             this.contextRetriever().$.centreResultContainer.focus();
         }
+    },
+
+    skipHistoryAction: function () {
+        return !(this.contextRetriever && this.contextRetriever()._visible && this.detachedView);
     },
 
     _getElement: function (customAction) {
@@ -546,9 +553,9 @@ Polymer({
 
     _expandCollapseTap: function (event) {
         if (this.detachedView) {
-            this._closeDialog();
+            this.closeDialog();
         } else {
-            this._showDialog();
+            this.showDialog();
         }
         tearDownEvent(event);
     },
