@@ -754,18 +754,7 @@ Polymer({
      * Switches between maximised / normal states of the dialog.
      */
     _invertMaximiseState: function() {
-        this._definePrefDim(); // define prefDim (maximise action) if it was not defined using action configuration
         this._invertDialogState('_maximised');
-    },
-
-    /**
-     * For dimensionless Entity Master, need to resizable it and assign prefDim from current calculated dimensions.
-     * This is necessary, for example, for later resetDimensions (and other prefDim usages).
-     */
-    _definePrefDim: function () {
-        if (!this.prefDim) { // define prefDim if it was not defined using action configuration
-            this.prefDim = this._lastElement.makeResizable();
-        }
     },
 
     /**
@@ -779,9 +768,6 @@ Polymer({
                     document.styleSheets[0].insertRule('* { cursor: nwse-resize !important; }', 0); // override custom cursors in all application with resizing cursor
                     break;
                 case 'track':
-                    if (!this._customDim()) {
-                        this._definePrefDim(); // define prefDim (resize action) if it was not defined using action configuration
-                    }
                     const resizedHeight = this.offsetHeight + event.detail.ddy;
                     const heightNeedsResize = resizedHeight >= 44 /* toolbar height*/ + 14 /* resizer image height */ ;
                     if (heightNeedsResize) {
@@ -839,8 +825,8 @@ Polymer({
      * Restores previously persisted dialog position (top, left) and dimensions (height, width).
      */
     _restoreLocallyPersistedDialogPositionAndDimension: function() {
+    	this._setDialogDimensions(this.prefDim, this.minimised, this._maximised);
         this._setDialogPosition(this.prefDim, this._minimised, this._maximised);
-        this._setDialogDimensions(this.prefDim, this.minimised, this._maximised);
     },
 
     closeDialog: function(forceClosing) {
@@ -1327,7 +1313,6 @@ Polymer({
         if (!this.mobile) {
             this._maximised = this._customMaximised();
         }
-        this._definePrefDim();
 
         if (this._dialogIsOutOfTheWindow()) {
             this._removePersistedPositionAndDimensions();
@@ -1392,6 +1377,8 @@ Polymer({
                 this.style.left = this.persistedLeft;
             } else if (prefDim) {
                 this._updateDialogPositionWithPrefDim(prefDim, _minimised, _maximised);
+            } else {
+                this.center();
             }
         }
     },
