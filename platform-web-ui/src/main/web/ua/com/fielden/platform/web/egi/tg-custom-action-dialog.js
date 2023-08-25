@@ -37,6 +37,8 @@ const ST_TOP = '_top';
 const ST_LEFT = '_left';
 const ST_MAXIMISED = '_maximised';
 
+const DEFAULT_PREF_DIM = {width: "50%", height: "50%"};
+
 const template = html`
     <style>
         :host {
@@ -1366,6 +1368,11 @@ Polymer({
             this.style.width = '';
             this.style.height = '';
             this.style.overflow = 'auto';
+        }
+        const dialogBodyDimensions = this.$.dialogBody.getBoundingClientRect();
+        if (dialogBodyDimensions.width === 0 || dialogBodyDimensions.height === 0) {
+            this.style.width = DEFAULT_PREF_DIM.width;
+            this.style.height = DEFAULT_PREF_DIM.height;
         }
     },
 
