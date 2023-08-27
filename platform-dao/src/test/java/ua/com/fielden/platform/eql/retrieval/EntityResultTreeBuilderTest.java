@@ -48,6 +48,23 @@ public class EntityResultTreeBuilderTest extends AbstractEqlShortcutTest {
         assertEquals(exp, act);
     }  
 
+    @Test
+    public void yielding_date_props_together_with_null_values_into_entity_aggregates_preserves_original_hib_types() {
+        final EntityTree<EntityAggregates> act = buildResultTree(
+                select(
+                    select(TgAuthor.class).yield().prop("dob").as("dob").yield().prop("utcDob").as("utcDob").modelAsAggregate(),
+                    select().yield().val(null).as("dob").yield().val(null).as("utcDob").modelAsAggregate()
+                ).
+                yield().prop("dob").as("dob").yield().prop("utcDob").as("utcDob").modelAsAggregate());
+        
+        final List<QueryResultLeaf> leaves = List.of(
+                qrl(0, "dob", "C_7", DateTimeType.INSTANCE),
+                qrl(1, "utcDob", "C_8", UtcDateTimeType.INSTANCE, UtcDateTimeType.INSTANCE));
+        
+        final EntityTree<EntityAggregates> exp = new EntityTree<>(EntityAggregates.class, leaves, emptyMap(), emptyMap());
+        assertEquals(exp, act);
+    }  
+    
     private static QueryResultLeaf qrl(final int position, final String name, final String column, final Type hibType) {
         return new QueryResultLeaf(position, name, new HibernateScalar(column, hibType), null);
     }
