@@ -37,7 +37,7 @@ const ST_TOP = '_top';
 const ST_LEFT = '_left';
 const ST_MAXIMISED = '_maximised';
 
-const DEFAULT_PREF_DIM = {width: "50%", height: "50%"};
+const FALLBACK_PREF_DIM = {width: "70%", height: "70%"};
 
 const template = html`
     <style>
@@ -1332,7 +1332,7 @@ Polymer({
     },
 
     /**
-     * Sets the dialog dimensions bassed on preferred dimension minimised and maximised state.
+     * Sets the dialog dimensions based on preferred dimension minimised and maximised state.
      * 
      * @param {Object} prefDim preferred dimension to set if there are no persisted one or minimised or maximised state aren't set.
      * @param {Boolean} minimised determines whether collapsed state is set or not.
@@ -1369,10 +1369,11 @@ Polymer({
             this.style.height = '';
             this.style.overflow = 'auto';
         }
+        // A fallback in case the dimensions were computed to be either 0 pixels width or height.
         const dialogBodyDimensions = this.$.dialogBody.getBoundingClientRect();
         if (dialogBodyDimensions.width === 0 || dialogBodyDimensions.height === 0) {
-            this.style.width = DEFAULT_PREF_DIM.width;
-            this.style.height = DEFAULT_PREF_DIM.height;
+            this.style.width = FALLBACK_PREF_DIM.width;
+            this.style.height = FALLBACK_PREF_DIM.height;
         }
     },
 
