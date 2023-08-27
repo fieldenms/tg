@@ -28,12 +28,12 @@ public abstract class AbstractSingleOperand2 {
     public static PropType getTypeHighestPrecedence(final Set<PropType> types) {
         if (types.size() == 1) {
             return types.iterator().next();
-        } else if (types.contains(DATE_PROP_TYPE)) {
-            return DATE_PROP_TYPE;
-        } else if (types.contains(DATETIME_PROP_TYPE)) {
-            return DATETIME_PROP_TYPE;
         } else if (types.contains(UTCDATETIME_PROP_TYPE)) {
             return UTCDATETIME_PROP_TYPE;
+        } else if (types.contains(DATETIME_PROP_TYPE)) {
+            return DATETIME_PROP_TYPE;
+        } else if (types.contains(DATE_PROP_TYPE)) {
+            return DATE_PROP_TYPE;
         } else if (types.contains(BIGDECIMAL_PROP_TYPE)) {
             return BIGDECIMAL_PROP_TYPE;
         } else if (types.contains(LONG_PROP_TYPE)) {
