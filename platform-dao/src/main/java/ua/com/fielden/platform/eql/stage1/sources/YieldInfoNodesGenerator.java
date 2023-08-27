@@ -39,7 +39,7 @@ public class YieldInfoNodesGenerator {
             final Map<String, List<YieldAndConditions>> yieldMatrix = generateYieldMatrixFromQueryModels(models);
             validateYieldsMatrix(yieldMatrix, models.size());
             for (final Entry<String, List<YieldAndConditions>> yieldEntry : yieldMatrix.entrySet()) {
-                result.add(new YieldInfo(yieldEntry.getKey(), determinePropType(yieldEntry), determineRequiredness(yieldEntry.getValue())));
+                result.add(new YieldInfo(yieldEntry.getKey(), determinePropType(yieldEntry.getValue()), determineRequiredness(yieldEntry.getValue())));
             }
             return result;
         }
@@ -58,11 +58,11 @@ public class YieldInfoNodesGenerator {
         return true;
     }
 
-    private static PropType determinePropType(final Entry<String, List<YieldAndConditions>> yieldVariantsEntry) {
+    private static PropType determinePropType(final List<YieldAndConditions> yieldVariants) {
         final Set<PropType> propTypes = new HashSet<>();
-        for (final YieldAndConditions yield : yieldVariantsEntry.getValue()) {
-            if (yield.yield.operand.type() != null) {
-                propTypes.add(yield.yield.operand.type());
+        for (final YieldAndConditions yieldVariant : yieldVariants) {
+            if (yieldVariant.yield.operand.type() != null) {
+                propTypes.add(yieldVariant.yield.operand.type());
             }
         }
         
