@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.eql.retrieval;
 
 import static java.lang.String.format;
+import static java.util.Collections.unmodifiableList;
+import static java.util.stream.Collectors.toList;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -11,8 +13,6 @@ import static ua.com.fielden.platform.eql.retrieval.HibernateScalarsExtractor.ge
 import static ua.com.fielden.platform.eql.stage3.EqlQueryTransformer.transform;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -33,12 +33,10 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.entity.query.stream.ScrollableResultStream;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
-import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.retrieval.records.EntityTree;
 import ua.com.fielden.platform.eql.retrieval.records.QueryModelResult;
 import ua.com.fielden.platform.eql.retrieval.records.YieldedColumn;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
-import ua.com.fielden.platform.eql.stage3.etc.Yield3;
 import ua.com.fielden.platform.eql.stage3.etc.Yields3;
 import ua.com.fielden.platform.eql.stage3.operands.queries.ResultQuery3;
 import ua.com.fielden.platform.streaming.SequentialGroupingStream;
@@ -132,12 +130,7 @@ public class EntityContainerFetcher {
     }
 
     private static List<YieldedColumn> getYieldedColumns(final Yields3 model) {
-        final List<YieldedColumn> result = new ArrayList<>();
-        for (final Yield3 yield : model.getYields()) {
-            final PropType yieldType = yield.type != null ? yield.type : yield.operand.type();
-            result.add(new YieldedColumn(yield.alias, yieldType, yield.column));
-        }
-        return Collections.unmodifiableList(result);
+        return unmodifiableList(model.getYields().stream().map(yield -> new YieldedColumn(yield.alias, yield.type, yield.column)).collect(toList()));
     }
     
     private static boolean idOnlyQuery(final QueryModelResult<?> queryModelResult) {

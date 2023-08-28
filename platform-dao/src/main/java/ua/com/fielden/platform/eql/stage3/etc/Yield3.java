@@ -12,7 +12,8 @@ public class Yield3 {
     public final ISingleOperand3 operand;
     public final String alias;
     public final String column;
-    public final PropType type;
+    public final PropType type; // declared type (the one from property declarations (java type and annotation); for non-calculated properties it will be the same as operand.type(); 
+    //for calculated properties operand.type() will be inferred from actual expression and may differ from the declared one.
 
     public Yield3(final ISingleOperand3 operand, final String alias, final int columnId, final PropType type) {
         this.operand = operand;
