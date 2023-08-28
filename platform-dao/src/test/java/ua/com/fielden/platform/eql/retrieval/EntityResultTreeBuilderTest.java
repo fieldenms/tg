@@ -3,6 +3,8 @@ package ua.com.fielden.platform.eql.retrieval;
 import static java.util.Collections.emptyMap;
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_DATETIME;
+import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_UTCDATETIME;
 
 import java.util.List;
 
@@ -14,7 +16,6 @@ import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
 import ua.com.fielden.platform.eql.retrieval.records.EntityTree;
 import ua.com.fielden.platform.eql.retrieval.records.HibernateScalar;
 import ua.com.fielden.platform.eql.retrieval.records.QueryResultLeaf;
-import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.persistence.types.UtcDateTimeType;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 
@@ -28,8 +29,8 @@ public class EntityResultTreeBuilderTest extends AbstractEqlShortcutTest {
                 modelAsAggregate());
         
         final List<QueryResultLeaf> leaves = List.of(
-                qrl(0, "dob", "C_2", DateTimeType.INSTANCE),
-                qrl(1, "utcDob", "C_3", UtcDateTimeType.INSTANCE, UtcDateTimeType.INSTANCE));
+                qrl(0, "dob", "C_2", H_DATETIME),
+                qrl(1, "utcDob", "C_3", H_UTCDATETIME, UtcDateTimeType.INSTANCE));
         
         final EntityTree<EntityAggregates> exp = new EntityTree<>(EntityAggregates.class, leaves, emptyMap(), emptyMap());
         assertEquals(exp, act);
@@ -41,8 +42,8 @@ public class EntityResultTreeBuilderTest extends AbstractEqlShortcutTest {
                 yield().prop("dob").as("dob").yield().prop("utcDob").as("utcDob").modelAsAggregate());
         
         final List<QueryResultLeaf> leaves = List.of(
-                qrl(0, "dob", "C_5", DateTimeType.INSTANCE),
-                qrl(1, "utcDob", "C_6", UtcDateTimeType.INSTANCE, UtcDateTimeType.INSTANCE));
+                qrl(0, "dob", "C_5", H_DATETIME),
+                qrl(1, "utcDob", "C_6", H_UTCDATETIME, UtcDateTimeType.INSTANCE));
         
         final EntityTree<EntityAggregates> exp = new EntityTree<>(EntityAggregates.class, leaves, emptyMap(), emptyMap());
         assertEquals(exp, act);
@@ -58,8 +59,8 @@ public class EntityResultTreeBuilderTest extends AbstractEqlShortcutTest {
                 yield().prop("dob").as("dob").yield().prop("utcDob").as("utcDob").modelAsAggregate());
         
         final List<QueryResultLeaf> leaves = List.of(
-                qrl(0, "dob", "C_7", DateTimeType.INSTANCE),
-                qrl(1, "utcDob", "C_8", UtcDateTimeType.INSTANCE, UtcDateTimeType.INSTANCE));
+                qrl(0, "dob", "C_7", H_DATETIME),
+                qrl(1, "utcDob", "C_8", H_UTCDATETIME, UtcDateTimeType.INSTANCE));
         
         final EntityTree<EntityAggregates> exp = new EntityTree<>(EntityAggregates.class, leaves, emptyMap(), emptyMap());
         assertEquals(exp, act);

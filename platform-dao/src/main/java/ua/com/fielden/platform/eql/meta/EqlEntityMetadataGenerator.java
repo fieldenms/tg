@@ -53,9 +53,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.hibernate.type.BasicType;
+import org.hibernate.type.BigDecimalType;
+import org.hibernate.type.DateType;
+import org.hibernate.type.IntegerType;
+import org.hibernate.type.LongType;
+import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
 import org.hibernate.type.TypeResolver;
+import org.hibernate.type.YesNoType;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 
@@ -78,15 +84,24 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
 import ua.com.fielden.platform.eql.meta.EqlPropertyMetadata.Builder;
 import ua.com.fielden.platform.eql.stage3.Table;
+import ua.com.fielden.platform.persistence.types.DateTimeType;
+import ua.com.fielden.platform.persistence.types.UtcDateTimeType;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public class EqlEntityMetadataGenerator {
 
     private static final TypeConfiguration typeConfiguration = new TypeConfiguration();
     public static final TypeResolver typeResolver = new TypeResolver(typeConfiguration, new TypeFactory(typeConfiguration));
-    private static final Type H_LONG = typeResolver.basic("long");
-    private static final Type H_STRING = typeResolver.basic("string");
-    private static final Type H_BOOLEAN = typeResolver.basic("yes_no");
+    public static final Type H_ENTITY = LongType.INSTANCE;
+    public static final Type H_LONG = LongType.INSTANCE;
+    public static final Type H_INTEGER = IntegerType.INSTANCE;
+    public static final Type H_BIGDECIMAL = BigDecimalType.INSTANCE;
+    public static final Type H_STRING = StringType.INSTANCE;
+    public static final Type H_DATE = DateType.INSTANCE;
+    public static final Type H_DATETIME = DateTimeType.INSTANCE;
+    public static final Type H_UTCDATETIME = UtcDateTimeType.INSTANCE;
+    public static final Type H_BOOLEAN = YesNoType.INSTANCE;
+    
     public static final String Y = "Y";
     public static final String N = "N";
 
@@ -179,7 +194,7 @@ public class EqlEntityMetadataGenerator {
         final Class<?> propType = propField.getType();
 
         if (isPersistedEntityType(propType) || isUnionEntityType(propType) || isSyntheticEntityType(propType)) {
-            return H_LONG;
+            return H_ENTITY;
         }
 
         final PersistentType persistentType = getAnnotation(propField, PersistentType.class);
@@ -217,8 +232,8 @@ public class EqlEntityMetadataGenerator {
     }
 
     private Optional<EqlPropertyMetadata> generateIdPropertyMetadata(final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo, final Class<? extends AbstractEntity<?>> actualType) {
-    	final EqlPropertyMetadata idProperty = new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).required().column(id).build();
-        final EqlPropertyMetadata idPropertyInOne2One = new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).required().column(id).build();
+    	final EqlPropertyMetadata idProperty = new EqlPropertyMetadata.Builder(ID, Long.class, H_ENTITY).required().column(id).build();
+        final EqlPropertyMetadata idPropertyInOne2One = new EqlPropertyMetadata.Builder(ID, Long.class, H_ENTITY).required().column(id).build();
         switch (parentInfo.category) {
         case PERSISTENT:
             return isOneToOne(actualType) ? of(idPropertyInOne2One) : of(idProperty)/*(entityType)*/;
@@ -229,7 +244,7 @@ public class EqlEntityMetadataGenerator {
                 }
                 return of(idProperty);
             } else if (isEntityType(getKeyType(actualType))) {
-                return of(new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).expression(expr().prop(KEY).model()).implicit().build());
+                return of(new EqlPropertyMetadata.Builder(ID, Long.class, H_ENTITY).expression(expr().prop(KEY).model()).implicit().build());
             } else {
             	// FIXME reconsider this implementation taking into account its role combined with actual yields information in the process of getting final EntityPropInfo for Synthetic Entity 
                 return of(idProperty);
@@ -248,9 +263,9 @@ public class EqlEntityMetadataGenerator {
         if (isOneToOne(actualType)) {
             switch (parentInfo.category) {
             case PERSISTENT:
-                return new EqlPropertyMetadata.Builder(KEY, keyType, H_LONG).required().column(id).build();
+                return new EqlPropertyMetadata.Builder(KEY, keyType, H_ENTITY).required().column(id).build();
             case QUERY_BASED:
-                return new EqlPropertyMetadata.Builder(KEY, keyType, H_LONG).required().build();
+                return new EqlPropertyMetadata.Builder(KEY, keyType, H_ENTITY).required().build();
             default:
                 return null;
             }
@@ -331,7 +346,7 @@ public class EqlEntityMetadataGenerator {
         final List<String> unionMembersNames = unionMembers.stream().map(up -> up.getName()).collect(toList());
         final List<EqlPropertyMetadata> subitems = new ArrayList<>();
         subitems.add(new EqlPropertyMetadata.Builder(KEY, String.class, H_STRING).expression(generateUnionEntityPropertyContextualExpression(unionMembersNames, KEY, contextPropName)).implicit().build());
-        subitems.add(new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).expression(generateUnionEntityPropertyContextualExpression(unionMembersNames, ID, contextPropName)).implicit().build());
+        subitems.add(new EqlPropertyMetadata.Builder(ID, Long.class, H_ENTITY).expression(generateUnionEntityPropertyContextualExpression(unionMembersNames, ID, contextPropName)).implicit().build());
         subitems.add(new EqlPropertyMetadata.Builder(DESC, String.class, H_STRING).expression(generateUnionCommonDescPropExpressionModel(unionMembers, contextPropName)).implicit().build());
 
         final List<String> commonProps = commonProperties(unionPropType).stream().filter(n -> !DESC.equals(n) && !KEY.equals(n)).collect(toList());

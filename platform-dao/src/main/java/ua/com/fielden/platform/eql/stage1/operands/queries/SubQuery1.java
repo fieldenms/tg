@@ -1,9 +1,8 @@
 package ua.com.fielden.platform.eql.stage1.operands.queries;
 
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_ENTITY;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
-
-import org.hibernate.type.LongType;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
@@ -56,7 +55,7 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
         return resultType == null ? 
                 yields.getYields().iterator().next().operand.type() // the case of modelAsPrimitive() no ResultType provided 
                 :
-                    new PropType(resultType, LongType.INSTANCE); // the case of modelAsEntity(..)
+                    new PropType(resultType, H_ENTITY); // the case of modelAsEntity(..)
     }
     
     private boolean isRefetchOnlyQuery() {

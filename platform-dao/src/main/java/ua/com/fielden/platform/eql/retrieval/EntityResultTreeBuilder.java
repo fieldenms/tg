@@ -3,6 +3,13 @@ package ua.com.fielden.platform.eql.retrieval;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_BIGDECIMAL;
+import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_BOOLEAN;
+import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_DATETIME;
+import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_ENTITY;
+import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_INTEGER;
+import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_LONG;
+import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_STRING;
 import static ua.com.fielden.platform.eql.meta.PropType.LONG_PROP_TYPE;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
@@ -13,12 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.type.BigDecimalType;
-import org.hibernate.type.IntegerType;
-import org.hibernate.type.LongType;
-import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
-import org.hibernate.type.YesNoType;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -33,7 +35,6 @@ import ua.com.fielden.platform.eql.retrieval.records.HibernateScalar;
 import ua.com.fielden.platform.eql.retrieval.records.QueryResultLeaf;
 import ua.com.fielden.platform.eql.retrieval.records.ValueTree;
 import ua.com.fielden.platform.eql.retrieval.records.YieldedColumn;
-import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public final class EntityResultTreeBuilder {
@@ -197,19 +198,19 @@ public final class EntityResultTreeBuilder {
         // TODO need to have the same logic as in EqlEntityMetadataGenerator.getHibernateType (i.e. use hibTypeDefaults)
         
         if (Date.class.equals(type)) {
-            return DateTimeType.INSTANCE; 
+            return H_DATETIME; 
         } else if (BigDecimal.class.equals(type)) {
-            return BigDecimalType.INSTANCE; 
+            return H_BIGDECIMAL; 
         } else if (Long.class.equals(type)) {
-            return LongType.INSTANCE; 
+            return H_LONG; 
         } else if (Integer.class.equals(type) || int.class.equals(type)){
-            return IntegerType.INSTANCE; 
+            return H_INTEGER; 
         } else if (String.class.equals(type)){
-            return StringType.INSTANCE; 
+            return H_STRING; 
         } else if (isEntityType(type)) {
-                return LongType.INSTANCE; 
+                return H_ENTITY; 
         } else if (type == boolean.class || Boolean.class.equals(type)){
-                return YesNoType.INSTANCE;
+                return H_BOOLEAN;
         } else {
             return null;
         }

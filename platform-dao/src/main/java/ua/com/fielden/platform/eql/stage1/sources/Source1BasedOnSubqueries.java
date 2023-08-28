@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static java.util.Collections.emptySortedMap;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_ENTITY;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 import java.util.ArrayList;
@@ -13,8 +14,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
-
-import org.hibernate.type.LongType;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -95,7 +94,7 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
             } else {
                 // adding not declared props
                 querySourceInfo.addProp(yield.propType != null && isEntityType(yield.propType.javaType())
-                        ? new EntityTypePropInfo<>(yield.name, domainInfo.getQuerySourceInfo((Class<? extends AbstractEntity<?>>) yield.propType.javaType()), LongType.INSTANCE, yield.required)
+                        ? new EntityTypePropInfo<>(yield.name, domainInfo.getQuerySourceInfo((Class<? extends AbstractEntity<?>>) yield.propType.javaType()), H_ENTITY, yield.required)
                         : new PrimTypePropInfo<>(yield.name, yield.propType != null ? yield.propType.javaType() : null, yield.propType != null ? yield.propType.hibType() : null));
             }
         }

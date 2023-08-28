@@ -5,13 +5,12 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
+import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_ENTITY;
 import static ua.com.fielden.platform.eql.meta.PropType.LONG_PROP_TYPE;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-
-import org.hibernate.type.LongType;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.PropType;
@@ -78,7 +77,7 @@ public class JoinLeaf2 implements IJoinNode2<IJoinNode3> {
         final ISingleOperand3 lo;
         
         if (implicitNode.expr == null) {
-            lo = new Prop3(implicitNode.name, rootSource, new PropType(implicitNode.source.sourceType(), LongType.INSTANCE));
+            lo = new Prop3(implicitNode.name, rootSource, new PropType(implicitNode.source.sourceType(), H_ENTITY));
         } else {
             final TransformationResult2<Expression3> expTr = implicitNode.expr.transform(currentContext);
             lo = expTr.item.isSingle() ? expTr.item.first : expTr.item;

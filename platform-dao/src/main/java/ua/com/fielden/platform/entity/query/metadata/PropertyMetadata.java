@@ -14,6 +14,7 @@ import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.SYN
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.UNION_ENTITY_DETAILS;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.UNION_ENTITY_HEADER;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.VIRTUAL_OVERRIDE;
+import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_ENTITY;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
@@ -25,13 +26,10 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.logging.log4j.Logger;
-import org.hibernate.type.LongType;
 import org.hibernate.type.Type;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
-import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.meta.EntityCategory;
@@ -153,7 +151,7 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
                     throw new EqlException(format("Property [%s] in union entity type [%s] has no @MapTo.", subpropField.getName(), javaType));
                 }
                 final PropertyColumn column = new PropertyColumn(getColumn() + "_" + (isEmpty(mapTo.value()) ? subpropField.getName() : mapTo.value()));
-                result.add(new PropertyMetadata.Builder(name + "." + subpropField.getName(), subpropField.getType(), true, entityCategory).column(column).category(UNION_ENTITY_DETAILS).hibType(LongType.INSTANCE).build());
+                result.add(new PropertyMetadata.Builder(name + "." + subpropField.getName(), subpropField.getType(), true, entityCategory).column(column).category(UNION_ENTITY_DETAILS).hibType(H_ENTITY).build());
             }
         }
         return result;
