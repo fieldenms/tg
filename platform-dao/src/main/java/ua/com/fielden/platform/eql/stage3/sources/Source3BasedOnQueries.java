@@ -13,10 +13,10 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.etc.Yield3;
 import ua.com.fielden.platform.eql.stage3.operands.queries.SourceQuery3;
 
-public class Source3BasedOnSubqueries extends AbstractSource3 {
+public class Source3BasedOnQueries extends AbstractSource3 {
     private final List<SourceQuery3> models = new ArrayList<>();
     
-    public Source3BasedOnSubqueries(final List<SourceQuery3> models, final Integer id, final int sqlId) {
+    public Source3BasedOnQueries(final List<SourceQuery3> models, final Integer id, final int sqlId) {
         super("Q_" + sqlId, id, obtainColumnsFromYields(models.get(0).yields.getYields()));
         this.models.addAll(models);
     }
@@ -36,7 +36,7 @@ public class Source3BasedOnSubqueries extends AbstractSource3 {
 
     @Override
     public String toString() {
-        return "QrySource3BasedOnSubqueries of type " + models.get(0).resultType;
+        return "Source3BasedOnQueries of type " + models.get(0).resultType;
     }
     
     @Override
@@ -57,11 +57,11 @@ public class Source3BasedOnSubqueries extends AbstractSource3 {
             return false;
         }
         
-        if (!(obj instanceof Source3BasedOnSubqueries)) {
+        if (!(obj instanceof Source3BasedOnQueries)) {
             return false;
         }
         
-        final Source3BasedOnSubqueries other = (Source3BasedOnSubqueries) obj;
+        final Source3BasedOnQueries other = (Source3BasedOnQueries) obj;
         
         return Objects.equals(models, other.models);
     }

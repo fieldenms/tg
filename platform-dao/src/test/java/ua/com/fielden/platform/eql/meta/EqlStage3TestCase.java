@@ -46,7 +46,7 @@ import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.eql.stage3.sources.JoinBranch3;
 import ua.com.fielden.platform.eql.stage3.sources.JoinLeaf3;
-import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnSubqueries;
+import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnQueries;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnTable;
 
 public abstract class EqlStage3TestCase extends EqlTestCase {
@@ -103,8 +103,8 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
         return new Source3BasedOnTable(metadata().entityMetadataHolder.getTableForEntityType(sourceType), sourceForContextId, nextSqlId());
     }
 
-    protected static Source3BasedOnSubqueries source(final Integer sourceForContextId, final SourceQuery3... sourceQueries) {
-        return new Source3BasedOnSubqueries(Arrays.asList(sourceQueries), sourceForContextId, nextSqlId());
+    protected static Source3BasedOnQueries source(final Integer sourceForContextId, final SourceQuery3... sourceQueries) {
+        return new Source3BasedOnQueries(Arrays.asList(sourceQueries), sourceForContextId, nextSqlId());
     }
 
     protected static ISingleOperand3 prop(final String name, final ISource3 source) {

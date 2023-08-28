@@ -26,17 +26,17 @@ import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.queries.SourceQuery1;
 import ua.com.fielden.platform.eql.stage2.operands.queries.SourceQuery2;
-import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnSubqueries;
+import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnQueries;
 
-public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubqueries> {
-    public static final String ERR_CONFLICT_BETWEEN_YIELDED_AND_DECLARED_PROP_TYPE = "There is a problem while trying to determine the type for property [%s] of a query source based on subqueries with result type [%s].\n"
+public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries> {
+    public static final String ERR_CONFLICT_BETWEEN_YIELDED_AND_DECLARED_PROP_TYPE = "There is a problem while trying to determine the type for property [%s] of a query source based on queries with result type [%s].\n"
             + "Declared type is [%s].\nActual yield type is [%s].";
     
     private final List<SourceQuery1> models = new ArrayList<>();
     private final boolean isSyntheticEntity;
     private final Class<? extends AbstractEntity<?>> sourceType;
 
-    public Source1BasedOnSubqueries(final List<SourceQuery1> models, final String alias, final Integer id, final Class<? extends AbstractEntity<?>> syntheticEntityType) {
+    public Source1BasedOnQueries(final List<SourceQuery1> models, final String alias, final Integer id, final Class<? extends AbstractEntity<?>> syntheticEntityType) {
         super(alias, id);
         this.isSyntheticEntity = syntheticEntityType != null;
         this.sourceType = determineSourceType(models, syntheticEntityType);
@@ -61,10 +61,10 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
     }
     
     @Override
-    public Source2BasedOnSubqueries transform(final TransformationContext1 context) {
+    public Source2BasedOnQueries transform(final TransformationContext1 context) {
         final List<SourceQuery2> transformedQueries = models.stream().map(m -> m.transform(context)).collect(toList());
         final QuerySourceInfo<?> ei = obtainQuerySourceInfo(context.domainInfo, transformedQueries, sourceType(), isSyntheticEntity);
-        return new Source2BasedOnSubqueries(transformedQueries, alias, id, ei, isSyntheticEntity);
+        return new Source2BasedOnQueries(transformedQueries, alias, id, ei, isSyntheticEntity);
     }
     
     @Override
@@ -153,11 +153,11 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
             return false;
         }
         
-        if (!(obj instanceof Source1BasedOnSubqueries)) {
+        if (!(obj instanceof Source1BasedOnQueries)) {
             return false;
         }
 
-        final Source1BasedOnSubqueries other = (Source1BasedOnSubqueries) obj;
+        final Source1BasedOnQueries other = (Source1BasedOnQueries) obj;
 
         return Objects.equals(models, other.models) && Objects.equals(isSyntheticEntity, other.isSyntheticEntity);
     }

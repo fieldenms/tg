@@ -55,7 +55,7 @@ import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.JoinBranch2;
 import ua.com.fielden.platform.eql.stage2.sources.JoinLeaf2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
-import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnSubqueries;
+import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnQueries;
 import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
@@ -264,8 +264,8 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
         return new Source2BasedOnPersistentType(sourceType, metadata().getQuerySourceInfo(sourceType), id);
     }
 
-    protected static Source2BasedOnSubqueries source(final QuerySourceInfo<?> querySourceInfo, final Integer id, final SourceQuery2... queries) {
-        return new Source2BasedOnSubqueries(Arrays.asList(queries), null, id, querySourceInfo, false);
+    protected static Source2BasedOnQueries source(final QuerySourceInfo<?> querySourceInfo, final Integer id, final SourceQuery2... queries) {
+        return new Source2BasedOnQueries(Arrays.asList(queries), null, id, querySourceInfo, false);
     }
 
     protected static ResultQuery2 qryCountAll(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions) {

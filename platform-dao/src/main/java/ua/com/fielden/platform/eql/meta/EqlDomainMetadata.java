@@ -37,7 +37,7 @@ import ua.com.fielden.platform.eql.meta.utils.DependentCalcPropsOrder;
 import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.queries.SourceQuery1;
-import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnSubqueries;
+import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnQueries;
 import ua.com.fielden.platform.eql.stage2.operands.queries.SourceQuery2;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -105,7 +105,7 @@ public class EqlDomainMetadata {
     private <T extends AbstractEntity<?>> QuerySourceInfo<?> generateEnhancedQuerySourceInfoForSyntheticType(final Class<? extends AbstractEntity<?>> actualType, final List<SourceQuery1> queries) {
         final TransformationContext1 context = new TransformationContext1(this);
         final List<SourceQuery2> transformedQueries = queries.stream().map(m -> m.transform(context)).collect(toList());
-        return Source1BasedOnSubqueries.produceQuerySourceInfoForEntityType(this, transformedQueries, actualType, true);
+        return Source1BasedOnQueries.produceQuerySourceInfoForEntityType(this, transformedQueries, actualType, true);
     }
 
     public List<String> getCalcPropsOrder(final Class<? extends AbstractEntity<?>> entityType) {

@@ -26,7 +26,7 @@ import ua.com.fielden.platform.eql.stage3.operands.queries.ResultQuery3;
 import ua.com.fielden.platform.eql.stage3.operands.queries.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.operands.queries.SubQuery3;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
-import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnSubqueries;
+import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnQueries;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnTable;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
 import ua.com.fielden.platform.sample.domain.TeVehicleModel;
@@ -113,8 +113,8 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
     
     @Test
     public void correlated_source_query_works() {
-        final AggregatedResultQueryModel sourceSubQry = select(TeVehicle.class).where().prop("model").eq().extProp("id").yield().countAll().as("qty").modelAsAggregate();
-        final PrimitiveResultQueryModel qtySubQry = select(sourceSubQry).yield().prop("qty").modelAsPrimitive();
+        final AggregatedResultQueryModel sourceQry = select(TeVehicle.class).where().prop("model").eq().extProp("id").yield().countAll().as("qty").modelAsAggregate();
+        final PrimitiveResultQueryModel qtySubQry = select(sourceQry).yield().prop("qty").modelAsPrimitive();
         final AggregatedResultQueryModel qry = select(TeVehicleModel.class).yield().model(qtySubQry).as("qty").modelAsAggregate();
 
         final ResultQuery3 actQry = qry(qry);
@@ -128,9 +128,9 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Conditions3 vehConditions = or(eq(vehModelProp, modelIdProp));
         final Yields3 vehYields = yields(yieldCountAll("qty"));
 
-        final SourceQuery3 vehSourceSubQry = srcqry(vehSources, vehConditions, vehYields);
+        final SourceQuery3 vehSourceQry = srcqry(vehSources, vehConditions, vehYields);
         
-        final Source3BasedOnSubqueries qtyQrySource = source(2, vehSourceSubQry);
+        final Source3BasedOnQueries qtyQrySource = source(2, vehSourceQry);
         final IJoinNode3 qtyQrySources = sources(qtyQrySource);
         final Yields3 qtyQryYields = yields(yieldProp("qty", qtyQrySource, "", INTEGER_PROP_TYPE));
         

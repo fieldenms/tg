@@ -23,7 +23,7 @@ import ua.com.fielden.platform.eql.stage2.operands.queries.ResultQuery2;
 import ua.com.fielden.platform.eql.stage2.operands.queries.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
-import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnSubqueries;
+import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnQueries;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
 import ua.com.fielden.platform.sample.domain.TeVehicleModel;
@@ -37,8 +37,8 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
     
     @Test
     public void correlated_source_query_works() {
-        final AggregatedResultQueryModel sourceSubQry = select(TeVehicle.class).where().prop("model").eq().extProp("id").yield().countAll().as("qty").modelAsAggregate();
-        final PrimitiveResultQueryModel qtySubQry = select(sourceSubQry).yield().prop("qty").modelAsPrimitive();
+        final AggregatedResultQueryModel sourceQry = select(TeVehicle.class).where().prop("model").eq().extProp("id").yield().countAll().as("qty").modelAsAggregate();
+        final PrimitiveResultQueryModel qtySubQry = select(sourceQry).yield().prop("qty").modelAsPrimitive();
         final AggregatedResultQueryModel qry = select(TeVehicleModel.class).yield().model(qtySubQry).as("qty").modelAsAggregate();
 
         final ResultQuery2 actQry = qry(qry);
@@ -52,12 +52,12 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final Conditions2 vehConditions = cond(eq(vehModelProp, modelIdProp));
         final Yields2 vehYields = mkYields(yieldCountAll("qty"));
 
-        final SourceQuery2 vehSourceSubQry = srcqry(vehSources, vehConditions, vehYields);
+        final SourceQuery2 vehSourceQry = srcqry(vehSources, vehConditions, vehYields);
         
         final QuerySourceInfo<EntityAggregates> querySourceInfo = new QuerySourceInfo<>(EntityAggregates.class, false);
         querySourceInfo.addProp(new PrimTypePropInfo<>("qty", INTEGER, null));
         
-        final Source2BasedOnSubqueries qtyQrySource = source(querySourceInfo, 2, vehSourceSubQry);
+        final Source2BasedOnQueries qtyQrySource = source(querySourceInfo, 2, vehSourceQry);
         final IJoinNode2<? extends IJoinNode3> qtyQrySources = sources(qtyQrySource);
         final Yields2 qtyQryYields = mkYields(QmToStage2TransformationTest.mkYield(prop(qtyQrySource, new PrimTypePropInfo<>("qty", INTEGER, H_INTEGER)), ""));
         
@@ -70,9 +70,9 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
     
     @Test
     public void correlated_source_queries_work() {
-        final AggregatedResultQueryModel sourceSubQry1 = select(TeVehicle.class).where().prop("id").isNotNull().and().prop("model").eq().extProp("id").yield().countAll().as("qty").modelAsAggregate();
-        final AggregatedResultQueryModel sourceSubQry2 = select(TeVehicle.class).where().prop("id").isNull().and().prop("model").eq().extProp("id").yield().countAll().as("qty").modelAsAggregate();
-        final PrimitiveResultQueryModel qtyQry = select(sourceSubQry1, sourceSubQry2).yield().prop("qty").modelAsPrimitive();
+        final AggregatedResultQueryModel sourceQry1 = select(TeVehicle.class).where().prop("id").isNotNull().and().prop("model").eq().extProp("id").yield().countAll().as("qty").modelAsAggregate();
+        final AggregatedResultQueryModel sourceQry2 = select(TeVehicle.class).where().prop("id").isNull().and().prop("model").eq().extProp("id").yield().countAll().as("qty").modelAsAggregate();
+        final PrimitiveResultQueryModel qtyQry = select(sourceQry1, sourceQry2).yield().prop("qty").modelAsPrimitive();
         final AggregatedResultQueryModel qry = select(TeVehicleModel.class).yield().model(qtyQry).as("qty").modelAsAggregate();
 
         final ResultQuery2 actQry = qry(qry);
@@ -87,7 +87,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final Conditions2 vehConditions1 = or(and(isNotNull(vehIdProp1), eq(vehModelProp1, modelIdProp)));
         final Yields2 vehYields1 = mkYields(yieldCountAll("qty"));
 
-        final SourceQuery2 vehSourceSubQry1 = srcqry(vehSources1, vehConditions1, vehYields1);
+        final SourceQuery2 vehSourceQry1 = srcqry(vehSources1, vehConditions1, vehYields1);
 
         final Source2BasedOnPersistentType vehSource2 = source(2, VEHICLE);
         final IJoinNode2<? extends IJoinNode3> vehSources2 = sources(vehSource2);
@@ -96,12 +96,12 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final Conditions2 vehConditions2 = or(and(isNull(vehIdProp2), eq(vehModelProp2, modelIdProp)));
         final Yields2 vehYields2 = mkYields(yieldCountAll("qty"));
 
-        final SourceQuery2 vehSourceSubQry2 = srcqry(vehSources2, vehConditions2, vehYields2);
+        final SourceQuery2 vehSourceQry2 = srcqry(vehSources2, vehConditions2, vehYields2);
 
         final QuerySourceInfo<EntityAggregates> querySourceInfo = new QuerySourceInfo<>(EntityAggregates.class, false);
         querySourceInfo.addProp(new PrimTypePropInfo<>("qty", INTEGER, null));
         
-        final Source2BasedOnSubqueries qtyQrySource = source(querySourceInfo, 3, vehSourceSubQry1, vehSourceSubQry2);
+        final Source2BasedOnQueries qtyQrySource = source(querySourceInfo, 3, vehSourceQry1, vehSourceQry2);
         final IJoinNode2<? extends IJoinNode3> qtyQrySources = sources(qtyQrySource);
         final Yields2 qtyQryYields = mkYields(mkYield(prop(qtyQrySource, new PrimTypePropInfo<>("qty", INTEGER, H_INTEGER)), ""));
         

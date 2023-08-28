@@ -9,7 +9,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import org.junit.Test;
 
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
-import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnSubqueries;
+import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnQueries;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleFuelUsage;
@@ -23,7 +23,7 @@ public class QuerySourceEntityPropsTypeTest extends AbstractEqlShortcutTest {
             transformToModelResult(select(select(TgVehicle.class).yield().prop("station").as("model").modelAsEntity(TgVehicle.class)).model());
             fail("Actual yield type should be in conflict with the declared one.");
         } catch (final EqlStage1ProcessingException e) {
-            final String expErrMsg = format(Source1BasedOnSubqueries.ERR_CONFLICT_BETWEEN_YIELDED_AND_DECLARED_PROP_TYPE, "model", TgVehicle.class.getName(), TgVehicleModel.class.getName(), TgOrgUnit5.class.getName());
+            final String expErrMsg = format(Source1BasedOnQueries.ERR_CONFLICT_BETWEEN_YIELDED_AND_DECLARED_PROP_TYPE, "model", TgVehicle.class.getName(), TgVehicleModel.class.getName(), TgOrgUnit5.class.getName());
             assertEquals("Unexpected error message.", expErrMsg, e.getMessage());
         }
     }
@@ -34,7 +34,7 @@ public class QuerySourceEntityPropsTypeTest extends AbstractEqlShortcutTest {
             transformToModelResult(select(select(TgVehicle.class).yield().val("someModel").as("model").modelAsEntity(TgVehicle.class)).model());
             fail("Actual yield type should be in conflict with the declared one.");
         } catch (final EqlStage1ProcessingException e) {
-            final String expErrMsg = format(Source1BasedOnSubqueries.ERR_CONFLICT_BETWEEN_YIELDED_AND_DECLARED_PROP_TYPE, "model", TgVehicle.class.getName(), TgVehicleModel.class.getName(), String.class.getName());
+            final String expErrMsg = format(Source1BasedOnQueries.ERR_CONFLICT_BETWEEN_YIELDED_AND_DECLARED_PROP_TYPE, "model", TgVehicle.class.getName(), TgVehicleModel.class.getName(), String.class.getName());
             assertEquals("Unexpected error message.", expErrMsg, e.getMessage());
         }
     }
