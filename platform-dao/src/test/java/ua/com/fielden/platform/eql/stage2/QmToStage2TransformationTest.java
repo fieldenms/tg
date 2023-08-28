@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.eql.meta.PropType.INTEGER_PROP_TYPE;
+import static ua.com.fielden.platform.eql.stage0.YieldBuilder.ABSENT_ALIAS;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -59,7 +60,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         
         final Source2BasedOnQueries qtyQrySource = source(querySourceInfo, 2, vehSourceQry);
         final IJoinNode2<? extends IJoinNode3> qtyQrySources = sources(qtyQrySource);
-        final Yields2 qtyQryYields = mkYields(QmToStage2TransformationTest.mkYield(prop(qtyQrySource, new PrimTypePropInfo<>("qty", INTEGER, H_INTEGER)), ""));
+        final Yields2 qtyQryYields = mkYields(QmToStage2TransformationTest.mkYield(prop(qtyQrySource, new PrimTypePropInfo<>("qty", INTEGER, H_INTEGER)), ABSENT_ALIAS));
         
         
         final Yields2 modelQryYields = mkYields(QmToStage2TransformationTest.mkYield(subqry(qtyQrySources, qtyQryYields, INTEGER_PROP_TYPE), "qty"));
@@ -103,7 +104,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         
         final Source2BasedOnQueries qtyQrySource = source(querySourceInfo, 3, vehSourceQry1, vehSourceQry2);
         final IJoinNode2<? extends IJoinNode3> qtyQrySources = sources(qtyQrySource);
-        final Yields2 qtyQryYields = mkYields(mkYield(prop(qtyQrySource, new PrimTypePropInfo<>("qty", INTEGER, H_INTEGER)), ""));
+        final Yields2 qtyQryYields = mkYields(mkYield(prop(qtyQrySource, new PrimTypePropInfo<>("qty", INTEGER, H_INTEGER)), ABSENT_ALIAS));
         
         
         final Yields2 modelQryYields = mkYields(mkYield(subqry(qtyQrySources, qtyQryYields, INTEGER_PROP_TYPE), "qty"));

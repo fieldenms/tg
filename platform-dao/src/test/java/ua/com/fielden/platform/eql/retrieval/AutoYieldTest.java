@@ -4,6 +4,7 @@ package ua.com.fielden.platform.eql.retrieval;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.eql.stage0.YieldBuilder.ABSENT_ALIAS;
 
 import org.junit.Test;
 
@@ -22,7 +23,7 @@ public class AutoYieldTest extends AbstractEqlShortcutTest {
 
         final var exp = select(VEHICLE_FUEL_USAGE).where().prop("vehicle.key").eq().val("A001").and().
                 notExists(select(VEHICLE_FUEL_USAGE).where().prop("vehicle").eq().extProp("vehicle").and().prop("date").gt().extProp("date").
-                        yield().val(null).as("").
+                        yield().val(null).as(ABSENT_ALIAS).
                         modelAsEntity(VEHICLE_FUEL_USAGE)).model();
         
         assertModelResultsEquals(exp, act);
@@ -32,7 +33,7 @@ public class AutoYieldTest extends AbstractEqlShortcutTest {
     public void auto_yield_in_subquery_yields_id_property_aliased_as_empty_string() {
         final var act = select(VEHICLE).where().prop("model").in().model(select(MODEL).where().prop("make.key").in().values("MERC", "BMW").model()).model();
 
-        final var exp = select(VEHICLE).where().prop("model").in().model(select(MODEL).where().prop("make.key").in().values("MERC", "BMW").yield().prop("id").as("").modelAsEntity(MODEL)).model();
+        final var exp = select(VEHICLE).where().prop("model").in().model(select(MODEL).where().prop("make.key").in().values("MERC", "BMW").yield().prop("id").as(ABSENT_ALIAS).modelAsEntity(MODEL)).model();
         
         assertModelResultsEquals(exp, act);
     }

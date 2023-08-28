@@ -8,6 +8,8 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class YieldBuilder extends AbstractTokensBuilder {
 
+    public static String ABSENT_ALIAS = ""; // Used for the cases where yield requires no alias (sub-query with single yield).
+    
     protected YieldBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder) {
         super(parent, queryBuilder);
     }
@@ -22,6 +24,6 @@ public class YieldBuilder extends AbstractTokensBuilder {
         final ISingleOperand1<? extends ISingleOperand2<?>> operand = getModelForSingleOperand(firstCat(), firstValue());
         final String alias = (String) secondValue();
         final boolean requiredHint = (secondCat() == TokenCategory.AS_ALIAS_REQUIRED);
-        return new Pair<TokenCategory, Object>(TokenCategory.QRY_YIELD, new Yield1(operand, alias == null ? "" : alias, requiredHint));
+        return new Pair<TokenCategory, Object>(TokenCategory.QRY_YIELD, new Yield1(operand, alias == null ? ABSENT_ALIAS : alias, requiredHint));
     }
 }

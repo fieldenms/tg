@@ -9,6 +9,7 @@ import static ua.com.fielden.platform.eql.meta.PropType.BIGDECIMAL_PROP_TYPE;
 import static ua.com.fielden.platform.eql.meta.PropType.INTEGER_PROP_TYPE;
 import static ua.com.fielden.platform.eql.meta.PropType.LONG_PROP_TYPE;
 import static ua.com.fielden.platform.eql.meta.PropType.STRING_PROP_TYPE;
+import static ua.com.fielden.platform.eql.stage0.YieldBuilder.ABSENT_ALIAS;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -79,12 +80,12 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable veh1 = source(VEHICLE, 2);
         final IJoinNode3 subQrySources1 = sources(veh1); 
         final Conditions3 subQryConditions1 = cond(eq(entityProp("station", veh1, ORG5), idProp(ou5)));
-        final SubQuery3 expSubQry1 = subqry(subQrySources1, subQryConditions1, yields(new Yield3(new MaxOf3(prop("price.amount", veh1, BIGDECIMAL_PROP_TYPE), BIGDECIMAL_PROP_TYPE), "", nextSqlId(), BIGDECIMAL_PROP_TYPE)), BIGDECIMAL_PROP_TYPE);
+        final SubQuery3 expSubQry1 = subqry(subQrySources1, subQryConditions1, yields(new Yield3(new MaxOf3(prop("price.amount", veh1, BIGDECIMAL_PROP_TYPE), BIGDECIMAL_PROP_TYPE), ABSENT_ALIAS, nextSqlId(), BIGDECIMAL_PROP_TYPE)), BIGDECIMAL_PROP_TYPE);
 
         final Source3BasedOnTable veh2 = source(VEHICLE, 3);
         final IJoinNode3 subQrySources2 = sources(veh2); 
         final Conditions3 subQryConditions2 = cond(eq(entityProp("station", veh2, ORG5), idProp(ou5)));
-        final SubQuery3 expSubQry2 = subqry(subQrySources2, subQryConditions2, yields(new Yield3(new MaxOf3(prop("purchasePrice.amount", veh2, BIGDECIMAL_PROP_TYPE), BIGDECIMAL_PROP_TYPE), "", nextSqlId(), BIGDECIMAL_PROP_TYPE)), BIGDECIMAL_PROP_TYPE);
+        final SubQuery3 expSubQry2 = subqry(subQrySources2, subQryConditions2, yields(new Yield3(new MaxOf3(prop("purchasePrice.amount", veh2, BIGDECIMAL_PROP_TYPE), BIGDECIMAL_PROP_TYPE), ABSENT_ALIAS, nextSqlId(), BIGDECIMAL_PROP_TYPE)), BIGDECIMAL_PROP_TYPE);
 
         final IJoinNode3 sources = sources(ou5);
         final Conditions3 conditions = or(and(or(isNotNull(expSubQry1), isNotNull(expSubQry2))));
@@ -132,7 +133,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         
         final Source3BasedOnQueries qtyQrySource = source(2, vehSourceQry);
         final IJoinNode3 qtyQrySources = sources(qtyQrySource);
-        final Yields3 qtyQryYields = yields(yieldProp("qty", qtyQrySource, "", INTEGER_PROP_TYPE));
+        final Yields3 qtyQryYields = yields(yieldProp("qty", qtyQrySource, ABSENT_ALIAS, INTEGER_PROP_TYPE));
         
         final Yields3 modelQryYields = yields(yieldModel(subqry(qtyQrySources, qtyQryYields, INTEGER_PROP_TYPE), "qty", INTEGER_PROP_TYPE));
         

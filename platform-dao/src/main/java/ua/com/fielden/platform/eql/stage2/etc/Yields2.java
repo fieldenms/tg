@@ -5,6 +5,7 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableCollection;
 import static java.util.Collections.unmodifiableSortedMap;
 import static java.util.stream.Collectors.toSet;
+import static ua.com.fielden.platform.eql.stage0.YieldBuilder.ABSENT_ALIAS;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
 import java.util.ArrayList;
@@ -29,7 +30,7 @@ public class Yields2 {
     private final SortedMap<String, Yield2> yieldsMap = new TreeMap<String, Yield2>();
     public final boolean allGenerated;
     
-    public static Yields2 nullYields = new Yields2(listOf(new Yield2(new Value2(null), "", false))); 
+    public static Yields2 nullYields = new Yields2(listOf(new Yield2(new Value2(null), ABSENT_ALIAS, false))); 
 
     public Yields2(final List<Yield2> yields, final boolean allGenerated) {
         this.allGenerated = allGenerated;

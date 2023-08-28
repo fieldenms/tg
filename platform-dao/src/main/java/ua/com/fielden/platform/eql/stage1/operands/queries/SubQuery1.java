@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage1.operands.queries;
 
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_ENTITY;
+import static ua.com.fielden.platform.eql.stage0.YieldBuilder.ABSENT_ALIAS;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -66,7 +67,7 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
         if (!yields.getYields().isEmpty()) {
             return yields;
         } else if (joinRoot2.mainSource().querySourceInfo().getProps().containsKey(ID)) {
-            return new Yields2(listOf(new Yield2(new Prop2(joinRoot2.mainSource(), listOf(joinRoot2.mainSource().querySourceInfo().getProps().get(ID))), "", false)));
+            return new Yields2(listOf(new Yield2(new Prop2(joinRoot2.mainSource(), listOf(joinRoot2.mainSource().querySourceInfo().getProps().get(ID))), ABSENT_ALIAS, false)));
         } else {
             throw new EqlStage1ProcessingException(ERR_AUTO_YIELD_IMPOSSIBLE_FOR_QUERY_WITH_MAIN_SOURCE_HAVING_NO_ID);
         }
