@@ -26,7 +26,7 @@ import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizabl
 
 import { TgEntityMasterBehavior } from '/resources/master/tg-entity-master-behavior.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js'
-import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
+import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
 import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
 
@@ -290,7 +290,7 @@ Polymer({
             const historySteps = this.currentHistoryState.currIndex - window.history.state.currIndex;
             // Computes to false/null or the first closable dialog
             // This is relevant if user went backward or forward (mobile device only) and there is overlay open and 'root' page (for e.g. https://tgdev.com:8091) is not opening
-            const currentOverlay = (historySteps !== 0 && isMobileApp() && this._findFirstClosableDialog());
+            const currentOverlay = (historySteps !== 0 && this._findFirstClosableDialog());
             if (currentOverlay) {
                 // disableNextHistoryChange flag is needed to avoid history movements cycling
                 if (!this.disableNextHistoryChange) {
@@ -349,7 +349,10 @@ Polymer({
      * This method skips all iron-overlay-behavior elements that should 'skipHistoryAction'.
      */
     _closeAllDialogs: function () {
-        const overlays = this._manager._overlays;
+        return this._closeDialogsInTheList(this._manager._overlays) && this._closeDialogsInTheList(InsertionPointManager._insertionPoints);
+    },
+
+    _closeDialogsInTheList : function (overlays) {
         for (let i = overlays.length - 1; i >= 0; i--) {
             if (!skipHistoryAction(overlays[i])) {
                 this._closeDialog(overlays[i]);
@@ -375,11 +378,10 @@ Polymer({
     },
     
     _findFirstClosableDialog: function () {
-        return this._findFirstClosableFrom(this._manager._overlays) || this._findFirstClosableFrom(InsertionPointManager._insertionPoints);
+        return this._findFirstClosableDialogFromList(this._manager._overlays) || this._findFirstClosableDialogFromList(InsertionPointManager._insertionPoints);
     },
 
-    _findFirstClosableFrom: function (overlays) {
-        const overlays = this._manager._overlays;
+    _findFirstClosableDialogFromList: function (overlays) {
         for (let i = overlays.length - 1; i >= 0; i--) {
             if (overlays[i].opened && !skipHistoryAction(overlays[i])) {
                 return overlays[i];

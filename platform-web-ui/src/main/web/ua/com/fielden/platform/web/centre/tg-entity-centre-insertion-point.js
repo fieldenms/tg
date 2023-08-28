@@ -191,6 +191,12 @@ Polymer({
             type: Boolean,
             value: false
         },
+
+        opened: {
+            type: Boolean,
+            computed: "_isOpened(detachedView)"
+        },
+
         /**
          * The icon for insertion point
          */
@@ -349,6 +355,10 @@ Polymer({
 
     skipHistoryAction: function () {
         return !(this.contextRetriever && this.contextRetriever()._visible && this.detachedView);
+    },
+
+    _isOpened: function (detachedView) {
+        return detachedView;
     },
 
     _getElement: function (customAction) {

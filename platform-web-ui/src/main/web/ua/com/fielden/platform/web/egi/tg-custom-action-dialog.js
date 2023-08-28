@@ -22,7 +22,6 @@ import {IronFitBehavior} from '/resources/polymer/@polymer/iron-fit-behavior/iro
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
-import { dom } from "/resources/polymer/@polymer/polymer/lib/legacy/polymer.dom.js";
 
 import { TgReflector } from '/app/tg-reflector.js';
 import {TgFocusRestorationBehavior} from '/resources/actions/tg-focus-restoration-behavior.js'
@@ -31,6 +30,7 @@ import {TgBackButtonBehavior} from '/resources/views/tg-back-button-behavior.js'
 import { tearDownEvent, isInHierarchy, allDefined, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, isIPhoneOs } from '/resources/reflection/tg-polymer-utils.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
+import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
 
 const template = html`
     <style>
@@ -217,6 +217,15 @@ const hasPreviousMaximisedOverlay = function (overlay) {
         }
     }
     return false;
+};
+
+const hasDetachedInsertionPoint = function() {
+    const insertionPoints = InsertionPointManager._insertionPoints;
+    for (let i = insertionPoints.length - 1; i >= 0; i--) {
+        if (insertionPoints[i].opened && !insertionPoints[i].skipHistoryAction()) {
+            return true;
+        }
+    }
 };
 
 
@@ -563,7 +572,7 @@ Polymer({
     },
 
     skipHistoryAction: function () {
-        return !isMobileApp() && !this._maximised && !hasPreviousMaximisedOverlay(this);
+        return !isMobileApp() && !this._maximised && !hasPreviousMaximisedOverlay(this) && !hasDetachedInsertionPoint();
     },
 
     _getCurrentFocusableElements: function() {
