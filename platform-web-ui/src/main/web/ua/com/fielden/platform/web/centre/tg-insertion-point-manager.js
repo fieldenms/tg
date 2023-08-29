@@ -1,4 +1,6 @@
-
+/**
+ * Class  that holds all detached insertion point needed to handle back button.
+ */
 class TgInsertionPointManager {
 
     constructor() {

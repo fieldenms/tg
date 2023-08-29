@@ -222,10 +222,11 @@ const hasPreviousMaximisedOverlay = function (overlay) {
 const hasDetachedInsertionPoint = function() {
     const insertionPoints = InsertionPointManager._insertionPoints;
     for (let i = insertionPoints.length - 1; i >= 0; i--) {
-        if (insertionPoints[i].opened && !insertionPoints[i].skipHistoryAction()) {
+        if (!insertionPoints[i].skipHistoryAction()) {
             return true;
         }
     }
+    return false;
 };
 
 
