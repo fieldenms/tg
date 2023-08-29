@@ -133,6 +133,11 @@ function addAllElements (elementsToAdd, addToArray, removeFromArray) {
     return addToArray;
 }
 
+/**
+ * Should return indicator whether passed overlay (it can be custom action dialog or insertion point) should not react on back button. 
+ * 
+ * @param {Object} overlay the custom action dialog or insertion point 
+ */
 function skipHistoryAction (overlay) {
     return typeof overlay.skipHistoryAction === 'function' && overlay.skipHistoryAction();
 }
@@ -346,7 +351,7 @@ Polymer({
     /**
      * In case where 'multiple back' occurs then all dialogs will be closed (if able) and multiple history back action will be performed.
      *
-     * This method skips all iron-overlay-behavior elements that should 'skipHistoryAction'.
+     * This method skips all overlays and insertion points elements that should 'skipHistoryAction'.
      */
     _closeAllDialogs: function () {
         return this._closeDialogsInTheList(this._manager._overlays) && this._closeDialogsInTheList(InsertionPointManager._insertionPoints);
@@ -367,7 +372,7 @@ Polymer({
     },
     
     /**
-     * Performs dialog closing through custom method 'closeDialog' (or in the simplest case just uses iron-overlay-behavior's 'close' method).
+     * Performs dialog/insertion-point closing through custom method 'closeDialog' (or in the simplest case just uses iron-overlay-behavior's 'close' method).
      */
     _closeDialog: function (dialog) {
         if (dialog.closeDialog) {
