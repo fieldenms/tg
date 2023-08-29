@@ -24,13 +24,21 @@ import ua.com.fielden.platform.entity.query.model.ConditionModel;
  */
 public class FallbackValueMatcherWithContext<CONTEXT extends AbstractEntity<?>, T extends AbstractEntity<?>> extends AbstractSearchEntityByKeyWithContext<CONTEXT, T> {
 
-    private final boolean activeOnly;
+    /**
+     * The default setting to configure the matching logic for including/excluding inactive activatable entity values.
+     * It should be set to {@code true} only for activatable entities.
+     * Users have the ability to control inclusion/exclusion of inactive values by means of setting value for attribute {@code activeOnly}, which is exposed via UI.
+     * Refer {@code EntityAutocompletionResource.post} for more details.
+     */
+    public final boolean activeOnlyByDefault;
+    private boolean activeOnly;
 
-    public FallbackValueMatcherWithContext(final IEntityDao<T> co, final boolean activeOnly) {
+    public FallbackValueMatcherWithContext(final IEntityDao<T> co, final boolean activeOnlyByDefault) {
         super(co);
         final Class<T> entityType = co.getEntityType();
-        this.activeOnly = activeOnly;
-        if (activeOnly && !ActivatableAbstractEntity.class.isAssignableFrom(entityType)) {
+        this.activeOnlyByDefault = activeOnlyByDefault;
+        this.activeOnly = activeOnlyByDefault;
+        if (activeOnlyByDefault && !ActivatableAbstractEntity.class.isAssignableFrom(entityType)) {
             final String entityTitle = getEntityTitleAndDesc(entityType).getKey();
             throw new EntityException(format("Activatable type is expected. Entity [%s] is not activatable.", entityTitle));
         }
@@ -48,4 +56,13 @@ public class FallbackValueMatcherWithContext<CONTEXT extends AbstractEntity<?>, 
         final ConditionModel originalSearchCriteria = super.makeSearchCriteriaModel(context, searchString);
         return activeOnly ? cond().condition(originalSearchCriteria).and().prop(ACTIVE).eq().val(true).model() : originalSearchCriteria;
     }
+
+    public boolean isActiveOnly() {
+        return activeOnly;
+    }
+
+    public void setActiveOnly(final boolean activeOnly) {
+        this.activeOnly = activeOnly;
+    }
+
 }

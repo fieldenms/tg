@@ -1423,7 +1423,7 @@ const TgEntityCentreBehaviorImpl = {
         return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : (isRunning || !this.$.selection_criteria._canLast(pageNumber, pageCount));
     },
     canNotCurrent: function (pageNumber, pageCount, isRunning) {
-        return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : (isRunning || !this.$.selection_criteria._canCurrent(pageNumber, pageCount));
+        return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : isRunning; // Refresh button enabled even if pageCount === null i.e. where erroneous autorun occurred
     },
 
     computeConfigButtonTooltip: function (staleCriteriaMessage) {
