@@ -155,7 +155,7 @@ const template = html`
     <div hidden$="[[_foundSome]]" class="no-result">
         <span>Found no matching values.</span>
     </div>
-    <div class="toolbar layout horizontal wrap">
+    <div id="toolbar" class="toolbar layout horizontal wrap">
         <div class="toolbar-content layout horizontal center">
             <paper-icon-button tooltip-text="Load more matching values, if any" on-tap="_loadMore" id="loadMoreButton" disabled$="[[!enableLoadMore]]" icon="tg-icons:expand-all"></paper-icon-button>
             <paper-icon-button tooltip-text$="[[_tooltipForActiveOnlyButton(_activeOnly)]]" on-tap="_changeActiveOnly" hidden$="[[_isHiddenActiveOnlyButton(_activeOnly)]]" icon="tg-icons:playlist-remove" active-button$="[[_activeOnly]]"></paper-icon-button>
@@ -603,26 +603,25 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
 
     /* Iron resize event listener for correct resizing and positioning of an open result overlay. */
     refit () {
-        var clientRectAndOffsetHeight = this.retrieveContainerSizes();
-        var rect = clientRectAndOffsetHeight[0]; // container.getBoundingClientRect();//getClientRects()[0];
-        var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
-        var scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
+        const clientRectAndOffsetHeight = this.retrieveContainerSizes();
+        const rect = clientRectAndOffsetHeight[0]; // container.getBoundingClientRect();//getClientRects()[0];
+        const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
 
-        var top = rect.top + scrollTop + clientRectAndOffsetHeight[1]; // container.offsetHeight;//rect.bottom + scrollTop;
-        var left = rect.left; // + scrollLeft;
-        var right = rect.right;
-        var width = rect.width;
+        const top = rect.top + scrollTop + clientRectAndOffsetHeight[1]; // container.offsetHeight;//rect.bottom + scrollTop;
+        const left = rect.left; // + scrollLeft;
+        const right = rect.right;
+        const width = rect.width;
 
         this.style.position = 'absolute';
-        this.style.top = top + 'px';
+        
 
         // let's try to accomodate the width of the overlay so that in case
         // the input field is narrow, but there is additional window width available to the
         // left or right of the input, it would be used.
-        var minWidth = 200;
+        const minWidth = 200;
         this.style['min-width'] = minWidth + 'px'; // set mid-width, which is important for shifting overlay to the left
-        var visibleWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-        var spaceToRightWindowSide = (visibleWidth - right) + width;
+        const visibleWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+        const spaceToRightWindowSide = (visibleWidth - right) + width;
         this.style['max-width'] = spaceToRightWindowSide + 'px';
         // is there sufficient space to the right?
         if (spaceToRightWindowSide >= minWidth) {
@@ -632,9 +631,8 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
             this.style.width = width + 'px';
         } else {
             // otherwise, move the overlay to the left side, but not beyond
-            var resultRect = this.getClientRects()[0];
-            var adjustment = 5; // minor adjustment to make the overlay fully visible
-            var newLeft = (visibleWidth - (minWidth + adjustment));
+            const adjustment = 5; // minor adjustment to make the overlay fully visible
+            const newLeft = (visibleWidth - (minWidth + adjustment));
             if (newLeft > 0) {
                 this.style.left = newLeft + 'px';
             } else {
@@ -644,8 +642,14 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
 
         // let's try also to determine the best height depending on the window height and
         // the current vertical location of the element
-        var visibleHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-        this.style['max-height'] = (visibleHeight - top - 10) + 'px'; // 10 pixels is an arbitrary adjustment
+        const visibleHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+        if (this.$.selector.children.length > 0 && visibleHeight - top - 10 - this.$.toolbar.offsetHeight < this.$.selector.children[0].offsetHeight * 2) {
+            this.style.maxHeight = rect.top - 10 + 'px';// 10 pixels is an arbitrary adjustment
+            this.style.bottom = visibleHeight - rect.top - 10 + 'px';
+        } else {
+            this.style.maxHeight = visibleHeight - top - 10 + 'px';// 10 pixels is an arbitrary adjustment
+            this.style.top = top + 'px';
+        }
     }
 
     /**
