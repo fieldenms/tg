@@ -1,5 +1,5 @@
 /**
- * Class  that holds all detached insertion point needed to handle back button.
+ * Class to track all detached insertion points, needed to handle back button.
  */
 class TgInsertionPointManager {
 

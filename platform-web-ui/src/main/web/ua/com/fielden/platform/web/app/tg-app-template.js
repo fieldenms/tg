@@ -134,9 +134,9 @@ function addAllElements (elementsToAdd, addToArray, removeFromArray) {
 }
 
 /**
- * Should return indicator whether passed overlay (it can be custom action dialog or insertion point) should not react on back button. 
- * 
- * @param {Object} overlay the custom action dialog or insertion point 
+ * Should return indicator whether passed overlay (it can be custom action dialog or insertion point) should not react on back button.
+ *
+ * @param {Object} overlay - a custom action dialog or an insertion point
  */
 function skipHistoryAction (overlay) {
     return typeof overlay.skipHistoryAction === 'function' && overlay.skipHistoryAction();
