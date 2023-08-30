@@ -53,7 +53,7 @@ export const TgToastBehavior = {
 
     ready: function () {
          // Indicates whether toast overlay can be closed via history (back button or not)
-         this._toast().skipHistoryAction = true;
+         this._toast().skipHistoryAction = () => true;
 
          // Styles to truncate the toast text.
          const label = this._toast().$$('#label');

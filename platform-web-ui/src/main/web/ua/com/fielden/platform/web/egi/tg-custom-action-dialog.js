@@ -16,12 +16,12 @@ import '/resources/images/tg-icons.js';
 import '/resources/components/postal-lib.js';
 
 import {IronOverlayBehavior, IronOverlayBehaviorImpl} from '/resources/polymer/@polymer/iron-overlay-behavior/iron-overlay-behavior.js';
+import { IronOverlayManager } from '/resources/polymer/@polymer/iron-overlay-behavior/iron-overlay-manager.js';
 import {IronA11yKeysBehavior} from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
 import {IronFitBehavior} from '/resources/polymer/@polymer/iron-fit-behavior/iron-fit-behavior.js';
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
-import { dom } from "/resources/polymer/@polymer/polymer/lib/legacy/polymer.dom.js";
 
 import { TgReflector } from '/app/tg-reflector.js';
 import {TgFocusRestorationBehavior} from '/resources/actions/tg-focus-restoration-behavior.js'
@@ -30,6 +30,7 @@ import {TgBackButtonBehavior} from '/resources/views/tg-back-button-behavior.js'
 import { tearDownEvent, isInHierarchy, allDefined, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, isIPhoneOs, localStorageKey } from '/resources/reflection/tg-polymer-utils.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
+import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
 
 const ST_WIDTH = '_width';
 const ST_HEIGHT = '_height';
@@ -212,7 +213,31 @@ const findParentDialog = function(action) {
         parent = parent.parentElement || parent.getRootNode().host;
     }
     return parent;
-}
+};
+
+const hasPreviousMaximisedOverlay = function (overlay) {
+    const overlayIdx = IronOverlayManager._overlays.indexOf(overlay);
+    if (overlayIdx >= 0) {
+        for (let i = overlayIdx - 1; i >= 0; i--) {
+            if (!!IronOverlayManager._overlays[i]._maximised){
+                return true;
+            }
+        }
+    }
+    return false;
+};
+
+const hasDetachedInsertionPoint = function() {
+    const insertionPoints = InsertionPointManager._insertionPoints;
+    for (let i = insertionPoints.length - 1; i >= 0; i--) {
+        if (!insertionPoints[i].skipHistoryAction()) {
+            return true;
+        }
+    }
+    return false;
+};
+
+
 Polymer({
 
     _template: template,
@@ -543,7 +568,11 @@ Polymer({
         this.removeEventListener('focus', this._onCaptureFocus, true);
         this.removeEventListener('keydown', this._onCaptureKeyDown);
     },
-    
+
+    skipHistoryAction: function () {
+        return !isMobileApp() && !this._maximised && !hasPreviousMaximisedOverlay(this) && !hasDetachedInsertionPoint();
+    },
+
     _getCurrentFocusableElements: function() {
         //Retrieve title's bar element to focus.
         const componentsToFocus = Array.from(this.$.titleBar.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR));
