@@ -65,11 +65,11 @@ import ua.com.fielden.platform.types.tuples.T2;
 public abstract class EqlStage2TestCase extends EqlTestCase {
 
     protected static AbstractPropInfo<?> pi(final Class<?> type, final String propName) {
-        return metadata().getQuerySourceInfo((Class<? extends AbstractEntity<?>>) type).getProps().get(propName);
+        return metadata().getModelledQuerySourceInfo((Class<? extends AbstractEntity<?>>) type).getProps().get(propName);
     }
 
     protected static AbstractPropInfo<?> pi(final Class<?> type, final String propName, final String subPropName) {
-        final AbstractPropInfo<?> propInfo = metadata().getQuerySourceInfo((Class<? extends AbstractEntity<?>>) type).getProps().get(propName);
+        final AbstractPropInfo<?> propInfo = metadata().getModelledQuerySourceInfo((Class<? extends AbstractEntity<?>>) type).getProps().get(propName);
         if (propInfo instanceof ComponentTypePropInfo) {
             return (AbstractPropInfo<?>) ((ComponentTypePropInfo<?>) propInfo).getProps().get(subPropName);
         } else if (propInfo instanceof UnionTypePropInfo) {
@@ -257,11 +257,11 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static Source2BasedOnPersistentType source(final Integer id, final Class<? extends AbstractEntity<?>> sourceType, final String alias) {
-        return new Source2BasedOnPersistentType(sourceType, metadata().getQuerySourceInfo(sourceType), alias, id);
+        return new Source2BasedOnPersistentType(sourceType, metadata().getModelledQuerySourceInfo(sourceType), alias, id);
     }
 
     protected static Source2BasedOnPersistentType source(final Integer id, final Class<? extends AbstractEntity<?>> sourceType) {
-        return new Source2BasedOnPersistentType(sourceType, metadata().getQuerySourceInfo(sourceType), id);
+        return new Source2BasedOnPersistentType(sourceType, metadata().getModelledQuerySourceInfo(sourceType), id);
     }
 
     protected static Source2BasedOnQueries source(final QuerySourceInfo<?> querySourceInfo, final Integer id, final SourceQuery2... queries) {

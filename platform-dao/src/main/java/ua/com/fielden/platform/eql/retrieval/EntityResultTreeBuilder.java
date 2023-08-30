@@ -58,7 +58,7 @@ public final class EntityResultTreeBuilder {
         Class<? extends AbstractEntity<?>> currentResultType = null;
         ComponentTypePropInfo<?> currentComponentInfo = null;
         List<YieldedColumn> currentGroupDetails = new ArrayList<>();
-        final QuerySourceInfo<?> querySourceInfo = resultType.equals(EntityAggregates.class) ? null : md.getQuerySourceInfo(resultType);
+        final QuerySourceInfo<?> querySourceInfo = resultType.equals(EntityAggregates.class) ? null : md.getDeclaredQuerySourceInfo(resultType);
         
         for (final YieldedColumn yc : yieldedColumns) {
             if (yc.name().contains(".")) {
