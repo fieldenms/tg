@@ -85,7 +85,9 @@ public class QuerySourceInfoProvider {
         }
 
         for (final QuerySourceInfo<?> querySourceInfo : modelledQuerySourceInfoMap.values()) {
-            entityTypesDependentCalcPropsOrder.put(querySourceInfo.javaType().getName(), DependentCalcPropsOrder.orderDependentCalcProps(this, gen, querySourceInfo));
+            if (isPersistedEntityType(querySourceInfo.javaType())) { // currently it's assumed that SE's don't have calc props with interdependencies.
+                entityTypesDependentCalcPropsOrder.put(querySourceInfo.javaType().getName(), DependentCalcPropsOrder.orderDependentCalcProps(this, gen, querySourceInfo));
+            }
         }
     }
     
