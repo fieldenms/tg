@@ -14,7 +14,7 @@ public class EqlDomainMetadataTest extends EqlTestCase {
     
     @Test
     public void vehicle_dependent_calc_props_order_is_correct() {
-        final List<String> actOrder = DependentCalcPropsOrder.orderDependentCalcProps(metadata(), qb(), metadata().getModelledQuerySourceInfo(TeVehicle.class));
+        final List<String> actOrder = DependentCalcPropsOrder.orderDependentCalcProps(querySourceInfoProvider(), qb(), querySourceInfoProvider().getModelledQuerySourceInfo(TeVehicle.class));
         final Integer replacedByTwicePosition = actOrder.indexOf("replacedByTwice");
         final Integer theSameVehiclePosition = actOrder.indexOf("theSameVehicle");
         final Integer replacedByTwiceModelPosition = actOrder.indexOf("replacedByTwiceModel");

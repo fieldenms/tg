@@ -124,4 +124,9 @@ public abstract class EqlTestCase {
     protected static final EqlDomainMetadata metadata() {
         return DOMAIN_METADATA.eqlDomainMetadata;
     }
+    
+    protected static final QuerySourceInfoProvider querySourceInfoProvider() {
+        return DOMAIN_METADATA.eqlDomainMetadata.querySourceInfoProvider;
+    }
+    
 }

@@ -16,7 +16,7 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.eql.exceptions.EqlStage2ProcessingException;
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
+import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.meta.query.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.query.ComponentTypePropInfo;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
@@ -44,17 +44,17 @@ import ua.com.fielden.platform.types.tuples.T3;
  */
 public class DependentCalcPropsOrder {
 
-    public static List<String> orderDependentCalcProps(final EqlDomainMetadata dmd, final EntQueryGenerator gen, final QuerySourceInfo<?> et) {
-        final Source2BasedOnPersistentType source = new Source2BasedOnPersistentType(et.javaType(), et, gen.nextSourceId());
+    public static List<String> orderDependentCalcProps(final QuerySourceInfoProvider querySourceInfoProvider, final EntQueryGenerator gen, final QuerySourceInfo<?> querySourceInfo) {
+        final Source2BasedOnPersistentType source = new Source2BasedOnPersistentType(querySourceInfo.javaType(), querySourceInfo, gen.nextSourceId());
         final Map<String, T2<Set<String>, Set<String>>> propDependencies = new HashMap<>();
         final List<String> calcPropsOfEntityType = new ArrayList<>();
-        for (final PropChunk calcPropChunk : determineCalcPropChunks(et)) {
+        for (final PropChunk calcPropChunk : determineCalcPropChunks(querySourceInfo)) {
                 if (isEntityType(calcPropChunk.data().javaType())) {
                     calcPropsOfEntityType.add(calcPropChunk.name());
                 }
 
                 final Expression1 exp1 = (Expression1) (new StandAloneExpressionBuilder(gen, calcPropChunk.data().expression)).getResult().getValue();
-                final TransformationContext1 prc = (new TransformationContext1(dmd)).cloneWithAdded(source);
+                final TransformationContext1 prc = (new TransformationContext1(querySourceInfoProvider)).cloneWithAdded(source);
                 try {
                     final Expression2 exp2 = exp1.transform(prc);
                     final Set<Prop2> expProps = exp2.collectProps();
@@ -66,7 +66,7 @@ public class DependentCalcPropsOrder {
                     }
                     propDependencies.put(calcPropChunk.name(), determineCalcPropChunksSets(externalProps));
                 } catch (final Exception e) {
-                    throw new EqlException("There is an error in expression of calculated property [" + et.javaType().getSimpleName() + ":" + calcPropChunk.name() + "]: " + e.getMessage());
+                    throw new EqlException("There is an error in expression of calculated property [" + querySourceInfo.javaType().getSimpleName() + ":" + calcPropChunk.name() + "]: " + e.getMessage());
                 }
         }
 

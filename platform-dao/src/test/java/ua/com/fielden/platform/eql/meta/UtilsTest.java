@@ -14,7 +14,7 @@ public class UtilsTest extends AbstractEqlShortcutTest {
 
     @Test
     public void order_of_dependent_calculated_properties_of_vehicle_is_correct() {
-        final List<String> actOrder = DependentCalcPropsOrder.orderDependentCalcProps(metadata(), qb(), metadata().getModelledQuerySourceInfo(TeVehicle.class));
+        final List<String> actOrder = DependentCalcPropsOrder.orderDependentCalcProps(querySourceInfoProvider(), qb(), querySourceInfoProvider().getModelledQuerySourceInfo(TeVehicle.class));
         final List<String> expOrder = List.of("replacedByTwice", "theSameVehicle", "replacedByTwiceModel", "replacedByTwiceModelMake");
         assertEquals(actOrder, expOrder);
     }

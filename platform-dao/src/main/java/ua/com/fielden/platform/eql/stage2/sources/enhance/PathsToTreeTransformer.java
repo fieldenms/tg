@@ -18,7 +18,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
+import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.meta.query.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.query.ComponentTypePropInfo;
 import ua.com.fielden.platform.eql.meta.query.EntityTypePropInfo;
@@ -36,11 +36,11 @@ import ua.com.fielden.platform.types.tuples.T2;
 
 public class PathsToTreeTransformer {
 
-    private final EqlDomainMetadata domainInfo;
+    private final QuerySourceInfoProvider querySourceInfoProvider;
     private final EntQueryGenerator gen;
 
-    public PathsToTreeTransformer(final EqlDomainMetadata domainInfo, final EntQueryGenerator gen) {
-        this.domainInfo = domainInfo;
+    public PathsToTreeTransformer(final QuerySourceInfoProvider querySourceInfoProvider, final EntQueryGenerator gen) {
+        this.querySourceInfoProvider = querySourceInfoProvider;
         this.gen = gen;
     }
     
@@ -100,7 +100,7 @@ public class PathsToTreeTransformer {
             }
         }
         
-        final List<String> orderedCalcPropsForType = isUnionEntityType(sourceForCalcPropResolution.sourceType()) || sourceForCalcPropResolution.sourceType().equals(EntityAggregates.class) ? emptyList() : domainInfo.getCalcPropsOrder(sourceForCalcPropResolution.sourceType());
+        final List<String> orderedCalcPropsForType = isUnionEntityType(sourceForCalcPropResolution.sourceType()) || sourceForCalcPropResolution.sourceType().equals(EntityAggregates.class) ? emptyList() : querySourceInfoProvider.getCalcPropsOrder(sourceForCalcPropResolution.sourceType());
 
         final List<ImplicitNode> orderedNodes = orderImplicitNodes(listOfNodes, orderedCalcPropsForType);
 
@@ -124,7 +124,7 @@ public class PathsToTreeTransformer {
 		for (final PropChunk calcChunk : getFirstCalcChunks(incomingTails)) {
 			if (!processedCalcDataLocal.containsKey(calcChunk.name())) {	// consider only calc props that have not yet been processed
 				final Expression1 exp1 = (Expression1) (new StandAloneExpressionBuilder(gen, calcChunk.data().expression)).getResult().getValue();
-				final TransformationContext1 prc = (new TransformationContext1(domainInfo)).cloneWithAdded(sourceForCalcPropResolution);
+				final TransformationContext1 prc = (new TransformationContext1(querySourceInfoProvider)).cloneWithAdded(sourceForCalcPropResolution);
 				final Expression2 exp2 = exp1.transform(prc);
 				final Set<Prop2> expProps = exp2.collectProps();
 				// separate into external and internal

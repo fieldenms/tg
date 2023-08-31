@@ -32,7 +32,7 @@ public class TypelessSubQuery1 extends AbstractQuery1 implements ITransformableT
         final TransformationResult1<? extends IJoinNode2<?>> joinRootTr = joinRoot.transform(localContext);
         final TransformationContext1 enhancedContext = joinRootTr.updatedContext;
         final IJoinNode2<? extends IJoinNode3> joinRoot2 = joinRootTr.item;
-        final Conditions2 conditions2 = enhanceWithUserDataFilterConditions(joinRoot2.mainSource(), context.domainInfo, conditions.transform(enhancedContext));
+        final Conditions2 conditions2 = enhanceWithUserDataFilterConditions(joinRoot2.mainSource(), context.querySourceInfoProvider, conditions.transform(enhancedContext));
         final Yields2 yields2 = yields.getYields().isEmpty() ? nullYields : yields.transform(enhancedContext);
         final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
         final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, joinRoot2.mainSource());

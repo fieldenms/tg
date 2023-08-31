@@ -46,7 +46,7 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
 
     @Override
     public SourceQuery2 transform(final TransformationContext1 context) {
-        final TransformationContext1 localContext = isCorrelated ? context : new TransformationContext1(context.domainInfo);
+        final TransformationContext1 localContext = isCorrelated ? context : new TransformationContext1(context.querySourceInfoProvider);
 
         if (joinRoot == null) {
             return new SourceQuery2(transformSourceless(localContext), resultType);
@@ -55,7 +55,7 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
         final TransformationResult1<? extends IJoinNode2<?>> joinRootTr = joinRoot.transform(localContext);
         final TransformationContext1 enhancedContext = joinRootTr.updatedContext;
         final IJoinNode2<? extends IJoinNode3> joinRoot2 = joinRootTr.item;
-        final Conditions2 conditions2 = enhanceWithUserDataFilterConditions(joinRoot2.mainSource(), context.domainInfo, conditions.transform(enhancedContext));
+        final Conditions2 conditions2 = enhanceWithUserDataFilterConditions(joinRoot2.mainSource(), context.querySourceInfoProvider, conditions.transform(enhancedContext));
         final Yields2 yields2 = yields.transform(enhancedContext);
         final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
         final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, joinRoot2.mainSource());

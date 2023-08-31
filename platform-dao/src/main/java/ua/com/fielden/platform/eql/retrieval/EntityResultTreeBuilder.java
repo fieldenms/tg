@@ -26,7 +26,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
+import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.meta.query.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.query.ComponentTypePropInfo;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
@@ -38,7 +38,7 @@ import ua.com.fielden.platform.eql.retrieval.records.YieldedColumn;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public final class EntityResultTreeBuilder {
-    public static <E extends AbstractEntity<?>> EntityTree<E> build(final Class<E> resultType, final List<YieldedColumn> sortedYields, final EqlDomainMetadata md) {
+    public static <E extends AbstractEntity<?>> EntityTree<E> build(final Class<E> resultType, final List<YieldedColumn> sortedYields, final QuerySourceInfoProvider md) {
         return buildEntityTree(resultType, sortedYields, -1, md).tree();
     }
     
@@ -46,7 +46,7 @@ public final class EntityResultTreeBuilder {
             final Class<E> resultType, 
             final List<YieldedColumn> yieldedColumns, 
             final Integer initialIndex,
-            final EqlDomainMetadata md) {
+            final QuerySourceInfoProvider md) {
         
         final List<QueryResultLeaf> leaves = new ArrayList<>();
         final Map<String /*composite property name*/, EntityTree<? extends AbstractEntity<?>>> entityTrees = new HashMap<>();

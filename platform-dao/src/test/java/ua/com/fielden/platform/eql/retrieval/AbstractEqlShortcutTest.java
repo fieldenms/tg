@@ -45,11 +45,11 @@ public abstract class AbstractEqlShortcutTest extends EqlTestCase {
     
     protected static <T extends AbstractEntity<?>> EntityTree<T> buildResultTree(final EntityResultQueryModel<T> act) {
         final QueryModelResult<T> modelResult = transformToModelResult(act);
-        return EntityResultTreeBuilder.build(modelResult.resultType(), modelResult.yieldedColumns(), metadata());
+        return EntityResultTreeBuilder.build(modelResult.resultType(), modelResult.yieldedColumns(), querySourceInfoProvider());
     }
     
     protected static EntityTree<EntityAggregates> buildResultTree(final AggregatedResultQueryModel act) {
         final QueryModelResult<EntityAggregates> modelResult = transformToModelResult(act);
-        return EntityResultTreeBuilder.build(modelResult.resultType(), modelResult.yieldedColumns(), metadata());
+        return EntityResultTreeBuilder.build(modelResult.resultType(), modelResult.yieldedColumns(), querySourceInfoProvider());
     }
 }
