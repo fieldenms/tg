@@ -35,11 +35,13 @@ import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFreque
 import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanSave_Token;
-import ua.com.fielden.platform.security.tokens.persistent.UserDefinableHelp_CanSave_Token;
 import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanRead_Token;
+import ua.com.fielden.platform.security.tokens.persistent.UserDefinableHelp_CanSave_Token;
 import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanRead_Token;
+import ua.com.fielden.platform.security.tokens.user.ReUser_CanReadModel_Token;
+import ua.com.fielden.platform.security.tokens.user.ReUser_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.user.UserAndRoleAssociation_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.user.UserAndRoleAssociation_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.user.UserRoleTokensUpdater_CanExecute_Token;
@@ -109,6 +111,8 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
                 User_CanSave_Token.class,
                 User_CanRead_Token.class,
                 User_CanReadModel_Token.class,
+                ReUser_CanRead_Token.class,
+                ReUser_CanReadModel_Token.class,
                 User_CanDelete_Token.class,
                 UserMaster_CanOpen_Token.class,
                 UserRole_CanSave_Token.class,

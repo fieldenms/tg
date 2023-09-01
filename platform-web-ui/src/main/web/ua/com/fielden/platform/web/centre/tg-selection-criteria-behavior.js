@@ -554,7 +554,9 @@ const TgSelectionCriteriaBehaviorImpl = {
      */
     currentPage: function () {
         this._openToast(null, "Refreshing current page", false, "", true);
-        this._validatePageCount();
+        if (this.pageCount === null) { // Refresh is always enabled, so need to perform first Run, if none performed earlier (or was unsuccessful)
+            return this._execute(RunActions.run);
+        }
         return this._execute(RunActions.refresh);
     },
 
@@ -621,9 +623,6 @@ const TgSelectionCriteriaBehaviorImpl = {
     },
     _canLast: function (pageNumber, pageCount) {
         return !(pageNumber + 1 >= pageCount);
-    },
-    _canCurrent: function (pageNumber, pageCount) {
-        return !(pageCount <= 0);
     },
 
     _calculateCentreDirtyOrEdited: function (centreDirty, _editedPropsExist) {
