@@ -3,7 +3,9 @@ import '/resources/components/moment-lib.js';
 export const timeZoneFormats = {
     "UTC": {
         "L": "YYYY-MM-DD",
+        "LTS": "HH:mm:ss.SSS",
         "L LT": "YYYY-MM-DD HH:mm",
+        "L HH:mm:ss": "YYYY-MM-DD HH:mm:ss",
         "L LTS": "YYYY-MM-DD HH:mm:ss.SSS"
     }
 }
@@ -22,17 +24,22 @@ export function _millis(fullDateString) { // using strict 'DD/MM/YYYY HH:mm:ss.S
 export function _millisDateRepresentation(dateMillis, timeZone, portionToDisplay) {
     const millisecondsExist = dateMillis % 1000 !== 0;
     const secondsExist = !millisecondsExist ? (dateMillis / 1000) % 60 !== 0 : true;
+    const timeFormat = () => {
+        const fullFormat = timeZone ? timeZoneFormats[timeZone]['LTS'] : moment.localeData().longDateFormat('LTS');
+        const noMillisFormat = fullFormat ? fullFormat.replace('.SSS', '') : 'LT';
+        return millisecondsExist ? 'LTS' : secondsExist ? noMillisFormat : 'LT';
+    };
     let format;
     if (portionToDisplay) {
         if (portionToDisplay == "DATE") {
             format = "L";
         } else if (portionToDisplay == "TIME") {
-            format = millisecondsExist || secondsExist ? "LTS" : "LT";
+            format = timeFormat();
         } else {
-            format = "L " + (millisecondsExist || secondsExist ? "LTS" : "LT");
+            format = "L " + timeFormat();
         }
     } else {
-        format = "L " + (millisecondsExist || secondsExist ? "LTS" : "LT");
+        format = "L " + timeFormat();
     }
     return _momentTz(dateMillis, timeZone).format(timeZone ? timeZoneFormats[timeZone][format] : format);
 };
