@@ -53,7 +53,7 @@ public final class MetaModelElement extends AbstractForwardingTypeElement {
      * Since both {@link MetaModelConcept} and {@link MetaModelElement} are uniquely identified by their qualified names,
      * it can be said that their instances are equal if they have the same qualified name.
      * <p>
-     * If the above is hard to grasp, then consider some examples of applying this method: 
+     * Here are a couple of examples where {@code asEqual} can be conveniently used:
      * <ul>
      *   <li>Testing that a {@link Set} of {@link MetaModelElement}s contains a {@link MetaModelConcept}</li>
      *   <li>Testing that a {@link Map} of {@link MetaModelElement}-typed keys contains a {@link MetaModelConcept} key</li>

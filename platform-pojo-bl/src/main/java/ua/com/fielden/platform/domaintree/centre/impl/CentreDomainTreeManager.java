@@ -24,6 +24,8 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.EnhancementLinkedRootsSet;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap;
+import ua.com.fielden.platform.domaintree.impl.EnhancementSet;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum;
 import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
@@ -90,6 +92,11 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
      *
      */
     public static class AddToCriteriaTickManager extends TickManager implements IAddToCriteriaTickManager {
+        private static final String AUTOCOMPLETE_ACTIVE_ONLY_ERR = "Could not %s an 'autocomplete active only' indication for '%s' property [%s] in type [%s].";
+        private static final String GET = "get";
+        private static final String SET = "set";
+        private static final String NON_ACTIVATABLE = "non-activatable";
+        private static final String UNCHECKED = "unchecked";
 
         private final transient EntityFactory entityFactory;
         private final EnhancementPropertiesMap<Object> propertiesValues1;
@@ -106,6 +113,8 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         private final EnhancementPropertiesMap<Boolean> propertiesNots;
         private final EnhancementPropertiesMap<Integer> propertiesOrGroups;
 
+        private final EnhancementSet propertiesAutocompleteActiveOnly;
+
         private Integer columnsNumber;
 
         private final EnhancementLinkedRootsSet rootTypes;
@@ -115,7 +124,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
          * fields.
          */
         public AddToCriteriaTickManager(final EntityFactory entityFactory, final Set<Class<?>> rootTypes) {
-            this(AbstractDomainTree.<List<String>> createRootsMap(), entityFactory, AbstractDomainTree.<Object> createPropertiesMap(), AbstractDomainTree.<Object> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<DateRangePrefixEnum> createPropertiesMap(), AbstractDomainTree.<MnemonicEnum> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Integer> createPropertiesMap(), null, rootTypes);
+            this(AbstractDomainTree.<List<String>> createRootsMap(), entityFactory, AbstractDomainTree.<Object> createPropertiesMap(), AbstractDomainTree.<Object> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<DateRangePrefixEnum> createPropertiesMap(), AbstractDomainTree.<MnemonicEnum> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Integer> createPropertiesMap(), createSet(), null, rootTypes);
         }
 
         /**
@@ -123,7 +132,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
          *
          * @param serialiser
          */
-        public AddToCriteriaTickManager(final Map<Class<?>, List<String>> checkedProperties, final EntityFactory entityFactory, final Map<Pair<Class<?>, String>, Object> propertiesValues1, final Map<Pair<Class<?>, String>, Object> propertiesValues2, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive1, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive2, final Map<Pair<Class<?>, String>, DateRangePrefixEnum> propertiesDatePrefixes, final Map<Pair<Class<?>, String>, MnemonicEnum> propertiesDateMnemonics, final Map<Pair<Class<?>, String>, Boolean> propertiesAndBefore, final Map<Pair<Class<?>, String>, Boolean> propertiesOrNulls, final Map<Pair<Class<?>, String>, Boolean> propertiesNots, final Map<Pair<Class<?>, String>, Integer> propertiesOrGroups, final Integer columnsNumber, final Set<Class<?>> rootTypes) {
+        public AddToCriteriaTickManager(final Map<Class<?>, List<String>> checkedProperties, final EntityFactory entityFactory, final Map<Pair<Class<?>, String>, Object> propertiesValues1, final Map<Pair<Class<?>, String>, Object> propertiesValues2, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive1, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive2, final Map<Pair<Class<?>, String>, DateRangePrefixEnum> propertiesDatePrefixes, final Map<Pair<Class<?>, String>, MnemonicEnum> propertiesDateMnemonics, final Map<Pair<Class<?>, String>, Boolean> propertiesAndBefore, final Map<Pair<Class<?>, String>, Boolean> propertiesOrNulls, final Map<Pair<Class<?>, String>, Boolean> propertiesNots, final Map<Pair<Class<?>, String>, Integer> propertiesOrGroups, final Set<Pair<Class<?>, String>> propertiesAutocompleteActiveOnly, final Integer columnsNumber, final Set<Class<?>> rootTypes) {
             super(checkedProperties);
             this.entityFactory = entityFactory;
 
@@ -147,6 +156,8 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             this.propertiesNots.putAll(propertiesNots);
             this.propertiesOrGroups = createPropertiesMap();
             this.propertiesOrGroups.putAll(propertiesOrGroups);
+            this.propertiesAutocompleteActiveOnly = createSet();
+            this.propertiesAutocompleteActiveOnly.addAll(propertiesAutocompleteActiveOnly);
 
             this.columnsNumber = columnsNumber;
 
@@ -434,7 +445,36 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             }
             return this;
         }
-        
+
+        /**
+         * Validates 'autocomplete active only' getter or setter for concrete property. The property should be checked and of activatable property type.
+         * 
+         * @param root
+         * @param property
+         * @param getOrSet -- "get" or "set" string
+         */
+        private void validateAutocompleteActiveOnlyProperty(final Class<?> root, final String property, final String getOrSet) {
+            illegalUncheckedProperties(this, root, property, format(AUTOCOMPLETE_ACTIVE_ONLY_ERR, getOrSet, UNCHECKED, property, root.getSimpleName()));
+            illegalType(root, property, format(AUTOCOMPLETE_ACTIVE_ONLY_ERR, getOrSet, NON_ACTIVATABLE, property, root.getSimpleName()), ActivatableAbstractEntity.class);
+        }
+
+        @Override
+        public boolean getAutocompleteActiveOnly(final Class<?> root, final String property) {
+            validateAutocompleteActiveOnlyProperty(root, property, GET);
+            return propertiesAutocompleteActiveOnly.contains(key(root, property));
+        }
+
+        @Override
+        public IAddToCriteriaTickManager setAutocompleteActiveOnly(final Class<?> root, final String property, final boolean autocompleteActiveOnly) {
+            validateAutocompleteActiveOnlyProperty(root, property, SET);
+            if (!autocompleteActiveOnly) {
+                propertiesAutocompleteActiveOnly.remove(key(root, property));
+            } else {
+                propertiesAutocompleteActiveOnly.add(key(root, property));
+            }
+            return this;
+        }
+
         /////////////////// Checked properties with placeholders ///////////////////
         @Override
         public IAddToCriteriaTickManager swap(final Class<?> root, final String property1, final String property2) {
@@ -562,6 +602,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             result = prime * result + propertiesOrNulls.hashCode();
             result = prime * result + propertiesValues1.hashCode();
             result = prime * result + propertiesValues2.hashCode();
+            result = prime * result + propertiesAutocompleteActiveOnly.hashCode();
             return result;
         }
 
@@ -619,6 +660,9 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
                 return false;
             }
             if (!propertiesValues2.equals(other.propertiesValues2)) {
+                return false;
+            }
+            if (!propertiesAutocompleteActiveOnly.equals(other.propertiesAutocompleteActiveOnly)) {
                 return false;
             }
             return true;

@@ -161,7 +161,7 @@ Polymer({
                         centre.loadActionFromUri.requireMasterEntity = originalLoadAction.requireMasterEntity;
                         centre.loadActionFromUri.chosenProperty = 'load-from-uri'; // this will be used to distinguish from standard action
                         centre.loadActionFromUri._masterReferenceForTestingChanged = function (master) {
-                            master.addEventListener('continuaton-completed-without-success', event => { // listen for CANCEL AcknowledgeWarnings action completion
+                            master.addEventListener('continuation-completed-without-success', event => { // listen for CANCEL AcknowledgeWarnings action completion
                                 history.back(); // move back from already recorded history transition (made explicitly by user by pasting URI into address bar)
                             });
                         };

@@ -50,7 +50,7 @@ const customInputTemplate = html`
             autocomplete="off"
             selectable-elements-container>
         </iron-autogrow-textarea>`;
-const propertyActionTemplate = html`<slot name="property-action"></slot>`;
+const propertyActionTemplate = html`<slot id="actionSlot" name="property-action"></slot>`;
 
 export class TgMultilineTextEditor extends TgEditor {
 

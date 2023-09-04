@@ -8,6 +8,8 @@ import ua.com.fielden.platform.entity.factory.DefaultCompanionObjectFinderImpl;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
+import ua.com.fielden.platform.sample.domain.ITgPersistentEntityWithProperties;
+import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithPropertiesDaoStub;
 import ua.com.fielden.platform.test.ioc.DatesForTesting;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.utils.IDates;
@@ -36,6 +38,7 @@ public final class CommonTestEntityModuleWithPropertyFactory extends EntityModul
         bind(ICompanionObjectFinder.class).to(DefaultCompanionObjectFinderImpl.class).in(Scopes.SINGLETON);
         bind(IDates.class).to(DatesForTesting.class).in(Scopes.SINGLETON);
         bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class).in(Scopes.SINGLETON);
+        bind(ITgPersistentEntityWithProperties.class).to(TgPersistentEntityWithPropertiesDaoStub.class).in(Scopes.SINGLETON);
     }
     
 }

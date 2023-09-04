@@ -138,6 +138,7 @@ public class TgCompoundEntityWebUiConfig {
                     .withSummary("total_count_", "COUNT(SELF)", String.format("Count:The total number of matching %ss.", TgCompoundEntity.ENTITY_TITLE))
                     .withAction(editTgCompoundEntityAction).also()
                 .addProp("desc").minWidth(300)
+                    .withAction(editTgCompoundEntityAction) // opens TgCompoundEntityDetail menu item immediately
                 .addPrimaryAction(editTgCompoundEntityAction)
                 .build();
 

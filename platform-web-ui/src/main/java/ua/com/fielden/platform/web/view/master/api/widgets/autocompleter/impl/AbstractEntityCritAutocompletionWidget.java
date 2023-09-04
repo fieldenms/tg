@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl;
 
+import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
+
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -25,6 +27,14 @@ public abstract class AbstractEntityCritAutocompletionWidget extends AbstractEnt
         super(widgetPath, titleAndDesc, propName, propType);
     }
 
+    @Override
+    protected Map<String, Object> createCustomAttributes() {
+        final Map<String, Object> attrs = super.createCustomAttributes();
+        if (isActivatableEntityType(propType)) {
+            attrs.put("_update-centre-dirty", "[[_updateCentreDirty]]");
+        }
+        return attrs;
+    }
 
     /**
      * Adds the bindings for centre context (if it is not empty).

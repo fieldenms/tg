@@ -68,7 +68,7 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
      * Running of this fully-fledged query depends on query context (see property centreContextHolder).
      */
     private Function<Map<String, Object>, Stream<AbstractEntity<?>>> exportQueryRunner;
-    private Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreAdjuster;
+    private Function<Consumer<ICentreDomainTreeManagerAndEnhancer>, ICentreDomainTreeManagerAndEnhancer> centreAdjuster; // returns applied fresh centre
     private Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreColumnWidthsAdjuster;
     private CentreContextHolder centreContextHolder;
     private DeviceProfile device;
@@ -122,12 +122,12 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         centreColumnWidthsAdjuster.accept(consumer);
     }
 
-    public void setCentreAdjuster(final Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreAdjuster) {
+    public void setCentreAdjuster(final Function<Consumer<ICentreDomainTreeManagerAndEnhancer>, ICentreDomainTreeManagerAndEnhancer> centreAdjuster) {
         this.centreAdjuster = centreAdjuster;
     }
 
-    public void adjustCentre(final Consumer<ICentreDomainTreeManagerAndEnhancer> consumer) {
-        centreAdjuster.accept(consumer);
+    public ICentreDomainTreeManagerAndEnhancer adjustCentre(final Consumer<ICentreDomainTreeManagerAndEnhancer> consumer) {
+        return centreAdjuster.apply(consumer);
     }
 
     public void setSavedCentreSupplier(final Supplier<ICentreDomainTreeManagerAndEnhancer> savedCentreSupplier) {

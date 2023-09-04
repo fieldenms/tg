@@ -1,10 +1,11 @@
 package ua.com.fielden.platform.entity.functional.centre;
 
 import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableMap;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -26,7 +27,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyTitle(value = "Key", desc = "Some key description")
 @CompanionObject(ICentreContextHolder.class)
 public class CentreContextHolder extends AbstractEntity<String> {
-    
+
     @IsProperty(Object.class)
     @Title(value = "Custom object", desc = "Custom object")
     private final Map<String, Object> customObject = new HashMap<>();
@@ -34,7 +35,7 @@ public class CentreContextHolder extends AbstractEntity<String> {
     @IsProperty(Object.class)
     @Title(value = "Modified properties holder", desc = "Modified properties holder")
     private final Map<String, Object> modifHolder = new HashMap<>();
-    
+
     @IsProperty
     @Title(value = "Originally Produced Entity", desc = "The entity (new only) that was produced during master's contextual retrieval and then reused during validation, saving and autocompletion processes as a validation prototype")
     private AbstractEntity<?> originallyProducedEntity;
@@ -50,6 +51,35 @@ public class CentreContextHolder extends AbstractEntity<String> {
     @IsProperty
     @Title(value = "Chosen Property", desc = "The property that was clicked during activation result-set functional action")
     private String chosenProperty;
+
+    @IsProperty(CentreContextHolder.class)
+    @Title(value = "Related contexts", desc = "Contexts relate to this one")
+    private Map<String, CentreContextHolder> relatedContexts = new LinkedHashMap<>();
+
+    @IsProperty
+    @Title(value = "Parent Centre Context", desc = "The context of the centre that owns this view as a insertion point")
+    private CentreContextHolder parentCentreContext;
+
+    @Observable
+    public CentreContextHolder setParentCentreContext(final CentreContextHolder parentCentreContext) {
+        this.parentCentreContext = parentCentreContext;
+        return this;
+    }
+
+    public CentreContextHolder getParentCentreContext() {
+        return parentCentreContext;
+    }
+
+    @Observable
+    protected CentreContextHolder setRelatedContexts(final Map<String, CentreContextHolder> relatedContexts) {
+        this.relatedContexts.clear();
+        this.relatedContexts.putAll(relatedContexts);
+        return this;
+    }
+
+    public Map<String, CentreContextHolder> getRelatedContexts() {
+        return unmodifiableMap(relatedContexts);
+    }
 
     @Observable
     public CentreContextHolder setChosenProperty(final String chosenProperty) {
@@ -100,7 +130,7 @@ public class CentreContextHolder extends AbstractEntity<String> {
     }
 
     public Map<String, Object> getModifHolder() {
-        return Collections.unmodifiableMap(modifHolder);
+        return unmodifiableMap(modifHolder);
     }
 
     @Observable
@@ -111,6 +141,6 @@ public class CentreContextHolder extends AbstractEntity<String> {
     }
 
     public Map<String, Object> getCustomObject() {
-        return Collections.unmodifiableMap(customObject);
+        return unmodifiableMap(customObject);
     }
 }

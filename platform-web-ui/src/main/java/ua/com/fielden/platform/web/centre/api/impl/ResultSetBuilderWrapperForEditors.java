@@ -147,6 +147,11 @@ public class ResultSetBuilderWrapperForEditors<T extends AbstractEntity<?>> impl
     }
 
     @Override
+    public IAlsoProp<T> withMultiAction(final EntityMultiActionConfig multiActionConfig) {
+        return builder.withMultiAction(multiActionConfig);
+    }
+
+    @Override
     public IWithRightSplitterPosition<T> withLeftSplitterPosition(final int percentage) {
         return builder.withLeftSplitterPosition(percentage);
     }
