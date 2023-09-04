@@ -101,8 +101,7 @@
                 centre.postRetrieved = function (entity, bindingEntity, customObject) {
                     const autocompleter = centre.$.selection_criteria.$.editor_4_tgFetchProviderTestEntity_property;
                     
-                    const oldOnFound = autocompleter._onFound;
-                    autocompleter._onFound = function (entities) {
+                    autocompleter._onFound = function (entitiesAndCustomObject) {
                         done();
                     }.bind(autocompleter);
                     

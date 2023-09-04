@@ -19,6 +19,11 @@ import { tearDownEvent, allDefined, isMobileApp } from '/resources/reflection/tg
 import { composeEntityValue, composeDefaultEntityValue } from '/resources/editors/tg-entity-formatter.js'; 
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
+const AUTOCOMPLETE_ACTIVE_ONLY_KEY = '@@activeOnly';
+const AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY = '@@activeOnlyChanged';
+const CENTRE_DIRTY_KEY = '@@centreDirty';
+const LOAD_MORE_DATA_KEY = '@@loadMoreData';
+
 const additionalTemplate = html`
     <style>
         label {
@@ -85,7 +90,7 @@ const customLabelTemplate = html`
            tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]">
         <span on-tap="_labelTap">[[_editorPropTitle]]</span>
         <iron-icon id="actionAvailability" icon="[[_actionIcon(actionAvailable, entity, propertyName)]]" action-available$="[[actionAvailable]]" on-tap="_labelTap"></iron-icon>
-        <iron-icon id="copyIcon" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
+        <iron-icon id="copyIcon" hidden$="[[noLabelFloat]]" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
     </label>`;
 const customInputTemplate = html`
     <iron-input bind-value="{{_editingValue}}" class="custom-input-wrapper">
@@ -117,7 +122,7 @@ const customIconButtonsTemplate = html`
     <paper-icon-button id="searcherButton" hidden$="[[searchingOrOpen]]" on-tap="_searchOnTap" icon="search" class="search-button custom-icon-buttons" tabindex="-1" disabled$="[[_disabled]]" tooltip-text="Show search result"></paper-icon-button>
     <paper-icon-button id="acceptButton" hidden$="[[searchingOrClosed]]" on-down="_done" icon="done" class="search-button custom-icon-buttons" tabindex="-1" disabled$="[[_disabled]]" tooltip-text="Accept the selected entries"></paper-icon-button>
     <paper-spinner id="progressSpinner" active hidden$="[[!searching]]" class="custom-icon-buttons" tabindex="-1" alt="searching..." disabled$="[[_disabled]]"></paper-spinner>`;
-const propertyActionTemplate = html`<slot name="property-action"></slot>`;
+const propertyActionTemplate = html`<slot id="actionSlot" name="property-action"></slot>`;
 
 /* several helper functions for string manipulation */
 function escapeRegExp(str) {
@@ -338,7 +343,7 @@ export class TgEntityEditor extends TgEditor {
     
             /**
              * In case if new entity is operated on, this instance holds an original fully-fledged contextually produced entity, otherwise 'null'.
-             * It is updated everytime when refresh process successfully completes.
+             * It is updated every time when refresh process successfully completes.
              */
             originallyProducedEntity: {
                 type: Object
@@ -409,6 +414,15 @@ export class TgEntityEditor extends TgEditor {
             },
 
             /**
+            * Indicates whether 'active only' values should be found in this autocompleter.
+            */
+           _activeOnly: {
+               type: Object,
+               value: null, // 'null' for non-activatable or for autocompleter on entity master, or otherwise true / false; also it is 'null' in the beginning where 'active only' parameter was not yet retrieved
+               observer: '_activeOnlyChanged'
+           },
+   
+           /**
              * The title of property that is a part of union entity. This might be null, undefined or empty if the search type is not of union entity. 
              */
             _typeTitle: {
@@ -437,7 +451,10 @@ export class TgEntityEditor extends TgEditor {
                         this._cancelSearch();
                         // and perform new search only if input has some text in it
                         if (this.decoratedInput().value) {
-                            this._asyncSearchHandle = setTimeout(() => this._search("*"), 700);
+                            this._asyncSearchHandle = setTimeout(() => {
+                                this._dataPage = 1; // autocompleter result stays open on typing; need to reset dataPage to prevent loading of many scrolled pages if scrolling was in place previously
+                                this._search("*");
+                            }, 700);
                         } else { // otherwise, close the result dialog
                             this.result && this.result.close();
                         }
@@ -519,6 +536,13 @@ export class TgEntityEditor extends TgEditor {
             _headers: {
                 type: String,
                 value: _timeZoneHeader
+            },
+
+            /**
+             * Callback for updating parent's _centreDirty with new value. Needed in activatable autocompleters that update 'autocomplete active only' option and thus may change centre dirtiness.
+             */
+            _updateCentreDirty: {
+                type: Function
             }
         };
     }
@@ -702,7 +726,10 @@ export class TgEntityEditor extends TgEditor {
         this._search('*', null, true);
     }
 
-    /** Loads more matching values. */
+    /**
+     * Loads more matching values.
+     * Skips this action if previous searching is still in progress.
+     */
     _loadMore (moreButtonPressed) {
         if (!this.searching) {
             if (moreButtonPressed) {
@@ -713,7 +740,27 @@ export class TgEntityEditor extends TgEditor {
         }
     }
 
-    _search (defaultSearchQuery, dataPage, ignoreInputText) {
+    /**
+     * Changes _activeOnly to new value and starts searching with new option applied.
+     * Skips this action if previous searching is still in progress.
+     */
+    _changeActiveOnly (new_activeOnly) {
+        if (!this.searching) {
+            this._activeOnly = new_activeOnly;
+            this._dataPage = 1;
+            this._search(this._searchQuery, null /* dataPage */, this._ignoreInputText, true /* 'active only' changed */);
+        }
+    }
+
+    /**
+     * Starts searching of values in autocompleter.
+     * 
+     * @param defaultSearchQuery -- search query in case where 'ignoreInputText' === true or in case if input text is empty
+     * @param dataPage -- null or undefined for searching the first and single page of data; number loadMore action -- loads > 1 pages of data
+     * @param ignoreInputText -- indicates whether to ignore the text in input; if true, uses 'defaultSearchQuery' parameter
+     * @param activeOnlyChanged -- 'true' only for the case where 'active only' button tapped, falsy value (e.g. undefined) otherwise
+     */
+    _search (defaultSearchQuery, dataPage, ignoreInputText, activeOnlyChanged) {
         // cancel any other search
         this._cancelSearchByOtherEditor();
         // What is the query string?
@@ -747,12 +794,15 @@ export class TgEntityEditor extends TgEditor {
         }
 
         if (this._searchQuery) {
-            // if this is not a request to load more data then let's clear the current result, if any
-            if (this.result && !dataPage) {
-                this.result.clearSelection();
-            }
             // prepare the AJAX request based on the raw search string
-            const serialisedSearchQuery = this.$.serialiser.serialise(this.createContextHolder(this._searchQuery, dataPage));
+            const contextHolder = this.createContextHolder(this._searchQuery, dataPage);
+            if (this._activeOnly !== null) {
+                contextHolder.customObject[AUTOCOMPLETE_ACTIVE_ONLY_KEY] = this._activeOnly;
+                if (activeOnlyChanged) {
+                    contextHolder.customObject[AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY] = activeOnlyChanged;
+                }
+            }
+            const serialisedSearchQuery = this.$.serialiser.serialise(contextHolder);
             this._ignoreInputText = ignoreInputText === true; // capture ignoreInputText for its use in _loadMore
             this.$.ajaxSearcher.body = JSON.stringify(serialisedSearchQuery);
             this.$.ajaxSearcher.generateRequest();
@@ -765,22 +815,61 @@ export class TgEntityEditor extends TgEditor {
     /*
      * Displays the search result.
      */
-    _onFound (entities) {
+    _onFound (entitiesAndCustomObject) { // always at least one element in this array
+        const entities = entitiesAndCustomObject.slice(0, -1); // -1 means cutting of last element
+        const customObject = entitiesAndCustomObject.at(-1); // -1 means index of last element
+
         if (!this.result) {
             this.result = this._createResultDialog();
         }
+
+        this._activeOnly = typeof customObject[AUTOCOMPLETE_ACTIVE_ONLY_KEY] === 'undefined' ? null : customObject[AUTOCOMPLETE_ACTIVE_ONLY_KEY];
+        const activeOnlyChanged = typeof customObject[AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY] === 'undefined' ? null : customObject[AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY];
+        const centreDirty = typeof customObject[CENTRE_DIRTY_KEY] === 'undefined' ? null : customObject[CENTRE_DIRTY_KEY];
+        const loadMoreData = typeof customObject[LOAD_MORE_DATA_KEY] === 'undefined' ? false : customObject[LOAD_MORE_DATA_KEY];
 
         // make sure to assign reflector to the result object
         this.result.reflector = this.reflector();
 
         let wasNewValueObserved = false;
         let indexOfFirstNewValue = -1;
+        if (centreDirty !== null) { // only update if received from server
+            this._updateCentreDirty(centreDirty);
+        }
+        if (activeOnlyChanged === true) {
+            const _selectedIndex = this.result._selectedIndex;
+            const selectedValues = this.result.selectedValues;
+            const _keyBoardNavigationReady = this.result._keyBoardNavigationReady;
+
+            this.result.clearSelection();
+
+            this.result._keyBoardNavigationReady = _keyBoardNavigationReady; // restore ability to navigate through keyboard on tapping of 'active only' toggle button
+            this.result.selectedValues = selectedValues; // restore selected items on tapping of 'active only' toggle button
+            if (_selectedIndex >= 0) {
+                this.result._selectedIndex = _selectedIndex; // ensure restoration of selected index regardless of whether it will be actually focused
+                if (_keyBoardNavigationReady) { // only focus item in case where keyboard navigation was already in place
+                    // timeout is required to allow the iron-list to load new items before they can be focused (see _loadMoreButtonPressed condition below)
+                    setTimeout (() => this.result && this.result.focusItemWithIndex(_selectedIndex), 100); // restore focused item (if possible) on tapping of 'active only' toggle button
+                }
+            }
+        } else if (!loadMoreData) { // if this is not a request to load more data then let's clear the current result, if any
+            this.result.clearSelection();
+        }
         for (let index = 0; index < entities.length; index++) {
             // Entity is converted to a string representation of itself that is the same as string representation of its key or [key is not assigned] string if there is no key.
             // This includes correct conversion of simple and composite entities. Top-level union entities are now also supported -- adds suffix to indicate active property.
             const key = entities[index].toString() + (entities[index].type().isUnionEntity() ? " " + entities[index]._activeProperty() : "");
             entities[index]['@key'] = key;
             const isNew = this.result.pushValue(entities[index]);
+            if (isNew && (activeOnlyChanged || loadMoreData) && this.result.selectedValues[key]) { // restore selected item on tapping of 'active only' toggle button and on 'load more' (either from scrolling or from 'more' button)
+                setTimeout(() => { // do it after new paper-item gets distributed
+                    if (this.result && this.result.$) {
+                        const newSelectedValues = this.result.$.selector.selectedValues.slice();
+                        newSelectedValues.push(key);
+                        this.result.$.selector.selectedValues = newSelectedValues;
+                    }
+                }, 0);
+            }
             // if a new value was observed for the first time then capture its index
             // so that later this new item could be focused
             if (!wasNewValueObserved && isNew) {
@@ -788,6 +877,7 @@ export class TgEntityEditor extends TgEditor {
             }
             wasNewValueObserved = isNew || wasNewValueObserved;
         }
+        setTimeout(() => this.result && this.result.notifyResize(), 0); // re-calculate shadow inside tg-scrollable-component; do it after new paper-items get distributed
 
         // if no new values were observed then there is no more to load
         // let's disable the load more action in this case
@@ -829,7 +919,12 @@ export class TgEntityEditor extends TgEditor {
             // focus the first new item if new ones were found, but only if search was due to pressing button MORE
             if (this._loadMoreButtonPressed && indexOfFirstNewValue >= 0) {
                 // timeout is required to allow the iron-list to load new items before they can be focused
-                setTimeout (() => this.result.focusItemWithIndex(indexOfFirstNewValue), 100);
+                setTimeout (() => {
+                    if (this.result) {
+                        this.result._keyBoardNavigationReady = true; // before focusing newly loaded item, keyboard navigation should be turned on (otherwise, up/down keys will lead to jumping on first item)
+                        this.result.focusItemWithIndex(indexOfFirstNewValue);
+                    }
+                }, 100);
             }
         }
 
@@ -1138,8 +1233,12 @@ export class TgEntityEditor extends TgEditor {
 
     _processSearcherResponse (e) {
         const self = this;
-        self.processResponse(e, "search", function (foundEntities) {
-            self._onFound(foundEntities);
+        self.processResponse(e, "search", function (entitiesAndCustomObject, exceptionOccurred) {
+            // at this stage exceptionOccurred is always null and don't need to be processed in any specific way;
+            // this is because [Criteria]EntityAutocompletionResource wraps found entities only into successful result;
+            // in case of unexpected exception, resultant representation is processed in _processSearcherError;
+            // please see tg-entity-binder-behavior._processResponse for more details
+            self._onFound(entitiesAndCustomObject);
         });
     }
 
@@ -1388,6 +1487,15 @@ export class TgEntityEditor extends TgEditor {
     }
 
     /**
+     * Observer for _activeOnly property. Synchronises value in entity editor result, if it is present.
+     */
+    _activeOnlyChanged (newValue) {
+        if (this.result) {
+            this.result._activeOnly = newValue;
+        }
+    }
+
+    /**
      * Creates 'tg-entity-editor-result' element dynamically.
      */
     _createResultDialog () {
@@ -1403,6 +1511,8 @@ export class TgEntityEditor extends TgEditor {
         dialog.noAutoFocus = true;
         dialog.acceptValues = this._done.bind(this);
         dialog.loadMore = this._loadMore.bind(this);
+        dialog.changeActiveOnly = this._changeActiveOnly.bind(this);
+        dialog._activeOnly = this._activeOnly; // synchronises value in entity editor result
         dialog.multi = this.multi;
         if (this.additionalProperties) {
             dialog.additionalProperties = JSON.parse(this.additionalProperties);

@@ -218,14 +218,13 @@ export const TgEntityBinderBehavior = {
         },
 
         /**
-         * This is the standard processor for 'core-response's and is applicable for all
+         * This is the standard processor for 'iron-response's and is applicable for all
          *   responses that contain java Result inside 'e.detail.response'.
          *
-         * In case when result is not successful (i.e. has 'ex' inside) the toast message is shown
+         * In case where result is not successful (i.e. has 'ex' inside) the toast message is shown
          *   and 'customErrorHandlerFor(result)' is invoked.
          *
-         * In case when result is successful -- 'customHandlerFor(result.instance)' is invoked.
-         *
+         * In case where result is successful -- 'customHandlerFor(result.instance)' is invoked.
          *
          * This is the function, that is designated for binding.
          */
@@ -234,14 +233,13 @@ export const TgEntityBinderBehavior = {
         },
 
         /**
-         * This is the standard processor for 'core-response's and is applicable for all
+         * This is the standard processor for 'iron-response's and is applicable for all
          *   responses that contain java Result inside 'e.detail.response'.
          *
-         * In case when result is not successful (i.e. has 'ex' inside) the toast message is shown
+         * In case where result is not successful (i.e. has 'ex' inside) the toast message is shown
          *   and 'customErrorHandlerFor(result)' is invoked.
          *
-         * In case when result is successful -- 'customHandlerFor(result.instance)' is invoked.
-         *
+         * In case where result is successful -- 'customHandlerFor(result.instance)' is invoked.
          *
          * This is the function, that is designated for binding.
          */
@@ -475,7 +473,7 @@ export const TgEntityBinderBehavior = {
                         }
                     }.bind(self);
                     xhr.onerror = function (e) {
-                        const msg = "Unknown error occured when sending request to download the attachment.";
+                        const msg = "Unknown error occurred when sending request to download the attachment.";
                         console.error(msg, e);
                         self._openToastForError(msg, msg + ' Request status: ' + xhr.status, true);
                     }.bind(self);
@@ -498,15 +496,15 @@ export const TgEntityBinderBehavior = {
             return this._reset(mph);
         }).bind(self);
 
-        self._provideExceptionOccured = (function (entity, exceptionOccured) {
-            if (exceptionOccured !== null && this._reflector().isEntity(entity)) {
-                entity._setExceptionOccured(exceptionOccured);
+        self._provideExceptionOccurred = (function (entity, exceptionOccurred) {
+            if (exceptionOccurred !== null && this._reflector().isEntity(entity)) {
+                entity._setExceptionOccurred(exceptionOccurred);
             }
         }).bind(self);
 
         self._processRetrieverResponse = function (e) {
-            self._processResponse(e, "retrieve", function (entityAndCustomObject, exceptionOccured) {
-                self._provideExceptionOccured(entityAndCustomObject[0], exceptionOccured);
+            self._processResponse(e, "retrieve", function (entityAndCustomObject, exceptionOccurred) {
+                self._provideExceptionOccurred(entityAndCustomObject[0], exceptionOccurred);
                 return self._postRetrievedDefault(entityAndCustomObject);
             });
         };
@@ -543,12 +541,10 @@ export const TgEntityBinderBehavior = {
                     // in case of customHandlerFor not returning any result need to assign true to recognise event handling as successful by default
                     if (e.detail.successful !== false) {
                         e.detail.successful = true;
-                        if (typeof deserialisedInstance.id !== 'undefined') {
-                            e.detail.entityId = deserialisedInstance.get('id');
-                            e.detail.entityPersistent = deserialisedInstance.type().isPersistent();
-                            e.detail.entityContinuation = deserialisedInstance.type().isContinuation();
-                        } else if (Array.isArray(deserialisedInstance) && this._reflector().isEntity(deserialisedInstance[0]) && typeof deserialisedInstance[0]['id'] !== 'undefined') {
+                        if (Array.isArray(deserialisedInstance) && this._reflector().isEntity(deserialisedInstance[0]) && typeof deserialisedInstance[0]['id'] !== 'undefined') {
                             e.detail.entityId = deserialisedInstance[0].get('id');
+                            e.detail.entityPersistent = deserialisedInstance[0].type().isPersistent();
+                            e.detail.entityContinuation = deserialisedInstance[0].type().isContinuation();
                         }
                     }
                 }
@@ -566,7 +562,7 @@ export const TgEntityBinderBehavior = {
             processResponseError(e, this._reflector(), this._serialiser(), customErrorHandlerFor, this.toaster);
         }).bind(self);
 
-        // calbacks, that will be bound by editor child elements:
+        // callbacks, that will be bound by editor child elements:
         self.validate = (function () {
             this.lastValidationAttemptPromise =  new Promise((resolve, reject) => {
                 const slf = this;
@@ -645,7 +641,7 @@ export const TgEntityBinderBehavior = {
             });
         }).bind(self);
 
-        // calbacks, that will potentially be augmented by tg-action child elements:
+        // callbacks, that will potentially be augmented by tg-action child elements:
         // 				retrieval:
         self._postRetrievedDefault = (function (entityAndCustomObject) {
             // console.timeEnd('actual-retrieval');
@@ -655,7 +651,7 @@ export const TgEntityBinderBehavior = {
             const messages = this._toastMessages("Refreshing", entity);
             this._openToast(entity, messages.short, !entity.isValid() || entity.isValidWithWarning(), messages.extended, false);
 
-            const newBindingEntity = this._postEntityReceived(entity, true);
+            const newBindingEntity = this._postEntityReceived(entity, true, customObject);
 
             this._postRetrievedDefaultForDescendants(entity, newBindingEntity, customObject);
             // custom external action
@@ -708,7 +704,7 @@ export const TgEntityBinderBehavior = {
             if (typeof this._continuations === 'object') {
                 this._continuations = {};
             }
-            const newBindingEntity = this._postEntityReceived(validatedEntity, false);
+            const newBindingEntity = this._postEntityReceived(validatedEntity, false, customObject);
             // custom external action
             if (this.postValidated) {
                 this.postValidated(validatedEntity, newBindingEntity, customObject);
@@ -916,7 +912,7 @@ export const TgEntityBinderBehavior = {
                 const origActiveProp = _originalBindingEntity['@' + propertyName + '_activeProperty'];
 
                 // VERY IMPORTANT: the property is considered to be 'modified'
-                //                 in the case when its value does not equal to original value
+                //                 in the case where its value does not equal to original value
                 //                 OR if active property was changed. The active property might be changed if entity is union 
                 //
                 //                 The 'modified' property is marked by existence of 'val' sub-property.
@@ -973,7 +969,7 @@ export const TgEntityBinderBehavior = {
      * @param isRefreshingProcess -- value true indicates that the call happens as part of refresh lifecycle, which requires resetting the state.
      *                               In all other cases (validate, save, run) value false should be provided.
      */
-    _postEntityReceived: function (entity, isRefreshingProcess) {
+    _postEntityReceived: function (entity, isRefreshingProcess, customObject) {
         var self = this;
         // in case entity is being retrieved need to reset the state, so that the master would behave as if it was created for the first time
         if (isRefreshingProcess) {
@@ -996,6 +992,8 @@ export const TgEntityBinderBehavior = {
             // version of entity should be taken from previous entity to correctly restore stale entity at the client-side
             entity.version = self._extractPreviousEntityVersion(previousEntity, entity.version, self._originalBindingEntity);
         }
+        //Set the property action indices
+        this._propertyActionIndices = customObject && customObject.propertyActionIndices;
         // New entity should be promoted to the local cache:
         self._currEntity = entity;
         self.fire('tg-entity-received', self._currEntity);

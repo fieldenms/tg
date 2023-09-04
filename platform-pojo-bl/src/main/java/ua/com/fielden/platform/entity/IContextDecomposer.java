@@ -18,6 +18,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
 
+import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -48,6 +49,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  *
  */
 public interface IContextDecomposer {
+    public static final String AUTOCOMPLETE_ACTIVE_ONLY_KEY = "@@activeOnly";
     
     /**
      * A factory method to instantiate {@link IContextDecomposer} for decomposing <code>optionalContext</code>.
@@ -477,6 +479,20 @@ public interface IContextDecomposer {
         return getContext() == null ? Optional.empty() : getContext().getComputation();
     }
     
+    // CUSTOM OBJECT:
+    
+    /**
+     * Checks whether the {@code context} represents {@link IValueMatcherWithCentreContext} context with indication that only active entities should be used for autocompletion.
+     * 
+     * @return
+     */
+    default boolean autocompleteActiveOnly() {
+        return getContext() != null
+                && getContext().getCustomObject() != null
+                && getContext().getCustomObject().containsKey(AUTOCOMPLETE_ACTIVE_ONLY_KEY)
+                && (boolean) getContext().getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_KEY);
+    }
+    
     ////////////////////////////////// CONTEXT DECOMPOSITION API [SECOND LEVEL] //////////////////////////////////
     
     default ContextOfMasterEntity ofMasterEntity() {
@@ -699,5 +715,6 @@ public interface IContextDecomposer {
         public Optional<BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object>> computation() {
             return decompose(context()).computation();
         }
-    }    
+    }
+
 }

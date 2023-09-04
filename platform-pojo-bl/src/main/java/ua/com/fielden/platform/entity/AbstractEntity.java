@@ -776,12 +776,15 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             throw new EntityDefinitionException(error);
         }
 
-        if (EntityUtils.isEntityType(type) && EntityUtils.isEntityType(PropertyTypeDeterminator.determinePropertyType(type, KEY))
-                && !Finder.isOne2One_association(entityType, propName)) {
-            final String error = format(INVALID_ONE2ONE_ASSOCIATION_MSG, propName, getType().getName());
-            logger.error(error);
-            throw new EntityDefinitionException(error);
-        }
+        // FIXME there are cases where entities inherit from an entity with implicitly-calculated one-2-one associations, which fail the association check
+        // Finder.isOne2One_association uses "equals" to validate the key of the one-2-one- entity matching the holding entity type.
+        // This needs to be considered and resolved.
+        // if (EntityUtils.isEntityType(type) && EntityUtils.isEntityType(PropertyTypeDeterminator.determinePropertyType(type, KEY))
+        //        && !Finder.isOne2One_association(entityType, propName)) {
+        //    final String error = format(INVALID_ONE2ONE_ASSOCIATION_MSG, propName, getType().getName());
+        //    logger.error(error);
+        //    throw new EntityDefinitionException(error);
+        //}
     }
 
     /**

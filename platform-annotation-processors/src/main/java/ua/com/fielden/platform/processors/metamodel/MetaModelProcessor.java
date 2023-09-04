@@ -315,13 +315,13 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
 
         final EntityElement entityElement = mmc.getEntityElement();
         final EntityElement entitySupertype = entityFinder.getParent(entityElement).orElse(null);
-        // entityElement must extend something, but this has already been a bug source once
+        // entityElement should extend something, but just in case if it does not, which is likely to be some erroneous situation, just report the error and move on
         if (entitySupertype == null) {
             printError("Parent entity type not found for %s, skipping meta-model generation", entityElement.getQualifiedName());
             return false;
         }
-        final Optional<EntityElement> maybeMetaModelledSupertype = Optional.ofNullable(entityFinder.isEntityThatNeedsMetaModel(entitySupertype) ? entitySupertype : null);
 
+        final Optional<EntityElement> maybeMetaModelledSupertype = Optional.ofNullable(entityFinder.isEntityThatNeedsMetaModel(entitySupertype) ? entitySupertype : null);
         final Collection<PropertyElement> properties;
         try {
             properties = collectProperties(entityElement, maybeMetaModelledSupertype);

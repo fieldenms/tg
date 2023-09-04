@@ -386,7 +386,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
             try {
                 forceUpdateExpiryTimeForSession(session.getId(), user, now().plusMinutes(untrustedDurationMins));
             } catch (final Exception ex) {
-                logger.info(format("Old session for user [%s] was not prolonged due to [%s].", ex.getMessage()));
+                logger.info(format("Old session for user [%s] was not prolonged due to [%s].", user, ex.getMessage()));
             }
 
             final Result ssoRefreshed = ssoSessionController.refresh(session.getSid());
@@ -395,7 +395,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
                 ssoSessionController.invalidate(session.getSid());
                 return empty();
             }
-            
+
             return of(newSession);
         } catch (final Exception ex) {
             logger.warn(format("Saving of a new session for user [%s] did not succeed. Using previously verified session if not expired: [%s].", user, !sessionExpired), ex);

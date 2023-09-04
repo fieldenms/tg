@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.join;
 import static org.apache.logging.log4j.LogManager.getLogger;
@@ -15,6 +16,7 @@ import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchNone;
 import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
@@ -24,7 +26,6 @@ import static ua.com.fielden.platform.utils.EntityUtils.isInteger;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
 import static ua.com.fielden.platform.utils.EntityUtils.isRangeType;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
-import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.createEmptyCentre;
@@ -55,7 +56,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -106,6 +107,7 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.MainMenuItemCo;
@@ -116,6 +118,7 @@ import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
+import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.MatcherOptions;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.OrderDirection;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.SummaryPropDef;
@@ -125,6 +128,8 @@ import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionCon
 import ua.com.fielden.platform.web.centre.api.actions.multi.FunctionalMultiActionElement;
 import ua.com.fielden.platform.web.centre.api.actions.multi.IEntityMultiActionSelector;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
+import ua.com.fielden.platform.web.centre.api.crit.IMultiValueAutocompleterBuilder;
+import ua.com.fielden.platform.web.centre.api.crit.ISingleValueAutocompleterBuilder;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritBooleanValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritStringValueMnemonic;
@@ -172,7 +177,7 @@ import ua.com.fielden.platform.web.utils.EntityResourceUtils;
  */
 public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
-    private static final CentreContextConfig defaultCentreContextConfig = new CentreContextConfig(false, false, false, false, null);
+    private static final CentreContextConfig defaultCentreContextConfig = new CentreContextConfig(false, false, false, false, null, empty(), empty());
 
     public static final String IMPORTS = "<!--@imports-->";
     private static final String FULL_ENTITY_TYPE = "@full_entity_type";
@@ -913,6 +918,19 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     }
 
     /**
+     * Creates and returns instance of multi-action selector in case of property multi-action specified in Centre DSL.
+     * Returns map between property names and property action selector.
+     */
+    public Map<String, ? extends IEntityMultiActionSelector> createPropertyActionSelectors() {
+        return dslDefaultConfig.getResultSetProperties().map(resultProps -> {
+            return resultProps.stream()
+                    .filter(resultProp -> resultProp.getPropAction().isPresent() && (resultProp.getPropAction().get().actions().size() > 0))
+                    .map(resultProp -> t2(derivePropName(resultProp), injector.getInstance(resultProp.getPropAction().get().actionSelectorClass())))
+                    .collect(toMap(tt -> tt._1, tt -> tt._2));
+        }).orElse(new HashMap<>());
+    }
+
+    /**
      * Creates instances of multi-action selectors in case of secondary multi-actions (or single actions) specified in Centre DSL.
      * Returns empty {@link List} if there were no secondary multi-actions (or single actions) specified in Centre DSL.
      */
@@ -998,21 +1016,18 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final ListMultimap<String, SummaryPropDef> summaryProps = dslDefaultConfig.getSummaryExpressions();
         final Class<?> managedType = centre.getEnhancer().getManagedType(root);
         if (resultProps.isPresent()) {
-            int actionIndex = 0;
+            final AtomicInteger actionIndex = new AtomicInteger(0);
             for (final ResultSetProp<T> resultProp : resultProps.get()) {
                 final String tooltipProp = resultProp.tooltipProp.isPresent() ? resultProp.tooltipProp.get() : null;
                 final String resultPropName = derivePropName(resultProp);
                 final boolean isEntityItself = "".equals(resultPropName); // empty property means "entity itself"
                 final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, resultPropName);
 
-                final Optional<FunctionalActionElement> action;
-                final Optional<EntityActionConfig> actionConfig = resultProp.getPropAction().get();
-                if (actionConfig.isPresent()) {
-                    action = Optional.of(new FunctionalActionElement(actionConfig.get(), actionIndex, resultPropName));
-                    actionIndex += 1;
-                } else {
-                    action = Optional.empty();
-                }
+                final List<FunctionalActionElement> actions =
+                        resultProp.getPropAction()
+                        .map(multiAction -> multiAction.actions()).orElse(new ArrayList<>()).stream()
+                        .map(actionConfig -> new FunctionalActionElement(actionConfig, actionIndex.getAndIncrement(), resultPropName))
+                        .collect(toList());
 
                 final PropertyColumnElement el = new PropertyColumnElement(resultPropName,
                         resultProp.widget,
@@ -1027,7 +1042,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                                 Optional.ofNullable(EntityUtils.isDate(propertyType) ? DefaultValueContract.getTimeZone(managedType, resultPropName) : null),
                                 Optional.ofNullable(EntityUtils.isDate(propertyType) ? DefaultValueContract.getTimePortionToDisplay(managedType, resultPropName) : null)),
                         CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName),
-                        action);
+                        actions);
                 if (summaryProps.containsKey(dslName(resultPropName))) {
                     final List<SummaryPropDef> summaries = summaryProps.get(dslName(resultPropName));
                     summaries.forEach(summary -> el.addSummary(summary.alias, PropertyTypeDeterminator.determinePropertyType(managedType, summary.alias), new Pair<>(summary.title, summary.desc)));
@@ -1047,10 +1062,10 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             if (column.hasSummary()) {
                 importPaths.add(column.getSummary(0).importPath());
             }
-            if (column.getAction().isPresent()) {
-                importPaths.add(column.getAction().get().importPath());
-                propActionsObject.append(prefix + createActionObject(column.getAction().get()));
-            }
+            column.getActions().forEach(action -> {
+                importPaths.add(action.importPath());
+                propActionsObject.append(prefix + createActionObject(action));
+            });
             egiColumns.add(column.render());
             column.renderWidget().ifPresent(widget -> egiEditors.add(widget));
         });
@@ -1537,39 +1552,40 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
     private CentreContextConfig getCentreContextConfigFor(final String critProp) {
         final String dslProp = dslName(critProp);
-        return dslDefaultConfig.getValueMatchersForSelectionCriteria().map(m -> m.get(dslProp)).flatMap(Pair::getValue).orElse(defaultCentreContextConfig);
+        return dslDefaultConfig.getValueMatchersForSelectionCriteria().map(m -> m.get(dslProp)).flatMap(t3 -> t3._2).orElse(defaultCentreContextConfig);
     }
 
     /**
-     * Creates value matcher instance with its context configuration.
+     * Creates value matcher instance with its context configuration; additionally returns original property with its type.
      *
      * @param criteriaType
      * @param criterionPropertyName
      * @return
      */
-    public <V extends AbstractEntity<?>> Pair<IValueMatcherWithCentreContext<V>, Optional<CentreContextConfig>> createValueMatcherAndContextConfig(final Class<? extends AbstractEntity<?>> criteriaType, final String criterionPropertyName) {
+    public <V extends AbstractEntity<?>> T3<IValueMatcherWithCentreContext<V>, Optional<CentreContextConfig>, T2<String, Class<V>>> createValueMatcherAndContextConfig(final Class<? extends AbstractEntity<?>> criteriaType, final String criterionPropertyName) {
         final String originalPropertyName = getOriginalPropertyName(criteriaType, criterionPropertyName);
         final Class<V> propType = dslDefaultConfig.getProvidedTypeForAutocompletedSelectionCriterion(originalPropertyName)
                 .map(propertyType -> (Class<V>) propertyType)
                 .orElseGet(() -> (Class<V>) ("".equals(originalPropertyName) ? getOriginalType(criteriaType) : determinePropertyType(getOriginalType(criteriaType), originalPropertyName)));
 
         final boolean isPropDescriptor = isPropertyDescriptor(propType);
-        final Pair<IValueMatcherWithCentreContext<V>, Optional<CentreContextConfig>> matcherAndConfig =
+        final T3<IValueMatcherWithCentreContext<V>, Optional<CentreContextConfig>, T2<String, Class<V>>> matcherAndConfigAndPropWithType =
             dslDefaultConfig.getValueMatchersForSelectionCriteria() // take all matchers
             .map(matchers -> matchers.get(dslName(originalPropertyName))) // choose single matcher with concrete property name
-            .map(customMatcherAndConfig -> pair((IValueMatcherWithCentreContext<V>) injector.getInstance(customMatcherAndConfig.getKey()), customMatcherAndConfig.getValue())) // instantiate the matcher: [matcherType; config] => [matcherInstance; config]
-            .orElseGet(() -> pair( // if no custom matcher was created then create default matcher
+            .map(customMatcherAndConfig -> t3((IValueMatcherWithCentreContext<V>) injector.getInstance(customMatcherAndConfig._1), customMatcherAndConfig._2, t2(originalPropertyName, propType))) // instantiate the matcher: [matcherType; config] => [matcherInstance; config]
+            .orElseGet(() -> t3( // if no custom matcher was created then create default matcher
                 isPropDescriptor
                     ? (IValueMatcherWithCentreContext<V>) new FallbackPropertyDescriptorMatcherWithCentreContext<>((Class<AbstractEntity<?>>) getPropertyAnnotation(IsProperty.class, getOriginalType(criteriaType), originalPropertyName).value())
                     : new FallbackValueMatcherWithCentreContext<>(companionFinder.find(propType)),
-                empty()
+                empty(),
+                t2(originalPropertyName, propType)
             ));
 
         // provide fetch model for created matcher
         if (!isPropDescriptor) {
-            matcherAndConfig.getKey().setFetch(createFetchModelForAutocompleter(originalPropertyName, propType));
+            matcherAndConfigAndPropWithType._1.setFetch(createFetchModelForAutocompleter(originalPropertyName, propType));
         }
-        return matcherAndConfig;
+        return matcherAndConfigAndPropWithType;
     }
 
     /**
@@ -1697,6 +1713,20 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     public EntityCentre<T> injectCustomImports(final JsCode customImports) {
         this.customImports = of(customImports);
         return this;
+    }
+
+    /**
+     * Indicates whether 'active only' action was deliberately hidden by specifying {@link MatcherOptions#HIDE_ACTIVE_ONLY_ACTION} option in following methods:<br>
+     * {@link ISingleValueAutocompleterBuilder#withMatcher(Class, MatcherOptions, MatcherOptions...)}<br>
+     * {@link ISingleValueAutocompleterBuilder#withMatcher(Class, CentreContextConfig, MatcherOptions, MatcherOptions...)}<br>
+     * {@link IMultiValueAutocompleterBuilder#withMatcher(Class, MatcherOptions, MatcherOptions...)}<br>
+     * {@link IMultiValueAutocompleterBuilder#withMatcher(Class, CentreContextConfig, MatcherOptions, MatcherOptions...)}
+     * 
+     * @param property
+     * @return
+     */
+    public boolean isActiveOnlyActionHidden(final String property) {
+        return dslDefaultConfig.isActiveOnlyActionHidden(property);
     }
 
 }

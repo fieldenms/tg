@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.resultset.impl;
 
 import static java.lang.String.format;
+import static java.util.Collections.unmodifiableList;
 import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_DESC;
 import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_DISPLAY_PROP;
 import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_GROUP_PROP;
@@ -44,7 +45,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
     private final String widgetPath;
     private final Object propertyType;
     private final Pair<String, String> titleDesc;
-    private final Optional<FunctionalActionElement> action;
+    private final List<FunctionalActionElement> actions = new ArrayList<>();
     private final List<SummaryElement> summary;
     private boolean debug = false;
     private final int growFactor;
@@ -59,7 +60,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
      * @param criteriaType
      * @param propertyName
      */
-    public PropertyColumnElement(final String propertyName, final Optional<AbstractWidget> widget, final boolean isDynamic, final boolean isSortable, final int width, final int growFactor, final boolean isFlexible, final String tooltipProp, final Object propertyType, final Pair<String, String> titleDesc, final Optional<FunctionalActionElement> action) {
+    public PropertyColumnElement(final String propertyName, final Optional<AbstractWidget> widget, final boolean isDynamic, final boolean isSortable, final int width, final int growFactor, final boolean isFlexible, final String tooltipProp, final Object propertyType, final Pair<String, String> titleDesc, final List<FunctionalActionElement> actions) {
         this.widgetName = AbstractCriterionWidget.extractNameFrom("egi/tg-property-column");
         this.widgetPath = "egi/tg-property-column";
         this.propertyName = propertyName;
@@ -72,7 +73,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         this.isFlexible = isFlexible;
         this.propertyType = propertyType;
         this.titleDesc = titleDesc;
-        this.action = action;
+        this.actions.addAll(actions);
         this.summary = new ArrayList<>();
     }
 
@@ -219,8 +220,8 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         return new LinkedHashMap<>();
     }
 
-    public Optional<FunctionalActionElement> getAction() {
-        return action;
+    public List<FunctionalActionElement> getActions() {
+        return unmodifiableList(actions);
     }
 
     @Override
@@ -235,13 +236,15 @@ public class PropertyColumnElement implements IRenderable, IImportable {
 
     private DomElement renderColumnElement () {
         final DomElement columnElement = new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
-        if (action.isPresent() && action.get().getFunctionalActionKind() == FunctionalActionKind.PROP) {
-            final DomElement actionElement = action.get().render();
-            actionElement.attr("slot", "property-action");
-            if (isDynamic) {
-                actionElement.attr("chosen-property", format("[[item.%s]]", DYN_COL_GROUP_PROP_VALUE));
+        for (final FunctionalActionElement actionElement : actions) {
+            if (actionElement.getFunctionalActionKind() == FunctionalActionKind.PROP) {
+                final DomElement actionDomElement = actionElement.render();
+                actionDomElement.attr("slot", "property-action");
+                if (isDynamic) {
+                    actionDomElement.attr("chosen-property", format("[[item.%s]]", DYN_COL_GROUP_PROP_VALUE));
+                }
+                columnElement.add(actionDomElement);
             }
-            columnElement.add(actionElement);
         }
         summary.forEach(summary -> columnElement.add(summary.render()));
         return columnElement;

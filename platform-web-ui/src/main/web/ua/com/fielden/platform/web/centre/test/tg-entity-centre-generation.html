@@ -195,7 +195,7 @@
                     assert.ok(criteriaEntity, 'Criteria entity should arrive from the server.');
                     assert.strictEqual(criteriaEntity.isValid(), true, 'Criteria entity should be valid.');
                     assert.strictEqual(criteriaEntity.isValidWithoutException(), false, 'Criteria entity should be valid, but should have an exception.');
-                    assert.strictEqual(criteriaEntity.exceptionOccured().message, 'Can not generate the instance based on current user [SU], choose another user for that.', 'Criteria entity should be valid, but should have an exception.');
+                    assert.strictEqual(criteriaEntity.exceptionOccurred().message, 'Can not generate the instance based on current user [SU], choose another user for that.', 'Criteria entity should be valid, but should have an exception.');
                     
                     centre.async(function () {
                         assert.strictEqual(centre._selectedView, 0, 'The view should not be switched to EGI result-set.');
@@ -232,7 +232,7 @@
                         assert.ok(criteriaEntity, 'Criteria entity should arrive from the server.');
                         assert.strictEqual(criteriaEntity.isValid(), true, 'Criteria entity should be valid.');
                         assert.strictEqual(criteriaEntity.isValidWithoutException(), false, 'Criteria entity should be valid, but should have an exception.');
-                        assert.strictEqual(criteriaEntity.exceptionOccured().message, 'Can not generate the instance based on current user [SU], choose another user for that.', 'Criteria entity should be valid, but should have an exception.');
+                        assert.strictEqual(criteriaEntity.exceptionOccurred().message, 'Can not generate the instance based on current user [SU], choose another user for that.', 'Criteria entity should be valid, but should have an exception.');
                         
                         centre.async(function () {
                             assert.strictEqual(centre._selectedView, 0, 'The view should not be switched to EGI result-set.');
