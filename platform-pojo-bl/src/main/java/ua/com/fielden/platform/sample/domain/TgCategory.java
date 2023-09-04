@@ -46,7 +46,7 @@ public class TgCategory extends ActivatableAbstractEntity<String> {
     
     @IsProperty
     @MapTo
-    @Final(persistentOnly = false)
+    @Final(persistedOnly = false)
     @Title(value = "Immediately Final")
     private Integer immediatelyFinalProp;
 

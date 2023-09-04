@@ -130,7 +130,6 @@ public class MasterInfoProvider {
             info.setHeightUnit(prefDim.heightUnit.value);
         });
         if (relativePropertyNameOpt.isPresent()) { // relativePropertyNameOpt is present only for EDIT case
-            info.setRequireSelectedEntities("ONE"); // require 'current entity' in the context only for EDIT case
             info.setRelativePropertyName(relativePropertyNameOpt.get()); // also require 'relative property name' only for EDIT case
         }
         return info;

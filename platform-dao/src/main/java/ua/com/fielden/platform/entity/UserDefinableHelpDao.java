@@ -1,13 +1,6 @@
 package ua.com.fielden.platform.entity;
 
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
-
-import java.util.Optional;
-
-import org.apache.commons.lang3.StringUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -51,16 +44,21 @@ public class UserDefinableHelpDao extends CommonEntityDao<UserDefinableHelp> imp
 
     @Override
     @SessionRequired
-    @Authorise(UserDefinableHelp_CanSave_Token.class)
     public UserDefinableHelp save(final UserDefinableHelp entity) {
         if (!entity.isSkipUi()) {
-            return super.save(entity);
+            return saveToChange(entity);
         }
         return entity;
+    }
+
+    @Authorise(UserDefinableHelp_CanSave_Token.class)
+    protected UserDefinableHelp saveToChange(final UserDefinableHelp entity) {
+        return super.save(entity);
     }
 
     @Override
     protected IFetchProvider<UserDefinableHelp> createFetchProvider() {
         return FETCH_PROVIDER;
     }
+
 }

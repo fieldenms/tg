@@ -20,7 +20,6 @@ const template = html`<!-- TODO layout vertical -->
         dynamic-action
         attrs='[[_tgOpenMasterActionAttrs]]'
         require-selection-criteria='false'
-        require-selected-entities='ONE'
         require-master-entity='true'
         hidden>
     </tg-ui-action>

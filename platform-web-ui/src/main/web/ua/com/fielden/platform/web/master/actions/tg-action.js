@@ -211,7 +211,7 @@ Polymer({
         },
 
         /**
-         * Custom focusing calback which will be called after action is executed. Please, note that standard focus restoration logic is still
+         * Custom focusing callback which will be called after action is executed. Please, note that standard focus restoration logic is still
          * working.
          */
         focusingCallback: {

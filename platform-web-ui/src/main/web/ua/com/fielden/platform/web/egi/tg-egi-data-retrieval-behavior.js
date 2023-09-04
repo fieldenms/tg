@@ -47,6 +47,14 @@ export const TgEgiDataRetrievalBehavior = {
         return entity && column.collectionalProperty ? this.getCollectionalItem(entity, column) : entity;
     },
 
+
+    /**
+     * Should return real property name which is an entity property name that has value.
+     * If specified column is for collectional property then real property - is a property name of collectional entity that has a value. 
+     * 
+     * @param {Object} column - property column for which real property name should be returned.
+     * @returns 
+     */
     getRealProperty: function (column) {
         return column.collectionalProperty ? column.valueProperty : column.property;
     },

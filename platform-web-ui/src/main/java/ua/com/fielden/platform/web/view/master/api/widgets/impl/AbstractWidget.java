@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.impl;
 
+import static java.util.Optional.of;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -7,6 +10,8 @@ import java.util.Optional;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
+import ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionSelector;
 import ua.com.fielden.platform.web.interfaces.IImportable;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 
@@ -27,7 +32,7 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
     private final String desc;
     private final String widgetName;
     private final String widgetPath;
-    private Optional<EntityActionConfig> action = Optional.empty();
+    private Optional<EntityMultiActionConfig> action = Optional.empty();
     private boolean skipValidation = false;
     private boolean debug = false;
 
@@ -93,6 +98,7 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
         attrs.put("prop-desc", this.desc);
         attrs.put("current-state", "[[currentState]]");
         attrs.put("toaster", "[[toaster]]");
+        attrs.put("property-action-index", "[[_propertyActionIndices." + this.propertyName +"]]");
         return attrs;
     }
 
@@ -113,10 +119,14 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
     }
 
     public void withAction(final EntityActionConfig action) {
-        this.action = Optional.of(action);
+        this.action = of(new EntityMultiActionConfig(SingleActionSelector.class, listOf(() -> of(action))));
     }
 
-    public Optional<EntityActionConfig> action() {
+    public void withMultiAction(final EntityMultiActionConfig action) {
+        this.action = of(action);
+    }
+
+    public Optional<EntityMultiActionConfig> action() {
         return action;
     }
 

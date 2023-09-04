@@ -87,7 +87,7 @@ public class UserWebUiConfig {
         centre = createCentre(injector, builder, mkLocator(builder, injector, UserLocator.class, "user"), withCompoundMaster);
         master = createMaster(injector);
         rolesUpdater = createRolesUpdater(injector);
-        
+
         if (withCompoundMaster) {
             CompoundMasterBuilder.<User, OpenUserMasterAction>create(injector, builder)
                     .forEntity(OpenUserMasterAction.class)
@@ -134,7 +134,9 @@ public class UserWebUiConfig {
                 .addFrontAction(locator)
                 .addTopAction(newUserAction).also()
                 .addTopAction(UserActions.DELETE_ACTION.mkAction()).also()
-                .addTopAction(locator)
+                .addTopAction(locator).also()
+                .addTopAction(CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction()).also()
+                .addTopAction(StandardActions.EXPORT_ACTION.mkAction(ReUser.class))
                 .addCrit("this").asMulti().autocompleter(User.class).also()
                 .addCrit("basedOnUser").asMulti().autocompleter(User.class).also()
                 .addCrit(ACTIVE).asMulti().bool().also()

@@ -9,6 +9,7 @@ import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.pdTypeFor;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_DEFAULT_WIDTH;
@@ -262,6 +263,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                .withTopPanelStyle(ofNullable(envTopPanelColour), ofNullable(envWatermarkText), ofNullable(envWatermarkCss));
 
         // Add entity centres
+        MoreDataForDeleteEntityWebUiConfig.register(injector(), configApp());
         final TgCompoundEntityWebUiConfig tgCompoundEntityWebUiConfig = TgCompoundEntityWebUiConfig.register(injector(), configApp());
         final EntityActionConfig mkTgCompoundEntityLocator = mkLocator(configApp(), injector(), TgCompoundEntityLocator.class, "tgCompoundEntity", "color: #0d4b8a");
 
@@ -285,7 +287,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 shortcut("alt+d").
                                 build())
                         .addProp("this").also()
-                        .addProp("desc")
+                        .addEditableProp("desc")
+                        .addPrimaryAction(EDIT_ACTION.mkAction(TgDeletionTestEntity.class))
                         // .addProp("additionalProp")
                         .build(), injector(), null);
         configApp().addCentre(deletionTestCentre);
@@ -554,30 +557,23 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .build())
                 .also()
                 .addProp("bigDecimalProp").asDecimal()
-                    .withAction(
-                        action(TgDummyAction.class)
-                        .withContext(context().withMasterEntity().build())
-                        .postActionSuccess(new PostActionSuccess(""
-                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
-                                ))
-                        .icon("accessibility")
-                        .withStyle("color: green")
-                        .shortDesc("Dummy")
-                        .longDesc("Dummy action, simply prints its result into console.")
-                        .build())
+                    .withMultiAction(multiAction(BigDecimalPropActionSelector.class)
+                            .addAction(dummyAction("color: green"))
+                            .addAction(dummyAction("color: yellow"))
+                            .addAction(dummyAction("color: red")).build())
                 .also()
-                .addProp("stringProp").asSinglelineText().skipValidation()
-                    .withAction(
-                        action(TgDummyAction.class)
-                        .withContext(context().withMasterEntity().build())
-                        .postActionSuccess(new PostActionSuccess(""
-                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
-                                ))
-                        .icon("accessibility")
-                        .shortDesc("Dummy")
-                        .longDesc("Dummy action, simply prints its result into console.")
-                        .build())
-                .also()
+//                .addProp("stringProp").asSinglelineText().skipValidation()
+//                    .withAction(
+//                        action(TgDummyAction.class)
+//                        .withContext(context().withMasterEntity().build())
+//                        .postActionSuccess(new PostActionSuccess(""
+//                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+//                                ))
+//                        .icon("accessibility")
+//                        .shortDesc("Dummy")
+//                        .longDesc("Dummy action, simply prints its result into console.")
+//                        .build())
+//                .also()
                 .addProp("stringProp").asMultilineText()
                     .withAction(
                         action(TgDummyAction.class)
@@ -716,7 +712,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addAction(MasterActions.VIEW)
                 .addAction(action(MakeCompletedAction.class)
                         .withContext(context().withMasterEntity().build())
-                        .postActionSuccess(() -> new JsCode(new BindSavedPropertyPostActionSuccess("masterEntity").build().toString() + "self.publishCloseForcibly();"))
+                        // .postActionSuccess(() -> new JsCode(new BindSavedPropertyPostActionSuccess("masterEntity").build().toString() + "self.publishCloseForcibly();")) // use this for additional manual testing of forced closing
+                        .postActionSuccess(new BindSavedPropertyPostActionSuccess("masterEntity"))
                         .postActionError(new BindSavedPropertyPostActionError("masterEntity"))
                         .shortDesc("Complete")
                         .longDesc("Complete this entity.")
@@ -1472,7 +1469,13 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 )
                 .addGroupAction(
                         action(EntityExportAction.class)
-                                .withContext(context().withSelectionCrit().withSelectedEntities().build())
+                                .withContext(context().withSelectionCrit().withSelectedEntities()
+                                        .extendWithParentCentreContext(
+                                                context().withSelectionCrit().withSelectedEntities()
+                                                .extendWithInsertionPointContext(TgCentreInvokerWithCentreContext.class,
+                                                        context().withSelectionCrit().withSelectedEntities().withMasterEntity().build()).build())
+                                        .extendWithInsertionPointContext(TgCentreInvokerWithCentreContext.class,
+                                                context().withSelectionCrit().withSelectedEntities().withMasterEntity().build()).build())
                                 .postActionSuccess(new FileSaverPostAction())
                                 .icon("icons:save")
                                 .shortDesc("Export Data")
@@ -1720,25 +1723,25 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 .replace("mrLast", centreMrLast).replace("mr", centreMr)
                 );
         }
-                //.hideCheckboxes()
-                //.notScrollable()
-                final IWithTooltip<TgPersistentEntityWithProperties> afterMinWidthConf = layoutConfig
-                        .withScrollingConfig(ScrollConfig.configScroll()
-                                .withFixedCheckboxesPrimaryActionsAndFirstProps(2)
-                                .withFixedSecondaryActions()
-                                .withFixedHeader()
-                                .withFixedSummary()
-                                .done())
-                //.lockScrollingForInsertionPoints()
-                //.draggable()
-                //.retrieveAll()
-                .setPageCapacity(20)
-                //.setHeight("100%")
-                //.setVisibleRowsCount(10)
-                //.fitToHeight()
-                .addProp("this")
-                    .order(2).asc()
-                    .width(60);
+        //.hideCheckboxes()
+        //.notScrollable()
+        final IWithTooltip<TgPersistentEntityWithProperties> afterMinWidthConf = layoutConfig
+                .withScrollingConfig(ScrollConfig.configScroll()
+                        .withFixedCheckboxesPrimaryActionsAndFirstProps(2)
+                        .withFixedSecondaryActions()
+                        .withFixedHeader()
+                        .withFixedSummary()
+                        .done())
+        //.lockScrollingForInsertionPoints()
+        //.draggable()
+        //.retrieveAll()
+        .setPageCapacity(20)
+        //.setHeight("100%")
+        //.setVisibleRowsCount(10)
+        //.fitToHeight()
+        .addProp("this")
+            .order(2).asc()
+            .width(60);
 
         final IWithSummary<TgPersistentEntityWithProperties> afterSummary;
         if (withCalculatedAndCustomProperties) {
@@ -1767,59 +1770,59 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .build()
                     )
                 .also();
-                if (withCalculatedAndCustomProperties) {
-                beforeAddProp = beforeAddProp.addProp(mkProp("DR", "Defect Radio", String.class)).width(26).
-                        withAction(action(TgStatusActivationFunctionalEntity.class).
-                        withContext(context().withCurrentEntity().build()).
-                        icon("assignment-turned-in").
-                        shortDesc("Change Status to DR").
-                        longDesc("Change Status to DR").
-                        build())
-                .also()
-                .addProp(mkProp("IS", "In Service", String.class)).width(26).
-                        withAction(action(TgISStatusActivationFunctionalEntity.class).
-                        withContext(context().withCurrentEntity().build()).
-                        icon("assignment-turned-in").
-                        shortDesc("Change Status to IS").
-                        longDesc("Change Status to IS").
-                        build())
-                .also()
-                .addProp(mkProp("IR", "In Repair", String.class)).width(26).
-                        withAction(action(TgIRStatusActivationFunctionalEntity.class).
-                        withContext(context().withCurrentEntity().build()).
-                        icon("assignment-turned-in").
-                        shortDesc("Change Status to IR").
-                        longDesc("Change Status to IR").
-                        build())
-                .also()
-                .addProp(mkProp("ON", "On Road Defect Station", String.class)).width(26).
-                        withAction(action(TgONStatusActivationFunctionalEntity.class).
-                        withContext(context().withCurrentEntity().build()).
-                        icon("assignment-turned-in").
-                        shortDesc("Change Status to ON").
-                        longDesc("Change Status to ON").
-                        build())
-                .also()
-                .addProp(mkProp("SR", "Defect Smash Repair", String.class)).width(26).
-                        withAction(action(TgSRStatusActivationFunctionalEntity.class).
-                        withContext(context().withCurrentEntity().build()).
-                        icon("assignment-turned-in").
-                        shortDesc("Change Status to SR").
-                        longDesc("Change Status to SR").
-                        build())
-                        .also();
-                }
-                final IWithSummary<TgPersistentEntityWithProperties> beforeSummaryConf = beforeAddProp.addEditableProp("integerProp")
-                    .minWidth(42)
-                    .withTooltip("desc");
+        if (withCalculatedAndCustomProperties) {
+            beforeAddProp = beforeAddProp.addProp(mkProp("DR", "Defect Radio", String.class)).width(26).
+                    withAction(action(TgStatusActivationFunctionalEntity.class).
+                    withContext(context().withCurrentEntity().build()).
+                    icon("assignment-turned-in").
+                    shortDesc("Change Status to DR").
+                    longDesc("Change Status to DR").
+                    build())
+            .also()
+            .addProp(mkProp("IS", "In Service", String.class)).width(26).
+                    withAction(action(TgISStatusActivationFunctionalEntity.class).
+                    withContext(context().withCurrentEntity().build()).
+                    icon("assignment-turned-in").
+                    shortDesc("Change Status to IS").
+                    longDesc("Change Status to IS").
+                    build())
+            .also()
+            .addProp(mkProp("IR", "In Repair", String.class)).width(26).
+                    withAction(action(TgIRStatusActivationFunctionalEntity.class).
+                    withContext(context().withCurrentEntity().build()).
+                    icon("assignment-turned-in").
+                    shortDesc("Change Status to IR").
+                    longDesc("Change Status to IR").
+                    build())
+            .also()
+            .addProp(mkProp("ON", "On Road Defect Station", String.class)).width(26).
+                    withAction(action(TgONStatusActivationFunctionalEntity.class).
+                    withContext(context().withCurrentEntity().build()).
+                    icon("assignment-turned-in").
+                    shortDesc("Change Status to ON").
+                    longDesc("Change Status to ON").
+                    build())
+            .also()
+            .addProp(mkProp("SR", "Defect Smash Repair", String.class)).width(26).
+                    withAction(action(TgSRStatusActivationFunctionalEntity.class).
+                    withContext(context().withCurrentEntity().build()).
+                    icon("assignment-turned-in").
+                    shortDesc("Change Status to SR").
+                    longDesc("Change Status to SR").
+                    build())
+                    .also();
+        }
+        final IWithSummary<TgPersistentEntityWithProperties> beforeSummaryConf = beforeAddProp.addEditableProp("integerProp")
+            .minWidth(42)
+            .withTooltip("desc");
 
-                    final IWithTooltip<TgPersistentEntityWithProperties> beforeSummaryConfForBigDecimalProp = (withCalculatedAndCustomProperties ? beforeSummaryConf.withSummary("sum_of_int", "SUM(integerProp)", "Sum of int. prop:Sum of integer property") : beforeSummaryConf)
+       final IWithTooltip<TgPersistentEntityWithProperties> beforeSummaryConfForBigDecimalProp = (withCalculatedAndCustomProperties ? beforeSummaryConf.withSummary("sum_of_int", "SUM(integerProp)", "Sum of int. prop:Sum of integer property") : beforeSummaryConf)
+            .also()
+            .addEditableProp("requiredValidatedProp")
+                .minWidth(42)
                 .also()
-                .addEditableProp("requiredValidatedProp")
-                    .minWidth(42)
-                    .also()
-                .addEditableProp("bigDecimalProp")
-                    .minWidth(68);
+            .addEditableProp("bigDecimalProp")
+                .minWidth(68);
 
         final Function<String, EntityActionConfig> createDummyAction = colour -> action(TgDummyAction.class)
             .withContext(context().withSelectedEntities().build())
@@ -1848,6 +1851,10 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 .withSummary("min_of_dec", "MIN(bigDecimalProp)", "Min of decimal:Minimum of big decimal property")
                                 .withSummary("sum_of_dec", "sum(bigDecimalProp)", "Sum of decimal:Sum of big decimal property") :
                                 beforeSummaryConfForBigDecimalProp)
+                .withMultiAction(multiAction(CompositePropActionSelector.class)
+                        .addAction(EDIT_ACTION.mkAction(TgPersistentEntityWithProperties.class, (entity, context) -> t2(TgPersistentEntityWithProperties.class, context.getCurrEntity().getId())))
+                        .addAction(EDIT_ACTION.mkAction(TgPersistentCompositeEntity.class, (entity, context) -> t2(TgPersistentCompositeEntity.class, context.getCurrEntity().get("compositeProp.id"))))
+                        .build())
                 .also()
                 .addEditableProp("entityProp").asAutocompleter().withMatcher(ContextMatcher.class).minWidth(40)
                     .withAction(editAction().withContext(context().withCurrentEntity().withSelectionCrit().build())
@@ -2107,5 +2114,18 @@ public class WebUiConfig extends AbstractWebUiConfig {
     @Override
     public int getPort() {
         return port;
+    }
+
+    EntityActionConfig dummyAction (final String style) {
+        return action(TgDummyAction.class)
+        .withContext(context().withMasterEntity().build())
+        .postActionSuccess(new PostActionSuccess(""
+                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                ))
+        .icon("accessibility")
+        .withStyle(style)
+        .shortDesc("Dummy")
+        .longDesc("Dummy action, simply prints its result into console.")
+        .build();
     }
 }

@@ -18,7 +18,7 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.IMultiStringDefaultV
  *
  * @param <T>
  */
-public interface IMutliValueAutocompleterBuilder1<T extends AbstractEntity<?>> extends IMultiStringDefaultValueAssigner<T> {
+public interface IMultiValueAutocompleterBuilder1<T extends AbstractEntity<?>> extends IMultiStringDefaultValueAssigner<T> {
 
     /** Indicates whether description should also be used to highlighting the matched parts.
      *  This method does not effect whether or not the search actually involves matching be description. */

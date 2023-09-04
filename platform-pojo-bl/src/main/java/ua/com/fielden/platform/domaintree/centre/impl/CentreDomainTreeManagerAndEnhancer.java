@@ -705,6 +705,19 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
         }
 
         @Override
+        public boolean getAutocompleteActiveOnly(final Class<?> root, final String property) {
+            // inject an enhanced type into method implementation
+            return base().getAutocompleteActiveOnly(enhancer().getManagedType(root), property);
+        }
+
+        @Override
+        public IAddToCriteriaTickManager setAutocompleteActiveOnly(final Class<?> root, final String property, final boolean autocompleteActiveOnly) {
+            // inject an enhanced type into method implementation
+            base().setAutocompleteActiveOnly(enhancer().getManagedType(root), property, autocompleteActiveOnly);
+            return this;
+        }
+
+        @Override
         public Set<Class<?>> rootTypes() {
             return base().rootTypes();
         }

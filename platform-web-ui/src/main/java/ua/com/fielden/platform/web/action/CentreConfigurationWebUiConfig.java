@@ -109,7 +109,7 @@ public class CentreConfigurationWebUiConfig {
                 .setLayoutFor(DESKTOP, empty(), masterLayout)
                 .setLayoutFor(TABLET, empty(), masterLayout)
                 .setLayoutFor(MOBILE, empty(), masterMobileLayout)
-                .withDimensions(mkDim("'30%'", "'50%'"))
+                .withDimensions(mkDim(576, 468))
                 .done();
         return new EntityMaster<>(CentreConfigUpdater.class, CentreConfigUpdaterProducer.class, masterConfig, injector);
     }

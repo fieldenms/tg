@@ -31,7 +31,7 @@ public class BindSavedPropertyPostActionSuccess implements IPostAction {
     }
 
     /**
-     * Creates {@link IPostAction}. For {@code erroneous} one we also attaches 'exceptionOccured' to the master entity.
+     * Creates {@link IPostAction}. For {@code erroneous} one we also attaches 'exceptionOccurred' to the master entity.
      * 
      * @param erroneous
      * @return
@@ -41,8 +41,14 @@ public class BindSavedPropertyPostActionSuccess implements IPostAction {
             + "const parentMasterName = `tg-${functionalEntity.type().prop('%s').type()._simpleClassName()}-master`;\n"
             + "const parentMaster = getParentAnd(self, parent => parent.matches(parentMasterName));\n"
             + "const masterEntity = functionalEntity.get('%s');\n"
-            + (erroneous ? "parentMaster._provideExceptionOccured(masterEntity, functionalEntity.exceptionOccured());\n" : "")
-            + "parentMaster._postSavedDefault(masterEntity);\n",
+            + (erroneous ? "parentMaster._provideExceptionOccurred(masterEntity, functionalEntity.exceptionOccurred());\n" : "")
+            // in successful case leave propertyActionIndices as previously;
+            //  we are not able to calculate them in companion 'save' methods because multi-action selectors are UI concept;
+            //  still, this temporal unsyncing is not a problem;
+            //  this is because propertyActionIndices will be updated on parentMaster 'validate' process following immediately after postActionSuccess (see tg-ui-action._onExecuted.postSaved postal publish)
+            // in unsuccessful case it is even more important to leave propertyActionIndices as previously (not to clear them or something);
+            //  this is because parentMaster update will not be performed and, in case of clearing, all actions on parentMaster will disappear (at this stage even non-multi action should have zero index)
+            + "parentMaster._postSavedDefault([masterEntity, { propertyActionIndices: parentMaster._propertyActionIndices }]);\n",
             propertyName, propertyName
         ));
     }
