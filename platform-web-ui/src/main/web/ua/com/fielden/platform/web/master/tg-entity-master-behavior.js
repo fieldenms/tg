@@ -721,6 +721,12 @@ const TgEntityMasterBehaviorImpl = {
             } else { // main entity (compound master) has been saved (for the first time)
                 this._currBindingEntity.setAndRegisterPropertyTouch('key', 'IRRELEVANT');
                 this._currBindingEntity['@key_id'] = savedEntityId;
+                const currentEntity = this._reflector().newEntity(this._currEntity.get('key').type().notEnhancedFullClassName());
+                currentEntity.id = savedEntityId;
+                this.savingContext = this._reflector().createContextHolder(
+                    null, 'ONE', null,
+                    null, () => [ currentEntity ], null
+                );
             }
             // please note, that after 'key' was made touched, it will remain touched forever (until compound master closed, opened and re-retrieved); see tg-entity-master-behavior._postSavedDefault/tg-reflector.tg_convertPropertyValue for more details;
             // #1992 this is necessary because it ensures correct server-side restoration of opener if its produced 'key' (no id) equals to saved version of 'key' (with id);
