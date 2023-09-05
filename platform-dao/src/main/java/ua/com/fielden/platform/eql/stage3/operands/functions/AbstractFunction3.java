@@ -69,13 +69,12 @@ public abstract class AbstractFunction3 extends AbstractSingleOperand3 {
     private String getConvertToStringSqlForPostgresql(final DbVersion dbVersion, final ISingleOperand3 operand) {
         if (operand.type() != null && Date.class.equals(operand.type().javaType())) {
             // TODO The date/time format should be read from IDates, once this contract is extended to support domain-specific data formats.
-            // If there will be support for time with seconds, without seconds, and with milliseconds then the following expression can be used:
-            //     case when extract(milliseconds from %s) = 0 then to_char(%s, 'DD/MM/YYYY HH24:MI')
-            //          when floor(extract(milliseconds from %s))::int - 1000 * floor(extract(seconds from %s))::int > 0 then to_char(%s, 'DD/MM/YYYY HH24:MI:SS.MS')
-            //     else to_char(%s, 'DD/MM/YYYY HH24:MI:SS') end
             final var opSql = operand.sql(dbVersion);
-            final var expression = "case when extract(milliseconds from %s) = 0 then to_char(%s, 'DD/MM/YYYY HH24:MI') else to_char(%s, 'DD/MM/YYYY HH24:MI:SS.MS') end";
-            return expression.formatted(opSql, opSql, opSql);
+            final var expression = "case " +
+                                   "when extract(milliseconds from %s) = 0 then to_char(%s, 'DD/MM/YYYY HH24:MI') " +
+                                   "when cast(floor(extract(milliseconds from %s)) as integer) - 1000 * cast(floor(extract(seconds from %s)) as integer) > 0 then to_char(%s, 'DD/MM/YYYY HH24:MI:SS.MS') " +
+                                   "else to_char(%s, 'DD/MM/YYYY HH24:MI:SS') end";
+            return expression.formatted(opSql, opSql, opSql, opSql, opSql, opSql);
         } else if (operand.type() != null && String.class.equals(operand.type().javaType())) {
             return operand.sql(dbVersion);
         } else {
