@@ -66,12 +66,18 @@ public abstract class AbstractFunction3 extends AbstractSingleOperand3 {
     }
 
     private String getConvertToStringSqlForPostgresql(final DbVersion dbVersion, final ISingleOperand3 operand) {
-        if (Date.class.equals(operand.type())) {
-            return "TO_CHAR(" + operand.sql(dbVersion) + ", 'YYYY-MM-DD HH24:MI:SS')";
-        } else if (String.class.equals(operand.type())) {
+        if (operand.type() != null && Date.class.equals(operand.type())) {
+            final var opSql = operand.sql(dbVersion);
+            final var expression = "case " +
+                                   "when extract(milliseconds from %s) = 0 then to_char(%s, 'DD/MM/YYYY HH24:MI') " +
+                                   "when cast(floor(extract(milliseconds from %s)) as integer) - 1000 * cast(floor(extract(seconds from %s)) as integer) > 0 then to_char(%s, 'DD/MM/YYYY HH24:MI:SS.MS') " +
+                                   "else to_char(%s, 'DD/MM/YYYY HH24:MI:SS') end";
+            return expression.formatted(opSql, opSql, opSql, opSql, opSql, opSql);
+        } else if (operand.type() != null && String.class.equals(operand.type())) {
             return operand.sql(dbVersion);
         } else {
             return "CAST(" + operand.sql(dbVersion) + " AS VARCHAR(255))";
         }
     }
+
 }
