@@ -56,7 +56,7 @@ public abstract class AbstractFunction3 extends AbstractSingleOperand3 {
         }
     }
 
-    private String getConvertToStringSqlForMsSql2005(final DbVersion dbVersion, final ISingleOperand3 operand) {
+    public static String getConvertToStringSqlForMsSql2005(final DbVersion dbVersion, final ISingleOperand3 operand) {
         if (operand.type() != null && Date.class.equals(operand.type().javaType())) {
             return "CONVERT(VARCHAR(19), " + operand.sql(dbVersion) + ", 120)";
         } else if (operand.type() != null && String.class.equals(operand.type().javaType())) {
@@ -66,7 +66,7 @@ public abstract class AbstractFunction3 extends AbstractSingleOperand3 {
         }
     }
 
-    private String getConvertToStringSqlForPostgresql(final DbVersion dbVersion, final ISingleOperand3 operand) {
+    public static String getConvertToStringSqlForPostgresql(final DbVersion dbVersion, final ISingleOperand3 operand) {
         if (operand.type() != null && Date.class.equals(operand.type().javaType())) {
             // TODO The date/time format should be read from IDates, once this contract is extended to support domain-specific data formats.
             final var opSql = operand.sql(dbVersion);
