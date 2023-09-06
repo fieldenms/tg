@@ -330,7 +330,9 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         try {
             properties = collectProperties(entityElement, maybeMetaModelledSupertype);
         } catch (final EntitySourceDefinitionException e) {
-            printNote("Failed to generate meta-model for %s. %s", entityElement.getSimpleName(), e.getLocalizedMessage());
+            messager.printMessage(Kind.WARNING,
+                    "Failed to generate meta-model for [%s]. Reason: %s".formatted(entityElement.getSimpleName(), e.getLocalizedMessage()),
+                    entityElement.element());
             return false;
         }
 
