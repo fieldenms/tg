@@ -111,7 +111,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         final Optional<MetaModelsElement> maybeMetaModelsElement = metaModelFinder.findMetaModelsElement();
 
         // meta-models need to be generated at every processing round for the matching entities, which where included into the round by the compiler
-        // except those that were already generated on one of the subsequent rounds during the current compilation process
+        // except those that were already generated on one of previous rounds during the current compilation process
         // also, if the meta-models entry point already exists, we should use it to identify existing meta-models to avoid excessive meta-model generation
         final var generatedMetaModels = collectEntitiesForMetaModelGeneration(roundEnv, maybeMetaModelsElement)
                                         .filter(mmc -> writeMetaModel(mmc)).collect(Collectors.toSet());
@@ -300,11 +300,12 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
      * </ol>
      * Therefore, 2 meta-model source files are generated for every entity.
      * <p>
-     * Properties, which test positive for COVID... {@code propertyTypeMetamodeledTest} are generated as such that have a meta-model on their own.
-     * All other properties are generated as instances of {@link PropertyMetaModel}, which are terminal and do not support property traversing.
+     * Properties, which test positive for COVID... {@code propertyTypeMetamodeledTest} are modelled with a respective
+     * meta-model type. All other properties, unless their type cannot be resovled, are modelled with {@link PropertyMetaModel},
+     * which are terminal and do not support property traversing.
      * <p>
-     * A super class for meta-models is determined based on the entity type hierarchy.
-     * If an entity extends another domain entity (i.e., it has a meta-model), then the meta-model for that entity would be used as a super class for the meta-model being generated.
+     * If an entity extends another meta-modelled entity, then the meta-model for the latter will be used as a super class
+     * for the meta-model generated for the former.
      *
      * @param mmc
      * @param propertyTypeMetamodeledTest
