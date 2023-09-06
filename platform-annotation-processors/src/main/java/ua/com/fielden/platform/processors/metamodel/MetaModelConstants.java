@@ -20,7 +20,8 @@ import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
 
 public abstract class MetaModelConstants {
 
-    public static final Set<Class<? extends Annotation>> ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION = Set.of(MapEntityTo.class, DomainEntity.class, WithMetaModel.class);
+    public static final Set<Class<? extends Annotation>> ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION = Set.of(
+            MapEntityTo.class, DomainEntity.class, WithMetaModel.class);
 
     public static final Class<EntityMetaModel> META_MODEL_SUPERCLASS = EntityMetaModel.class;
     public static final ClassName META_MODEL_SUPERCLASS_CLASSNAME = ClassName.get(META_MODEL_SUPERCLASS);

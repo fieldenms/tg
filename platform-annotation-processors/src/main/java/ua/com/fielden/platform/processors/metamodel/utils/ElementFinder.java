@@ -1,50 +1,28 @@
 package ua.com.fielden.platform.processors.metamodel.utils;
 
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
-import static java.util.stream.Stream.iterate;
-import static ua.com.fielden.platform.utils.StreamUtils.stopAfter;
-
-import java.lang.annotation.Annotation;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
-
-import javax.lang.model.AnnotatedConstruct;
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
-import javax.lang.model.element.Name;
-import javax.lang.model.element.PackageElement;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.ArrayType;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.ErrorType;
-import javax.lang.model.type.MirroredTypeException;
-import javax.lang.model.type.NoType;
-import javax.lang.model.type.PrimitiveType;
-import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.SimpleTypeVisitor14;
-import javax.lang.model.util.Types;
-
 import ua.com.fielden.platform.processors.metamodel.elements.AbstractForwardingElement;
 import ua.com.fielden.platform.processors.metamodel.elements.utils.TypeElementCache;
 import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderException;
 import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelException;
 import ua.com.fielden.platform.utils.StreamUtils;
+
+import javax.lang.model.AnnotatedConstruct;
+import javax.lang.model.element.*;
+import javax.lang.model.type.*;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.SimpleTypeVisitor14;
+import javax.lang.model.util.Types;
+import java.lang.annotation.Annotation;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Stream.iterate;
+import static ua.com.fielden.platform.utils.StreamUtils.stopAfter;
 
 /**
  * A collection of utility methods for operating on elements and types, an extension of {@link Elements} and {@link Types}. 
@@ -117,7 +95,7 @@ public class ElementFinder {
         if (element == null || clazz == null) {
             throw new EntityMetaModelException("Neither typeElement nor type arguments can be null.");
         }
-        return element.getQualifiedName().toString().equals(clazz.getCanonicalName());
+        return element.getQualifiedName().contentEquals(clazz.getCanonicalName());
     }
 
     /**
@@ -150,7 +128,8 @@ public class ElementFinder {
             return Stream.empty();
         }
         return stopAfter(
-                iterate(Optional.of(typeElement), Optional::isPresent, elt -> elt.flatMap(ElementFinder::findSuperclass)).map(Optional::get),
+                iterate(Optional.of(typeElement), Optional::isPresent, elt -> elt.flatMap(ElementFinder::findSuperclass))
+                        .map(Optional::get),
                 elt -> isSameType(elt, rootType))
                 .skip(1); // drop the typeElement itself
     }
@@ -171,10 +150,6 @@ public class ElementFinder {
 
     /**
      * The same as {@link #findSuperclasses(TypeElement, Class)}, but with the {@code rootType} set as {@code Object}. 
-     *
-     * @param typeElement
-     * @param includeRootClass
-     * @return
      */
     public List<TypeElement> findSuperclasses(final TypeElement typeElement) {
         return streamSuperclasses(typeElement, ROOT_CLASS).toList();
@@ -225,18 +200,15 @@ public class ElementFinder {
     }
 
     /**
-     * Returns a stream of variable elements, representing fields inherited by the type element with upper limit on superclasses equal to {@code rootType}.
-     *
-     * @param element
-     * @param predicate
-     * @return
+     * Returns a stream of elements representing fields inherited by the type element from its superclasses up to and
+     * including {@code rootType}.
      */
     public Stream<VariableElement> streamInheritedFields(final TypeElement element, final Class<?> rootType) {
         return streamSuperclasses(element, rootType).flatMap(elt -> streamDeclaredFields(elt));
     }
 
     /**
-     * Returns a stream of variable elements, representing all inherited fields of the type element.
+     * Returns a stream of elements representing all fields inherited by the type element.
      */
     public Stream<VariableElement> streamInheritedFields(final TypeElement element) {
         return streamInheritedFields(element, ROOT_CLASS);
@@ -250,7 +222,7 @@ public class ElementFinder {
     }
 
     /**
-     * Returns a stream of variable elements, representing all fields of the type element: both declared and inherited.
+     * Returns a stream of elements representing all fields of the type element: both declared and inherited.
      */
     public Stream<VariableElement> streamFields(final TypeElement element) {
         return Stream.concat(streamDeclaredFields(element), streamInheritedFields(element));
@@ -275,7 +247,7 @@ public class ElementFinder {
     public Optional<VariableElement> findField(final TypeElement typeElement, final String fieldName, final Predicate<VariableElement> predicate) {
         // first search declared, then inherited fields
         return streamFields(typeElement)
-               .filter(varEl -> varEl.getSimpleName().toString().equals(fieldName) && predicate.test(varEl))
+               .filter(varEl -> varEl.getSimpleName().contentEquals(fieldName) && predicate.test(varEl))
                .findFirst();
     }
 
@@ -300,7 +272,7 @@ public class ElementFinder {
      */
     public Optional<VariableElement> findDeclaredField(final TypeElement typeElement, final String fieldName, final Predicate<VariableElement> predicate) {
         return streamDeclaredFields(typeElement)
-               .filter(varEl -> varEl.getSimpleName().toString().equals(fieldName) && predicate.test(varEl))
+               .filter(varEl -> varEl.getSimpleName().contentEquals(fieldName) && predicate.test(varEl))
                .findFirst();
     }
 
@@ -456,7 +428,7 @@ public class ElementFinder {
      */
     public Optional<AnnotationValue> findAnnotationValue(final AnnotationMirror annotation, final String name) {
         return elements.getElementValuesWithDefaults(annotation).entrySet().stream()
-                .filter(entry -> entry.getKey().getSimpleName().toString().equals(name))
+                .filter(entry -> entry.getKey().getSimpleName().contentEquals(name))
                 .findFirst().map(Entry::getValue);
     }
 
@@ -540,7 +512,7 @@ public class ElementFinder {
 
     /**
      * Converts a type mirror to a declared type iff the type mirror represents a declared type, otherwise an exception is thrown.
-     * 
+     *
      * @param mirror
      * @return
      * @throws ElementFinderException
@@ -737,16 +709,15 @@ public class ElementFinder {
     }
 
     /**
-     * Wraps {@link Elements#getPackageOf} in order to avoid ClassCastException, since Sun's internal implementation of {@link Elements} expects a {@link com.sun.tools.javac.code.Symbol} instance.
-     * <p>
-     * In order to enable support for {@link ForwardingElement} we have to dynamically check the type of <code>element</code>.
-     * 
+     * A safe version of {@link Elements#getPackageOf} that avoids ClassCastException that's possible because Sun's
+     * implementation of {@link Elements} depends on its internal types.
+     *
      * @param element
      * @return
      */
     public Optional<PackageElement> getPackageOf(final Element element) {
-        if (AbstractForwardingElement.class.isAssignableFrom(element.getClass())) {
-            return Optional.ofNullable(elements.getPackageOf(((AbstractForwardingElement<Element>) element).element()));
+        if (element instanceof AbstractForwardingElement elt) {
+            return Optional.ofNullable(elements.getPackageOf(elt.element()));
         }
         return Optional.ofNullable(elements.getPackageOf(element));
     }
@@ -768,7 +739,8 @@ public class ElementFinder {
     }
 
     /**
-     * Returns the type element coresponding to the given declared type.
+     * Returns the type element coresponding to the given declared type. No checks for {@link ErrorType} are performed,
+     * so make sure {@code type} has kind {@link TypeKind#DECLARED}.
      */
     public static TypeElement asTypeElement(final DeclaredType type) {
         return (TypeElement) type.asElement();
