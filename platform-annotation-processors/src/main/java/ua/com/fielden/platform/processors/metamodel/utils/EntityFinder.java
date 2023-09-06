@@ -44,6 +44,22 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
+import javax.lang.model.element.*;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.TypeKindVisitor14;
+import javax.lang.model.util.Types;
+import java.lang.annotation.Annotation;
+import java.util.Optional;
+import java.util.*;
+import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.toCollection;
+import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION;
+import static ua.com.fielden.platform.utils.Pair.pair;
+
 /**
  * A collection of utility functions to finding various elements in application to an entity abstraction of type {@link EntityElement}.
  *
@@ -502,12 +518,20 @@ public class EntityFinder extends ElementFinder {
      * @return
      */
     public boolean isPropertyOfDomainEntityType(final PropertyElement propElement) {
-        final TypeMirror type = propElement.getType();
-        if (type.getKind() != TypeKind.DECLARED) {
+        return propElement.getType().accept(IS_PROPERTY_OF_DOMAIN_ENTITY_TYPE_VISITOR, null);
+    }
+
+    private final TypeKindVisitor14<Boolean, Void> IS_PROPERTY_OF_DOMAIN_ENTITY_TYPE_VISITOR = new TypeKindVisitor14<>() {
+        @Override
+        public Boolean visitDeclared(DeclaredType t, Void unused) {
+            return isEntityThatNeedsMetaModel(asTypeElement(t));
+        }
+
+        @Override
+        protected Boolean defaultAction(TypeMirror e, Void unused) {
             return false;
         }
-        return isEntityThatNeedsMetaModel(asTypeElementOfTypeMirror(type));
-    }
+    };
 
     /**
      * Tests whether the property element represents a collectional property.
