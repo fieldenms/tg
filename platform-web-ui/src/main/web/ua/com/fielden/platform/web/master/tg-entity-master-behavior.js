@@ -721,6 +721,12 @@ const TgEntityMasterBehaviorImpl = {
             } else { // main entity (compound master) has been saved (for the first time)
                 this._currBindingEntity.setAndRegisterPropertyTouch('key', 'IRRELEVANT');
                 this._currBindingEntity['@key_id'] = savedEntityId;
+                // # 2096 Compound Master: avoid opener custom producing logic after successful save in NEW case
+                // In NEW case, originallyProducedEntity is getting overridden after successful save of main entity by recalculated instance (OpenEntityMasterAction).
+                // 'modifPropsHolder' still contains origVals like 'Add new Entity' and vals like '0001: entity description' ('sectionTitle' prop).
+                // This is not enough for actions inside compound master, because actions require deep context and originallyProducedEntity will be disregarded (see 'EntityResource.retrieve')
+                // To avoid producing of OpenEntityMasterAction with original context, we replace original context with surrogate one containing only id in it.
+                // Base logic of AbstractProducerForOpenEntityMasterAction will then be used to produce new instance (currentEntityNotEmpty branch).
                 const currentEntity = this._reflector().newEntity(this._currEntity.get('key').type().notEnhancedFullClassName());
                 currentEntity.id = savedEntityId;
                 this.savingContext = this._reflector().createContextHolder(
