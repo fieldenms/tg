@@ -30,6 +30,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.ErrorType;
 import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.type.NoType;
 import javax.lang.model.type.PrimitiveType;
@@ -121,19 +122,20 @@ public class ElementFinder {
 
     /**
      * Returns the immediate superclass of a type element if there is one.
-     * An empty optional is returned if the type element represents an interface type or the {@link Object} class.
+     * An empty optional is returned if the type element represents an interface type or the {@link Object} class, or
+     * its supertype {@linkplain ErrorType could not be resolved}.
      */
     public static Optional<TypeElement> findSuperclass(final TypeElement element) {
         final TypeMirror superclass = element.getSuperclass();
-        if (superclass.getKind() == TypeKind.NONE) {
-            return Optional.empty();
-        }
-        return Optional.of(asTypeElementOfTypeMirror(superclass));
+        return switch (superclass.getKind()) {
+            case NONE, ERROR -> Optional.empty();
+            default -> Optional.of(asTypeElementOfTypeMirror(superclass));
+        };
     }
 
     /**
      * Returns an ordered stream of all superclasses of the type element.
-     * The type hierarchy is traversed until either {@code rootType} or an interface type is reached.
+     * The type hierarchy is traversed until either a {@code rootType}, an interface type or an unresolved type is reached.
      * <p>
      * If the type element is not a subtype of {@code rootType}, then an empty stream is returned.
      * <p>
@@ -679,6 +681,10 @@ public class ElementFinder {
         }
     }
 
+    /**
+     * Returns a stream of type elements representing supertypes of the given type element. Elements corresponding to
+     * {@linkplain ErrorType unresolved types} will be excluded.
+     */
     public Stream<TypeElement> streamAllSupertypes(final TypeElement element) {
         return doStreamAllSupertypes(element).skip(1); // skip the initial element
     }
@@ -688,8 +694,9 @@ public class ElementFinder {
         return StreamUtils.distinct(
                 Stream.concat(Stream.of(element),
                         types.directSupertypes(element.asType()).stream()
-                            .map(t -> asTypeElementOfTypeMirror(t))
-                            .flatMap(this::doStreamAllSupertypes)),
+                                .filter(t -> t.getKind() != TypeKind.ERROR)
+                                .map(t -> asTypeElementOfTypeMirror(t))
+                                .flatMap(this::doStreamAllSupertypes)),
                 // using Name rather than String should be faster, since Name-s are interned
                 elt -> elt.getQualifiedName());
     }
