@@ -10,7 +10,7 @@ import javax.lang.model.AnnotatedConstruct;
 import javax.lang.model.element.*;
 import javax.lang.model.type.*;
 import javax.lang.model.util.Elements;
-import javax.lang.model.util.SimpleTypeVisitor14;
+import javax.lang.model.util.TypeKindVisitor14;
 import javax.lang.model.util.Types;
 import java.lang.annotation.Annotation;
 import java.util.*;
@@ -536,23 +536,17 @@ public class ElementFinder {
      * @throws ElementFinderException if no coresponding type element was found
      */
     public boolean isSameType(final TypeMirror mirror, final Class<?> clazz) {
-        return mirror.accept(new IsSameTypeVisitor(clazz), null);
+        return mirror.accept(IS_SAME_TYPE_VISITOR, clazz);
     }
     // where
-    private final class IsSameTypeVisitor extends SimpleTypeVisitor14<Boolean, Void> {
-        private final Class<?> clazz;
-
-        protected IsSameTypeVisitor(final Class<?> clazz) {
-            this.clazz = clazz;
-        }
-
+    private final TypeKindVisitor14<Boolean, Class<?>> IS_SAME_TYPE_VISITOR = new TypeKindVisitor14<>() {
         @Override
-        protected Boolean defaultAction(TypeMirror e, Void p) {
+        protected Boolean defaultAction(TypeMirror e, Class<?> clazz) {
             return false;
         }
 
         @Override
-        public Boolean visitPrimitive(final PrimitiveType t, final Void p) {
+        public Boolean visitPrimitive(final PrimitiveType t, final Class<?> clazz) {
             return PRIMITIVE_TYPE_MAP.get(t.getKind()) == clazz;
         }
 
@@ -571,20 +565,20 @@ public class ElementFinder {
 
         // handle void type
         @Override
-        public Boolean visitNoType(final NoType t, final Void p) {
+        public Boolean visitNoType(final NoType t, final Class<?> clazz) {
             return t.getKind() == TypeKind.VOID && clazz == void.class;
         }
 
         @Override
-        public Boolean visitArray(ArrayType t, Void p) {
+        public Boolean visitArray(ArrayType t, Class<?> clazz) {
             return clazz.isArray() && isSameType(t.getComponentType(), clazz.componentType());
         }
 
         @Override
-        public Boolean visitDeclared(final DeclaredType t, final Void p) {
+        public Boolean visitDeclared(final DeclaredType t, final Class<?> clazz) {
             return isSameType(asTypeElement(t), clazz);
         }
-    }
+    };
 
     /**
      * Tests whether the type represented by the type mirror is a subtype of the given class. Any type is considered to be a subtype of itself.
@@ -598,23 +592,17 @@ public class ElementFinder {
      * @throws ElementFinderException if no coresponding type element was found
      */
     public boolean isSubtype(final TypeMirror mirror, final Class<?> clazz) {
-        return mirror.accept(new IsSubtypeVisitor(clazz), null);
+        return mirror.accept(IS_SUBTYPE_VISITOR, clazz);
     }
     // where
-    private final class IsSubtypeVisitor extends SimpleTypeVisitor14<Boolean, Void> {
-        private final Class<?> clazz;
-
-        protected IsSubtypeVisitor(final Class<?> clazz) {
-            this.clazz = clazz;
-        }
-
+    private final TypeKindVisitor14<Boolean, Class<?>> IS_SUBTYPE_VISITOR = new TypeKindVisitor14<>() {
         @Override
-        protected Boolean defaultAction(TypeMirror e, Void p) {
+        protected Boolean defaultAction(TypeMirror e, Class<?> clazz) {
             return false;
         }
 
         @Override
-        public Boolean visitPrimitive(final PrimitiveType t, final Void p) {
+        public Boolean visitPrimitive(final PrimitiveType t, final Class<?> clazz) {
             if (!clazz.isPrimitive()) {
                 return false;
             }
@@ -636,22 +624,22 @@ public class ElementFinder {
 
         // handle void type
         @Override
-        public Boolean visitNoType(final NoType t, final Void p) {
+        public Boolean visitNoType(final NoType t, final Class<?> clazz) {
             return t.getKind() == TypeKind.VOID && clazz == void.class;
         }
 
         @Override
-        public Boolean visitArray(ArrayType t, Void p) {
+        public Boolean visitArray(ArrayType t, Class<?> clazz) {
             return clazz.isArray() && isSubtype(t.getComponentType(), clazz.componentType());
         }
 
         @Override
-        public Boolean visitDeclared(final DeclaredType t, final Void p) {
+        public Boolean visitDeclared(final DeclaredType t, final Class<?> clazz) {
             final TypeElement elt = asTypeElement(t);
             return isSameType(elt, clazz)
                     || streamAllSupertypes(elt).anyMatch(sup -> isSameType(sup, clazz));
         }
-    }
+    };
 
     /**
      * Returns a stream of type elements representing supertypes of the given type element. Elements corresponding to
