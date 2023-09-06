@@ -41,6 +41,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic.Kind;
 
@@ -618,18 +619,32 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
      * @return
      * @throws EntitySourceDefinitionException
      */
-    private LinkedHashSet<PropertyElement> collectProperties(final EntityElement entity, final Optional<EntityElement> maybeMetaModelledSupertype) throws EntitySourceDefinitionException {
+    private LinkedHashSet<PropertyElement> collectProperties(
+            final EntityElement entity, final Optional<EntityElement> maybeMetaModelledSupertype)
+            throws EntitySourceDefinitionException
+    {
+        final Predicate<PropertyElement> erroneousPropertyFilter = prop -> {
+            if (prop.getType().getKind() == TypeKind.ERROR) {
+                messager.printMessage(Kind.WARNING,
+                        "Property [%s] with unresolved type won't be meta-modelled.".formatted(prop.getSimpleName()),
+                        prop.element());
+                return false;
+            }
+            return true;
+        };
 
         final Set<PropertyElement> properties = new LinkedHashSet<>();
         if (maybeMetaModelledSupertype.isPresent()) {
             // declared properties + property key
-            properties.addAll(entityFinder.processProperties(entityFinder.findDeclaredProperties(entity), entity));
+            List<PropertyElement> declaredProps = entityFinder.streamDeclaredProperties(entity).filter(erroneousPropertyFilter).toList();
+            properties.addAll(entityFinder.processProperties(declaredProps, entity));
             // "key" is guaranteed to exist
             final PropertyElement keyElt = entityFinder.findProperty(maybeMetaModelledSupertype.get(), AbstractEntity.KEY)
                     .orElseThrow(() -> new ElementFinderException("Property [%s] was not found in [%s].".formatted(AbstractEntity.KEY, entity)));
             properties.add(keyElt);
         } else {
-            properties.addAll(entityFinder.processProperties(entityFinder.findProperties(entity), entity));
+            List<PropertyElement> allProps  = entityFinder.streamProperties(entity).filter(erroneousPropertyFilter).toList();
+            properties.addAll(entityFinder.processProperties(allProps, entity));
         }
 
         // map of the following form: String propertyName -> PropertyElement property
