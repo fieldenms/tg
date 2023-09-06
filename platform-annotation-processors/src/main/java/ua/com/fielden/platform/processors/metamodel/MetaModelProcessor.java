@@ -642,7 +642,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
             properties.addAll(entityFinder.processProperties(declaredProps, entity));
             // "key" is guaranteed to exist
             final PropertyElement keyElt = entityFinder.findProperty(maybeMetaModelledSupertype.get(), AbstractEntity.KEY)
-                    .orElseThrow(() -> new ElementFinderException("Property [%s] was not found in [%s].".formatted(AbstractEntity.KEY, entity)));
+                    .orElseThrow(() -> new EntitySourceDefinitionException("Property [%s] was not found in [%s].".formatted(AbstractEntity.KEY, entity)));
             properties.add(keyElt);
         } else {
             List<PropertyElement> allProps  = entityFinder.streamProperties(entity).filter(erroneousPropertyFilter).toList();
