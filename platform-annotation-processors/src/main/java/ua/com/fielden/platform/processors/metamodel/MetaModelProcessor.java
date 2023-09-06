@@ -42,6 +42,7 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
+import javax.tools.Diagnostic.Kind;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -315,9 +316,10 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
 
         final EntityElement entityElement = mmc.getEntityElement();
         final EntityElement entitySupertype = entityFinder.getParent(entityElement).orElse(null);
-        // entityElement should extend something, but just in case if it does not, which is likely to be some erroneous situation, just report the error and move on
         if (entitySupertype == null) {
-            printError("Parent entity type not found for %s, skipping meta-model generation", entityElement.getQualifiedName());
+            messager.printMessage(Kind.WARNING,
+                    "Entity [%s] has no parent entity type, won't be meta-modelled.".formatted(entityElement.getQualifiedName()),
+                    entityElement.element());
             return false;
         }
 
