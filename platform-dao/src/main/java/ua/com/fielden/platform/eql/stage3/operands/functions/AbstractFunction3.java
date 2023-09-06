@@ -55,7 +55,7 @@ public abstract class AbstractFunction3 extends AbstractSingleOperand3 {
         }
     }
 
-    private String getConvertToStringSqlForMsSql2005(final DbVersion dbVersion, final ISingleOperand3 operand) {
+    public static String getConvertToStringSqlForMsSql2005(final DbVersion dbVersion, final ISingleOperand3 operand) {
         if (Date.class.equals(operand.type())) {
             return "CONVERT(VARCHAR(19), " + operand.sql(dbVersion) + ", 120)";
         } else if (String.class.equals(operand.type())) {
@@ -65,7 +65,7 @@ public abstract class AbstractFunction3 extends AbstractSingleOperand3 {
         }
     }
 
-    private String getConvertToStringSqlForPostgresql(final DbVersion dbVersion, final ISingleOperand3 operand) {
+    public static String getConvertToStringSqlForPostgresql(final DbVersion dbVersion, final ISingleOperand3 operand) {
         if (operand.type() != null && Date.class.equals(operand.type())) {
             final var opSql = operand.sql(dbVersion);
             final var expression = "case " +
