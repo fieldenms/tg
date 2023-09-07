@@ -9,6 +9,8 @@ import ua.com.fielden.platform.processors.verify.IElementVerifier;
 import ua.com.fielden.platform.processors.verify.ViolatingElement;
 import ua.com.fielden.platform.types.tuples.T2;
 
+import javax.lang.model.type.TypeKind;
+
 /**
  * A base type for verifiers that verify entity properties, represented by {@link PropertyElement}.
  *
@@ -33,5 +35,9 @@ public abstract class AbstractPropertyElementVerifier implements IElementVerifie
      * Verifies a property of an entity.
      */
     public abstract Optional<ViolatingElement> verifyProperty(final EntityElement entity, final PropertyElement property);
+
+    protected boolean hasErrorType(PropertyElement property) {
+        return property.getType().getKind() == TypeKind.ERROR;
+    }
 
 }

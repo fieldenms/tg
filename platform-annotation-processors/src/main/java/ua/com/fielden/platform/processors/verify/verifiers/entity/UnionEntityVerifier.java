@@ -10,6 +10,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.type.ErrorType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
@@ -21,10 +23,12 @@ import ua.com.fielden.platform.processors.verify.ViolatingElement;
  * Composable verifier for union entities. Verification rules include:
  * <ol>
  *  <li>There should be at least 1 entity-typed property.</li>
- *  <li>Only entity-typed properties are permitted. However, those should not be union entities themselves
+ *  <li>Only entity-typed properties are permitted. However, these should not be union entities themselves
  *  (i.e., nesting of union entities is not supported).</li>
  *  <li>There should be at most one property of a particular entity type (i.e., multiple properties of the same entity type are disallowed).</li>
  * </ol>
+ * Most contexts where an {@linkplain ErrorType unresolved type} is encountered are not subject to verification because
+ * erroneous definitions are inherently incorrect.
  *
  * @author homedirectory
  */
@@ -76,7 +80,7 @@ public class UnionEntityVerifier extends AbstractComposableEntityVerifier {
     }
 
     /**
-     * Only entity-typed properties are permitted. However, those should not be union entities themselves
+     * Only entity-typed properties are permitted. However, these should not be union entities themselves
      * (i.e., nesting of union entities is not supported).
      */
     static class PropertyTypeVerifier extends AbstractEntityVerifier {
@@ -106,6 +110,9 @@ public class UnionEntityVerifier extends AbstractComposableEntityVerifier {
             @Override
             public Optional<ViolatingElement> verifyProperty(final EntityElement entity, final PropertyElement property) {
                 final TypeMirror propType = property.getType();
+                if (propType.getKind() == TypeKind.ERROR) {
+                    return Optional.empty();
+                }
                 if (!entityFinder.isEntityType(propType)) {
                     return Optional.of(new ViolatingElement(
                             property.element(), ERROR, errNonEntityTypedProperty(getSimpleName(property.element()))));
@@ -149,7 +156,7 @@ public class UnionEntityVerifier extends AbstractComposableEntityVerifier {
 
             @Override
             public Optional<ViolatingElement> verify(final EntityElement entity) {
-                // key is an entity type and value - properties having that type
+                // entity type -> properties having that type
                 final Map<EntityElement, List<PropertyElement>> map = entityFinder.streamDeclaredProperties(entity)
                         .filter(prop -> entityFinder.isEntityType(prop.asType()))
                         .collect(Collectors.groupingBy(this::entityElementOfPropertyType));
