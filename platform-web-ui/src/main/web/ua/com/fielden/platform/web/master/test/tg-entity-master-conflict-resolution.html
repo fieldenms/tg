@@ -66,7 +66,7 @@
                 return master._currEntity;
             };
             
-            const conflictWarning = 'This property has recently been changed by another user.';
+            const conflictWarning = 'This property has been recently changed.';
             const conflictError = function (revertToValue) {
                 return conflictWarning + ' ' + 'Please either edit the value back to [' + revertToValue + '] to resolve the conflict or cancel all of your changes.';
             };
