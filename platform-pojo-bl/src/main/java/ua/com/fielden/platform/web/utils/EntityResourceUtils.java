@@ -91,7 +91,7 @@ import ua.com.fielden.platform.utils.MiscUtilities;
  *
  */
 public class EntityResourceUtils {
-    private static final String CONFLICT_WARNING = "This property has recently been changed by another user.";
+    private static final String CONFLICT_WARNING = "This property has been recently changed.";
     public static final String CENTRE_CONFIG_CONFLICT_WARNING = "Configuration with this title already exists.";
     public static final String ERR_MORE_THEN_ONE_ENTITY_FOUND = "Please choose a specific value explicitly from a drop-down.";
     private static final String RESOLVE_CONFLICT_INSTRUCTION = "Please either edit the value back to [%s] to resolve the conflict or cancel all of your changes.";

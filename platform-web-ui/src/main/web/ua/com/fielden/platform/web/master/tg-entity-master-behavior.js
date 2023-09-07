@@ -721,6 +721,18 @@ const TgEntityMasterBehaviorImpl = {
             } else { // main entity (compound master) has been saved (for the first time)
                 this._currBindingEntity.setAndRegisterPropertyTouch('key', 'IRRELEVANT');
                 this._currBindingEntity['@key_id'] = savedEntityId;
+                // # 2096 Compound Master: avoid opener custom producing logic after successful save in NEW case
+                // In the NEW case, originallyProducedEntity is getting overridden after successful save of the main entity by the recalculated instance (OpenEntityMasterAction).
+                // 'modifPropsHolder' still contains origVals like 'Add new Entity' and vals like '0001: entity description' ('sectionTitle' prop).
+                // This is not enough for actions inside compound master, because actions require deep context and originallyProducedEntity will be disregarded (see 'EntityResource.retrieve')
+                // To avoid producing an instance of OpenEntityMasterAction with the original context, which is no longer relevant, we replace this original context with a surrogate one, containing only the id of the saved entity.
+                // The core logic of AbstractProducerForOpenEntityMasterAction will then be used to produce a new instance the opener with the key value taken from the surrogate context (currentEntityNotEmpty branch).
+                const currentEntity = this._reflector().newEntity(this._currEntity.get('key').type().notEnhancedFullClassName());
+                currentEntity.id = savedEntityId;
+                this.savingContext = this._reflector().createContextHolder(
+                    null, 'ONE', null,
+                    null, () => [ currentEntity ], null
+                );
             }
             // please note, that after 'key' was made touched, it will remain touched forever (until compound master closed, opened and re-retrieved); see tg-entity-master-behavior._postSavedDefault/tg-reflector.tg_convertPropertyValue for more details;
             // #1992 this is necessary because it ensures correct server-side restoration of opener if its produced 'key' (no id) equals to saved version of 'key' (with id);
