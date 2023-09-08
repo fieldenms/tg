@@ -21,6 +21,7 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.TypeKindVisitor14;
+import javax.tools.Diagnostic;
 import java.lang.annotation.Annotation;
 import java.util.Optional;
 import java.util.*;
@@ -546,19 +547,16 @@ public class EntityFinder extends ElementFinder {
     }
 
     /**
-     * Returns an optional describing the entity element on which a given meta-model is based by looking at its {@link MetaModelForType} annotation.
-     * <p>
-     * Entity type might be missing due to renaming/removal. In such cases an empty optional is returned.
-     *
-     * @param mme
-     * @return
-     * @throws ElementFinderException if the meta-model element is missing {@link MetaModelForType}
+     * Returns an optional describing the underlying entity of a given meta-model by analysing its {@link MetaModelForType}
+     * annotation. If this annotation is not present, then a warning is reported and an empty optional returned.
+     * If the underlying entity is missing (e.g., due to renaming/removal), then an empty optional is returned.
      */
     public Optional<EntityElement> findEntityForMetaModel(final MetaModelElement mme) {
         final MetaModelForType annot = mme.getAnnotation(MetaModelForType.class);
         if (annot == null) {
-            throw new ElementFinderException("Meta-model [%s] is missing [%s] annotation.".formatted(
-                    mme.getSimpleName(), MetaModelForType.class.getSimpleName()));
+            messager.printMessage(Diagnostic.Kind.WARNING, "Meta-model [%s] is missing @[%s].".formatted(
+                    mme.getQualifiedName(), MetaModelForType.class.getSimpleName()));
+            return Optional.empty();
         }
         final TypeMirror entityType = getAnnotationElementValueOfClassType(annot, a -> a.value());
         // missing types have TypeKind.ERROR
