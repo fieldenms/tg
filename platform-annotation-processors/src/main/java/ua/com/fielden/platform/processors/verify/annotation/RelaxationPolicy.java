@@ -1,8 +1,9 @@
 package ua.com.fielden.platform.processors.verify.annotation;
 
+import javax.tools.Diagnostic.Kind;
 import java.util.EnumMap;
 
-import javax.tools.Diagnostic.Kind;;
+;
 
 /**
  * Verification relaxation policy. The constants of this enumerated class describe the various policies for relaxing verification.

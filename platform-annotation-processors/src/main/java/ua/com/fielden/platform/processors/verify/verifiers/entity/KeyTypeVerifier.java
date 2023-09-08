@@ -1,7 +1,14 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
-import java.util.List;
-import java.util.Optional;
+import ua.com.fielden.platform.entity.*;
+import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
+import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
+import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
+import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
+import ua.com.fielden.platform.processors.verify.ViolatingElement;
+import ua.com.fielden.platform.ref_hierarchy.AbstractTreeEntry;
+import ua.com.fielden.platform.web.action.AbstractFunEntityForDataExport;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
@@ -12,21 +19,8 @@ import javax.lang.model.type.ErrorType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic.Kind;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractEntityWithInputStream;
-import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
-import ua.com.fielden.platform.entity.AbstractPersistentEntity;
-import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
-import ua.com.fielden.platform.entity.NoKey;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
-import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
-import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
-import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
-import ua.com.fielden.platform.processors.verify.ViolatingElement;
-import ua.com.fielden.platform.ref_hierarchy.AbstractTreeEntry;
-import ua.com.fielden.platform.web.action.AbstractFunEntityForDataExport;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Performs verification of a domain model with respect to the {@link KeyType} annotation.

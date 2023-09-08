@@ -1,23 +1,22 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
-import static javax.tools.Diagnostic.Kind.ERROR;
-import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asTypeElementOfTypeMirror;
-import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.getSimpleName;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
+import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
+import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
+import ua.com.fielden.platform.processors.verify.ViolatingElement;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.type.ErrorType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
-import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
-import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
-import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
-import ua.com.fielden.platform.processors.verify.ViolatingElement;
+import static javax.tools.Diagnostic.Kind.ERROR;
+import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asTypeElementOfTypeMirror;
+import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.getSimpleName;
 
 /**
  * Composable verifier for union entities. Verification rules include:

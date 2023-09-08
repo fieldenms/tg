@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
-import java.util.Optional;
-
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
@@ -10,6 +8,7 @@ import ua.com.fielden.platform.processors.verify.ViolatingElement;
 import ua.com.fielden.platform.types.tuples.T2;
 
 import javax.lang.model.type.TypeKind;
+import java.util.Optional;
 
 /**
  * A base type for verifiers that verify entity properties, represented by {@link PropertyElement}.

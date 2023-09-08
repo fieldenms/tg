@@ -1,20 +1,5 @@
 package ua.com.fielden.platform.processors.verify;
 
-import static java.util.stream.Collectors.joining;
-
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Function;
-
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.annotation.processing.RoundEnvironment;
-import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.Name;
-import javax.lang.model.element.TypeElement;
-
 import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
 import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
@@ -22,6 +7,20 @@ import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPrope
 import ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.UnionEntityVerifier;
 import ua.com.fielden.platform.utils.CollectionUtil;
+
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.annotation.processing.RoundEnvironment;
+import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.Name;
+import javax.lang.model.element.TypeElement;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
+
+import static java.util.stream.Collectors.joining;
 
 /**
  * Annotation processor responsible for verifying source definitions in a domain model.

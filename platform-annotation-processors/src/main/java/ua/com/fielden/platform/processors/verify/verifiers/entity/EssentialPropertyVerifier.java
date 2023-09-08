@@ -1,22 +1,5 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
-import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asDeclaredType;
-import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.getSimpleName;
-import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.isRawType;
-
-import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.ErrorType;
-import javax.lang.model.type.TypeMirror;
-import javax.tools.Diagnostic.Kind;
-
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
@@ -27,6 +10,20 @@ import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
+
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.ErrorType;
+import javax.lang.model.type.TypeMirror;
+import javax.tools.Diagnostic.Kind;
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.*;
 
 /**
  * Composable verifier for entity properties, responsible for the most essential verification, which includes:
