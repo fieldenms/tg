@@ -210,7 +210,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         try {
             javaFile.writeTo(filer);
         } catch (final IOException ex) {
-            printWarning(ex.getMessage());
+            printWarning("Failed to generate empty meta-model [%s]. %s", mme.getSimpleName(), ex.getMessage());
             return false;
         }
 
@@ -515,7 +515,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         try {
             metaModelJavaFile.writeTo(filer);
         } catch (final IOException ex) {
-            printWarning(ex.getMessage());
+            printWarning("Failed to generate meta-model [%s]. %s", metaModelSpec.name, ex.getMessage());
             return false;
         }
 
@@ -569,7 +569,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         try {
             metaModelAliasedJavaFile.writeTo(filer);
         } catch (final IOException ex) {
-            printWarning(ex.getMessage());
+            printWarning("Failed to generate aliased meta-model [%s]. %s", metaModelAliasedSpec.name, ex.getMessage());
             return false;
         }
 
@@ -826,7 +826,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         try {
             javaFile.writeTo(filer);
         } catch (final IOException ex) {
-            printWarning(ex.getMessage());
+            printWarning("Failed to generate [%s]. %s", ex.getMessage());
             return;
         }
 
