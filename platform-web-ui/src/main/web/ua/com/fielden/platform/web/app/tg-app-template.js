@@ -30,6 +30,9 @@ import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js'
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
 import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
 
+let screenWidth = window.screen.availWidth;
+let screenHeight = window.screen.availHeight;
+
 const template = html`
     <style>
         :host {
@@ -609,8 +612,11 @@ Polymer({
         
         //Add URI (location) change event handler to set history state. 
         window.addEventListener('location-changed', this._replaceStateWithNumber.bind(this));
+
+        //Add resize listener that checks whether screen resolution changed
+        window.addEventListener('resize', this._checkResolution.bind(this));
     },
-    
+
     attached: function () {
         const self = this;
         //@use-empty-console.log
@@ -676,6 +682,17 @@ Polymer({
                 node.scrollIntoView({block: "end", inline: "end", behavior: "smooth"}); // Safari (WebKit) does not support options object (smooth scrolling). We are aiming Chrome for iOS devices at this stage.
             }
         } 
+    },
+
+    /**
+     * Window resize handler that checks whether screen resolution changes and dispatches 'tg-screen-resolution-changed' if it does.
+     */
+    _checkResolution: function () {
+        if (window.screen.availWidth !== screenWidth || window.screen.availHeight !== screenHeight) {
+            screenWidth = window.screen.availWidth;
+            screenHeight = window.screen.availHeight;
+            window.dispatchEvent(new CustomEvent('tg-screen-resolution-changed', {bubbles: true, composed: true, detail: {width: screenWidth, height: screenHeight}}));
+        }
     },
     
     /**
