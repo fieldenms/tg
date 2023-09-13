@@ -790,9 +790,9 @@ Polymer({
     _invertMaximiseStateAndStore: function() {
         this._invertMaximiseState();
         if (this._maximised) {
-            this._setCustomProp(this._keyWithoutResolution(ST_MAXIMISED), true);
+            this._setCustomProp(ST_MAXIMISED, true);
         } else {
-            this._removeCustomProp(this._keyWithoutResolution(ST_MAXIMISED));
+            this._removeCustomProp(ST_MAXIMISED);
         }
     },
 
@@ -846,8 +846,8 @@ Polymer({
     },
 
     _removePersistedPositionAndDimensions: function () {
-        this._removeCustomProp(this._keyWithResolution(ST_WIDTH));
-        this._removeCustomProp(this._keyWithResolution(ST_HEIGHT));
+        this._removeCustomProp(ST_WIDTH);
+        this._removeCustomProp(ST_HEIGHT);
         this._removeCustomPosition();
     },
 
@@ -863,8 +863,8 @@ Polymer({
      * Reads the entity master position from local storage and into dialog position properties in order to remain the dialog position when switching between different types of entity master.
      */
     _persistDialogPositionLocally: function() {
-        this.persistedTop = localStorage.getItem(this._keyWithResolution(ST_TOP));
-        this.persistedLeft = localStorage.getItem(this._keyWithResolution(ST_LEFT));
+        this.persistedTop = localStorage.getItem(this._generateKey(ST_TOP));
+        this.persistedLeft = localStorage.getItem(this._generateKey(ST_LEFT));
     },
 
     /**
@@ -1777,29 +1777,25 @@ Polymer({
         return `_${window.screen.availWidth}x${window.screen.availHeight}`;
     },
 
-    _keyWithResolution: function (name) {
+    _generateKey: function (name) {
         return localStorageKey(this._embeddedMasterTypeKey() + this._resolutionKey() + name);
     },
 
-    _keyWithoutResolution: function (name) {
-        return localStorageKey(this._embeddedMasterTypeKey() + name);
-    },
-    
     /**
      * Persists custom property for this dialog's Entity Master into local storage. Does nothing if no Entity Master was loaded.
      */
-    _setCustomProp: function (key, value) {
+    _setCustomProp: function (name, value) {
         if (this._embeddedMasterTypeKey()) {
-            localStorage.setItem(key, value);
+            localStorage.setItem(this._generateKey(name), value);
         }
     },
     
     /**
      * Removes custom property for this dialog's Entity Master from local storage. Does nothing if no Entity Master was loaded.
      */
-    _removeCustomProp: function (key) {
+    _removeCustomProp: function (name) {
         if (this._embeddedMasterTypeKey()) {
-            localStorage.removeItem(key);
+            localStorage.removeItem(this._generateKey(name));
         }
     },
     
@@ -1808,8 +1804,8 @@ Polymer({
      */
     _customDim: function () {
         if (this._embeddedMasterTypeKey()) {
-            const savedWidth = localStorage.getItem(this._keyWithResolution(ST_WIDTH));
-            const savedHeight = localStorage.getItem(this._keyWithResolution(ST_HEIGHT));
+            const savedWidth = localStorage.getItem(this._generateKey(ST_WIDTH));
+            const savedHeight = localStorage.getItem(this._generateKey(ST_HEIGHT));
             if (savedWidth && savedHeight) {
                 return [savedWidth, savedHeight];
             }
@@ -1819,8 +1815,8 @@ Polymer({
 
     _saveCustomDim: function(customWidth, customHeight) {
         if (this._embeddedMasterTypeKey()) {
-            this._setCustomProp(this._keyWithResolution(ST_WIDTH), customWidth);
-            this._setCustomProp(this._keyWithResolution(ST_HEIGHT), customHeight);
+            this._setCustomProp(ST_WIDTH, customWidth);
+            this._setCustomProp(ST_HEIGHT, customHeight);
         }
     },
     
@@ -1828,21 +1824,21 @@ Polymer({
         if (this._embeddedMasterTypeKey()) {
             this.persistedTop = customTop;
             this.persistedLeft = customLeft;
-            this._setCustomProp(this._keyWithResolution(ST_TOP), this.persistedTop);
-            this._setCustomProp(this._keyWithResolution(ST_LEFT), this.persistedLeft);
+            this._setCustomProp(ST_TOP, this.persistedTop);
+            this._setCustomProp(ST_LEFT, this.persistedLeft);
         }
     },
 
     _removeCustomPosition: function () {
-        this._removeCustomProp(this._keyWithResolution(ST_TOP));
-        this._removeCustomProp(this._keyWithResolution(ST_LEFT));
+        this._removeCustomProp(ST_TOP);
+        this._removeCustomProp(ST_LEFT);
         //Next call should delete locally persisted position for dialog in order to properly restore dialog position. 
         this._deleteLocallyPersistedDialogPosition();
     },
     
     _customMaximised: function () {
         if (this._embeddedMasterTypeKey()) {
-            return localStorage.getItem(this._keyWithoutResolution(ST_MAXIMISED)) !== null;
+            return localStorage.getItem(this._generateKey(ST_MAXIMISED)) !== null;
         }
         return false;
     }
