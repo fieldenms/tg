@@ -1384,6 +1384,12 @@ Polymer({
                 this.style.height = '';
                 this.style.overflow = 'auto';
             }
+            // A fallback in case the dimensions were computed to be either 0 pixels width or height.
+            const dialogBodyDimensions = this.$.dialogBody.getBoundingClientRect();
+            if (dialogBodyDimensions.width === 0 || dialogBodyDimensions.height === 0) {
+                this.style.width = FALLBACK_PREF_DIM.width;
+                this.style.height = FALLBACK_PREF_DIM.height;
+            }
         } else if (!minimised && maximised) {
             this.style.top = '0%';
             this.style.left = '0%';
@@ -1397,12 +1403,6 @@ Polymer({
             this.style.width = '';
             this.style.height = '';
             this.style.overflow = 'auto';
-        }
-        // A fallback in case the dimensions were computed to be either 0 pixels width or height.
-        const dialogBodyDimensions = this.$.dialogBody.getBoundingClientRect();
-        if (dialogBodyDimensions.width === 0 || dialogBodyDimensions.height === 0) {
-            this.style.width = FALLBACK_PREF_DIM.width;
-            this.style.height = FALLBACK_PREF_DIM.height;
         }
     },
 
