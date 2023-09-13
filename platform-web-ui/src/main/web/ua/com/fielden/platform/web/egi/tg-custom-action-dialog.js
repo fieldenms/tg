@@ -686,9 +686,11 @@ Polymer({
      * @param {Event} e - event 
      */
     _handleResolutionChanged: function (e) {
-        this._persistDialogPositionLocally();
-        this.refit();
-        this.notifyResizeWithoutItselfAndAncestors();
+        if (this._dialogIsOutOfTheWindow()) {
+            this._persistDialogPositionLocally();
+            this.refit();
+            this.notifyResizeWithoutItselfAndAncestors();
+        }
     },
     
     //////////////////////////////////entity master navigation related//////////////////////////////
