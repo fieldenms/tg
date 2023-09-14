@@ -22,6 +22,12 @@ import {mixinBehaviors} from '/resources/polymer/@polymer/polymer/lib/legacy/cla
 import {html, PolymerElement} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import {microTask} from '/resources/polymer/@polymer/polymer/lib/utils/async.js';
 
+/**
+ * The minimal number of items that should be visible in the result dialog if it is placed under the editor.
+ * If the result dialog can not contain this number of items then this result dialog should be placed above the editor.
+ */
+const NUMBER_OF_VISIBLE_ITEMS = 5;
+
 const template = html`
     <style>
         :host {
@@ -643,7 +649,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         // let's try also to determine the best height depending on the window height and
         // the current vertical location of the element
         const visibleHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-        if (this.$.selector.children.length > 0 && visibleHeight - top - 10 - this.$.toolbar.offsetHeight < this.$.selector.children[0].offsetHeight * 2) {
+        if (this.$.selector.children.length > 0 && visibleHeight - top - 10 - this.$.toolbar.offsetHeight < this.$.selector.children[0].offsetHeight * NUMBER_OF_VISIBLE_ITEMS) {
             this.style.maxHeight = rect.top - 10 + 'px';// 10 pixels is an arbitrary adjustment
             this.style.bottom = visibleHeight - rect.top - 10 + 'px';
         } else {
