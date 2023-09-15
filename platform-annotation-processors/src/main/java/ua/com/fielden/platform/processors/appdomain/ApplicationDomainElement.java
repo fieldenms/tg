@@ -3,6 +3,7 @@ package ua.com.fielden.platform.processors.appdomain;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
@@ -66,6 +67,10 @@ public class ApplicationDomainElement extends AbstractForwardingTypeElement {
 
     public List<EntityElement> externalEntities() {
         return Collections.unmodifiableList(externalEntities);
+    }
+
+    public Stream<EntityElement> streamAllEntities() {
+        return Stream.concat(entities.stream(), externalEntities.stream());
     }
 
     public List<ErrorType> errorTypes() {

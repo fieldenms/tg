@@ -5,6 +5,7 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
+import static ua.com.fielden.platform.processors.ProcessorOptionDescriptor.parseOptionFrom;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asTypeElementOfTypeMirror;
 
 import java.io.IOException;
@@ -45,12 +46,14 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
+import ua.com.fielden.platform.processors.ProcessorOptionDescriptor;
 import ua.com.fielden.platform.processors.appdomain.annotation.ExtendApplicationDomain;
 import ua.com.fielden.platform.processors.appdomain.annotation.RegisteredEntity;
 import ua.com.fielden.platform.processors.appdomain.annotation.SkipEntityRegistration;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.CollectionUtil;
 
 /**
@@ -87,6 +90,10 @@ import ua.com.fielden.platform.utils.CollectionUtil;
 public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProcessor {
 
     public static final String APPLICATION_DOMAIN_SIMPLE_NAME = "ApplicationDomain";
+    /**
+     * The <i>basename</i> of the generated {@code ApplicationDomain}, i.e., the last component of the package name.
+     */
+    public static final String APPLICATION_DOMAIN_PKG_BASENAME = "config";
 
     public static final String ERR_AT_MOST_ONE_EXTENSION_POINT_IS_ALLOWED = "At most one extension point is allowed.";
 
@@ -101,7 +108,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         super.init(processingEnv);
         this.elementFinder = new ElementFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
         this.entityFinder = new EntityFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
-        this.applicationDomainPackage = "%s.config".formatted(this.packageName);
+        this.applicationDomainPackage = "%s.%s".formatted(packageName, APPLICATION_DOMAIN_PKG_BASENAME);
     }
 
     @Override
@@ -390,6 +397,12 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
 
     protected Optional<ApplicationDomainElement> findApplicationDomain() {
         return elementFinder.findTypeElement(getApplicationDomainQualifiedName()).map(elt -> new ApplicationDomainElement(elt, entityFinder));
+    }
+
+    public static Optional<ApplicationDomainElement> findApplicationDomain(ProcessingEnvironment procEnv, EntityFinder entityFinder) {
+        final String qualName = "%s.%s.%s".formatted(parseOptionFrom(procEnv.getOptions(), PACKAGE_OPT_DESC),
+                APPLICATION_DOMAIN_PKG_BASENAME, APPLICATION_DOMAIN_SIMPLE_NAME);
+        return entityFinder.findTypeElement(qualName).map(elt -> new ApplicationDomainElement(elt, entityFinder));
     }
 
     protected Optional<ApplicationDomainElement> findApplicationDomainInRound(final RoundEnvironment roundEnv) {

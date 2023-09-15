@@ -1,24 +1,26 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
-import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asDeclaredType;
-import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.getSimpleName;
-import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.isRawType;
-
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Name;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic.Kind;
 
 import org.apache.poi.sl.draw.geom.GuideIf;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.processors.appdomain.ApplicationDomainElement;
+import ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
@@ -28,6 +30,8 @@ import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
+
+import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.*;
 
 /**
  * Composable verifier for entity properties, responsible for the most essential verification, which includes:
@@ -252,8 +256,15 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
         static final List<Class<?>> SPECIAL_COLLECTION_TYPES = List.of(Map.class);
         static final List<Class<?>> SPECIAL_ENTITY_TYPES = List.of(PropertyDescriptor.class);
 
+        private Supplier<Optional<ApplicationDomainElement>> lazyAppDomainElement;
+
         protected PropertyTypeVerifier(final ProcessingEnvironment processingEnv) {
             super(processingEnv);
+            lazyAppDomainElement = () -> {
+                Optional<ApplicationDomainElement> optElt = ApplicationDomainProcessor.findApplicationDomain(processingEnv, entityFinder);
+                lazyAppDomainElement = () -> optElt;
+                return optElt;
+            };
         }
 
         public static String errEntityTypeMustBeRegistered(final String property, final String type) {
@@ -282,12 +293,24 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
             return classes.stream().anyMatch(cls -> entityFinder.isSameType(t, cls));
         }
 
+        /**
+         * Determines whether an entity type is registered in the generated {@code ApplicationDomain} if one exists,
+         * otherwise an entity type is considered unregistered.
+         *
+         * @param entityType    type mirror representing an entity type (caller must guarantee this)
+         */
         private boolean isEntityTypeRegistered(final TypeMirror entityType) {
-            // TODO Implement when ApplicationDomain becomes analysable by annotation processors or
-            // some other suitable entity registration mechanism is used.
-            // Currently, entity types are registered in the static initialiser block, which is unreachable to annotation processors.
-            // Refer issue https://github.com/fieldenms/tg/issues/1946
-            return true;
+            final Optional<ApplicationDomainElement> appDomainElt = lazyAppDomainElement.get();
+            if (appDomainElt.isEmpty()) {
+                return false;
+            }
+
+            // we can safely cast because we know this type mirror represents an entity type
+            final TypeElement entityTypeElt = (TypeElement) ((DeclaredType) entityType).asElement();
+            final Name entityQualName = entityTypeElt.getQualifiedName();
+            return appDomainElt.get().streamAllEntities()
+                    .map(EntityElement::getQualifiedName)
+                    .anyMatch(name -> entityQualName.equals(name));
         }
 
         @Override
