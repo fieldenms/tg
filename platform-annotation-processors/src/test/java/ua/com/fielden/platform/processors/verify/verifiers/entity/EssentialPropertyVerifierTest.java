@@ -38,6 +38,7 @@ import com.squareup.javapoet.TypeSpec;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
 import ua.com.fielden.platform.processors.verify.AbstractVerifierTest;
 import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
@@ -455,6 +456,17 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         public void binary_array_type_is_allowed() {
             assertTypeAllowed(ArrayTypeName.of(byte.class));
         }
+
+        @Test
+        public void PropertyDescriptor_type_is_allowed() {
+            assertTypeAllowed(ParameterizedTypeName.get(PropertyDescriptor.class, ExampleEntity.class));
+        }
+
+        @Test
+        public void raw_PropertyDescriptor_type_is_allowed() {
+            assertTypeAllowed(ClassName.get(PropertyDescriptor.class));
+        }
+
     }
 
 }
