@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -122,6 +123,11 @@ public class CompilationTestUtils {
             fileManager.setLocationFromPaths(StandardLocation.SOURCE_OUTPUT, List.of(generatedTmpDir));
             fileManager.setLocationFromPaths(StandardLocation.SOURCE_PATH, List.of(srcTmpDir, generatedTmpDir));
             fileManager.setLocationFromPaths(StandardLocation.CLASS_OUTPUT, List.of(targetTmpDir));
+            // append CLASS_OUTPUT to CLASS_PATH
+            final ArrayList<Path> classPath = new ArrayList<>();
+            fileManager.getLocationAsPaths(StandardLocation.CLASS_PATH).forEach(classPath::add);
+            classPath.add(targetTmpDir);
+            fileManager.setLocationFromPaths(StandardLocation.CLASS_PATH, classPath);
         } catch (final IOException ex) {
             FileUtils.deleteQuietly(rootTmpDir.toFile());
             throw new TestCaseConfigException("Failed to configure compilation with temporary storage.", ex);
