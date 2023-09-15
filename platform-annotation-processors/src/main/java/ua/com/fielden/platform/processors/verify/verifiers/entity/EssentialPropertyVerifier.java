@@ -16,7 +16,9 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic.Kind;
 
+import org.apache.poi.sl.draw.geom.GuideIf;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
@@ -248,6 +250,7 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
         static final List<Class<?>> PLATFORM_TYPES = List.of(Money.class, Colour.class, Hyperlink.class);
         static final List<Class<?>> BINARY_TYPES = List.of(byte[].class);
         static final List<Class<?>> SPECIAL_COLLECTION_TYPES = List.of(Map.class);
+        static final List<Class<?>> SPECIAL_ENTITY_TYPES = List.of(PropertyDescriptor.class);
 
         protected PropertyTypeVerifier(final ProcessingEnvironment processingEnv) {
             super(processingEnv);
@@ -309,9 +312,11 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
                 if (isAnyOf(propType, BINARY_TYPES)) return Optional.empty();
                 // 6. special case of collection-like types
                 if (isSpecialCollectionType(propType)) return Optional.empty();
+                if (isAnyOf(propType, SPECIAL_ENTITY_TYPES)) return Optional.empty();
 
                 // 3. entity type
                 if (entityFinder.isEntityType(propType)) {
+                    // all entity types, except some special ones, used as property types must be registered
                     if (!isEntityTypeRegistered(propType)) {
                         return Optional.of(new ViolatingElement(
                                 property.element(), Kind.ERROR,
