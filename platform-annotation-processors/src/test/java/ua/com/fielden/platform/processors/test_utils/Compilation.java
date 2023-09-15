@@ -1,11 +1,8 @@
 package ua.com.fielden.platform.processors.test_utils;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Consumer;
+import com.google.testing.compile.ForwardingStandardJavaFileManager;
+import ua.com.fielden.platform.processors.test_utils.exceptions.CompilationException;
+import ua.com.fielden.platform.types.try_wrapper.ThrowableConsumer;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -13,15 +10,11 @@ import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
-import javax.tools.DiagnosticCollector;
-import javax.tools.JavaCompiler;
+import javax.tools.*;
 import javax.tools.JavaCompiler.CompilationTask;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.ToolProvider;
-
-import ua.com.fielden.platform.processors.test_utils.exceptions.CompilationException;
-import ua.com.fielden.platform.types.try_wrapper.ThrowableConsumer;
+import java.io.IOException;
+import java.util.*;
+import java.util.function.Consumer;
 
 /**
  * An abstraction for compiling java sources that is based on {@link CompilationTask} with the primary purpose of evaluating additional statements in the annotation processing environment.
@@ -62,10 +55,6 @@ public final class Compilation {
      * Only a single annotation processor is allowed to ensure that the processing environment is not shared with other processors, which could lead to unexpected behaviour.
      *
      * @param javaSources java sources to compile
-     * @param processor annotation processor to use during compilation
-     * @param compiler
-     * @param fileManager
-     * @param options
      */
     public Compilation(final Collection<? extends JavaFileObject> javaSources) {
         this.javaSources = new HashSet<>(javaSources);
@@ -146,6 +135,7 @@ public final class Compilation {
     }
 
     private CompilationResult doCompile(final EvaluatingProcessor processor) {
+        final MyJavaFileManager fileManager = new MyJavaFileManager(this.fileManager);
         final CompilationTask task = compiler.getTask(
                 null, // Writer for additional output from the compiler (null => System.err)
                 fileManager,
@@ -156,7 +146,8 @@ public final class Compilation {
         task.setProcessors(List.of(processor));
         final boolean success = task.call();
 
-        return new CompilationResult(success, diagnosticListener.getDiagnostics(), processor.processingErrors);
+        return new CompilationResult(success, diagnosticListener.getDiagnostics(), processor.processingErrors,
+                fileManager.getGeneratedSources());
     }
 
     /**
@@ -222,6 +213,34 @@ public final class Compilation {
             if (evaluatorError != null) {
                 throw evaluatorError;
             }
+        }
+    }
+
+    /**
+     * A forwarding java file manager that remembers generated sources so that they can be retrieved later.
+     */
+    private static final class MyJavaFileManager extends ForwardingStandardJavaFileManager {
+
+        private final List<JavaFileObject> generatedJavaSources = new ArrayList<>();
+
+        MyJavaFileManager(StandardJavaFileManager fileManager) {
+            super(fileManager);
+        }
+
+        @Override
+        public JavaFileObject getJavaFileForOutput(
+                Location location, String className, final JavaFileObject.Kind kind, FileObject sibling)
+                throws IOException
+        {
+            JavaFileObject jfo = super.getJavaFileForOutput(location, className, kind, sibling);
+            if (location.isOutputLocation() && kind == JavaFileObject.Kind.SOURCE) {
+                generatedJavaSources.add(jfo);
+            }
+            return jfo;
+        }
+
+        public List<JavaFileObject> getGeneratedSources() {
+            return List.copyOf(generatedJavaSources);
         }
     }
 
