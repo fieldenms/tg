@@ -873,6 +873,8 @@ export class TgEntityEditor extends TgEditor {
             if (elementExists !== this.result) {
                 document.body.appendChild(this.result);
             }
+            //Need to call highlight matched parts to build the DOM of result dialog for better positioning of result dialog.
+            this.result.highlightMatchedParts(this._searchQuery);
 
             // now let's open the dialog to display the result, but only if it is not opened yet...
             if (this.result.opened) {
@@ -972,7 +974,6 @@ export class TgEntityEditor extends TgEditor {
             // indicate that the autocompleter dialog was opened and
             // highlight matched parts of the items found
             this.opened = true;
-            this.result.highlightMatchedParts(this._searchQuery);
         } else {
             this.opened = true;
             this.result.cancel(e);

@@ -648,6 +648,9 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
 
         // let's try also to determine the best height depending on the window height and
         // the current vertical location of the element
+        this.style.removeProperty("maxHeight");
+        this.style.removeProperty("top");
+        this.style.removeProperty("bottom");
         const visibleHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
         if (this.$.selector.children.length > 0 && visibleHeight - top - 10 - this.$.toolbar.offsetHeight < this.$.selector.children[0].offsetHeight * NUMBER_OF_VISIBLE_ITEMS // if the height from the bottom of editor to the bottom of the window can't contain minimal number of visible items 
             && rect.top - 10 > visibleHeight - top - 10 ) { // and if height above the editor is lagger than the one under the editor then place dialog above the editor.
