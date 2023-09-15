@@ -456,6 +456,9 @@ public class ApplicationDomainProcessorTest {
                     compilation
                     .setJavaSources(List.of(entity1.toJavaFileObject(), entity2.toJavaFileObject()))
                     .setProcessor(new ApplicationDomainProcessor())
+                    // it's essential to avoid producing a .class file for Second because it would be used in place of
+                    // the deleted source file during the next compilation
+                    .addOptions(OPTION_PROC_ONLY)
                     .compile());
 
             // 2
@@ -493,6 +496,7 @@ public class ApplicationDomainProcessorTest {
                     compilation
                     .setJavaSources(List.of(entity1.toJavaFileObject()))
                     .setProcessor(processor)
+                    .addOptions(OPTION_PROC_ONLY)
                     .compile());
         });
     }
