@@ -1,5 +1,37 @@
 package ua.com.fielden.platform.processors.appdomain;
 
+import com.squareup.javapoet.AnnotationSpec;
+import com.squareup.javapoet.JavaFile;
+import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeSpec;
+import org.junit.Test;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
+import ua.com.fielden.platform.processors.appdomain.annotation.ExtendApplicationDomain;
+import ua.com.fielden.platform.processors.appdomain.annotation.RegisterEntity;
+import ua.com.fielden.platform.processors.appdomain.annotation.SkipEntityRegistration;
+import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
+import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
+import ua.com.fielden.platform.processors.test_entities.PersistentEntity;
+import ua.com.fielden.platform.processors.test_utils.Compilation;
+import ua.com.fielden.platform.processors.test_utils.CompilationResult;
+import ua.com.fielden.platform.processors.test_utils.CompilationTestUtils;
+import ua.com.fielden.platform.processors.test_utils.ProcessorListener;
+import ua.com.fielden.platform.processors.test_utils.ProcessorListener.AbstractRoundListener;
+
+import javax.annotation.processing.Processor;
+import javax.annotation.processing.RoundEnvironment;
+import javax.lang.model.element.TypeElement;
+import javax.tools.Diagnostic.Kind;
+import javax.tools.JavaFileObject;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
+
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static org.junit.Assert.assertEquals;
@@ -12,51 +44,6 @@ import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils
 import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccessWithoutProcessingErrors;
 import static ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileObjects.createJavaSource;
 import static ua.com.fielden.platform.processors.test_utils.TestUtils.assertPresent;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
-
-import javax.annotation.processing.Processor;
-import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.element.TypeElement;
-import javax.tools.Diagnostic.Kind;
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.StandardLocation;
-import javax.tools.ToolProvider;
-
-import org.apache.commons.io.FileUtils;
-import org.junit.Test;
-
-import com.squareup.javapoet.AnnotationSpec;
-import com.squareup.javapoet.JavaFile;
-import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeSpec;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
-import ua.com.fielden.platform.processors.appdomain.annotation.ExtendApplicationDomain;
-import ua.com.fielden.platform.processors.appdomain.annotation.RegisterEntity;
-import ua.com.fielden.platform.processors.appdomain.annotation.SkipEntityRegistration;
-import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
-import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
-import ua.com.fielden.platform.processors.test_entities.PersistentEntity;
-import ua.com.fielden.platform.processors.test_utils.Compilation;
-import ua.com.fielden.platform.processors.test_utils.CompilationResult;
-import ua.com.fielden.platform.processors.test_utils.ProcessorListener;
-import ua.com.fielden.platform.processors.test_utils.ProcessorListener.AbstractRoundListener;
-import ua.com.fielden.platform.processors.test_utils.exceptions.TestCaseConfigException;
 
 /**
  * A test suite related to {@link ApplicationDomainProcessor}.
@@ -712,65 +699,14 @@ public class ApplicationDomainProcessorTest {
         return entities;
     }
 
-    /**
-     * Evaluates the given consumer with a configured {@link Compilation} instance and a {@link Consumer} to persist source files
-     * between compilations.
-     * <p>
-     * Temporary storage is set up in the form of a filesystem directory, which is deleted after {@code consumer} returns or throws an exception.
-     *
-     * @param consumer
-     */
     private static void compileWithTempStorage(final BiConsumer<Compilation, Consumer<JavaFile>> consumer) {
-        final Path rootTmpDir;
-        try {
-            // set up temporary storage
-            rootTmpDir = Files.createTempDirectory("java-test");
-        } catch (final IOException ex) {
-            throw new TestCaseConfigException("Failed to create a temporary directory", ex);
-        }
-
-        final Path srcTmpDir;
-        final JavaCompiler compiler;
-        final StandardJavaFileManager fileManager ;
-        try {
-            srcTmpDir = Files.createDirectories(Path.of(rootTmpDir.toString(), "src/main/java"));
-            final Path targetTmpDir = Files.createDirectories(Path.of(rootTmpDir.toString(), "target/classes"));
-            final Path generatedTmpDir = Files.createDirectories(Path.of(rootTmpDir.toString(), "target/generated-sources"));
-
-            // configure compilation settings
-            compiler = ToolProvider.getSystemJavaCompiler();
-            fileManager = compiler.getStandardFileManager(null, Locale.getDefault(), StandardCharsets.UTF_8);
-            fileManager.setLocationFromPaths(StandardLocation.SOURCE_OUTPUT, List.of(generatedTmpDir));
-            fileManager.setLocationFromPaths(StandardLocation.SOURCE_PATH, List.of(srcTmpDir, generatedTmpDir));
-            fileManager.setLocationFromPaths(StandardLocation.CLASS_OUTPUT, List.of(targetTmpDir));
-        } catch (final IOException ex) {
-            FileUtils.deleteQuietly(rootTmpDir.toFile());
-            throw new TestCaseConfigException("Failed to configure compilation with temporary storage.", ex);
-        }
-
-        // this instance can be reused by setting different java sources each time
-        final Compilation compilation = new Compilation(List.of(PLACEHOLDER))
-                .setCompiler(compiler)
-                .setFileManager(fileManager)
-                .addProcessorOption(PACKAGE_OPT_DESC.name(), GENERATED_PKG);
-
-        final Consumer<JavaFile> javaFileWriter = javaFile -> {
-            try {
-                javaFile.writeTo(srcTmpDir);
-            } catch (final IOException ex) {
-                throw new TestCaseConfigException("Failed to write java file.", ex);
-            }
-        };
-
-        // wrap the consumer in a big try-catch block to clean up temporary storage afterwards
-        try {
+        CompilationTestUtils.compileWithTempStorage(((compilation, javaFileWriter) -> {
+            compilation.addProcessorOption(PACKAGE_OPT_DESC.name(), GENERATED_PKG);
             consumer.accept(compilation, javaFileWriter);
-        } finally {
-            FileUtils.deleteQuietly(rootTmpDir.toFile());
-        }
+        }));
     }
 
     /** A round listener tailored for {@link ApplicationDomainProcessor}. */
-    private static abstract class RoundListener extends AbstractRoundListener<ApplicationDomainProcessor> { }
+    public static abstract class RoundListener extends AbstractRoundListener<ApplicationDomainProcessor> { }
 
 }
