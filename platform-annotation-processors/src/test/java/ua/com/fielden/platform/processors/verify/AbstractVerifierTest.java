@@ -42,7 +42,7 @@ public abstract class AbstractVerifierTest {
      * {@link #createVerifier(ProcessingEnvironment)}.
      * @return
      */
-    private final VerifyingProcessor createProcessor() {
+    protected final VerifyingProcessor createProcessor() {
         return new VerifyingProcessor(List.of(this::createVerifier));
     }
 
