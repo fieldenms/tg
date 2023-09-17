@@ -13,6 +13,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.EqlEntityMetadataHolder;
 import ua.com.fielden.platform.eql.stage2.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.sources.ImplicitNode;
+import ua.com.fielden.platform.eql.stage2.sources.enhance.Prop3Lite;
 import ua.com.fielden.platform.eql.stage3.Table;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -85,8 +86,8 @@ public class TransformationContext2 {
     }
 
     public T2<String, ISource3> resolve(final Integer sourceId, final String path) {
-        final T2<String, Integer> propAndSourceId = treeResultBySources.plainPropsResolutions().get(sourceId).get(path);
-        return t2(propAndSourceId._1, sourcesByIds.get(propAndSourceId._2));
+        final Prop3Lite leafProp = treeResultBySources.plainPropsResolutions().get(sourceId).get(path);
+        return t2(leafProp.name(), sourcesByIds.get(leafProp.sourceId()));
     }
     
     public Expression2 resolveExpression(final Integer sourceId, final String path) {

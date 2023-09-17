@@ -23,6 +23,7 @@ import ua.com.fielden.platform.eql.stage2.sources.enhance.ExpressionLinks;
 import ua.com.fielden.platform.eql.stage2.sources.enhance.PathsToTreeTransformer;
 import ua.com.fielden.platform.eql.stage2.sources.enhance.Prop2Lite;
 import ua.com.fielden.platform.eql.stage2.sources.enhance.Prop3Links;
+import ua.com.fielden.platform.eql.stage2.sources.enhance.Prop3Lite;
 import ua.com.fielden.platform.eql.stage2.sources.enhance.TreeResult;
 import ua.com.fielden.platform.eql.stage3.operands.queries.ResultQuery3;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -77,16 +78,16 @@ public class EqlQueryTransformer {
         return expressionsData;
     }
     
-    private static Map<Integer, Map<String, T2<String, Integer>>> processPropsResolutionData(final List<Prop3Links> propsResolutions) {
-        final Map<Integer, Map<String, T2<String, Integer>>> resolutionsData = new HashMap<>();
+    private static Map<Integer, Map<String, Prop3Lite>> processPropsResolutionData(final List<Prop3Links> propsResolutions) {
+        final Map<Integer, Map<String, Prop3Lite>> resolutionsData = new HashMap<>();
         for (final Prop3Links item : propsResolutions) {
             for (final Prop2Lite link : item.links()) {
-                Map<String, T2<String, Integer>> existingSourceMap = resolutionsData.get(link.sourceId());
+                Map<String, Prop3Lite> existingSourceMap = resolutionsData.get(link.sourceId());
                 if (existingSourceMap == null) {
-                    existingSourceMap = new HashMap<String, T2<String, Integer>>();
+                    existingSourceMap = new HashMap<String, Prop3Lite>();
                     resolutionsData.put(link.sourceId(), existingSourceMap);
                 }
-                existingSourceMap.put(link.name(), t2(item.propName(), item.sourceId()));
+                existingSourceMap.put(link.name(), item.leafProp());
             }
         }
         

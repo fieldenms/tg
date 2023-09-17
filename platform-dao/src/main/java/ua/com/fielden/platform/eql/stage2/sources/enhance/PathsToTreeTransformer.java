@@ -169,7 +169,7 @@ public class PathsToTreeTransformer {
         
         if (next._2.isEmpty()) {
             if (expression == null) {
-                return t2(null, new TreeResult(emptyMap(), List.of(new Prop3Links(currResolutionSourceId, propName, next._1)), emptyList()));
+                return t2(null, new TreeResult(emptyMap(), List.of(new Prop3Links(new Prop3Lite(propName, currResolutionSourceId), next._1)), emptyList()));
             } else {
                 return t2(null, new TreeResult(emptyMap(), emptyList(), List.of(new ExpressionLinks(expression, next._1))));
             }
@@ -187,7 +187,7 @@ public class PathsToTreeTransformer {
                 if (expression != null) {
                     expressionLinks.add(new ExpressionLinks(expression, next._1));
                 } else {
-                    propLinks.add(new Prop3Links(currResolutionSourceId, propName, next._1));
+                    propLinks.add(new Prop3Links(new Prop3Lite(propName, currResolutionSourceId), next._1));
                 }
             }
             
