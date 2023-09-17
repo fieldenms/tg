@@ -11,12 +11,12 @@ import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 public class Yield2 {
     public final ISingleOperand2<? extends ISingleOperand3> operand;
     public final String alias;
-    public final boolean hasRequiredHint;
+    public final boolean hasNonnullableHint;
 
-    public Yield2(final ISingleOperand2<? extends ISingleOperand3> operand, final String alias, final boolean hasRequiredHint) {
+    public Yield2(final ISingleOperand2<? extends ISingleOperand3> operand, final String alias, final boolean hasNonnullableHint) {
         this.operand = operand;
         this.alias = alias;
-        this.hasRequiredHint = hasRequiredHint;
+        this.hasNonnullableHint = hasNonnullableHint;
     }
 
     public TransformationResult2<Yield3> transform(final TransformationContext2 context) {
@@ -31,7 +31,7 @@ public class Yield2 {
         int result = 1;
         result = prime * result + ((alias == null) ? 0 : alias.hashCode());
         result = prime * result + operand.hashCode();
-        result = prime * result + (hasRequiredHint ? 1231 : 1237);
+        result = prime * result + (hasNonnullableHint ? 1231 : 1237);
         return result;
     }
 
@@ -47,6 +47,6 @@ public class Yield2 {
         
         final Yield2 other = (Yield2) obj;
         
-        return Objects.equals(operand, other.operand) && Objects.equals(alias, other.alias) && (hasRequiredHint == other.hasRequiredHint);
+        return Objects.equals(operand, other.operand) && Objects.equals(alias, other.alias) && (hasNonnullableHint == other.hasNonnullableHint);
     }
 }

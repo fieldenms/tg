@@ -10,16 +10,16 @@ import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 public class Yield1 {
     public final ISingleOperand1<? extends ISingleOperand2<?>> operand;
     public final String alias;
-    public final boolean hasRequiredHint;
+    public final boolean hasNonnullableHint;
 
-    public Yield1(final ISingleOperand1<? extends ISingleOperand2<?>> operand, final String alias, final boolean hasRequiredHint) {
+    public Yield1(final ISingleOperand1<? extends ISingleOperand2<?>> operand, final String alias, final boolean hasNonnullableHint) {
         this.operand = operand;
         this.alias = alias;
-        this.hasRequiredHint = hasRequiredHint;
+        this.hasNonnullableHint = hasNonnullableHint;
     }
     
     public Yield2 transform(final TransformationContext1 context) {
-        return new Yield2(operand.transform(context), alias, hasRequiredHint);
+        return new Yield2(operand.transform(context), alias, hasNonnullableHint);
     }
 
     @Override
@@ -27,7 +27,7 @@ public class Yield1 {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((alias == null) ? 0 : alias.hashCode());
-        result = prime * result + (hasRequiredHint ? 1231 : 1237);
+        result = prime * result + (hasNonnullableHint ? 1231 : 1237);
         result = prime * result + operand.hashCode();
         return result;
     }
@@ -44,6 +44,6 @@ public class Yield1 {
         
         final Yield1 other = (Yield1) obj;
 
-        return Objects.equals(operand, other.operand) && Objects.equals(alias, other.alias) && (hasRequiredHint == other.hasRequiredHint);
+        return Objects.equals(operand, other.operand) && Objects.equals(alias, other.alias) && (hasNonnullableHint == other.hasNonnullableHint);
     }
 }

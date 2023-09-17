@@ -23,7 +23,7 @@ public class YieldBuilder extends AbstractTokensBuilder {
     public Pair<TokenCategory, Object> getResult() {
         final ISingleOperand1<? extends ISingleOperand2<?>> operand = getModelForSingleOperand(firstCat(), firstValue());
         final String alias = (String) secondValue();
-        final boolean requiredHint = (secondCat() == TokenCategory.AS_ALIAS_REQUIRED);
-        return new Pair<TokenCategory, Object>(TokenCategory.QRY_YIELD, new Yield1(operand, alias == null ? ABSENT_ALIAS : alias, requiredHint));
+        final boolean nonnullableHint = (secondCat() == TokenCategory.AS_ALIAS_REQUIRED);
+        return new Pair<TokenCategory, Object>(TokenCategory.QRY_YIELD, new Yield1(operand, alias == null ? ABSENT_ALIAS : alias, nonnullableHint));
     }
 }

@@ -191,7 +191,7 @@ public class PathsToTreeTransformer {
                 }
             }
             
-            final ImplicitNode node = new ImplicitNode(propName, genRes._1, propInfo.required, implicitSource, expression);
+            final ImplicitNode node = new ImplicitNode(propName, genRes._1, propInfo.nonnullable, implicitSource, expression);
             
             return t2(node, new TreeResult(genRes._2.implicitNodesMap(), propLinks, expressionLinks));
         }

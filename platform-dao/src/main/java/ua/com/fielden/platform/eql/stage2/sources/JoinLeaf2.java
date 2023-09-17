@@ -88,7 +88,7 @@ public class JoinLeaf2 implements IJoinNode2<IJoinNode3> {
         final ComparisonTest3 ct = new ComparisonTest3(lo, EQ, ro);
         final Conditions3 jc = new Conditions3(false, asList(asList(ct)));
         final TransformationResult2<IJoinNode3> implicitJoinNodeTr = generateJoinNode(addedSource, implicitNode.subnodes(), currentContext);
-        return new TransformationResult2<>(new JoinBranch3(currentJoinNode, implicitJoinNodeTr.item, (implicitNode.required ? IJ : LJ), jc), implicitJoinNodeTr.updatedContext);
+        return new TransformationResult2<>(new JoinBranch3(currentJoinNode, implicitJoinNodeTr.item, (implicitNode.nonnullable ? IJ : LJ), jc), implicitJoinNodeTr.updatedContext);
     }
     
     @Override

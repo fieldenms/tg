@@ -111,7 +111,7 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
     }
     
     private static boolean isNonnullableEntity(final AbstractPropInfo<?> propInfo) {
-        return propInfo instanceof EntityTypePropInfo ? ((EntityTypePropInfo<?>) propInfo).required : false;
+        return propInfo instanceof EntityTypePropInfo ? ((EntityTypePropInfo<?>) propInfo).nonnullable : false;
     }
 
     @Override

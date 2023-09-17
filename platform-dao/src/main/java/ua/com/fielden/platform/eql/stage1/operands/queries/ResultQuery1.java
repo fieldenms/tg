@@ -161,7 +161,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
 
         final Yield2 firstYield = yields.getYields().iterator().next();
         if (yields.getYields().size() == 1 && !yieldAll && isEmpty(firstYield.alias) && isPersistedEntityType(resultType)) {
-            return new Yields2(listOf(new Yield2(firstYield.operand, ID, firstYield.hasRequiredHint)));
+            return new Yields2(listOf(new Yield2(firstYield.operand, ID, firstYield.hasNonnullableHint)));
         }
 
         //TODO need to remove the yields not contained by the fetch model to be consisted with old EQL (the case of explicit yields)
