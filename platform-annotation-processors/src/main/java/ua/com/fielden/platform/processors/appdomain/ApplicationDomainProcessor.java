@@ -301,14 +301,14 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         final List<AnnotationSpec> registeredEntityAnnots = new ArrayList<>(registeredEntities.size() + externalEntities.size());
         registeredEntityAnnots.addAll(registeredEntities.stream()
                 .map(entity -> AnnotationSpec.builder(RegisteredEntity.class)
-                        .addMember("value", "$T.class", entity.element())
+                        .addMember("value", "$T.class", ClassName.get(entity.element()))
                         .build())
                 .toList());
 
          // @RegisteredEntity($ENTITY.class, external = true)...
         registeredEntityAnnots.addAll(externalEntities.stream()
                 .map(entity -> AnnotationSpec.builder(RegisteredEntity.class)
-                        .addMember("value", "$T.class", entity.element())
+                        .addMember("value", "$T.class", ClassName.get(entity.element()))
                         .addMember("external", "$L", true)
                         .build())
                 .toList());
