@@ -5,7 +5,6 @@ import org.apache.commons.io.FileUtils;
 import ua.com.fielden.platform.processors.test_utils.exceptions.TestCaseConfigException;
 
 import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor.PACKAGE_OPT_DESC;
 import static ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileObjects.createJavaSource;
 
 import java.io.IOException;

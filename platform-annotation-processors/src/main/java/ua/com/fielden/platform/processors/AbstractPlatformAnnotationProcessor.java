@@ -2,7 +2,6 @@ package ua.com.fielden.platform.processors;
 
 import com.google.common.base.Stopwatch;
 import org.joda.time.DateTime;
-import ua.com.fielden.platform.processors.exceptions.ProcessorInitializationException;
 import ua.com.fielden.platform.processors.metamodel.elements.utils.TypeElementCache;
 
 import javax.annotation.processing.*;
@@ -15,7 +14,6 @@ import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -35,7 +33,6 @@ import static ua.com.fielden.platform.processors.ProcessorOptionDescriptor.parse
  * Supported options by this base type:
  * <ul>
  *   <li>{@code cacheStats} -- if set to {@code true} enables recording of type element cache statistics (see {@link TypeElementCache#getStats()}). </li>
- *   <li>{@code package} -- the name of the top project package; might be useful in determining the location of specific sources.</li>
  * </ul>
  *
  * @author TG Team
@@ -65,24 +62,9 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
     public static final ProcessorOptionDescriptor<Boolean> CACHE_STATS_OPT_DESC = newBooleanOptionDescriptor("cacheStats", false);
     private boolean reportCacheStats;
 
-    public static final ProcessorOptionDescriptor<String> PACKAGE_OPT_DESC = new ProcessorOptionDescriptor<>() {
-        @Override public String name() { return "package"; }
-        @Override public String defaultValue() { return "fielden"; }
-
-        @Override public String parse(String value) {
-            if (!Pattern.matches("([a-zA-Z]\\w*\\.)*[a-zA-Z]\\w*", value)) {
-                throw new ProcessorInitializationException("Option \"%s\" specifies an illegal package name \"%s\"."
-                        .formatted(name(), value));
-            }
-            return value;
-        }
-    };
-    protected String packageName;
-
     @Override
     public Set<String> getSupportedOptions() {
-        return Stream.of(CACHE_STATS_OPT_DESC, PACKAGE_OPT_DESC)
-                .map(ProcessorOptionDescriptor::name).collect(Collectors.toSet());
+        return Stream.of(CACHE_STATS_OPT_DESC).map(ProcessorOptionDescriptor::name).collect(Collectors.toSet());
     }
 
     @Override
@@ -117,8 +99,6 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
         reportCacheStats = parseOptionFrom(options, CACHE_STATS_OPT_DESC);
         if (reportCacheStats)
             TypeElementCache.recordStats();
-
-        packageName = parseOptionFrom(options, PACKAGE_OPT_DESC);
     }
 
     @Override

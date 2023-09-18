@@ -1,24 +1,20 @@
 package ua.com.fielden.platform.processors.appdomain;
 
-import static java.util.stream.Collectors.toSet;
-import static javax.lang.model.element.Modifier.FINAL;
-import static javax.lang.model.element.Modifier.PRIVATE;
-import static javax.lang.model.element.Modifier.PUBLIC;
-import static javax.lang.model.element.Modifier.STATIC;
-import static ua.com.fielden.platform.processors.ProcessorOptionDescriptor.parseOptionFrom;
-import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asTypeElementOfTypeMirror;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import com.squareup.javapoet.*;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.domain.PlatformDomainTypes;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
+import ua.com.fielden.platform.processors.ProcessorOptionDescriptor;
+import ua.com.fielden.platform.processors.appdomain.annotation.ExtendApplicationDomain;
+import ua.com.fielden.platform.processors.appdomain.annotation.RegisteredEntity;
+import ua.com.fielden.platform.processors.appdomain.annotation.SkipEntityRegistration;
+import ua.com.fielden.platform.processors.exceptions.ProcessorInitializationException;
+import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
+import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
+import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
+import ua.com.fielden.platform.utils.CollectionUtil;
 
 import javax.annotation.processing.Generated;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -29,32 +25,17 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ErrorType;
 import javax.tools.Diagnostic.Kind;
+import java.io.IOException;
+import java.util.*;
+import java.util.function.Function;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
-
-import com.squareup.javapoet.AnnotationSpec;
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.CodeBlock;
-import com.squareup.javapoet.FieldSpec;
-import com.squareup.javapoet.JavaFile;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeSpec;
-import com.squareup.javapoet.WildcardTypeName;
-
-import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
-import ua.com.fielden.platform.domain.PlatformDomainTypes;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
-import ua.com.fielden.platform.processors.ProcessorOptionDescriptor;
-import ua.com.fielden.platform.processors.appdomain.annotation.ExtendApplicationDomain;
-import ua.com.fielden.platform.processors.appdomain.annotation.RegisteredEntity;
-import ua.com.fielden.platform.processors.appdomain.annotation.SkipEntityRegistration;
-import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
-import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
-import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
-import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.utils.CollectionUtil;
+import static java.util.stream.Collectors.toSet;
+import static javax.lang.model.element.Modifier.*;
+import static ua.com.fielden.platform.processors.ProcessorOptionDescriptor.parseOptionFrom;
+import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asTypeElementOfTypeMirror;
 
 /**
  * An annotation processor that generates and maintains the {@code ApplicationDomain} class, which implements {@link IApplicationDomainProvider}.
@@ -84,31 +65,56 @@ import ua.com.fielden.platform.utils.CollectionUtil;
  * 3rd-party entities are those that come from dependencies. Their registration requires a designated application-level class that
  * must be annotated with {@link ExtendApplicationDomain}, which shall be used to specify them.
  *
+ * <h3>Supported options</h3>
+ * <ul>
+ *     <li>{@linkplain ApplicationDomainProcessor#APP_DOMAIN_PKG_OPT_DESC appDomainPkg} - destination package of a generated
+ *     {@code AppplicationDomain}
+ * </ul>
+ *
  * @author TG Team
  */
 @SupportedAnnotationTypes("*")
 public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProcessor {
 
     public static final String APPLICATION_DOMAIN_SIMPLE_NAME = "ApplicationDomain";
-    /**
-     * The <i>basename</i> of the generated {@code ApplicationDomain}, i.e., the last component of the package name.
-     */
-    public static final String APPLICATION_DOMAIN_PKG_BASENAME = "config";
 
     public static final String ERR_AT_MOST_ONE_EXTENSION_POINT_IS_ALLOWED = "At most one extension point is allowed.";
+
+    public static final ProcessorOptionDescriptor<String> APP_DOMAIN_PKG_OPT_DESC = new ProcessorOptionDescriptor<>() {
+        @Override public String name() { return "appDomainPkg"; }
+        @Override public String defaultValue() { return "fielden.config"; }
+
+        @Override public String parse(String value) {
+            if (!Pattern.matches("([a-zA-Z]\\w*\\.)*[a-zA-Z]\\w*", value)) {
+                throw new ProcessorInitializationException("Option \"%s\" specifies an illegal package name \"%s\"."
+                        .formatted(name(), value));
+            }
+            return value;
+        }
+    };
+    protected String appDomainPkg;
 
     private ElementFinder elementFinder;
     private EntityFinder entityFinder;
 
-    // initialised after parsing options
-    private String applicationDomainPackage;
+    @Override
+    public Set<String> getSupportedOptions() {
+        return Stream.concat(super.getSupportedOptions().stream(),
+                        Stream.of(APP_DOMAIN_PKG_OPT_DESC).map(ProcessorOptionDescriptor::name))
+                .collect(toSet());
+    }
+
+    @Override
+    protected void parseOptions(Map<String, String> options) {
+        super.parseOptions(options);
+        appDomainPkg = ProcessorOptionDescriptor.parseOptionFrom(options, APP_DOMAIN_PKG_OPT_DESC);
+    }
 
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
         this.elementFinder = new ElementFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
         this.entityFinder = new EntityFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
-        this.applicationDomainPackage = "%s.%s".formatted(packageName, APPLICATION_DOMAIN_PKG_BASENAME);
     }
 
     @Override
@@ -379,7 +385,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
                     .build())
             .build();
 
-        final JavaFile javaFile = JavaFile.builder(applicationDomainPackage, typeSpec).indent("    ").build();
+        final JavaFile javaFile = JavaFile.builder(appDomainPkg, typeSpec).indent("    ").build();
         try {
             javaFile.writeTo(filer);
         } catch (final IOException ex) {
@@ -392,7 +398,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
     }
 
     protected String getApplicationDomainQualifiedName() {
-        return "%s.%s".formatted(applicationDomainPackage, APPLICATION_DOMAIN_SIMPLE_NAME);
+        return "%s.%s".formatted(appDomainPkg, APPLICATION_DOMAIN_SIMPLE_NAME);
     }
 
     protected Optional<ApplicationDomainElement> findApplicationDomain() {
@@ -400,8 +406,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
     }
 
     public static Optional<ApplicationDomainElement> findApplicationDomain(ProcessingEnvironment procEnv, EntityFinder entityFinder) {
-        final String qualName = "%s.%s.%s".formatted(parseOptionFrom(procEnv.getOptions(), PACKAGE_OPT_DESC),
-                APPLICATION_DOMAIN_PKG_BASENAME, APPLICATION_DOMAIN_SIMPLE_NAME);
+        final String qualName = "%s.%s".formatted(parseOptionFrom(procEnv.getOptions(), APP_DOMAIN_PKG_OPT_DESC), APPLICATION_DOMAIN_SIMPLE_NAME);
         return entityFinder.findTypeElement(qualName).map(elt -> new ApplicationDomainElement(elt, entityFinder));
     }
 

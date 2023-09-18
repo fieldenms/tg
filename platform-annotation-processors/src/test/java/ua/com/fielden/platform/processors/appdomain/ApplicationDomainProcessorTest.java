@@ -36,7 +36,7 @@ import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor.PACKAGE_OPT_DESC;
+import static ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor.APP_DOMAIN_PKG_OPT_DESC;
 import static ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor.ERR_AT_MOST_ONE_EXTENSION_POINT_IS_ALLOWED;
 import static ua.com.fielden.platform.processors.test_utils.CollectionTestUtils.assertEqualByContents;
 import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
@@ -83,7 +83,7 @@ public class ApplicationDomainProcessorTest {
         assertSuccessWithoutProcessingErrors(Compilation.newInMemory(List.of(firstExtension.toJavaFileObject()))
                 .setProcessor(processor)
                 .addOptions(OPTION_PROC_ONLY)
-                .addProcessorOption(PACKAGE_OPT_DESC.name(), GENERATED_PKG)
+                .addProcessorOption(APP_DOMAIN_PKG_OPT_DESC.name(), GENERATED_PKG)
                 .compile());
     }
 
@@ -102,7 +102,7 @@ public class ApplicationDomainProcessorTest {
         assertSuccessWithoutProcessingErrors(Compilation.newInMemory(List.of(PLACEHOLDER))
                 .setProcessor(processor)
                 .addOptions(OPTION_PROC_ONLY)
-                .addProcessorOption(PACKAGE_OPT_DESC.name(), GENERATED_PKG)
+                .addProcessorOption(APP_DOMAIN_PKG_OPT_DESC.name(), GENERATED_PKG)
                 .compile());
     }
 
@@ -139,7 +139,7 @@ public class ApplicationDomainProcessorTest {
         assertSuccessWithoutProcessingErrors(Compilation.newInMemory(javaFileObjects)
                 .setProcessor(processor)
                 .addOptions(OPTION_PROC_ONLY)
-                .addProcessorOption(PACKAGE_OPT_DESC.name(), GENERATED_PKG)
+                .addProcessorOption(APP_DOMAIN_PKG_OPT_DESC.name(), GENERATED_PKG)
                 .compile());
     }
 
@@ -175,7 +175,7 @@ public class ApplicationDomainProcessorTest {
         assertSuccessWithoutProcessingErrors(Compilation.newInMemory(List.of(firstEntity.toJavaFileObject(), skippedEntity.toJavaFileObject()))
                 .setProcessor(processor)
                 .addOptions(OPTION_PROC_ONLY)
-                .addProcessorOption(PACKAGE_OPT_DESC.name(), GENERATED_PKG)
+                .addProcessorOption(APP_DOMAIN_PKG_OPT_DESC.name(), GENERATED_PKG)
                 .compile());
     }
 
@@ -280,7 +280,7 @@ public class ApplicationDomainProcessorTest {
                 Compilation.newInMemory(Stream.of(domainEntity, abstractEntity).map(JavaFile::toJavaFileObject).toList())
                 .setProcessor(processor)
                 .addOptions(OPTION_PROC_ONLY)
-                .addProcessorOption(PACKAGE_OPT_DESC.name(), GENERATED_PKG)
+                .addProcessorOption(APP_DOMAIN_PKG_OPT_DESC.name(), GENERATED_PKG)
                 .compile());
     }
 
@@ -666,7 +666,7 @@ public class ApplicationDomainProcessorTest {
         final CompilationResult result = Compilation.newInMemory(Stream.of(extension1, extension2).map(JavaFile::toJavaFileObject).toList())
                 .setProcessor(new ApplicationDomainProcessor())
                 .addOptions(OPTION_PROC_ONLY)
-                .addProcessorOption(PACKAGE_OPT_DESC.name(), GENERATED_PKG)
+                .addProcessorOption(APP_DOMAIN_PKG_OPT_DESC.name(), GENERATED_PKG)
                 .compile();
         assertTrue(result.failure());
         assertMessages(result, Kind.ERROR, ERR_AT_MOST_ONE_EXTENSION_POINT_IS_ALLOWED);
@@ -705,7 +705,7 @@ public class ApplicationDomainProcessorTest {
 
     private static void compileWithTempStorage(final BiConsumer<Compilation, Consumer<JavaFile>> consumer) {
         CompilationTestUtils.compileWithTempStorage(((compilation, javaFileWriter) -> {
-            compilation.addProcessorOption(PACKAGE_OPT_DESC.name(), GENERATED_PKG);
+            compilation.addProcessorOption(APP_DOMAIN_PKG_OPT_DESC.name(), GENERATED_PKG);
             consumer.accept(compilation, javaFileWriter);
         }));
     }
