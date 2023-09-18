@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.meta.query;
 
 import static java.util.Collections.unmodifiableSortedMap;
 
+import java.util.Collection;
 import java.util.Objects;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -11,7 +12,7 @@ import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 
 public class QuerySourceInfo<T extends AbstractEntity<?>> implements IResolvable<T> {
     private final Class<T> javaType;
-    private final SortedMap<String, AbstractPropInfo<?>> props = new TreeMap<>();
+    private final SortedMap<String, AbstractPropInfo<?>> propsMap = new TreeMap<>();
     public final boolean isComprehensive; //indicates that all data-backed props from PE/SE are present
 
     public QuerySourceInfo(final Class<T> javaType, final boolean isComprehensive) {
@@ -19,18 +20,24 @@ public class QuerySourceInfo<T extends AbstractEntity<?>> implements IResolvable
         this.isComprehensive = isComprehensive;
     }
 
-    @Override
-    public PropResolutionProgress resolve(final PropResolutionProgress context) {
-        return IResolvable.resolve(context, props);
+    public QuerySourceInfo(final Class<T> javaType, final boolean isComprehensive, final Collection<AbstractPropInfo<?>> props) {
+        this(javaType, isComprehensive);
+        addProps(props);
     }
 
-    public QuerySourceInfo<T> addProp(final AbstractPropInfo<?> propInfo) { 
-        props.put(propInfo.name, propInfo);
-        return this;
+    @Override
+    public PropResolutionProgress resolve(final PropResolutionProgress context) {
+        return IResolvable.resolve(context, propsMap);
+    }
+
+    public void addProps(final Collection<AbstractPropInfo<?>> props) {
+        for (final AbstractPropInfo<?> prop : props) {
+            propsMap.put(prop.name, prop);    
+        }
     }
     
     public SortedMap<String, AbstractPropInfo<?>> getProps() {
-        return unmodifiableSortedMap(props);
+        return unmodifiableSortedMap(propsMap);
     }
     
     @Override
@@ -48,7 +55,7 @@ public class QuerySourceInfo<T extends AbstractEntity<?>> implements IResolvable
         final int prime = 31;
         int result = 1;
         result = prime * result + javaType.hashCode();
-        result = prime * result + props.keySet().hashCode();
+        result = prime * result + propsMap.keySet().hashCode();
         result = prime * result + (isComprehensive ? 1231 : 1237);
         return result;
     }
@@ -65,6 +72,6 @@ public class QuerySourceInfo<T extends AbstractEntity<?>> implements IResolvable
 
         final QuerySourceInfo<?> other = (QuerySourceInfo<?>) obj;
 
-        return Objects.equals(javaType, other.javaType) && Objects.equals(props.keySet(), other.props.keySet()) && isComprehensive == other.isComprehensive;
+        return Objects.equals(javaType, other.javaType) && Objects.equals(propsMap.keySet(), other.propsMap.keySet()) && isComprehensive == other.isComprehensive;
     }
 }

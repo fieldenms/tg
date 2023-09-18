@@ -6,6 +6,8 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.eql.meta.PropType.INTEGER_PROP_TYPE;
 import static ua.com.fielden.platform.eql.stage0.YieldBuilder.ABSENT_ALIAS;
 
+import java.util.List;
+
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -55,8 +57,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
 
         final SourceQuery2 vehSourceQry = srcqry(vehSources, vehConditions, vehYields);
         
-        final QuerySourceInfo<EntityAggregates> querySourceInfo = new QuerySourceInfo<>(EntityAggregates.class, false);
-        querySourceInfo.addProp(new PrimTypePropInfo<>("qty", INTEGER, null));
+        final QuerySourceInfo<EntityAggregates> querySourceInfo = new QuerySourceInfo<>(EntityAggregates.class, false, List.of(new PrimTypePropInfo<>("qty", INTEGER, null)));
         
         final Source2BasedOnQueries qtyQrySource = source(querySourceInfo, 2, vehSourceQry);
         final IJoinNode2<? extends IJoinNode3> qtyQrySources = sources(qtyQrySource);
@@ -99,8 +100,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
 
         final SourceQuery2 vehSourceQry2 = srcqry(vehSources2, vehConditions2, vehYields2);
 
-        final QuerySourceInfo<EntityAggregates> querySourceInfo = new QuerySourceInfo<>(EntityAggregates.class, false);
-        querySourceInfo.addProp(new PrimTypePropInfo<>("qty", INTEGER, null));
+        final QuerySourceInfo<EntityAggregates> querySourceInfo = new QuerySourceInfo<>(EntityAggregates.class, false, List.of(new PrimTypePropInfo<>("qty", INTEGER, null)));
         
         final Source2BasedOnQueries qtyQrySource = source(querySourceInfo, 3, vehSourceQry1, vehSourceQry2);
         final IJoinNode2<? extends IJoinNode3> qtyQrySources = sources(qtyQrySource);

@@ -13,6 +13,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +26,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
 import ua.com.fielden.platform.eql.meta.query.AbstractPropInfo;
@@ -58,11 +60,11 @@ public class QuerySourceInfoProvider {
         final EntQueryGenerator gen = new EntQueryGenerator(null, null, null, emptyMap());
 
         declaredQuerySourceInfoMap.putAll(entityMetadataHolder.entityPropsMetadata().entrySet().stream().collect(toConcurrentMap(k -> k.getKey(), k -> new QuerySourceInfo<>(k.getKey(), true)))); 
-        declaredQuerySourceInfoMap.values().stream().forEach(ei -> addProps(ei, declaredQuerySourceInfoMap, entityMetadataHolder.entityPropsMetadata().get(ei.javaType()).props()));
+        declaredQuerySourceInfoMap.values().stream().forEach(ei -> ei.addProps(generateProps(declaredQuerySourceInfoMap, entityMetadataHolder.entityPropsMetadata().get(ei.javaType()).props())));
         
         modelledQuerySourceInfoMap.putAll(entityMetadataHolder.entityPropsMetadata().entrySet().stream().
                 filter(e -> e.getValue().typeInfo.category == PERSISTENT || e.getValue().typeInfo.category == UNION).collect(toConcurrentMap(k -> k.getKey(), k -> new QuerySourceInfo<>(k.getKey(), true)))); 
-        modelledQuerySourceInfoMap.values().stream().forEach(ei -> addProps(ei, modelledQuerySourceInfoMap, entityMetadataHolder.entityPropsMetadata().get(ei.javaType()).props()));
+        modelledQuerySourceInfoMap.values().stream().forEach(ei -> ei.addProps(generateProps(modelledQuerySourceInfoMap, entityMetadataHolder.entityPropsMetadata().get(ei.javaType()).props())));
 
         // generating models and dependencies info for SE types (there is no need to include UE types here as their models are implicitly generated and have no interdependencies)
         final Map<Class<? extends AbstractEntity<?>>, Set<Class<? extends AbstractEntity<?>>>> seDependencies = new HashMap<>();
@@ -114,7 +116,8 @@ public class QuerySourceInfoProvider {
         return entityTypesDependentCalcPropsOrder.get(getOriginalType(entityType).getName());
     }
      
-    private <T extends AbstractEntity<?>> void addProps(final QuerySourceInfo<T> querySourceInfo, final Map<Class<? extends AbstractEntity<?>>, QuerySourceInfo<?>> allEntitiesInfo, final Collection<EqlPropertyMetadata> entityPropsMetadatas) {
+    private List<AbstractPropInfo<?>> generateProps(final Map<Class<? extends AbstractEntity<?>>, QuerySourceInfo<?>> allEntitiesInfo, final Collection<EqlPropertyMetadata> entityPropsMetadatas) {
+        final List<AbstractPropInfo<?>> props = new ArrayList<>();
         for (final EqlPropertyMetadata el : entityPropsMetadatas) {
             if (!el.critOnly) {
                 final String name = el.name;
@@ -136,41 +139,36 @@ public class QuerySourceInfoProvider {
                             }
                         }
                     }
-                    querySourceInfo.addProp(new UnionTypePropInfo(name, javaType, hibType, subprops));
+                    props.add(new UnionTypePropInfo<>(name, ((Class<? extends AbstractUnionEntity>) javaType), hibType, subprops));
                 } else if (isPersistedEntityType(javaType)) {
-                    querySourceInfo.addProp(new EntityTypePropInfo<>(name, allEntitiesInfo.get(javaType), hibType, el.required, expr, el.implicit));
+                    props.add(new EntityTypePropInfo<>(name, allEntitiesInfo.get(javaType), hibType, el.required, expr, el.implicit));
                     //                } else if (ID.equals(name)){
                     //                    querySourceInfo.addProp(new EntityTypePropInfo(name, allEntitiesInfo.get(querySourceInfo.javaType()), hibType, required, expr));
                 } else {
                     if (el.subitems().isEmpty()) {
-                        querySourceInfo.addProp(new PrimTypePropInfo<>(name, javaType, hibType, expr, el.implicit));
+                        props.add(new PrimTypePropInfo<>(name, javaType, hibType, expr, el.implicit));
                     } else {
                         final ComponentTypePropInfo<?> propTpi = new ComponentTypePropInfo<>(name, javaType, hibType);
                         for (final EqlPropertyMetadata sub : el.subitems()) {
                             final ExpressionModel subExpr = sub.expressionModel;
                             propTpi.addProp(new PrimTypePropInfo<>(sub.name, sub.javaType, sub.hibType, subExpr, sub.implicit));
                         }
-                        querySourceInfo.addProp(propTpi);
+                        props.add(propTpi);
                     }
                 }
             }
         }
+        return props;
     }
 
     private QuerySourceInfo<?> generateDeclaredQuerySourceInfo(final Class<? extends AbstractEntity<?>> type) {
-        final QuerySourceInfo<?> created = new QuerySourceInfo<>(type, true);
         final List<EqlPropertyMetadata> propsMetadatas = entityMetadataHolder.obtainEqlEntityMetadata(type).props();
-        addProps(created, declaredQuerySourceInfoMap, propsMetadatas);
-
-        return created;
+        return new QuerySourceInfo<>(type, true, generateProps(declaredQuerySourceInfoMap, propsMetadatas));
     }
     
     private QuerySourceInfo<?> generateModelledQuerySourceInfoForPersistentType(final Class<? extends AbstractEntity<?>> type) {
-        final QuerySourceInfo<?> created = new QuerySourceInfo<>(type, true);
         final List<EqlPropertyMetadata> propsMetadatas = entityMetadataHolder.obtainEqlEntityMetadata(type).props();
-        addProps(created, modelledQuerySourceInfoMap, propsMetadatas);
-
-        return created;
+        return new QuerySourceInfo<>(type, true, generateProps(modelledQuerySourceInfoMap, propsMetadatas));
     }
 
     public QuerySourceInfo<?> getDeclaredQuerySourceInfo(final Class<? extends AbstractEntity<?>> type) {

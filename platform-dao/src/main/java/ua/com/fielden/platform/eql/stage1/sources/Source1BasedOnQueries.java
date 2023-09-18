@@ -9,8 +9,10 @@ import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
@@ -73,9 +75,9 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
     }
 
     public static <T extends AbstractEntity<?>> QuerySourceInfo<T> produceQuerySourceInfoForEntityType(final QuerySourceInfoProvider querySourceInfoProvider, final List<SourceQuery2> models, final Class<T> sourceType, final boolean isComprehensive) {
-        final QuerySourceInfo<T> querySourceInfo = new QuerySourceInfo<>(sourceType, isComprehensive);
         final SortedMap<String, AbstractPropInfo<?>> declaredProps = EntityAggregates.class.equals(sourceType) ? emptySortedMap() : querySourceInfoProvider.getDeclaredQuerySourceInfo(sourceType).getProps();
         final Collection<YieldInfoNode> yieldInfoNodes = YieldInfoNodesGenerator.generate(models);
+        final Map<String, AbstractPropInfo<?>> createdProps = new HashMap<>(); 
         for (final YieldInfoNode yield : yieldInfoNodes) {
             final AbstractPropInfo<?> declaredProp = declaredProps.get(yield.name);
             if (declaredProp != null) {
@@ -85,15 +87,15 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
                     if (!(yield.propType == null || isEntityType(yield.propType.javaType()) && yield.propType.javaType().equals(declaredEntityTypePropInfo.javaType()) || Long.class.equals(yield.propType.javaType()))) {
                         throw new EqlStage1ProcessingException(format(ERR_CONFLICT_BETWEEN_YIELDED_AND_DECLARED_PROP_TYPE, declaredEntityTypePropInfo.name, sourceType.getName(), declaredEntityTypePropInfo.javaType().getName(), yield.propType.javaType().getName()));
                     }
-                    querySourceInfo.addProp(new EntityTypePropInfo<>(yield.name, querySourceInfoProvider.getModelledQuerySourceInfo((Class<? extends AbstractEntity<?>>) declaredProp.javaType()), declaredEntityTypePropInfo.hibType, yield.nonnullable));
+                    createdProps.put(yield.name, new EntityTypePropInfo<>(yield.name, querySourceInfoProvider.getModelledQuerySourceInfo((Class<? extends AbstractEntity<?>>) declaredProp.javaType()), declaredEntityTypePropInfo.hibType, yield.nonnullable));
                 } else {
                     // TODO need to ensure that in case of UE or complex value all declared subprops match yielded ones.
                     // TODO need actual (based on yield) rather than declared info (similar to not declared props section below).
-                    querySourceInfo.addProp(declaredProp.hasExpression() ? declaredProp.cloneWithoutExpression() : declaredProp);
+                    createdProps.put(declaredProp.name, declaredProp.hasExpression() ? declaredProp.cloneWithoutExpression() : declaredProp);
                 }
             } else {
                 // adding not declared props
-                querySourceInfo.addProp(yield.propType != null && isEntityType(yield.propType.javaType())
+                createdProps.put(yield.name, yield.propType != null && isEntityType(yield.propType.javaType())
                         ? new EntityTypePropInfo<>(yield.name, querySourceInfoProvider.getModelledQuerySourceInfo((Class<? extends AbstractEntity<?>>) yield.propType.javaType()), H_ENTITY, yield.nonnullable)
                         : new PrimTypePropInfo<>(yield.name, yield.propType != null ? yield.propType.javaType() : null, yield.propType != null ? yield.propType.hibType() : null));
             }
@@ -103,12 +105,12 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
 
         // In case of ad-hoc added calc props (e.g. totals) -- they should be included here
         for (final AbstractPropInfo<?> prop : declaredProps.values()) {
-            if (prop.hasExpression() && !querySourceInfo.getProps().containsKey(prop.name)) {
-                querySourceInfo.addProp(prop);
+            if (prop.hasExpression() && !createdProps.containsKey(prop.name)) {
+                createdProps.put(prop.name, prop);
             }
         }
 
-        return querySourceInfo;
+        return new QuerySourceInfo<>(sourceType, isComprehensive, createdProps.values());
     }
     
     private static QuerySourceInfo<?> obtainQuerySourceInfo(final QuerySourceInfoProvider querySourceInfoProvider, final List<SourceQuery2> models, final Class<? extends AbstractEntity<?>> sourceType, final boolean isSyntheticEntity) {
