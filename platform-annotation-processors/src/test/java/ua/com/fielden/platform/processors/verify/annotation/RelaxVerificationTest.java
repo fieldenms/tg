@@ -74,6 +74,7 @@ public class RelaxVerificationTest extends AbstractVerifierTest {
             // make sure that kind OTHER was truly disregarded
             assertTrue("Diagnostic kind OTHER was not disregarded by the compiler.", result.other().isEmpty());
             assertMessages(result, NOTE, "INVALID CLASS", "POSSIBLY INVALID FIELD", "POSSIBLY INVALID METHOD");
+            System.out.println("Don't worry about previously printed messages, the test passed.");
         }
     }
 
