@@ -66,15 +66,14 @@ public class TypeElementCacheTest {
     }
 
     @Test
-    public void getTypeElement_returns_and_caches_null_if_no_element_was_found() {
+    public void null_values_are_not_cached() {
         final Elements elements = rule1.getElements();
 
         final TypeElement stubElt = TypeElementCache.getTypeElement(elements, "stub");
         assertNull(stubElt);
 
         final Map<String, TypeElement> cacheView = TypeElementCache.cacheViewFor(elements).orElseThrow();
-        assertEquals(Set.of("stub"), cacheView.keySet());
-        assertNull(cacheView.get("stub"));
+        assertFalse(cacheView.containsKey("stub"));
     }
 
     @Test
