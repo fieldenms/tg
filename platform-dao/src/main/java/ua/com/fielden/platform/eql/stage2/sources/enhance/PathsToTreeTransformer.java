@@ -43,7 +43,7 @@ public class PathsToTreeTransformer {
         this.querySourceInfoProvider = querySourceInfoProvider;
         this.gen = gen;
     }
-    
+
     public final TreeResult transform(final Set<Prop2> props) {
         final Map<Integer, List<ImplicitNode>> nodes = new HashMap<>();
         final List<ExpressionLinks> expressionsLinks = new ArrayList<>();
@@ -51,13 +51,13 @@ public class PathsToTreeTransformer {
 
         for (final SourceTails sourceTails : groupBySource(props)) {
             final T2<List<ImplicitNode>, TreeResult> genRes = generateSourceNodes(sourceTails.source, sourceTails.tails, true);
-            
+
             nodes.put(sourceTails.source.id(), genRes._1);
             nodes.putAll(genRes._2.implicitNodesMap());
             expressionsLinks.addAll(genRes._2.expressionsData());
             propLinks.addAll(genRes._2.propsData());
         }
-        
+
         return new TreeResult(nodes, propLinks, expressionsLinks);
     }
     
@@ -66,40 +66,46 @@ public class PathsToTreeTransformer {
             final List<PendingTail> pendingTails,
             final boolean explicitSource // true if sourceForCalcPropResolution is explicit source
     ) {
+        final Set<String> propsToSkip = explicitSource ? new HashSet<String>(pendingTails.stream().map(p -> p.link.name()).toList()) : emptySet();
+        final T2<Map<String, CalcPropData>, List<PendingTail>> procRes = enhanceWithCalcPropsData(sourceForCalcPropResolution, emptyMap(), propsToSkip, pendingTails);
+
+        final Map<String, CalcPropData> calcPropData = procRes._1;
+
         final List<ImplicitNode> listOfNodes = new ArrayList<>();
         final Map<Integer, List<ImplicitNode>> otherSourcesNodes = new HashMap<>();
         final List<ExpressionLinks> expressionLinks = new ArrayList<>();
         final List<Prop3Links> propLinks = new ArrayList<>();
-        
-        final Set<String> propsToSkip = explicitSource ? new HashSet<String>(pendingTails.stream().map(p -> p.link.name()).toList()) : emptySet(); 
-        final T2<Map<String, CalcPropData>, List<PendingTail>> procRes = 
-                enhanceWithCalcPropsData(sourceForCalcPropResolution, emptyMap(), propsToSkip, pendingTails);
 
-        final Map<String, CalcPropData> calcPropData = procRes._1;
-        
         for (final FirstChunkGroup propEntry : groupByFirstChunk(procRes._2)) {
-        	
-        	final CalcPropData cpd = calcPropData.get(propEntry.firstChunk.name());
-        	
-        	if (cpd != null) {
-        	    otherSourcesNodes.putAll(cpd.internalsResult.implicitNodesMap());
-        	    expressionLinks.addAll(cpd.internalsResult.expressionsData());
-        	    propLinks.addAll(cpd.internalsResult.propsData());
-        	}
-        	
-        	final T2<ImplicitNode, TreeResult> genRes = generateNode(propEntry, cpd != null ? cpd.expr : null, sourceForCalcPropResolution.id());
-        	
-            if (genRes._1 != null) {
-                listOfNodes.add(genRes._1);
+
+            final CalcPropData cpd = calcPropData.get(propEntry.firstChunk.name());
+
+            if (cpd != null) {
+                otherSourcesNodes.putAll(cpd.internalsResult.implicitNodesMap());
+                expressionLinks.addAll(cpd.internalsResult.expressionsData());
+                propLinks.addAll(cpd.internalsResult.propsData());
             }
 
-            if (genRes._2 != null) {
+            final T2<List<Prop2Lite>, List<PendingTail>> next = getLeafPathsAndNextPendingTails(propEntry.tails);
+            final Expression2 expression = cpd != null ? cpd.expr : null;
+
+            if (!next._1.isEmpty()) {
+                if (expression != null) {
+                    expressionLinks.add(new ExpressionLinks(expression, next._1));
+                } else {
+                    propLinks.add(new Prop3Links(new Prop3Lite(propEntry.firstChunk.name(), sourceForCalcPropResolution.id()), next._1));
+                }
+            }
+
+            if (!next._2.isEmpty()) {
+                final T2<ImplicitNode, TreeResult> genRes = generateNode(next._2, propEntry, expression);
+                listOfNodes.add(genRes._1);
                 otherSourcesNodes.putAll(genRes._2.implicitNodesMap());
                 expressionLinks.addAll(genRes._2.expressionsData());
                 propLinks.addAll(genRes._2.propsData());
             }
         }
-        
+
         final List<String> orderedCalcPropsForType = isUnionEntityType(sourceForCalcPropResolution.sourceType()) || sourceForCalcPropResolution.sourceType().equals(EntityAggregates.class) ? emptyList() : querySourceInfoProvider.getCalcPropsOrder(sourceForCalcPropResolution.sourceType());
 
         final List<ImplicitNode> orderedNodes = orderImplicitNodes(listOfNodes, orderedCalcPropsForType);
@@ -107,100 +113,74 @@ public class PathsToTreeTransformer {
         return t2(orderedNodes, new TreeResult(otherSourcesNodes, propLinks, expressionLinks));
     }
 
-	private T2<Map<String, CalcPropData>, List<PendingTail>> enhanceWithCalcPropsData(
-			final ISource2<?> sourceForCalcPropResolution, 
-			final Map<String, CalcPropData> processedCalcData,
-			final Set<String> processedProps, // Prop2 name
-			final List<PendingTail> incomingTails) {
-		
-		final Map<String, CalcPropData> processedCalcDataLocal = new HashMap<>(); // used to store processed calc props (key is the same as FirstPropInfoAndItsPathes.firstPropName)
-		processedCalcDataLocal.putAll(processedCalcData);
-		
-		final Set<String> processedPropsLocal = new HashSet<>();
-		processedPropsLocal.addAll(processedProps);
-
-		final List<PendingTail> addedTails = new ArrayList<>();
-
-		for (final PropChunk calcChunk : getFirstCalcChunks(incomingTails)) {
-			if (!processedCalcDataLocal.containsKey(calcChunk.name())) {	// consider only calc props that have not yet been processed
-				final Expression1 exp1 = (Expression1) (new StandAloneExpressionBuilder(gen, calcChunk.data().expression)).getResult().getValue();
-				final TransformationContext1 prc = (new TransformationContext1(querySourceInfoProvider)).cloneWithAdded(sourceForCalcPropResolution);
-				final Expression2 exp2 = exp1.transform(prc);
-				final Set<Prop2> expProps = exp2.collectProps();
-				// separate into external and internal
-				final Set<Prop2> externalProps = new HashSet<>();
-				final Set<Prop2> internalProps = new HashSet<>();
-
-				for (final Prop2 prop2 : expProps) {
-					if (prop2.source.id().equals(sourceForCalcPropResolution.id())) {
-						externalProps.add(prop2);
-					} else {
-						internalProps.add(prop2);
-					}
-				}
-				
-				final TreeResult localCalcPropSourcesNodes = transform(internalProps);
-				processedCalcDataLocal.put(calcChunk.name(), new CalcPropData(exp2, localCalcPropSourcesNodes));
-				
-				for (final Prop2 prop : externalProps) {
-					if (!processedPropsLocal.contains(prop.name)) {
-						addedTails.add(tailFromProp(prop));
-						processedPropsLocal.add(prop.name);
-					}
-				}
-			}
-		}
-		
-		// let's recursively enhance newly added tails (as they can have unprocessed calc props among them)
-		final T2<Map<String, CalcPropData>, List<PendingTail>> recursivelyEnhanced = addedTails.isEmpty() ? 
-				t2(unmodifiableMap(processedCalcDataLocal), emptyList()) : 
-					enhanceWithCalcPropsData(sourceForCalcPropResolution, processedCalcDataLocal, processedPropsLocal, addedTails);
-
-		final List<PendingTail> allTails = new ArrayList<>();
-		allTails.addAll(incomingTails);
-		allTails.addAll(recursivelyEnhanced._2);
-
-		return t2(recursivelyEnhanced._1, allTails);
-	}
-	
-    private T2<ImplicitNode, TreeResult> generateNode(final FirstChunkGroup firstChunkGroup, final Expression2 expression, final Integer currResolutionSourceId) {
-        final T2<List<Prop2Lite>, List<PendingTail>> next = getLeafPathsAndNextPendingTails(firstChunkGroup.tails);
-        final String propName = firstChunkGroup.firstChunk.name();
+    private T2<Map<String, CalcPropData>, List<PendingTail>> enhanceWithCalcPropsData(
+            final ISource2<?> sourceForCalcPropResolution, 
+            final Map<String, CalcPropData> processedCalcData,
+            final Set<String> processedProps, // Prop2 name
+            final List<PendingTail> incomingTails) {
         
-        if (next._2.isEmpty()) {
-            if (expression == null) {
-                return t2(null, new TreeResult(emptyMap(), List.of(new Prop3Links(new Prop3Lite(propName, currResolutionSourceId), next._1)), emptyList()));
-            } else {
-                return t2(null, new TreeResult(emptyMap(), emptyList(), List.of(new ExpressionLinks(expression, next._1))));
-            }
-        } else {
-            final EntityTypePropInfo<?> propInfo = (EntityTypePropInfo<?>) firstChunkGroup.firstChunk.data();
-            final Source2BasedOnPersistentType implicitSource = new Source2BasedOnPersistentType(propInfo.javaType(), propInfo.propQuerySourceInfo, gen.nextSourceId()); 
-            
-            final T2<List<ImplicitNode>, TreeResult> genRes = generateSourceNodes(implicitSource, next._2, false);
-            final List<ExpressionLinks> expressionLinks = new ArrayList<>();
-            final List<Prop3Links> propLinks = new ArrayList<>();
-            expressionLinks.addAll(genRes._2.expressionsData());
-            propLinks.addAll(genRes._2.propsData());
-            
-            if (!next._1.isEmpty()) {
-                if (expression != null) {
-                    expressionLinks.add(new ExpressionLinks(expression, next._1));
-                } else {
-                    propLinks.add(new Prop3Links(new Prop3Lite(propName, currResolutionSourceId), next._1));
+        final Map<String, CalcPropData> processedCalcDataLocal = new HashMap<>(); // used to store processed calc props (key is the same as FirstPropInfoAndItsPathes.firstPropName)
+        processedCalcDataLocal.putAll(processedCalcData);
+
+        final Set<String> processedPropsLocal = new HashSet<>();
+        processedPropsLocal.addAll(processedProps);
+
+        final List<PendingTail> addedTails = new ArrayList<>();
+
+        for (final PropChunk calcChunk : getFirstCalcChunks(incomingTails)) {
+            if (!processedCalcDataLocal.containsKey(calcChunk.name())) { // consider only calc props that have not yet been processed
+                final Expression1 exp1 = (Expression1) (new StandAloneExpressionBuilder(gen, calcChunk.data().expression)).getResult().getValue();
+                final TransformationContext1 prc = (new TransformationContext1(querySourceInfoProvider)).cloneWithAdded(sourceForCalcPropResolution);
+                final Expression2 exp2 = exp1.transform(prc);
+                final Set<Prop2> expProps = exp2.collectProps();
+                // separate into external and internal
+                final Set<Prop2> externalProps = new HashSet<>();
+                final Set<Prop2> internalProps = new HashSet<>();
+
+                for (final Prop2 prop2 : expProps) {
+                    if (prop2.source.id().equals(sourceForCalcPropResolution.id())) {
+                        externalProps.add(prop2);
+                    } else {
+                        internalProps.add(prop2);
+                    }
+                }
+
+                final TreeResult localCalcPropSourcesNodes = transform(internalProps);
+                processedCalcDataLocal.put(calcChunk.name(), new CalcPropData(exp2, localCalcPropSourcesNodes));
+
+                for (final Prop2 prop : externalProps) {
+                    if (!processedPropsLocal.contains(prop.name)) {
+                        addedTails.add(tailFromProp(prop));
+                        processedPropsLocal.add(prop.name);
+                    }
                 }
             }
-            
-            final ImplicitNode node = new ImplicitNode(propName, genRes._1, propInfo.nonnullable, implicitSource, expression);
-            
-            return t2(node, new TreeResult(genRes._2.implicitNodesMap(), propLinks, expressionLinks));
         }
+
+        // let's recursively enhance newly added tails (as they can have unprocessed calc props among them)
+        final T2<Map<String, CalcPropData>, List<PendingTail>> recursivelyEnhanced = addedTails.isEmpty() ? t2(unmodifiableMap(processedCalcDataLocal), emptyList())
+                : enhanceWithCalcPropsData(sourceForCalcPropResolution, processedCalcDataLocal, processedPropsLocal, addedTails);
+
+        final List<PendingTail> allTails = new ArrayList<>();
+        allTails.addAll(incomingTails);
+        allTails.addAll(recursivelyEnhanced._2);
+
+        return t2(recursivelyEnhanced._1, allTails);
     }
-	
-	private static PendingTail tailFromProp(final Prop2 prop) {
-	    return new PendingTail(new Prop2Lite(prop.name, prop.source.id()), convertPathToChunks(prop.getPath()));
-	}
-	
+    
+    private T2<ImplicitNode, TreeResult> generateNode(final List<PendingTail> tails, final FirstChunkGroup firstChunkGroup, final Expression2 expression) {
+        final String propName = firstChunkGroup.firstChunk.name();
+        final EntityTypePropInfo<?> propInfo = (EntityTypePropInfo<?>) firstChunkGroup.firstChunk.data();
+        final Source2BasedOnPersistentType implicitSource = new Source2BasedOnPersistentType(propInfo.javaType(), propInfo.propQuerySourceInfo, gen.nextSourceId());
+        final T2<List<ImplicitNode>, TreeResult> genRes = generateSourceNodes(implicitSource, tails, false);
+        final ImplicitNode node = new ImplicitNode(propName, genRes._1, propInfo.nonnullable, implicitSource, expression);
+        return t2(node, genRes._2);
+    }
+
+    private static PendingTail tailFromProp(final Prop2 prop) {
+        return new PendingTail(new Prop2Lite(prop.name, prop.source.id()), convertPathToChunks(prop.getPath()));
+    }
+
     private static final Collection<SourceTails> groupBySource(final Set<Prop2> props) {
         final SortedMap<Integer, SourceTails> result = new TreeMap<>(); //need predictable order for testing purposes
         for (final Prop2 prop : props) {
@@ -215,9 +195,9 @@ public class PathsToTreeTransformer {
         }
         return result.values();
     }
-	
-	private static Collection<FirstChunkGroup> groupByFirstChunk(final List<PendingTail> tails) {
-        final SortedMap<String, FirstChunkGroup> result = new TreeMap<>();  //need predictable order for testing purposes
+    
+    private static Collection<FirstChunkGroup> groupByFirstChunk(final List<PendingTail> tails) {
+        final SortedMap<String, FirstChunkGroup> result = new TreeMap<>(); //need predictable order for testing purposes
 
         for (final PendingTail pt : tails) {
             final PropChunk first = pt.tail.get(0);
@@ -232,15 +212,15 @@ public class PathsToTreeTransformer {
 
         return result.values();
     }
-	
-	/**
-	 * Obtains unique set of first chunks (only calculated) from the collection of pending tails.
-	 * 
-	 * @param props
-	 * @return
-	 */
-	private static Collection<PropChunk> getFirstCalcChunks(final Collection<PendingTail> props) {
-        final SortedMap<String, PropChunk> result = new TreeMap<>();  //need predictable order for testing purposes
+
+    /**
+     * Obtains unique set of first chunks (only calculated) from the collection of pending tails.
+     * 
+     * @param props
+     * @return
+     */
+    private static Collection<PropChunk> getFirstCalcChunks(final Collection<PendingTail> props) {
+        final SortedMap<String, PropChunk> result = new TreeMap<>(); //need predictable order for testing purposes
 
         for (final PendingTail propEntry : props) {
             final PropChunk first = propEntry.tail.get(0);
@@ -253,34 +233,34 @@ public class PathsToTreeTransformer {
     }
 
     /**
-     * Establishes proper sequence of implicit nodes to be used for JOINs generation later on. 
+     * Establishes proper sequence of implicit nodes to be used for JOINs generation later on.
      * 
      * @param all
      * @param dependentCalcPropOrderFromMetadata
      * @return
      */
-	private static List<ImplicitNode> orderImplicitNodes(final List<ImplicitNode> all, final List<String> dependentCalcPropOrderFromMetadata) {
+    private static List<ImplicitNode> orderImplicitNodes(final List<ImplicitNode> all, final List<String> dependentCalcPropOrderFromMetadata) {
         final Map<String, ImplicitNode> dependentCalcPropNodes = new HashMap<>();
         final List<ImplicitNode> independentCalcPropNodes = new ArrayList<>();
         final List<ImplicitNode> result = new ArrayList<>(); // includes all non-calc prop nodes 
 
         for (final ImplicitNode node : all) {
-            if (node.expr == null) { 
+            if (node.expr == null) {
                 result.add(node); // adding all non-calc nodes first
-            } else if (dependentCalcPropOrderFromMetadata.contains(node.name)){
-                dependentCalcPropNodes.put(node.name, node); 
+            } else if (dependentCalcPropOrderFromMetadata.contains(node.name)) {
+                dependentCalcPropNodes.put(node.name, node);
             } else {
                 independentCalcPropNodes.add(node);
             }
         }
-        
+
         result.addAll(independentCalcPropNodes); // adding all independent calc prop nodes 
-        
+
         // adding all dependent calc prop nodes in the order as specified in their metadata
         for (final String calcProp : dependentCalcPropOrderFromMetadata) {
             final ImplicitNode foundCalcProp = dependentCalcPropNodes.get(calcProp);
             if (foundCalcProp != null) {
-                result.add(foundCalcProp);        
+                result.add(foundCalcProp);
             }
         }
 
@@ -295,26 +275,26 @@ public class PathsToTreeTransformer {
             if (subpropEntry.tail.size() > 1) {
                 nextTails.add(new PendingTail(subpropEntry.link, subpropEntry.tail.subList(1, subpropEntry.tail.size())));
             } else {
-            	paths.add(subpropEntry.link);
+                paths.add(subpropEntry.link);
             }
         }
         return t2(paths, nextTails);
     }
 
-	private static List<PropChunk> convertPathToChunks(final List<AbstractPropInfo<?>> propPath) {
-		final List<PropChunk> result = new ArrayList<>();
-		String currentPropName = null;
-		for (final AbstractPropInfo<?> propInfo : propPath) {
-			currentPropName = (currentPropName != null) ? currentPropName + "." + propInfo.name : propInfo.name;
-			if (!(propInfo instanceof ComponentTypePropInfo || propInfo instanceof UnionTypePropInfo)) {
-				// need to finalise and reset currentPropName
-				result.add(new PropChunk(currentPropName, propInfo));
-				currentPropName = null;
-			}
-		}
+    private static List<PropChunk> convertPathToChunks(final List<AbstractPropInfo<?>> propPath) {
+        final List<PropChunk> result = new ArrayList<>();
+        String currentPropName = null;
+        for (final AbstractPropInfo<?> propInfo : propPath) {
+            currentPropName = (currentPropName != null) ? currentPropName + "." + propInfo.name : propInfo.name;
+            if (!(propInfo instanceof ComponentTypePropInfo || propInfo instanceof UnionTypePropInfo)) {
+                // need to finalise and reset currentPropName
+                result.add(new PropChunk(currentPropName, propInfo));
+                currentPropName = null;
+            }
+        }
 
-		return result;
-	}
+        return result;
+    }
 
     private static class FirstChunkGroup {
         private final PropChunk firstChunk;
@@ -324,21 +304,21 @@ public class PathsToTreeTransformer {
             this.firstChunk = firstChunk;
         }
     }
-    
-	// there are 2 types: 1) tail corresponds to link, 2) tail is shorter (as left side being converted into nodes)
-	private static record PendingTail(Prop2Lite link, List<PropChunk> tail) {
-    	private PendingTail {
-    		tail = List.copyOf(tail);
-		}
+
+    // there are 2 types: 1) tail corresponds to link, 2) tail is shorter (as left side being converted into nodes)
+    private static record PendingTail(Prop2Lite link, List<PropChunk> tail) {
+        private PendingTail {
+            tail = List.copyOf(tail);
+        }
     }
-    
+
     private static record SourceTails(ISource2<?> source, List<PendingTail> tails) {
         private SourceTails(final ISource2<?> source, final List<PendingTail> tails) {
             this.source = source;
             this.tails = tails;// unmodifiableList(tails);
         }
     }
-    
-    private static record CalcPropData (Expression2 expr, TreeResult internalsResult) {
+
+    private static record CalcPropData(Expression2 expr, TreeResult internalsResult) {
     }
 }
