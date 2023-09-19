@@ -467,8 +467,10 @@ Polymer({
     startDrag: function (dragEvent) {
         this._menuItemToDrag = dragEvent.target.parentElement;
         this.async(() => {
-            this._menuItemToDrag.classList.add("dragging");
-            this.$.menu.classList.add("dragging");
+            if (this._menuItemToDrag) {
+                this._menuItemToDrag.classList.add("dragging");
+                this.$.menu.classList.add("dragging");
+            }
         }, 1);
         dragEvent.dataTransfer.effectAllowed = "copyMove";
         dragEvent.dataTransfer.setDragImage(this._menuItemToDrag, 12, 24);
@@ -476,15 +478,16 @@ Polymer({
     },
 
     endDrag: function (dragEvent) {
-        if (this._menuItemToDrag !== null) {
+        if (this._menuItemToDrag) {
             this._menuItemToDrag.classList.remove("dragging");
             this.$.menu.classList.remove("dragging");
             this._saveMenuOrder();
+            this._menuItemToDrag = null;
         }
     },
 
     dragOver: function (e) {
-        if (this._menuItemToDrag !== null) {
+        if (this._menuItemToDrag) {
             tearDownEvent(e);
             const siblings = [...this.querySelectorAll("paper-item:not(.dragging):not(.notDraggable)")];
             const nextSibling = siblings.find(sibling => {
