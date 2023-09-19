@@ -766,16 +766,18 @@ Polymer({
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
     _invertDialogState: function(stateName) {
-        if (!this[stateName]) {
-            this.persistActiveElement();
-            this.focus();
+        if (!this._masterVisibilityChanges && !this._masterLayoutChanges) {
+            if (!this[stateName]) {
+                this.persistActiveElement();
+                this.focus();
+            }
+            this[stateName] = !this[stateName];
+            if (!this[stateName]) {
+                this.restoreActiveElement();
+                this._restoreLocallyPersistedDialogPositionAndDimension();
+            }
+            this.notifyResize(); // notify children about resize of action dialog (for e.g. to re-draw shadow of tg-entity-master's actionContainer)
         }
-        this[stateName] = !this[stateName];
-        if (!this[stateName]) {
-            this.restoreActiveElement();
-            this._restoreLocallyPersistedDialogPositionAndDimension();
-        }
-        this.notifyResize(); // notify children about resize of action dialog (for e.g. to re-draw shadow of tg-entity-master's actionContainer)
     },
 
     _invertMinimiseState: function() {
@@ -1359,6 +1361,8 @@ Polymer({
         if (!this.mobile) {
             this._maximised = this._customMaximised();
         }
+
+        console.log(`--refiting fialog maximised state: ${this._maximised}--`);
 
         if (this._dialogIsOutOfTheWindow()) {
             this._removePersistedPositionAndDimensions();
