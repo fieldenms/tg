@@ -881,7 +881,7 @@ export class TgEntityEditor extends TgEditor {
                 this._resultOpened();
             } else {
                 if (this.result.visibleHeightUnderEditorIsSmall()) {
-                    this.scrollIntoView({block: "center", inline: "center"}); // behavior: "smooth"
+                    this.scrollIntoView(); // behavior: "smooth"
                     // need to wait at least 400 ms for smooth scrolling to complete... let's instead disable it
                     setTimeout(function () {
                         this._showResult(this.result);

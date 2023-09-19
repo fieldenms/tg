@@ -663,7 +663,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
     }
 
     /**
-     * Defines reasonable rule for 'small height for showing autocompleter results'. For now three items need to be shown, otherwise scrolling will be triggered.
+     * Defines reasonable rule for 'small height for showing autocompleter results'. For now NUMBER_OF_VISIBLE_ITEMS items need to be shown, otherwise scrolling will be triggered.
      */
     visibleHeightUnderEditorIsSmall () {
         const clientRectAndOffsetHeight = this.retrieveContainerSizes();
@@ -674,7 +674,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         // let's try to determine the height under the editor to bottom of the screen
         const visibleHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
         const itemHeight = 24 + 2 * 6 + 1; // see tg-item styles with min-height, top / bottom padding and top border
-        return visibleHeight - top - 10 < 3 * itemHeight; // three items do not fit, so visible height is small for showing items
+        return visibleHeight - top - 10 < NUMBER_OF_VISIBLE_ITEMS * itemHeight && rect.top - 10 < NUMBER_OF_VISIBLE_ITEMS * itemHeight; // NUMBER_OF_VISIBLE_ITEMS items do not fit from bottom and from top, then trigger scroll.
     }
 
     /**
