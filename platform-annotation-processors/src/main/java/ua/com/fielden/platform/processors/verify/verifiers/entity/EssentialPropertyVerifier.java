@@ -1,10 +1,7 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Supplier;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -17,6 +14,8 @@ import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic.Kind;
 
 import org.apache.poi.sl.draw.geom.GuideIf;
+import ua.com.fielden.platform.domain.PlatformDomainTypes;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.processors.appdomain.ApplicationDomainElement;
@@ -255,6 +254,7 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
         static final List<Class<?>> BINARY_TYPES = List.of(byte[].class);
         static final List<Class<?>> SPECIAL_COLLECTION_TYPES = List.of(Map.class);
         static final List<Class<?>> SPECIAL_ENTITY_TYPES = List.of(PropertyDescriptor.class);
+        static final List<Class<?>> PLATFORM_ENTITY_TYPES = new ArrayList<>(PlatformDomainTypes.types);
 
         private Supplier<Optional<ApplicationDomainElement>> lazyAppDomainElement;
 
@@ -336,6 +336,7 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
                 // 6. special case of collection-like types
                 if (isSpecialCollectionType(propType)) return Optional.empty();
                 if (isAnyOf(propType, SPECIAL_ENTITY_TYPES)) return Optional.empty();
+                if (isAnyOf(propType, PLATFORM_ENTITY_TYPES)) return Optional.empty();
 
                 // 3. entity type
                 if (entityFinder.isEntityType(propType)) {
@@ -356,7 +357,7 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
                     if (!typeArguments.isEmpty()) {
                         final TypeMirror typeArg = typeArguments.get(0);
 
-                        if (isAnyOf(typeArg, ORDINARY_TYPE_ARGS) || isAnyOf(typeArg, PLATFORM_TYPES)) {
+                        if (isAnyOf(typeArg, ORDINARY_TYPE_ARGS) || isAnyOf(typeArg, PLATFORM_TYPES) || isAnyOf(typeArg, PLATFORM_ENTITY_TYPES)) {
                             return Optional.empty();
                         }
 
