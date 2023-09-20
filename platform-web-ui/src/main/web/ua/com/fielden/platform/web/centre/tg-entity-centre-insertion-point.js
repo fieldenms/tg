@@ -17,6 +17,7 @@ import '/resources/egi/tg-responsive-toolbar.js';
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
+import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
 
 import '/resources/polymer/@polymer/paper-styles/color.js';
 import '/resources/polymer/@polymer/paper-styles/shadow.js';
@@ -54,13 +55,12 @@ const template = html`
             min-width: fit-content;
             @apply --shadow-elevation-2dp;
         }
-
         #pm[detached] {
             position: fixed;
-            top: 2%;
-            left: 2%;
-            width: 96%;
-            height: 96%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             z-index: 1;
         }
         .title-bar {
@@ -180,16 +180,6 @@ Polymer({
             value: false
         },
         
-        /**
-         * Indicates whether to hide margins around insertion point.
-         * This is typically needed for the case where this insertion point is separate alternative view.
-         */
-        hideMargins: {
-            type: Boolean,
-            value: false,
-            observer: "_hideMarginsChanged"
-        },
-        
         activated: {
             type: Boolean,
             value: false
@@ -201,6 +191,12 @@ Polymer({
             type: Boolean,
             value: false
         },
+
+        opened: {
+            type: Boolean,
+            computed: "_isOpened(detachedView)"
+        },
+
         /**
          * The icon for insertion point
          */
@@ -343,16 +339,26 @@ Polymer({
         }
     },
 
-    _showDialog: function () {
+    showDialog: function () {
         this.detachedView = true;
+        InsertionPointManager.addInsertionPoint(this);
         this.$.insertionPointContent.focus();
     },
 
-    _closeDialog: function () {
+    closeDialog: function () {
         this.detachedView = false;
+        InsertionPointManager.removeInsertionPoint(this);
         if (this.contextRetriever && this.contextRetriever().$.centreResultContainer) {
             this.contextRetriever().$.centreResultContainer.focus();
         }
+    },
+
+    skipHistoryAction: function () {
+        return !(this.contextRetriever && this.contextRetriever()._visible && this.detachedView);
+    },
+
+    _isOpened: function (detachedView) {
+        return detachedView;
     },
 
     _getElement: function (customAction) {
@@ -419,14 +425,6 @@ Polymer({
     _updateElementWithContextRetriever: function (newValue, oldValue) {
         if (this._element) {
             this._element.contextRetriever = newValue;
-        }
-    },
-
-    _hideMarginsChanged: function (newValue, oldValue) {
-        if (newValue) {
-            this.$.pm.style.removeProperty("margin");
-        } else {
-            this.$.pm.style["margin"] = "10px";
         }
     },
 
@@ -520,6 +518,7 @@ Polymer({
         this.$.loadableContent.style.removeProperty("height");
         this.$.loadableContent.style.removeProperty("min-width");
         this.$.loadableContent.style.removeProperty("min-height");
+        this.$.pm.style.removeProperty("margin");
         this.style.removeProperty("width");
         this.style.removeProperty("height");
         if (!detachedView) {
@@ -531,6 +530,8 @@ Polymer({
             if (alternativeView) {
                 this.style.width = "100%";
                 this.style.height = "100%";
+            } else {
+                this.$.pm.style["margin"] = "10px";
             }
         } else {
             this.$.loadableContent.style.width = "100%";
@@ -562,9 +563,9 @@ Polymer({
 
     _expandCollapseTap: function (event) {
         if (this.detachedView) {
-            this._closeDialog();
+            this.closeDialog();
         } else {
-            this._showDialog();
+            this.showDialog();
         }
         tearDownEvent(event);
     },

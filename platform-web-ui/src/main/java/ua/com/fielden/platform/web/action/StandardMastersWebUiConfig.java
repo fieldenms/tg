@@ -110,6 +110,7 @@ public class StandardMastersWebUiConfig {
                 .setLayoutFor(DESKTOP, Optional.empty(), layout)
                 .setLayoutFor(TABLET, Optional.empty(), layout)
                 .setLayoutFor(MOBILE, Optional.empty(), layout)
+                .withDimensions(mkDim(420, 380, Unit.PX))
                 .done();
 
         return new EntityMaster<>(EntityExportAction.class, EntityExportActionProducer.class, masterConfig, injector);

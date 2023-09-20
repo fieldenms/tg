@@ -430,4 +430,5 @@ public class TgVehicle extends AbstractEntity<String> {
         this.calc6 = calc6;
         return this;
     }
+
 }

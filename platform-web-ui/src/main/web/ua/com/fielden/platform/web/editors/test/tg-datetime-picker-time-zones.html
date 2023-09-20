@@ -89,8 +89,8 @@
                 correctlyApproximates(done, 1473057204015, '2016-09-05 06:33:24.015', 79);
             });
 
-            test('[1473057204000] to UTC [2016-09-05 06:33:24.000]', function (done) {
-                correctlyApproximates(done, 1473057204000, '2016-09-05 06:33:24.000', 80);
+            test('[1473057204000] to UTC [2016-09-05 06:33:24]', function (done) {
+                correctlyApproximates(done, 1473057204000, '2016-09-05 06:33:24', 80);
             });
 
             test('[1473057180000] to UTC [2016-09-05 06:33]', function (done) {
@@ -224,10 +224,26 @@
                 correctlyApproximates(done, '7-9-9 9:5 : 34  .  567  ', '2007-09-09 09:05:34.567', '09/09/2007 19:05:34.567');
             });
             
+            test('[7-9-9 9:5 : 34  .  000  ] to local [09/09/2007 09:05:34]', function(done) {
+                correctlyApproximates(done, '7-9-9 9:5 : 34  .  000  ', '2007-09-09 09:05:34', '09/09/2007 19:05:34');
+            });
+            
             test('[05:15] to local [16:15] in current day', function(done) {
                 const todayDate = moment.tz('UTC').startOf("day").hour(5).minute(15);
                 const currentTimeZone = moment().tz();
                 correctlyApproximates(done, todayDate.format('HH:mm'), todayDate.format('YYYY-MM-DD HH:mm'), todayDate.tz(currentTimeZone).format('DD/MM/YYYY HH:mm'), todayDate.valueOf());
+            });
+            
+            test('[05:15:03] to local [16:15:03] in current day', function(done) {
+                const todayDate = moment.tz('UTC').startOf("day").hour(5).minute(15).second(3);
+                const currentTimeZone = moment().tz();
+                correctlyApproximates(done, todayDate.format('HH:mm:ss'), todayDate.format('YYYY-MM-DD HH:mm:ss'), todayDate.tz(currentTimeZone).format('DD/MM/YYYY HH:mm:ss'), todayDate.valueOf());
+            });
+            
+            test('[05:15:03.555] to local [16:15:03.555] in current day', function(done) {
+                const todayDate = moment.tz('UTC').startOf("day").hour(5).minute(15).second(3).millisecond(555);
+                const currentTimeZone = moment().tz();
+                correctlyApproximates(done, todayDate.format('HH:mm:ss.SSS'), todayDate.format('YYYY-MM-DD HH:mm:ss.SSS'), todayDate.tz(currentTimeZone).format('DD/MM/YYYY HH:mm:ss.SSS'), todayDate.valueOf());
             });
             
             test('[t] to todays date with time set to start of the day', function(done) {
