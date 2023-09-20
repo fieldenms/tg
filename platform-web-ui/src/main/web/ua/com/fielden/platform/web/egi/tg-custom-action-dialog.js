@@ -745,6 +745,7 @@ Polymer({
         this.$.spinner.style.removeProperty("display");
         this.$.spinner.style.left = element.offsetLeft + (element.offsetWidth / 2 - this.$.spinner.offsetWidth / 2) + 'px';
         this.$.spinner.style.top = element.offsetTop + (element.offsetHeight / 2 - this.$.spinner.offsetHeight / 2) + 'px';
+        element.parentElement.appendChild(this.$.spinner);
         this.isNavigationActionInProgress = true;
     },
     
@@ -766,18 +767,25 @@ Polymer({
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
     _invertDialogState: function(stateName) {
-        if (!this._masterVisibilityChanges && !this._masterLayoutChanges) {
-            if (!this[stateName]) {
-                this.persistActiveElement();
-                this.focus();
-            }
-            this[stateName] = !this[stateName];
-            if (!this[stateName]) {
-                this.restoreActiveElement();
-                this._restoreLocallyPersistedDialogPositionAndDimension();
-            }
-            this.notifyResize(); // notify children about resize of action dialog (for e.g. to re-draw shadow of tg-entity-master's actionContainer)
+        if (this._isAnimatingDimensions()) {
+            this._dialogResized();
         }
+        if (!this[stateName]) {
+            this.persistActiveElement();
+            this.focus();
+        }
+        this[stateName] = !this[stateName];
+        if (!this[stateName]) {
+            this.restoreActiveElement();
+            this._restoreLocallyPersistedDialogPositionAndDimension();
+        } else {
+            this._setDialogDimensions(this.prefDim, this._minimised, this._maximised);
+        }
+        this.notifyResize(); // notify children about resize of action dialog (for e.g. to re-draw shadow of tg-entity-master's actionContainer)
+    },
+
+    _isAnimatingDimensions: function () {
+        return !!this.style.getPropertyValue("transition-property");
     },
 
     _invertMinimiseState: function() {
@@ -873,7 +881,7 @@ Polymer({
      * Restores previously persisted dialog position (top, left) and dimensions (height, width).
      */
     _restoreLocallyPersistedDialogPositionAndDimension: function() {
-    	this._setDialogDimensions(this.prefDim, this.minimised, this._maximised);
+    	this._setDialogDimensions(this.prefDim, this._minimised, this._maximised);
         this._setDialogPosition(this.prefDim, this._minimised, this._maximised);
     },
 
@@ -1218,7 +1226,7 @@ Polymer({
                 this._updateDialogPositionWithPrefDim(this.prefDim, this._minimised, this._maximised);
             }
             //Indicates that dialog is resized and moved after the resizing animation will be finished.
-            this.async(this._dialogResized, 500);
+            this._resizeAnimation = this.async(this._dialogResized, 500);
         }
     },
 
@@ -1266,6 +1274,10 @@ Polymer({
     
     //Removes animation properties and hides blocking pane. (Please note that blocking layer was shown twice if master changed it's type that's why _hideBlockingLayer invokaction is needed here)
     _dialogResized: function () {
+        if (this._resizeAnimation !== null) {
+            this.cancelAsync(this._resizeAnimation);
+            this._resizeAnimation = null;
+        }
         this.style.removeProperty("transition-property");
         this.style.removeProperty("transition-duration");
         //Removes the optimisation hook if master size or position was changed.
@@ -1278,7 +1290,7 @@ Polymer({
     
     //Invoked when master is about to change it's type.
     _handleMasterBeforeChange: function () {
-        if (this.opened) {
+        if (this.opened && !this._minimised && !this._maximised) {
             //First animate the blocking pane.
             this._showBlockingPane();
             //Indicate that master is about to change it's type
