@@ -236,14 +236,20 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
     /**
      * Acceptable property types:
      * <ol>
-     *   <li>Ordinary (aka primitive) types: {@link Long}, {@link Integer}, {@link BigDecimal}, {@link Date}, {@link String}, {@link boolean}.</li>
-     *   <li>Custom platform types: {@link Money}, {@link Colour}, {@link Hyperlink}.</li>
-     *   <li>Entity types: any registered domain entity
-     *   (at the time of writing, this means an entity, registered in an application specific class {@link ApplicationDomain}).</li>
-     *   <li>Collectional types: any type assignable to {@link java.util.Collection}, but parameterised with any of the permitted types
-     *   in items 1-3.</li>
-     *   <li>Binary: {@code byte[]}.</li>
-     *   <li>Special case collectional: {@link Map} (key and value type verification will need to be covered by another verifier).</li>
+     *   <li>Ordinary (aka primitive) types: {@link Long}, {@link Integer}, {@link BigDecimal}, {@link Date}, {@link String}, {@code boolean}.
+     *   <li>Custom platform types: {@link Money}, {@link Colour}, {@link Hyperlink}.
+     *   <li>Entity types:
+     *   <ol>
+     *      <li>Any registered domain entity (at the time of writing, this means an entity, registered in an
+     *      application-specific class {@code ApplicationDomain}).
+     *      <li>{@linkplain PlatformDomainTypes#types Platform entity types}.
+     *      <li>Special entity types: {@link PropertyDescriptor}.
+     *   </ol>
+
+     *   <li>Collectional types: any type assignable to {@link java.util.Collection}, but parameterised with any of the
+     *   permitted types in items 1-3.
+     *   <li>Binary: {@code byte[]}.
+     *   <li>Special case collectional: {@link Map} (key and value type verification will need to be covered by another verifier).
      * </ol>
      */
     static class PropertyTypeVerifier extends AbstractEntityVerifier {
@@ -335,12 +341,13 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
                 if (isAnyOf(propType, BINARY_TYPES)) return Optional.empty();
                 // 6. special case of collection-like types
                 if (isSpecialCollectionType(propType)) return Optional.empty();
+                // 3.2
                 if (isAnyOf(propType, SPECIAL_ENTITY_TYPES)) return Optional.empty();
+                // 3.3
                 if (isAnyOf(propType, PLATFORM_ENTITY_TYPES)) return Optional.empty();
 
-                // 3. entity type
                 if (entityFinder.isEntityType(propType)) {
-                    // all entity types, except some special ones, used as property types must be registered
+                    // 3.1 all entity types, except some special ones, used as property types must be registered
                     if (!isEntityTypeRegistered(propType)) {
                         return Optional.of(new ViolatingElement(
                                 property.element(), Kind.ERROR,
