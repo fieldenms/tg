@@ -357,7 +357,10 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
                     if (!typeArguments.isEmpty()) {
                         final TypeMirror typeArg = typeArguments.get(0);
 
-                        if (isAnyOf(typeArg, ORDINARY_TYPE_ARGS) || isAnyOf(typeArg, PLATFORM_TYPES) || isAnyOf(typeArg, PLATFORM_ENTITY_TYPES)) {
+                        if (isAnyOf(typeArg, ORDINARY_TYPE_ARGS)
+                                || isAnyOf(typeArg, PLATFORM_TYPES)
+                                || isAnyOf(typeArg, PLATFORM_ENTITY_TYPES)
+                                || isAnyOf(typeArg, SPECIAL_ENTITY_TYPES)) {
                             return Optional.empty();
                         }
 

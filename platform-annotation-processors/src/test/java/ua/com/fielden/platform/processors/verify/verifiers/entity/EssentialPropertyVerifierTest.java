@@ -540,6 +540,11 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
             assertTypeAllowed(ClassName.get(PropertyDescriptor.class));
         }
 
+        @Test
+        public void collection_type_parameterised_with_PropertyDescriptor_is_allowed() {
+            assertTypeAllowed(ParameterizedTypeName.get(List.class, PropertyDescriptor.class));
+        }
+
     }
 
 }
