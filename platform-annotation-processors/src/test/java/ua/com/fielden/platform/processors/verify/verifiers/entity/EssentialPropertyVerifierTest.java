@@ -38,10 +38,12 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 
 import com.squareup.javapoet.*;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 
+import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -452,6 +454,13 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
+        public void platform_entity_types_are_allowed() {
+            PlatformDomainTypes.types.forEach(type -> {
+                assertTypeAllowed(ClassName.get(type));
+            });
+        }
+
+        @Test
         public void unsupported_types_cannot_be_used_as_collection_type_arguments() {
             final TypeSpec entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
@@ -488,6 +497,13 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         @Test
         public void collection_type_parameterised_with_boxed_boolean_is_allowed() {
             assertTypeAllowed(ParameterizedTypeName.get(Set.class, Boolean.class));
+        }
+
+        @Test
+        public void collection_type_parameterised_with_platform_entity_type_is_allowed() {
+            PlatformDomainTypes.types.forEach(type -> {
+                assertTypeAllowed(ParameterizedTypeName.get(List.class, type));
+            });
         }
 
         // TODO this might change in the future with more thorough verification of collectional properties
