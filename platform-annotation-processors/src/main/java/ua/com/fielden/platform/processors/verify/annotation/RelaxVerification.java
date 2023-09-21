@@ -1,13 +1,12 @@
 package ua.com.fielden.platform.processors.verify.annotation;
 
+import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
+
+import javax.lang.model.element.Element;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Objects;
 import java.util.Optional;
-
-import javax.lang.model.element.Element;
-
-import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 
 /**
  * Indicates to which degree should the verification of a program element be relaxed.

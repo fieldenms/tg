@@ -1,17 +1,11 @@
 package ua.com.fielden.platform.processors.metamodel.elements.utils;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
 
 /**
  * A singleton class representing a cache for instances of {@link TypeElement} produced by (potentially multiple) instances of {@link Elements}.

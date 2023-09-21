@@ -11,6 +11,7 @@ import ua.com.fielden.platform.processors.verify.verifiers.entity.UnionEntityVer
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -19,7 +20,6 @@ import java.util.Set;
 import java.util.function.Function;
 
 import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toSet;
 
 /**
  * Annotation processor responsible for verifying source definitions in a domain model.
@@ -124,7 +124,12 @@ public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
             if (!erronousElements.isEmpty()) {
                 roundPassed = false;
                 printError(errVerifierNotPassedBy(verifier.getClass().getSimpleName(),
-                        erronousElements.stream().map(ve -> ve.element().getSimpleName().toString()).collect(toSet())));
+                        erronousElements.stream()
+                            .map(ve -> ve.element().getSimpleName())
+                            .distinct()
+                            .map(Name::toString)
+                            .sorted() /* sort to have a predictable order */
+                            .toList()));
             }
         }
 

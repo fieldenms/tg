@@ -1,21 +1,6 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
-import java.math.BigDecimal;
-import java.util.*;
-import java.util.function.Supplier;
-
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Name;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeMirror;
-import javax.tools.Diagnostic.Kind;
-
-import org.apache.poi.sl.draw.geom.GuideIf;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.processors.appdomain.ApplicationDomainElement;
@@ -28,7 +13,19 @@ import ua.com.fielden.platform.processors.verify.ViolatingElement;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.web.test.config.ApplicationDomain;
+
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Name;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.ErrorType;
+import javax.lang.model.type.TypeMirror;
+import javax.tools.Diagnostic.Kind;
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.function.Supplier;
 
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.*;
 
@@ -39,6 +36,8 @@ import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.*
  *  <li>Declaration of collectional properties as {@code final} fields</li>
  *  <li>Verification of property types</li>
  * </ol>
+ * Properties with {@linkplain ErrorType unresolved types} are not subject to verification because erroneous definitions
+ * are inherently incorrect.
  *
  * @author TG Team
  */
@@ -58,10 +57,11 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
     }
 
     /**
-     * All properties must have a corresponding accessor method with a name starting with "get" or "is".
+     * All properties must have a corresponding accessor method with a name starting with "get" or "is". The latter prefix
+     * should be used strictly for {@code boolean} properties.
      * <p>
-     * An accessor's return type must match its property type with the exception of collectional properties, where return type must be
-     * <b>assignable to</b> the property type.
+     * An accessor's return type must match its property type with the exception of collectional properties, where the
+     * return type must be <b>assignable to</b> the property type.
      */
     static class PropertyAccessorVerifier extends AbstractEntityVerifier {
 
@@ -94,6 +94,9 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
 
             @Override
             public Optional<ViolatingElement> verifyProperty(final EntityElement entity, final PropertyElement property) {
+                if (hasErrorType(property))
+                    return Optional.empty();
+
                 // accessor must be declared
                 final Optional<ExecutableElement> maybeAccessor = entityFinder.findDeclaredPropertyAccessor(entity, getSimpleName(property.element()));
                 if (maybeAccessor.isEmpty()) {
@@ -167,6 +170,9 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
 
             @Override
             public Optional<ViolatingElement> verifyProperty(final EntityElement entity, final PropertyElement property) {
+                if (hasErrorType(property))
+                    return Optional.empty();
+
                 // setter should be declared
                 final Optional<ExecutableElement> maybeSetter = entityFinder.findDeclaredPropertySetter(entity, getSimpleName(property.element()));
                 if (maybeSetter.isEmpty()) {
@@ -221,6 +227,9 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
 
             @Override
             public Optional<ViolatingElement> verifyProperty(final EntityElement entity, final PropertyElement property) {
+                if (hasErrorType(property)) {
+                    return Optional.empty();
+                }
                 if (!entityFinder.isCollectionalProperty(property)) {
                     return Optional.empty();
                 }
@@ -331,6 +340,9 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
 
             @Override
             public Optional<ViolatingElement> verifyProperty(final EntityElement entity, final PropertyElement property) {
+                if (hasErrorType(property))
+                    return Optional.empty();
+
                 final TypeMirror propType = property.getType();
 
                 // 1. ordinary type

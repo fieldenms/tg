@@ -6,6 +6,7 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
+import ua.com.fielden.platform.processors.DateTimeUtils;
 import ua.com.fielden.platform.processors.ProcessorOptionDescriptor;
 import ua.com.fielden.platform.processors.appdomain.annotation.ExtendApplicationDomain;
 import ua.com.fielden.platform.processors.appdomain.annotation.RegisteredEntity;
@@ -16,7 +17,6 @@ import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.utils.CollectionUtil;
 
-import javax.annotation.processing.Generated;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
@@ -113,8 +113,8 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
-        this.elementFinder = new ElementFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
-        this.entityFinder = new EntityFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
+        this.elementFinder = new ElementFinder(processingEnv);
+        this.entityFinder = new EntityFinder(processingEnv);
     }
 
     @Override
@@ -287,10 +287,8 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         };
 
         // class-level @Generated annotation
-        final AnnotationSpec atGenerated = AnnotationSpec.builder(ClassName.get(Generated.class))
-                .addMember("value", "$S", this.getClass().getCanonicalName())
-                .addMember("date", "$S", initDateTime)
-                .build();
+        final String dateString = DateTimeUtils.toIsoFormat(DateTimeUtils.zonedNow());
+        final AnnotationSpec atGenerated = buildAtGenerated(dateString);
 
         // We use @RegisteredEntity annotations just to enable the processor to get access to the list of registered types,
         // since we can't analyse the insides of the static initialiser block.

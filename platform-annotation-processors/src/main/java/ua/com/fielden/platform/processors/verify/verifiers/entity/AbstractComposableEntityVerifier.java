@@ -1,12 +1,11 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
-import java.util.Collections;
-import java.util.List;
+import ua.com.fielden.platform.processors.verify.verifiers.AbstractComposableVerifier;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
-
-import ua.com.fielden.platform.processors.verify.verifiers.AbstractComposableVerifier;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Base composable verifier type to be subclassed by entity-oriented composable verifiers. Utilises {@link EntityRoundEnvironment}.

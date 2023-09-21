@@ -751,7 +751,7 @@ public class ElementFinderTest {
 
         try {
             final CompilationResult result = comp.compileAndEvaluate(procEnv ->
-                consumer.accept(new ElementFinder(procEnv.getElementUtils(), procEnv.getTypeUtils())));
+                consumer.accept(new ElementFinder(procEnv)));
             // TODO print diagnostics in case of failure
             assertTrue("Processing of sources failed.", result.success());
         } catch (final Throwable t) {
