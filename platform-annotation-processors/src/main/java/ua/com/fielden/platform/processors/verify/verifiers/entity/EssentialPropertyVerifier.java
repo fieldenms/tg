@@ -26,6 +26,8 @@ import javax.tools.Diagnostic.Kind;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.*;
 
@@ -295,10 +297,13 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
         }
 
         public static String errUnsupportedType(final String property) {
-            return ("Unsupported type for property [%s]." + "\n" +
-                    "Supported types include: String, Long, Integer, BigDecimal, Date, boolean, Money, Colour, Hyperlink, byte[], Set, List, Map, and Entity Types.")
-                    .formatted(property);
+            return ("Unsupported type for property [%s].\nSupported types include: %s, collectional and domain entity types.")
+                    .formatted(property, MSG_SUPPORTED_TYPES);
         }
+        private static final String MSG_SUPPORTED_TYPES =
+                Stream.of(ORDINARY_TYPES, PLATFORM_TYPES, BINARY_TYPES, SPECIAL_COLLECTION_TYPES, SPECIAL_ENTITY_TYPES)
+                        .flatMap(list -> list.stream().map(Class::getSimpleName))
+                        .collect(Collectors.joining(", "));
 
         private boolean isSpecialCollectionType(final TypeMirror t) {
             return SPECIAL_COLLECTION_TYPES.stream().anyMatch(cls -> entityFinder.isSubtype(t, cls));
