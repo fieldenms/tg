@@ -113,6 +113,7 @@
                         <configuration>
                             <release>17</release>
                             <encoding>UTF-8</encoding>
+                            <showWarnings>true</showWarnings>
                             <generatedTestSourcesDirectory>${project.build.directory}/generated-test-sources</generatedTestSourcesDirectory>
                             <annotationProcessors>
                                 <annotationProcessor>ua.com.fielden.platform.processors.metamodel.MetaModelProcessor</annotationProcessor>
