@@ -38,6 +38,7 @@ const template = html`
             overflow: auto; /* this is to make host scorable when needed */
             -webkit-overflow-scrolling: touch;
             box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
+            position: fixed;
             @apply --layout-vertical;
         }
 
@@ -611,14 +612,12 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
     refit () {
         const clientRectAndOffsetHeight = this.retrieveContainerSizes();
         const rect = clientRectAndOffsetHeight[0]; // container.getBoundingClientRect();//getClientRects()[0];
-        const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
 
-        const top = rect.top + scrollTop + clientRectAndOffsetHeight[1]; // container.offsetHeight;//rect.bottom + scrollTop;
-        const left = rect.left; // + scrollLeft;
+        const top = rect.top + clientRectAndOffsetHeight[1];
+        const left = rect.left;
         const right = rect.right;
         const width = rect.width;
 
-        this.style.position = 'absolute';
         
 
         // let's try to accomodate the width of the overlay so that in case
@@ -668,8 +667,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
     visibleHeightUnderEditorIsSmall () {
         const clientRectAndOffsetHeight = this.retrieveContainerSizes();
         const rect = clientRectAndOffsetHeight[0];
-        const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
-        const top = rect.top + scrollTop + clientRectAndOffsetHeight[1];
+        const top = rect.top + clientRectAndOffsetHeight[1];
 
         // let's try to determine the height under the editor to bottom of the screen
         const visibleHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
