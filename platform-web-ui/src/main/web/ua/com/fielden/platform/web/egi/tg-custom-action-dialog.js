@@ -810,7 +810,9 @@ Polymer({
      * Switches between maximised / normal states of the dialog.
      */
     _invertMaximiseState: function() {
-        this._invertDialogState('_maximised');
+        if (!this._minimised) { // need to skip the action if dialog is in minimised state: this is needed to prevent alt+m action.
+            this._invertDialogState('_maximised');
+        }
     },
 
     /**
