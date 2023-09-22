@@ -86,19 +86,18 @@ public class PathsToTreeTransformer {
                 propLinks.addAll(cpd.internalsResult.propsData());
             }
 
-            final T2<List<Prop2Lite>, List<PendingTail>> next = getLeafPathsAndNextPendingTails(propEntry.tails);
             final Expression2 expression = cpd != null ? cpd.expr : null;
 
-            if (!next._1.isEmpty()) {
+            if (!propEntry.origins.isEmpty()) {
                 if (expression != null) {
-                    expressionLinks.add(new ExpressionLinks(expression, next._1));
+                    expressionLinks.add(new ExpressionLinks(expression, propEntry.origins));
                 } else {
-                    propLinks.add(new Prop3Links(new Prop3Lite(propEntry.firstChunk.name(), sourceForCalcPropResolution.id()), next._1));
+                    propLinks.add(new Prop3Links(new Prop3Lite(propEntry.firstChunk.name(), sourceForCalcPropResolution.id()), propEntry.origins));
                 }
             }
 
-            if (!next._2.isEmpty()) {
-                final T2<ImplicitNode, TreeResult> genRes = generateNode(next._2, propEntry, expression);
+            if (!propEntry.tails.isEmpty()) {
+                final T2<ImplicitNode, TreeResult> genRes = generateNode(propEntry.tails, propEntry.firstChunk, expression);
                 listOfNodes.add(genRes._1);
                 otherSourcesNodes.putAll(genRes._2.implicitNodesMap());
                 expressionLinks.addAll(genRes._2.expressionsData());
@@ -159,7 +158,7 @@ public class PathsToTreeTransformer {
 
         // let's recursively enhance newly added tails (as they can have unprocessed calc props among them)
         final T2<Map<String, CalcPropData>, List<PendingTail>> recursivelyEnhanced = addedTails.isEmpty() ? t2(unmodifiableMap(processedCalcDataLocal), emptyList())
-                : enhanceWithCalcPropsData(sourceForCalcPropResolution, processedCalcDataLocal, processedPropsLocal, addedTails);
+                : enhanceWithCalcPropsData(sourceForCalcPropResolution, processedCalcDataLocal, processedPropsLocal, addedTails); //processedPropsLocal is passed here as enhancement is done within calc props of the same source -- the same level
 
         final List<PendingTail> allTails = new ArrayList<>();
         allTails.addAll(incomingTails);
@@ -168,12 +167,11 @@ public class PathsToTreeTransformer {
         return t2(recursivelyEnhanced._1, allTails);
     }
     
-    private T2<ImplicitNode, TreeResult> generateNode(final List<PendingTail> tails, final FirstChunkGroup firstChunkGroup, final Expression2 expression) {
-        final String propName = firstChunkGroup.firstChunk.name();
-        final EntityTypePropInfo<?> propInfo = (EntityTypePropInfo<?>) firstChunkGroup.firstChunk.data();
+    private T2<ImplicitNode, TreeResult> generateNode(final List<PendingTail> tails, final PropChunk firstChunk, final Expression2 expression) {
+        final EntityTypePropInfo<?> propInfo = (EntityTypePropInfo<?>) firstChunk.data();
         final Source2BasedOnPersistentType implicitSource = new Source2BasedOnPersistentType(propInfo.javaType(), propInfo.propQuerySourceInfo, gen.nextSourceId());
         final T2<List<ImplicitNode>, TreeResult> genRes = generateSourceNodes(implicitSource, tails, false);
-        final ImplicitNode node = new ImplicitNode(propName, genRes._1, propInfo.nonnullable, implicitSource, expression);
+        final ImplicitNode node = new ImplicitNode(firstChunk.name(), genRes._1, propInfo.nonnullable, implicitSource, expression);
         return t2(node, genRes._2);
     }
 
@@ -207,7 +205,11 @@ public class PathsToTreeTransformer {
                 result.put(first.name(), existing);
             }
 
-            existing.tails.add(pt);
+            if (pt.tail.size() == 1) {
+                existing.origins.add(pt.link);
+            } else {
+                existing.tails.add(new PendingTail(pt.link, pt.tail.subList(1, pt.tail.size())));    
+            }
         }
 
         return result.values();
@@ -267,20 +269,6 @@ public class PathsToTreeTransformer {
         return result;
     }
 
-    private static T2<List<Prop2Lite>, List<PendingTail>> getLeafPathsAndNextPendingTails(final List<PendingTail> subprops) {
-        final List<PendingTail> nextTails = new ArrayList<>();
-        final List<Prop2Lite> paths = new ArrayList<>();
-
-        for (final PendingTail subpropEntry : subprops) {
-            if (subpropEntry.tail.size() > 1) {
-                nextTails.add(new PendingTail(subpropEntry.link, subpropEntry.tail.subList(1, subpropEntry.tail.size())));
-            } else {
-                paths.add(subpropEntry.link);
-            }
-        }
-        return t2(paths, nextTails);
-    }
-
     private static List<PropChunk> convertPathToChunks(final List<AbstractPropInfo<?>> propPath) {
         final List<PropChunk> result = new ArrayList<>();
         String currentPropName = null;
@@ -298,7 +286,8 @@ public class PathsToTreeTransformer {
 
     private static class FirstChunkGroup {
         private final PropChunk firstChunk;
-        private final List<PendingTail> tails = new ArrayList<>(); // pending tails that all start from 'firstChunk'
+        private final List<PendingTail> tails = new ArrayList<>(); // tails that follow `firstChunk`
+        private final List<Prop2Lite> origins = new ArrayList<>(); // originals props for which `firstChunk` happened to be the last PropChunk in their pending tail
 
         private FirstChunkGroup(final PropChunk firstChunk) {
             this.firstChunk = firstChunk;
