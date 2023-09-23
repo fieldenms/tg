@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.stage2;
+package ua.com.fielden.platform.eql.stage2.sources.enhance;
 
 import static java.util.Map.copyOf;
 
@@ -7,7 +7,6 @@ import java.util.Map;
 
 import ua.com.fielden.platform.eql.stage2.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.sources.ImplicitNode;
-import ua.com.fielden.platform.eql.stage2.sources.enhance.Prop3Lite;
 
 public record TreeResultBySources (
         Map<Integer, List<ImplicitNode>> implicitNodesMap, 

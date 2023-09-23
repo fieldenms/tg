@@ -1,11 +1,5 @@
 package ua.com.fielden.platform.eql.stage3;
 
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.QueryProcessingModel;
@@ -14,19 +8,11 @@ import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.queries.ResultQuery1;
-import ua.com.fielden.platform.eql.stage2.TreeResultBySources;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
-import ua.com.fielden.platform.eql.stage2.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.operands.queries.ResultQuery2;
-import ua.com.fielden.platform.eql.stage2.sources.enhance.ExpressionLinks;
 import ua.com.fielden.platform.eql.stage2.sources.enhance.PathsToTreeTransformer;
-import ua.com.fielden.platform.eql.stage2.sources.enhance.Prop2Lite;
-import ua.com.fielden.platform.eql.stage2.sources.enhance.Prop3Links;
-import ua.com.fielden.platform.eql.stage2.sources.enhance.Prop3Lite;
-import ua.com.fielden.platform.eql.stage2.sources.enhance.TreeResult;
 import ua.com.fielden.platform.eql.stage3.operands.queries.ResultQuery3;
-import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.IDates;
 
 /**
@@ -55,42 +41,7 @@ public class EqlQueryTransformer {
         final ResultQuery1 query1 = gen.generateAsResultQuery(qem.queryModel, qem.orderModel, qem.fetchModel);
 		final ResultQuery2 query2 = query1.transform(context1);
         final PathsToTreeTransformer p2tt = new PathsToTreeTransformer(eqlDomainMetadata.querySourceInfoProvider, gen);
-        final TreeResult treeResult = p2tt.transform(query2.collectProps());
-        final TransformationContext2 context2 = new TransformationContext2(
-                new TreeResultBySources(treeResult.implicitNodesMap(), processExpressionsData(treeResult.expressionsData()), processPropsResolutionData(treeResult.propsData())), 
-                eqlDomainMetadata.entityMetadataHolder);
+        final TransformationContext2 context2 = new TransformationContext2(p2tt.transformFinally(query2.collectProps()), eqlDomainMetadata.entityMetadataHolder);
 		return query2.transform(context2);
-    }
-    
-    private static Map<Integer, Map<String, Expression2>> processExpressionsData(final List<ExpressionLinks> expressionsResolutions) {
-        final Map<Integer, Map<String, Expression2>> expressionsData = new HashMap<>();
-        for (final ExpressionLinks item : expressionsResolutions) {
-            for (final Prop2Lite link : item.links()) {
-                Map<String, Expression2> existingSourceMap = expressionsData.get(link.sourceId());
-                if (existingSourceMap == null) {
-                    existingSourceMap = new HashMap<String, Expression2>();
-                    expressionsData.put(link.sourceId(), existingSourceMap);
-                }
-                existingSourceMap.put(link.name(), item.expr());
-            }
-        }
-        
-        return expressionsData;
-    }
-    
-    private static Map<Integer, Map<String, Prop3Lite>> processPropsResolutionData(final List<Prop3Links> propsResolutions) {
-        final Map<Integer, Map<String, Prop3Lite>> resolutionsData = new HashMap<>();
-        for (final Prop3Links item : propsResolutions) {
-            for (final Prop2Lite link : item.links()) {
-                Map<String, Prop3Lite> existingSourceMap = resolutionsData.get(link.sourceId());
-                if (existingSourceMap == null) {
-                    existingSourceMap = new HashMap<String, Prop3Lite>();
-                    resolutionsData.put(link.sourceId(), existingSourceMap);
-                }
-                existingSourceMap.put(link.name(), item.leafProp());
-            }
-        }
-        
-        return resolutionsData;
     }
 }
