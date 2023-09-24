@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.sources.enhance;
 
+import static java.util.Collections.unmodifiableList;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -13,7 +15,10 @@ import ua.com.fielden.platform.eql.meta.query.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.query.ComponentTypePropInfo;
 import ua.com.fielden.platform.eql.meta.query.UnionTypePropInfo;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
+import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.ImplicitNode;
+import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.types.tuples.T3;
 
 public class PathToTreeTransformerUtils {
 
@@ -22,39 +27,39 @@ public class PathToTreeTransformerUtils {
     }
 
     public static final Collection<SourceTails> groupBySource(final Set<Prop2> props) {
-        final SortedMap<Integer, SourceTails> result = new TreeMap<>(); //need predictable order for testing purposes
+        final SortedMap<Integer, T2<ISource2<?>, List<PendingTail>>> result = new TreeMap<>(); //need predictable order for testing purposes
         for (final Prop2 prop : props) {
-            final SourceTails existing = result.get(prop.source.id());
+            final T2<ISource2<?>, List<PendingTail>> existing = result.get(prop.source.id());
             if (existing != null) {
-                existing.tails().add(tailFromProp(prop));
+                existing._2.add(tailFromProp(prop));
             } else {
                 final List<PendingTail> added = new ArrayList<>();
                 added.add(tailFromProp(prop));
-                result.put(prop.source.id(), new SourceTails(prop.source, added));
+                result.put(prop.source.id(), T2.t2(prop.source, added));
             }
         }
-        return result.values();
+        return result.values().stream().map(el -> new SourceTails(el._1, unmodifiableList(el._2))).toList();
     }
     
     public static Collection<FirstChunkGroup> groupByFirstChunk(final List<PendingTail> tails) {
-        final SortedMap<String, FirstChunkGroup> result = new TreeMap<>(); //need predictable order for testing purposes
-
+        final SortedMap<String, T3<PropChunk, List<Prop2Lite>, List<PendingTail>>> firstChunkDataMap = new TreeMap<>(); //need predictable order for testing purposes
+        
         for (final PendingTail pt : tails) {
             final PropChunk first = pt.tail().get(0);
-            FirstChunkGroup existing = result.get(first.name());
+            T3<PropChunk, List<Prop2Lite>, List<PendingTail>> existing = firstChunkDataMap.get(first.name());
             if (existing == null) {
-                existing = new FirstChunkGroup(first);
-                result.put(first.name(), existing);
+                existing = T3.t3(first, new ArrayList<Prop2Lite>(), new ArrayList<PendingTail>());
+                firstChunkDataMap.put(first.name(), existing);
             }
 
             if (pt.tail().size() == 1) {
-                existing.origins.add(pt.link());
+                existing._2.add(pt.link());
             } else {
-                existing.tails.add(new PendingTail(pt.link(), pt.tail().subList(1, pt.tail().size())));    
+                existing._3.add(new PendingTail(pt.link(), pt.tail().subList(1, pt.tail().size())));    
             }
         }
-
-        return result.values();
+        
+        return firstChunkDataMap.values().stream().map(el -> new FirstChunkGroup(el._1, unmodifiableList(el._2), unmodifiableList(el._3))).toList();
     }
 
     /**

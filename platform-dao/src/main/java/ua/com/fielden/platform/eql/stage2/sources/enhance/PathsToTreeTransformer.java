@@ -83,7 +83,7 @@ public class PathsToTreeTransformer {
 
         for (final FirstChunkGroup propEntry : groupByFirstChunk(procRes._2)) {
 
-            final CalcPropData cpd = calcPropData.get(propEntry.firstChunk.name());
+            final CalcPropData cpd = calcPropData.get(propEntry.firstChunk().name());
 
             if (cpd != null) {
                 otherSourcesNodes.putAll(cpd.internalsResult.implicitNodesMap());
@@ -93,16 +93,16 @@ public class PathsToTreeTransformer {
 
             final Expression2 expression = cpd != null ? cpd.expr : null;
 
-            if (!propEntry.getOrigins().isEmpty()) {
+            if (!propEntry.origins().isEmpty()) {
                 if (expression != null) {
-                    expressionLinks.add(new ExpressionLinks(propEntry.getOrigins(), expression));
+                    expressionLinks.add(new ExpressionLinks(propEntry.origins(), expression));
                 } else {
-                    propLinks.add(new Prop3Links(propEntry.getOrigins(), new Prop3Lite(propEntry.firstChunk.name(), sourceForCalcPropResolution.id())));
+                    propLinks.add(new Prop3Links(propEntry.origins(), new Prop3Lite(propEntry.firstChunk().name(), sourceForCalcPropResolution.id())));
                 }
             }
 
-            if (!propEntry.tails.isEmpty()) {
-                final T2<ImplicitNode, TreeResult> genRes = generateNode(propEntry.tails, propEntry.firstChunk, expression);
+            if (!propEntry.tails().isEmpty()) {
+                final T2<ImplicitNode, TreeResult> genRes = generateNode(propEntry.tails(), propEntry.firstChunk(), expression);
                 listOfNodes.add(genRes._1);
                 otherSourcesNodes.putAll(genRes._2.implicitNodesMap());
                 expressionLinks.addAll(genRes._2.expressionsData());
