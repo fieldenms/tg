@@ -6,16 +6,17 @@ import java.util.List;
 import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage2.operands.Expression2;
+import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
 public class ImplicitNode {
     public final String name; // name within the holder source; either name or expression is null TODO currently name is always provided
     public final Expression2 expr; // expression is based on the holder source
     public final boolean nonnullable;
 
-    public final Source2BasedOnPersistentType source;
+    public final ISource2<? extends ISource3> source;
     private final List<ImplicitNode> subnodes; //can contain none
     
-    public ImplicitNode(final String name, final List<ImplicitNode> subnodes, final boolean nonnullable, final Source2BasedOnPersistentType source, final Expression2 expr) {
+    public ImplicitNode(final String name, final List<ImplicitNode> subnodes, final boolean nonnullable, final ISource2<? extends ISource3> source, final Expression2 expr) {
         this.name = name;
         this.subnodes = subnodes;
         this.nonnullable = nonnullable;

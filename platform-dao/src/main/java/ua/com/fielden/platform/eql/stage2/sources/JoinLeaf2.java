@@ -26,7 +26,6 @@ import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.eql.stage3.sources.JoinBranch3;
 import ua.com.fielden.platform.eql.stage3.sources.JoinLeaf3;
-import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnTable;
 
 public class JoinLeaf2 implements IJoinNode2<IJoinNode3> {
     public final ISource2<?> source;
@@ -70,8 +69,8 @@ public class JoinLeaf2 implements IJoinNode2<IJoinNode3> {
     }
     
     private static TransformationResult2<IJoinNode3> joinImplicitNode(final IJoinNode3 currentJoinNode, final ImplicitNode implicitNode, final ISource3 rootSource, final TransformationContext2 context) {
-        final TransformationResult2<Source3BasedOnTable> tr = implicitNode.source.transform(context);
-        final Source3BasedOnTable addedSource = tr.item;
+        final TransformationResult2<? extends ISource3> tr = implicitNode.source.transform(context);
+        final ISource3 addedSource = tr.item;
         TransformationContext2 currentContext = tr.updatedContext; 
 
         final ISingleOperand3 lo;
