@@ -4,8 +4,9 @@ import java.util.List;
 
 import ua.com.fielden.platform.eql.stage2.operands.Expression2;
 
-public record ExpressionLinks(Expression2 expr, List<Prop2Lite> links) {
-    public ExpressionLinks {
-        links = List.copyOf(links);
+public class ExpressionLinks extends AbstractLinks<Expression2>{
+
+    public ExpressionLinks(final List<Prop2Lite> links, final Expression2 resolution) {
+        super(links, resolution);
     }
 }

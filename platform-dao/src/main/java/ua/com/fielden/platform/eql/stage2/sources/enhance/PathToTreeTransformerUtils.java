@@ -12,7 +12,6 @@ import java.util.TreeMap;
 import ua.com.fielden.platform.eql.meta.query.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.query.ComponentTypePropInfo;
 import ua.com.fielden.platform.eql.meta.query.UnionTypePropInfo;
-import ua.com.fielden.platform.eql.stage2.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sources.ImplicitNode;
 
@@ -127,32 +126,16 @@ public class PathToTreeTransformerUtils {
         return result;
     }
     
-    public static Map<Integer, Map<String, Expression2>> processExpressionsData(final List<ExpressionLinks> expressionsResolutions) {
-        final Map<Integer, Map<String, Expression2>> expressionsData = new HashMap<>();
-        for (final ExpressionLinks item : expressionsResolutions) {
-            for (final Prop2Lite link : item.links()) {
-                Map<String, Expression2> existingSourceMap = expressionsData.get(link.sourceId());
+    public static <T> Map<Integer, Map<String, T>> groupByExplicitSources(final List<? extends AbstractLinks<T>> resolutionsLinks) {
+        final Map<Integer, Map<String, T>> resolutionsData = new HashMap<>();
+        for (final AbstractLinks<T> item : resolutionsLinks) {
+            for (final Prop2Lite link : item.links) {
+                Map<String, T> existingSourceMap = resolutionsData.get(link.sourceId());
                 if (existingSourceMap == null) {
-                    existingSourceMap = new HashMap<String, Expression2>();
-                    expressionsData.put(link.sourceId(), existingSourceMap);
-                }
-                existingSourceMap.put(link.name(), item.expr());
-            }
-        }
-        
-        return expressionsData;
-    }
-    
-    public static Map<Integer, Map<String, Prop3Lite>> processPropsResolutionData(final List<Prop3Links> propsResolutions) {
-        final Map<Integer, Map<String, Prop3Lite>> resolutionsData = new HashMap<>();
-        for (final Prop3Links item : propsResolutions) {
-            for (final Prop2Lite link : item.links()) {
-                Map<String, Prop3Lite> existingSourceMap = resolutionsData.get(link.sourceId());
-                if (existingSourceMap == null) {
-                    existingSourceMap = new HashMap<String, Prop3Lite>();
+                    existingSourceMap = new HashMap<String, T>();
                     resolutionsData.put(link.sourceId(), existingSourceMap);
                 }
-                existingSourceMap.put(link.name(), item.leafProp());
+                existingSourceMap.put(link.name(), item.resolution);
             }
         }
         

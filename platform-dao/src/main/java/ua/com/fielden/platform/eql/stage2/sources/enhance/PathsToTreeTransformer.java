@@ -8,8 +8,7 @@ import static ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTrans
 import static ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.groupByFirstChunk;
 import static ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.groupBySource;
 import static ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.orderImplicitNodes;
-import static ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.processExpressionsData;
-import static ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.processPropsResolutionData;
+import static ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.groupByExplicitSources;
 import static ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.tailFromProp;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
@@ -47,7 +46,7 @@ public class PathsToTreeTransformer {
     
     public final TreeResultBySources transformFinally(final Set<Prop2> props) {
         final TreeResult treeResult = transform(props);
-        return new TreeResultBySources(treeResult.implicitNodesMap(), processExpressionsData(treeResult.expressionsData()), processPropsResolutionData(treeResult.propsData()));
+        return new TreeResultBySources(treeResult.implicitNodesMap(), groupByExplicitSources(treeResult.expressionsData()), groupByExplicitSources(treeResult.propsData()));
     }
     
     private final TreeResult transform(final Set<Prop2> props) {
@@ -94,11 +93,11 @@ public class PathsToTreeTransformer {
 
             final Expression2 expression = cpd != null ? cpd.expr : null;
 
-            if (!propEntry.origins.isEmpty()) {
+            if (!propEntry.getOrigins().isEmpty()) {
                 if (expression != null) {
-                    expressionLinks.add(new ExpressionLinks(expression, propEntry.origins));
+                    expressionLinks.add(new ExpressionLinks(propEntry.getOrigins(), expression));
                 } else {
-                    propLinks.add(new Prop3Links(new Prop3Lite(propEntry.firstChunk.name(), sourceForCalcPropResolution.id()), propEntry.origins));
+                    propLinks.add(new Prop3Links(propEntry.getOrigins(), new Prop3Lite(propEntry.firstChunk.name(), sourceForCalcPropResolution.id())));
                 }
             }
 
