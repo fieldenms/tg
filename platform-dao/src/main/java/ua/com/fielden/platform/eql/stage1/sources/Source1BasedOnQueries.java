@@ -36,12 +36,10 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
     
     private final List<SourceQuery1> models = new ArrayList<>();
     private final boolean isSyntheticEntity;
-    private final Class<? extends AbstractEntity<?>> sourceType;
 
     public Source1BasedOnQueries(final List<SourceQuery1> models, final String alias, final Integer id, final Class<? extends AbstractEntity<?>> syntheticEntityType) {
-        super(alias, id);
+        super(determineSourceType(models, syntheticEntityType), alias, id);
         this.isSyntheticEntity = syntheticEntityType != null;
-        this.sourceType = determineSourceType(models, syntheticEntityType);
         this.models.addAll(models);
     }
 
@@ -69,11 +67,6 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
         return new Source2BasedOnQueries(transformedQueries, alias, id, ei, isSyntheticEntity);
     }
     
-    @Override
-    public Class<? extends AbstractEntity<?>> sourceType() {
-        return sourceType;
-    }
-
     public static <T extends AbstractEntity<?>> QuerySourceInfo<T> produceQuerySourceInfoForEntityType(final QuerySourceInfoProvider querySourceInfoProvider, final List<SourceQuery2> models, final Class<T> sourceType, final boolean isComprehensive) {
         final SortedMap<String, AbstractPropInfo<?>> declaredProps = EntityAggregates.class.equals(sourceType) ? emptySortedMap() : querySourceInfoProvider.getDeclaredQuerySourceInfo(sourceType).getProps();
         final Collection<YieldInfoNode> yieldInfoNodes = YieldInfoNodesGenerator.generate(models);

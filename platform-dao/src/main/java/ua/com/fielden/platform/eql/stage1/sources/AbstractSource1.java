@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage1.sources;
 
 import java.util.Objects;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 
 public abstract class AbstractSource1<S2 extends ISource2<?>> implements ISource1<S2> {
@@ -11,15 +12,22 @@ public abstract class AbstractSource1<S2 extends ISource2<?>> implements ISource
      */
     protected final String alias;
     public final Integer id;
+    private final Class<? extends AbstractEntity<?>> sourceType;
 
-    public AbstractSource1(final String alias, final Integer id) {
+    public AbstractSource1(final Class<? extends AbstractEntity<?>> sourceType, final String alias, final Integer id) {
         this.id = id; // id is not taken into consideration in hashCode() and equals(..) methods on purpose -- Stage1 elements have no need to reference uniquely one another.
         this.alias = alias;
+        this.sourceType = Objects.requireNonNull(sourceType);
     }
 
     @Override
     public String getAlias() {
         return alias;
+    }
+    
+    @Override
+    public Class<? extends AbstractEntity<?>> sourceType() {
+        return sourceType;
     }
 
     @Override
@@ -27,6 +35,7 @@ public abstract class AbstractSource1<S2 extends ISource2<?>> implements ISource
         final int prime = 31;
         int result = 1;
         result = prime * result + ((alias == null) ? 0 : alias.hashCode());
+        result = prime * result + sourceType.hashCode();
         return result;
     }
 
@@ -42,6 +51,6 @@ public abstract class AbstractSource1<S2 extends ISource2<?>> implements ISource
 
         final AbstractSource1<?> other = (AbstractSource1<?>) obj;
 
-        return Objects.equals(alias, other.alias);
+        return Objects.equals(alias, other.alias) && Objects.equals(sourceType, other.sourceType);
     }
 }
