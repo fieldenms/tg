@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage2.sources;
 
 import java.util.Objects;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
 
 public abstract class AbstractSource2 {
@@ -25,6 +26,10 @@ public abstract class AbstractSource2 {
     
     public QuerySourceInfo<?> querySourceInfo() {
         return querySourceInfo;
+    }
+    
+    public Class<? extends AbstractEntity<?>> sourceType() {
+        return querySourceInfo.javaType();
     }
     
     @Override

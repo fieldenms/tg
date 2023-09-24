@@ -174,7 +174,7 @@ public class PathsToTreeTransformer {
     
     private T2<ImplicitNode, TreeResult> generateNode(final List<PendingTail> tails, final PropChunk firstChunk, final Expression2 expression) {
         final EntityTypePropInfo<?> propInfo = (EntityTypePropInfo<?>) firstChunk.data();
-        final Source2BasedOnPersistentType implicitSource = new Source2BasedOnPersistentType(propInfo.javaType(), propInfo.propQuerySourceInfo, gen.nextSourceId());
+        final Source2BasedOnPersistentType implicitSource = new Source2BasedOnPersistentType(propInfo.propQuerySourceInfo, gen.nextSourceId());
         final T2<List<ImplicitNode>, TreeResult> genRes = generateSourceNodes(implicitSource, tails, false);
         final ImplicitNode node = new ImplicitNode(firstChunk.name(), genRes._1, propInfo.nonnullable, implicitSource, expression);
         return t2(node, genRes._2);

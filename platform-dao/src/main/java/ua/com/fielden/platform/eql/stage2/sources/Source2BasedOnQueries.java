@@ -26,11 +26,6 @@ public class Source2BasedOnQueries extends AbstractSource2 implements ISource2<S
         this.models.addAll(models);
         this.isSyntheticEntity = isSyntheticEntity;
     }
-    
-    @Override
-    public Class<? extends AbstractEntity<?>> sourceType() {
-        return querySourceInfo.javaType();
-    }
 
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {

@@ -257,11 +257,11 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static Source2BasedOnPersistentType source(final Integer id, final Class<? extends AbstractEntity<?>> sourceType, final String alias) {
-        return new Source2BasedOnPersistentType(sourceType, querySourceInfoProvider().getModelledQuerySourceInfo(sourceType), alias, id);
+        return new Source2BasedOnPersistentType(querySourceInfoProvider().getModelledQuerySourceInfo(sourceType), alias, id);
     }
 
     protected static Source2BasedOnPersistentType source(final Integer id, final Class<? extends AbstractEntity<?>> sourceType) {
-        return new Source2BasedOnPersistentType(sourceType, querySourceInfoProvider().getModelledQuerySourceInfo(sourceType), id);
+        return new Source2BasedOnPersistentType(querySourceInfoProvider().getModelledQuerySourceInfo(sourceType), id);
     }
 
     protected static Source2BasedOnQueries source(final QuerySourceInfo<?> querySourceInfo, final Integer id, final SourceQuery2... queries) {
