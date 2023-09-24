@@ -123,16 +123,14 @@ public class PathsToTreeTransformer {
             final Set<String> processedProps, // Prop2 name
             final List<PendingTail> incomingTails) {
         
-        final Map<String, CalcPropData> processedCalcDataLocal = new HashMap<>(); // used to store processed calc props (key is the same as FirstPropInfoAndItsPathes.firstPropName)
-        processedCalcDataLocal.putAll(processedCalcData);
-
         final Set<String> processedPropsLocal = new HashSet<>();
         processedPropsLocal.addAll(processedProps);
 
+        final Map<String, CalcPropData> processedCalcDataLocal = new HashMap<>(); // used to store locally added calc props data (key is the same as PropChunk.name())
         final List<PendingTail> addedTails = new ArrayList<>();
 
         for (final PropChunk calcChunk : getFirstCalcChunks(incomingTails)) {
-            if (!processedCalcDataLocal.containsKey(calcChunk.name())) { // consider only calc props that have not yet been processed
+            if (!processedCalcData.containsKey(calcChunk.name())) { // consider only calc props that have not yet been processed on the previous iteration(s)
                 final Expression1 exp1 = (Expression1) (new StandAloneExpressionBuilder(gen, calcChunk.data().expression)).getResult().getValue();
                 final TransformationContext1 prc = (new TransformationContext1(querySourceInfoProvider)).cloneWithAdded(sourceForCalcPropResolution);
                 final Expression2 exp2 = exp1.transform(prc);
@@ -160,6 +158,8 @@ public class PathsToTreeTransformer {
                 }
             }
         }
+
+        processedCalcDataLocal.putAll(processedCalcData); //lets now add incoming data to the locally discovered in order to path it further down the recursive process
 
         // let's recursively enhance newly added tails (as they can have unprocessed calc props among them)
         final T2<Map<String, CalcPropData>, List<PendingTail>> recursivelyEnhanced = addedTails.isEmpty() ? t2(unmodifiableMap(processedCalcDataLocal), emptyList())
