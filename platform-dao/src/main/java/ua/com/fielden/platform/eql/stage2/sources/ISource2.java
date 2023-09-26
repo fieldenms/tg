@@ -19,4 +19,6 @@ public interface ISource2<S3 extends ISource3> extends ITransformableToS3<S3> {
     String alias();
     
     Integer id();
+    
+    boolean isExplicit(); // i.e. explicitly declared as part of user query or calculated property expression.
 }

@@ -14,12 +14,12 @@ import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnTable;
 
 public class Source2BasedOnPersistentType extends AbstractSource2 implements ISource2<Source3BasedOnTable> {
 
-    public Source2BasedOnPersistentType(final QuerySourceInfo<?> querySourceInfo, final String alias, final Integer id) {
-        super(id, alias, querySourceInfo);
+    public Source2BasedOnPersistentType(final QuerySourceInfo<?> querySourceInfo, final String alias, final Integer id, final boolean isExplicit) {
+        super(id, alias, querySourceInfo, isExplicit);
     }
 
-    public Source2BasedOnPersistentType(final QuerySourceInfo<?> querySourceInfo, final Integer id) {
-        this(querySourceInfo, null, id);               
+    public Source2BasedOnPersistentType(final QuerySourceInfo<?> querySourceInfo, final Integer id, final boolean isExplicit) {
+        this(querySourceInfo, null, id, isExplicit);               
     }
 
     @Override

@@ -45,7 +45,7 @@ import ua.com.fielden.platform.types.tuples.T3;
 public class DependentCalcPropsOrder {
 
     public static List<String> orderDependentCalcProps(final QuerySourceInfoProvider querySourceInfoProvider, final EntQueryGenerator gen, final QuerySourceInfo<?> querySourceInfo) {
-        final Source2BasedOnPersistentType source = new Source2BasedOnPersistentType(querySourceInfo, gen.nextSourceId());
+        final Source2BasedOnPersistentType source = new Source2BasedOnPersistentType(querySourceInfo, gen.nextSourceId(), true);
         final Map<String, T2<Set<String>, Set<String>>> propDependencies = new HashMap<>();
         final List<String> calcPropsOfEntityType = new ArrayList<>();
         for (final PropChunk calcPropChunk : determineCalcPropChunks(querySourceInfo)) {

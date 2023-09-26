@@ -9,11 +9,13 @@ public abstract class AbstractSource2 {
     public final Integer id;
     public final String alias;
     public final QuerySourceInfo<?> querySourceInfo;
+    public final boolean isExplicit; 
     
-    protected AbstractSource2(final Integer id, final String alias, final QuerySourceInfo<?> querySourceInfo) {
+    protected AbstractSource2(final Integer id, final String alias, final QuerySourceInfo<?> querySourceInfo, final boolean isExplicit) {
         this.id = Objects.requireNonNull(id);
         this.alias = alias;
         this.querySourceInfo = Objects.requireNonNull(querySourceInfo);
+        this.isExplicit = isExplicit;
     }
     
     public String alias() {
@@ -30,6 +32,10 @@ public abstract class AbstractSource2 {
     
     public Class<? extends AbstractEntity<?>> sourceType() {
         return querySourceInfo.javaType();
+    }
+    
+    public boolean isExplicit() {
+        return isExplicit;
     }
     
     @Override

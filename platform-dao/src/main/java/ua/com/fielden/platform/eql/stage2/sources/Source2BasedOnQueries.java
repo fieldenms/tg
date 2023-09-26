@@ -21,8 +21,8 @@ public class Source2BasedOnQueries extends AbstractSource2 implements ISource2<S
     private final List<SourceQuery2> models = new ArrayList<>();
     public final boolean isSyntheticEntity;
     
-    public Source2BasedOnQueries(final List<SourceQuery2> models, final String alias, final Integer id, final QuerySourceInfo<?> querySourceInfo, final boolean isSyntheticEntity) {
-        super(id, alias, querySourceInfo);
+    public Source2BasedOnQueries(final List<SourceQuery2> models, final String alias, final Integer id, final QuerySourceInfo<?> querySourceInfo, final boolean isSyntheticEntity, final boolean isExplicit) {
+        super(id, alias, querySourceInfo, isExplicit);
         this.models.addAll(models);
         this.isSyntheticEntity = isSyntheticEntity;
     }

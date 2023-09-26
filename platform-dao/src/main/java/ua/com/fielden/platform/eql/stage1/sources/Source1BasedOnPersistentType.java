@@ -14,7 +14,7 @@ public class Source1BasedOnPersistentType extends AbstractSource1<Source2BasedOn
 
     @Override
     public Source2BasedOnPersistentType transform(final TransformationContext1 context) {
-        return new Source2BasedOnPersistentType(context.querySourceInfoProvider.getModelledQuerySourceInfo(sourceType()), alias, id);
+        return new Source2BasedOnPersistentType(context.querySourceInfoProvider.getModelledQuerySourceInfo(sourceType()), alias, id, true);
     }
 
     @Override

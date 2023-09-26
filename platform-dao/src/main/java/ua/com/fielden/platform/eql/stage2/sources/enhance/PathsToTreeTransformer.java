@@ -55,7 +55,7 @@ public class PathsToTreeTransformer {
         final List<Prop3Links> propLinks = new ArrayList<>();
 
         for (final SourceTails sourceTails : groupBySource(props)) {
-            final T2<List<ImplicitNode>, TreeResult> genRes = generateSourceNodes(sourceTails.source(), sourceTails.tails(), true);
+            final T2<List<ImplicitNode>, TreeResult> genRes = generateSourceNodes(sourceTails.source(), sourceTails.tails());
 
             nodes.put(sourceTails.source().id(), genRes._1);
             nodes.putAll(genRes._2.implicitNodesMap());
@@ -68,10 +68,9 @@ public class PathsToTreeTransformer {
     
     private T2<List<ImplicitNode>, TreeResult> generateSourceNodes(
             final ISource2<?> sourceForCalcPropResolution, 
-            final List<PendingTail> pendingTails,
-            final boolean explicitSource // true if sourceForCalcPropResolution is explicit source
+            final List<PendingTail> pendingTails
     ) {
-        final Set<String> propsToSkip = explicitSource ? new HashSet<String>(pendingTails.stream().map(p -> p.link().name()).toList()) : emptySet();
+        final Set<String> propsToSkip = sourceForCalcPropResolution.isExplicit() ? new HashSet<String>(pendingTails.stream().map(p -> p.link().name()).toList()) : emptySet();
         final T2<Map<String, CalcPropData>, List<PendingTail>> procRes = enhanceWithCalcPropsData(sourceForCalcPropResolution, emptyMap(), propsToSkip, pendingTails);
 
         final Map<String, CalcPropData> calcPropData = procRes._1;
@@ -174,8 +173,8 @@ public class PathsToTreeTransformer {
     
     private T2<ImplicitNode, TreeResult> generateNode(final List<PendingTail> tails, final PropChunk firstChunk, final Expression2 expression) {
         final EntityTypePropInfo<?> propInfo = (EntityTypePropInfo<?>) firstChunk.data();
-        final Source2BasedOnPersistentType implicitSource = new Source2BasedOnPersistentType(propInfo.propQuerySourceInfo, gen.nextSourceId());
-        final T2<List<ImplicitNode>, TreeResult> genRes = generateSourceNodes(implicitSource, tails, false);
+        final Source2BasedOnPersistentType implicitSource = new Source2BasedOnPersistentType(propInfo.propQuerySourceInfo, gen.nextSourceId(), false);
+        final T2<List<ImplicitNode>, TreeResult> genRes = generateSourceNodes(implicitSource, tails);
         final ImplicitNode node = new ImplicitNode(firstChunk.name(), genRes._1, propInfo.nonnullable, implicitSource, expression);
         return t2(node, genRes._2);
     }
