@@ -971,8 +971,7 @@ export class TgEntityEditor extends TgEditor {
             if (!this._isInputFocused()) {
                 this._focusResult();
             }
-            // indicate that the autocompleter dialog was opened and
-            // highlight matched parts of the items found
+            // indicate that the autocompleter dialog was opened
             this.opened = true;
         } else {
             this.opened = true;
