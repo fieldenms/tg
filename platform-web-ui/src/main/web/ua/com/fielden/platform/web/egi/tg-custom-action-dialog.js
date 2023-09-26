@@ -130,6 +130,21 @@ const template = html`
             height: 19px;
             padding: 0px;
         }
+        .share-button {
+            /*
+               standard gap between buttons is to be 4px;
+               however Share button can be single (mobile app) and it is better to align it to Help button on Android and increase small gap on iOs;
+               the idea is to calculate it like this (22px (close or seqEdit) - 19px (rest buttons)) / 2.0 -- the distance to move Share button to exactly match Help button position in Android
+            */
+            margin-right: 1.5px;
+        }
+        .collapse-button {
+            margin-left: 2.5px;
+            margin-right: 4px;
+        }
+        .maximise-button {
+            margin-right: 4px;
+        }
         #navigationBar {
             color: white;
         }
@@ -179,13 +194,13 @@ const template = html`
             </div>
             <div class="layout horizontal center">
                 <!-- Get A Link button -->
-                <paper-icon-button hidden="[[!_mainEntityType]]" class="default-button title-bar-button" icon="tg-icons:share" on-tap="_getLink" tooltip-text="Get a link"></paper-icon-button>
+                <paper-icon-button hidden="[[!_mainEntityType]]" class="default-button title-bar-button share-button" icon="tg-icons:share" on-tap="_getLink" tooltip-text="Get a link"></paper-icon-button>
 
                 <!-- collapse/expand button -->
-                <paper-icon-button hidden="[[mobile]]" class="default-button title-bar-button" icon="[[_minimisedIcon(_minimised)]]" on-tap="_invertMinimiseState" tooltip-text$="[[_minimisedTooltip(_minimised)]]" disabled="[[_maximised]]"></paper-icon-button>
+                <paper-icon-button hidden="[[mobile]]" class="default-button title-bar-button collapse-button" icon="[[_minimisedIcon(_minimised)]]" on-tap="_invertMinimiseState" tooltip-text$="[[_minimisedTooltip(_minimised)]]" disabled="[[_maximised]]"></paper-icon-button>
 
                 <!-- maximize/restore buttons -->
-                <paper-icon-button hidden="[[mobile]]" class="default-button title-bar-button" icon="[[_maximisedIcon(_maximised)]]" on-tap="_invertMaximiseStateAndStore" tooltip-text$="[[_maximisedTooltip(_maximised)]]" disabled=[[_minimised]]></paper-icon-button>
+                <paper-icon-button hidden="[[mobile]]" class="default-button title-bar-button maximise-button" icon="[[_maximisedIcon(_maximised)]]" on-tap="_invertMaximiseStateAndStore" tooltip-text$="[[_maximisedTooltip(_maximised)]]" disabled=[[_minimised]]></paper-icon-button>
 
                 <!-- close/next buttons -->
                 <paper-icon-button id="closeButton" hidden="[[_closerHidden(_lastAction, mobile)]]" class="close-button title-bar-button" icon="icons:cancel"  on-tap="closeDialog" tooltip-text="Close, Alt&nbsp+&nbspx"></paper-icon-button>
