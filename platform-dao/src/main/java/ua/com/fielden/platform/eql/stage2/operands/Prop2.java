@@ -18,7 +18,6 @@ import ua.com.fielden.platform.eql.meta.query.EntityTypePropInfo;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
-import ua.com.fielden.platform.eql.stage2.sources.enhance.PathsToTreeTransformer;
 import ua.com.fielden.platform.eql.stage3.operands.Expression3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.Prop3;
@@ -33,8 +32,8 @@ import ua.com.fielden.platform.types.tuples.T2;
  * <p>
  * Dot-notated path may also contain "headers" such as union-typed property or component-typed property (e.g., {@link Money}). The parts of the path that represent such properties exist mainly to preserve the structure of dot-notated properties.
  * For example, property {@code vehicle.model.make.avgPrice.amount} will be resolved to 5 parts, where the part corresponding to {@code avgPrice} will be a "header", without any retrievable value.
- * At a later processing stage such "header" parts get combined into "chunks" (represented by {@code PropChunk} in {@link PathsToTreeTransformer} that have retrievable values.
- * In the correct example such chunk would correspond to {@code avgPrice.amount}.   
+ * At a later processing stage such "header" parts get combined into "chunks" (represented by {@link ua.com.fielden.platform.eql.stage2.sources.enhance.PropChunk PropChunk}) that have retrievable values.
+ * In the current example such chunk would correspond to {@code avgPrice.amount}.   
  * 
  * @author TG Team
  *
