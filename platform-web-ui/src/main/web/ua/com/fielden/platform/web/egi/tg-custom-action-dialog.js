@@ -186,11 +186,11 @@ const template = html`
         </div>
         <div class="relative layout horizontal justified center">
             <div id="navigationBar" hidden="[[!_isNavigationBarVisible(_lastAction, _minimised)]]" style$="[[_calcNavigationBarStyle(mobile)]]" class="layout horizontal center">
-                <paper-icon-button id="firstEntity" class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_firstEntry" disabled$="[[!_isNavigatonButtonEnable(_hasPrev, isNavigationActionInProgress)]]" tooltip-text$="[[_getFirstEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
-                <paper-icon-button id="prevEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_previousEntry" disabled$="[[!_isNavigatonButtonEnable(_hasPrev, isNavigationActionInProgress)]]" tooltip-text$="[[_getPreviousEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
+                <paper-icon-button id="firstEntity" class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_firstEntry" disabled$="[[!_isNavigationButtonEnable(_hasPrev, isNavigationActionInProgress)]]" tooltip-text$="[[_getFirstEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
+                <paper-icon-button id="prevEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_previousEntry" disabled$="[[!_isNavigationButtonEnable(_hasPrev, isNavigationActionInProgress)]]" tooltip-text$="[[_getPreviousEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
                 <span style="white-space: nowrap;">[[_sequentialEditText]]</span>
-                <paper-icon-button id="nextEntity" class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_nextEntry" disabled$="[[!_isNavigatonButtonEnable(_hasNext, isNavigationActionInProgress)]]" tooltip-text$="[[_getNextEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
-                <paper-icon-button id="lastEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_lastEntry" disabled$="[[!_isNavigatonButtonEnable(_hasNext, isNavigationActionInProgress)]]" tooltip-text$="[[_getLastEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
+                <paper-icon-button id="nextEntity" class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_nextEntry" disabled$="[[!_isNavigationButtonEnable(_hasNext, isNavigationActionInProgress)]]" tooltip-text$="[[_getNextEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
+                <paper-icon-button id="lastEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_lastEntry" disabled$="[[!_isNavigationButtonEnable(_hasNext, isNavigationActionInProgress)]]" tooltip-text$="[[_getLastEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
             </div>
             <div class="layout horizontal center">
                 <!-- Get A Link button -->
@@ -568,6 +568,8 @@ Polymer({
         this.addEventListener("tg-no-item-focused", this._focusFirstBestElement.bind(this));
         //Add event listener that listens when dialog body chang it's opacity
         this.$.dialogLoader.addEventListener("transitionend", this._handleBodyTransitionEnd.bind(this));
+        //Add tg-screen-resolution-changed event listener to reset dialog dimension and position if resolution changes
+        window.addEventListener('tg-screen-resolution-changed', this._handleResolutionChanged.bind(this));
     },
 
     attached: function() {
@@ -692,6 +694,19 @@ Polymer({
             this._lastAction.skipNext();
         }
     },
+
+    /**
+     * Handles resolution change event. It resets the dialog position and dimension if after resolution change dialog becomes out of the window.
+     *  
+     * @param {Event} e - event 
+     */
+    _handleResolutionChanged: function (e) {
+        if (this._dialogIsOutOfTheWindow()) {
+            this._persistDialogPositionLocally();
+            this.refit();
+            this.notifyResizeWithoutItselfAndAncestors();
+        }
+    },
     
     //////////////////////////////////entity master navigation related//////////////////////////////
     _isNavigationBarVisible: function (lastAction, minimised) {
@@ -709,34 +724,34 @@ Polymer({
         }
     },
     
-    _isNavigatonButtonEnable: function (hasNextEntry, isNavigationActionInProgress) {
+    _isNavigationButtonEnable: function (hasNextEntry, isNavigationActionInProgress) {
         return hasNextEntry && !isNavigationActionInProgress;
     },
     
     _firstEntry: function () {
-        if (this._lastAction.supportsNavigation && this.canClose() 
-                && this._hasPrev && this._isNavigatonButtonEnable(this._hasPrev, this.isNavigationActionInProgress)) {
+        if (this._isNavigationBarVisible(this._lastAction, this._minimised) && this.canClose() 
+                && this._hasPrev && this._isNavigationButtonEnable(this._hasPrev, this.isNavigationActionInProgress)) {
             this._lastAction.firstEntry();
         }
     },
     
     _previousEntry: function () {
-        if (this._lastAction.supportsNavigation && this.canClose() 
-                && this._hasPrev && this._isNavigatonButtonEnable(this._hasPrev, this.isNavigationActionInProgress)) {
+        if (this._isNavigationBarVisible(this._lastAction, this._minimised) && this.canClose() 
+                && this._hasPrev && this._isNavigationButtonEnable(this._hasPrev, this.isNavigationActionInProgress)) {
             this._lastAction.previousEntry();
         }
     },
     
     _nextEntry: function () {
-        if (this._lastAction.supportsNavigation && this.canClose() 
-                && this._hasNext && this._isNavigatonButtonEnable(this._hasNext, this.isNavigationActionInProgress)) {
+        if (this._isNavigationBarVisible(this._lastAction, this._minimised) && this.canClose() 
+                && this._hasNext && this._isNavigationButtonEnable(this._hasNext, this.isNavigationActionInProgress)) {
             this._lastAction.nextEntry();
         }
     },
     
     _lastEntry: function () {
-        if (this._lastAction.supportsNavigation && this.canClose() 
-                && this._hasNext && this._isNavigatonButtonEnable(this._hasNext, this.isNavigationActionInProgress)) {
+        if (this._isNavigationBarVisible(this._lastAction, this._minimised) && this.canClose() 
+                && this._hasNext && this._isNavigationButtonEnable(this._hasNext, this.isNavigationActionInProgress)) {
             this._lastAction.lastEntry();
         }
     },
@@ -745,6 +760,7 @@ Polymer({
         this.$.spinner.style.removeProperty("display");
         this.$.spinner.style.left = element.offsetLeft + (element.offsetWidth / 2 - this.$.spinner.offsetWidth / 2) + 'px';
         this.$.spinner.style.top = element.offsetTop + (element.offsetHeight / 2 - this.$.spinner.offsetHeight / 2) + 'px';
+        element.parentElement.appendChild(this.$.spinner);
         this.isNavigationActionInProgress = true;
     },
     
@@ -766,6 +782,9 @@ Polymer({
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
     _invertDialogState: function(stateName) {
+        if (this._isAnimatingDimensions()) {
+            this._dialogResized();
+        }
         if (!this[stateName]) {
             this.persistActiveElement();
             this.focus();
@@ -774,8 +793,14 @@ Polymer({
         if (!this[stateName]) {
             this.restoreActiveElement();
             this._restoreLocallyPersistedDialogPositionAndDimension();
+        } else {
+            this._setDialogDimensions(this.prefDim, this._minimised, this._maximised);
         }
         this.notifyResize(); // notify children about resize of action dialog (for e.g. to re-draw shadow of tg-entity-master's actionContainer)
+    },
+
+    _isAnimatingDimensions: function () {
+        return !!this.style.getPropertyValue("transition-property");
     },
 
     _invertMinimiseState: function() {
@@ -800,7 +825,9 @@ Polymer({
      * Switches between maximised / normal states of the dialog.
      */
     _invertMaximiseState: function() {
-        this._invertDialogState('_maximised');
+        if (!this._minimised) { // need to skip the action if dialog is in minimised state: this is needed to prevent alt+m action.
+            this._invertDialogState('_maximised');
+        }
     },
 
     /**
@@ -863,15 +890,15 @@ Polymer({
      * Reads the entity master position from local storage and into dialog position properties in order to remain the dialog position when switching between different types of entity master.
      */
     _persistDialogPositionLocally: function() {
-        this.persistedTop = localStorage.getItem(localStorageKey(this._embeddedMasterTypeKey() + ST_TOP));
-        this.persistedLeft = localStorage.getItem(localStorageKey(this._embeddedMasterTypeKey() + ST_LEFT));
+        this.persistedTop = localStorage.getItem(this._generateKey(ST_TOP));
+        this.persistedLeft = localStorage.getItem(this._generateKey(ST_LEFT));
     },
 
     /**
      * Restores previously persisted dialog position (top, left) and dimensions (height, width).
      */
     _restoreLocallyPersistedDialogPositionAndDimension: function() {
-    	this._setDialogDimensions(this.prefDim, this.minimised, this._maximised);
+    	this._setDialogDimensions(this.prefDim, this._minimised, this._maximised);
         this._setDialogPosition(this.prefDim, this._minimised, this._maximised);
     },
 
@@ -1216,7 +1243,7 @@ Polymer({
                 this._updateDialogPositionWithPrefDim(this.prefDim, this._minimised, this._maximised);
             }
             //Indicates that dialog is resized and moved after the resizing animation will be finished.
-            this.async(this._dialogResized, 500);
+            this._resizeAnimation = this.async(this._dialogResized, 500);
         }
     },
 
@@ -1264,6 +1291,10 @@ Polymer({
     
     //Removes animation properties and hides blocking pane. (Please note that blocking layer was shown twice if master changed it's type that's why _hideBlockingLayer invokaction is needed here)
     _dialogResized: function () {
+        if (this._resizeAnimation !== null) {
+            this.cancelAsync(this._resizeAnimation);
+            this._resizeAnimation = null;
+        }
         this.style.removeProperty("transition-property");
         this.style.removeProperty("transition-duration");
         //Removes the optimisation hook if master size or position was changed.
@@ -1276,7 +1307,7 @@ Polymer({
     
     //Invoked when master is about to change it's type.
     _handleMasterBeforeChange: function () {
-        if (this.opened) {
+        if (this.opened && !this._minimised && !this._maximised) {
             //First animate the blocking pane.
             this._showBlockingPane();
             //Indicate that master is about to change it's type
@@ -1359,6 +1390,8 @@ Polymer({
         if (!this.mobile) {
             this._maximised = this._customMaximised();
         }
+
+        console.log(`--refiting fialog maximised state: ${this._maximised}--`);
 
         if (this._dialogIsOutOfTheWindow()) {
             this._removePersistedPositionAndDimensions();
@@ -1772,13 +1805,21 @@ Polymer({
     _embeddedMasterTypeKey: function () {
         return this._embeddedMasterType ? this._embeddedMasterType.fullClassName() : null;
     },
-    
+
+    _resolutionKey: function () {
+        return `_${window.screen.availWidth}x${window.screen.availHeight}`;
+    },
+
+    _generateKey: function (name) {
+        return localStorageKey(this._embeddedMasterTypeKey() + this._resolutionKey() + name);
+    },
+
     /**
      * Persists custom property for this dialog's Entity Master into local storage. Does nothing if no Entity Master was loaded.
      */
     _setCustomProp: function (name, value) {
         if (this._embeddedMasterTypeKey()) {
-            localStorage.setItem(localStorageKey(this._embeddedMasterTypeKey() + name), value);
+            localStorage.setItem(this._generateKey(name), value);
         }
     },
     
@@ -1787,7 +1828,7 @@ Polymer({
      */
     _removeCustomProp: function (name) {
         if (this._embeddedMasterTypeKey()) {
-            localStorage.removeItem(localStorageKey(this._embeddedMasterTypeKey() + name));
+            localStorage.removeItem(this._generateKey(name));
         }
     },
     
@@ -1796,8 +1837,8 @@ Polymer({
      */
     _customDim: function () {
         if (this._embeddedMasterTypeKey()) {
-            const savedWidth = localStorage.getItem(localStorageKey(this._embeddedMasterTypeKey() + ST_WIDTH));
-            const savedHeight = localStorage.getItem(localStorageKey(this._embeddedMasterTypeKey() + ST_HEIGHT));
+            const savedWidth = localStorage.getItem(this._generateKey(ST_WIDTH));
+            const savedHeight = localStorage.getItem(this._generateKey(ST_HEIGHT));
             if (savedWidth && savedHeight) {
                 return [savedWidth, savedHeight];
             }
@@ -1830,7 +1871,7 @@ Polymer({
     
     _customMaximised: function () {
         if (this._embeddedMasterTypeKey()) {
-            return localStorage.getItem(localStorageKey(this._embeddedMasterTypeKey() + ST_MAXIMISED)) !== null;
+            return localStorage.getItem(this._generateKey(ST_MAXIMISED)) !== null;
         }
         return false;
     }
