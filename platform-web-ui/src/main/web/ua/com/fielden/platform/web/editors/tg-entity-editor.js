@@ -873,7 +873,7 @@ export class TgEntityEditor extends TgEditor {
             if (elementExists !== this.result) {
                 document.body.appendChild(this.result);
             }
-            //Need to call highlight matched parts to build the DOM of result dialog for better positioning of result dialog.
+            // need to call highlight matched parts to build the DOM for the result dialog to ensure its correct positioning
             this.result.highlightMatchedParts(this._searchQuery);
 
             // now let's open the dialog to display the result, but only if it is not opened yet...
