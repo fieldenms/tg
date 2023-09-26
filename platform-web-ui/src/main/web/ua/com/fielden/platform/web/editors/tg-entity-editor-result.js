@@ -22,6 +22,12 @@ import {mixinBehaviors} from '/resources/polymer/@polymer/polymer/lib/legacy/cla
 import {html, PolymerElement} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import {microTask} from '/resources/polymer/@polymer/polymer/lib/utils/async.js';
 
+/**
+ * The minimal number of items that should be visible in the result dialog if it is placed under the editor.
+ * If the result dialog can not contain this number of items then this result dialog should be placed above the editor.
+ */
+const NUMBER_OF_VISIBLE_ITEMS = 5;
+
 const template = html`
     <style>
         :host {
@@ -32,6 +38,7 @@ const template = html`
             overflow: auto; /* this is to make host scorable when needed */
             -webkit-overflow-scrolling: touch;
             box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
+            position: fixed;
             @apply --layout-vertical;
         }
 
@@ -155,7 +162,7 @@ const template = html`
     <div hidden$="[[_foundSome]]" class="no-result">
         <span>Found no matching values.</span>
     </div>
-    <div class="toolbar layout horizontal wrap">
+    <div id="toolbar" class="toolbar layout horizontal wrap">
         <div class="toolbar-content layout horizontal center">
             <paper-icon-button tooltip-text="Load more matching values, if any" on-tap="_loadMore" id="loadMoreButton" disabled$="[[!enableLoadMore]]" icon="tg-icons:expand-all"></paper-icon-button>
             <paper-icon-button tooltip-text$="[[_tooltipForActiveOnlyButton(_activeOnly)]]" on-tap="_changeActiveOnly" hidden$="[[_isHiddenActiveOnlyButton(_activeOnly)]]" icon="tg-icons:playlist-remove" active-button$="[[_activeOnly]]"></paper-icon-button>
@@ -603,26 +610,23 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
 
     /* Iron resize event listener for correct resizing and positioning of an open result overlay. */
     refit () {
-        var clientRectAndOffsetHeight = this.retrieveContainerSizes();
-        var rect = clientRectAndOffsetHeight[0]; // container.getBoundingClientRect();//getClientRects()[0];
-        var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
-        var scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
+        const clientRectAndOffsetHeight = this.retrieveContainerSizes();
+        const rect = clientRectAndOffsetHeight[0]; // container.getBoundingClientRect();//getClientRects()[0];
 
-        var top = rect.top + scrollTop + clientRectAndOffsetHeight[1]; // container.offsetHeight;//rect.bottom + scrollTop;
-        var left = rect.left; // + scrollLeft;
-        var right = rect.right;
-        var width = rect.width;
+        const top = rect.top + clientRectAndOffsetHeight[1];
+        const left = rect.left;
+        const right = rect.right;
+        const width = rect.width;
 
-        this.style.position = 'absolute';
-        this.style.top = top + 'px';
+        
 
         // let's try to accomodate the width of the overlay so that in case
         // the input field is narrow, but there is additional window width available to the
         // left or right of the input, it would be used.
-        var minWidth = 200;
+        const minWidth = 200;
         this.style['min-width'] = minWidth + 'px'; // set mid-width, which is important for shifting overlay to the left
-        var visibleWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-        var spaceToRightWindowSide = (visibleWidth - right) + width;
+        const visibleWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+        const spaceToRightWindowSide = (visibleWidth - right) + width;
         this.style['max-width'] = spaceToRightWindowSide + 'px';
         // is there sufficient space to the right?
         if (spaceToRightWindowSide >= minWidth) {
@@ -632,9 +636,8 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
             this.style.width = width + 'px';
         } else {
             // otherwise, move the overlay to the left side, but not beyond
-            var resultRect = this.getClientRects()[0];
-            var adjustment = 5; // minor adjustment to make the overlay fully visible
-            var newLeft = (visibleWidth - (minWidth + adjustment));
+            const adjustment = 5; // minor adjustment to make the overlay fully visible
+            const newLeft = (visibleWidth - (minWidth + adjustment));
             if (newLeft > 0) {
                 this.style.left = newLeft + 'px';
             } else {
@@ -644,23 +647,32 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
 
         // let's try also to determine the best height depending on the window height and
         // the current vertical location of the element
-        var visibleHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-        this.style['max-height'] = (visibleHeight - top - 10) + 'px'; // 10 pixels is an arbitrary adjustment
+        this.style.removeProperty("maxHeight");
+        this.style.removeProperty("top");
+        this.style.removeProperty("bottom");
+        const visibleHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+        if (this.$.selector.children.length > 0 && visibleHeight - top - 10 - this.$.toolbar.offsetHeight < this.$.selector.children[0].offsetHeight * NUMBER_OF_VISIBLE_ITEMS // if the height from the bottom of editor to the bottom of the window can't contain minimal number of visible items 
+            && rect.top - 10 > visibleHeight - top - 10 ) { // and if height above the editor is lagger than the one under the editor then place dialog above the editor.
+            this.style.maxHeight = rect.top - 10 + 'px';// 10 pixels is an arbitrary adjustment
+            this.style.bottom = visibleHeight - rect.top - 10 + 'px';
+        } else {
+            this.style.maxHeight = visibleHeight - top - 10 + 'px';// 10 pixels is an arbitrary adjustment
+            this.style.top = top + 'px';
+        }
     }
 
     /**
-     * Defines reasonable rule for 'small height for showing autocompleter results'. For now three items need to be shown, otherwise scrolling will be triggered.
+     * Defines reasonable rule for 'small height for showing autocompleter results'. For now NUMBER_OF_VISIBLE_ITEMS items need to be shown, otherwise scrolling will be triggered.
      */
     visibleHeightUnderEditorIsSmall () {
         const clientRectAndOffsetHeight = this.retrieveContainerSizes();
         const rect = clientRectAndOffsetHeight[0];
-        const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
-        const top = rect.top + scrollTop + clientRectAndOffsetHeight[1];
+        const top = rect.top + clientRectAndOffsetHeight[1];
 
         // let's try to determine the height under the editor to bottom of the screen
         const visibleHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
         const itemHeight = 24 + 2 * 6 + 1; // see tg-item styles with min-height, top / bottom padding and top border
-        return visibleHeight - top - 10 < 3 * itemHeight; // three items do not fit, so visible height is small for showing items
+        return visibleHeight - top - 10 < NUMBER_OF_VISIBLE_ITEMS * itemHeight && rect.top - 10 < NUMBER_OF_VISIBLE_ITEMS * itemHeight; // NUMBER_OF_VISIBLE_ITEMS items do not fit from bottom and from top, then trigger scroll.
     }
 
     /**
