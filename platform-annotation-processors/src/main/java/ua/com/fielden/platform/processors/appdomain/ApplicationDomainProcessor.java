@@ -215,14 +215,13 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         final Set<EntityElement> currentRegisteredEntities = new HashSet<>(appDomainElt.entities());
 
         // analyse input entities
-        // * domain entities -- are there any new ones we need to register?
+        // * input entities -- are there any new ones we need to register?
         toRegister.addAll(inputEntities.stream()
                 .filter(ent -> isRegisterable(ent) && !currentRegisteredEntities.contains(ent))
                 .toList());
-        // * non-domain entities OR skipped ones -- were any of them registered? (we need to unregister them)
+        // * unregisterable entities -- were any of them registered? (we need to unregister them)
         toUnregister.addAll(inputEntities.stream()
-                .filter(ent -> !isRegisterable(ent))
-                .filter(ent -> currentRegisteredEntities.contains(ent))
+                .filter(ent -> currentRegisteredEntities.contains(ent) && !isRegisterable(ent))
                 .toList());
 
         // analyse the input extension if it exists
@@ -230,7 +229,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
 
         final Set<EntityElement> externalEntitiesFromExtension = inputExtension.map(mirr -> streamEntitiesFromExtension(mirr).collect(toSet()))
                 .orElseGet(() -> Set.of());
-        // NOTE: we assume that external entities are always domain entities, thus don't perform additional checks
+        // NOTE: we assume that external entities are always registerable entities, thus don't perform additional checks
         // * are there any new external entities we need to register?
         final List<EntityElement> externalToRegister = externalEntitiesFromExtension.stream()
                 .filter(ent -> !currentExternalRegisteredEntities.contains(ent))
