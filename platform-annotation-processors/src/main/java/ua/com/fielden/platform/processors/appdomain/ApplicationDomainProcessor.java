@@ -174,11 +174,25 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         return entity.getAnnotation(SkipEntityRegistration.class) != null;
     }
 
+    private boolean canBeRegistered(final EntityElement entity) {
+        if (ElementFinder.isGeneric(entity)) {
+            printWarning("Entity %s won't be registered because it is a generic type, which is incompatible with the type of @%s.value()",
+                    entity.getQualifiedName(), RegisteredEntity.class.getCanonicalName());
+            return false;
+        }
+        return true;
+    }
+
+    // combines all "can/should be registered" checks
+    private boolean isRegisterable(final EntityElement entity) {
+        return isDomainEntity(entity) && !shouldSkipRegistration(entity) && canBeRegistered(entity);
+    }
+
     private void generate(final Collection<EntityElement> inputEntities, final Optional<ExtendApplicationDomain.Mirror> inputExtension) {
         printNote("Generating %s from scratch", APPLICATION_DOMAIN_SIMPLE_NAME);
 
         final List<EntityElement> toRegister = inputEntities.stream()
-                .filter(ent -> isDomainEntity(ent) && !shouldSkipRegistration(ent))
+                .filter(this::isRegisterable)
                 .toList();
 
         final List<EntityElement> externalEntities = inputExtension.map(mirr -> streamEntitiesFromExtension(mirr).toList())
@@ -203,11 +217,11 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         // analyse input entities
         // * domain entities -- are there any new ones we need to register?
         toRegister.addAll(inputEntities.stream()
-                .filter(ent -> isDomainEntity(ent) && !shouldSkipRegistration(ent) && !currentRegisteredEntities.contains(ent))
+                .filter(ent -> isRegisterable(ent) && !currentRegisteredEntities.contains(ent))
                 .toList());
         // * non-domain entities OR skipped ones -- were any of them registered? (we need to unregister them)
         toUnregister.addAll(inputEntities.stream()
-                .filter(ent -> !isDomainEntity(ent) || shouldSkipRegistration(ent))
+                .filter(ent -> !isRegisterable(ent))
                 .filter(ent -> currentRegisteredEntities.contains(ent))
                 .toList());
 
