@@ -197,15 +197,18 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         final Set<EntityElement> toUnregister = new HashSet<>();
         final Set<EntityElement> toRegister = new HashSet<>();
 
+        // without external ones
+        final Set<EntityElement> currentRegisteredEntities = new HashSet<>(appDomainElt.entities());
+
         // analyse input entities
         // * domain entities -- are there any new ones we need to register?
         toRegister.addAll(inputEntities.stream()
-                .filter(ent -> isDomainEntity(ent) && !shouldSkipRegistration(ent) && !appDomainElt.entities().contains(ent))
+                .filter(ent -> isDomainEntity(ent) && !shouldSkipRegistration(ent) && !currentRegisteredEntities.contains(ent))
                 .toList());
         // * non-domain entities OR skipped ones -- were any of them registered? (we need to unregister them)
         toUnregister.addAll(inputEntities.stream()
                 .filter(ent -> !isDomainEntity(ent) || shouldSkipRegistration(ent))
-                .filter(ent -> appDomainElt.entities().contains(ent))
+                .filter(ent -> currentRegisteredEntities.contains(ent))
                 .toList());
 
         // analyse the input extension if it exists
