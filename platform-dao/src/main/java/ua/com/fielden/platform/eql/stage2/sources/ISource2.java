@@ -21,4 +21,6 @@ public interface ISource2<S3 extends ISource3> extends ITransformableToS3<S3> {
     Integer id();
     
     boolean isExplicit(); // i.e. explicitly declared as part of user query or calculated property expression.
+    
+    boolean isPartOfCalcProp(); // indicates that given source has been generated as part of calc-prop expression processing (i.e. has not been explicitly stated within user query).
 }

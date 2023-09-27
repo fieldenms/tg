@@ -101,7 +101,7 @@ public class PathsToTreeTransformer {
             }
 
             if (!propEntry.tails().isEmpty()) {
-                final T2<ImplicitNode, TreeResult> genRes = generateNode(propEntry.tails(), propEntry.firstChunk(), expression);
+                final T2<ImplicitNode, TreeResult> genRes = generateNode(propEntry.tails(), propEntry.firstChunk(), expression, sourceForCalcPropResolution.isPartOfCalcProp());
                 listOfNodes.add(genRes._1);
                 otherSourcesNodes.putAll(genRes._2.implicitNodesMap());
                 expressionLinks.addAll(genRes._2.expressionsData());
@@ -171,9 +171,9 @@ public class PathsToTreeTransformer {
         return t2(recursivelyEnhanced._1, allTails);
     }
     
-    private T2<ImplicitNode, TreeResult> generateNode(final List<PendingTail> tails, final PropChunk firstChunk, final Expression2 expression) {
+    private T2<ImplicitNode, TreeResult> generateNode(final List<PendingTail> tails, final PropChunk firstChunk, final Expression2 expression, final boolean isPartOfCalcProp) {
         final EntityTypePropInfo<?> propInfo = (EntityTypePropInfo<?>) firstChunk.data();
-        final Source2BasedOnPersistentType implicitSource = new Source2BasedOnPersistentType(propInfo.propQuerySourceInfo, gen.nextSourceId(), false);
+        final Source2BasedOnPersistentType implicitSource = new Source2BasedOnPersistentType(propInfo.propQuerySourceInfo, gen.nextSourceId(), false, isPartOfCalcProp);
         final T2<List<ImplicitNode>, TreeResult> genRes = generateSourceNodes(implicitSource, tails);
         final ImplicitNode node = new ImplicitNode(firstChunk.name(), genRes._1, propInfo.nonnullable, implicitSource, expression);
         return t2(node, genRes._2);
