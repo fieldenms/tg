@@ -212,18 +212,20 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
                 .toList());
 
         // analyse the input extension if it exists
-        final Set<EntityElement> externalEntities = inputExtension.map(mirr -> streamEntitiesFromExtension(mirr).collect(toSet()))
+        final Set<EntityElement> currentExternalRegisteredEntities = new HashSet<>(appDomainElt.externalEntities());
+
+        final Set<EntityElement> externalEntitiesFromExtension = inputExtension.map(mirr -> streamEntitiesFromExtension(mirr).collect(toSet()))
                 .orElseGet(() -> Set.of());
         // NOTE: we assume that external entities are always domain entities, thus don't perform additional checks
         // * are there any new external entities we need to register?
-        final List<EntityElement> externalToRegister = externalEntities.stream()
-                .filter(ent -> !appDomainElt.entities().contains(ent))
+        final List<EntityElement> externalToRegister = externalEntitiesFromExtension.stream()
+                .filter(ent -> !currentExternalRegisteredEntities.contains(ent))
                 .toList();
         // * are there any external entities that need to be unregistered?
         // only if an extension has been modified
         final List<EntityElement> externalToUnregister = inputExtension.isEmpty() ? List.of() :
-            appDomainElt.externalEntities().stream()
-                .filter(ent -> !externalEntities.contains(ent))
+            currentExternalRegisteredEntities.stream()
+                .filter(ent -> !externalEntitiesFromExtension.contains(ent))
                 .toList();
 
         // analyse ApplicationDomain
