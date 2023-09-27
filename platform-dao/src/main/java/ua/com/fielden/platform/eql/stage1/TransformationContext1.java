@@ -14,15 +14,17 @@ public final class TransformationContext1 {
     public final List<List<ISource2<? extends ISource3>>> sources;
     public final QuerySourceInfoProvider querySourceInfoProvider;
     public final boolean shouldIncludeCalcProps;
+    public final boolean isForCalcProp; // indicates that this context is used to transform calc-prop expression.
 
-    public TransformationContext1(final QuerySourceInfoProvider querySourceInfoProvider) {
-        this(querySourceInfoProvider, emptyList(), false);
+    public TransformationContext1(final QuerySourceInfoProvider querySourceInfoProvider, final boolean isForCalcProp) {
+        this(querySourceInfoProvider, emptyList(), false, isForCalcProp);
     }
 
-    private TransformationContext1(final QuerySourceInfoProvider querySourceInfoProvider, final List<List<ISource2<? extends ISource3>>> sources, final boolean shouldIncludeCalcProps) {
+    private TransformationContext1(final QuerySourceInfoProvider querySourceInfoProvider, final List<List<ISource2<? extends ISource3>>> sources, final boolean shouldIncludeCalcProps, final boolean isForCalcProp) {
         this.querySourceInfoProvider = querySourceInfoProvider;
         this.sources = sources;
         this.shouldIncludeCalcProps = shouldIncludeCalcProps;
+        this.isForCalcProp = isForCalcProp;
     }
 
     public TransformationContext1 cloneWithAdded(final ISource2<? extends ISource3> transformedSource) {
@@ -31,7 +33,7 @@ public final class TransformationContext1 {
         final List<List<ISource2<? extends ISource3>>> newSources = new ArrayList<>();
         newSources.add(unmodifiableList(current));
         newSources.addAll(sources); // all lists within added list are already unmodifiable
-        return new TransformationContext1(querySourceInfoProvider, unmodifiableList(newSources), false);
+        return new TransformationContext1(querySourceInfoProvider, unmodifiableList(newSources), false, isForCalcProp);
     }
 
     public TransformationContext1 cloneWithAdded(final List<ISource2<? extends ISource3>> leftNodeSources, final List<ISource2<? extends ISource3>> rightNodeSources) {
@@ -41,10 +43,10 @@ public final class TransformationContext1 {
         final List<List<ISource2<? extends ISource3>>> newSources = new ArrayList<>();
         newSources.add(unmodifiableList(current));
         newSources.addAll(sources); // all lists within added list are already unmodifiable
-        return new TransformationContext1(querySourceInfoProvider, unmodifiableList(newSources), false);
+        return new TransformationContext1(querySourceInfoProvider, unmodifiableList(newSources), false, isForCalcProp);
     }
 
     public TransformationContext1 cloneForAggregates() {
-        return new TransformationContext1(querySourceInfoProvider, sources, true);
+        return new TransformationContext1(querySourceInfoProvider, sources, true, isForCalcProp);
     }
 }

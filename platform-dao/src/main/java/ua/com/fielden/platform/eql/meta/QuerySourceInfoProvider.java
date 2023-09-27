@@ -106,7 +106,7 @@ public class QuerySourceInfoProvider {
      * @return
      */
     private <T extends AbstractEntity<?>> QuerySourceInfo<?> generateModelledQuerySourceInfoForSyntheticType(final Class<? extends AbstractEntity<?>> entityType, final List<SourceQuery1> queries) {
-        final TransformationContext1 context = new TransformationContext1(this);
+        final TransformationContext1 context = new TransformationContext1(this, false);
         final List<SourceQuery2> transformedQueries = queries.stream().map(m -> m.transform(context)).collect(toList());
         return Source1BasedOnQueries.produceQuerySourceInfoForEntityType(this, transformedQueries, entityType, true);
     }

@@ -54,7 +54,7 @@ public class DependentCalcPropsOrder {
                 }
 
                 final Expression1 exp1 = (Expression1) (new StandAloneExpressionBuilder(gen, calcPropChunk.data().expression)).getResult().getValue();
-                final TransformationContext1 prc = (new TransformationContext1(querySourceInfoProvider)).cloneWithAdded(source);
+                final TransformationContext1 prc = (new TransformationContext1(querySourceInfoProvider, true)).cloneWithAdded(source);
                 try {
                     final Expression2 exp2 = exp1.transform(prc);
                     final Set<Prop2> expProps = exp2.collectProps();
