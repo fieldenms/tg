@@ -22,12 +22,12 @@ const template = html`
             @apply --layout-vertical;
         }
     </style>
-    <paper-button on-tap="_runItemAction">
+    <paper-button on-tap="_runItemAction" elevation="2">
         <slot name="current-item"></slot>
         <iron-icon icon="icons:arrow-drop-down" on-tap="_openOptionList"></iron-icon>
     </paper-button>
-    <iron-dropdown id="dropdown" horizontal-align="left" vertical-align="bottom" restore-focus-on-close always-on-top >
-        <paper-listbox id="availableViews" class="dropdown-content" slot="dropdown-content" attr-for-selected="view-index" on-iron-select="_changeView">
+    <iron-dropdown id="dropdown" horizontal-align="left" vertical-align="top" restore-focus-on-close always-on-top >
+        <paper-listbox id="availableViews" class="dropdown-content" slot="dropdown-content" on-iron-select="_changeActionAndRun">
             <slot name="hidden-item"></slot>
         </paper-listbox>
     </iron-dropdown>`; 
@@ -46,8 +46,6 @@ class TgOptionButton extends PolymerElement {
 
     ready () {
         super.ready();
-        
-        
     }
 
     _runItemAction() {
@@ -59,6 +57,22 @@ class TgOptionButton extends PolymerElement {
 
     _openOptionList (e) {
         tearDownEvent(e);
+        this.$.dropdown.open();
+    }
+
+    _changeActionAndRun (e) {
+        this.$.dropdown.close();
+        // const selectedItem = e.detail.item;
+        // const currentItem = this.querySelector("[slot='current-item']");
+        // if (currentItem) {
+        //     currentItem.setAttribute("slot", "hidden-item");
+        // }
+        // if (selectedItem) {
+        //     selectedItem.setAttribute("slot", "current-item");
+        //     if (selectedItem._asyncRun) {
+        //         //selectedItem._asyncRun();
+        //     }
+        // }
     }
 }
 

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Option Button Example</title>
+    <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js'></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script type="module">
+        import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
+        import '/resources/components/tg-option-button/tg-option-button.js';
+        import '/resources/components/tg-option-button/tg-option-action.js';
+    </script>
+    <style>
+        body {
+            font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+        }
+    </style>
+</head>
+
+<body unresolved class="fullbleed">
+    <dom-bind>
+        <template is="dom-bind">
+            <tg-option-button>
+                <tg-option-action title="SAVE" slot="current-item"></tg-option-action>
+                <tg-option-action title="SAVE&CLOSE" slot="hidden-item"></tg-option-action>
+                <tg-option-action title="SAVE&NEW" slot="hidden-item"></tg-option-action>
+            </tg-option-button>
+        </template>
+    </dom-bind>
+</body>
+
+</html>
