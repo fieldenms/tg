@@ -21,11 +21,11 @@ import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
 public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityActionConfig0<T>, IEntityActionConfig1<T>, IEntityActionConfig2<T>, IEntityActionConfig3<T>, IEntityActionConfig4<T>, IEntityActionConfig5<T>, IActionBarLayoutConfig1<T> {
 
-    private final DefaultEntityAction action;
+    private final AbstractAction action;
     private final SimpleMasterBuilder<T> simpleMasterBuilder;
 
-    public EntityActionConfig(final DefaultEntityAction defaultEntityAction, final SimpleMasterBuilder<T> simpleMaster) {
-        this.action = defaultEntityAction;
+    public EntityActionConfig(final AbstractAction action, final SimpleMasterBuilder<T> simpleMaster) {
+        this.action = action;
         this.simpleMasterBuilder = simpleMaster;
     }
 

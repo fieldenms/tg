@@ -25,6 +25,8 @@ import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.MapEntityTo;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.UI_ROLE;
@@ -45,6 +47,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionC
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig5;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.DefaultEntityAction;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig;
+import ua.com.fielden.platform.web.view.master.api.actions.impl.AbstractAction;
 import ua.com.fielden.platform.web.view.master.api.helpers.IActionBarLayoutConfig1;
 import ua.com.fielden.platform.web.view.master.api.helpers.IComplete;
 import ua.com.fielden.platform.web.view.master.api.helpers.ILayoutConfig;
@@ -98,18 +101,26 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
     @Override
     public IEntityActionConfig0<T> addAction(final MasterActions masterAction) {
-        final DefaultEntityAction defaultEntityAction = new DefaultEntityAction(masterAction.name(), getPostAction(masterAction), getPostActionError(masterAction));
+        final AbstractAction action = createAction(masterAction);
         final Optional<String> shortcut = getShortcut(masterAction);
         if (shortcut.isPresent()) {
-            defaultEntityAction.setShortcut(shortcut.get()); // default value of shortcut if present
+            action.setShortcut(shortcut.get()); // default value of shortcut if present
         }
         final Optional<String> focusingCallback = getFocusingCallback(masterAction);
         if (focusingCallback.isPresent()) {
-            defaultEntityAction.setFocusingCallback(focusingCallback.get()); // default value of focusingCallback if present
+            action.setFocusingCallback(focusingCallback.get()); // default value of focusingCallback if present
         }
-        final EntityActionConfig<T> entityAction = new EntityActionConfig<>(defaultEntityAction, this);
+        final EntityActionConfig<T> entityAction = new EntityActionConfig<T>(action, this);
         entityActions.add(entityAction);
         return entityAction;
+    }
+
+    private AbstractAction createAction(final MasterActions masterAction) {
+        //Save action for persistent entity which is not one-2-one association should have save with options action.
+        if (masterAction  == MasterActions.SAVE && entityType.isAnnotationPresent(MapEntityTo.class) && !AbstractEntity.class.isAssignableFrom(AnnotationReflector.getKeyType(entityType))) {
+
+        }
+        return new DefaultEntityAction(masterAction.name(), getPostAction(masterAction), getPostActionError(masterAction));
     }
 
     @Override

@@ -69,7 +69,7 @@ const template = html`
         <span class="truncate item-title" style$="[[_calcButtonStyle(buttonWidth)]]">[[_currentView.title]]</span>
         <iron-icon icon="icons:arrow-drop-down"></iron-icon>
     </paper-button>
-    <iron-dropdown id="dropdown" horizontal-align="left" vertical-offset="40" restore-focus-on-close always-on-top on-iron-overlay-opened="_dropdownOpened" on-iron-overlay-closed="_dropdownClosed">
+    <iron-dropdown id="dropdown" horizontal-align="left" restore-focus-on-close always-on-top on-iron-overlay-opened="_dropdownOpened" on-iron-overlay-closed="_dropdownClosed">
         <paper-listbox id="availableViews" class="dropdown-content" slot="dropdown-content" attr-for-selected="view-index" on-iron-select="_changeView">
             <template is="dom-repeat" items="[[views]]" as="view">
                 <paper-item class="view-item" view-index$="[[view.index]]" tooltip-text$="[[view.desc]]">
@@ -138,6 +138,7 @@ export class TgDropdownSwitch extends mixinBehaviors([TgElementSelectorBehavior]
         if (!this.changeCurrentViewOnSelect) {
             this.$.availableViews.selected = this.viewIndex;
         }
+        this.$.dropdown.verticalOffset = this.$.trigger.offsetHeight;
         this.$.dropdown.open();
     }
 
