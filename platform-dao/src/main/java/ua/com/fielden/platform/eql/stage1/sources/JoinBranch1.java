@@ -31,7 +31,7 @@ public class JoinBranch1 implements IJoinNode1<JoinBranch2> {
     public TransformationResult1<JoinBranch2> transform(TransformationContext1 context) {
         final TransformationResult1<? extends IJoinNode2<?>> lsTransformed = leftNode.transform(context);
         final TransformationResult1<? extends IJoinNode2<?>> rsTransformed = rightNode.transform(context);
-        final TransformationContext1 updatedContext = context.cloneWithAdded(lsTransformed.updatedContext.sources.get(0), rsTransformed.updatedContext.sources.get(0));
+        final TransformationContext1 updatedContext = context.cloneWithAdded(lsTransformed.updatedContext.getCurrentLevelSources(), rsTransformed.updatedContext.getCurrentLevelSources());
         final Conditions2 jcTransformed = joinConditions.transform(updatedContext);
         return new TransformationResult1<>(new JoinBranch2(lsTransformed.item, rsTransformed.item, joinType, jcTransformed), updatedContext);
     }

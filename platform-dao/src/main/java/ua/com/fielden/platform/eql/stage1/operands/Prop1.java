@@ -34,7 +34,7 @@ public class Prop1 implements ISingleOperand1<Prop2> {
     @Override
     public Prop2 transform(final TransformationContext1 context) {
         
-        final Iterator<List<ISource2<? extends ISource3>>> it = context.sources.iterator();
+        final Iterator<List<ISource2<? extends ISource3>>> it = context.sourcesForNestedQueries.iterator();
         if (external) {
             it.next();
         }
