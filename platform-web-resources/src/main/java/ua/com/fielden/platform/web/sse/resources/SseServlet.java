@@ -12,6 +12,7 @@ import java.security.SignatureException;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 import javax.servlet.AsyncContext;
@@ -56,7 +57,7 @@ public final class SseServlet extends HttpServlet {
     private static final Logger LOGGER = Logger.getLogger(SseServlet.class);
 
     private static final ScheduledExecutorService HEARTBEAT_SCHEDULER = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("SSE-heartbeat-%d").build());
-    private static final int HEARTBEAT_FREQUENCY_IN_SECONDS = 10;
+    private static final int HEARTBEAT_FREQUENCY_IN_SECONDS = 5;
 
     private final IEventSourceEmitterRegister eseRegister;
     private final ICompanionObjectFinder coFinder;
@@ -86,7 +87,7 @@ public final class SseServlet extends HttpServlet {
         // let's now bind the servlet to the default SSE path
         handler.addServletWithMapping(servletHolder, "/sse/*");
     }
-    
+
     private SseServlet(
             final IEventSourceEmitterRegister eseRegister,
             final ICompanionObjectFinder coFinder,
@@ -108,6 +109,7 @@ public final class SseServlet extends HttpServlet {
     /**
      * Responsible for processing requests for establishing SSE communication channels.
      */
+    @Override
     protected void doGet(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         final String sseIdString = Optional.ofNullable(request.getPathInfo()).filter(pi -> pi.length() > 1).map(pi -> pi.substring(1, pi.length())).orElse(NO_SSE_UID);
         if (NO_SSE_UID.equals(sseIdString)) {
@@ -125,8 +127,11 @@ public final class SseServlet extends HttpServlet {
 
         final User user = maybeUser.get();
         // any errors that may occur during subscription or a normal lifecycle after, should result in deregistering and closing of the emitter, created during this request
+        final AtomicBoolean wasRegisterd = new AtomicBoolean(false);
         try {
+            LOGGER.info(format("Registering event emitter for web client [%s, %s].", user, sseIdString));
             eseRegister.registerEmitter(user, sseIdString, () -> {
+                wasRegisterd.set(true);
                 try {
                     makeHandshake(response);
                     // create an asynchronous context for pushing messages out to the subscribed client
@@ -140,11 +145,19 @@ public final class SseServlet extends HttpServlet {
                     throw new SseException("Could not create a new SSE emitter.", ex);
                 }
             }).ifFailure(Result::throwRuntime);
-            LOGGER.info(format("SSE subscription for client [%s, %s] completed.", user, sseIdString));
+            if (wasRegisterd.get()) {
+                LOGGER.info(format("SSE subscription for client [%s, %s] completed.", user, sseIdString));
+            } else {
+                LOGGER.info(format("SSE subscription for client [%s, %s] already registered, skip.", user, sseIdString));
+                super.doGet(request, response);
+                return;
+            }
         } catch (final Exception ex) {
             LOGGER.error(ex);
-            eseRegister.deregisterEmitter(user, sseIdString);
-            LOGGER.warn(format("SSE subscription for client [%s, %s] did not complete.", user, sseIdString), ex);
+            if (wasRegisterd.get()) {
+                eseRegister.deregisterEmitter(user, sseIdString);
+                LOGGER.warn(format("SSE subscription for client [%s, %s] did not complete.", user, sseIdString), ex);
+            }
             throw new ServletException(ex);
         }
     }
@@ -174,7 +187,7 @@ public final class SseServlet extends HttpServlet {
             LOGGER.debug("SSE request: provided authenticator cannot be verified. SignatureException was thrown.");
             return empty();
         }
-        
+
         final IUser coUser = coFinder.find(User.class, true);
         final User user = coUser.findUser(auth.username);
         return user != null && user.isActive() ? of(user) : empty();

@@ -95,7 +95,6 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
 
     @Override
     public Result registerEmitter(final User user, final String sseUid, final Supplier<IEventSourceEmitter> emitterFactory) {
-        LOGGER.info(format("Registering event emitter for web client [%s, %s].", user, sseUid));
         if (isActive.get()) {
             final IEventSourceEmitter emitter = register.computeIfAbsent(key(user, sseUid), argNotUsed -> emitterFactory.get());
             logRegisterSize();
@@ -130,7 +129,7 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
         final long totalConnections =  keySet.size();
         LOGGER.info(format("SSE connections: [%s] distinct, [%s] total.", distinctUserConnections, totalConnections));
     }
-    
+
     @Override
     public IEventSourceEmitter getEmitter(final User user, final String sseUid) {
         return register.get(key(user, sseUid));
@@ -200,7 +199,7 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
                     LOGGER.warn(format("Non critical error during closing of emitters."), ex);
                 }
             }
-            
+
             LOGGER.info("Closing all emitters...");
             for (final Iterator<IEventSourceEmitter> iter = register.values().iterator(); iter.hasNext();) {
                 final IEventSourceEmitter emitter = iter.next();
@@ -211,7 +210,7 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
                     LOGGER.warn(format("Non critical error during closing of emitters."), ex);
                 }
             }
-            
+
         }
     }
 

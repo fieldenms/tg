@@ -9,7 +9,7 @@ import '/resources/polymer/@polymer/app-route/app-route.js';
 import '/resources/polymer/@polymer/neon-animation/neon-animated-pages.js';
 
 // this import is required to ensure the SSE initialisation upon loading of a web client
-import '/app/tg-app-config.js';
+import {establishSSE} from '/app/tg-app-config.js';
 
 import '/resources/views/tg-app-menu.js';
 import '/resources/views/tg-app-view.js';
@@ -588,6 +588,7 @@ Polymer({
                 });
             });
             this.menuConfig = entity;
+            establishSSE(entity.userName);
             // make splash related elements invisible
             // selection happens by id, but for all for safety reasons; for example, for web tests these elements do not exist
             document.querySelectorAll("#splash-background").forEach(bg => bg.style.display = 'none'); // background
