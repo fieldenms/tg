@@ -26,6 +26,7 @@ import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
+import ua.com.fielden.platform.entity.annotation.RestrictCreationByUsers;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.PrefDim;
@@ -47,6 +48,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionC
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig5;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.DefaultEntityAction;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig;
+import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionWithOptions;
 import ua.com.fielden.platform.web.view.master.api.actions.impl.AbstractAction;
 import ua.com.fielden.platform.web.view.master.api.helpers.IActionBarLayoutConfig1;
 import ua.com.fielden.platform.web.view.master.api.helpers.IComplete;
@@ -117,8 +119,14 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
     private AbstractAction createAction(final MasterActions masterAction) {
         //Save action for persistent entity which is not one-2-one association should have save with options action.
-        if (masterAction  == MasterActions.SAVE && entityType.isAnnotationPresent(MapEntityTo.class) && !AbstractEntity.class.isAssignableFrom(AnnotationReflector.getKeyType(entityType))) {
-
+        if ((masterAction  == MasterActions.SAVE || masterAction  == MasterActions.REFRESH) && entityType.isAnnotationPresent(MapEntityTo.class) && !AbstractEntity.class.isAssignableFrom(AnnotationReflector.getKeyType(entityType))) {
+            final DefaultEntityAction saveAction = new DefaultEntityAction(masterAction.name(), getPostAction(masterAction), getPostActionError(masterAction));
+            final DefaultEntityAction saveAndCloseAction = new DefaultEntityAction(masterAction.name()+" & CLOSE", getPostAction(masterAction), getPostActionError(masterAction));
+            if (entityType.isAnnotationPresent(RestrictCreationByUsers.class)) {
+                return new EntityActionWithOptions(saveAction, saveAndCloseAction);
+            }
+            final DefaultEntityAction saveAndNew = new DefaultEntityAction(masterAction.name()+" & NEW", getPostAction(masterAction), getPostActionError(masterAction));
+            return new EntityActionWithOptions(saveAction, saveAndCloseAction, saveAndNew);
         }
         return new DefaultEntityAction(masterAction.name(), getPostAction(masterAction), getPostActionError(masterAction));
     }
