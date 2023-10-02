@@ -37,10 +37,12 @@ public class EqlQueryTransformer {
             final IDates dates,
             final EqlDomainMetadata eqlDomainMetadata) {
         final EntQueryGenerator gen = new EntQueryGenerator(filter, username, new QueryNowValue(dates), qem.getParamValues());
-        final TransformationContext1 context1 = new TransformationContext1(eqlDomainMetadata.querySourceInfoProvider, false);
         final ResultQuery1 query1 = gen.generateAsResultQuery(qem.queryModel, qem.orderModel, qem.fetchModel);
+
+        final TransformationContext1 context1 = new TransformationContext1(eqlDomainMetadata.querySourceInfoProvider, false);
 		final ResultQuery2 query2 = query1.transform(context1);
-        final PathsToTreeTransformer p2tt = new PathsToTreeTransformer(eqlDomainMetadata.querySourceInfoProvider, gen);
+        
+		final PathsToTreeTransformer p2tt = new PathsToTreeTransformer(eqlDomainMetadata.querySourceInfoProvider, gen);
         final TransformationContext2 context2 = new TransformationContext2(p2tt.transformFinally(query2.collectProps()), eqlDomainMetadata.entityMetadataHolder);
 		return query2.transform(context2);
     }

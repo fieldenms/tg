@@ -16,12 +16,12 @@ public class ImplicitNode {
     public final ISource2<? extends ISource3> source;
     private final List<ImplicitNode> subnodes; //can contain none
     
-    public ImplicitNode(final String name, final List<ImplicitNode> subnodes, final boolean nonnullable, final ISource2<? extends ISource3> source, final Expression2 expr) {
+    public ImplicitNode(final String name, final Expression2 expr, final boolean nonnullable, final ISource2<? extends ISource3> source, final List<ImplicitNode> subnodes) {
         this.name = name;
-        this.subnodes = subnodes;
+        this.expr = expr;
         this.nonnullable = nonnullable;
         this.source = source;
-        this.expr = expr;
+        this.subnodes = subnodes;
     }
     
     public List<ImplicitNode> subnodes() {
@@ -53,9 +53,9 @@ public class ImplicitNode {
         final ImplicitNode other = (ImplicitNode) obj;
         
         return Objects.equals(name, other.name) && //
-                Objects.equals(source, other.source) && //
+                Objects.equals(expr, other.expr) && //
                 Objects.equals(nonnullable, other.nonnullable) && //
-                Objects.equals(subnodes, other.subnodes) && //
-                Objects.equals(expr, other.expr);
+                Objects.equals(source, other.source) && //
+                Objects.equals(subnodes, other.subnodes);
     }
 }
