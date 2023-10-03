@@ -121,11 +121,13 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         //Save action for persistent entity which is not one-2-one association should have save with options action.
         if ((masterAction  == MasterActions.SAVE || masterAction  == MasterActions.REFRESH) && entityType.isAnnotationPresent(MapEntityTo.class) && !AbstractEntity.class.isAssignableFrom(AnnotationReflector.getKeyType(entityType))) {
             final DefaultEntityAction saveAction = new DefaultEntityAction(masterAction.name(), getPostAction(masterAction), getPostActionError(masterAction));
-            final DefaultEntityAction saveAndCloseAction = new DefaultEntityAction(masterAction.name()+" & CLOSE", getPostAction(masterAction), getPostActionError(masterAction));
+            final MasterActions actionAndClose = MasterActions.valueOf(masterAction.name() + "_AND_CLOSE");
+            final DefaultEntityAction saveAndCloseAction = new DefaultEntityAction(actionAndClose.name(), getPostAction(actionAndClose), getPostActionError(actionAndClose));
             if (entityType.isAnnotationPresent(RestrictCreationByUsers.class)) {
                 return new EntityActionWithOptions(saveAction, saveAndCloseAction);
             }
-            final DefaultEntityAction saveAndNew = new DefaultEntityAction(masterAction.name()+" & NEW", getPostAction(masterAction), getPostActionError(masterAction));
+            final MasterActions actionAndNew = MasterActions.valueOf(masterAction.name() + "_AND_NEW");
+            final DefaultEntityAction saveAndNew = new DefaultEntityAction(actionAndNew.name(), getPostAction(actionAndNew), getPostActionError(actionAndNew));
             return new EntityActionWithOptions(saveAction, saveAndCloseAction, saveAndNew);
         }
         return new DefaultEntityAction(masterAction.name(), getPostAction(masterAction), getPostActionError(masterAction));
@@ -138,6 +140,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     }
 
     public static Optional<String> getFocusingCallback(final MasterActions masterAction) {
+        //TODO Consider SAVE_AND_NEW and SAVE_AND_CLOSE
         if (MasterActions.SAVE == masterAction) {
             return Optional.of("focusViewBound"); // focuses enabled input or other subcomponent on SAVE completion either from actual tap or shortcut activation; see 'focusViewBound' in 'tg-entity-master-behavior'
         } else {
@@ -146,9 +149,9 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     }
 
     public static Optional<String> getShortcut(final MasterActions masterAction) {
-        if (MasterActions.REFRESH == masterAction) {
+        if (MasterActions.REFRESH == masterAction || MasterActions.REFRESH_AND_CLOSE == masterAction || MasterActions.REFRESH_AND_NEW == masterAction) {
             return Optional.of("ctrl+r meta+r");
-        } else if (MasterActions.SAVE == masterAction) {
+        } else if (MasterActions.SAVE == masterAction || MasterActions.SAVE_AND_CLOSE == masterAction || MasterActions.SAVE_AND_NEW == masterAction) {
             return Optional.of("ctrl+s meta+s");
         } else if (MasterActions.VALIDATE == masterAction || MasterActions.EDIT == masterAction || MasterActions.VIEW == masterAction) {
             return Optional.empty();
@@ -158,11 +161,11 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     }
 
     public static String getPostActionError(final MasterActions masterAction) {
-        if (MasterActions.REFRESH == masterAction) {
+        if (MasterActions.REFRESH == masterAction || MasterActions.REFRESH_AND_CLOSE == masterAction || MasterActions.REFRESH_AND_NEW == masterAction) {
             return "_postRetrievedDefaultError";
         } else if (MasterActions.VALIDATE == masterAction) {
             return "_postValidatedDefaultError";
-        } else if (MasterActions.SAVE == masterAction) {
+        } else if (MasterActions.SAVE == masterAction || MasterActions.SAVE_AND_CLOSE == masterAction || MasterActions.SAVE_AND_NEW == masterAction) {
             return "_postSavedDefaultError";
         } else if (MasterActions.EDIT == masterAction) {
             return "_actions.EDIT.postActionError"; // TODO maybe, should be deleted (no ajax request sends)?
@@ -174,11 +177,11 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     }
 
     public static String getPostAction(final MasterActions masterAction) {
-        if (MasterActions.REFRESH == masterAction) {
+        if (MasterActions.REFRESH == masterAction || MasterActions.REFRESH_AND_CLOSE == masterAction || MasterActions.REFRESH_AND_NEW == masterAction) {
             return "_postRetrievedDefault";
         } else if (MasterActions.VALIDATE == masterAction) {
             return "_postValidatedDefault";
-        } else if (MasterActions.SAVE == masterAction) {
+        } else if (MasterActions.SAVE == masterAction || MasterActions.SAVE_AND_CLOSE == masterAction || MasterActions.SAVE_AND_NEW == masterAction) {
             return "_postSavedDefault";
         } else if (MasterActions.EDIT == masterAction) {
             return "_actions.EDIT.postAction";

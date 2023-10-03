@@ -8,6 +8,7 @@ import '/resources/polymer/@polymer/paper-item/paper-item.js';
 import '/resources/polymer/@polymer/paper-listbox/paper-listbox.js';
 
 import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
+import { FlattenedNodesObserver } from '/resources/polymer/@polymer/polymer/lib/utils/flattened-nodes-observer.js';
 
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 
@@ -22,13 +23,13 @@ const template = html`
             @apply --layout-vertical;
         }
     </style>
-    <paper-button on-tap="_runItemAction" elevation="2">
-        <slot name="current-item"></slot>
+    <paper-button on-tap="_runItemAction" raised>
+        <span>[[_currentItem.title]]</span>
         <iron-icon icon="icons:arrow-drop-down" on-tap="_openOptionList"></iron-icon>
     </paper-button>
     <iron-dropdown id="dropdown" horizontal-align="left" vertical-align="top" restore-focus-on-close always-on-top >
-        <paper-listbox id="availableViews" class="dropdown-content" slot="dropdown-content" on-iron-select="_changeActionAndRun">
-            <slot name="hidden-item"></slot>
+        <paper-listbox id="availableViews" class="dropdown-content" slot="dropdown-content" on-iron-select="_changeItem" attr-for-selected="option-index">
+            <slot id="options" name="option-item"></slot>
         </paper-listbox>
     </iron-dropdown>`; 
 
@@ -40,18 +41,24 @@ class TgOptionButton extends PolymerElement {
 
     static get properties() {
         return {
-            
+            _currentItem: {
+                type: Object,
+                value: null
+            }
         };
     }
 
     ready () {
         super.ready();
+
+        new FlattenedNodesObserver(this.$.options, (info) => {
+            this._currentItem = info.addedNodes.find(option => option.hasAttribute("default-option"));
+        });
     }
 
     _runItemAction() {
-        const currentItem = this.querySelector("[slot='current-item']");
-        if (currentItem && currentItem._asyncRun) {
-            currentItem._asyncRun();
+        if (this._currentItem && currentItem._asyncRun) {
+            this._currentItem.dispatchEvent(new Event('tap')); //Dispatched tap event to currently selected item displayed in paper-button element 
         }
     }
 
@@ -60,19 +67,9 @@ class TgOptionButton extends PolymerElement {
         this.$.dropdown.open();
     }
 
-    _changeActionAndRun (e) {
+    _changeItem (e) {
         this.$.dropdown.close();
-        // const selectedItem = e.detail.item;
-        // const currentItem = this.querySelector("[slot='current-item']");
-        // if (currentItem) {
-        //     currentItem.setAttribute("slot", "hidden-item");
-        // }
-        // if (selectedItem) {
-        //     selectedItem.setAttribute("slot", "current-item");
-        //     if (selectedItem._asyncRun) {
-        //         //selectedItem._asyncRun();
-        //     }
-        // }
+        this._currentItem = e.detail.item;
     }
 }
 

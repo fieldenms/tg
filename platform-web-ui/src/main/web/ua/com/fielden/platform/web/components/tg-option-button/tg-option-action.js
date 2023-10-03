@@ -14,10 +14,10 @@ import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 const template = html`
     <style>
         :host {
-            @apply --layout-horizontal;
+            @apply --layout-vertical;
         }
     </style>
-    <paper-item>[[title]]</paper-item>`; 
+    <paper-item on-tap="_runAction">[[title]]</paper-item>`; 
 
 class TgOptionAction extends PolymerElement {
 
@@ -35,8 +35,8 @@ class TgOptionAction extends PolymerElement {
         super.ready();
     }
 
-    _asyncRun () {
-        alert(`${this.title} was pressed`);
+    _runAction () {
+        console.log(`action ${this.title} pressed`);
     }
 }
 

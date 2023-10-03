@@ -994,6 +994,26 @@ const TgEntityMasterBehaviorImpl = {
         };
         self._notifyActionPathsFor('SAVE', true);
 
+        self._actions['SAVE_AND_CLOSE'] = {
+            shortDesc: 'SAVE & CLOSE',
+            longDesc: 'SAVE & CLOSE ACTION...',
+            enabledStates: ['EDIT'],
+            action: function () {
+                return self.save();
+            }
+        };
+        self._notifyActionPathsFor('SAVE_AND_CLOSE', true);
+
+        self._actions['SAVE_AND_NEW'] = {
+            shortDesc: 'SAVE & NEW',
+            longDesc: 'SAVE & NEW ACTION...',
+            enabledStates: ['EDIT'],
+            action: function () {
+                return self.save();
+            }
+        };
+        self._notifyActionPathsFor('SAVE_AND_NEW', true);
+
         self._actions['EDIT'] = {
             shortDesc: 'EDIT',
             longDesc: 'EDIT ACTION...',

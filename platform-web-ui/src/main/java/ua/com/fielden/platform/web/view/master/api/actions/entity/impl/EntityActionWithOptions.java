@@ -17,7 +17,7 @@ public class EntityActionWithOptions extends AbstractAction implements IRenderab
     private final List<DefaultEntityAction> actions = new ArrayList<>();
 
     public EntityActionWithOptions(final DefaultEntityAction action, final DefaultEntityAction... optionalActions) {
-        super("", "/resources/components/tg-dropdown-switch");
+        super("", "components/tg-option-button/tg-option-button");
         actions.add(action);
         actions.addAll(listOf(optionalActions));
     }
@@ -35,7 +35,14 @@ public class EntityActionWithOptions extends AbstractAction implements IRenderab
     @Override
     public DomElement render() {
         final DomElement button = new DomElement(this.actionComponentName());
-        actions.forEach(action -> button.add(action.render()));
+        for(int idx = 0; idx < actions.size(); idx++) {
+            final DefaultEntityAction action = actions.get(idx);
+            final DomElement actionElement = action.render().attr("slot", "option-item");
+            if (idx == 0 ) {
+                actionElement.attr("default-option", true);
+            }
+            button.add(actionElement);
+        }
         return button;
     }
 }
