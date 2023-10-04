@@ -143,46 +143,47 @@ public class EqlEntityMetadataGenerator {
         this.hibTypesInjector = hibTypesInjector;
     }
     
-    public <T extends AbstractEntity<?>> EqlEntityMetadataPair<T> generate(final EntityTypeInfo<? super T> parentInfo, final Class<T> entityType) {
+    public <T extends AbstractEntity<?>> EqlEntityMetadataPair<T> generate(final EntityTypeInfo<? super T> typeInfo, final Class<T> entityType) {
         try {
-            final List<EqlPropertyMetadata> propsMetadata = generatePropertyMetadatasForEntity(parentInfo, entityType);
-            return new EqlEntityMetadataPair<>(entityType, new EqlEntityMetadata<T>(entityType, parentInfo, propsMetadata));
+            final List<EqlPropertyMetadata> propsMetadata = generatePropertyMetadatasForEntity(typeInfo, entityType);
+            return new EqlEntityMetadataPair<>(entityType, new EqlEntityMetadata<T>(entityType, typeInfo, propsMetadata));
         } catch (final Exception ex) {
             throw new EqlMetadataGenerationException("Couldn't generate persistence metadata for entity [" + entityType + "].", ex);
         }
     }
 
-    private List<EqlPropertyMetadata> generatePropertyMetadatasForEntity(final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo, final Class<? extends AbstractEntity<?>> actualType) {
+    private List<EqlPropertyMetadata> generatePropertyMetadatasForEntity(final EntityTypeInfo<? extends AbstractEntity<?>> typeInfo, final Class<? extends AbstractEntity<?>> entityType) {
         final List<EqlPropertyMetadata> result = new ArrayList<>();
-        if (UNION == parentInfo.category) {
-            result.addAll(generateUnionImplicitCalcSubprops((Class<? extends AbstractUnionEntity>) actualType, null));
-            unionProperties((Class<? extends AbstractUnionEntity>) actualType).stream().forEach(field -> result.add(getCommonPropInfo(field, actualType, null)));
+        if (UNION == typeInfo.category) {
+            result.addAll(generateUnionImplicitCalcSubprops((Class<? extends AbstractUnionEntity>) entityType, null));
+            unionProperties((Class<? extends AbstractUnionEntity>) entityType).stream().forEach(field -> result.add(getCommonPropInfo(field, entityType, null)));
         } else {
-            generateIdPropertyMetadata(parentInfo, actualType).ifPresent(idPmd -> result.add(idPmd));
+            generateIdPropertyMetadata(entityType, typeInfo.category).ifPresent(idPmd -> result.add(idPmd));
 
-            result.add(generateKeyPropertyMetadata(parentInfo, actualType));
+            result.add(generateKeyPropertyMetadata(entityType, typeInfo.category));
 
-            final List<Field> restOfPropsFields = getRestOfProperties(parentInfo, actualType);
+            final List<Field> restOfPropsFields = getRestOfProperties(entityType, typeInfo.category);
             final Set<String> addedProps = new HashSet<>();
             addedProps.add(DESC);
-            parentInfo.compositeKeyMembers.stream().forEach(f -> addedProps.add(f._1));
-            parentInfo.compositeKeyMembers.stream().forEach(f -> restOfPropsFields.stream().filter(p -> f._1.equals(p.getName())).findAny().ifPresent(km -> result.add(getCommonPropInfo(km, actualType, null))));
+            typeInfo.compositeKeyMembers.stream().forEach(f -> addedProps.add(f._1));
+            typeInfo.compositeKeyMembers.stream().forEach(f -> restOfPropsFields.stream().filter(p -> f._1.equals(p.getName())).findAny().ifPresent(km -> result.add(getCommonPropInfo(km, entityType, null))));
 
-            restOfPropsFields.stream().filter(p -> DESC.equals(p.getName())).findAny().ifPresent(desc -> result.add(getCommonPropInfo(desc, actualType, null)));
+            restOfPropsFields.stream().filter(p -> DESC.equals(p.getName())).findAny().ifPresent(desc -> result.add(getCommonPropInfo(desc, entityType, null)));
 
-            if (PERSISTENT == parentInfo.category || QUERY_BASED == parentInfo.category && EntityUtils.isPersistedEntityType(actualType.getSuperclass())) {
-                result.add(generateVersionPropertyMetadata(parentInfo));
+            if (PERSISTENT == typeInfo.category || QUERY_BASED == typeInfo.category && EntityUtils.isPersistedEntityType(entityType.getSuperclass())) {
+                result.add(generateVersionPropertyMetadata());
             }
 
             for (final Field field : restOfPropsFields.stream().filter(p -> !addedProps.contains(p.getName())).collect(toList())) {
-                result.add(isOne2One_association(actualType/*parentInfo.entityType*/, field.getName()) ? getOneToOnePropInfo(field, parentInfo)
-                        : getCommonPropInfo(field, actualType/*parentInfo.entityType*/, null));
+                result.add(isOne2One_association(entityType, field.getName()) ? getOneToOnePropInfo(field)
+                        : getCommonPropInfo(field, entityType, null));
             }
         }
 
         return result;
     }
     
+    // TODO there is a duplicate code within HibernateTypeDeterminer.             
     /**
      * Determines hibernate type instance (Type/UserType/CustomUserType) for entity property based on provided property's meta information.
      * 
@@ -231,19 +232,19 @@ public class EqlEntityMetadataGenerator {
         }
     }
 
-    private Optional<EqlPropertyMetadata> generateIdPropertyMetadata(final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo, final Class<? extends AbstractEntity<?>> actualType) {
+    private Optional<EqlPropertyMetadata> generateIdPropertyMetadata(final Class<? extends AbstractEntity<?>> entityType, final EntityCategory category) {
     	final EqlPropertyMetadata idProperty = new EqlPropertyMetadata.Builder(ID, Long.class, H_ENTITY).required().column(id).build();
         final EqlPropertyMetadata idPropertyInOne2One = new EqlPropertyMetadata.Builder(ID, Long.class, H_ENTITY).required().column(id).build();
-        switch (parentInfo.category) {
+        switch (category) {
         case PERSISTENT:
-            return isOneToOne(actualType) ? of(idPropertyInOne2One) : of(idProperty)/*(entityType)*/;
+            return isOneToOne(entityType) ? of(idPropertyInOne2One) : of(idProperty)/*(entityType)*/;
         case QUERY_BASED:
-            if (isSyntheticBasedOnPersistentEntityType(actualType)) {
-                if (isEntityType(getKeyType(actualType))) {
-                    throw new EntityDefinitionException(format("Entity [%s] is recognised as synthetic that is based on a persistent type with an entity-typed key. This is not supported.", actualType.getName()));
+            if (isSyntheticBasedOnPersistentEntityType(entityType)) {
+                if (isEntityType(getKeyType(entityType))) {
+                    throw new EntityDefinitionException(format("Entity [%s] is recognised as synthetic that is based on a persistent type with an entity-typed key. This is not supported.", entityType.getName()));
                 }
                 return of(idProperty);
-            } else if (isEntityType(getKeyType(actualType))) {
+            } else if (isEntityType(getKeyType(entityType))) {
                 return of(new EqlPropertyMetadata.Builder(ID, Long.class, H_ENTITY).expression(expr().prop(KEY).model()).implicit().build());
             } else {
             	// FIXME reconsider this implementation taking into account its role combined with actual yields information in the process of getting final EntityPropInfo for Synthetic Entity 
@@ -254,14 +255,14 @@ public class EqlEntityMetadataGenerator {
         }
     }
 
-    private EqlPropertyMetadata generateVersionPropertyMetadata(final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo) {
+    private EqlPropertyMetadata generateVersionPropertyMetadata() {
         return new EqlPropertyMetadata.Builder(VERSION, Long.class, H_LONG).required().column(version).build();
     }
 
-    private EqlPropertyMetadata generateKeyPropertyMetadata(final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo, final Class<? extends AbstractEntity<?>> actualType) {
-        final Class<? extends Comparable<?>> keyType = getKeyType(actualType);
-        if (isOneToOne(actualType)) {
-            switch (parentInfo.category) {
+    private EqlPropertyMetadata generateKeyPropertyMetadata(final Class<? extends AbstractEntity<?>> entityType, final EntityCategory category) {
+        final Class<? extends Comparable<?>> keyType = getKeyType(entityType);
+        if (isOneToOne(entityType)) {
+            switch (category) {
             case PERSISTENT:
                 return new EqlPropertyMetadata.Builder(KEY, keyType, H_ENTITY).required().column(id).build();
             case QUERY_BASED:
@@ -270,14 +271,14 @@ public class EqlEntityMetadataGenerator {
                 return null;
             }
         } else if (DynamicEntityKey.class.equals(keyType)) {
-            return new EqlPropertyMetadata.Builder(KEY, String.class, H_STRING).expression(generateCompositeKeyEqlExpression((Class<? extends AbstractEntity<DynamicEntityKey>>) actualType)).implicit().required().build();
+            return new EqlPropertyMetadata.Builder(KEY, String.class, H_STRING).expression(generateCompositeKeyEqlExpression((Class<? extends AbstractEntity<DynamicEntityKey>>) entityType)).implicit().required().build();
         } else {
             final Object keyHibType = typeResolver.basic(keyType.getName());
-            switch (parentInfo.category) {
+            switch (category) {
             case PERSISTENT:
                 return new EqlPropertyMetadata.Builder(KEY, keyType, keyHibType).required().column(key).build();
             case QUERY_BASED:
-                if (isSyntheticBasedOnPersistentEntityType(actualType)) {
+                if (isSyntheticBasedOnPersistentEntityType(entityType)) {
                     return new EqlPropertyMetadata.Builder(KEY, keyType, keyHibType).required().column(key).build();
                 }
                 return new EqlPropertyMetadata.Builder(KEY, keyType, keyHibType).required().build();
@@ -292,15 +293,15 @@ public class EqlEntityMetadataGenerator {
         return generateUnionEntityPropertyContextualExpression(unionMembersNames, DESC, contextPropName);
     }
 
-    private static List<Field> getRestOfProperties(final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo, final Class<? extends AbstractEntity<?>> actualType) {
-       return streamRealProperties(actualType/*parentInfo.entityType*/)
+    private static List<Field> getRestOfProperties(final Class<? extends AbstractEntity<?>> entityType, final EntityCategory category) {
+       return streamRealProperties(entityType)
               .filter(propField -> (isAnnotationPresent(propField, Calculated.class) ||
                       isAnnotationPresent(propField, MapTo.class) ||
                       isAnnotationPresent(propField, CritOnly.class) ||
-                      isOne2One_association(actualType/*parentInfo.entityType*/, propField.getName()) ||
-                      parentInfo.category == QUERY_BASED) &&
+                      isOne2One_association(entityType, propField.getName()) ||
+                      category == QUERY_BASED) &&
                       !specialProps.contains(propField.getName()) &&
-                      !(Collection.class.isAssignableFrom(propField.getType()) && hasLinkProperty(actualType/*parentInfo.entityType*/, propField.getName())))
+                      !(Collection.class.isAssignableFrom(propField.getType()) && hasLinkProperty(entityType, propField.getName())))
              .collect(toList());
     }
 
@@ -424,7 +425,7 @@ public class EqlEntityMetadataGenerator {
         }
     }
 
-    private EqlPropertyMetadata getOneToOnePropInfo(final Field propField, final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo) {
+    private EqlPropertyMetadata getOneToOnePropInfo(final Field propField) {
         final String propName = propField.getName();
         final Class<?> javaType = propField.getType();
         final Object hibType = getHibernateType(propField);
