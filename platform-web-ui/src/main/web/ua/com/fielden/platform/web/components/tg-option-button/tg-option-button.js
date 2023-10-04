@@ -24,7 +24,7 @@ const template = html`
         }
     </style>
     <paper-button on-tap="_runItemAction" raised>
-        <span>[[_currentItem.title]]</span>
+        <span>[[_currentItem.shortDesc]]</span>
         <iron-icon icon="icons:arrow-drop-down" on-tap="_openOptionList"></iron-icon>
     </paper-button>
     <iron-dropdown id="dropdown" horizontal-align="left" vertical-align="top" restore-focus-on-close always-on-top >
@@ -56,9 +56,10 @@ class TgOptionButton extends PolymerElement {
         });
     }
 
-    _runItemAction() {
-        if (this._currentItem && currentItem._asyncRun) {
-            this._currentItem.dispatchEvent(new Event('tap')); //Dispatched tap event to currently selected item displayed in paper-button element 
+    _runItemAction(event) {
+        if (this._currentItem) {
+            const newEvent = new event.constructor(event.type, event)
+            this._currentItem.dispatchEvent(newEvent); //Dispatched tap event to currently selected item displayed in paper-button element 
         }
     }
 

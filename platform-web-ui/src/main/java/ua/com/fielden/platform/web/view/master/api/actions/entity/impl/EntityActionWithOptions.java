@@ -37,7 +37,7 @@ public class EntityActionWithOptions extends AbstractAction implements IRenderab
         final DomElement button = new DomElement(this.actionComponentName());
         for(int idx = 0; idx < actions.size(); idx++) {
             final DefaultEntityAction action = actions.get(idx);
-            final DomElement actionElement = action.render().attr("slot", "option-item");
+            final DomElement actionElement = action.render().attr("slot", "option-item").attr("action-type", "menuitem");
             if (idx == 0 ) {
                 actionElement.attr("default-option", true);
             }

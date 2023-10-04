@@ -122,13 +122,13 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         if ((masterAction  == MasterActions.SAVE || masterAction  == MasterActions.REFRESH) && entityType.isAnnotationPresent(MapEntityTo.class) && !AbstractEntity.class.isAssignableFrom(AnnotationReflector.getKeyType(entityType))) {
             final DefaultEntityAction saveAction = new DefaultEntityAction(masterAction.name(), getPostAction(masterAction), getPostActionError(masterAction));
             final MasterActions actionAndClose = MasterActions.valueOf(masterAction.name() + "_AND_CLOSE");
-            final DefaultEntityAction saveAndCloseAction = new DefaultEntityAction(actionAndClose.name(), getPostAction(actionAndClose), getPostActionError(actionAndClose));
+            final DefaultEntityAction andClose = new DefaultEntityAction(actionAndClose.name(), getPostAction(actionAndClose), getPostActionError(actionAndClose));
             if (entityType.isAnnotationPresent(RestrictCreationByUsers.class)) {
-                return new EntityActionWithOptions(saveAction, saveAndCloseAction);
+                return new EntityActionWithOptions(saveAction, andClose);
             }
             final MasterActions actionAndNew = MasterActions.valueOf(masterAction.name() + "_AND_NEW");
-            final DefaultEntityAction saveAndNew = new DefaultEntityAction(actionAndNew.name(), getPostAction(actionAndNew), getPostActionError(actionAndNew));
-            return new EntityActionWithOptions(saveAction, saveAndCloseAction, saveAndNew);
+            final DefaultEntityAction andNew = new DefaultEntityAction(actionAndNew.name(), getPostAction(actionAndNew), getPostActionError(actionAndNew));
+            return new EntityActionWithOptions(saveAction, andClose, andNew);
         }
         return new DefaultEntityAction(masterAction.name(), getPostAction(masterAction), getPostActionError(masterAction));
     }

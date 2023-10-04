@@ -17,7 +17,7 @@ const template = html`
             @apply --layout-vertical;
         }
     </style>
-    <paper-item on-tap="_runAction">[[title]]</paper-item>`; 
+    <paper-item>[[shortDesc]]</paper-item>`; 
 
 class TgOptionAction extends PolymerElement {
 
@@ -27,16 +27,17 @@ class TgOptionAction extends PolymerElement {
 
     static get properties() {
         return {
-            title: String
+            shortDesc: String
         };
     }
 
     ready () {
         super.ready();
+        this.addEventListener("tap", this._runAction.bind(this));
     }
 
     _runAction () {
-        console.log(`action ${this.title} pressed`);
+        console.log(`action ${this.shortDesc} pressed`);
     }
 }
 

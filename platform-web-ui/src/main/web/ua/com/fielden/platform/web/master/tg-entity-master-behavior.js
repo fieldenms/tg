@@ -975,6 +975,27 @@ const TgEntityMasterBehaviorImpl = {
             }
         };
         self._notifyActionPathsFor('REFRESH', true);
+
+        self._actions['REFRESH_AND_CLOSE'] = {
+            shortDesc: 'REFRESH & CLOSE',
+            longDesc: 'REFRESH & CLOSE ACTION...',
+            enabledStates: ['EDIT'],
+            action: function () {
+                return self.retrieve();
+            }
+        };
+        self._notifyActionPathsFor('REFRESH_AND_CLOSE', true);
+
+        self._actions['REFRESH_AND_NEW'] = {
+            shortDesc: 'REFRESH & NEW',
+            longDesc: 'REFRESH & NEW ACTION...',
+            enabledStates: ['EDIT'],
+            action: function () {
+                return self.retrieve();
+            }
+        };
+        self._notifyActionPathsFor('REFRESH_AND_NEW', true);
+
         self._actions['VALIDATE'] = {
             shortDesc: 'VALIDATE',
             longDesc: 'VALIDATE ACTION...',
@@ -984,6 +1005,7 @@ const TgEntityMasterBehaviorImpl = {
             }
         };
         self._notifyActionPathsFor('VALIDATE', true);
+
         self._actions['SAVE'] = {
             shortDesc: 'SAVE',
             longDesc: 'SAVE ACTION...',

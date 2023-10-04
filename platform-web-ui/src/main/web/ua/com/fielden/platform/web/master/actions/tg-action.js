@@ -5,8 +5,10 @@ import '/resources/polymer/@polymer/paper-fab/paper-fab.js';
 import '/resources/polymer/@polymer/paper-button/paper-button.js';
 import '/resources/polymer/@polymer/paper-spinner/paper-spinner.js';
 import '/resources/polymer/@polymer/paper-styles/color.js';
+import '/resources/polymer/@polymer/paper-item/paper-item.js';
 
 import '/resources/components/postal-lib.js';
+import '/resources/components/tg-dropdown-switch.js';
 
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { createEntityActionThenCallback } from '/resources/master/actions/tg-entity-master-closing-utils.js';
@@ -15,6 +17,12 @@ import { allDefined } from '/resources/reflection/tg-polymer-utils.js';
 import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
 import { _isEntity } from '/app/tg-reflector.js';
 // depends on '/resources/filesaver/FileSaver.min.js' 
+
+const ActionType = {
+    ICON: "icon",
+    BUTTON: "button",
+    OPTIONBUTTON: "optionbutton"
+}
 
 const template = html`
     <style>
@@ -40,10 +48,11 @@ const template = html`
             display: none !important;
         }
     </style>
-    <paper-button id="actionButton" hidden$="[[isIcon]]" raised roll="button" on-tap="_asyncRun" style="width:100%" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]">
+    <paper-button id="actionButton" hidden$="[[!_isButton(actionType)]]" raised roll="button" on-tap="_asyncRun" style="width:100%" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]">
         <span>[[shortDesc]]</span>
     </paper-button>
-    <paper-fab id="fabButton" mini icon="[[icon]]" on-tap="_asyncRun" hidden$="[[!isIcon]]" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]"></paper-fab>
+    <paper-fab id="fabButton" mini icon="[[icon]]" on-tap="_asyncRun" hidden$="[[!_isIcon(actionType)]]" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]"></paper-fab>
+    <tg-dropdown-switch disabled$="[[_disabled]]" hidden$="[[!_isOptionButton(actionType)]]" view-index="0" views="[[_options]]" button-width="80" change-current-view-on-select on-tg-centre-view-change="_runOptionAction"></tg-dropdown-switch>
     <paper-spinner id="spinner" active="[[_working]]" class="blue" style="display: none;" alt="in progress"></paper-spinner>
 `;
 
@@ -97,9 +106,14 @@ Polymer({
             type: String
         },
 
-        isIcon: {
+        actionType: {
+            type: String,
+            value: ActionType.BUTTON //also can be ICON or OPTIONBUTTON
+        },
+
+        restrictNewOption: {
             type: Boolean,
-            value: false,
+            value: false
         },
 
         /**
@@ -230,7 +244,9 @@ Polymer({
         this.$.fabButton._calculateElevation = function () {
             return this.elevation;
         };
-    },    
+    },
+    
+    observers: ["_updateOptions(actionType, shortDesc, longDesc, restrictNewOption)"],
 
     created: function () {
         this.run = this._createRun();
@@ -276,6 +292,42 @@ Polymer({
                         });
             }
         }).bind(this);
+    },
+
+    _isButton: function (actionType) {
+        return ActionType.BUTTON === actionType;
+    },
+
+    _isIcon: function (actionType) {
+        return ActionType.ICON === actionType;
+    },
+
+    _isOptionButton: function (actionType) {
+        return ActionType.OPTIONBUTTON === actionType;
+    },
+
+    _updateOptions: function (actionType, shortDesc, longDesc, restrictNewOption) {
+        if (allDefined(arguments) && this._isOptionButton(actionType)) {
+            this._options = [
+                {
+                    index: 0,
+                    title: shortDesc,
+                    desc: longDesc,
+
+                }, {
+                    index: 1,
+                    title: shortDesc + " & CLOSE",
+                    desc: longDesc + " & CLOSE"
+                }
+            ];
+            if (!restrictNewOption) {
+                this._options.push({
+                    index: 2,
+                    title: shortDesc + " & NEW",
+                    desc: longDesc + " & NEW"
+                });
+            }
+        }
     },
 
     /**
