@@ -13,8 +13,8 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
-import ua.com.fielden.platform.eql.meta.query.AbstractPropInfo;
-import ua.com.fielden.platform.eql.meta.query.ComponentTypePropInfo;
+import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceInfoItem;
+import ua.com.fielden.platform.eql.meta.query.ComponentTypeQuerySourceInfoItem;
 import ua.com.fielden.platform.eql.stage1.PropResolution;
 import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
@@ -51,11 +51,11 @@ public class Prop1 implements ISingleOperand1<Prop2> {
         throw new EqlStage1ProcessingException(format("Can't resolve property [%s].", name));
     }
     
-    public static final List<AbstractPropInfo<?>> enhancePath(final List<AbstractPropInfo<?>> originalPath) {
-        final AbstractPropInfo<?> lastResolutionItem = originalPath.get(originalPath.size() - 1);
-        if (lastResolutionItem instanceof ComponentTypePropInfo && ((ComponentTypePropInfo<?>) lastResolutionItem).getProps().size() == 1) {
-            final List<AbstractPropInfo<?>> enhancedPath = new ArrayList<>(originalPath);
-            final AbstractPropInfo<?> autoResolvedItem = ((ComponentTypePropInfo<?>) lastResolutionItem).getProps().values().iterator().next();
+    public static final List<AbstractQuerySourceInfoItem<?>> enhancePath(final List<AbstractQuerySourceInfoItem<?>> originalPath) {
+        final AbstractQuerySourceInfoItem<?> lastResolutionItem = originalPath.get(originalPath.size() - 1);
+        if (lastResolutionItem instanceof ComponentTypeQuerySourceInfoItem && ((ComponentTypeQuerySourceInfoItem<?>) lastResolutionItem).getSubitems().size() == 1) {
+            final List<AbstractQuerySourceInfoItem<?>> enhancedPath = new ArrayList<>(originalPath);
+            final AbstractQuerySourceInfoItem<?> autoResolvedItem = ((ComponentTypeQuerySourceInfoItem<?>) lastResolutionItem).getSubitems().values().iterator().next();
             enhancedPath.add(autoResolvedItem);
             return enhancedPath;
         }

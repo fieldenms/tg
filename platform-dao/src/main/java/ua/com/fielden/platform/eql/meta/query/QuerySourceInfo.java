@@ -10,9 +10,18 @@ import java.util.TreeMap;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 
+/**
+ * A structure to describe where an eql query gets the data from, which is the query source (entity type or another query/s).
+ * It is essential for dot-notation processing within a query.
+ * 
+ * @param <T>
+ */
 public class QuerySourceInfo<T extends AbstractEntity<?>> implements IResolvable<T> {
+    /**
+     * The type of a query source (either persistent entity, synthetic entity, union entity or entity aggregates).
+     */
     private final Class<T> javaType;
-    private final SortedMap<String, AbstractPropInfo<?>> propsMap = new TreeMap<>();
+    private final SortedMap<String, AbstractQuerySourceInfoItem<?>> propsMap = new TreeMap<>();
     public final boolean isComprehensive; //indicates that all data-backed props from PE/SE are present
 
     public QuerySourceInfo(final Class<T> javaType, final boolean isComprehensive) {
@@ -20,7 +29,7 @@ public class QuerySourceInfo<T extends AbstractEntity<?>> implements IResolvable
         this.isComprehensive = isComprehensive;
     }
 
-    public QuerySourceInfo(final Class<T> javaType, final boolean isComprehensive, final Collection<AbstractPropInfo<?>> props) {
+    public QuerySourceInfo(final Class<T> javaType, final boolean isComprehensive, final Collection<AbstractQuerySourceInfoItem<?>> props) {
         this(javaType, isComprehensive);
         addProps(props);
     }
@@ -30,13 +39,13 @@ public class QuerySourceInfo<T extends AbstractEntity<?>> implements IResolvable
         return IResolvable.resolve(context, propsMap);
     }
 
-    public void addProps(final Collection<AbstractPropInfo<?>> props) {
-        for (final AbstractPropInfo<?> prop : props) {
+    public void addProps(final Collection<AbstractQuerySourceInfoItem<?>> props) {
+        for (final AbstractQuerySourceInfoItem<?> prop : props) {
             propsMap.put(prop.name, prop);    
         }
     }
     
-    public SortedMap<String, AbstractPropInfo<?>> getProps() {
+    public SortedMap<String, AbstractQuerySourceInfoItem<?>> getProps() {
         return unmodifiableSortedMap(propsMap);
     }
     

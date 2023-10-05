@@ -11,9 +11,9 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import ua.com.fielden.platform.eql.meta.query.AbstractPropInfo;
-import ua.com.fielden.platform.eql.meta.query.ComponentTypePropInfo;
-import ua.com.fielden.platform.eql.meta.query.UnionTypePropInfo;
+import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceInfoItem;
+import ua.com.fielden.platform.eql.meta.query.ComponentTypeQuerySourceInfoItem;
+import ua.com.fielden.platform.eql.meta.query.UnionTypeQuerySourceInfoItem;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.ImplicitNode;
@@ -116,14 +116,14 @@ public class PathToTreeTransformerUtils {
         return result;
     }
 
-    public static List<PropChunk> convertPathToChunks(final List<AbstractPropInfo<?>> propPath) {
+    public static List<PropChunk> convertPathToChunks(final List<AbstractQuerySourceInfoItem<?>> propPath) {
         final List<PropChunk> result = new ArrayList<>();
         String currentPropName = null;
-        for (final AbstractPropInfo<?> propInfo : propPath) {
-            currentPropName = (currentPropName != null) ? currentPropName + "." + propInfo.name : propInfo.name;
-            if (!(propInfo instanceof ComponentTypePropInfo || propInfo instanceof UnionTypePropInfo)) {
+        for (final AbstractQuerySourceInfoItem<?> querySourceInfoItem : propPath) {
+            currentPropName = (currentPropName != null) ? currentPropName + "." + querySourceInfoItem.name : querySourceInfoItem.name;
+            if (!(querySourceInfoItem instanceof ComponentTypeQuerySourceInfoItem || querySourceInfoItem instanceof UnionTypeQuerySourceInfoItem)) {
                 // need to finalise and reset currentPropName
-                result.add(new PropChunk(currentPropName, propInfo));
+                result.add(new PropChunk(currentPropName, querySourceInfoItem));
                 currentPropName = null;
             }
         }

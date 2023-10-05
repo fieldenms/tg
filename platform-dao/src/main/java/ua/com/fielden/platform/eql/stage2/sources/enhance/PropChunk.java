@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.sources.enhance;
 
-import ua.com.fielden.platform.eql.meta.query.AbstractPropInfo;
+import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceInfoItem;
 
-public record PropChunk(String name, AbstractPropInfo<?> data) {
+public record PropChunk(String name, AbstractQuerySourceInfoItem<?> data) {
 
 }

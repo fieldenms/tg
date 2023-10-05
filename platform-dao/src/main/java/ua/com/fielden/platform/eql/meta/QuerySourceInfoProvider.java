@@ -29,12 +29,12 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
-import ua.com.fielden.platform.eql.meta.query.AbstractPropInfo;
-import ua.com.fielden.platform.eql.meta.query.ComponentTypePropInfo;
-import ua.com.fielden.platform.eql.meta.query.EntityTypePropInfo;
-import ua.com.fielden.platform.eql.meta.query.PrimTypePropInfo;
+import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceInfoItem;
+import ua.com.fielden.platform.eql.meta.query.ComponentTypeQuerySourceInfoItem;
+import ua.com.fielden.platform.eql.meta.query.EntityTypeQuerySourceInfoItem;
+import ua.com.fielden.platform.eql.meta.query.PrimTypeQuerySourceInfoItem;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
-import ua.com.fielden.platform.eql.meta.query.UnionTypePropInfo;
+import ua.com.fielden.platform.eql.meta.query.UnionTypeQuerySourceInfoItem;
 import ua.com.fielden.platform.eql.meta.utils.DependentCalcPropsOrder;
 import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
@@ -45,7 +45,7 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public class QuerySourceInfoProvider {
-    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, QuerySourceInfo<?>> declaredQuerySourceInfoMap; // by "declared" here it is meant that all properties are included (even those with no way of getting data from db for them)
+    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, QuerySourceInfo<?>> declaredQuerySourceInfoMap; // by "declared" here it is meant that all (as defined by EqlEntityMetadata) properties are included (even those with no way of getting data from db for them)
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, QuerySourceInfo<?>> modelledQuerySourceInfoMap; // by "modelled" here it is meant that only properties with db data are included (table/query column, calculated expression)
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, List<SourceQuery1>> seModels;
     private final ConcurrentMap<String, List<String>> entityTypesDependentCalcPropsOrder = new ConcurrentHashMap<>();
@@ -60,11 +60,11 @@ public class QuerySourceInfoProvider {
         final EntQueryGenerator gen = new EntQueryGenerator(null, null, null, emptyMap());
 
         declaredQuerySourceInfoMap.putAll(entityMetadataHolder.entityPropsMetadata().entrySet().stream().collect(toConcurrentMap(k -> k.getKey(), k -> new QuerySourceInfo<>(k.getKey(), true)))); 
-        declaredQuerySourceInfoMap.values().stream().forEach(ei -> ei.addProps(generateProps(declaredQuerySourceInfoMap, entityMetadataHolder.entityPropsMetadata().get(ei.javaType()).props())));
+        declaredQuerySourceInfoMap.values().stream().forEach(ei -> ei.addProps(generateQuerySourceInfoItems(declaredQuerySourceInfoMap, entityMetadataHolder.entityPropsMetadata().get(ei.javaType()).props())));
         
         modelledQuerySourceInfoMap.putAll(entityMetadataHolder.entityPropsMetadata().entrySet().stream().
                 filter(e -> e.getValue().typeInfo.category == PERSISTENT || e.getValue().typeInfo.category == UNION).collect(toConcurrentMap(k -> k.getKey(), k -> new QuerySourceInfo<>(k.getKey(), true)))); 
-        modelledQuerySourceInfoMap.values().stream().forEach(ei -> ei.addProps(generateProps(modelledQuerySourceInfoMap, entityMetadataHolder.entityPropsMetadata().get(ei.javaType()).props())));
+        modelledQuerySourceInfoMap.values().stream().forEach(ei -> ei.addProps(generateQuerySourceInfoItems(modelledQuerySourceInfoMap, entityMetadataHolder.entityPropsMetadata().get(ei.javaType()).props())));
 
         // generating models and dependencies info for SE types (there is no need to include UE types here as their models are implicitly generated and have no interdependencies)
         final Map<Class<? extends AbstractEntity<?>>, Set<Class<? extends AbstractEntity<?>>>> seDependencies = new HashMap<>();
@@ -116,8 +116,8 @@ public class QuerySourceInfoProvider {
         return entityTypesDependentCalcPropsOrder.get(getOriginalType(entityType).getName());
     }
      
-    private List<AbstractPropInfo<?>> generateProps(final Map<Class<? extends AbstractEntity<?>>, QuerySourceInfo<?>> allEntitiesInfo, final Collection<EqlPropertyMetadata> entityPropsMetadatas) {
-        final List<AbstractPropInfo<?>> props = new ArrayList<>();
+    private List<AbstractQuerySourceInfoItem<?>> generateQuerySourceInfoItems(final Map<Class<? extends AbstractEntity<?>>, QuerySourceInfo<?>> allQuerySourceInfos, final Collection<EqlPropertyMetadata> entityPropsMetadatas) {
+        final List<AbstractQuerySourceInfoItem<?>> props = new ArrayList<>();
         for (final EqlPropertyMetadata el : entityPropsMetadatas) {
             if (!el.critOnly) {
                 final String name = el.name;
@@ -126,32 +126,32 @@ public class QuerySourceInfoProvider {
                 final ExpressionModel expr = el.expressionModel;
 
                 if (isUnionEntityType(javaType)) {
-                    final SortedMap<String, AbstractPropInfo<?>> subprops = new TreeMap<>();
+                    final SortedMap<String, AbstractQuerySourceInfoItem<?>> subprops = new TreeMap<>();
                     for (final EqlPropertyMetadata sub : el.subitems()) {
                         if (sub.expressionModel == null) {
-                            subprops.put(sub.name, new EntityTypePropInfo<>(sub.name, allEntitiesInfo.get(sub.javaType), sub.hibType, false, null, sub.implicit));
+                            subprops.put(sub.name, new EntityTypeQuerySourceInfoItem<>(sub.name, allQuerySourceInfos.get(sub.javaType), sub.hibType, false, null, sub.implicit));
                         } else {
                             final ExpressionModel subExpr = sub.expressionModel;
                             if (EntityUtils.isEntityType(sub.javaType)) {
-                                subprops.put(sub.name, new EntityTypePropInfo<>(sub.name, allEntitiesInfo.get(sub.javaType), sub.hibType, false, subExpr, sub.implicit));
+                                subprops.put(sub.name, new EntityTypeQuerySourceInfoItem<>(sub.name, allQuerySourceInfos.get(sub.javaType), sub.hibType, false, subExpr, sub.implicit));
                             } else {
-                                subprops.put(sub.name, new PrimTypePropInfo<>(sub.name, sub.javaType, sub.hibType, subExpr, sub.implicit));
+                                subprops.put(sub.name, new PrimTypeQuerySourceInfoItem<>(sub.name, sub.javaType, sub.hibType, subExpr, sub.implicit));
                             }
                         }
                     }
-                    props.add(new UnionTypePropInfo<>(name, ((Class<? extends AbstractUnionEntity>) javaType), hibType, subprops));
+                    props.add(new UnionTypeQuerySourceInfoItem<>(name, ((Class<? extends AbstractUnionEntity>) javaType), hibType, subprops));
                 } else if (isPersistedEntityType(javaType)) {
-                    props.add(new EntityTypePropInfo<>(name, allEntitiesInfo.get(javaType), hibType, el.required, expr, el.implicit));
+                    props.add(new EntityTypeQuerySourceInfoItem<>(name, allQuerySourceInfos.get(javaType), hibType, el.required, expr, el.implicit));
                     //                } else if (ID.equals(name)){
                     //                    querySourceInfo.addProp(new EntityTypePropInfo(name, allEntitiesInfo.get(querySourceInfo.javaType()), hibType, required, expr));
                 } else {
                     if (el.subitems().isEmpty()) {
-                        props.add(new PrimTypePropInfo<>(name, javaType, hibType, expr, el.implicit));
+                        props.add(new PrimTypeQuerySourceInfoItem<>(name, javaType, hibType, expr, el.implicit));
                     } else {
-                        final ComponentTypePropInfo<?> propTpi = new ComponentTypePropInfo<>(name, javaType, hibType);
+                        final ComponentTypeQuerySourceInfoItem<?> propTpi = new ComponentTypeQuerySourceInfoItem<>(name, javaType, hibType);
                         for (final EqlPropertyMetadata sub : el.subitems()) {
                             final ExpressionModel subExpr = sub.expressionModel;
-                            propTpi.addProp(new PrimTypePropInfo<>(sub.name, sub.javaType, sub.hibType, subExpr, sub.implicit));
+                            propTpi.addSubitem(new PrimTypeQuerySourceInfoItem<>(sub.name, sub.javaType, sub.hibType, subExpr, sub.implicit));
                         }
                         props.add(propTpi);
                     }
@@ -163,12 +163,12 @@ public class QuerySourceInfoProvider {
 
     private QuerySourceInfo<?> generateDeclaredQuerySourceInfo(final Class<? extends AbstractEntity<?>> type) {
         final List<EqlPropertyMetadata> propsMetadatas = entityMetadataHolder.obtainEqlEntityMetadata(type).props();
-        return new QuerySourceInfo<>(type, true, generateProps(declaredQuerySourceInfoMap, propsMetadatas));
+        return new QuerySourceInfo<>(type, true, generateQuerySourceInfoItems(declaredQuerySourceInfoMap, propsMetadatas));
     }
     
     private QuerySourceInfo<?> generateModelledQuerySourceInfoForPersistentType(final Class<? extends AbstractEntity<?>> type) {
         final List<EqlPropertyMetadata> propsMetadatas = entityMetadataHolder.obtainEqlEntityMetadata(type).props();
-        return new QuerySourceInfo<>(type, true, generateProps(modelledQuerySourceInfoMap, propsMetadatas));
+        return new QuerySourceInfo<>(type, true, generateQuerySourceInfoItems(modelledQuerySourceInfoMap, propsMetadatas));
     }
 
     public QuerySourceInfo<?> getDeclaredQuerySourceInfo(final Class<? extends AbstractEntity<?>> type) {

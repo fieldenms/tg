@@ -27,8 +27,8 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
-import ua.com.fielden.platform.eql.meta.query.AbstractPropInfo;
-import ua.com.fielden.platform.eql.meta.query.ComponentTypePropInfo;
+import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceInfoItem;
+import ua.com.fielden.platform.eql.meta.query.ComponentTypeQuerySourceInfoItem;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
 import ua.com.fielden.platform.eql.retrieval.records.EntityTree;
 import ua.com.fielden.platform.eql.retrieval.records.HibernateScalar;
@@ -56,7 +56,7 @@ public final class EntityResultTreeBuilder {
         
         String currentGroup = null;
         Class<? extends AbstractEntity<?>> currentResultType = null;
-        ComponentTypePropInfo<?> currentComponentInfo = null;
+        ComponentTypeQuerySourceInfoItem<?> currentComponentInfo = null;
         List<YieldedColumn> currentGroupDetails = new ArrayList<>();
         final QuerySourceInfo<?> querySourceInfo = resultType.equals(EntityAggregates.class) ? null : md.getDeclaredQuerySourceInfo(resultType);
         
@@ -95,13 +95,13 @@ public final class EntityResultTreeBuilder {
                         currentResultType = EntityAggregates.class;
                         currentGroupDetails.add(new YieldedColumn(remainingProp, yc.propType(), yc.column())); 
                     } else {
-                        final AbstractPropInfo<?> propInfo = querySourceInfo.getProps().get(currentGroup);
+                        final AbstractQuerySourceInfoItem<?> propInfo = querySourceInfo.getProps().get(currentGroup);
                         if (propInfo != null) {
                             if (EntityUtils.isEntityType(propInfo.javaType())) {
                                 currentResultType = (Class<? extends AbstractEntity<?>>) propInfo.javaType();
                                 currentGroupDetails.add(new YieldedColumn(remainingProp, yc.propType(), yc.column())); 
                             } else {
-                                currentComponentInfo = (ComponentTypePropInfo<?>) propInfo;
+                                currentComponentInfo = (ComponentTypeQuerySourceInfoItem<?>) propInfo;
                                 currentGroupDetails.add(new YieldedColumn(remainingProp, yc.propType(), yc.column()));
                             }
                         } else {
@@ -146,7 +146,7 @@ public final class EntityResultTreeBuilder {
                         final Object derivedHibType = yc.propType() == null ? null : yc.propType().hibType(); // taking actual original prop hibType (if available)
                         leaves.add(new QueryResultLeaf(localIndex, yc.name(), new HibernateScalar(yc.column(), getHibTypeAsType(derivedHibType)), getHibTypeAsUserType(derivedHibType)));
                     } else { 
-                        final AbstractPropInfo<?> propInfo = querySourceInfo.getProps().get(yc.name());
+                        final AbstractQuerySourceInfoItem<?> propInfo = querySourceInfo.getProps().get(yc.name());
                         if (propInfo != null) {
                             final Object declaredHibType = propInfo.hibType;
                             leaves.add(new QueryResultLeaf(localIndex, yc.name(), new HibernateScalar(yc.column(), getHibTypeAsType(declaredHibType)), getHibTypeAsUserType(declaredHibType)));
@@ -178,7 +178,7 @@ public final class EntityResultTreeBuilder {
     }
 
     private static ValueTreeResult buildValueTree(
-            final ComponentTypePropInfo<?> propInfo,
+            final ComponentTypeQuerySourceInfoItem<?> propInfo,
             final List<YieldedColumn> properties,
             final Integer initialIndex) {
         
@@ -187,7 +187,7 @@ public final class EntityResultTreeBuilder {
         
         for (final YieldedColumn prop : properties) {
             localIndex = localIndex + 1;
-            final Object declaredHibType = propInfo.getProps().get(prop.name()).hibType;
+            final Object declaredHibType = propInfo.getSubitems().get(prop.name()).hibType;
             singles.add(new QueryResultLeaf(localIndex, prop.name(), new HibernateScalar(prop.column(), getHibTypeAsType(declaredHibType)), getHibTypeAsUserType(declaredHibType)));
         }
         

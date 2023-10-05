@@ -26,10 +26,10 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
-import ua.com.fielden.platform.eql.meta.query.AbstractPropInfo;
-import ua.com.fielden.platform.eql.meta.query.ComponentTypePropInfo;
+import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceInfoItem;
+import ua.com.fielden.platform.eql.meta.query.ComponentTypeQuerySourceInfoItem;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
-import ua.com.fielden.platform.eql.meta.query.UnionTypePropInfo;
+import ua.com.fielden.platform.eql.meta.query.UnionTypeQuerySourceInfoItem;
 import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.Prop1;
@@ -64,16 +64,16 @@ import ua.com.fielden.platform.types.tuples.T2;
 
 public abstract class EqlStage2TestCase extends EqlTestCase {
 
-    protected static AbstractPropInfo<?> pi(final Class<?> type, final String propName) {
+    protected static AbstractQuerySourceInfoItem<?> pi(final Class<?> type, final String propName) {
         return querySourceInfoProvider().getModelledQuerySourceInfo((Class<? extends AbstractEntity<?>>) type).getProps().get(propName);
     }
 
-    protected static AbstractPropInfo<?> pi(final Class<?> type, final String propName, final String subPropName) {
-        final AbstractPropInfo<?> propInfo = querySourceInfoProvider().getModelledQuerySourceInfo((Class<? extends AbstractEntity<?>>) type).getProps().get(propName);
-        if (propInfo instanceof ComponentTypePropInfo) {
-            return (AbstractPropInfo<?>) ((ComponentTypePropInfo<?>) propInfo).getProps().get(subPropName);
-        } else if (propInfo instanceof UnionTypePropInfo) {
-            return (AbstractPropInfo<?>) ((UnionTypePropInfo<?>) propInfo).getProps().get(subPropName);
+    protected static AbstractQuerySourceInfoItem<?> pi(final Class<?> type, final String propName, final String subPropName) {
+        final AbstractQuerySourceInfoItem<?> querySourceInfoItem = querySourceInfoProvider().getModelledQuerySourceInfo((Class<? extends AbstractEntity<?>>) type).getProps().get(propName);
+        if (querySourceInfoItem instanceof ComponentTypeQuerySourceInfoItem) {
+            return (AbstractQuerySourceInfoItem<?>) ((ComponentTypeQuerySourceInfoItem<?>) querySourceInfoItem).getSubitems().get(subPropName);
+        } else if (querySourceInfoItem instanceof UnionTypeQuerySourceInfoItem) {
+            return (AbstractQuerySourceInfoItem<?>) ((UnionTypeQuerySourceInfoItem<?>) querySourceInfoItem).getProps().get(subPropName);
         } else {
             throw new EqlException("Can't obtain metadata for property " + propName + " and subproperty " + subPropName + " within type " + type);
         }
@@ -163,12 +163,12 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
         return new Yield2(operand, alias, false);
     }
 
-    protected static Prop2 prop(final ISource2<? extends ISource3> source, final AbstractPropInfo<?>... propInfos) {
-        return new Prop2(source, asList(propInfos));
+    protected static Prop2 prop(final ISource2<? extends ISource3> source, final AbstractQuerySourceInfoItem<?>... querySourceInfoItems) {
+        return new Prop2(source, asList(querySourceInfoItems));
     }
 
-    protected static Prop2 propWithIsId(final ISource2<? extends ISource3> source, final AbstractPropInfo<?>... propInfos) {
-        return new Prop2(source, asList(propInfos), true);
+    protected static Prop2 propWithIsId(final ISource2<? extends ISource3> source, final AbstractQuerySourceInfoItem<?>... querySourceInfoItems) {
+        return new Prop2(source, asList(querySourceInfoItems), true);
     }
 
     protected static Conditions2 cond(final ICondition2<? extends ICondition3> condition) {

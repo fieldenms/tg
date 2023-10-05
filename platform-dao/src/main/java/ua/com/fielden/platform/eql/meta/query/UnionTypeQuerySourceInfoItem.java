@@ -17,28 +17,28 @@ import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
  * @param <T>
  * @param <PARENT>
  */
-public class UnionTypePropInfo<T extends AbstractUnionEntity> extends AbstractPropInfo<T> {
+public class UnionTypeQuerySourceInfoItem<T extends AbstractUnionEntity> extends AbstractQuerySourceInfoItem<T> {
     private final Class<T> javaType;
-    private final SortedMap<String, AbstractPropInfo<?>> props = new TreeMap<>(); // TODO why sorted?
+    private final SortedMap<String, AbstractQuerySourceInfoItem<?>> subitems = new TreeMap<>(); // TODO why sorted?
 
-    public UnionTypePropInfo(final String name, final Class<T> javaType, final Object hibType, final SortedMap<String, AbstractPropInfo<?>> props) {
+    public UnionTypeQuerySourceInfoItem(final String name, final Class<T> javaType, final Object hibType, final SortedMap<String, AbstractQuerySourceInfoItem<?>> props) {
         super(name, hibType, null);
         this.javaType = javaType;
-        this.props.putAll(props);
+        this.subitems.putAll(props);
     }
     
     @Override
-    public AbstractPropInfo<T> cloneWithoutExpression() {
-        return new UnionTypePropInfo<T>(name, javaType, hibType, props);
+    public AbstractQuerySourceInfoItem<T> cloneWithoutExpression() {
+        return new UnionTypeQuerySourceInfoItem<T>(name, javaType, hibType, subitems);
     }
 
     @Override
     public PropResolutionProgress resolve(final PropResolutionProgress context) {
-        return IResolvable.resolve(context, props);
+        return IResolvable.resolve(context, subitems);
     }
     
-    public SortedMap<String, AbstractPropInfo<?>> getProps() {
-        return unmodifiableSortedMap(props);
+    public SortedMap<String, AbstractQuerySourceInfoItem<?>> getProps() {
+        return unmodifiableSortedMap(subitems);
     }
 
     @Override
@@ -56,7 +56,7 @@ public class UnionTypePropInfo<T extends AbstractUnionEntity> extends AbstractPr
         final int prime = 31;
         int result = super.hashCode();
         result = prime * result + javaType.hashCode();
-        result = prime * result + props.hashCode();
+        result = prime * result + subitems.hashCode();
         return result;
     }
 
@@ -70,12 +70,12 @@ public class UnionTypePropInfo<T extends AbstractUnionEntity> extends AbstractPr
             return false;
         }
 
-        if (!(obj instanceof UnionTypePropInfo)) {
+        if (!(obj instanceof UnionTypeQuerySourceInfoItem)) {
             return false;
         }
 
-        final UnionTypePropInfo<?> other = (UnionTypePropInfo<?>) obj;
+        final UnionTypeQuerySourceInfoItem<?> other = (UnionTypeQuerySourceInfoItem<?>) obj;
 
-        return Objects.equals(props, other.props) && Objects.equals(javaType, other.javaType);
+        return Objects.equals(subitems, other.subitems) && Objects.equals(javaType, other.javaType);
     }
 }

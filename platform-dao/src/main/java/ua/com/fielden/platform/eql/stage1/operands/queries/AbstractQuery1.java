@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
-import ua.com.fielden.platform.eql.meta.query.AbstractPropInfo;
+import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceInfoItem;
 import ua.com.fielden.platform.eql.stage1.PropResolution;
 import ua.com.fielden.platform.eql.stage1.QueryComponents1;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
@@ -133,7 +133,7 @@ public abstract class AbstractQuery1 {
         if (yields.getYieldsMap().isEmpty()) {
             final PropResolution propResolution = Prop1.resolvePropAgainstSource(mainSource, new Prop1(original.yieldName, false));
             if (propResolution != null) {
-                final List<AbstractPropInfo<?>> path = enhancePath(propResolution.getPath());
+                final List<AbstractQuerySourceInfoItem<?>> path = enhancePath(propResolution.getPath());
                 return transformForOperand(new Prop2(mainSource, path), original.isDesc);
             }
         }

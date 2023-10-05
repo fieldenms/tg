@@ -13,8 +13,8 @@ import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.PropType;
-import ua.com.fielden.platform.eql.meta.query.AbstractPropInfo;
-import ua.com.fielden.platform.eql.meta.query.EntityTypePropInfo;
+import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceInfoItem;
+import ua.com.fielden.platform.eql.meta.query.EntityTypeQuerySourceInfoItem;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
@@ -40,22 +40,22 @@ import ua.com.fielden.platform.types.tuples.T2;
  */
 public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISingleOperand3> {
     public final ISource2<? extends ISource3> source; // An explicit qry source to which a given property gets resolved (e.g., Vehicle.class in case of select(Vehicle) ...). 
-    private final List<AbstractPropInfo<?>> path; // A sequence of individual properties in a dot-notated property (path), resolved to their source. 
+    private final List<AbstractQuerySourceInfoItem<?>> path; // A sequence of individual properties in a dot-notated property (path), resolved to their source. 
     public final String name; // An explicit property name used in '.prop(...)' (e.g., "model.make.key" in case of select(Vehicle.class).where().prop("model.make.key")... ). 
 
-    public Prop2(final ISource2<? extends ISource3> source, final List<AbstractPropInfo<?>> path) {
+    public Prop2(final ISource2<? extends ISource3> source, final List<AbstractQuerySourceInfoItem<?>> path) {
         this(source, path, false);
     }
 
-    public Prop2(final ISource2<? extends ISource3> source, final List<AbstractPropInfo<?>> path, final boolean shouldBeTreatedAsId) {
+    public Prop2(final ISource2<? extends ISource3> source, final List<AbstractQuerySourceInfoItem<?>> path, final boolean shouldBeTreatedAsId) {
         super(shouldBeTreatedAsId ? LONG_PROP_TYPE : obtainPropType(path));
         this.source = source;
         this.path = path;
         this.name = path.stream().map(k -> k.name).collect(Collectors.joining("."));
     }
     
-    private static PropType obtainPropType(final List<AbstractPropInfo<?>> path) {
-        final AbstractPropInfo<?> lastElement = path.stream().reduce((first, second) -> second).orElse(null);
+    private static PropType obtainPropType(final List<AbstractQuerySourceInfoItem<?>> path) {
+        final AbstractQuerySourceInfoItem<?> lastElement = path.stream().reduce((first, second) -> second).orElse(null);
         return new PropType(lastElement.javaType(), lastElement.hibType);
     }
 
@@ -81,11 +81,11 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
         return emptySet(); //TODO explore within calc-prop expressions on the prop path (also add prop result type in case it's SE itself)
     }
     
-    public List<AbstractPropInfo<?>> getPath() {
+    public List<AbstractQuerySourceInfoItem<?>> getPath() {
         return unmodifiableList(path);
     }
     
-    public AbstractPropInfo<?> lastPart() {
+    public AbstractQuerySourceInfoItem<?> lastPart() {
         return path.get(path.size() - 1);
     }
     
@@ -100,8 +100,8 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
             return true; // TODO this is temporary fix to be able to treat such primitive prop correctly until distinction between usual 1ong and PK long is introduced.
         }
         
-        for (final AbstractPropInfo<?> abstractPropInfo : path) {
-            if (!isNonnullableEntity(abstractPropInfo)) {
+        for (final AbstractQuerySourceInfoItem<?> querySourceInfoItem : path) {
+            if (!isNonnullableEntity(querySourceInfoItem)) {
                 return false;
             }
         }
@@ -109,8 +109,8 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
         return true;
     }
     
-    private static boolean isNonnullableEntity(final AbstractPropInfo<?> propInfo) {
-        return propInfo instanceof EntityTypePropInfo ? ((EntityTypePropInfo<?>) propInfo).nonnullable : false;
+    private static boolean isNonnullableEntity(final AbstractQuerySourceInfoItem<?> querySourceInfoItem) {
+        return querySourceInfoItem instanceof EntityTypeQuerySourceInfoItem ? ((EntityTypeQuerySourceInfoItem<?>) querySourceInfoItem).nonnullable : false;
     }
 
     @Override

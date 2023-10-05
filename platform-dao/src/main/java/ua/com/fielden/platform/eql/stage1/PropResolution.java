@@ -5,24 +5,24 @@ import static java.util.Collections.unmodifiableList;
 import java.util.List;
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.meta.query.AbstractPropInfo;
+import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceInfoItem;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
 public class PropResolution {
     public final ISource2<? extends ISource3> source;
-    private final List<AbstractPropInfo<?>> path;
+    private final List<AbstractQuerySourceInfoItem<?>> path;
 
-    public PropResolution(final ISource2<? extends ISource3> source, final List<AbstractPropInfo<?>> path) {
+    public PropResolution(final ISource2<? extends ISource3> source, final List<AbstractQuerySourceInfoItem<?>> path) {
         this.source = source;
         this.path = path;
     }
     
-    public List<AbstractPropInfo<?>> getPath() {
+    public List<AbstractQuerySourceInfoItem<?>> getPath() {
         return unmodifiableList(path);
     }
     
-    public AbstractPropInfo<?> lastPart() {
+    public AbstractQuerySourceInfoItem<?> lastPart() {
         return path.get(path.size() - 1);
     }
 

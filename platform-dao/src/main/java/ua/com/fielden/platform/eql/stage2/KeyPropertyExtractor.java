@@ -8,8 +8,8 @@ import static ua.com.fielden.platform.utils.EntityUtils.keyPaths;
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.eql.meta.query.AbstractPropInfo;
-import ua.com.fielden.platform.eql.meta.query.EntityTypePropInfo;
+import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceInfoItem;
+import ua.com.fielden.platform.eql.meta.query.EntityTypeQuerySourceInfoItem;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
 import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
@@ -17,15 +17,15 @@ import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 public class KeyPropertyExtractor {
 
     public static List<Prop2> extract(final Prop2 original) {
-        final AbstractPropInfo<?> operandPropLastMember = original.lastPart();
+        final AbstractQuerySourceInfoItem<?> operandPropLastMember = original.lastPart();
         if (needsExtraction(operandPropLastMember)) {
             final int pathSize = original.getPath().size();
-            final QuerySourceInfo<?> ei = pathSize == 1 ? original.source.querySourceInfo() : ((EntityTypePropInfo<?>) original.getPath().get(pathSize - 2)).propQuerySourceInfo;
+            final QuerySourceInfo<?> ei = pathSize == 1 ? original.source.querySourceInfo() : ((EntityTypeQuerySourceInfoItem<?>) original.getPath().get(pathSize - 2)).querySourceInfo;
             final List<String> keyTreeLeaves = keyPaths(ei.javaType());
             final List<Prop2> result = new ArrayList<>();
             for (final String keyTreeLeaf : keyTreeLeaves) {
                 final PropResolutionProgress resolution = ei.resolve(new PropResolutionProgress(keyTreeLeaf));
-                final List<AbstractPropInfo<?>> enhancedPath = new ArrayList<>(original.getPath().subList(0, pathSize - 1));
+                final List<AbstractQuerySourceInfoItem<?>> enhancedPath = new ArrayList<>(original.getPath().subList(0, pathSize - 1));
                 enhancedPath.addAll(resolution.getResolved());
                 result.add(new Prop2(original.source, enhancedPath));
             }
@@ -35,7 +35,7 @@ public class KeyPropertyExtractor {
         return asList(original);
     }
 
-    public static boolean needsExtraction(final AbstractPropInfo<?> operandPropLastMember) {
+    public static boolean needsExtraction(final AbstractQuerySourceInfoItem<?> operandPropLastMember) {
         return KEY.equals(operandPropLastMember.name) && (operandPropLastMember.hasExpression()/*composite*/ || isEntityType(operandPropLastMember.javaType())/*1-2-1*/);
     }
 }

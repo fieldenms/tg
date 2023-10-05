@@ -8,28 +8,28 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.eql.meta.query.AbstractPropInfo;
+import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceInfoItem;
 
 public class PropResolutionProgress {
-    private final List<AbstractPropInfo<?>> resolved = new ArrayList<>();
+    private final List<AbstractQuerySourceInfoItem<?>> resolved = new ArrayList<>();
     private final List<String> pending = new ArrayList<>();
 
     public PropResolutionProgress(final String pendingAsOneDotNotatedProp) {
         this.pending.addAll(asList(pendingAsOneDotNotatedProp.split("\\.")));
     }
 
-    private PropResolutionProgress(final List<String> pending, final List<AbstractPropInfo<?>> resolved) {
+    private PropResolutionProgress(final List<String> pending, final List<AbstractQuerySourceInfoItem<?>> resolved) {
         this.pending.addAll(pending);
         this.resolved.addAll(resolved);
     }
 
-    public PropResolutionProgress registerResolutionAndClone(final AbstractPropInfo<?> propResolutionStep) {
-        final List<AbstractPropInfo<?>> updatedResolved = new ArrayList<>(resolved); 
+    public PropResolutionProgress registerResolutionAndClone(final AbstractQuerySourceInfoItem<?> propResolutionStep) {
+        final List<AbstractQuerySourceInfoItem<?>> updatedResolved = new ArrayList<>(resolved); 
         updatedResolved.add(propResolutionStep);
         return new PropResolutionProgress(pending.subList(1, pending.size()), updatedResolved);
     }
     
-    public List<AbstractPropInfo<?>> getResolved() {
+    public List<AbstractQuerySourceInfoItem<?>> getResolved() {
         return unmodifiableList(resolved);
     }
     

@@ -5,29 +5,29 @@ import java.util.Objects;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 
 /**
- * A structure that captures a query source yield-able property resolution related info within a query source of type <code>PARENT</code>. 
+ * A structure that represents resolution-related info for a query source item of type {@code T} within a query source.
  * 
  * @author TG Team
  *
  */
-public abstract class AbstractPropInfo<T> implements IResolvable<T> {
+public abstract class AbstractQuerySourceInfoItem<T> implements IResolvable<T> {
     public final String name; //shouldn't contain dots
     public final ExpressionModel expression;
     public final boolean implicit;
     public final Object hibType;
 
-    public AbstractPropInfo(final String name, final Object hibType, final ExpressionModel expression, final boolean implicit) {
+    public AbstractQuerySourceInfoItem(final String name, final Object hibType, final ExpressionModel expression, final boolean implicit) {
         this.name = name;
         this.expression = expression;
         this.hibType = hibType;
         this.implicit = implicit;
     }
     
-    public AbstractPropInfo(final String name, final Object hibType, final ExpressionModel expression) {
+    public AbstractQuerySourceInfoItem(final String name, final Object hibType, final ExpressionModel expression) {
         this(name, hibType, expression, false);
     }
 
-    public abstract AbstractPropInfo<T> cloneWithoutExpression();
+    public abstract AbstractQuerySourceInfoItem<T> cloneWithoutExpression();
     
     /**
      * Represents a calculated property explicitly defined at the Entity level.
@@ -70,11 +70,11 @@ public abstract class AbstractPropInfo<T> implements IResolvable<T> {
             return true;
         }
 
-        if (!(obj instanceof AbstractPropInfo)) {
+        if (!(obj instanceof AbstractQuerySourceInfoItem)) {
             return false;
         }
 
-        final AbstractPropInfo<?> other = (AbstractPropInfo<?>) obj;
+        final AbstractQuerySourceInfoItem<?> other = (AbstractQuerySourceInfoItem<?>) obj;
         
         return Objects.equals(name, other.name) && Objects.equals(hibType, other.hibType) && Objects.equals(expression, other.expression) && Objects.equals(implicit, other.implicit);
     }
