@@ -167,7 +167,7 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
     }
 
     protected AttachmentsUploadActionMasterEntityActionConfig addMasterAction(final MasterActions masterAction) {
-        final DefaultEntityAction defaultEntityAction = new DefaultEntityAction(masterAction.name(), SimpleMasterBuilder.getPostAction(masterAction), SimpleMasterBuilder.getPostActionError(masterAction));
+        final DefaultEntityAction<AttachmentsUploadAction> defaultEntityAction = new DefaultEntityAction<>(masterAction.name(), AttachmentsUploadAction.class, SimpleMasterBuilder.getPostAction(masterAction), SimpleMasterBuilder.getPostActionError(masterAction));
         final Optional<String> shortcut = SimpleMasterBuilder.getShortcut(masterAction);
         if (shortcut.isPresent()) {
             defaultEntityAction.setShortcut(shortcut.get()); // default value of shortcut if present

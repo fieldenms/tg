@@ -4,6 +4,10 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import ua.com.fielden.platform.dom.DomElement;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.MapEntityTo;
+import ua.com.fielden.platform.entity.annotation.RestrictCreationByUsers;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.minijs.JsCode;
@@ -15,7 +19,8 @@ import ua.com.fielden.platform.web.view.master.api.actions.impl.AbstractAction;
  * @author TG Team
  *
  */
-public class DefaultEntityAction extends AbstractAction implements IRenderable, IExecutable {
+public class DefaultEntityAction<T extends AbstractEntity<?>> extends AbstractAction implements IRenderable, IExecutable {
+    private final Class<T> entityType;
     private final String postActionFunction;
     private final String postActionErrorFunction;
 
@@ -25,11 +30,26 @@ public class DefaultEntityAction extends AbstractAction implements IRenderable, 
      * @param functionalEntityType
      * @param propertyName
      */
-    public DefaultEntityAction(final String name, final String postActionFunction, final String postActionErrorFunction) {
+    public DefaultEntityAction(final String name, final Class<T> entityType, final String postActionFunction, final String postActionErrorFunction) {
         super(name, "master/actions/tg-action");
+        this.entityType = entityType;
         this.postActionFunction = postActionFunction;
         this.postActionErrorFunction = postActionErrorFunction;
     }
+
+    /*
+     * if ((masterAction  == MasterActions.SAVE || masterAction  == MasterActions.REFRESH) && entityType.isAnnotationPresent(MapEntityTo.class) && !AbstractEntity.class.isAssignableFrom(AnnotationReflector.getKeyType(entityType))) {
+            final DefaultEntityAction saveAction = new DefaultEntityAction(masterAction.name(), getPostAction(masterAction), getPostActionError(masterAction));
+            final MasterActions actionAndClose = MasterActions.valueOf(masterAction.name() + "_AND_CLOSE");
+            final DefaultEntityAction andClose = new DefaultEntityAction(actionAndClose.name(), getPostAction(actionAndClose), getPostActionError(actionAndClose));
+            if (entityType.isAnnotationPresent(RestrictCreationByUsers.class)) {
+                return new EntityActionWithOptions(saveAction, andClose);
+            }
+            final MasterActions actionAndNew = MasterActions.valueOf(masterAction.name() + "_AND_NEW");
+            final DefaultEntityAction andNew = new DefaultEntityAction(actionAndNew.name(), getPostAction(actionAndNew), getPostActionError(actionAndNew));
+            return new EntityActionWithOptions(saveAction, andClose, andNew);
+        }
+     */
 
     @Override
     protected Map<String, Object> createCustomAttributes() {
@@ -37,6 +57,14 @@ public class DefaultEntityAction extends AbstractAction implements IRenderable, 
 
         if ("save".equals(this.name().toLowerCase())) {
             attrs.put("id", "_saveAction");
+        }
+        if (("save".equals(this.name().toLowerCase()) || "refresh".equals(this.name().toLowerCase()))
+                && this.entityType.isAnnotationPresent(MapEntityTo.class)
+                && !AbstractEntity.class.isAssignableFrom(AnnotationReflector.getKeyType(this.entityType))) {
+            attrs.put("action-type", "optionbutton");
+            if (entityType.isAnnotationPresent(RestrictCreationByUsers.class)) {
+                attrs.put("restrict-new-option", true);
+            }
         }
         attrs.put("role", this.name().toLowerCase());
         if (focusingCallback() != null) {

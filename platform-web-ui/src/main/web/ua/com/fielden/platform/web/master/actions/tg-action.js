@@ -161,14 +161,14 @@ Polymer({
         },
 
         /**
-         * Custom function to be invoked during run() of this action.
+         * Custom function to be invoked during run(role) of this action.
          */
         action: {
             type: Function
         },
 
         /**
-         * Custom function to be invoked after run() of this action has been executed.
+         * Custom function to be invoked after run(role) of this action has been executed.
          */
         postAction: {
             type: Function,
@@ -177,7 +177,7 @@ Polymer({
         },
 
         /**
-         * Custom function to be invoked after run() of this action has been executed with error.
+         * Custom function to be invoked after run(role) of this action has been executed with error.
          */
         postActionError: {
             type: Function,
@@ -246,7 +246,7 @@ Polymer({
         };
     },
     
-    observers: ["_updateOptions(actionType, shortDesc, longDesc, restrictNewOption)"],
+    observers: ["_updateOptions(actionType, shortDesc, longDesc, role, restrictNewOption)"],
 
     created: function () {
         this.run = this._createRun();
@@ -263,7 +263,7 @@ Polymer({
      */
     _createRun: function () {
         const self = this;
-        return (function () {
+        return (function (role) {
             self.persistActiveElement();
 
             this._innerEnabled = false;
@@ -282,7 +282,7 @@ Polymer({
             if (promise) {
                 promise
                     .then(  // first a handler for successful promise execution
-                        createEntityActionThenCallback(self.eventChannel, self.role, postal, self._afterExecution.bind(self), self.closeAfterExecution),
+                        createEntityActionThenCallback(self.eventChannel, role, postal, self._afterExecution.bind(self), self.closeAfterExecution),
                         // and in case of some exceptional situation let's provide a trivial catch handler
                         function (value) {
                             console.log('AJAX PROMISE CATCH', value);
@@ -292,6 +292,16 @@ Polymer({
                         });
             }
         }).bind(this);
+    },
+
+    _runOptionAction: function (e) {
+        const itemIdx = e.detail;
+        if (this._options && this._options[itemIdx]) {
+            const role = this._options[itemIdx].role;
+            this.async(function () {
+                this.run(role);
+            }, 100);
+        }
     },
 
     _isButton: function (actionType) {
@@ -306,27 +316,32 @@ Polymer({
         return ActionType.OPTIONBUTTON === actionType;
     },
 
-    _updateOptions: function (actionType, shortDesc, longDesc, restrictNewOption) {
+    _updateOptions: function (actionType, shortDesc, longDesc, role, restrictNewOption) {
         if (allDefined(arguments) && this._isOptionButton(actionType)) {
             this._options = [
                 {
                     index: 0,
                     title: shortDesc,
                     desc: longDesc,
+                    role: role,
 
                 }, {
                     index: 1,
                     title: shortDesc + " & CLOSE",
-                    desc: longDesc + " & CLOSE"
+                    desc: longDesc + " & CLOSE",
+                    role: role + "&close",
                 }
             ];
             if (!restrictNewOption) {
                 this._options.push({
                     index: 2,
                     title: shortDesc + " & NEW",
-                    desc: longDesc + " & NEW"
+                    desc: longDesc + " & NEW",
+                    role: role + "&new",
                 });
             }
+        } else {
+            delete this._options;
         }
     },
 
@@ -414,7 +429,7 @@ Polymer({
         // it is critical to execute the actual logic that is intended for an on-tap action in async
         // with a relatively long delay to make sure that all required changes
         this.async(function () {
-            this.run();
+            this.run(this.role);
         }, 100);
     }
 });

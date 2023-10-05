@@ -25,9 +25,6 @@ import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.RestrictCreationByUsers;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.UI_ROLE;
@@ -48,7 +45,6 @@ import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionC
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig5;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.DefaultEntityAction;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig;
-import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionWithOptions;
 import ua.com.fielden.platform.web.view.master.api.actions.impl.AbstractAction;
 import ua.com.fielden.platform.web.view.master.api.helpers.IActionBarLayoutConfig1;
 import ua.com.fielden.platform.web.view.master.api.helpers.IComplete;
@@ -103,7 +99,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
     @Override
     public IEntityActionConfig0<T> addAction(final MasterActions masterAction) {
-        final AbstractAction action = createAction(masterAction);
+        final AbstractAction action = new DefaultEntityAction(masterAction.name(), this.entityType, getPostAction(masterAction), getPostActionError(masterAction));
         final Optional<String> shortcut = getShortcut(masterAction);
         if (shortcut.isPresent()) {
             action.setShortcut(shortcut.get()); // default value of shortcut if present
@@ -115,22 +111,6 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         final EntityActionConfig<T> entityAction = new EntityActionConfig<T>(action, this);
         entityActions.add(entityAction);
         return entityAction;
-    }
-
-    private AbstractAction createAction(final MasterActions masterAction) {
-        //Save action for persistent entity which is not one-2-one association should have save with options action.
-        if ((masterAction  == MasterActions.SAVE || masterAction  == MasterActions.REFRESH) && entityType.isAnnotationPresent(MapEntityTo.class) && !AbstractEntity.class.isAssignableFrom(AnnotationReflector.getKeyType(entityType))) {
-            final DefaultEntityAction saveAction = new DefaultEntityAction(masterAction.name(), getPostAction(masterAction), getPostActionError(masterAction));
-            final MasterActions actionAndClose = MasterActions.valueOf(masterAction.name() + "_AND_CLOSE");
-            final DefaultEntityAction andClose = new DefaultEntityAction(actionAndClose.name(), getPostAction(actionAndClose), getPostActionError(actionAndClose));
-            if (entityType.isAnnotationPresent(RestrictCreationByUsers.class)) {
-                return new EntityActionWithOptions(saveAction, andClose);
-            }
-            final MasterActions actionAndNew = MasterActions.valueOf(masterAction.name() + "_AND_NEW");
-            final DefaultEntityAction andNew = new DefaultEntityAction(actionAndNew.name(), getPostAction(actionAndNew), getPostActionError(actionAndNew));
-            return new EntityActionWithOptions(saveAction, andClose, andNew);
-        }
-        return new DefaultEntityAction(masterAction.name(), getPostAction(masterAction), getPostActionError(masterAction));
     }
 
     @Override
