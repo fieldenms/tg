@@ -7,7 +7,14 @@ import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
 public class Prop3 extends AbstractSingleOperand3 {
+    /**
+     * Ordinarily property name, but in case of union-type property this name contains a subproperty of the union type (e.g., "location.workshop").
+     * If component types were to be supported, then it could also include lower level component attribute name (e.g., "cost.amount").
+     */
     public final String name;
+    /**
+     * Either table or query where property {@code name} lives.
+     */
     public final ISource3 source;
 
     public Prop3(final String name, final ISource3 source, final PropType type) {

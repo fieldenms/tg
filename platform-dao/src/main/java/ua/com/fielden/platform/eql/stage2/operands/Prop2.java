@@ -41,7 +41,7 @@ import ua.com.fielden.platform.types.tuples.T2;
 public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISingleOperand3> {
     public final ISource2<? extends ISource3> source; // An explicit qry source to which a given property gets resolved (e.g., Vehicle.class in case of select(Vehicle) ...). 
     private final List<AbstractQuerySourceItem<?>> path; // A sequence of individual properties in a dot-notated property (path), resolved to their source. 
-    public final String name; // An explicit property name used in '.prop(...)' (e.g., "model.make.key" in case of select(Vehicle.class).where().prop("model.make.key")... ). 
+    public final String propPath; // An explicit property name used in '.prop(...)' (e.g., "model.make.key" in case of select(Vehicle.class).where().prop("model.make.key")... ). 
 
     public Prop2(final ISource2<? extends ISource3> source, final List<AbstractQuerySourceItem<?>> path) {
         this(source, path, false);
@@ -51,7 +51,7 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
         super(shouldBeTreatedAsId ? LONG_PROP_TYPE : obtainPropType(path));
         this.source = source;
         this.path = path;
-        this.name = path.stream().map(k -> k.name).collect(Collectors.joining("."));
+        this.propPath = path.stream().map(k -> k.name).collect(Collectors.joining("."));
     }
     
     private static PropType obtainPropType(final List<AbstractQuerySourceItem<?>> path) {
@@ -62,11 +62,11 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
     @Override
     public TransformationResult2<ISingleOperand3> transform(final TransformationContext2 context) {
         if (lastPart().hasExpression()) {
-            final Expression2 expr2 = context.resolveExpression(source.id(), name);
+            final Expression2 expr2 = context.resolveExpression(source.id(), propPath);
             final TransformationResult2<Expression3> exprTr = expr2.transform(context);
             return new TransformationResult2<>(exprTr.item.isSingle() ? exprTr.item.first : exprTr.item, exprTr.updatedContext);
         } else {
-            final T2<String, ISource3> resolution = context.resolve(source.id(), name);
+            final T2<String, ISource3> resolution = context.resolve(source.id(), propPath);
             return new TransformationResult2<>(new Prop3(resolution._1, resolution._2, type), context);
         }
     }
@@ -96,7 +96,7 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
     
     @Override
     public boolean isNonnullableEntity() {
-        if (ID.equals(name)) {
+        if (ID.equals(propPath)) {
             return true; // TODO this is temporary fix to be able to treat such primitive prop correctly until distinction between usual 1ong and PK long is introduced.
         }
         

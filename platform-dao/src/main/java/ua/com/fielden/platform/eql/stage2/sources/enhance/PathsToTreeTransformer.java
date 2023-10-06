@@ -147,9 +147,9 @@ public class PathsToTreeTransformer {
                 processedCalcDataLocal.put(calcChunk.name(), new CalcPropData(exp2, localCalcPropSourcesNodes));
 
                 for (final Prop2 prop : externalProps) {
-                    if (!processedPropsLocal.contains(prop.name)) {
+                    if (!processedPropsLocal.contains(prop.propPath)) {
                         addedTails.add(tailFromProp(prop));
-                        processedPropsLocal.add(prop.name);
+                        processedPropsLocal.add(prop.propPath);
                     }
                 }
             }

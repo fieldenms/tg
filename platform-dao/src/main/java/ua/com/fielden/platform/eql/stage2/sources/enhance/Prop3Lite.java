@@ -5,7 +5,7 @@ package ua.com.fielden.platform.eql.stage2.sources.enhance;
  * 
  * Used within the process of building associations between Prop2 and the corresponding Prop3 item.
  * 
- * @param name -- name from the respective Prop3 instance
+ * @param propPath -- name from the respective Prop3 instance
  * 
  * @param sourceId -- source.id() from the respective Prop3 instance
  * 

@@ -23,7 +23,7 @@ import ua.com.fielden.platform.types.tuples.T3;
 public class PathToTreeTransformerUtils {
 
     public static PendingTail tailFromProp(final Prop2 prop) {
-        return new PendingTail(new Prop2Lite(prop.name, prop.source.id()), convertPathToChunks(prop.getPath()));
+        return new PendingTail(new Prop2Lite(prop.propPath, prop.source.id()), convertPathToChunks(prop.getPath()));
     }
 
     public static final Collection<SourceTails> groupBySource(final Set<Prop2> props) {

@@ -7,7 +7,7 @@ import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
  * 
  * @param position -- used to indicate order of columns in query sql statement (the same order is used for providing hibernate scalars for native query execution).
  * 
- * @param name -- immediate (local) name of the property within entity tree (can't contain dots).
+ * @param propPath -- immediate (local) name of the property within entity tree (can't contain dots).
  * 
  * @param hibScalar -- {@link HibernateScalar hibernate scalar} corresponding to the given entity property
  * 
