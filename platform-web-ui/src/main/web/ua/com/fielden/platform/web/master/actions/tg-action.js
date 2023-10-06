@@ -61,7 +61,7 @@ Polymer({
 
     is: 'tg-action',
 
-    behaviors: [ TgFocusRestorationBehavior, TgElementSelectorBehavior ],
+    behaviors: [TgFocusRestorationBehavior, TgElementSelectorBehavior],
 
     properties: {
         /**
@@ -161,14 +161,14 @@ Polymer({
         },
 
         /**
-         * Custom function to be invoked during run(role) of this action.
+         * Custom function to be invoked during run(closeAfterExecution) of this action.
          */
         action: {
             type: Function
         },
 
         /**
-         * Custom function to be invoked after run(role) of this action has been executed.
+         * Custom function to be invoked after run(closeAfterExecution) of this action has been executed.
          */
         postAction: {
             type: Function,
@@ -177,7 +177,7 @@ Polymer({
         },
 
         /**
-         * Custom function to be invoked after run(role) of this action has been executed with error.
+         * Custom function to be invoked after run(closeAfterExecution) of this action has been executed with error.
          */
         postActionError: {
             type: Function,
@@ -245,7 +245,7 @@ Polymer({
             return this.elevation;
         };
     },
-    
+
     observers: ["_updateOptions(actionType, shortDesc, longDesc, role, restrictNewOption)"],
 
     created: function () {
@@ -263,7 +263,7 @@ Polymer({
      */
     _createRun: function () {
         const self = this;
-        return (function (role) {
+        return (function (closeAfterExecution) {
             self.persistActiveElement();
 
             this._innerEnabled = false;
@@ -282,7 +282,8 @@ Polymer({
             if (promise) {
                 promise
                     .then(  // first a handler for successful promise execution
-                        createEntityActionThenCallback(self.eventChannel, role, postal, self._afterExecution.bind(self), self.closeAfterExecution),
+                        createEntityActionThenCallback(self.eventChannel, self.role, postal, self._afterExecution.bind(self), 
+                                    typeof closeAfterExecution !== 'undefined' ? closeAfterExecution : self.closeAfterExecution),
                         // and in case of some exceptional situation let's provide a trivial catch handler
                         function (value) {
                             console.log('AJAX PROMISE CATCH', value);
@@ -297,9 +298,9 @@ Polymer({
     _runOptionAction: function (e) {
         const itemIdx = e.detail;
         if (this._options && this._options[itemIdx]) {
-            const role = this._options[itemIdx].role;
+            const closeAfterExecution = this._options[itemIdx].closeAfterExecution;
             this.async(function () {
-                this.run(role);
+                this.run(closeAfterExecution);
             }, 100);
         }
     },
@@ -322,22 +323,20 @@ Polymer({
                 {
                     index: 0,
                     title: shortDesc,
-                    desc: longDesc,
-                    role: role,
+                    desc: longDesc
 
                 }, {
                     index: 1,
                     title: shortDesc + " & CLOSE",
                     desc: longDesc + " & CLOSE",
-                    role: role + "&close",
+                    closeAfterExecution: true
                 }
             ];
             if (!restrictNewOption) {
                 this._options.push({
                     index: 2,
                     title: shortDesc + " & NEW",
-                    desc: longDesc + " & NEW",
-                    role: role + "&new",
+                    desc: longDesc + " & NEW"
                 });
             }
         } else {
@@ -429,7 +428,7 @@ Polymer({
         // it is critical to execute the actual logic that is intended for an on-tap action in async
         // with a relatively long delay to make sure that all required changes
         this.async(function () {
-            this.run(this.role);
+            this.run(this.closeAfterExecution);
         }, 100);
     }
 });
