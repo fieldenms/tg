@@ -10,16 +10,16 @@ import ua.com.fielden.platform.entity.query.fluent.enums.Quantifier;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage1.operands.queries.SubQuery1;
-import ua.com.fielden.platform.eql.stage2.conditions.QuantifiedTest2;
+import ua.com.fielden.platform.eql.stage2.conditions.QuantifiedPredicate2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 
-public class QuantifiedTest1 implements ICondition1<QuantifiedTest2> {
+public class QuantifiedPredicate1 implements ICondition1<QuantifiedPredicate2> {
     private final ISingleOperand1<? extends ISingleOperand2<?>> leftOperand;
     private final SubQuery1 rightOperand;
     private final Quantifier quantifier;
     private final ComparisonOperator operator;
 
-    public QuantifiedTest1(final ISingleOperand1<? extends ISingleOperand2<?>> leftOperand, final ComparisonOperator operator, final Quantifier quantifier, final SubQuery1 rightOperand) {
+    public QuantifiedPredicate1(final ISingleOperand1<? extends ISingleOperand2<?>> leftOperand, final ComparisonOperator operator, final Quantifier quantifier, final SubQuery1 rightOperand) {
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
         this.operator = operator;
@@ -27,8 +27,8 @@ public class QuantifiedTest1 implements ICondition1<QuantifiedTest2> {
     }
 
     @Override
-    public QuantifiedTest2 transform(final TransformationContext1 context) {
-        return new QuantifiedTest2(leftOperand.transform(context), operator, quantifier, rightOperand.transform(context));
+    public QuantifiedPredicate2 transform(final TransformationContext1 context) {
+        return new QuantifiedPredicate2(leftOperand.transform(context), operator, quantifier, rightOperand.transform(context));
     }
     
     @Override
@@ -56,11 +56,11 @@ public class QuantifiedTest1 implements ICondition1<QuantifiedTest2> {
             return true;
         }
 
-        if (!(obj instanceof QuantifiedTest1)) {
+        if (!(obj instanceof QuantifiedPredicate1)) {
             return false;
         }
         
-        final QuantifiedTest1 other = (QuantifiedTest1) obj;
+        final QuantifiedPredicate1 other = (QuantifiedPredicate1) obj;
         
         return Objects.equals(leftOperand, other.leftOperand) &&
                 Objects.equals(rightOperand, other.rightOperand) &&

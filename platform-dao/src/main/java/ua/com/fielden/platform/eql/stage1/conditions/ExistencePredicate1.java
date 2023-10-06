@@ -6,20 +6,20 @@ import java.util.Set;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.queries.TypelessSubQuery1;
-import ua.com.fielden.platform.eql.stage2.conditions.ExistenceTest2;
+import ua.com.fielden.platform.eql.stage2.conditions.ExistencePredicate2;
 
-public class ExistenceTest1 implements ICondition1<ExistenceTest2> {
+public class ExistencePredicate1 implements ICondition1<ExistencePredicate2> {
     private final boolean negated;
     private final TypelessSubQuery1 subQuery;
 
-    public ExistenceTest1(final boolean negated, final TypelessSubQuery1 subQuery) {
+    public ExistencePredicate1(final boolean negated, final TypelessSubQuery1 subQuery) {
         this.negated = negated;
         this.subQuery = subQuery;
     }
 
     @Override
-    public ExistenceTest2 transform(final TransformationContext1 context) {
-        return new ExistenceTest2(negated, subQuery.transform(context));
+    public ExistencePredicate2 transform(final TransformationContext1 context) {
+        return new ExistencePredicate2(negated, subQuery.transform(context));
     }
 
     @Override
@@ -42,11 +42,11 @@ public class ExistenceTest1 implements ICondition1<ExistenceTest2> {
             return true;
         }
         
-        if (!(obj instanceof ExistenceTest1)) {
+        if (!(obj instanceof ExistencePredicate1)) {
             return false;
         }
         
-        final ExistenceTest1 other = (ExistenceTest1) obj;
+        final ExistencePredicate1 other = (ExistencePredicate1) obj;
 
         return Objects.equals(negated, other.negated) && Objects.equals(subQuery, other.subQuery);
     }

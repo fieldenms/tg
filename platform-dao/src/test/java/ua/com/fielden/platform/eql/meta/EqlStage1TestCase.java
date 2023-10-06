@@ -17,11 +17,11 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.stage1.QueryComponents1;
-import ua.com.fielden.platform.eql.stage1.conditions.ComparisonTest1;
+import ua.com.fielden.platform.eql.stage1.conditions.ComparisonPredicate1;
 import ua.com.fielden.platform.eql.stage1.conditions.CompoundCondition1;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.conditions.ICondition1;
-import ua.com.fielden.platform.eql.stage1.conditions.NullTest1;
+import ua.com.fielden.platform.eql.stage1.conditions.NullPredicate1;
 import ua.com.fielden.platform.eql.stage1.etc.Yield1;
 import ua.com.fielden.platform.eql.stage1.etc.Yields1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
@@ -101,20 +101,20 @@ public abstract class EqlStage1TestCase extends EqlTestCase {
         return new CompoundCondition1(OR, condition);
     }
 
-    protected static NullTest1 isNull(final ISingleOperand1<? extends ISingleOperand2<?>> operand) {
-        return new NullTest1(operand, false);
+    protected static NullPredicate1 isNull(final ISingleOperand1<? extends ISingleOperand2<?>> operand) {
+        return new NullPredicate1(operand, false);
     }
 
-    protected static NullTest1 isNotNull(final ISingleOperand1<? extends ISingleOperand2<?>> operand) {
-        return new NullTest1(operand, true);
+    protected static NullPredicate1 isNotNull(final ISingleOperand1<? extends ISingleOperand2<?>> operand) {
+        return new NullPredicate1(operand, true);
     }
 
-    protected static ComparisonTest1 eq(final Prop1 op1, final Prop1 op2) {
-        return new ComparisonTest1(op1, EQ, op2);
+    protected static ComparisonPredicate1 eq(final Prop1 op1, final Prop1 op2) {
+        return new ComparisonPredicate1(op1, EQ, op2);
     }
     
-    protected static ComparisonTest1 ne(final Prop1 op1, final Prop1 op2) {
-        return new ComparisonTest1(op1, NE, op2);
+    protected static ComparisonPredicate1 ne(final Prop1 op1, final Prop1 op2) {
+        return new ComparisonPredicate1(op1, NE, op2);
     }
 
     protected static Prop1 prop(final String name) {

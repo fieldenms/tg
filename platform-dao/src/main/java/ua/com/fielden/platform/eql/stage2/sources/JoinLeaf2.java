@@ -17,7 +17,7 @@ import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
-import ua.com.fielden.platform.eql.stage3.conditions.ComparisonTest3;
+import ua.com.fielden.platform.eql.stage3.conditions.ComparisonPredicate3;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.operands.Expression3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
@@ -84,7 +84,7 @@ public class JoinLeaf2 implements IJoinNode2<IJoinNode3> {
         }
         
         final Prop3 ro = new Prop3(ID, addedSource, LONG_PROP_TYPE);
-        final ComparisonTest3 ct = new ComparisonTest3(lo, EQ, ro);
+        final ComparisonPredicate3 ct = new ComparisonPredicate3(lo, EQ, ro);
         final Conditions3 jc = new Conditions3(false, asList(asList(ct)));
         final TransformationResult2<IJoinNode3> implicitJoinNodeTr = generateJoinNode(addedSource, implicitNode.subnodes(), currentContext);
         return new TransformationResult2<>(new JoinBranch3(currentJoinNode, implicitJoinNodeTr.item, (implicitNode.nonnullable ? IJ : LJ), jc), implicitJoinNodeTr.updatedContext);

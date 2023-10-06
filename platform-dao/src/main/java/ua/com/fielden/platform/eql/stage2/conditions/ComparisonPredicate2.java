@@ -10,15 +10,15 @@ import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
-import ua.com.fielden.platform.eql.stage3.conditions.ComparisonTest3;
+import ua.com.fielden.platform.eql.stage3.conditions.ComparisonPredicate3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
-public class ComparisonTest2 extends AbstractCondition2<ComparisonTest3> {
+public class ComparisonPredicate2 extends AbstractCondition2<ComparisonPredicate3> {
     public final ISingleOperand2<? extends ISingleOperand3> leftOperand;
     public final ISingleOperand2<? extends ISingleOperand3> rightOperand;
     public final ComparisonOperator operator;
 
-    public ComparisonTest2(final ISingleOperand2<? extends ISingleOperand3> leftOperand, final ComparisonOperator operator, final ISingleOperand2<? extends ISingleOperand3> rightOperand) {
+    public ComparisonPredicate2(final ISingleOperand2<? extends ISingleOperand3> leftOperand, final ComparisonOperator operator, final ISingleOperand2<? extends ISingleOperand3> rightOperand) {
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
         this.operator = operator;
@@ -30,10 +30,10 @@ public class ComparisonTest2 extends AbstractCondition2<ComparisonTest3> {
     }
 
     @Override
-    public TransformationResult2<ComparisonTest3> transform(final TransformationContext2 context) {
+    public TransformationResult2<ComparisonPredicate3> transform(final TransformationContext2 context) {
         final TransformationResult2<? extends ISingleOperand3> leftOperandTr = leftOperand.transform(context);
         final TransformationResult2<? extends ISingleOperand3> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
-        return new TransformationResult2<>(new ComparisonTest3(leftOperandTr.item, operator, rightOperandTr.item), rightOperandTr.updatedContext);
+        return new TransformationResult2<>(new ComparisonPredicate3(leftOperandTr.item, operator, rightOperandTr.item), rightOperandTr.updatedContext);
     }
 
     @Override
@@ -68,11 +68,11 @@ public class ComparisonTest2 extends AbstractCondition2<ComparisonTest3> {
             return true;
         }
 
-        if (!(obj instanceof ComparisonTest2)) {
+        if (!(obj instanceof ComparisonPredicate2)) {
             return false;
         }
 
-        final ComparisonTest2 other = (ComparisonTest2) obj;
+        final ComparisonPredicate2 other = (ComparisonPredicate2) obj;
 
         return Objects.equals(leftOperand, other.leftOperand) &&
                 Objects.equals(rightOperand, other.rightOperand) &&

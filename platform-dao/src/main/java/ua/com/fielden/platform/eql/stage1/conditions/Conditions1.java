@@ -21,7 +21,7 @@ import ua.com.fielden.platform.eql.stage2.conditions.ICondition2;
 
 public class Conditions1 implements ICondition1<Conditions2> {
     public static final Conditions1 emptyConditions = new Conditions1(false, null, emptyList());
-    private static final ComparisonTest1 idEqualsExtIdCondition = new ComparisonTest1(new Prop1(ID, false), EQ, new Prop1(ID, true));
+    private static final ComparisonPredicate1 idEqualsExtIdCondition = new ComparisonPredicate1(new Prop1(ID, false), EQ, new Prop1(ID, true));
 
     public final boolean negated;
     public final ICondition1<? extends ICondition2<?>> firstCondition;

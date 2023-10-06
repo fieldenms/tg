@@ -8,14 +8,14 @@ import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
-import ua.com.fielden.platform.eql.stage3.conditions.NullTest3;
+import ua.com.fielden.platform.eql.stage3.conditions.NullPredicate3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
-public class NullTest2 extends AbstractCondition2<NullTest3> {
+public class NullPredicate2 extends AbstractCondition2<NullPredicate3> {
     public final ISingleOperand2<? extends ISingleOperand3> operand;
     private final boolean negated;
 
-    public NullTest2(final ISingleOperand2<? extends ISingleOperand3> operand, final boolean negated) {
+    public NullPredicate2(final ISingleOperand2<? extends ISingleOperand3> operand, final boolean negated) {
         this.operand = operand;
         this.negated = negated;
     }
@@ -26,9 +26,9 @@ public class NullTest2 extends AbstractCondition2<NullTest3> {
     }
 
     @Override
-    public TransformationResult2<NullTest3> transform(final TransformationContext2 context) {
+    public TransformationResult2<NullPredicate3> transform(final TransformationContext2 context) {
         final TransformationResult2<? extends ISingleOperand3> operandTr = operand.transform(context);
-        return new TransformationResult2<>(new NullTest3(operandTr.item, negated), operandTr.updatedContext);
+        return new TransformationResult2<>(new NullPredicate3(operandTr.item, negated), operandTr.updatedContext);
     }
 
     @Override
@@ -56,11 +56,11 @@ public class NullTest2 extends AbstractCondition2<NullTest3> {
             return true;
         }
 
-        if (!(obj instanceof NullTest2)) {
+        if (!(obj instanceof NullPredicate2)) {
             return false;
         }
         
-        final NullTest2 other = (NullTest2) obj;
+        final NullPredicate2 other = (NullPredicate2) obj;
         
         return (negated == other.negated) && Objects.equals(operand, other.operand);
     }

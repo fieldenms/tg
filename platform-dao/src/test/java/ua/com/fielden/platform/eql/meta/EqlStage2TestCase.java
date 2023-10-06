@@ -34,11 +34,11 @@ import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.Prop1;
 import ua.com.fielden.platform.eql.stage2.QueryComponents2;
-import ua.com.fielden.platform.eql.stage2.conditions.ComparisonTest2;
+import ua.com.fielden.platform.eql.stage2.conditions.ComparisonPredicate2;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
-import ua.com.fielden.platform.eql.stage2.conditions.ExistenceTest2;
+import ua.com.fielden.platform.eql.stage2.conditions.ExistencePredicate2;
 import ua.com.fielden.platform.eql.stage2.conditions.ICondition2;
-import ua.com.fielden.platform.eql.stage2.conditions.NullTest2;
+import ua.com.fielden.platform.eql.stage2.conditions.NullPredicate2;
 import ua.com.fielden.platform.eql.stage2.etc.OrderBy2;
 import ua.com.fielden.platform.eql.stage2.etc.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.etc.Yield2;
@@ -228,28 +228,28 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
         return new Conditions2(false, asList(conditions));
     }
 
-    protected static ExistenceTest2 exists(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions) {
-        return new ExistenceTest2(false, typelessSubqry(sources, conditions));
+    protected static ExistencePredicate2 exists(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions) {
+        return new ExistencePredicate2(false, typelessSubqry(sources, conditions));
     }
 
-    protected static ExistenceTest2 notExists(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions) {
-        return new ExistenceTest2(true, typelessSubqry(sources, conditions));
+    protected static ExistencePredicate2 notExists(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions) {
+        return new ExistencePredicate2(true, typelessSubqry(sources, conditions));
     }
 
-    protected static NullTest2 isNull(final ISingleOperand2<? extends ISingleOperand3> operand) {
-        return new NullTest2(operand, false);
+    protected static NullPredicate2 isNull(final ISingleOperand2<? extends ISingleOperand3> operand) {
+        return new NullPredicate2(operand, false);
     }
 
-    protected static NullTest2 isNotNull(final ISingleOperand2<? extends ISingleOperand3> operand) {
-        return new NullTest2(operand, true);
+    protected static NullPredicate2 isNotNull(final ISingleOperand2<? extends ISingleOperand3> operand) {
+        return new NullPredicate2(operand, true);
     }
 
-    protected static ComparisonTest2 eq(final Prop2 op1, final Prop2 op2) {
-        return new ComparisonTest2(op1, EQ, op2);
+    protected static ComparisonPredicate2 eq(final Prop2 op1, final Prop2 op2) {
+        return new ComparisonPredicate2(op1, EQ, op2);
     }
 
-    protected static ComparisonTest2 ne(final Prop2 op1, final Prop2 op2) {
-        return new ComparisonTest2(op1, NE, op2);
+    protected static ComparisonPredicate2 ne(final Prop2 op1, final Prop2 op2) {
+        return new ComparisonPredicate2(op1, NE, op2);
     }
 
     protected static Prop1 prop(final String name) {

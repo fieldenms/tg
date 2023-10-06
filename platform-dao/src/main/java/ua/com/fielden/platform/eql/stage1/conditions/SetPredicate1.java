@@ -5,26 +5,27 @@ import java.util.Objects;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fluent.LikeOptions;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.operands.ISetOperand1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
-import ua.com.fielden.platform.eql.stage2.conditions.LikeTest2;
+import ua.com.fielden.platform.eql.stage2.conditions.SetPredicate2;
+import ua.com.fielden.platform.eql.stage2.operands.ISetOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 
-public class LikeTest1 implements ICondition1<LikeTest2> {
+public class SetPredicate1 implements ICondition1<SetPredicate2> {
     private final ISingleOperand1<? extends ISingleOperand2<?>> leftOperand;
-    private final ISingleOperand1<? extends ISingleOperand2<?>> rightOperand;
-    private final LikeOptions options;
+    private final ISetOperand1<? extends ISetOperand2<?>> rightOperand;
+    private final boolean negated;
 
-    public LikeTest1(final ISingleOperand1<? extends ISingleOperand2<?>> leftOperand, final ISingleOperand1<? extends ISingleOperand2<?>> rightOperand, final LikeOptions options) {
+    public SetPredicate1(final ISingleOperand1<? extends ISingleOperand2<?>> leftOperand, final boolean negated, final ISetOperand1<? extends ISetOperand2<?>> rightOperand) {
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
-        this.options = options;
+        this.negated = negated;
     }
 
     @Override
-    public LikeTest2 transform(final TransformationContext1 context) {
-        return new LikeTest2(leftOperand.transform(context), rightOperand.transform(context), options);
+    public SetPredicate2 transform(final TransformationContext1 context) {
+        return new SetPredicate2(leftOperand.transform(context), negated, rightOperand.transform(context));
     }
     
     @Override
@@ -40,7 +41,7 @@ public class LikeTest1 implements ICondition1<LikeTest2> {
         final int prime = 31;
         int result = 1;
         result = prime * result + leftOperand.hashCode();
-        result = prime * result + options.hashCode();
+        result = prime * result + (negated ? 1231 : 1237);
         result = prime * result + rightOperand.hashCode();
         return result;
     }
@@ -50,15 +51,15 @@ public class LikeTest1 implements ICondition1<LikeTest2> {
         if (this == obj) {
             return true;
         }
-        
-        if (!(obj instanceof LikeTest1)) {
+
+        if (!(obj instanceof SetPredicate1)) {
             return false;
         }
         
-        final LikeTest1 other = (LikeTest1) obj;
+        final SetPredicate1 other = (SetPredicate1) obj;
         
         return Objects.equals(leftOperand, other.leftOperand) &&
                 Objects.equals(rightOperand, other.rightOperand) &&
-                Objects.equals(options, other.options);
+                Objects.equals(negated, other.negated);
     }
 }

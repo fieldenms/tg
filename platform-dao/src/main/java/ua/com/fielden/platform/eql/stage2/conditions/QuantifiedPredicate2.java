@@ -12,17 +12,17 @@ import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.queries.SubQuery2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
-import ua.com.fielden.platform.eql.stage3.conditions.QuantifiedTest3;
+import ua.com.fielden.platform.eql.stage3.conditions.QuantifiedPredicate3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.queries.SubQuery3;
 
-public class QuantifiedTest2 extends AbstractCondition2<QuantifiedTest3> {
+public class QuantifiedPredicate2 extends AbstractCondition2<QuantifiedPredicate3> {
     public final ISingleOperand2<? extends ISingleOperand3> leftOperand;
     public final SubQuery2 rightOperand;
     public final Quantifier quantifier;
     public final ComparisonOperator operator;
 
-    public QuantifiedTest2(final ISingleOperand2<? extends ISingleOperand3> leftOperand, final ComparisonOperator operator, final Quantifier quantifier, final SubQuery2 rightOperand) {
+    public QuantifiedPredicate2(final ISingleOperand2<? extends ISingleOperand3> leftOperand, final ComparisonOperator operator, final Quantifier quantifier, final SubQuery2 rightOperand) {
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
         this.operator = operator;
@@ -35,11 +35,11 @@ public class QuantifiedTest2 extends AbstractCondition2<QuantifiedTest3> {
     }
 
     @Override
-    public TransformationResult2<QuantifiedTest3> transform(final TransformationContext2 context) {
+    public TransformationResult2<QuantifiedPredicate3> transform(final TransformationContext2 context) {
         final TransformationResult2<? extends ISingleOperand3> leftOperandTr = leftOperand.transform(context);
         final TransformationResult2<SubQuery3> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
         
-        return new TransformationResult2<>(new QuantifiedTest3(leftOperandTr.item, operator, quantifier, rightOperandTr.item), rightOperandTr.updatedContext);
+        return new TransformationResult2<>(new QuantifiedPredicate3(leftOperandTr.item, operator, quantifier, rightOperandTr.item), rightOperandTr.updatedContext);
     }
 
     @Override
@@ -75,11 +75,11 @@ public class QuantifiedTest2 extends AbstractCondition2<QuantifiedTest3> {
             return true;
         }
         
-        if (!(obj instanceof QuantifiedTest2)) {
+        if (!(obj instanceof QuantifiedPredicate2)) {
             return false;
         }
         
-        final QuantifiedTest2 other = (QuantifiedTest2) obj;
+        final QuantifiedPredicate2 other = (QuantifiedPredicate2) obj;
 
         return Objects.equals(leftOperand, other.leftOperand) &&
                 Objects.equals(rightOperand, other.rightOperand) &&

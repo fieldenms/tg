@@ -10,7 +10,7 @@ import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.operands.queries.ResultQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
 
-public class NullTestEnhancementTest extends EqlStage2TestCase {
+public class NullPredicateEnhancementTest extends EqlStage2TestCase {
 
     @Test
     public void is_null_condition_is_correctly_transformed_for_union_property() {

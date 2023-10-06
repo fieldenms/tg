@@ -8,12 +8,12 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
-public class ComparisonTest3 implements ICondition3 {
+public class ComparisonPredicate3 implements ICondition3 {
     public final ISingleOperand3 leftOperand;
     public final ISingleOperand3 rightOperand;
     public final ComparisonOperator operator;
 
-    public ComparisonTest3(final ISingleOperand3 leftOperand, final ComparisonOperator operator, final ISingleOperand3 rightOperand) {
+    public ComparisonPredicate3(final ISingleOperand3 leftOperand, final ComparisonOperator operator, final ISingleOperand3 rightOperand) {
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
         this.operator = operator;
@@ -40,11 +40,11 @@ public class ComparisonTest3 implements ICondition3 {
             return true;
         }
 
-        if (!(obj instanceof ComparisonTest3)) {
+        if (!(obj instanceof ComparisonPredicate3)) {
             return false;
         }
         
-        final ComparisonTest3 other = (ComparisonTest3) obj;
+        final ComparisonPredicate3 other = (ComparisonPredicate3) obj;
         
         return Objects.equals(leftOperand, other.leftOperand) &&
                 Objects.equals(rightOperand, other.rightOperand) &&

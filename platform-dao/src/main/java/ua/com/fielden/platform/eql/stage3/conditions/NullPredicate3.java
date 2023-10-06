@@ -5,11 +5,11 @@ import java.util.Objects;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
-public class NullTest3 implements ICondition3 {
+public class NullPredicate3 implements ICondition3 {
     public final ISingleOperand3 operand;
     private final boolean negated;
 
-    public NullTest3(final ISingleOperand3 operand, final boolean negated) {
+    public NullPredicate3(final ISingleOperand3 operand, final boolean negated) {
         this.operand = operand;
         this.negated = negated;
     }
@@ -34,10 +34,10 @@ public class NullTest3 implements ICondition3 {
             return true;
         }
 
-        if (!(obj instanceof NullTest3)) {
+        if (!(obj instanceof NullPredicate3)) {
             return false;
         }
-        final NullTest3 other = (NullTest3) obj;
+        final NullPredicate3 other = (NullPredicate3) obj;
 
         return (negated == other.negated) && Objects.equals(operand, other.operand);
     }

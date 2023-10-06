@@ -6,12 +6,12 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.operands.ISetOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
-public class SetTest3 implements ICondition3 {
+public class SetPredicate3 implements ICondition3 {
     public final ISingleOperand3 leftOperand;
     public final ISetOperand3 rightOperand;
     public final boolean negated;
 
-    public SetTest3(final ISingleOperand3 leftOperand, final boolean negated, final ISetOperand3 rightOperand) {
+    public SetPredicate3(final ISingleOperand3 leftOperand, final boolean negated, final ISetOperand3 rightOperand) {
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
         this.negated = negated;
@@ -38,11 +38,11 @@ public class SetTest3 implements ICondition3 {
             return true;
         }
 
-        if (!(obj instanceof SetTest3)) {
+        if (!(obj instanceof SetPredicate3)) {
             return false;
         }
         
-        final SetTest3 other = (SetTest3) obj;
+        final SetPredicate3 other = (SetPredicate3) obj;
         
         return Objects.equals(leftOperand, other.leftOperand) &&
                 Objects.equals(rightOperand, other.rightOperand) &&

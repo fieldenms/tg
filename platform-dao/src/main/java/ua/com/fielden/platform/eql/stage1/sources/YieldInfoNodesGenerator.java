@@ -16,7 +16,7 @@ import java.util.Set;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
-import ua.com.fielden.platform.eql.stage2.conditions.NullTest2;
+import ua.com.fielden.platform.eql.stage2.conditions.NullPredicate2;
 import ua.com.fielden.platform.eql.stage2.etc.Yield2;
 import ua.com.fielden.platform.eql.stage2.operands.AbstractSingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.queries.SourceQuery2;
@@ -46,7 +46,7 @@ public class YieldInfoNodesGenerator {
     }
     
     private static boolean determineNonnullability(final YieldAndConditions yieldAndConditions) {
-        return yieldAndConditions.yield().hasNonnullableHint || yieldAndConditions.yield().operand.isNonnullableEntity() || yieldAndConditions.conditions().conditionIsSatisfied(new NullTest2(yieldAndConditions.yield().operand, true));
+        return yieldAndConditions.yield().hasNonnullableHint || yieldAndConditions.yield().operand.isNonnullableEntity() || yieldAndConditions.conditions().conditionIsSatisfied(new NullPredicate2(yieldAndConditions.yield().operand, true));
     }
     
     private static boolean determineNonnullability(final List<YieldAndConditions> yieldVariants) {

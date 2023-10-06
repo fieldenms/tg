@@ -26,10 +26,10 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.stage3.EqlQueryTransformer;
 import ua.com.fielden.platform.eql.stage3.QueryComponents3;
-import ua.com.fielden.platform.eql.stage3.conditions.ComparisonTest3;
+import ua.com.fielden.platform.eql.stage3.conditions.ComparisonPredicate3;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
-import ua.com.fielden.platform.eql.stage3.conditions.NullTest3;
+import ua.com.fielden.platform.eql.stage3.conditions.NullPredicate3;
 import ua.com.fielden.platform.eql.stage3.etc.GroupBy3;
 import ua.com.fielden.platform.eql.stage3.etc.GroupBys3;
 import ua.com.fielden.platform.eql.stage3.etc.OrderBy3;
@@ -131,20 +131,20 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
         return new Prop3(name, source, DATETIME_PROP_TYPE);
     }
 
-    protected static ComparisonTest3 eq(final ISingleOperand3 op1, final ISingleOperand3 op2) {
-        return new ComparisonTest3(op1, EQ, op2);
+    protected static ComparisonPredicate3 eq(final ISingleOperand3 op1, final ISingleOperand3 op2) {
+        return new ComparisonPredicate3(op1, EQ, op2);
     }
 
-    protected static ComparisonTest3 ne(final ISingleOperand3 op1, final ISingleOperand3 op2) {
-        return new ComparisonTest3(op1, NE, op2);
+    protected static ComparisonPredicate3 ne(final ISingleOperand3 op1, final ISingleOperand3 op2) {
+        return new ComparisonPredicate3(op1, NE, op2);
     }
 
-    protected static NullTest3 isNotNull(final ISingleOperand3 op1) {
-        return new NullTest3(op1, true);
+    protected static NullPredicate3 isNotNull(final ISingleOperand3 op1) {
+        return new NullPredicate3(op1, true);
     }
 
-    protected static NullTest3 isNull(final ISingleOperand3 op1) {
-        return new NullTest3(op1, false);
+    protected static NullPredicate3 isNull(final ISingleOperand3 op1) {
+        return new NullPredicate3(op1, false);
     }
 
     protected static Conditions3 cond(final ICondition3 condition) {

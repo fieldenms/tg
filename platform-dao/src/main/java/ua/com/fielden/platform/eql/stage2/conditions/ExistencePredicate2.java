@@ -8,14 +8,14 @@ import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.queries.TypelessSubQuery2;
-import ua.com.fielden.platform.eql.stage3.conditions.ExistenceTest3;
+import ua.com.fielden.platform.eql.stage3.conditions.ExistencePredicate3;
 import ua.com.fielden.platform.eql.stage3.operands.queries.TypelessSubQuery3;
 
-public class ExistenceTest2 extends AbstractCondition2<ExistenceTest3> {
+public class ExistencePredicate2 extends AbstractCondition2<ExistencePredicate3> {
     private final boolean negated;
     private final TypelessSubQuery2 subQuery;
 
-    public ExistenceTest2(final boolean negated, final TypelessSubQuery2 subQuery) {
+    public ExistencePredicate2(final boolean negated, final TypelessSubQuery2 subQuery) {
         this.negated = negated;
         this.subQuery = subQuery;
     }
@@ -26,9 +26,9 @@ public class ExistenceTest2 extends AbstractCondition2<ExistenceTest3> {
     }
 
     @Override
-    public TransformationResult2<ExistenceTest3> transform(final TransformationContext2 context) {
+    public TransformationResult2<ExistencePredicate3> transform(final TransformationContext2 context) {
         final TransformationResult2<TypelessSubQuery3> subQueryTr = subQuery.transform(context);
-        return new TransformationResult2<>(new ExistenceTest3(negated, subQueryTr.item), subQueryTr.updatedContext);
+        return new TransformationResult2<>(new ExistencePredicate3(negated, subQueryTr.item), subQueryTr.updatedContext);
     }
     
     @Override
@@ -56,11 +56,11 @@ public class ExistenceTest2 extends AbstractCondition2<ExistenceTest3> {
             return true;
         }
      
-        if (!(obj instanceof ExistenceTest2)) {
+        if (!(obj instanceof ExistencePredicate2)) {
             return false;
         }
         
-        final ExistenceTest2 other = (ExistenceTest2) obj;
+        final ExistencePredicate2 other = (ExistencePredicate2) obj;
         
         return Objects.equals(subQuery, other.subQuery) && (negated == other.negated);
     }

@@ -8,13 +8,13 @@ import ua.com.fielden.platform.entity.query.fluent.enums.Quantifier;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.queries.SubQuery3;
 
-public class QuantifiedTest3 implements ICondition3 {
+public class QuantifiedPredicate3 implements ICondition3 {
     public final ISingleOperand3 leftOperand;
     public final SubQuery3 rightOperand;
     public final Quantifier quantifier;
     public final ComparisonOperator operator;
 
-    public QuantifiedTest3(final ISingleOperand3 leftOperand, final ComparisonOperator operator, final Quantifier quantifier, final SubQuery3 rightOperand) {
+    public QuantifiedPredicate3(final ISingleOperand3 leftOperand, final ComparisonOperator operator, final Quantifier quantifier, final SubQuery3 rightOperand) {
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
         this.operator = operator;
@@ -43,11 +43,11 @@ public class QuantifiedTest3 implements ICondition3 {
             return true;
         }
         
-        if (!(obj instanceof QuantifiedTest3)) {
+        if (!(obj instanceof QuantifiedPredicate3)) {
             return false;
         }
         
-        final QuantifiedTest3 other = (QuantifiedTest3) obj;
+        final QuantifiedPredicate3 other = (QuantifiedPredicate3) obj;
 
         return Objects.equals(leftOperand, other.leftOperand) &&
                 Objects.equals(rightOperand, other.rightOperand) &&

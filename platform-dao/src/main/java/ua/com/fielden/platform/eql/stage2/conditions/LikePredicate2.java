@@ -5,38 +5,37 @@ import java.util.Objects;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.fluent.LikeOptions;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
-import ua.com.fielden.platform.eql.stage2.operands.ISetOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
-import ua.com.fielden.platform.eql.stage3.conditions.SetTest3;
-import ua.com.fielden.platform.eql.stage3.operands.ISetOperand3;
+import ua.com.fielden.platform.eql.stage3.conditions.LikePredicate3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
-public class SetTest2 extends AbstractCondition2<SetTest3> {
+public class LikePredicate2 extends AbstractCondition2<LikePredicate3> {
     public final ISingleOperand2<? extends ISingleOperand3> leftOperand;
-    public final ISetOperand2<? extends ISetOperand3> rightOperand;
-    public final boolean negated;
+    public final ISingleOperand2<? extends ISingleOperand3> rightOperand;
+    public final LikeOptions options;
 
-    public SetTest2(final ISingleOperand2<? extends ISingleOperand3> leftOperand, final boolean negated, final ISetOperand2<? extends ISetOperand3> rightOperand) {
+    public LikePredicate2(final ISingleOperand2<? extends ISingleOperand3> leftOperand, final ISingleOperand2<? extends ISingleOperand3> rightOperand, final LikeOptions options) {
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
-        this.negated = negated;
+        this.options = options;
     }
 
     @Override
     public boolean ignore() {
-        return leftOperand.ignore();
+        return leftOperand.ignore() || rightOperand.ignore();
     }
 
     @Override
-    public TransformationResult2<SetTest3> transform(final TransformationContext2 context) {
+    public TransformationResult2<LikePredicate3> transform(final TransformationContext2 context) {
         final TransformationResult2<? extends ISingleOperand3> leftOperandTr = leftOperand.transform(context);
-        final TransformationResult2<? extends ISetOperand3> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
-        return new TransformationResult2<>(new SetTest3(leftOperandTr.item, negated, rightOperandTr.item), rightOperandTr.updatedContext);
+        final TransformationResult2<? extends ISingleOperand3> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
+        return new TransformationResult2<>(new LikePredicate3(leftOperandTr.item, rightOperandTr.item, options), rightOperandTr.updatedContext);
     }
-    
+
     @Override
     public Set<Prop2> collectProps() {
         final Set<Prop2> result = new HashSet<>();
@@ -44,7 +43,7 @@ public class SetTest2 extends AbstractCondition2<SetTest3> {
         result.addAll(rightOperand.collectProps());
         return result;
     }
-
+    
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>();
@@ -58,7 +57,7 @@ public class SetTest2 extends AbstractCondition2<SetTest3> {
         final int prime = 31;
         int result = 1;
         result = prime * result + leftOperand.hashCode();
-        result = prime * result + (negated ? 1231 : 1237);
+        result = prime * result + options.hashCode();
         result = prime * result + rightOperand.hashCode();
         return result;
     }
@@ -69,14 +68,14 @@ public class SetTest2 extends AbstractCondition2<SetTest3> {
             return true;
         }
 
-        if (!(obj instanceof SetTest2)) {
+        if (!(obj instanceof LikePredicate2)) {
             return false;
         }
-        
-        final SetTest2 other = (SetTest2) obj;
-        
+
+        final LikePredicate2 other = (LikePredicate2) obj;
+
         return Objects.equals(leftOperand, other.leftOperand) &&
                 Objects.equals(rightOperand, other.rightOperand) &&
-                (negated == other.negated);
+                Objects.equals(options, other.options);
     }
 }

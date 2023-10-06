@@ -5,11 +5,11 @@ import java.util.Objects;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.operands.queries.TypelessSubQuery3;
 
-public class ExistenceTest3 implements ICondition3 {
+public class ExistencePredicate3 implements ICondition3 {
     private final boolean negated;
     private final TypelessSubQuery3 subQuery;
 
-    public ExistenceTest3(final boolean negated, final TypelessSubQuery3 subQuery) {
+    public ExistencePredicate3(final boolean negated, final TypelessSubQuery3 subQuery) {
         this.negated = negated;
         this.subQuery = subQuery;
     }
@@ -34,11 +34,11 @@ public class ExistenceTest3 implements ICondition3 {
             return true;
         }
      
-        if (!(obj instanceof ExistenceTest3)) {
+        if (!(obj instanceof ExistencePredicate3)) {
             return false;
         }
         
-        final ExistenceTest3 other = (ExistenceTest3) obj;
+        final ExistencePredicate3 other = (ExistencePredicate3) obj;
         
         return (negated == other.negated) && Objects.equals(subQuery, other.subQuery);
     }

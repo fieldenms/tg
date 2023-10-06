@@ -11,12 +11,12 @@ import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.functions.AbstractFunction3;
 
-public class LikeTest3 implements ICondition3 {
+public class LikePredicate3 implements ICondition3 {
     public final ISingleOperand3 leftOperand;
     public final ISingleOperand3 rightOperand;
     public final LikeOptions options;
 
-    public LikeTest3(final ISingleOperand3 leftOperand, final ISingleOperand3 rightOperand, final LikeOptions options) {
+    public LikePredicate3(final ISingleOperand3 leftOperand, final ISingleOperand3 rightOperand, final LikeOptions options) {
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
         this.options = options;
@@ -69,11 +69,11 @@ public class LikeTest3 implements ICondition3 {
             return true;
         }
         
-        if (!(obj instanceof LikeTest3)) {
+        if (!(obj instanceof LikePredicate3)) {
             return false;
         }
         
-        final LikeTest3 other = (LikeTest3) obj;
+        final LikePredicate3 other = (LikePredicate3) obj;
 
         return Objects.equals(leftOperand, other.leftOperand) &&
                 Objects.equals(rightOperand, other.rightOperand) &&
