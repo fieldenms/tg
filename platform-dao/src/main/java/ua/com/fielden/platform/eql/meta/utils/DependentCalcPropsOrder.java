@@ -21,7 +21,7 @@ import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForComponentType;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForUnionType;
-import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
+import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage0.StandAloneExpressionBuilder;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.Expression1;
@@ -44,7 +44,7 @@ import ua.com.fielden.platform.types.tuples.T3;
  */
 public class DependentCalcPropsOrder {
 
-    public static List<String> orderDependentCalcProps(final QuerySourceInfoProvider querySourceInfoProvider, final EntQueryGenerator gen, final QuerySourceInfo<?> querySourceInfo) {
+    public static List<String> orderDependentCalcProps(final QuerySourceInfoProvider querySourceInfoProvider, final QueryModelToStage1Transformer gen, final QuerySourceInfo<?> querySourceInfo) {
         final Source2BasedOnPersistentType source = new Source2BasedOnPersistentType(querySourceInfo, gen.nextSourceId(), true, true);
         final Map<String, T2<Set<String>, Set<String>>> propDependencies = new HashMap<>();
         final List<String> calcPropsOfEntityType = new ArrayList<>();

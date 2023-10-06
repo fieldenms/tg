@@ -22,7 +22,7 @@ import ua.com.fielden.platform.entity.query.generation.ioc.HelperIocModule;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
-import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
+import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage3.Table;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.persistence.types.ColourType;
@@ -109,16 +109,16 @@ public abstract class EqlTestCase {
         DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
     }
     
-    protected static final EntQueryGenerator qb() {
+    protected static final QueryModelToStage1Transformer qb() {
         return qb(new SimpleUserFilter(), null, injector.getInstance(IDates.class), emptyMap());
     }
 
-    protected static final EntQueryGenerator qb(final Map<String, Object> paramValues) {
+    protected static final QueryModelToStage1Transformer qb(final Map<String, Object> paramValues) {
         return qb(new SimpleUserFilter(), null, injector.getInstance(IDates.class), paramValues);
     }
     
-    protected static final EntQueryGenerator qb(final IFilter filter, final String username, final IDates dates, final Map<String, Object> paramValues) {
-        return new EntQueryGenerator(filter, username, new QueryNowValue(dates), paramValues);
+    protected static final QueryModelToStage1Transformer qb(final IFilter filter, final String username, final IDates dates, final Map<String, Object> paramValues) {
+        return new QueryModelToStage1Transformer(filter, username, new QueryNowValue(dates), paramValues);
     }
     
     protected static final EqlDomainMetadata metadata() {

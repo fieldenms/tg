@@ -12,7 +12,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class QryOrderingsBuilder extends AbstractTokensBuilder {
 
-    protected QryOrderingsBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder) {
+    protected QryOrderingsBuilder(final AbstractTokensBuilder parent, final QueryModelToStage1Transformer queryBuilder) {
         super(parent, queryBuilder);
     }
 

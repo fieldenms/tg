@@ -23,7 +23,7 @@ import java.util.Set;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForEntityType;
-import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
+import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage0.StandAloneExpressionBuilder;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.Expression1;
@@ -36,9 +36,9 @@ import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
 public class PathsToTreeTransformer {
 
     private final QuerySourceInfoProvider querySourceInfoProvider;
-    private final EntQueryGenerator gen;
+    private final QueryModelToStage1Transformer gen;
 
-    public PathsToTreeTransformer(final QuerySourceInfoProvider querySourceInfoProvider, final EntQueryGenerator gen) {
+    public PathsToTreeTransformer(final QuerySourceInfoProvider querySourceInfoProvider, final QueryModelToStage1Transformer gen) {
         this.querySourceInfoProvider = querySourceInfoProvider;
         this.gen = gen;
     }

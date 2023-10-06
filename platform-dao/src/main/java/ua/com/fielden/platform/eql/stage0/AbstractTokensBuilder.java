@@ -77,9 +77,9 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     private final ITokensBuilder parent;
     private ITokensBuilder child;
     private final List<Pair<TokenCategory, Object>> tokens = new ArrayList<>();
-    private final EntQueryGenerator queryBuilder;
+    private final QueryModelToStage1Transformer queryBuilder;
 
-    protected AbstractTokensBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder) {
+    protected AbstractTokensBuilder(final AbstractTokensBuilder parent, final QueryModelToStage1Transformer queryBuilder) {
         this.parent = parent;
         this.queryBuilder = queryBuilder;
     }
@@ -494,7 +494,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         return result;
     }
 
-    protected EntQueryGenerator getQueryBuilder() {
+    protected QueryModelToStage1Transformer getQueryBuilder() {
         return queryBuilder;
     }
 }

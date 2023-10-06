@@ -30,7 +30,7 @@ import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForComponentType;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForUnionType;
-import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
+import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.Prop1;
 import ua.com.fielden.platform.eql.stage2.QueryComponents2;
@@ -83,7 +83,7 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
         return qryCountAll(unfinishedQry, emptyMap());
     }
 
-    protected static <T extends AbstractEntity<?>> T2<EntQueryGenerator, ResultQuery2> qryCountAll2(final ICompoundCondition0<T> unfinishedQry) {
+    protected static <T extends AbstractEntity<?>> T2<QueryModelToStage1Transformer, ResultQuery2> qryCountAll2(final ICompoundCondition0<T> unfinishedQry) {
         return qryCountAll2(unfinishedQry, emptyMap());
     }
 
@@ -93,10 +93,10 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
         return qb(paramValues).generateAsResultQuery(countQry, null, null).transform(context);
     }
 
-    protected static <T extends AbstractEntity<?>> T2<EntQueryGenerator, ResultQuery2> qryCountAll2(final ICompoundCondition0<T> unfinishedQry, final Map<String, Object> paramValues) {
+    protected static <T extends AbstractEntity<?>> T2<QueryModelToStage1Transformer, ResultQuery2> qryCountAll2(final ICompoundCondition0<T> unfinishedQry, final Map<String, Object> paramValues) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
         final TransformationContext1 context = new TransformationContext1(querySourceInfoProvider(), false);
-        final EntQueryGenerator qb = qb(paramValues);
+        final QueryModelToStage1Transformer qb = qb(paramValues);
         return t2(qb, qb.generateAsResultQuery(countQry, null, null).transform(context));
     }
 

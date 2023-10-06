@@ -13,7 +13,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class OrderByBuilder extends AbstractTokensBuilder {
 
-    protected OrderByBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder) {
+    protected OrderByBuilder(final AbstractTokensBuilder parent, final QueryModelToStage1Transformer queryBuilder) {
         super(parent, queryBuilder);
     }
 

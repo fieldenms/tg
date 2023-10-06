@@ -13,7 +13,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class ConditionsBuilder extends AbstractTokensBuilder {
 
-    protected ConditionsBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder) {
+    protected ConditionsBuilder(final AbstractTokensBuilder parent, final QueryModelToStage1Transformer queryBuilder) {
         super(parent, queryBuilder);
         //	setChild(new ConditionBuilder(this, queryBuilder, paramValues));
     }

@@ -32,13 +32,17 @@ import ua.com.fielden.platform.eql.stage1.sources.IJoinNode1;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.utils.Pair;
 
-public class EntQueryGenerator {
+/**
+ * Transforms EQL models in form of fluent API tokens to the stage 1 representation. 
+ * 
+ */
+public class QueryModelToStage1Transformer {
     public final QueryNowValue nowValue;
     public final IFilter filter;
     public final String username;
     private final Map<String, Object> paramValues = new HashMap<>();
     
-    public EntQueryGenerator(final IFilter filter, final String username, final QueryNowValue nowValue, final Map<String, Object> paramValues) {
+    public QueryModelToStage1Transformer(final IFilter filter, final String username, final QueryNowValue nowValue, final Map<String, Object> paramValues) {
         this.filter = filter;
         this.username = username;
         this.nowValue = nowValue;

@@ -10,7 +10,7 @@ public class YieldBuilder extends AbstractTokensBuilder {
 
     public static String ABSENT_ALIAS = ""; // Used for the cases where yield requires no alias (sub-query with single yield).
     
-    protected YieldBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder) {
+    protected YieldBuilder(final AbstractTokensBuilder parent, final QueryModelToStage1Transformer queryBuilder) {
         super(parent, queryBuilder);
     }
 

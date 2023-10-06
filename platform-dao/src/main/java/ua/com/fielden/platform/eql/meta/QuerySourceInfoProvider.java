@@ -39,7 +39,7 @@ import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForEntityType;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForPrimType;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForUnionType;
 import ua.com.fielden.platform.eql.meta.utils.DependentCalcPropsOrder;
-import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
+import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.queries.SourceQuery1;
 import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnQueries;
@@ -62,7 +62,7 @@ public class QuerySourceInfoProvider {
         modelledQuerySourceInfoMap = new ConcurrentHashMap<>(entityMetadataHolder.entityPropsMetadata().size());
         seModels = new ConcurrentHashMap<>(entityMetadataHolder.entityPropsMetadata().size());
         
-        final EntQueryGenerator gen = new EntQueryGenerator(null, null, null, emptyMap());
+        final QueryModelToStage1Transformer gen = new QueryModelToStage1Transformer(null, null, null, emptyMap());
 
         declaredQuerySourceInfoMap.putAll(entityMetadataHolder.entityPropsMetadata().entrySet().stream().collect(toConcurrentMap(k -> k.getKey(), k -> new QuerySourceInfo<>(k.getKey(), true)))); 
         declaredQuerySourceInfoMap.values().stream().forEach(ei -> ei.addProps(generateQuerySourceItems(declaredQuerySourceInfoMap, entityMetadataHolder.entityPropsMetadata().get(ei.javaType()).props())));
@@ -99,7 +99,7 @@ public class QuerySourceInfoProvider {
         }
     }
     
-    private static <T extends AbstractEntity<?>> T2<List<SourceQuery1>, Set<Class<? extends AbstractEntity<?>>>> generateModelsAndDependenciesForSyntheticType(final EntityTypeInfo<T> entityTypeInfo, final EntQueryGenerator gen) {
+    private static <T extends AbstractEntity<?>> T2<List<SourceQuery1>, Set<Class<? extends AbstractEntity<?>>>> generateModelsAndDependenciesForSyntheticType(final EntityTypeInfo<T> entityTypeInfo, final QueryModelToStage1Transformer gen) {
         final List<SourceQuery1> queries = entityTypeInfo.entityModels.stream().map(model -> gen.generateAsUncorrelatedSourceQuery(model)).collect(toList());
         final Set<Class<? extends AbstractEntity<?>>> dependencies = queries.stream().map(qry -> qry.collectEntityTypes()).flatMap(Set::stream).collect(Collectors.toSet());
         return T2.t2(queries, dependencies);

@@ -12,7 +12,7 @@ import ua.com.fielden.platform.utils.Pair;
 public class CompoundQrySourceBuilder extends AbstractTokensBuilder {
     private final IJoinNode1<? extends IJoinNode2<?>> leftNode;
     private final JoinType joinType;
-    protected CompoundQrySourceBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final IJoinNode1<? extends IJoinNode2<?>> leftNode, final JoinType joinType) {
+    protected CompoundQrySourceBuilder(final AbstractTokensBuilder parent, final QueryModelToStage1Transformer queryBuilder, final IJoinNode1<? extends IJoinNode2<?>> leftNode, final JoinType joinType) {
         super(parent, queryBuilder);
         this.leftNode = leftNode;
         this.joinType = joinType;

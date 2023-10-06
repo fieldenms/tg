@@ -17,7 +17,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class StandAloneExpressionBuilder extends AbstractTokensBuilder {
 
-    public StandAloneExpressionBuilder(final EntQueryGenerator queryBuilder, final ExpressionModel exprModel) {
+    public StandAloneExpressionBuilder(final QueryModelToStage1Transformer queryBuilder, final ExpressionModel exprModel) {
         super(null, queryBuilder);
 
         for (final Pair<TokenCategory, Object> tokenPair : exprModel.getTokens()) {

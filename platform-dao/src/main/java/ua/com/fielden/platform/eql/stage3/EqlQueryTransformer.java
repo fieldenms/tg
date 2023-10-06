@@ -5,7 +5,7 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.QueryProcessingModel;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
-import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
+import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.queries.ResultQuery1;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
@@ -36,7 +36,7 @@ public class EqlQueryTransformer {
             final String username, 
             final IDates dates,
             final EqlDomainMetadata eqlDomainMetadata) {
-        final EntQueryGenerator gen = new EntQueryGenerator(filter, username, new QueryNowValue(dates), qem.getParamValues());
+        final QueryModelToStage1Transformer gen = new QueryModelToStage1Transformer(filter, username, new QueryNowValue(dates), qem.getParamValues());
         final ResultQuery1 query1 = gen.generateAsResultQuery(qem.queryModel, qem.orderModel, qem.fetchModel);
 
         final TransformationContext1 context1 = new TransformationContext1(eqlDomainMetadata.querySourceInfoProvider, false);

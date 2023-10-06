@@ -12,7 +12,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class QryGroupsBuilder extends AbstractTokensBuilder {
 
-    protected QryGroupsBuilder(final EntQueryGenerator queryBuilder) {
+    protected QryGroupsBuilder(final QueryModelToStage1Transformer queryBuilder) {
         super(null, queryBuilder);
     }
 

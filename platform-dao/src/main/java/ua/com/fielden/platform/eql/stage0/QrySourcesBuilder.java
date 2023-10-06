@@ -11,7 +11,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class QrySourcesBuilder extends AbstractTokensBuilder {
     
-    protected QrySourcesBuilder(final EntQueryGenerator queryBuilder) {
+    protected QrySourcesBuilder(final QueryModelToStage1Transformer queryBuilder) {
         super(/* parent = */ null, queryBuilder);
         setChild(new QrySourceBuilder(this, queryBuilder));
     }
