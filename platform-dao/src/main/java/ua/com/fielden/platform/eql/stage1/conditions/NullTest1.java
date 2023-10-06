@@ -10,8 +10,8 @@ import java.util.Objects;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceInfoItem;
-import ua.com.fielden.platform.eql.meta.query.UnionTypeQuerySourceInfoItem;
+import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
+import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForUnionType;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
@@ -34,12 +34,12 @@ public class NullTest1 implements ICondition1<ICondition2<?>> {
         final ISingleOperand2<?> transformedOperand = operand.transform(context);
         if (transformedOperand instanceof Prop2 && isUnionEntityType(((Prop2) transformedOperand).type.javaType())) {
             final Prop2 prop = (Prop2) transformedOperand;
-            final UnionTypeQuerySourceInfoItem<?> lastResolutionItem = (UnionTypeQuerySourceInfoItem<?>) prop.getPath().get(prop.getPath().size() - 1);
+            final QuerySourceItemForUnionType<?> lastResolutionItem = (QuerySourceItemForUnionType<?>) prop.getPath().get(prop.getPath().size() - 1);
             final List<ICondition2<?>> nullTests = new ArrayList<>();
 
-            for (final AbstractQuerySourceInfoItem<?> querySourceInfoItem : lastResolutionItem.getProps().values()) {
+            for (final AbstractQuerySourceItem<?> querySourceInfoItem : lastResolutionItem.getProps().values()) {
                 if (!querySourceInfoItem.hasExpression()) {
-                    final List<AbstractQuerySourceInfoItem<?>> subPropPath = new ArrayList<>(prop.getPath());
+                    final List<AbstractQuerySourceItem<?>> subPropPath = new ArrayList<>(prop.getPath());
                     subPropPath.add(querySourceInfoItem);
                     nullTests.add(new NullTest2(new Prop2(prop.source, subPropPath), negated));
                 }

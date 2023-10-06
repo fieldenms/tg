@@ -22,7 +22,7 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
-import ua.com.fielden.platform.eql.meta.query.EntityTypeQuerySourceInfoItem;
+import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForEntityType;
 import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage0.StandAloneExpressionBuilder;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
@@ -169,7 +169,7 @@ public class PathsToTreeTransformer {
     }
     
     private SourceNodeResult generateImplicitNode(final List<PendingTail> tails, final PropChunk firstChunk, final Expression2 expression, final boolean isPartOfCalcProp) {
-        final EntityTypeQuerySourceInfoItem<?> querySourceInfoItem = (EntityTypeQuerySourceInfoItem<?>) firstChunk.data();
+        final QuerySourceItemForEntityType<?> querySourceInfoItem = (QuerySourceItemForEntityType<?>) firstChunk.data();
         final Source2BasedOnPersistentType implicitSource = new Source2BasedOnPersistentType(querySourceInfoItem.querySourceInfo, gen.nextSourceId(), false, isPartOfCalcProp);
         final SourceNodesResult result = generateImplicitNodesForSource(implicitSource, tails);
         final ImplicitNode node = new ImplicitNode(firstChunk.name(), expression, querySourceInfoItem.nonnullable, implicitSource, result.sourceNodes);

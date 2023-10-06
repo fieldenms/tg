@@ -9,19 +9,19 @@ import java.util.TreeMap;
 
 import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 
-public class ComponentTypeQuerySourceInfoItem<T> extends AbstractQuerySourceInfoItem<T> {
+public class QuerySourceItemForComponentType<T> extends AbstractQuerySourceItem<T> {
     private final Class<T> javaType;
-    private final SortedMap<String, AbstractQuerySourceInfoItem<?>> subitems = new TreeMap<>(); // TODO why sorted?
+    private final SortedMap<String, AbstractQuerySourceItem<?>> subitems = new TreeMap<>(); // TODO why sorted?
 
-    public ComponentTypeQuerySourceInfoItem(final String name, final Class<T> javaType, final Object hibType) {
+    public QuerySourceItemForComponentType(final String name, final Class<T> javaType, final Object hibType) {
         super(name, hibType, null);
         this.javaType = javaType;
     }
     
     @Override
-    public AbstractQuerySourceInfoItem<T> cloneWithoutExpression() {
-        final ComponentTypeQuerySourceInfoItem<T> result = new ComponentTypeQuerySourceInfoItem<T>(name, javaType, hibType);
-        for (final Entry<String, AbstractQuerySourceInfoItem<?>> entry : subitems.entrySet()) {
+    public AbstractQuerySourceItem<T> cloneWithoutExpression() {
+        final QuerySourceItemForComponentType<T> result = new QuerySourceItemForComponentType<T>(name, javaType, hibType);
+        for (final Entry<String, AbstractQuerySourceItem<?>> entry : subitems.entrySet()) {
             result.subitems.put(entry.getKey(), entry.getValue().cloneWithoutExpression());
         }
         return result;
@@ -32,12 +32,12 @@ public class ComponentTypeQuerySourceInfoItem<T> extends AbstractQuerySourceInfo
         return IResolvable.resolve(context, subitems);
     }
     
-    public ComponentTypeQuerySourceInfoItem<T> addSubitem(final AbstractQuerySourceInfoItem<?> subitem) { 
+    public QuerySourceItemForComponentType<T> addSubitem(final AbstractQuerySourceItem<?> subitem) { 
         subitems.put(subitem.name, subitem);
         return this;
     }
     
-    public SortedMap<String, AbstractQuerySourceInfoItem<?>> getSubitems() {
+    public SortedMap<String, AbstractQuerySourceItem<?>> getSubitems() {
         return unmodifiableSortedMap(subitems);
     }
     
@@ -80,11 +80,11 @@ public class ComponentTypeQuerySourceInfoItem<T> extends AbstractQuerySourceInfo
             return false;
         }
 
-        if (!(obj instanceof ComponentTypeQuerySourceInfoItem)) {
+        if (!(obj instanceof QuerySourceItemForComponentType)) {
             return false;
         }
 
-        final ComponentTypeQuerySourceInfoItem<?> other = (ComponentTypeQuerySourceInfoItem<?>) obj;
+        final QuerySourceItemForComponentType<?> other = (QuerySourceItemForComponentType<?>) obj;
 
         return Objects.equals(subitems, other.subitems) && Objects.equals(javaType, other.javaType);
     }

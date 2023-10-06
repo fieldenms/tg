@@ -17,10 +17,10 @@ import java.util.Set;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.eql.exceptions.EqlStage2ProcessingException;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
-import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceInfoItem;
-import ua.com.fielden.platform.eql.meta.query.ComponentTypeQuerySourceInfoItem;
+import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
+import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForComponentType;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
-import ua.com.fielden.platform.eql.meta.query.UnionTypeQuerySourceInfoItem;
+import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForUnionType;
 import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage0.StandAloneExpressionBuilder;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
@@ -82,11 +82,11 @@ public class DependentCalcPropsOrder {
      */
     private static List<PropChunk> determineCalcPropChunks(final QuerySourceInfo<?> et) {
         final List<PropChunk> result = new ArrayList<>();
-        for (final AbstractQuerySourceInfoItem<?> prop : et.getProps().values()) {
+        for (final AbstractQuerySourceItem<?> prop : et.getProps().values()) {
             if (prop.expression != null && !prop.name.equals(KEY)) {
                 result.add(new PropChunk(prop.name, prop));
-            } else if (prop.hasExpression() && prop instanceof ComponentTypeQuerySourceInfoItem) {
-                for (final AbstractQuerySourceInfoItem<?> subprop : ((ComponentTypeQuerySourceInfoItem<?>) prop).getSubitems().values()) {
+            } else if (prop.hasExpression() && prop instanceof QuerySourceItemForComponentType) {
+                for (final AbstractQuerySourceItem<?> subprop : ((QuerySourceItemForComponentType<?>) prop).getSubitems().values()) {
                     if (subprop.expression != null) {
                         result.add(new PropChunk(prop.name + "." + subprop.name, subprop));
                     }
@@ -181,13 +181,13 @@ public class DependentCalcPropsOrder {
      * @param propPath
      * @return
      */
-    private static T3<String, Boolean, Boolean> obtainFirstChunkInfo(final List<AbstractQuerySourceInfoItem<?>> propPath) {
+    private static T3<String, Boolean, Boolean> obtainFirstChunkInfo(final List<AbstractQuerySourceItem<?>> propPath) {
         String currentPropName = null;
         int propLength = 0;
-        for (final AbstractQuerySourceInfoItem<?> querySourceItemInfo : propPath) {
+        for (final AbstractQuerySourceItem<?> querySourceItemInfo : propPath) {
             propLength = propLength + 1;
             currentPropName = (currentPropName != null) ? currentPropName + "." + querySourceItemInfo.name : querySourceItemInfo.name;
-            if (!(querySourceItemInfo instanceof ComponentTypeQuerySourceInfoItem || querySourceItemInfo instanceof UnionTypeQuerySourceInfoItem)) {
+            if (!(querySourceItemInfo instanceof QuerySourceItemForComponentType || querySourceItemInfo instanceof QuerySourceItemForUnionType)) {
                 return t3(currentPropName, querySourceItemInfo.hasExpression(), propPath.size() > propLength);
             }
         }

@@ -10,24 +10,24 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
  * @author TG Team
  *
  */
-public abstract class AbstractQuerySourceInfoItem<T> implements IResolvable<T> {
+public abstract class AbstractQuerySourceItem<T> implements IResolvable<T> {
     public final String name; //shouldn't contain dots
     public final ExpressionModel expression;
     public final boolean implicit;
     public final Object hibType;
 
-    public AbstractQuerySourceInfoItem(final String name, final Object hibType, final ExpressionModel expression, final boolean implicit) {
+    public AbstractQuerySourceItem(final String name, final Object hibType, final ExpressionModel expression, final boolean implicit) {
         this.name = name;
         this.expression = expression;
         this.hibType = hibType;
         this.implicit = implicit;
     }
     
-    public AbstractQuerySourceInfoItem(final String name, final Object hibType, final ExpressionModel expression) {
+    public AbstractQuerySourceItem(final String name, final Object hibType, final ExpressionModel expression) {
         this(name, hibType, expression, false);
     }
 
-    public abstract AbstractQuerySourceInfoItem<T> cloneWithoutExpression();
+    public abstract AbstractQuerySourceItem<T> cloneWithoutExpression();
     
     /**
      * Represents a calculated property explicitly defined at the Entity level.
@@ -70,11 +70,11 @@ public abstract class AbstractQuerySourceInfoItem<T> implements IResolvable<T> {
             return true;
         }
 
-        if (!(obj instanceof AbstractQuerySourceInfoItem)) {
+        if (!(obj instanceof AbstractQuerySourceItem)) {
             return false;
         }
 
-        final AbstractQuerySourceInfoItem<?> other = (AbstractQuerySourceInfoItem<?>) obj;
+        final AbstractQuerySourceItem<?> other = (AbstractQuerySourceItem<?>) obj;
         
         return Objects.equals(name, other.name) && Objects.equals(hibType, other.hibType) && Objects.equals(expression, other.expression) && Objects.equals(implicit, other.implicit);
     }

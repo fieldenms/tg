@@ -17,19 +17,19 @@ import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
  * @param <T>
  * @param <PARENT>
  */
-public class UnionTypeQuerySourceInfoItem<T extends AbstractUnionEntity> extends AbstractQuerySourceInfoItem<T> {
+public class QuerySourceItemForUnionType<T extends AbstractUnionEntity> extends AbstractQuerySourceItem<T> {
     private final Class<T> javaType;
-    private final SortedMap<String, AbstractQuerySourceInfoItem<?>> subitems = new TreeMap<>(); // TODO why sorted?
+    private final SortedMap<String, AbstractQuerySourceItem<?>> subitems = new TreeMap<>(); // TODO why sorted?
 
-    public UnionTypeQuerySourceInfoItem(final String name, final Class<T> javaType, final Object hibType, final SortedMap<String, AbstractQuerySourceInfoItem<?>> props) {
+    public QuerySourceItemForUnionType(final String name, final Class<T> javaType, final Object hibType, final SortedMap<String, AbstractQuerySourceItem<?>> props) {
         super(name, hibType, null);
         this.javaType = javaType;
         this.subitems.putAll(props);
     }
     
     @Override
-    public AbstractQuerySourceInfoItem<T> cloneWithoutExpression() {
-        return new UnionTypeQuerySourceInfoItem<T>(name, javaType, hibType, subitems);
+    public AbstractQuerySourceItem<T> cloneWithoutExpression() {
+        return new QuerySourceItemForUnionType<T>(name, javaType, hibType, subitems);
     }
 
     @Override
@@ -37,7 +37,7 @@ public class UnionTypeQuerySourceInfoItem<T extends AbstractUnionEntity> extends
         return IResolvable.resolve(context, subitems);
     }
     
-    public SortedMap<String, AbstractQuerySourceInfoItem<?>> getProps() {
+    public SortedMap<String, AbstractQuerySourceItem<?>> getProps() {
         return unmodifiableSortedMap(subitems);
     }
 
@@ -70,11 +70,11 @@ public class UnionTypeQuerySourceInfoItem<T extends AbstractUnionEntity> extends
             return false;
         }
 
-        if (!(obj instanceof UnionTypeQuerySourceInfoItem)) {
+        if (!(obj instanceof QuerySourceItemForUnionType)) {
             return false;
         }
 
-        final UnionTypeQuerySourceInfoItem<?> other = (UnionTypeQuerySourceInfoItem<?>) obj;
+        final QuerySourceItemForUnionType<?> other = (QuerySourceItemForUnionType<?>) obj;
 
         return Objects.equals(subitems, other.subitems) && Objects.equals(javaType, other.javaType);
     }

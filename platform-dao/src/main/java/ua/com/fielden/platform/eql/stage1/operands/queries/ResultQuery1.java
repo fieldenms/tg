@@ -17,10 +17,10 @@ import com.google.common.base.Objects;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityRetrievalModel;
 import ua.com.fielden.platform.entity.query.IRetrievalModel;
-import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceInfoItem;
-import ua.com.fielden.platform.eql.meta.query.ComponentTypeQuerySourceInfoItem;
-import ua.com.fielden.platform.eql.meta.query.EntityTypeQuerySourceInfoItem;
-import ua.com.fielden.platform.eql.meta.query.UnionTypeQuerySourceInfoItem;
+import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
+import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForComponentType;
+import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForEntityType;
+import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForUnionType;
 import ua.com.fielden.platform.eql.stage1.ITransformableToS2;
 import ua.com.fielden.platform.eql.stage1.QueryComponents1;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
@@ -78,7 +78,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
         if (mainSource.sourceType().equals(fetchModel.getEntityType())) {
             allAggregated = true;
             for (final String primProp : fetchModel.getPrimProps()) {
-                final AbstractQuerySourceInfoItem<?> fetchedProp = mainSource.querySourceInfo().getProps().get(primProp.split("\\.")[0]);
+                final AbstractQuerySourceItem<?> fetchedProp = mainSource.querySourceInfo().getProps().get(primProp.split("\\.")[0]);
                 if (fetchedProp != null) {
                     allAggregated = allAggregated && fetchedProp.hasAggregation();
                 }
@@ -113,38 +113,38 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
 
             final boolean isNotTopFetch = fetchModel == null ? false : !fetchModel.topLevel();
             
-            for (final Entry<String, AbstractQuerySourceInfoItem<?>> l1Prop : mainSource.querySourceInfo().getProps().entrySet()) {
+            for (final Entry<String, AbstractQuerySourceItem<?>> l1Prop : mainSource.querySourceInfo().getProps().entrySet()) {
             	// FIXME condition for {@code id} should be removed once the default fetch strategies are adjusted to recognise the presence of {@code id} in synthetic entities.
                 if (fetchModel == null || fetchModel.containsProp(l1Prop.getValue().name) || (!allAggregated && ID.equals(l1Prop.getValue().name) && isSyntheticEntityType(resultType))) {
                     final EntityRetrievalModel<? extends AbstractEntity<?>> l1PropFm = fetchModel == null ? null : fetchModel.getRetrievalModels().get(l1Prop.getValue().name);
-                    final boolean yieldSubprops = isNotTopFetch && l1PropFm != null && l1Prop.getValue() instanceof EntityTypeQuerySourceInfoItem;
+                    final boolean yieldSubprops = isNotTopFetch && l1PropFm != null && l1Prop.getValue() instanceof QuerySourceItemForEntityType;
                     
                     if (!yieldSubprops) {
-                        if (l1Prop.getValue() instanceof UnionTypeQuerySourceInfoItem) {
-                            for (final Entry<String, AbstractQuerySourceInfoItem<?>> sub : ((UnionTypeQuerySourceInfoItem<?>) l1Prop.getValue()).getProps().entrySet()) {
+                        if (l1Prop.getValue() instanceof QuerySourceItemForUnionType) {
+                            for (final Entry<String, AbstractQuerySourceItem<?>> sub : ((QuerySourceItemForUnionType<?>) l1Prop.getValue()).getProps().entrySet()) {
                                 if (isEntityType(sub.getValue().javaType()) && !sub.getValue().hasExpression()) {
                                     enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(l1Prop.getValue(), sub.getValue())), l1Prop.getKey() + "." + sub.getValue().name, false));
                                 }
                             }
-                        } else if (l1Prop.getValue() instanceof ComponentTypeQuerySourceInfoItem) {
-                            for (final Entry<String, AbstractQuerySourceInfoItem<?>> sub : ((ComponentTypeQuerySourceInfoItem<?>) l1Prop.getValue()).getSubitems().entrySet()) {
+                        } else if (l1Prop.getValue() instanceof QuerySourceItemForComponentType) {
+                            for (final Entry<String, AbstractQuerySourceItem<?>> sub : ((QuerySourceItemForComponentType<?>) l1Prop.getValue()).getSubitems().entrySet()) {
                                 enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(l1Prop.getValue(), sub.getValue())), l1Prop.getKey() + "." + sub.getValue().name, false));
                             }
                         } else {
                             enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(l1Prop.getValue())), l1Prop.getKey(), false));    
                         }
                     } else {
-                        final EntityTypeQuerySourceInfoItem<?> l1PropMd = ((EntityTypeQuerySourceInfoItem<?>) l1Prop.getValue());
-                        for (final Entry<String, AbstractQuerySourceInfoItem<?>> l2Prop : l1PropMd.querySourceInfo.getProps().entrySet()) {
+                        final QuerySourceItemForEntityType<?> l1PropMd = ((QuerySourceItemForEntityType<?>) l1Prop.getValue());
+                        for (final Entry<String, AbstractQuerySourceItem<?>> l2Prop : l1PropMd.querySourceInfo.getProps().entrySet()) {
                             if (l1PropFm.containsProp(l2Prop.getValue().name)) {
-                                if (l2Prop.getValue() instanceof UnionTypeQuerySourceInfoItem) {
-                                    for (final Entry<String, AbstractQuerySourceInfoItem<?>> sub : ((UnionTypeQuerySourceInfoItem<?>) l2Prop.getValue()).getProps().entrySet()) {
+                                if (l2Prop.getValue() instanceof QuerySourceItemForUnionType) {
+                                    for (final Entry<String, AbstractQuerySourceItem<?>> sub : ((QuerySourceItemForUnionType<?>) l2Prop.getValue()).getProps().entrySet()) {
                                         if (isEntityType(sub.getValue().javaType()) && !sub.getValue().hasExpression()) {
                                             enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(l1Prop.getValue(), l2Prop.getValue(), sub.getValue())), l1Prop.getKey() + "." + l2Prop.getKey() + "." + sub.getValue().name, false));
                                         }
                                     }
-                                } else if (l2Prop.getValue() instanceof ComponentTypeQuerySourceInfoItem) {
-                                    for (final Entry<String, AbstractQuerySourceInfoItem<?>> sub : ((ComponentTypeQuerySourceInfoItem<?>) l2Prop.getValue()).getSubitems().entrySet()) {
+                                } else if (l2Prop.getValue() instanceof QuerySourceItemForComponentType) {
+                                    for (final Entry<String, AbstractQuerySourceItem<?>> sub : ((QuerySourceItemForComponentType<?>) l2Prop.getValue()).getSubitems().entrySet()) {
                                         enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(l1Prop.getValue(), l2Prop.getValue(), sub.getValue())), l1Prop.getKey() + "." + l2Prop.getKey() + "." + sub.getValue().name, false));
                                     }
                                 } else {

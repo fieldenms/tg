@@ -11,9 +11,9 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceInfoItem;
-import ua.com.fielden.platform.eql.meta.query.ComponentTypeQuerySourceInfoItem;
-import ua.com.fielden.platform.eql.meta.query.UnionTypeQuerySourceInfoItem;
+import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
+import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForComponentType;
+import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForUnionType;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.ImplicitNode;
@@ -116,12 +116,12 @@ public class PathToTreeTransformerUtils {
         return result;
     }
 
-    public static List<PropChunk> convertPathToChunks(final List<AbstractQuerySourceInfoItem<?>> propPath) {
+    public static List<PropChunk> convertPathToChunks(final List<AbstractQuerySourceItem<?>> propPath) {
         final List<PropChunk> result = new ArrayList<>();
         String currentPropName = null;
-        for (final AbstractQuerySourceInfoItem<?> querySourceInfoItem : propPath) {
+        for (final AbstractQuerySourceItem<?> querySourceInfoItem : propPath) {
             currentPropName = (currentPropName != null) ? currentPropName + "." + querySourceInfoItem.name : querySourceInfoItem.name;
-            if (!(querySourceInfoItem instanceof ComponentTypeQuerySourceInfoItem || querySourceInfoItem instanceof UnionTypeQuerySourceInfoItem)) {
+            if (!(querySourceInfoItem instanceof QuerySourceItemForComponentType || querySourceInfoItem instanceof QuerySourceItemForUnionType)) {
                 // need to finalise and reset currentPropName
                 result.add(new PropChunk(currentPropName, querySourceInfoItem));
                 currentPropName = null;

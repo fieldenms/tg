@@ -5,21 +5,21 @@ import java.util.Objects;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 
-public class PrimTypeQuerySourceInfoItem<T> extends AbstractQuerySourceInfoItem<T> {
+public class QuerySourceItemForPrimType<T> extends AbstractQuerySourceItem<T> {
     private final Class<T> itemType;
 
-    public PrimTypeQuerySourceInfoItem(final String name, final Class<T> itemType, final Object hibType) {
+    public QuerySourceItemForPrimType(final String name, final Class<T> itemType, final Object hibType) {
         this(name, itemType, hibType, null, false);
     }
     
-    public PrimTypeQuerySourceInfoItem(final String name, final Class<T> itemType, final Object hibType, final ExpressionModel expression, final boolean implicit) {
+    public QuerySourceItemForPrimType(final String name, final Class<T> itemType, final Object hibType, final ExpressionModel expression, final boolean implicit) {
         super(name, hibType, expression, implicit);
         this.itemType = itemType;
     }
 
     @Override
-    public AbstractQuerySourceInfoItem<T> cloneWithoutExpression() {
-        return new PrimTypeQuerySourceInfoItem<T>(name, itemType, hibType);
+    public AbstractQuerySourceItem<T> cloneWithoutExpression() {
+        return new QuerySourceItemForPrimType<T>(name, itemType, hibType);
     }
     
     @Override
@@ -56,11 +56,11 @@ public class PrimTypeQuerySourceInfoItem<T> extends AbstractQuerySourceInfoItem<
             return false;
         }
 
-        if (!(obj instanceof PrimTypeQuerySourceInfoItem)) {
+        if (!(obj instanceof QuerySourceItemForPrimType)) {
             return false;
         }
 
-        final PrimTypeQuerySourceInfoItem other = (PrimTypeQuerySourceInfoItem) obj;
+        final QuerySourceItemForPrimType other = (QuerySourceItemForPrimType) obj;
 
         return Objects.equals(itemType, other.itemType);
     }

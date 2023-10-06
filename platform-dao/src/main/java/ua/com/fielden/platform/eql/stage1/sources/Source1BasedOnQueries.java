@@ -21,9 +21,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
-import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceInfoItem;
-import ua.com.fielden.platform.eql.meta.query.EntityTypeQuerySourceInfoItem;
-import ua.com.fielden.platform.eql.meta.query.PrimTypeQuerySourceInfoItem;
+import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
+import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForEntityType;
+import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForPrimType;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.queries.SourceQuery1;
@@ -68,19 +68,19 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
     }
     
     public static <T extends AbstractEntity<?>> QuerySourceInfo<T> produceQuerySourceInfoForEntityType(final QuerySourceInfoProvider querySourceInfoProvider, final List<SourceQuery2> models, final Class<T> sourceType, final boolean isComprehensive) {
-        final SortedMap<String, AbstractQuerySourceInfoItem<?>> declaredProps = EntityAggregates.class.equals(sourceType) ? emptySortedMap() : querySourceInfoProvider.getDeclaredQuerySourceInfo(sourceType).getProps();
+        final SortedMap<String, AbstractQuerySourceItem<?>> declaredProps = EntityAggregates.class.equals(sourceType) ? emptySortedMap() : querySourceInfoProvider.getDeclaredQuerySourceInfo(sourceType).getProps();
         final Collection<YieldInfoNode> yieldInfoNodes = YieldInfoNodesGenerator.generate(models);
-        final Map<String, AbstractQuerySourceInfoItem<?>> createdProps = new HashMap<>(); 
+        final Map<String, AbstractQuerySourceItem<?>> createdProps = new HashMap<>(); 
         for (final YieldInfoNode yield : yieldInfoNodes) {
-            final AbstractQuerySourceInfoItem<?> declaredProp = declaredProps.get(yield.name);
+            final AbstractQuerySourceItem<?> declaredProp = declaredProps.get(yield.name);
             if (declaredProp != null) {
                 // The only thing that has to be taken from declared is its structure (in case of UE or complex value)
-                if (declaredProp instanceof EntityTypeQuerySourceInfoItem<?>) { // TODO here we assume that yield is of ET (this will help to handle the case of yielding ID, which currently is just long only.
-                    final EntityTypeQuerySourceInfoItem<?> declaredEntityTypeQuerySourceInfoItem = (EntityTypeQuerySourceInfoItem<?>) declaredProp;
+                if (declaredProp instanceof QuerySourceItemForEntityType<?>) { // TODO here we assume that yield is of ET (this will help to handle the case of yielding ID, which currently is just long only.
+                    final QuerySourceItemForEntityType<?> declaredEntityTypeQuerySourceInfoItem = (QuerySourceItemForEntityType<?>) declaredProp;
                     if (!(yield.propType == null || isEntityType(yield.propType.javaType()) && yield.propType.javaType().equals(declaredEntityTypeQuerySourceInfoItem.javaType()) || Long.class.equals(yield.propType.javaType()))) {
                         throw new EqlStage1ProcessingException(format(ERR_CONFLICT_BETWEEN_YIELDED_AND_DECLARED_PROP_TYPE, declaredEntityTypeQuerySourceInfoItem.name, sourceType.getName(), declaredEntityTypeQuerySourceInfoItem.javaType().getName(), yield.propType.javaType().getName()));
                     }
-                    createdProps.put(yield.name, new EntityTypeQuerySourceInfoItem<>(yield.name, querySourceInfoProvider.getModelledQuerySourceInfo((Class<? extends AbstractEntity<?>>) declaredProp.javaType()), declaredEntityTypeQuerySourceInfoItem.hibType, yield.nonnullable));
+                    createdProps.put(yield.name, new QuerySourceItemForEntityType<>(yield.name, querySourceInfoProvider.getModelledQuerySourceInfo((Class<? extends AbstractEntity<?>>) declaredProp.javaType()), declaredEntityTypeQuerySourceInfoItem.hibType, yield.nonnullable));
                 } else {
                     // TODO need to ensure that in case of UE or complex value all declared subprops match yielded ones.
                     // TODO need actual (based on yield) rather than declared info (similar to not declared props section below).
@@ -89,15 +89,15 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
             } else {
                 // adding not declared props
                 createdProps.put(yield.name, yield.propType != null && isEntityType(yield.propType.javaType())
-                        ? new EntityTypeQuerySourceInfoItem<>(yield.name, querySourceInfoProvider.getModelledQuerySourceInfo((Class<? extends AbstractEntity<?>>) yield.propType.javaType()), H_ENTITY, yield.nonnullable)
-                        : new PrimTypeQuerySourceInfoItem<>(yield.name, yield.propType != null ? yield.propType.javaType() : null, yield.propType != null ? yield.propType.hibType() : null));
+                        ? new QuerySourceItemForEntityType<>(yield.name, querySourceInfoProvider.getModelledQuerySourceInfo((Class<? extends AbstractEntity<?>>) yield.propType.javaType()), H_ENTITY, yield.nonnullable)
+                        : new QuerySourceItemForPrimType<>(yield.name, yield.propType != null ? yield.propType.javaType() : null, yield.propType != null ? yield.propType.hibType() : null));
             }
         }
 
         // including all calc-props, which haven't been yielded explicitly
 
         // In case of ad-hoc added calc props (e.g. totals) -- they should be included here
-        for (final AbstractQuerySourceInfoItem<?> prop : declaredProps.values()) {
+        for (final AbstractQuerySourceItem<?> prop : declaredProps.values()) {
             if (prop.hasExpression() && !createdProps.containsKey(prop.name)) {
                 createdProps.put(prop.name, prop);
             }

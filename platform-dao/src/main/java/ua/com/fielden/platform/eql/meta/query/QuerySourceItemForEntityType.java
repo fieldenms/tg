@@ -14,23 +14,23 @@ import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
  * @param <T>
  * @param <PARENT>
  */
-public class EntityTypeQuerySourceInfoItem<T extends AbstractEntity<?>> extends AbstractQuerySourceInfoItem<T> {
+public class QuerySourceItemForEntityType<T extends AbstractEntity<?>> extends AbstractQuerySourceItem<T> {
     public final QuerySourceInfo<T> querySourceInfo;
     public final boolean nonnullable;
 
-    public EntityTypeQuerySourceInfoItem(final String name, final QuerySourceInfo<T> querySourceInfo, final Object hibType, final boolean nonnullable) {
+    public QuerySourceItemForEntityType(final String name, final QuerySourceInfo<T> querySourceInfo, final Object hibType, final boolean nonnullable) {
         this(name, querySourceInfo, hibType, nonnullable, null, false);
     }
 
-    public EntityTypeQuerySourceInfoItem(final String name, final QuerySourceInfo<T> querySourceInfo, final Object hibType, final boolean nonnullable, final ExpressionModel expression, final boolean implicit) {
+    public QuerySourceItemForEntityType(final String name, final QuerySourceInfo<T> querySourceInfo, final Object hibType, final boolean nonnullable, final ExpressionModel expression, final boolean implicit) {
         super(name, hibType, expression, implicit);
         this.querySourceInfo = querySourceInfo;
         this.nonnullable = nonnullable;
     }
     
     @Override
-    public AbstractQuerySourceInfoItem<T> cloneWithoutExpression() {
-        return new EntityTypeQuerySourceInfoItem<T>(name, querySourceInfo, hibType, nonnullable);
+    public AbstractQuerySourceItem<T> cloneWithoutExpression() {
+        return new QuerySourceItemForEntityType<T>(name, querySourceInfo, hibType, nonnullable);
     }    
     
     @Override
@@ -67,11 +67,11 @@ public class EntityTypeQuerySourceInfoItem<T extends AbstractEntity<?>> extends 
             return false;
         }
 
-        if (!(obj instanceof EntityTypeQuerySourceInfoItem)) {
+        if (!(obj instanceof QuerySourceItemForEntityType)) {
             return false;
         }
 
-        final EntityTypeQuerySourceInfoItem<?> other = (EntityTypeQuerySourceInfoItem<?>) obj;
+        final QuerySourceItemForEntityType<?> other = (QuerySourceItemForEntityType<?>) obj;
 
         return Objects.equals(querySourceInfo, other.querySourceInfo) && Objects.equals(nonnullable, other.nonnullable);
     }
