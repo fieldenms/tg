@@ -103,16 +103,9 @@ public class EntityTypeInfo <ET extends AbstractEntity<?>> {
 
     public static <T extends AbstractEntity<?>> EntityTypeInfo<? super T> getEntityTypeInfo(final Class<T> type) {
         final var originalType = DynamicEntityClassLoader.getOriginalType(type);
-        final var existing = (EntityTypeInfo<? super T>) ENTITY_TYPE_TO_ENTITY_TYPE_INFO.get(originalType);
-        if (existing != null) {
-            return existing;
-        } else {
-            final var created = (EntityTypeInfo<? super T>) new EntityTypeInfo<>(originalType);
-            ENTITY_TYPE_TO_ENTITY_TYPE_INFO.put(type, created);
-            return created;
-        }
+        return (EntityTypeInfo<? super T>) ENTITY_TYPE_TO_ENTITY_TYPE_INFO.computeIfAbsent(originalType, key -> new EntityTypeInfo<>(key));
     }
-    
+
     public static <T extends AbstractEntity<?>> EntityTypeInfoPair<T> getEntityTypeInfoPair(final Class<T> type) {
         return new EntityTypeInfoPair<T>(type, getEntityTypeInfo(type));
     }

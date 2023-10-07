@@ -33,8 +33,8 @@ public class EqlEntityMetadataHolder {
                 final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = getEntityTypeInfo(entityType);
                 if (parentInfo.category != PURE) {
                     final EqlEntityMetadataPair<? extends AbstractEntity<?>> pd = eemg.generate(getEntityTypeInfo(entityType), entityType);
-                    entityPropsMetadata.put(pd.entityType(), pd.eqlEntityMetadata());    
-                    
+                    entityPropsMetadata.put(pd.entityType(), pd.eqlEntityMetadata());
+
                     if (parentInfo.category == PERSISTENT) {
                         tables.put(entityType, generateTable(parentInfo.tableName, pd.eqlEntityMetadata().props()));
                         tableStructsForBatchInsertion.put(entityType.getName(), generateTableWithPropColumnInfo(parentInfo.tableName, pd.eqlEntityMetadata().props()));
