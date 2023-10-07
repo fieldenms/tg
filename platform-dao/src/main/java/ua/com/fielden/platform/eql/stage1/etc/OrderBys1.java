@@ -30,7 +30,7 @@ public class OrderBys1 {
         }
     }
 
-    public Set<Class<? extends AbstractEntity<?>>> collectSyntheticEntities() {
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return models.isEmpty() ? emptySet() : models.stream().filter(el -> el.operand != null).map(el -> el.operand.collectEntityTypes()).flatMap(Set::stream).collect(toSet());
     }
     

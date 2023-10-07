@@ -53,7 +53,7 @@ public class Yields1 {
         return unmodifiableSortedMap(yieldsMap);
     }
     
-    public Set<Class<? extends AbstractEntity<?>>> collectSyntheticEntities() {
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return yieldsMap.isEmpty() ? emptySet() : yieldsMap.values().stream().map(el -> el.operand.collectEntityTypes()).flatMap(Set::stream).collect(toSet());
     }
 

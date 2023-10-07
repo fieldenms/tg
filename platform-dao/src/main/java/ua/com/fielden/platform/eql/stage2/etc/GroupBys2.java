@@ -50,7 +50,7 @@ public class GroupBys2 {
         return result;
     }
     
-    public Set<Class<? extends AbstractEntity<?>>> collectSyntheticEntities() {
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return groups.isEmpty() ? emptySet() : groups.stream().map(el -> el.operand.collectEntityTypes()).flatMap(Set::stream).collect(toSet());
     }
     

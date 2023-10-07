@@ -51,9 +51,9 @@ public abstract class AbstractQuery2 {
         final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>();
         result.addAll(joinRoot != null ? joinRoot.collectEntityTypes() : emptySet());
         result.addAll(conditions.collectEntityTypes());
-        result.addAll(yields.collectSyntheticEntities());
-        result.addAll(groups.collectSyntheticEntities());
-        result.addAll(orderings.collectSyntheticEntities());
+        result.addAll(yields.collectEntityTypes());
+        result.addAll(groups.collectEntityTypes());
+        result.addAll(orderings.collectEntityTypes());
         
         return result;
     }
