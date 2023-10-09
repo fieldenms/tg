@@ -579,7 +579,7 @@ const TgEntityMasterBehaviorImpl = {
                         const saveButton = queryElements(self, "tg-action[role='save']")[0];
                         self.save(functionalEntity, continuationProperty)
                             .then(
-                                createEntityActionThenCallback(self.centreUuid, 'save', postal, null, saveButton ? saveButton.closeAfterExecution : true),
+                                createEntityActionThenCallback(self.centreUuid, 'save', '', postal, null, saveButton ? saveButton.closeAfterExecution : true),
                                 function (value) { console.log('AJAX PROMISE CATCH', value); }
                             );
                     };

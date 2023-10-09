@@ -161,14 +161,14 @@ Polymer({
         },
 
         /**
-         * Custom function to be invoked during run(closeAfterExecution) of this action.
+         * Custom function to be invoked during run(closeAfterExecution, subRole) of this action.
          */
         action: {
             type: Function
         },
 
         /**
-         * Custom function to be invoked after run(closeAfterExecution) of this action has been executed.
+         * Custom function to be invoked after run(closeAfterExecution, subRole) of this action has been executed.
          */
         postAction: {
             type: Function,
@@ -177,7 +177,7 @@ Polymer({
         },
 
         /**
-         * Custom function to be invoked after run(closeAfterExecution) of this action has been executed with error.
+         * Custom function to be invoked after run(closeAfterExecution, subRole) of this action has been executed with error.
          */
         postActionError: {
             type: Function,
@@ -263,7 +263,7 @@ Polymer({
      */
     _createRun: function () {
         const self = this;
-        return (function (closeAfterExecution) {
+        return (function (closeAfterExecution, subRole) {
             self.persistActiveElement();
 
             this._innerEnabled = false;
@@ -282,7 +282,7 @@ Polymer({
             if (promise) {
                 promise
                     .then(  // first a handler for successful promise execution
-                        createEntityActionThenCallback(self.eventChannel, self.role, postal, self._afterExecution.bind(self), 
+                        createEntityActionThenCallback(self.eventChannel, self.role, subRole, postal, self._afterExecution.bind(self), 
                                     typeof closeAfterExecution !== 'undefined' ? closeAfterExecution : self.closeAfterExecution),
                         // and in case of some exceptional situation let's provide a trivial catch handler
                         function (value) {
@@ -299,8 +299,9 @@ Polymer({
         const itemIdx = e.detail;
         if (this._options && this._options[itemIdx]) {
             const closeAfterExecution = this._options[itemIdx].closeAfterExecution;
+            const subRole = this._options[itemIdx].subRole;
             this.async(function () {
-                this.run(closeAfterExecution);
+                this.run(closeAfterExecution, subRole);
             }, 100);
         }
     },
@@ -323,20 +324,21 @@ Polymer({
                 {
                     index: 0,
                     title: shortDesc,
-                    desc: longDesc
-
+                    desc: longDesc,
                 }, {
                     index: 1,
                     title: shortDesc + " & CLOSE",
                     desc: longDesc + " & CLOSE",
-                    closeAfterExecution: true
+                    closeAfterExecution: true,
+                    subRole: "close"
                 }
             ];
             if (!restrictNewOption) {
                 this._options.push({
                     index: 2,
                     title: shortDesc + " & NEW",
-                    desc: longDesc + " & NEW"
+                    desc: longDesc + " & NEW",
+                    subRole: "new"
                 });
             }
         } else {
@@ -428,7 +430,7 @@ Polymer({
         // it is critical to execute the actual logic that is intended for an on-tap action in async
         // with a relatively long delay to make sure that all required changes
         this.async(function () {
-            this.run(this.closeAfterExecution);
+            this.run(this.closeAfterExecution, '');
         }, 100);
     }
 });

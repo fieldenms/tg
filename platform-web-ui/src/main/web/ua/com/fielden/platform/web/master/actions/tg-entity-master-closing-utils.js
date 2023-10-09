@@ -1,7 +1,7 @@
 /**
  * Creates successful 'then' handler for master 'entity action' promise.
  */
-export const createEntityActionThenCallback = function (eventChannel, role, postalLib, _afterExecution, closeAfterExecution) {
+export const createEntityActionThenCallback = function (eventChannel, role, subRole, postalLib, _afterExecution, closeAfterExecution) {
     return function (ironRequest) {
         if (eventChannel && role) {
             console.log('AJAX PROMISE THEN', ironRequest.successful);
@@ -29,7 +29,7 @@ export const createEntityActionThenCallback = function (eventChannel, role, post
                 // action with role 'refresh' should only encourage closing in cases
                 // where the returned after refresh entity is new (aka not persisted) as per issue #916
                 // (https://github.com/fieldenms/tg/issues/916)
-                if (role === 'refresh' && ironRequest.entityId) {
+                if (role === 'refresh' && subRole !== 'close' && ironRequest.entityId) {
                     dataValue.canClose = false;
                 }
 
