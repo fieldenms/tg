@@ -44,6 +44,11 @@ import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
+/**
+ * Base class for stage 1 data structures representing an EQL query, suitable for transformation into stage 2.
+ * 
+ * 
+ */
 public abstract class AbstractQuery1 {
 
     public final IJoinNode1<? extends IJoinNode2<?>> joinRoot;
@@ -73,14 +78,14 @@ public abstract class AbstractQuery1 {
         result.addAll(yields.collectEntityTypes());
         result.addAll(groups.collectEntityTypes());
         result.addAll(orderings.collectEntityTypes());
-        
+
         return result;
     }
-    
-    public QueryComponents2 transformSourceless(final TransformationContext1 context) {
+
+    protected QueryComponents2 transformSourceless(final TransformationContext1 context) {
         return new QueryComponents2(null, conditions.transform(context), yields.transform(context), groups.transform(context), orderings.transform(context));
     }
-    
+
     protected Conditions2 enhanceWithUserDataFilterConditions(final ISource2<? extends ISource3> mainSource, final QuerySourceInfoProvider querySourceInfoProvider, final Conditions2 originalConditions) { 
         if (udfConditions.isEmpty()) {
             return originalConditions;

@@ -13,15 +13,15 @@ import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
-import ua.com.fielden.platform.eql.stage3.sources.JoinBranch3;
+import ua.com.fielden.platform.eql.stage3.sources.JoinInnerNode3;
 
-public class JoinBranch2 implements IJoinNode2<JoinBranch3> {
+public class JoinInnerNode2 implements IJoinNode2<JoinInnerNode3> {
     public final IJoinNode2<? extends IJoinNode3> leftNode;
     public final IJoinNode2<? extends IJoinNode3> rightNode;
     public final JoinType joinType;
     public final Conditions2 joinConditions;
 
-    public JoinBranch2(final IJoinNode2<?> leftNode, final IJoinNode2<?> rightNode, final JoinType joinType, final Conditions2 joinConditions) {
+    public JoinInnerNode2(final IJoinNode2<?> leftNode, final IJoinNode2<?> rightNode, final JoinType joinType, final Conditions2 joinConditions) {
         this.leftNode = leftNode;
         this.rightNode = rightNode;
         this.joinType = joinType;
@@ -29,11 +29,11 @@ public class JoinBranch2 implements IJoinNode2<JoinBranch3> {
     }
 
     @Override
-    public TransformationResult2<JoinBranch3> transform(TransformationContext2 context) {
+    public TransformationResult2<JoinInnerNode3> transform(TransformationContext2 context) {
         final TransformationResult2<? extends IJoinNode3> lsTransformed = leftNode.transform(context);
         final TransformationResult2<? extends IJoinNode3> rsTransformed = rightNode.transform(lsTransformed.updatedContext);
         final TransformationResult2<Conditions3> jcTransformed = joinConditions.transform(rsTransformed.updatedContext);
-        return new TransformationResult2<>(new JoinBranch3(lsTransformed.item, rsTransformed.item, joinType, jcTransformed.item), jcTransformed.updatedContext);
+        return new TransformationResult2<>(new JoinInnerNode3(lsTransformed.item, rsTransformed.item, joinType, jcTransformed.item), jcTransformed.updatedContext);
     }
 
     @Override
@@ -76,11 +76,11 @@ public class JoinBranch2 implements IJoinNode2<JoinBranch3> {
             return true;
         }
 
-        if (!(obj instanceof JoinBranch2)) {
+        if (!(obj instanceof JoinInnerNode2)) {
             return false;
         }
         
-        final JoinBranch2 other = (JoinBranch2) obj;
+        final JoinInnerNode2 other = (JoinInnerNode2) obj;
         
         return Objects.equals(leftNode, other.leftNode) &&
                 Objects.equals(rightNode, other.rightNode) &&

@@ -5,7 +5,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QR
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.eql.stage1.sources.IJoinNode1;
-import ua.com.fielden.platform.eql.stage1.sources.JoinBranch1;
+import ua.com.fielden.platform.eql.stage1.sources.JoinInnerNode1;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -43,6 +43,6 @@ public class CompoundQrySourceBuilder extends AbstractTokensBuilder {
     public Pair<TokenCategory, Object> getResult() {
         final ITokensBuilder last = getChild();
         setChild(null);
-        return new Pair<TokenCategory, Object>(QRY_COMPOUND_SOURCE, new JoinBranch1(leftNode, (IJoinNode1<? extends IJoinNode2<?>>) firstValue(), joinType, ((ConditionsBuilder) last).getModel()));
+        return new Pair<TokenCategory, Object>(QRY_COMPOUND_SOURCE, new JoinInnerNode1(leftNode, (IJoinNode1<? extends IJoinNode2<?>>) firstValue(), joinType, ((ConditionsBuilder) last).getModel()));
     }
 }

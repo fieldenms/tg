@@ -52,8 +52,8 @@ import ua.com.fielden.platform.eql.stage2.operands.queries.SubQuery2;
 import ua.com.fielden.platform.eql.stage2.operands.queries.TypelessSubQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
-import ua.com.fielden.platform.eql.stage2.sources.JoinBranch2;
-import ua.com.fielden.platform.eql.stage2.sources.JoinLeaf2;
+import ua.com.fielden.platform.eql.stage2.sources.JoinInnerNode2;
+import ua.com.fielden.platform.eql.stage2.sources.JoinLeafNode2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnQueries;
 import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
@@ -184,15 +184,15 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
     //    }
 
     protected static IJoinNode2<? extends IJoinNode3> sources(final ISource2<? extends ISource3> main) {
-        return new JoinLeaf2(main);
+        return new JoinLeafNode2(main);
     }
 
     protected static IJoinNode2<? extends IJoinNode3> ij(final IJoinNode2<? extends IJoinNode3> leftSource, final ISource2<? extends ISource3> rightSource, final Conditions2 conditions) {
-        return new JoinBranch2(leftSource, new JoinLeaf2(rightSource), IJ, conditions);
+        return new JoinInnerNode2(leftSource, new JoinLeafNode2(rightSource), IJ, conditions);
     }
 
     protected static IJoinNode2<? extends IJoinNode3> ij(final ISource2<? extends ISource3> leftSource, final ISource2<? extends ISource3> rightSource, final Conditions2 conditions) {
-        return new JoinBranch2(new JoinLeaf2(leftSource), new JoinLeaf2(rightSource), IJ, conditions);
+        return new JoinInnerNode2(new JoinLeafNode2(leftSource), new JoinLeafNode2(rightSource), IJ, conditions);
     }
     
     //    protected static CompoundSource1 lj(final IQrySource1<? extends IQrySource2<?>> source, final ICondition1<?> firstCondition) {

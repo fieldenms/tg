@@ -19,7 +19,7 @@ public class Source2BasedOnPersistentType extends AbstractSource2 implements ISo
     }
 
     public Source2BasedOnPersistentType(final QuerySourceInfo<?> querySourceInfo, final Integer id, final boolean isExplicit, final boolean isPartOfCalcProp) {
-        this(querySourceInfo, null, id, isExplicit, isPartOfCalcProp);               
+        this(querySourceInfo, null, id, isExplicit, isPartOfCalcProp);
     }
 
     @Override
@@ -38,7 +38,7 @@ public class Source2BasedOnPersistentType extends AbstractSource2 implements ISo
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return Set.of(sourceType());
     }
-    
+
     @Override
     public String toString() {
         return format("type = [%s], ID = [%s], alias = [%s]", sourceType().getSimpleName(), id, (alias != null ? alias : ""));

@@ -24,13 +24,13 @@ import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.Prop3;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
-import ua.com.fielden.platform.eql.stage3.sources.JoinBranch3;
-import ua.com.fielden.platform.eql.stage3.sources.JoinLeaf3;
+import ua.com.fielden.platform.eql.stage3.sources.JoinInnerNode3;
+import ua.com.fielden.platform.eql.stage3.sources.JoinLeafNode3;
 
-public class JoinLeaf2 implements IJoinNode2<IJoinNode3> {
+public class JoinLeafNode2 implements IJoinNode2<IJoinNode3> {
     public final ISource2<?> source;
 
-    public JoinLeaf2(final ISource2<?> source) {
+    public JoinLeafNode2(final ISource2<?> source) {
         this.source = source;
     }
 
@@ -57,7 +57,7 @@ public class JoinLeaf2 implements IJoinNode2<IJoinNode3> {
 
     private static TransformationResult2<IJoinNode3> generateJoinNode(final ISource3 source, final List<ImplicitNode> implicitNodes, final TransformationContext2 context) {
         TransformationContext2 currentContext = context.cloneWithSource(source);
-        IJoinNode3 currentJoinNode = new JoinLeaf3(source);
+        IJoinNode3 currentJoinNode = new JoinLeafNode3(source);
 
         for (final ImplicitNode implicitNode : implicitNodes) {
             final TransformationResult2<IJoinNode3> tr = joinImplicitNode(currentJoinNode, implicitNode, source, currentContext);
@@ -87,7 +87,7 @@ public class JoinLeaf2 implements IJoinNode2<IJoinNode3> {
         final ComparisonPredicate3 ct = new ComparisonPredicate3(lo, EQ, ro);
         final Conditions3 jc = new Conditions3(false, asList(asList(ct)));
         final TransformationResult2<IJoinNode3> implicitJoinNodeTr = generateJoinNode(addedSource, implicitNode.subnodes(), currentContext);
-        return new TransformationResult2<>(new JoinBranch3(currentJoinNode, implicitJoinNodeTr.item, (implicitNode.nonnullable ? IJ : LJ), jc), implicitJoinNodeTr.updatedContext);
+        return new TransformationResult2<>(new JoinInnerNode3(currentJoinNode, implicitJoinNodeTr.item, (implicitNode.nonnullable ? IJ : LJ), jc), implicitJoinNodeTr.updatedContext);
     }
     
     @Override
@@ -101,11 +101,11 @@ public class JoinLeaf2 implements IJoinNode2<IJoinNode3> {
             return true;
         }
 
-        if (!(obj instanceof JoinLeaf2)) {
+        if (!(obj instanceof JoinLeafNode2)) {
             return false;
         }
         
-        final JoinLeaf2 other = (JoinLeaf2) obj;
+        final JoinLeafNode2 other = (JoinLeafNode2) obj;
         
         return Objects.equals(source, other.source);
     }

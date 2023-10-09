@@ -15,7 +15,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForComponentType;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForUnionType;
-import ua.com.fielden.platform.eql.stage1.ITransformableToS2;
+import ua.com.fielden.platform.eql.stage1.ITransformableToStage2;
 import ua.com.fielden.platform.eql.stage1.QueryComponents1;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.TransformationResult1;
@@ -32,7 +32,7 @@ import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 
-public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<SourceQuery2> {
+public class SourceQuery1 extends AbstractQuery1 implements ITransformableToStage2<SourceQuery2> {
 
     /**
      * All simple queries as source queries are accessible for correlation. Source queries derived from synthetic entities can't be correlated.
@@ -59,7 +59,7 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
         final Yields2 yields2 = yields.transform(enhancedContext);
         final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
         final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, joinRoot2.mainSource());
-        final Yields2 enhancedYields2 = enhanceYields(yields2, joinRoot2.mainSource(), context.shouldIncludeCalcProps);
+        final Yields2 enhancedYields2 = enhanceYields(yields2, joinRoot2.mainSource(), context.shouldMaterialiseCalcPropsAsColumnsInSqlQuery);
         final QueryComponents2 queryComponents2 = new QueryComponents2(joinRoot2, conditions2, enhancedYields2, groups2, orderings2);
         return new SourceQuery2(queryComponents2, resultType);
     }

@@ -13,17 +13,17 @@ import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 public final class TransformationContext1 {
     public final List<List<ISource2<? extends ISource3>>> sourcesForNestedQueries; // in reverse order -- the first list is for the deepest nested query
     public final QuerySourceInfoProvider querySourceInfoProvider;
-    public final boolean shouldIncludeCalcProps;
+    public final boolean shouldMaterialiseCalcPropsAsColumnsInSqlQuery;
     public final boolean isForCalcProp; // indicates that this context is used to transform calc-prop expression.
 
     public TransformationContext1(final QuerySourceInfoProvider querySourceInfoProvider, final boolean isForCalcProp) {
         this(querySourceInfoProvider, emptyList(), false, isForCalcProp);
     }
 
-    private TransformationContext1(final QuerySourceInfoProvider querySourceInfoProvider, final List<List<ISource2<? extends ISource3>>> sourcesForNestedQueries, final boolean shouldIncludeCalcProps, final boolean isForCalcProp) {
+    private TransformationContext1(final QuerySourceInfoProvider querySourceInfoProvider, final List<List<ISource2<? extends ISource3>>> sourcesForNestedQueries, final boolean shouldMaterialiseCalcPropsAsColumnsInSqlQuery, final boolean isForCalcProp) {
         this.querySourceInfoProvider = querySourceInfoProvider;
         this.sourcesForNestedQueries = sourcesForNestedQueries;
-        this.shouldIncludeCalcProps = shouldIncludeCalcProps;
+        this.shouldMaterialiseCalcPropsAsColumnsInSqlQuery = shouldMaterialiseCalcPropsAsColumnsInSqlQuery;
         this.isForCalcProp = isForCalcProp;
     }
 
@@ -46,6 +46,11 @@ public final class TransformationContext1 {
         return new TransformationContext1(querySourceInfoProvider, unmodifiableList(newSourcesForNestedQueries), false, isForCalcProp);
     }
 
+    /**
+     * Is used to handle entity types with calculated totals. It is mainly needed to handle SQL Server limitation of aggregation on subqueries.
+     * 
+     * @return
+     */
     public TransformationContext1 cloneForAggregates() {
         return new TransformationContext1(querySourceInfoProvider, sourcesForNestedQueries, true, isForCalcProp);
     }

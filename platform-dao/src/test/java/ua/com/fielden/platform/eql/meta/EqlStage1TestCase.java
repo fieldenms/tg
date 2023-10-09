@@ -30,7 +30,7 @@ import ua.com.fielden.platform.eql.stage1.operands.functions.CountAll1;
 import ua.com.fielden.platform.eql.stage1.operands.queries.ResultQuery1;
 import ua.com.fielden.platform.eql.stage1.sources.ISource1;
 import ua.com.fielden.platform.eql.stage1.sources.IJoinNode1;
-import ua.com.fielden.platform.eql.stage1.sources.JoinLeaf1;
+import ua.com.fielden.platform.eql.stage1.sources.JoinLeafNode1;
 import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
@@ -90,7 +90,7 @@ public abstract class EqlStage1TestCase extends EqlTestCase {
     }
     
     protected static IJoinNode1<? extends IJoinNode2<?>> sources(final ISource1<? extends ISource2<?>> main) {
-        return new JoinLeaf1(main);
+        return new JoinLeafNode1(main);
     }
 
     protected static CompoundCondition1 and(final ICondition1<?> condition) {

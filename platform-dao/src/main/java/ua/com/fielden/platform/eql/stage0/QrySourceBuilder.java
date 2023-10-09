@@ -21,7 +21,7 @@ import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.EntityTypeInfo;
 import ua.com.fielden.platform.eql.stage1.operands.queries.SourceQuery1;
-import ua.com.fielden.platform.eql.stage1.sources.JoinLeaf1;
+import ua.com.fielden.platform.eql.stage1.sources.JoinLeafNode1;
 import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnQueries;
 import ua.com.fielden.platform.utils.Pair;
@@ -66,21 +66,21 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
     private Pair<TokenCategory, Object> buildResultForQrySourceBasedOnEntityType() {
         final Class<AbstractEntity<?>> resultType = (Class<AbstractEntity<?>>) firstValue();
         if (isPersistedEntityType(resultType)) {
-            return pair(QRY_SOURCE, new JoinLeaf1(new Source1BasedOnPersistentType(resultType, (String) secondValue(), getQueryBuilder().nextSourceId())));    
+            return pair(QRY_SOURCE, new JoinLeafNode1(new Source1BasedOnPersistentType(resultType, (String) secondValue(), getQueryBuilder().nextSourceId())));    
         } else if (isSyntheticEntityType(resultType) || isSyntheticBasedOnPersistentEntityType(resultType) || isUnionEntityType(resultType)) {
             return pair(QRY_SOURCE, buildQrySourceBasedOnSyntheticEntityType(resultType, (String) secondValue()));
         } else {
-            throw new EqlStage1ProcessingException("Not yet.");
+            throw new EqlStage1ProcessingException("Unexpected situation occurred.");
         }
     }
     
-    private <T extends AbstractEntity<?>> JoinLeaf1 buildQrySourceBasedOnSyntheticEntityType(final Class<T> resultType, final String alias) {
+    private <T extends AbstractEntity<?>> JoinLeafNode1 buildQrySourceBasedOnSyntheticEntityType(final Class<T> resultType, final String alias) {
         final EntityTypeInfo<?> parentInfo = getEntityTypeInfo(resultType);
         final List<SourceQuery1> queries = new ArrayList<>();
         for (final QueryModel<?> qryModel : parentInfo.entityModels) {
             queries.add(getQueryBuilder().generateAsUncorrelatedSourceQuery(qryModel));
         }
-        return new JoinLeaf1(new Source1BasedOnQueries(queries, alias, getQueryBuilder().nextSourceId(), resultType));
+        return new JoinLeafNode1(new Source1BasedOnQueries(queries, alias, getQueryBuilder().nextSourceId(), resultType));
     }
     
     private Pair<TokenCategory, Object> buildResultForQrySourceBasedOnQueries() {
@@ -91,7 +91,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
             queries.add(getQueryBuilder().generateAsCorrelatedSourceQuery(qryModel));
         }
 
-        return pair(QRY_SOURCE, new JoinLeaf1(new Source1BasedOnQueries(queries, alias, getQueryBuilder().nextSourceId(), null)));
+        return pair(QRY_SOURCE, new JoinLeafNode1(new Source1BasedOnQueries(queries, alias, getQueryBuilder().nextSourceId(), null)));
     }
 
     @Override

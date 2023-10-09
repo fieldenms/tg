@@ -21,7 +21,7 @@ import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForComponentType;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForEntityType;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForUnionType;
-import ua.com.fielden.platform.eql.stage1.ITransformableToS2;
+import ua.com.fielden.platform.eql.stage1.ITransformableToStage2;
 import ua.com.fielden.platform.eql.stage1.QueryComponents1;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.TransformationResult1;
@@ -39,7 +39,7 @@ import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 import ua.com.fielden.platform.types.tuples.T2;
 
-public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<ResultQuery2> {
+public class ResultQuery1 extends AbstractQuery1 implements ITransformableToStage2<ResultQuery2> {
 
     public final IRetrievalModel<?> fetchModel;
 

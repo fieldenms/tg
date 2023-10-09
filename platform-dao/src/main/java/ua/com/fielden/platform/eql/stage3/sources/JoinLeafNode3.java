@@ -4,10 +4,10 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
 
-public class JoinLeaf3 implements IJoinNode3 {
+public class JoinLeafNode3 implements IJoinNode3 {
     public final ISource3 source;
 
-    public JoinLeaf3(final ISource3 source) {
+    public JoinLeafNode3(final ISource3 source) {
         this.source = source;
     }
 
@@ -27,11 +27,11 @@ public class JoinLeaf3 implements IJoinNode3 {
             return true;
         }
 
-        if (!(obj instanceof JoinLeaf3)) {
+        if (!(obj instanceof JoinLeafNode3)) {
             return false;
         }
         
-        final JoinLeaf3 other = (JoinLeaf3) obj;
+        final JoinLeafNode3 other = (JoinLeafNode3) obj;
         
         return Objects.equals(source, other.source);
     }

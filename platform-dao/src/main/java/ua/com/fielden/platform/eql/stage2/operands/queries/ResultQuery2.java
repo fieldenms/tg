@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.operands.queries;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.stage2.ITransformableToS3;
+import ua.com.fielden.platform.eql.stage2.ITransformableToStage3;
 import ua.com.fielden.platform.eql.stage2.QueryComponents2;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
@@ -13,7 +13,7 @@ import ua.com.fielden.platform.eql.stage3.etc.Yields3;
 import ua.com.fielden.platform.eql.stage3.operands.queries.ResultQuery3;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 
-public class ResultQuery2 extends AbstractQuery2 implements ITransformableToS3<ResultQuery3> {
+public class ResultQuery2 extends AbstractQuery2 implements ITransformableToStage3<ResultQuery3> {
 
     public ResultQuery2(final QueryComponents2 queryComponents, final Class<? extends AbstractEntity<?>> resultType) {
         super(queryComponents, resultType);

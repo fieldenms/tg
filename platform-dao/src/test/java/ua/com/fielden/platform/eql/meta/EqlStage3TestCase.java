@@ -44,8 +44,8 @@ import ua.com.fielden.platform.eql.stage3.operands.queries.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.operands.queries.SubQuery3;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
-import ua.com.fielden.platform.eql.stage3.sources.JoinBranch3;
-import ua.com.fielden.platform.eql.stage3.sources.JoinLeaf3;
+import ua.com.fielden.platform.eql.stage3.sources.JoinInnerNode3;
+import ua.com.fielden.platform.eql.stage3.sources.JoinLeafNode3;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnQueries;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnTable;
 
@@ -152,35 +152,35 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
     }
 
     protected static IJoinNode3 sources(final IJoinNode3 main, final JoinType jt, final IJoinNode3 second, final Conditions3 conditions) {
-        return new JoinBranch3(main, second, jt, conditions);
+        return new JoinInnerNode3(main, second, jt, conditions);
     }
 
     protected static IJoinNode3 sources(final ISource3 main, final JoinType jt, final IJoinNode3 second, final Conditions3 conditions) {
-        return new JoinBranch3(sources(main), second, jt, conditions);
+        return new JoinInnerNode3(sources(main), second, jt, conditions);
     }
 
     protected static IJoinNode3 sources(final IJoinNode3 main, final JoinType jt, final ISource3 second, final Conditions3 conditions) {
-        return new JoinBranch3(main, sources(second), jt, conditions);
+        return new JoinInnerNode3(main, sources(second), jt, conditions);
     }
 
     protected static IJoinNode3 sources(final ISource3 main, final JoinType jt, final ISource3 second, final Conditions3 conditions) {
-        return new JoinBranch3(sources(main), sources(second), jt, conditions);
+        return new JoinInnerNode3(sources(main), sources(second), jt, conditions);
     }
 
     protected static IJoinNode3 sources(final IJoinNode3 main, final JoinType jt, final IJoinNode3 second, final ICondition3 condition) {
-        return new JoinBranch3(main, second, jt, cond(condition));
+        return new JoinInnerNode3(main, second, jt, cond(condition));
     }
 
     protected static IJoinNode3 sources(final ISource3 main, final JoinType jt, final IJoinNode3 second, final ICondition3 condition) {
-        return new JoinBranch3(sources(main), second, jt, cond(condition));
+        return new JoinInnerNode3(sources(main), second, jt, cond(condition));
     }
 
     protected static IJoinNode3 sources(final IJoinNode3 main, final JoinType jt, final ISource3 second, final ICondition3 condition) {
-        return new JoinBranch3(main, sources(second), jt, cond(condition));
+        return new JoinInnerNode3(main, sources(second), jt, cond(condition));
     }
 
     protected static IJoinNode3 sources(final ISource3 main, final JoinType jt, final ISource3 second, final ICondition3 condition) {
-        return new JoinBranch3(sources(main), sources(second), jt, cond(condition));
+        return new JoinInnerNode3(sources(main), sources(second), jt, cond(condition));
     }
 
     protected static IJoinNode3 lj(final IJoinNode3 main, final IJoinNode3 second, final Conditions3 conditions) {
@@ -248,7 +248,7 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
     }
 
     protected static IJoinNode3 sources(final ISource3 main) {
-        return new JoinLeaf3(main);
+        return new JoinLeafNode3(main);
     }
 
     //    private static EntQuery3 qry(final IQrySources3 sources, final QueryCategory queryCategory, final Class<?> resultType) {

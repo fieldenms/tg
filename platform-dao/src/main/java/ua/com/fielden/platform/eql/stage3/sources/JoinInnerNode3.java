@@ -8,13 +8,13 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 
-public class JoinBranch3 implements IJoinNode3 {
+public class JoinInnerNode3 implements IJoinNode3 {
     public final IJoinNode3 leftNode;
     public final IJoinNode3 rightNode;
     public final JoinType joinType;
     public final Conditions3 joinConditions;
 
-    public JoinBranch3(final IJoinNode3 leftNode, final IJoinNode3 rightNode, final JoinType joinType, final Conditions3 joinConditions) {
+    public JoinInnerNode3(final IJoinNode3 leftNode, final IJoinNode3 rightNode, final JoinType joinType, final Conditions3 joinConditions) {
         this.leftNode = leftNode;
         this.rightNode = rightNode;
         this.joinType = joinType;
@@ -48,11 +48,11 @@ public class JoinBranch3 implements IJoinNode3 {
             return true;
         }
 
-        if (!(obj instanceof JoinBranch3)) {
+        if (!(obj instanceof JoinInnerNode3)) {
             return false;
         }
         
-        final JoinBranch3 other = (JoinBranch3) obj;
+        final JoinInnerNode3 other = (JoinInnerNode3) obj;
         
         return Objects.equals(leftNode, other.leftNode) &&
                 Objects.equals(rightNode, other.rightNode) &&
