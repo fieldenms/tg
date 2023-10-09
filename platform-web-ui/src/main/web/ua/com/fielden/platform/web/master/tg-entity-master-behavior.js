@@ -189,6 +189,13 @@ const TgEntityMasterBehaviorImpl = {
         },
 
         /**
+         * Default implementation for postSaved callback with new action.
+         */
+        _postSavedDefaultAndNew: {
+            type: Function
+        },
+
+        /**
          * Default implementation for unsuccessful postSaved callback.
          */
         _postSavedDefaultError: {
@@ -613,6 +620,13 @@ const TgEntityMasterBehaviorImpl = {
             }
 
             return potentiallySavedOrNewEntity.isValidWithoutException();
+        }).bind(self);
+
+        self._postSavedDefaultAndNew = (function(potentiallySavedOrNewEntityAndCustomObject) {
+            const isValidWithoutException = self._postSavedDefault(potentiallySavedOrNewEntity);
+            if (isValidWithoutException) {
+                self.tgOpenMasterAction._runDynamicActionForNew(self.entityType);
+            }
         }).bind(self);
 
         self._postSavedDefaultPostExceptionHandler = (function () {

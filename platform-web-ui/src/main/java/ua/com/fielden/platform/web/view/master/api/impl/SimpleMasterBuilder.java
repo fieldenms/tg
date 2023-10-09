@@ -161,8 +161,10 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
             return "_postRetrievedDefault";
         } else if (MasterActions.VALIDATE == masterAction) {
             return "_postValidatedDefault";
-        } else if (MasterActions.SAVE == masterAction || MasterActions.SAVE_AND_CLOSE == masterAction || MasterActions.SAVE_AND_NEW == masterAction) {
+        } else if (MasterActions.SAVE == masterAction || MasterActions.SAVE_AND_CLOSE == masterAction) {
             return "_postSavedDefault";
+        } else if (MasterActions.SAVE_AND_NEW == masterAction) {
+            return "_postSavedDefaultAndNew";
         } else if (MasterActions.EDIT == masterAction) {
             return "_actions.EDIT.postAction";
         } else if (MasterActions.VIEW == masterAction) {
