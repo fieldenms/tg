@@ -846,7 +846,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         try {
             javaFile.writeTo(filer);
         } catch (final IOException ex) {
-            printWarning("Failed to generate [%s]. %s", ex.getMessage());
+            printWarning("Failed to generate [%s]. %s", metaModelsTypeSpec.name, ex.getMessage());
             return;
         }
 
