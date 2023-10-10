@@ -168,6 +168,13 @@ Polymer({
         },
 
         /**
+         * The action that is inoked after main action in case if action's sub role is 'new'
+         */
+        newAction: {
+            type: Function
+        },
+
+        /**
          * Custom function to be invoked after run(closeAfterExecution, subRole) of this action has been executed.
          */
         postAction: {
@@ -290,7 +297,12 @@ Polymer({
                             if (self.postActionError) {
                                 self.postActionError();
                             }
-                        });
+                        })
+                    .then(ironRequest => {
+                        if (ironRequest.successful && subRole === 'new' && typeof self.newAction === 'function') {
+                            self.newAction();
+                        }
+                    });
             }
         }).bind(this);
     },

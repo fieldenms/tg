@@ -52,5 +52,6 @@ export const createEntityActionThenCallback = function (eventChannel, role, subR
                 }
             }
         }
+        return ironRequest;
     };
 };

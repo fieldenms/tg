@@ -189,9 +189,9 @@ const TgEntityMasterBehaviorImpl = {
         },
 
         /**
-         * Default implementation for postSaved callback with new action.
+         * Action that creates opens new dialog for new entity. This action will be provided fro SAVE and REFRESH actions to run new action after successful save or refresh actions.
          */
-        _postSavedDefaultAndNew: {
+        _newAction: {
             type: Function
         },
 
@@ -622,11 +622,8 @@ const TgEntityMasterBehaviorImpl = {
             return potentiallySavedOrNewEntity.isValidWithoutException();
         }).bind(self);
 
-        self._postSavedDefaultAndNew = (function(potentiallySavedOrNewEntityAndCustomObject) {
-            const isValidWithoutException = self._postSavedDefault(potentiallySavedOrNewEntity);
-            if (isValidWithoutException) {
-                self.tgOpenMasterAction._runDynamicActionForNew(self.entityType);
-            }
+        self._newAction = (function() {
+            self.tgOpenMasterAction._runDynamicActionForNew(self.entityType);
         }).bind(self);
 
         self._postSavedDefaultPostExceptionHandler = (function () {
@@ -986,29 +983,12 @@ const TgEntityMasterBehaviorImpl = {
             enabledStates: ['EDIT'],
             action: function () {
                 return self.retrieve();
+            },
+            newAction: function() {
+                self._newAction();
             }
         };
         self._notifyActionPathsFor('REFRESH', true);
-
-        self._actions['REFRESH_AND_CLOSE'] = {
-            shortDesc: 'REFRESH & CLOSE',
-            longDesc: 'REFRESH & CLOSE ACTION...',
-            enabledStates: ['EDIT'],
-            action: function () {
-                return self.retrieve();
-            }
-        };
-        self._notifyActionPathsFor('REFRESH_AND_CLOSE', true);
-
-        self._actions['REFRESH_AND_NEW'] = {
-            shortDesc: 'REFRESH & NEW',
-            longDesc: 'REFRESH & NEW ACTION...',
-            enabledStates: ['EDIT'],
-            action: function () {
-                return self.retrieve();
-            }
-        };
-        self._notifyActionPathsFor('REFRESH_AND_NEW', true);
 
         self._actions['VALIDATE'] = {
             shortDesc: 'VALIDATE',
@@ -1026,29 +1006,12 @@ const TgEntityMasterBehaviorImpl = {
             enabledStates: ['EDIT'],
             action: function () {
                 return self.save();
+            },
+            newAction: function() {
+                self._newAction();
             }
         };
         self._notifyActionPathsFor('SAVE', true);
-
-        self._actions['SAVE_AND_CLOSE'] = {
-            shortDesc: 'SAVE & CLOSE',
-            longDesc: 'SAVE & CLOSE ACTION...',
-            enabledStates: ['EDIT'],
-            action: function () {
-                return self.save();
-            }
-        };
-        self._notifyActionPathsFor('SAVE_AND_CLOSE', true);
-
-        self._actions['SAVE_AND_NEW'] = {
-            shortDesc: 'SAVE & NEW',
-            longDesc: 'SAVE & NEW ACTION...',
-            enabledStates: ['EDIT'],
-            action: function () {
-                return self.save();
-            }
-        };
-        self._notifyActionPathsFor('SAVE_AND_NEW', true);
 
         self._actions['EDIT'] = {
             shortDesc: 'EDIT',

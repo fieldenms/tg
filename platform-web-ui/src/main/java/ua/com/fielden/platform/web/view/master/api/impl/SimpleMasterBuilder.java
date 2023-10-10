@@ -129,9 +129,9 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     }
 
     public static Optional<String> getShortcut(final MasterActions masterAction) {
-        if (MasterActions.REFRESH == masterAction || MasterActions.REFRESH_AND_CLOSE == masterAction || MasterActions.REFRESH_AND_NEW == masterAction) {
+        if (MasterActions.REFRESH == masterAction) {
             return Optional.of("ctrl+r meta+r");
-        } else if (MasterActions.SAVE == masterAction || MasterActions.SAVE_AND_CLOSE == masterAction || MasterActions.SAVE_AND_NEW == masterAction) {
+        } else if (MasterActions.SAVE == masterAction) {
             return Optional.of("ctrl+s meta+s");
         } else if (MasterActions.VALIDATE == masterAction || MasterActions.EDIT == masterAction || MasterActions.VIEW == masterAction) {
             return Optional.empty();
@@ -141,11 +141,11 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     }
 
     public static String getPostActionError(final MasterActions masterAction) {
-        if (MasterActions.REFRESH == masterAction || MasterActions.REFRESH_AND_CLOSE == masterAction || MasterActions.REFRESH_AND_NEW == masterAction) {
+        if (MasterActions.REFRESH == masterAction) {
             return "_postRetrievedDefaultError";
         } else if (MasterActions.VALIDATE == masterAction) {
             return "_postValidatedDefaultError";
-        } else if (MasterActions.SAVE == masterAction || MasterActions.SAVE_AND_CLOSE == masterAction || MasterActions.SAVE_AND_NEW == masterAction) {
+        } else if (MasterActions.SAVE == masterAction) {
             return "_postSavedDefaultError";
         } else if (MasterActions.EDIT == masterAction) {
             return "_actions.EDIT.postActionError"; // TODO maybe, should be deleted (no ajax request sends)?
@@ -157,14 +157,12 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     }
 
     public static String getPostAction(final MasterActions masterAction) {
-        if (MasterActions.REFRESH == masterAction || MasterActions.REFRESH_AND_CLOSE == masterAction || MasterActions.REFRESH_AND_NEW == masterAction) {
+        if (MasterActions.REFRESH == masterAction) {
             return "_postRetrievedDefault";
         } else if (MasterActions.VALIDATE == masterAction) {
             return "_postValidatedDefault";
-        } else if (MasterActions.SAVE == masterAction || MasterActions.SAVE_AND_CLOSE == masterAction) {
+        } else if (MasterActions.SAVE == masterAction) {
             return "_postSavedDefault";
-        } else if (MasterActions.SAVE_AND_NEW == masterAction) {
-            return "_postSavedDefaultAndNew";
         } else if (MasterActions.EDIT == masterAction) {
             return "_actions.EDIT.postAction";
         } else if (MasterActions.VIEW == masterAction) {
