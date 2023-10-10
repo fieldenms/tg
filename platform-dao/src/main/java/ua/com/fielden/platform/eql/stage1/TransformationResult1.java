@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.eql.stage1;
 
-public class TransformationResult1<S2> {
-    public final S2 item;
+import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
+
+public class TransformationResult1<T extends IJoinNode2<?>> {
+    public final T item;
     public final TransformationContext1 updatedContext;
     
-    public TransformationResult1(final S2 item, final TransformationContext1 updatedContext) {
+    public TransformationResult1(final T item, final TransformationContext1 updatedContext) {
         this.item = item;
         this.updatedContext = updatedContext;
     }
