@@ -124,7 +124,8 @@ public class QueryModelToStage1Transformer {
     
     private Conditions1 generateUserDataFilteringCondition(final boolean filterable, final IFilter filter, final String username, final ISource1<?> mainSource) {
         if (filterable && filter != null) {
-            final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), mainSource.getAlias(), username);
+            // now there is no need to rely on the main source alias while processing UDF (that's why null can be used until alias parameter is removed from the enhance() method.
+            final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), null, username); 
             if (filteringCondition != null) {
                 // LOGGER.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() + "]");
                 return new StandAloneConditionBuilder(this, filteringCondition, false).getModel();

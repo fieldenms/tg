@@ -17,12 +17,13 @@ public interface ISource2<T extends ISource3> extends ITransformableToStage3<T> 
     QuerySourceInfo<?> querySourceInfo();
     
     /**
-     * Represents business alias for the given source (i.e. name provided as parameter for {@code as(..)} operator within one of the following EQL Fluent API contexts:
+     * Represents business alias for the given source -- the value provided as parameter for {@code as(..)} operator within one of the following EQL Fluent API contexts:
      * <ul>
      *  <li> {@code select(..).as(..)}
      *  <li> {@code innerJoin(..).as(..)}
      *  <li> {@code leftJoin(..).as(..)}
      * </ul>
+     * Alias is used to avoid ambiguity while resolving properties to the corresponding sources (everything according to SQL logic applied to columns and tables/queries).
      * 
      * @return
      */

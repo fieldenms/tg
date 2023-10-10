@@ -21,11 +21,6 @@ public abstract class AbstractSource1<T extends ISource2<?>> implements ISource1
     }
 
     @Override
-    public String getAlias() {
-        return alias;
-    }
-    
-    @Override
     public Class<? extends AbstractEntity<?>> sourceType() {
         return sourceType;
     }
