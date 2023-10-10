@@ -5,7 +5,7 @@ import java.util.Objects;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 
-public abstract class AbstractSource1<S2 extends ISource2<?>> implements ISource1<S2> {
+public abstract class AbstractSource1<T extends ISource2<?>> implements ISource1<T> {
 
     /**
      * Business name for query source. Can be also dot.notated, but should stick to property alias naming rules (e.g. no dots in beginning/end).

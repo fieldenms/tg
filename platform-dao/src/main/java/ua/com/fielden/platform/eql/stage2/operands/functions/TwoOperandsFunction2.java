@@ -10,7 +10,7 @@ import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
-abstract class TwoOperandsFunction2<S3 extends ISingleOperand3> extends AbstractFunction2<S3> {
+abstract class TwoOperandsFunction2<T extends ISingleOperand3> extends AbstractFunction2<T> {
     public final ISingleOperand2<? extends ISingleOperand3> operand1;
     public final ISingleOperand2<? extends ISingleOperand3> operand2;
 
