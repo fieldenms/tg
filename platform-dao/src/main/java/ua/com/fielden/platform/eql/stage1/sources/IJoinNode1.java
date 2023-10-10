@@ -2,8 +2,9 @@ package ua.com.fielden.platform.eql.stage1.sources;
 
 import ua.com.fielden.platform.eql.stage1.ITransformableToStage2;
 import ua.com.fielden.platform.eql.stage1.TransformationResult1;
-import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
+import ua.com.fielden.platform.eql.stage2.sources.ISource2;
+import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 
 /**
  * Starting with stage 1 the structure for the {@code FROM} statement of the EQL query becomes tree-like.
@@ -36,7 +37,7 @@ import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
  * 
  * @param <T> -- a type of corresponding join node at stage 2.
  */
-public interface IJoinNode1<T extends IJoinNode2<?>> extends ITransformableToStage2<TransformationResult1<T>> {
+public interface IJoinNode1<T extends IJoinNode2<? extends IJoinNode3>> extends ITransformableToStage2<TransformationResult1<T>> {
 
     /**
      * Gets the leftmost query source. Needed for UDF (user data filtering).

@@ -10,8 +10,8 @@ import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.TransformationResult1;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
-import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
+import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.JoinInnerNode2;
 
 public class JoinInnerNode1 implements IJoinNode1<JoinInnerNode2> {
@@ -28,7 +28,7 @@ public class JoinInnerNode1 implements IJoinNode1<JoinInnerNode2> {
     }
 
     @Override
-    public TransformationResult1<JoinInnerNode2> transform(TransformationContext1 context) {
+    public TransformationResult1<JoinInnerNode2> transform(final TransformationContext1 context) {
         final TransformationResult1<? extends IJoinNode2<?>> lsTransformed = leftNode.transform(context);
         final TransformationResult1<? extends IJoinNode2<?>> rsTransformed = rightNode.transform(context);
         final TransformationContext1 updatedContext = context.cloneWithAdded(lsTransformed.updatedContext.getCurrentLevelSources(), rsTransformed.updatedContext.getCurrentLevelSources());
