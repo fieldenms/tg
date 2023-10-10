@@ -15,7 +15,7 @@ import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 public abstract class AbstractQuery3 {
 
     public final IJoinNode3 joinRoot;
-    public final Conditions3 conditions;
+    public final Conditions3 whereConditions;
     public final Yields3 yields;
     public final GroupBys3 groups;
     public final OrderBys3 orderings;
@@ -23,7 +23,7 @@ public abstract class AbstractQuery3 {
 
     public AbstractQuery3(final QueryComponents3 queryComponents, final Class<?> resultType) {
         this.joinRoot = queryComponents.joinRoot;
-        this.conditions = queryComponents.conditions;
+        this.whereConditions = queryComponents.whereConditions;
         this.yields = queryComponents.yields;
         this.groups = queryComponents.groups;
         this.orderings = queryComponents.orderings;
@@ -34,7 +34,7 @@ public abstract class AbstractQuery3 {
         final StringBuffer sb = new StringBuffer();
         sb.append(yields.sql(dbVersion));
         sb.append(joinRoot != null ? "\nFROM\n" + joinRoot.sql(dbVersion) : (dbVersion == ORACLE ? " FROM DUAL " : ""));
-        sb.append(conditions != null ? "\nWHERE " + conditions.sql(dbVersion) : "");
+        sb.append(whereConditions != null ? "\nWHERE " + whereConditions.sql(dbVersion) : "");
         sb.append(groups != null ? "\nGROUP BY " + groups.sql(dbVersion) : "");
         sb.append(orderings != null ? "\nORDER BY " + orderings.sql(dbVersion) : "");
         return sb.toString();
@@ -52,7 +52,7 @@ public abstract class AbstractQuery3 {
         result = prime * result + yields.hashCode();
         result = prime * result + ((orderings == null) ? 0 : orderings.hashCode());
         result = prime * result + ((groups == null) ? 0 : groups.hashCode());
-        result = prime * result + ((conditions == null) ? 0 : conditions.hashCode());
+        result = prime * result + ((whereConditions == null) ? 0 : whereConditions.hashCode());
         result = prime * result + ((joinRoot == null) ? 0 : joinRoot.hashCode());
         result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
         return result;
@@ -72,7 +72,7 @@ public abstract class AbstractQuery3 {
 
         return Objects.equals(joinRoot, other.joinRoot) &&
                 Objects.equals(yields, other.yields) &&
-                Objects.equals(conditions, other.conditions) &&
+                Objects.equals(whereConditions, other.whereConditions) &&
                 Objects.equals(groups, other.groups) &&
                 Objects.equals(orderings, other.orderings) &&
                 Objects.equals(resultType, other.resultType);

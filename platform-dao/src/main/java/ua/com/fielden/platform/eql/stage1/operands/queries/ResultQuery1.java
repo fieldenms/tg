@@ -56,12 +56,12 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToStag
         final T2<TransformationResult1<? extends IJoinNode2<?>>, Boolean> joinRootTr = transformAndEnhanceJoinRoot(context);
         final TransformationContext1 enhancedContext = joinRootTr._1.updatedContext;
         final IJoinNode2<? extends IJoinNode3> joinRoot2 = joinRootTr._1.item;
-        final Conditions2 conditions2 = enhanceWithUserDataFilterConditions(joinRoot2.mainSource(), context.querySourceInfoProvider, conditions.transform(enhancedContext));
+        final Conditions2 whereConditions2 = enhanceWithUserDataFilterConditions(joinRoot2.mainSource(), context.querySourceInfoProvider, whereConditions.transform(enhancedContext));
         final Yields2 yields2 = yields.transform(enhancedContext);
         final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
         final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, joinRoot2.mainSource());
         final Yields2 enhancedYields2 = enhanceYields(yields2, joinRoot2.mainSource(), joinRootTr._2);
-        final QueryComponents2 queryComponents2 = new QueryComponents2(joinRoot2, conditions2, enhancedYields2, groups2, orderings2);
+        final QueryComponents2 queryComponents2 = new QueryComponents2(joinRoot2, whereConditions2, enhancedYields2, groups2, orderings2);
 
         return new ResultQuery2(queryComponents2, resultType);
     }

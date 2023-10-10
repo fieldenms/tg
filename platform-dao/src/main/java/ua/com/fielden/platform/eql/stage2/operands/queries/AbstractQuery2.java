@@ -21,7 +21,7 @@ import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 public abstract class AbstractQuery2 {
 
     public final IJoinNode2<? extends IJoinNode3> joinRoot;
-    public final Conditions2 conditions;
+    public final Conditions2 whereConditions;
     public final Yields2 yields;
     public final GroupBys2 groups;
     public final OrderBys2 orderings;
@@ -29,7 +29,7 @@ public abstract class AbstractQuery2 {
 
     public AbstractQuery2(final QueryComponents2 queryComponents, final Class<?> resultType) {
         this.joinRoot = queryComponents.joinRoot;
-        this.conditions = queryComponents.conditions;
+        this.whereConditions = queryComponents.whereConditions;
         this.yields = queryComponents.yields;
         this.groups = queryComponents.groups;
         this.orderings = queryComponents.orderings;
@@ -39,7 +39,7 @@ public abstract class AbstractQuery2 {
     public Set<Prop2> collectProps() {
         final Set<Prop2> result = new HashSet<>();
         result.addAll(joinRoot != null ? joinRoot.collectProps() : emptySet());
-        result.addAll(conditions.collectProps());
+        result.addAll(whereConditions.collectProps());
         result.addAll(yields.collectProps());
         result.addAll(groups.collectProps());
         result.addAll(orderings.collectProps());
@@ -50,7 +50,7 @@ public abstract class AbstractQuery2 {
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>();
         result.addAll(joinRoot != null ? joinRoot.collectEntityTypes() : emptySet());
-        result.addAll(conditions.collectEntityTypes());
+        result.addAll(whereConditions.collectEntityTypes());
         result.addAll(yields.collectEntityTypes());
         result.addAll(groups.collectEntityTypes());
         result.addAll(orderings.collectEntityTypes());
@@ -66,7 +66,7 @@ public abstract class AbstractQuery2 {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + conditions.hashCode();
+        result = prime * result + whereConditions.hashCode();
         result = prime * result + groups.hashCode();
         result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
         result = prime * result + ((joinRoot == null) ? 0 : joinRoot.hashCode());
@@ -90,7 +90,7 @@ public abstract class AbstractQuery2 {
         return Objects.equals(resultType, other.resultType) &&
                 Objects.equals(joinRoot, other.joinRoot) &&
                 Objects.equals(yields, other.yields) &&
-                Objects.equals(conditions, other.conditions) &&
+                Objects.equals(whereConditions, other.whereConditions) &&
                 Objects.equals(groups, other.groups) &&
                 Objects.equals(orderings, other.orderings);
     }

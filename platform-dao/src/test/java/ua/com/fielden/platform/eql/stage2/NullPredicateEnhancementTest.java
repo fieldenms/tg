@@ -17,7 +17,7 @@ public class NullPredicateEnhancementTest extends EqlStage2TestCase {
         final ResultQuery2 actQry = qryCountAll(select(BOGIE).where().prop("location").isNull());
         final Source2BasedOnPersistentType bogie = source(1, BOGIE);
         final Conditions2 conditions = or(and(or(and(isNull(prop(bogie, pi(BOGIE, "location"), pi(BOGIE, "location", "wagonSlot"))), isNull(prop(bogie, pi(BOGIE, "location"), pi(BOGIE, "location", "workshop")))))));
-        assertEquals(conditions, actQry.conditions);
+        assertEquals(conditions, actQry.whereConditions);
     }
     
     @Test
@@ -25,6 +25,6 @@ public class NullPredicateEnhancementTest extends EqlStage2TestCase {
         final ResultQuery2 actQry = qryCountAll(select(BOGIE).where().prop("location").isNotNull());
         final Source2BasedOnPersistentType bogie = source(1, BOGIE);
         final Conditions2 conditions = or(and(or(and(isNotNull(prop(bogie, pi(BOGIE, "location"), pi(BOGIE, "location", "wagonSlot")))), and(isNotNull(prop(bogie, pi(BOGIE, "location"), pi(BOGIE, "location", "workshop")))))));
-        assertEquals(conditions, actQry.conditions);
+        assertEquals(conditions, actQry.whereConditions);
     }
 }

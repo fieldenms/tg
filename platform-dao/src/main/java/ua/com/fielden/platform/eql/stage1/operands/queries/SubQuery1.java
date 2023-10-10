@@ -43,12 +43,12 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
         final TransformationResult1<? extends IJoinNode2<?>> joinRootTr = joinRoot.transform(localContext);
         final TransformationContext1 enhancedContext = joinRootTr.updatedContext;
         final IJoinNode2<? extends IJoinNode3> joinRoot2 = joinRootTr.item;
-        final Conditions2 conditions2 = enhanceWithUserDataFilterConditions(joinRoot2.mainSource(), context.querySourceInfoProvider, conditions.transform(enhancedContext));
+        final Conditions2 whereConditions2 = enhanceWithUserDataFilterConditions(joinRoot2.mainSource(), context.querySourceInfoProvider, whereConditions.transform(enhancedContext));
         final Yields2 yields2 = yields.transform(enhancedContext);
         final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
         final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, joinRoot2.mainSource());
         final Yields2 enhancedYields2 = enhanceYields(yields2, joinRoot2);
-        final QueryComponents2 queryComponents2 = new QueryComponents2(joinRoot2, conditions2, enhancedYields2, groups2, orderings2);
+        final QueryComponents2 queryComponents2 = new QueryComponents2(joinRoot2, whereConditions2, enhancedYields2, groups2, orderings2);
         return new SubQuery2(queryComponents2, enhance(resultType, enhancedYields2), isRefetchOnlyQuery());
     }
 
@@ -60,7 +60,7 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
     }
     
     private boolean isRefetchOnlyQuery() {
-        return conditions.isIdEqualsExtId();
+        return whereConditions.isIdEqualsExtId();
     }
     
     private static Yields2 enhanceYields(final Yields2 yields, final IJoinNode2<? extends IJoinNode3> joinRoot2) {

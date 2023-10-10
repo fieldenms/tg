@@ -33,7 +33,7 @@ public class YieldInfoNodesGenerator {
     
     private static List<YieldInfo> generateYieldInfos(final List<SourceQuery2> models) {
         if (models.size() == 1) {
-            return models.get(0).yields.getYields().stream().map(yield -> new YieldInfo(yield.alias, yield.operand.type(), determineNonnullability(new YieldAndConditions(yield, models.get(0).conditions)))).collect(toList());
+            return models.get(0).yields.getYields().stream().map(yield -> new YieldInfo(yield.alias, yield.operand.type(), determineNonnullability(new YieldAndConditions(yield, models.get(0).whereConditions)))).collect(toList());
         } else {
             final List<YieldInfo> result = new ArrayList<>(); 
             final Map<String, List<YieldAndConditions>> yieldMatrix = generateYieldMatrixFromQueryModels(models);
@@ -81,10 +81,10 @@ public class YieldInfoNodesGenerator {
             for (final Yield2 yield : entQuery.yields.getYields()) {
                 final List<YieldAndConditions> foundYields = yieldsMatrix.get(yield.alias);
                 if (foundYields != null) {
-                    foundYields.add(new YieldAndConditions(yield, entQuery.conditions));
+                    foundYields.add(new YieldAndConditions(yield, entQuery.whereConditions));
                 } else {
                     final List<YieldAndConditions> newList = new ArrayList<>();
-                    newList.add(new YieldAndConditions(yield, entQuery.conditions));
+                    newList.add(new YieldAndConditions(yield, entQuery.whereConditions));
                     yieldsMatrix.put(yield.alias, newList);
                 }
             }

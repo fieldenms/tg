@@ -227,11 +227,11 @@ public class CritConditionOperatorTest extends EqlStage1TestCase {
     }
 
     protected static Conditions1 conditions(final ICompoundCondition0<?> condition) {
-        return resultQry(condition.model()).conditions;
+        return resultQry(condition.model()).whereConditions;
     }
 
     protected static Conditions1 conditions(final ICompoundCondition0<?> condition, final Map<String, Object> paramValues) {
-        return resultQry(condition.model(), paramValues).conditions;
+        return resultQry(condition.model(), paramValues).whereConditions;
     }
    
     protected static void assertModelsEquals(final Conditions1 exp, final Conditions1 act) {

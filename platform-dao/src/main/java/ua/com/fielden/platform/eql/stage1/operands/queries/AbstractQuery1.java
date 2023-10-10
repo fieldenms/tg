@@ -52,7 +52,7 @@ import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 public abstract class AbstractQuery1 {
 
     public final IJoinNode1<? extends IJoinNode2<?>> joinRoot;
-    public final Conditions1 conditions;
+    public final Conditions1 whereConditions;
     public final Conditions1 udfConditions;
     public final Yields1 yields;
     public final GroupBys1 groups;
@@ -62,7 +62,7 @@ public abstract class AbstractQuery1 {
 
     public AbstractQuery1(final QueryComponents1 queryComponents, final Class<? extends AbstractEntity<?>> resultType) {
         this.joinRoot = queryComponents.joinRoot;
-        this.conditions = queryComponents.conditions;
+        this.whereConditions = queryComponents.whereConditions;
         this.udfConditions = queryComponents.udfConditions;
         this.yields = queryComponents.yields;
         this.groups = queryComponents.groups;
@@ -74,7 +74,7 @@ public abstract class AbstractQuery1 {
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>();
         result.addAll(joinRoot != null ? joinRoot.collectEntityTypes() : emptySet());
-        result.addAll(conditions.collectEntityTypes());
+        result.addAll(whereConditions.collectEntityTypes());
         result.addAll(yields.collectEntityTypes());
         result.addAll(groups.collectEntityTypes());
         result.addAll(orderings.collectEntityTypes());
@@ -83,7 +83,7 @@ public abstract class AbstractQuery1 {
     }
 
     protected QueryComponents2 transformSourceless(final TransformationContext1 context) {
-        return new QueryComponents2(null, conditions.transform(context), yields.transform(context), groups.transform(context), orderings.transform(context));
+        return new QueryComponents2(null, whereConditions.transform(context), yields.transform(context), groups.transform(context), orderings.transform(context));
     }
 
     protected Conditions2 enhanceWithUserDataFilterConditions(final ISource2<? extends ISource3> mainSource, final QuerySourceInfoProvider querySourceInfoProvider, final Conditions2 originalConditions) { 
@@ -162,7 +162,7 @@ public abstract class AbstractQuery1 {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + conditions.hashCode();
+        result = prime * result + whereConditions.hashCode();
         result = prime * result + udfConditions.hashCode();
         result = prime * result + groups.hashCode();
         result = prime * result + orderings.hashCode();
@@ -188,7 +188,7 @@ public abstract class AbstractQuery1 {
         return Objects.equals(resultType, other.resultType) &&
                 Objects.equals(joinRoot, other.joinRoot) &&
                 Objects.equals(yields, other.yields) &&
-                Objects.equals(conditions, other.conditions) &&
+                Objects.equals(whereConditions, other.whereConditions) &&
                 Objects.equals(udfConditions, other.udfConditions) &&
                 Objects.equals(groups, other.groups) &&
                 Objects.equals(orderings, other.orderings) &&

@@ -28,12 +28,12 @@ public class SubQuery2 extends AbstractQuery2 implements ISingleOperand2<SubQuer
     @Override
     public TransformationResult2<SubQuery3> transform(final TransformationContext2 context) {
         final TransformationResult2<? extends IJoinNode3> joinRootTr = joinRoot != null ? joinRoot.transform(context) : transformNone(context);
-        final TransformationResult2<Conditions3> conditionsTr = conditions.transform(joinRootTr.updatedContext);
-        final TransformationResult2<Yields3> yieldsTr = yields.transform(conditionsTr.updatedContext);
+        final TransformationResult2<Conditions3> whereConditionsTr = whereConditions.transform(joinRootTr.updatedContext);
+        final TransformationResult2<Yields3> yieldsTr = yields.transform(whereConditionsTr.updatedContext);
         final TransformationResult2<GroupBys3> groupsTr = groups.transform(yieldsTr.updatedContext);
         final TransformationResult2<OrderBys3> orderingsTr = orderings.transform(groupsTr.updatedContext, yieldsTr.item);
 
-        final QueryComponents3 queryComponents3 = new QueryComponents3(joinRootTr.item, conditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item);
+        final QueryComponents3 queryComponents3 = new QueryComponents3(joinRootTr.item, whereConditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item);
 
         return new TransformationResult2<>(new SubQuery3(queryComponents3, type), orderingsTr.updatedContext);
     }
