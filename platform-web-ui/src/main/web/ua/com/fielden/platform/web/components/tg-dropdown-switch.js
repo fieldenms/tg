@@ -44,6 +44,7 @@ const template = html`
             margin: 0 8px 0 8px;
         }
         .dropdown-content {
+            padding: 0;
             background-color: white;
             box-shadow: 0px 2px 6px #ccc;
             @apply --layout-vertical;
@@ -70,7 +71,7 @@ const template = html`
         <span class="truncate item-title" style$="[[_calcButtonStyle(buttonWidth)]]">[[_currentView.title]]</span>
         <iron-icon icon="icons:arrow-drop-down" on-tap="_showViews"></iron-icon>
     </paper-button>
-    <iron-dropdown id="dropdown" horizontal-align="left" restore-focus-on-close always-on-top on-iron-overlay-opened="_dropdownOpened" on-iron-overlay-closed="_dropdownClosed">
+    <iron-dropdown id="dropdown" horizontal-align="left" vertical-align="[[verticalAlign]]" restore-focus-on-close always-on-top on-iron-overlay-opened="_dropdownOpened" on-iron-overlay-closed="_dropdownClosed">
         <paper-listbox id="availableViews" class="dropdown-content" slot="dropdown-content" attr-for-selected="view-index" on-iron-select="_changeView">
             <template is="dom-repeat" items="[[views]]" as="view">
                 <paper-item class="view-item" view-index$="[[view.index]]" tooltip-text$="[[view.desc]]">
@@ -93,6 +94,10 @@ export class TgDropdownSwitch extends mixinBehaviors([TgElementSelectorBehavior]
             viewIndex: Number, 
             views: Array,
             buttonWidth: Number,
+            verticalAlign: {
+                type: String,
+                value: "top"
+            },
             fragmented: {
                 type: Boolean,
                 value: false,

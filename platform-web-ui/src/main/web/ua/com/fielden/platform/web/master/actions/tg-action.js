@@ -52,7 +52,7 @@ const template = html`
         <span>[[shortDesc]]</span>
     </paper-button>
     <paper-fab id="fabButton" mini icon="[[icon]]" on-tap="_asyncRun" hidden$="[[!_isIcon(actionType)]]" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]"></paper-fab>
-    <tg-dropdown-switch raised fragmented disabled$="[[_disabled]]" hidden$="[[!_isOptionButton(actionType)]]" view-index="0" views="[[_options]]" change-current-view-on-select on-tg-centre-view-change="_runOptionAction"></tg-dropdown-switch>
+    <tg-dropdown-switch raised fragmented vertical-align="bottom" disabled$="[[_disabled]]" hidden$="[[!_isOptionButton(actionType)]]" view-index="0" views="[[_options]]" change-current-view-on-select on-tg-centre-view-change="_runOptionAction"></tg-dropdown-switch>
     <paper-spinner id="spinner" active="[[_working]]" class="blue" style="display: none;" alt="in progress"></paper-spinner>
 `;
 
