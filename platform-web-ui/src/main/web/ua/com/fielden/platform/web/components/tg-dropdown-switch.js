@@ -65,11 +65,14 @@ const template = html`
         iron-icon {
             @apply --layout-flex-none;
         }
+        iron-icon[dropdown-opened] {
+            transform: scale(1, -1);
+        }
     </style>
     <paper-button id="trigger" raised="[[raised]]" class="view-item main" dropdown-opened$="[[dropDownOpened]]" on-tap="_runActionOrShowView" tooltip-text$=[[mainButtonTooltipText]]>
         <iron-icon hidden$="[[!_currentView.icon]]" icon="[[_currentView.icon]]" style$="[[_currentView.iconStyle]]"></iron-icon>
         <span class="truncate item-title" style$="[[_calcButtonStyle(buttonWidth)]]">[[_currentView.title]]</span>
-        <iron-icon icon="icons:arrow-drop-down" on-tap="_showViews"></iron-icon>
+        <iron-icon icon="icons:arrow-drop-down" on-tap="_showViews" dropdown-opened$="[[dropDownOpened]]"></iron-icon>
     </paper-button>
     <iron-dropdown id="dropdown" horizontal-align="left" vertical-align="[[verticalAlign]]" restore-focus-on-close always-on-top on-iron-overlay-opened="_dropdownOpened" on-iron-overlay-closed="_dropdownClosed">
         <paper-listbox id="availableViews" class="dropdown-content" slot="dropdown-content" attr-for-selected="view-index" on-iron-select="_changeView">
