@@ -74,6 +74,7 @@ public class DefaultEntityAction<T extends AbstractEntity<?>> extends AbstractAc
         final String actionSelector = "_actions." + this.name();
 
         attrs.put("action", "[[" + actionSelector + ".action]]");
+        attrs.put("new-action", "[[" + actionSelector + ".newAction]]");
         attrs.put("post-action", "{{" + this.postActionFunction() + "}}");
         attrs.put("post-action-error", "{{" + this.postActionErrorFunction() + "}}");
 

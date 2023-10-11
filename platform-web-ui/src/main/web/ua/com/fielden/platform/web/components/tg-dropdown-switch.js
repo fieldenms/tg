@@ -33,6 +33,7 @@ const template = html`
         }
         .view-item {
             padding: 8px 12px 8px 12px;
+            cursor: pointer;
             @apply --layout-horizontal;
             @apply --layout-center;
         }
@@ -64,16 +65,16 @@ const template = html`
             @apply --layout-flex-none;
         }
     </style>
-    <paper-button id="trigger" class="view-item main" dropdown-opened$="[[dropDownOpened]]" on-tap="_showViews" tooltip-text$=[[mainButtonTooltipText]]>
-        <iron-icon icon="[[_currentView.icon]]" style$="[[_currentView.iconStyle]]"></iron-icon>
+    <paper-button id="trigger" raised="[[raised]]" class="view-item main" dropdown-opened$="[[dropDownOpened]]" on-tap="_runActionOrShowView" tooltip-text$=[[mainButtonTooltipText]]>
+        <iron-icon hidden$="[[!_currentView.icon]]" icon="[[_currentView.icon]]" style$="[[_currentView.iconStyle]]"></iron-icon>
         <span class="truncate item-title" style$="[[_calcButtonStyle(buttonWidth)]]">[[_currentView.title]]</span>
-        <iron-icon icon="icons:arrow-drop-down"></iron-icon>
+        <iron-icon icon="icons:arrow-drop-down" on-tap="_showViews"></iron-icon>
     </paper-button>
     <iron-dropdown id="dropdown" horizontal-align="left" restore-focus-on-close always-on-top on-iron-overlay-opened="_dropdownOpened" on-iron-overlay-closed="_dropdownClosed">
         <paper-listbox id="availableViews" class="dropdown-content" slot="dropdown-content" attr-for-selected="view-index" on-iron-select="_changeView">
             <template is="dom-repeat" items="[[views]]" as="view">
                 <paper-item class="view-item" view-index$="[[view.index]]" tooltip-text$="[[view.desc]]">
-                    <iron-icon icon="[[view.icon]]" style$="[[view.iconStyle]]"></iron-icon>
+                    <iron-icon hidden$="[[!view.icon]]" icon="[[view.icon]]" style$="[[view.iconStyle]]"></iron-icon>
                     <span class="truncate item-title">[[view.title]]</span>
                 </paper-item>
             </template>
@@ -92,6 +93,16 @@ export class TgDropdownSwitch extends mixinBehaviors([TgElementSelectorBehavior]
             viewIndex: Number, 
             views: Array,
             buttonWidth: Number,
+            fragmented: {
+                type: Boolean,
+                value: false,
+                reflectToAttribute: true
+            },
+            raised: {
+                type: Boolean,
+                value: false,
+                reflectToAttribute: true
+            },
             mainButtonTooltipText:{
                 type: String,
                 value: "Choose a view."
@@ -130,11 +141,22 @@ export class TgDropdownSwitch extends mixinBehaviors([TgElementSelectorBehavior]
 
     _updateViews(views, viewIndex) {
         if (allDefined(arguments) && viewIndex !== null && viewIndex >= 0) {
-            this._currentView = this.views.find(view => view.index === viewIndex);
+            this._currentView = views.find(view => view.index === viewIndex);
+        }
+    }
+
+    _runActionOrShowView(e) {
+        if (this.fragmented && this._currentView) {
+            this.dispatchEvent(new CustomEvent('tg-centre-view-change',  { bubbles: true, composed: true, detail: this._currentView.index }));
+        } else {
+            this._showViews(e);
         }
     }
 
     _showViews(e) {
+        if (this.fragmented) {
+            tearDownEvent(e);
+        }
         if (!this.changeCurrentViewOnSelect) {
             this.$.availableViews.selected = this.viewIndex;
         }

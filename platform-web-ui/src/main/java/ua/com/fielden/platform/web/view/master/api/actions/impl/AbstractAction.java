@@ -144,7 +144,6 @@ public abstract class AbstractAction implements IImportable {
         final LinkedHashMap<String, Object> attrs = new LinkedHashMap<>();
 
         final String actionSelector = "_actions." + this.name();
-        attrs.put("new-action", "[[" + actionSelector + ".newAction]]");
         attrs.put("entity-type", "[[" + actionSelector + ".entityType]]");
         attrs.put("enabled-states", "[[" + actionSelector + ".enabledStates]]");
         attrs.put("short-desc", "[[" + actionSelector + ".shortDesc]]");
