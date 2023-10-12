@@ -59,10 +59,9 @@ public class DefaultEntityAction<T extends AbstractEntity<?>> extends AbstractAc
             attrs.put("id", "_saveAction");
         }
         if (("save".equals(this.name().toLowerCase()) || "refresh".equals(this.name().toLowerCase()))
-                && this.entityType.isAnnotationPresent(MapEntityTo.class)
-                && !AbstractEntity.class.isAssignableFrom(AnnotationReflector.getKeyType(this.entityType))) {
+                && this.entityType.isAnnotationPresent(MapEntityTo.class)) {
             attrs.put("action-type", "optionbutton");
-            if (entityType.isAnnotationPresent(RestrictCreationByUsers.class)) {
+            if (entityType.isAnnotationPresent(RestrictCreationByUsers.class) || AbstractEntity.class.isAssignableFrom(AnnotationReflector.getKeyType(this.entityType))) {
                 attrs.put("restrict-new-option", true);
             }
         }
