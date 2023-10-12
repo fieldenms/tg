@@ -39,6 +39,12 @@ import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 import ua.com.fielden.platform.types.tuples.T2;
 
+/**
+ * A structure used for representing the most outer query that is used to actually execute to get some data out.
+ * <p>
+ * The most important fact about yields in this structure is that fetch models are used for auto-yielding in case of no explicit yields or {@code yieldAll}.
+ *
+ */
 public class ResultQuery1 extends AbstractQuery1 implements ITransformableToStage2<ResultQuery2> {
 
     public final IRetrievalModel<?> fetchModel;
@@ -65,13 +71,13 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToStag
 
         return new ResultQuery2(queryComponents2, resultType);
     }
-    
+
     private T2<TransformationResult1<? extends IJoinNode2<?>>, Boolean> transformAndEnhanceJoinRoot(final TransformationContext1 context) {
         final TransformationResult1<? extends IJoinNode2<?>> joinRootTr = joinRoot.transform(context);
         if (fetchModel == null) {
             return T2.t2(joinRootTr, false);
         }
-        
+
         final IJoinNode2<? extends IJoinNode3> joinRoot2 = joinRootTr.item;
         boolean allAggregated = false;
         final ISource2<? extends ISource3> mainSource = joinRoot2.mainSource();
@@ -84,7 +90,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToStag
                 }
             }
         }
-        
+
         if (!allAggregated) {
             return T2.t2(joinRootTr, false);
         } else {
@@ -92,16 +98,16 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToStag
             return T2.t2(joinRoot.transform(context.cloneForAggregates()), true);
         }
     }
-    
+
     /**
      * Enhances {@code yields}, which were determined during EQL stage2 processing, with additional yields:
-     * <ol> 
+     * <ol>
      * <li> No yields or {@code yieldAll} - adds all properties that belong to {@code mainSource} and are also present in {@code fetchModel}; in case of entity-typed properties, their properties are also included (if they exist in a fetch model) to improve query performance.
      *      It is important to note that in case of the synthetic entities (excluding the case of fetching totals only), {@code id} is added to the yields.
-     *      This is necessary to overcome the current limitation of fetch strategies that ignore {@code id} for synthetic entities. 
-     * <li> Single yield {@code .modelAsEntity} - enhances the yield with "id" as alias. 
+     *      This is necessary to overcome the current limitation of fetch strategies that ignore {@code id} for synthetic entities.
+     * <li> Single yield {@code .modelAsEntity} - enhances the yield with "id" as alias.
      * </ol>
-     * 
+     *
      * @param yields
      * @param mainSource
      * @param allAggregated
@@ -112,13 +118,13 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToStag
             final List<Yield2> enhancedYields = new ArrayList<>(yields.getYields());
 
             final boolean isNotTopFetch = fetchModel == null ? false : !fetchModel.topLevel();
-            
+
             for (final Entry<String, AbstractQuerySourceItem<?>> l1Prop : mainSource.querySourceInfo().getProps().entrySet()) {
             	// FIXME condition for {@code id} should be removed once the default fetch strategies are adjusted to recognise the presence of {@code id} in synthetic entities.
                 if (fetchModel == null || fetchModel.containsProp(l1Prop.getValue().name) || (!allAggregated && ID.equals(l1Prop.getValue().name) && isSyntheticEntityType(resultType))) {
                     final EntityRetrievalModel<? extends AbstractEntity<?>> l1PropFm = fetchModel == null ? null : fetchModel.getRetrievalModels().get(l1Prop.getValue().name);
                     final boolean yieldSubprops = isNotTopFetch && l1PropFm != null && l1Prop.getValue() instanceof QuerySourceItemForEntityType;
-                    
+
                     if (!yieldSubprops) {
                         if (l1Prop.getValue() instanceof QuerySourceItemForUnionType) {
                             for (final Entry<String, AbstractQuerySourceItem<?>> sub : ((QuerySourceItemForUnionType<?>) l1Prop.getValue()).getProps().entrySet()) {
@@ -131,7 +137,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToStag
                                 enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(l1Prop.getValue(), sub.getValue())), l1Prop.getKey() + "." + sub.getValue().name, false));
                             }
                         } else {
-                            enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(l1Prop.getValue())), l1Prop.getKey(), false));    
+                            enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(l1Prop.getValue())), l1Prop.getKey(), false));
                         }
                     } else {
                         final QuerySourceItemForEntityType<?> l1PropMd = ((QuerySourceItemForEntityType<?>) l1Prop.getValue());
@@ -155,7 +161,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToStag
                     }
                 }
             }
-            
+
             return new Yields2(enhancedYields);
         }
 
@@ -164,8 +170,9 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToStag
             return new Yields2(listOf(new Yield2(firstYield.operand, ID, firstYield.hasNonnullableHint)));
         }
 
-        //TODO need to remove the yields not contained by the fetch model to be consisted with old EQL (the case of explicit yields)
-        
+        // TODO need to remove the explicit yields, not contained in the fetch model to be consistent with EQL2.
+        // This more of a desire to guarantee that columns in the SELECT statement are not wider than the fetch model specifies.
+
         return yields;
     }
 

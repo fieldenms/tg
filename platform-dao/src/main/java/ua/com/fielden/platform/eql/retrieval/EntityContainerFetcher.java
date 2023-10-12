@@ -45,7 +45,7 @@ import ua.com.fielden.platform.utils.IDates;
 public class EntityContainerFetcher {
     private final QueryExecutionContext executionContext;
     private final Logger logger = getLogger(this.getClass());
-    
+
     public EntityContainerFetcher(final QueryExecutionContext executionContext) {
         this.executionContext = executionContext;
     }
@@ -97,7 +97,7 @@ public class EntityContainerFetcher {
         final List<?> res = query.list();
         final Period pd = new Period(st, new DateTime());
         logger.debug(format("Query exec duration: %s m %s s %s ms for type [%s].", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), modelResult.resultType().getSimpleName()));
-        
+
         return entityRawResultConverter.transformFromNativeResult(resultTree, res);
     }
 
@@ -132,10 +132,10 @@ public class EntityContainerFetcher {
     private static List<YieldedColumn> getYieldedColumns(final Yields3 model) {
         return unmodifiableList(model.getYields().stream().map(yield -> new YieldedColumn(yield.alias, yield.type, yield.column)).collect(toList()));
     }
-    
+
     private static boolean idOnlyQuery(final QueryModelResult<?> queryModelResult) {
-        return isPersistedEntityType(queryModelResult.resultType()) && queryModelResult.yieldedColumns().size() == 1 && ID.equals(queryModelResult.yieldedColumns().get(0).name()) 
-                && !(queryModelResult.fetchModel().getPrimProps().size() == 1 && queryModelResult.fetchModel().getPrimProps().contains("id") && 
+        return isPersistedEntityType(queryModelResult.resultType()) && queryModelResult.yieldedColumns().size() == 1 && ID.equals(queryModelResult.yieldedColumns().get(0).name())
+                && !(queryModelResult.fetchModel().getPrimProps().size() == 1 && queryModelResult.fetchModel().getPrimProps().contains(ID) &&
                         queryModelResult.fetchModel().getRetrievalModels().isEmpty());
     }
 }

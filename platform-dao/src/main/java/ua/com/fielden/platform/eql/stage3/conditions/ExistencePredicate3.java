@@ -3,13 +3,13 @@ package ua.com.fielden.platform.eql.stage3.conditions;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.eql.stage3.operands.queries.TypelessSubQuery3;
+import ua.com.fielden.platform.eql.stage3.operands.queries.SubQueryForExists3;
 
 public class ExistencePredicate3 implements ICondition3 {
     private final boolean negated;
-    private final TypelessSubQuery3 subQuery;
+    private final SubQueryForExists3 subQuery;
 
-    public ExistencePredicate3(final boolean negated, final TypelessSubQuery3 subQuery) {
+    public ExistencePredicate3(final boolean negated, final SubQueryForExists3 subQuery) {
         this.negated = negated;
         this.subQuery = subQuery;
     }

@@ -23,6 +23,15 @@ import ua.com.fielden.platform.eql.stage2.operands.queries.SubQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 
+/**
+ * A structure used for representing queries in WHERE/ON conditions, yielding, grouping, and ordering.
+ * The only exception is the EXISTS statement, which is represented by {@link SubQueryForExists1}.
+ * <p>
+ * The specificity of this structure pertains to the processing of yields.
+ * In case of no explicit yields, it is expected that query result is entity (i.e., contains ID), which can be auto-yielded.
+ * Otherwise the exception is thrown.
+ *
+ */
 public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuery2> {
 
     public static final String ERR_AUTO_YIELD_IMPOSSIBLE_FOR_QUERY_WITH_MAIN_SOURCE_HAVING_NO_ID = "Auto-yield is not possible when the main source of the query doesn't contain ID property.";
@@ -34,7 +43,7 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
     @Override
     public SubQuery2 transform(final TransformationContext1 context) {
         final TransformationContext1 localContext = context;
-        
+
         if (joinRoot == null) {
             final QueryComponents2 qb = transformSourceless(localContext);
             return new SubQuery2(qb, enhance(null, qb.yields), false);
@@ -53,16 +62,16 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
     }
 
     private static PropType enhance(final Class<?> resultType, final Yields2 yields) {
-        return resultType == null ? 
-                yields.getYields().iterator().next().operand.type() // the case of modelAsPrimitive() no ResultType provided 
+        return resultType == null ?
+                yields.getYields().iterator().next().operand.type() // the case of modelAsPrimitive() no ResultType provided
                 :
                     new PropType(resultType, H_ENTITY); // the case of modelAsEntity(..)
     }
-    
+
     private boolean isRefetchOnlyQuery() {
         return whereConditions.isIdEqualsExtId();
     }
-    
+
     private static Yields2 enhanceYields(final Yields2 yields, final IJoinNode2<? extends IJoinNode3> joinRoot2) {
         if (!yields.getYields().isEmpty()) {
             return yields;

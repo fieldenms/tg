@@ -7,15 +7,15 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
-import ua.com.fielden.platform.eql.stage2.operands.queries.TypelessSubQuery2;
+import ua.com.fielden.platform.eql.stage2.operands.queries.SubQueryForExists2;
 import ua.com.fielden.platform.eql.stage3.conditions.ExistencePredicate3;
-import ua.com.fielden.platform.eql.stage3.operands.queries.TypelessSubQuery3;
+import ua.com.fielden.platform.eql.stage3.operands.queries.SubQueryForExists3;
 
 public class ExistencePredicate2 extends AbstractCondition2<ExistencePredicate3> {
     private final boolean negated;
-    private final TypelessSubQuery2 subQuery;
+    private final SubQueryForExists2 subQuery;
 
-    public ExistencePredicate2(final boolean negated, final TypelessSubQuery2 subQuery) {
+    public ExistencePredicate2(final boolean negated, final SubQueryForExists2 subQuery) {
         this.negated = negated;
         this.subQuery = subQuery;
     }
@@ -27,7 +27,7 @@ public class ExistencePredicate2 extends AbstractCondition2<ExistencePredicate3>
 
     @Override
     public TransformationResult2<ExistencePredicate3> transform(final TransformationContext2 context) {
-        final TransformationResult2<TypelessSubQuery3> subQueryTr = subQuery.transform(context);
+        final TransformationResult2<SubQueryForExists3> subQueryTr = subQuery.transform(context);
         return new TransformationResult2<>(new ExistencePredicate3(negated, subQueryTr.item), subQueryTr.updatedContext);
     }
     

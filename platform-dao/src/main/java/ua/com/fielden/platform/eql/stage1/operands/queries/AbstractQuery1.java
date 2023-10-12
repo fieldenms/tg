@@ -46,8 +46,14 @@ import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
 /**
  * Base class for stage 1 data structures representing an EQL query, suitable for transformation into stage 2.
- * 
- * 
+ * There are four kinds of structures for representing queries depending on its usage:
+ * <ol>
+ *  <li> Result query {@link ResultQuery1} - the most outer query that is used to actually execute to get some data out.
+ *  <li> Source query (@link SourceQuery1} - a query that is a source for another query (i.e., select from (select ..)).
+ *  <li> Sub query {@link SubQuery1} - queries that are not used as source queries, but are used in WHERE/ON conditions, yielding, grouping, and ordering.
+ *  <li> Exists sub query {@link SubQueryForExists1} - is a kind of Sub queries that don't require the yield portion, which effectively means they are used for EXISTS predicate only.
+ * </ol>
+ *
  */
 public abstract class AbstractQuery1 {
 
@@ -86,45 +92,45 @@ public abstract class AbstractQuery1 {
         return new QueryComponents2(null, whereConditions.transform(context), yields.transform(context), groups.transform(context), orderings.transform(context));
     }
 
-    protected Conditions2 enhanceWithUserDataFilterConditions(final ISource2<? extends ISource3> mainSource, final QuerySourceInfoProvider querySourceInfoProvider, final Conditions2 originalConditions) { 
+    protected Conditions2 enhanceWithUserDataFilterConditions(final ISource2<? extends ISource3> mainSource, final QuerySourceInfoProvider querySourceInfoProvider, final Conditions2 originalConditions) {
         if (udfConditions.isEmpty()) {
             return originalConditions;
         }
-        
-        final TransformationContext1 localContext = (new TransformationContext1(querySourceInfoProvider, false)).cloneWithAdded(mainSource); 
+
+        final TransformationContext1 localContext = (new TransformationContext1(querySourceInfoProvider, false)).cloneWithAdded(mainSource);
         final Conditions2 udfConditions2 = udfConditions.transform(localContext);
-        
+
         if (originalConditions.ignore()) {
-            return udfConditions2.ignore() ? emptyConditions : udfConditions2;  
+            return udfConditions2.ignore() ? emptyConditions : udfConditions2;
         } else {
             return udfConditions2.ignore() ? originalConditions : new Conditions2(false, asList(asList(udfConditions2, originalConditions)));
         }
     }
-    
+
     protected static GroupBys2 enhance(final GroupBys2 groupBys) {
         if (groupBys.equals(emptyGroupBys)) {
             return emptyGroupBys;
         }
-        
+
         final List<GroupBy2> enhanced = groupBys.getGroups().stream().map(group -> enhance(group)).flatMap(List::stream).collect(Collectors.toList());
         return new GroupBys2(enhanced);
     }
-    
+
     protected static OrderBys2 enhance(final OrderBys2 orderBys, final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
         if (orderBys.equals(emptyOrderBys)) {
             return emptyOrderBys;
         }
-        
+
         final List<OrderBy2> enhanced = new ArrayList<>();
-        
+
         for (final OrderBy2 original : orderBys.getModels()) {
             enhanced.addAll(original.operand != null ? transformForOperand(original.operand, original.isDesc) :
                 transformForYield(original, yields, mainSource));
         }
-        
+
         return new OrderBys2(enhanced);
     }
-    
+
     private static List<OrderBy2> transformForYield(final OrderBy2 original, final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
         if (yields.getYieldsMap().containsKey(original.yieldName)) {
             final Yield2 yield = yields.getYieldsMap().get(original.yieldName);
@@ -133,8 +139,8 @@ public abstract class AbstractQuery1 {
             } else {
                 return asList(original);
             }
-        } 
-        
+        }
+
         if (yields.getYieldsMap().isEmpty()) {
             final PropResolution propResolution = Prop1.resolvePropAgainstSource(mainSource, new Prop1(original.yieldName, false));
             if (propResolution != null) {
@@ -142,7 +148,7 @@ public abstract class AbstractQuery1 {
                 return transformForOperand(new Prop2(mainSource, path), original.isDesc);
             }
         }
-        
+
         throw new EqlStage1ProcessingException("Can't find yield [" + original.yieldName + "]!");
     }
 
@@ -151,7 +157,7 @@ public abstract class AbstractQuery1 {
                 extract((Prop2) operand).stream().map(keySubprop -> new OrderBy2(keySubprop, isDesc)).collect(toList()) : //
                 asList(new OrderBy2(operand, isDesc));
     }
-    
+
     private static List<GroupBy2> enhance(final GroupBy2 original) {
         return original.operand instanceof Prop2 ? //
                 extract((Prop2) original.operand).stream().map(keySubprop -> new GroupBy2(keySubprop)).collect(toList()) : //

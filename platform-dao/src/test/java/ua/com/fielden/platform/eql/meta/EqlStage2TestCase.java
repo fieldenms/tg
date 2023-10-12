@@ -49,7 +49,7 @@ import ua.com.fielden.platform.eql.stage2.operands.functions.CountAll2;
 import ua.com.fielden.platform.eql.stage2.operands.queries.ResultQuery2;
 import ua.com.fielden.platform.eql.stage2.operands.queries.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.operands.queries.SubQuery2;
-import ua.com.fielden.platform.eql.stage2.operands.queries.TypelessSubQuery2;
+import ua.com.fielden.platform.eql.stage2.operands.queries.SubQueryForExists2;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.JoinInnerNode2;
@@ -304,8 +304,8 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
         return new SubQuery2(qc2(sources, conditions, yields), new PropType(resultType, H_LONG), false);
     }
 
-    protected static TypelessSubQuery2 typelessSubqry(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions) {
-        return new TypelessSubQuery2(new QueryComponents2(sources, conditions, nullYields, emptyGroupBys, emptyOrderBys));
+    protected static SubQueryForExists2 typelessSubqry(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions) {
+        return new SubQueryForExists2(new QueryComponents2(sources, conditions, nullYields, emptyGroupBys, emptyOrderBys));
     }
 
     protected static SubQuery2 subqry(final IJoinNode2<? extends IJoinNode3> sources, final Yields2 yields, final PropType resultType) {

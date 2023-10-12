@@ -26,7 +26,7 @@ import ua.com.fielden.platform.eql.stage1.etc.OrderBys1;
 import ua.com.fielden.platform.eql.stage1.operands.queries.ResultQuery1;
 import ua.com.fielden.platform.eql.stage1.operands.queries.SourceQuery1;
 import ua.com.fielden.platform.eql.stage1.operands.queries.SubQuery1;
-import ua.com.fielden.platform.eql.stage1.operands.queries.TypelessSubQuery1;
+import ua.com.fielden.platform.eql.stage1.operands.queries.SubQueryForExists1;
 import ua.com.fielden.platform.eql.stage1.sources.ISource1;
 import ua.com.fielden.platform.eql.stage1.sources.IJoinNode1;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
@@ -76,8 +76,8 @@ public class QueryModelToStage1Transformer {
         return new SubQuery1(parseTokensIntoComponents(qryModel, null), qryModel.getResultType());
     }
 
-    public TypelessSubQuery1 generateAsTypelessSubquery(final QueryModel<?> qryModel) {
-        return new TypelessSubQuery1(parseTokensIntoComponents(qryModel, null));
+    public SubQueryForExists1 generateAsTypelessSubquery(final QueryModel<?> qryModel) {
+        return new SubQueryForExists1(parseTokensIntoComponents(qryModel, null));
     }
 
     private QueryComponents1 parseTokensIntoComponents(final QueryModel<?> qryModel, final OrderingModel orderModel) {

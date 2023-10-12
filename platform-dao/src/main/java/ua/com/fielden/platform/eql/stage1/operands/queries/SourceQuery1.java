@@ -32,6 +32,12 @@ import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 
+/**
+ * A structure used for representing queries in the FROM/JOIN statements.
+ * Technically these queries are sub queries from SQL point of view, but the nomenclature of the Sub-Query is reserved for sub queries in other parts (i.e., not FROM/JOIN).
+ * <p>
+ * The specificity of this structure pertains to the fact that in case of no explicit yields or {@code yieldAll}, yields are derived from the main source of the query. No fetch models affect this.
+ */
 public class SourceQuery1 extends AbstractQuery1 implements ITransformableToStage2<SourceQuery2> {
 
     /**
@@ -69,7 +75,7 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToStag
             final List<Yield2> enhancedYields = new ArrayList<>(yields.getYields());
             for (final Entry<String, AbstractQuerySourceItem<?>> el : mainSource.querySourceInfo().getProps().entrySet()) {
                 if (!el.getValue().hasExpression() || shouldIncludeCalcProps && !(el.getValue().hasAggregation() || el.getValue().implicit)) {
-                    
+
                     if (el.getValue() instanceof QuerySourceItemForUnionType) {
                         for (final Entry<String, AbstractQuerySourceItem<?>> sub : ((QuerySourceItemForUnionType<?>) el.getValue()).getProps().entrySet()) {
                             if (isEntityType(sub.getValue().javaType()) && !sub.getValue().hasExpression()) {
@@ -81,7 +87,7 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToStag
                             enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(el.getValue(), sub.getValue())), el.getKey() + "." + sub.getValue().name, false));
                         }
                     } else {
-                        enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(el.getValue())), el.getKey(), false));    
+                        enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(el.getValue())), el.getKey(), false));
                     }
                 }
             }
@@ -93,6 +99,8 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToStag
 
         final Yield2 firstYield = yields.getYields().iterator().next();
         if (yields.getYields().size() == 1 && !yieldAll && isEmpty(firstYield.alias) && isPersistedEntityType(resultType)) {
+            // TODO Identify the use cases. Possibly important for conversion result query into source query (see EntityContainerFetcher.idOnlyQuery handling).
+            // If no use cases found, replace with exception as no practical usage is foreseen for sources that contain only IDs.
             return new Yields2(listOf(new Yield2(firstYield.operand, ID, firstYield.hasNonnullableHint)));
         }
 
