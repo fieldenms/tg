@@ -36,13 +36,26 @@ public record ViolatingElement(
         Optional<AnnotationMirror> annotationMirror, Optional<AnnotationValue> annotationValue,
         List<ViolatingElement> subElements) {
 
-    public ViolatingElement {
+    public ViolatingElement (
+            final Element element,
+            final Kind kind,
+            final String message,
+            final Optional<AnnotationMirror> annotationMirror,
+            final Optional<AnnotationValue> annotationValue,
+            final List<ViolatingElement> subElements)
+    {
         Objects.requireNonNull(element, "Argument [element] cannot be null.");
         Objects.requireNonNull(kind, "Argument [kind] cannot be null.");
         Objects.requireNonNull(message, "Argument [message] cannot be null.");
         Objects.requireNonNull(annotationMirror, "Argument [annotationMirror] cannot be null.");
         Objects.requireNonNull(annotationValue, "Argument [annotationValue] cannot be null.");
         Objects.requireNonNull(subElements, "Argument [subElements] cannot be null.");
+        this.element = element;
+        this.kind = kind;
+        this.message = message;
+        this.annotationMirror = annotationMirror;
+        this.annotationValue = annotationValue;
+        this.subElements = List.copyOf(subElements);
     }
 
     public ViolatingElement(final Element element, final Kind kind, final String message) {
