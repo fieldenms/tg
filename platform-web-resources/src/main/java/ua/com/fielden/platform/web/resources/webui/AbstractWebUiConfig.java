@@ -5,8 +5,6 @@ import static java.util.Arrays.asList;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.ResourceLoader.getStream;
-import static ua.com.fielden.platform.web.action.CentreConfigShareActionProducer.createPostAction;
-import static ua.com.fielden.platform.web.action.CentreConfigShareActionProducer.createPreAction;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.getDefaultCentre;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
@@ -327,11 +325,11 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     @Override
     public List<EntityActionConfig> centreConfigShareActions() {
+        // default Share action does not have pre/post actions (from CentreConfigShareActionProducer) and is implemented specially through synchronous XMLHttpRequest execution (see #2116);
+        // but older way of defining Share action can still be used, especially where Entity Master opening during Share is required
         return asList(
             action(CentreConfigShareAction.class)
             .withContext(context().withSelectionCrit().build())
-            .preAction(createPreAction())
-            .postActionSuccess(createPostAction("errorMessage"))
             .icon("tg-icons:share")
             .shortDesc("Share")
             .longDesc("Share centre configuration")
