@@ -9,7 +9,6 @@ import static ua.com.fielden.platform.eql.stage0.YieldBuilder.ABSENT_ALIAS;
 import org.junit.Test;
 
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
-import ua.com.fielden.platform.eql.stage1.operands.queries.SourceQuery1;
 import ua.com.fielden.platform.eql.stage1.operands.queries.SubQuery1;
 import ua.com.fielden.platform.sample.domain.TeFuelUsageByType;
 
@@ -47,17 +46,6 @@ public class AutoYieldTest extends AbstractEqlShortcutTest {
         } catch (final EqlStage1ProcessingException e) {
             final String expErrMsg = SubQuery1.ERR_AUTO_YIELD_IMPOSSIBLE_FOR_QUERY_WITH_MAIN_SOURCE_HAVING_NO_ID;
             assertEquals("Unexpected error message.", expErrMsg, e.getMessage());
-        }
-    }
-
-    @Test
-    public void yielding_prop_of_entity_type_without_alias_but_modelled_as_entity_for_source_query_is_not_permitted() {
-        try {
-            transformToModelResult(select(select(VEHICLE).yield().prop("model").modelAsEntity(MODEL)).model());
-            fail("Exception expected.");
-        } catch (final EqlStage1ProcessingException e) {
-            final String expErrMsg = SourceQuery1.ERR_NON_ALIASED_YIELDING_OF_ENTITY_VALUE_WITH_MODEL_AS_ENTITY_IS_NOT_PERMITTED.formatted(MODEL.getSimpleName(), MODEL.getSimpleName(), MODEL.getSimpleName());
-            assertEquals(expErrMsg, e.getMessage());
         }
     }
 }

@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage1.operands.queries;
 
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang.StringUtils.isEmpty;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
@@ -11,7 +12,6 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForComponentType;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForUnionType;
@@ -39,11 +39,6 @@ import ua.com.fielden.platform.eql.stage3.sources.ISource3;
  * The specificity of this structure pertains to the fact that in case of no explicit yields or {@code yieldAll}, yields are derived from the main source of the query. No fetch models affect this.
  */
 public class SourceQuery1 extends AbstractQuery1 implements ITransformableToStage2<SourceQuery2> {
-
-    public static final String ERR_NON_ALIASED_YIELDING_OF_ENTITY_VALUE_WITH_MODEL_AS_ENTITY_IS_NOT_PERMITTED = """
-       It looks like you trying to end the query with a single yield of an entity type without providing an alias and modelling it as an entity of that type (i.e., select(..).yield(value of type [%s]).modelAsEntity(%s.class)).
-       This is not permitted. Consider using something like select(..)..yield(..).as("someName").modelAsAggregate(). The resultant entity aggregates would have property "someName" of type [%s].
-    """;
 
     /**
      * All simple queries as source queries are accessible for correlation. Source queries derived from synthetic entities can't be correlated.
@@ -104,7 +99,7 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToStag
 
         final Yield2 firstYield = yields.getYields().iterator().next();
         if (yields.getYields().size() == 1 && !yieldAll && isEmpty(firstYield.alias) && isPersistedEntityType(resultType)) {
-            throw new EqlStage1ProcessingException(ERR_NON_ALIASED_YIELDING_OF_ENTITY_VALUE_WITH_MODEL_AS_ENTITY_IS_NOT_PERMITTED.formatted(resultType.getSimpleName(), resultType.getSimpleName(), resultType.getSimpleName()));
+            return new Yields2(listOf(new Yield2(firstYield.operand, ID, firstYield.hasNonnullableHint)));
         }
 
         return yields;
