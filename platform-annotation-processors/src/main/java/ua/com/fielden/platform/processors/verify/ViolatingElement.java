@@ -50,7 +50,7 @@ public record ViolatingElement(
     }
 
     public ViolatingElement(final Element element, final Kind kind, final String message, List<ViolatingElement> subElements) {
-        this(element, kind, message, empty(), empty(), unmodifiableList(subElements));
+        this(element, kind, message, empty(), empty(), subElements);
     }
 
     public ViolatingElement(final Element element, final Kind kind, final String message, final AnnotationMirror annotationMirror) {
