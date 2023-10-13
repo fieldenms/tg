@@ -18,18 +18,20 @@ import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
 import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier;
+import ua.com.fielden.platform.processors.verify.verifiers.entity.UnionEntityVerifier;
+import ua.com.fielden.platform.utils.CollectionUtil;
 
 /**
  * Annotation processor responsible for verifying source definitions in a domain model.
  * <p>
  * The processor itself does not define any specific verification logic. Instead it delegates to implementations of the {@link IVerifier} interface,
  * providing them its own inputs and respective processing/round environments.
- * 
+ *
  * @author TG Team
  */
 @SupportedAnnotationTypes("*")
 public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
-    
+
     private final List<Function<ProcessingEnvironment, IVerifier>> registeredVerifiersProviders = new LinkedList<>();
     private final List<IVerifier> registeredVerifiers = new LinkedList<>();
 
@@ -40,6 +42,7 @@ public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
         // specify default verifiers here
         this.registeredVerifiersProviders.add(procEnv -> new KeyTypeVerifier(procEnv));
         this.registeredVerifiersProviders.add(procEnv -> new EssentialPropertyVerifier(procEnv));
+        this.registeredVerifiersProviders.add(procEnv -> new UnionEntityVerifier(procEnv));
     }
 
     /**
@@ -101,12 +104,26 @@ public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
             final List<ViolatingElement> violators = verifier.verify(roundEnv);
             if (!violators.isEmpty()) {
                 roundPassed = false;
-                printError("%s was not passed by: [%s]", verifier.getClass().getSimpleName(),
-                        violators.stream().map(ve -> ve.element().getSimpleName()).collect(joining(", ")));
+                printError(errVerifierNotPassedBy(verifier.getClass().getSimpleName(),
+                        violators.stream().map(ve -> ve.element().getSimpleName().toString()).toList()));
             }
         }
 
         return roundPassed;
+    }
+
+    /**
+     * Constructs an error message about a verifier that was not passed by certain elements.
+     */
+    public static String errVerifierNotPassedBy(final String verifierSimpleName, final Collection<String> elementSimpleNames) {
+        return "%s was not passed by: [%s]".formatted(verifierSimpleName, CollectionUtil.toString(elementSimpleNames, ", "));
+    }
+
+    /**
+     * Constructs an error message about a verifier that was not passed by certain elements.
+     */
+    public static String errVerifierNotPassedBy(final String verifierSimpleName, final String... elementSimpleNames) {
+        return errVerifierNotPassedBy(verifierSimpleName, List.of(elementSimpleNames));
     }
 
 }

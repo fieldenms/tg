@@ -1,21 +1,16 @@
 package ua.com.fielden.platform.processors.verify.verifiers;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.lang.reflect.Type;
-import java.util.List;
-import java.util.Locale;
 
 import javax.lang.model.element.Modifier;
-import javax.tools.Diagnostic;
-import javax.tools.JavaFileObject;
 
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.FieldSpec;
+import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 
 public class VerifierTestUtils {
@@ -33,18 +28,6 @@ public class VerifierTestUtils {
     }
 
     /**
-     * Asserts that an error containing {@code msg} was reported during compilation.
-     * @param compilation
-     * @param msg
-     */
-    public static void assertErrorReported(final Compilation compilation, final String msg) {
-        final List<Diagnostic<? extends JavaFileObject>> errors = compilation.getErrors();
-        assertFalse("An error should have been reported.", errors.isEmpty());
-        assertTrue("No error with a matching message was reported.",
-                compilation.getErrors().stream().anyMatch(err -> msg.equals(err.getMessage(Locale.getDefault()))));
-    }
-
-    /**
      * Returns a field builder for entity properties that already includes a {@code private} modifier and {@link IsProperty} annotation.
      */
     public static FieldSpec.Builder propertyBuilder(final Type type, final String name) {
@@ -58,6 +41,21 @@ public class VerifierTestUtils {
     public static FieldSpec.Builder propertyBuilder(final TypeName typeName, final String name) {
         return FieldSpec.builder(typeName, name, Modifier.PRIVATE)
                 .addAnnotation(AnnotationSpec.builder(IsProperty.class).build());
+    }
+
+    /**
+     * Returns a method builder for a property setter having the following form:
+     * <pre>
+     * {@literal @Observable}
+     * public $entityType $name($propType x) {}
+     * </pre>
+     */
+    public static MethodSpec.Builder setterBuilder(final String name, final TypeName propType, final TypeName entityType) {
+        return MethodSpec.methodBuilder(name)
+                .addModifiers(Modifier.PUBLIC)
+                .returns(entityType)
+                .addParameter(propType, "x")
+                .addAnnotation(Observable.class);
     }
 
 }

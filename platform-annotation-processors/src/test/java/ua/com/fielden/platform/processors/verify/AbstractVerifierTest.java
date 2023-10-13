@@ -1,12 +1,14 @@
 package ua.com.fielden.platform.processors.verify;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.tools.JavaCompiler;
@@ -19,11 +21,10 @@ import com.squareup.javapoet.TypeSpec;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileManager;
 import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
-import ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils;
 
 /**
  * Base class for unit tests targeted at {@link IVerifier} implementations.
- * 
+ *
  * @author TG Team
  */
 public abstract class AbstractVerifierTest {
@@ -38,7 +39,7 @@ public abstract class AbstractVerifierTest {
     abstract protected IVerifier createVerifier(final ProcessingEnvironment procEnv);
 
     /**
-     * Returns a new instance of the verifying processor that will initialize and use the sole verifier provided by 
+     * Returns a new instance of the verifying processor that will initialize and use the sole verifier provided by
      * {@link #createVerifier(ProcessingEnvironment)}.
      * @return
      */
@@ -53,7 +54,7 @@ public abstract class AbstractVerifierTest {
      * <p>
      * <i>Note</i>: {@code typeSpecs} will be mapped to java sources belonging to a <i>default package</i> (empty package name).
      * @see {@link TypeSpec}
-     * 
+     *
      * @param typeSpecs
      * @return
      */
@@ -77,26 +78,59 @@ public abstract class AbstractVerifierTest {
     }
 
     /**
-     * A convenient method to compile {@code typeSpecs} and asssert that the given error message was reported.
+     * Another signature for {@link #compileAndAssertErrors(Collection, Collection)}.
+     */
+    protected final Compilation compileAndAssertErrors(final Collection<TypeSpec> typeSpecs, final String... expectedErrorMessages) {
+        return compileAndAssertErrors(typeSpecs, List.of(expectedErrorMessages));
+    }
+
+    /**
+     * A convenient method to compile {@code typeSpecs} and asssert that certain error messages were reported.
+     * <p>
+     * If some errors were reported that were not expected (i.e. not specified by {@code expectedErrorMessages}) then the assertion fails
+     * and all diagnostic messages are printed to standard output.
+     *
      * @return the resulting compilation instance
      */
-    protected final Compilation compileAndAssertError(final Collection<TypeSpec> typeSpecs, final String expectedErrorMessage) {
+    protected final Compilation compileAndAssertErrors(final Collection<TypeSpec> typeSpecs, final Collection<String> expectedErrorMessages) {
         final Compilation compilation = buildCompilation(typeSpecs);
-        final boolean success = VerifierTestUtils.compileAndPrintDiagnostics(compilation);
-        assertFalse("Compilaton should have failed.", success);
-        VerifierTestUtils.assertErrorReported(compilation, expectedErrorMessage);
+        final boolean success = compilation.compile();
+        assertTrueOrFailWith("Compilaton should have failed.", !success, () -> compilation.printDiagnostics());
+
+        // first assert that all expected errors were reported
+        final Set<String> uniqueErrorMessages = compilation.getErrors().stream()
+                .map(err -> err.getMessage(Locale.getDefault())).collect(Collectors.toSet());
+        expectedErrorMessages.forEach(
+                msg -> assertTrueOrFailWith("No error was reported with message [%s].".formatted(msg),
+                        uniqueErrorMessages.contains(msg), () -> compilation.printDiagnostics()));
+
+        // now test for unexpected errors
+        final int diff = compilation.getErrors().size() - expectedErrorMessages.size();
+        assertTrueOrFailWith("%s unexpected error(s) were reported.".formatted(diff), diff == 0, () -> compilation.printDiagnostics());
+
         return compilation;
     }
 
     /**
      * A convenient method to compile {@code typeSpecs} and asssert compilation successs.
+     * <p>
+     * In the case of an unsuccessful compilation, the assertion fails and all diagnostic messages are printed to standard output.
+     *
      * @return the resulting compilation instance
      */
     protected final Compilation compileAndAssertSuccess(final Collection<TypeSpec> typeSpecs) {
         final Compilation compilation = buildCompilation(typeSpecs);
-        final boolean success = VerifierTestUtils.compileAndPrintDiagnostics(compilation);
-        assertTrue("Compilaton should have succeeded.", success);
+        final boolean success = compilation.compile();
+        assertTrueOrFailWith("Compilation should have succeeded.", success, () -> compilation.printDiagnostics());
+
         return compilation;
+    }
+
+    private void assertTrueOrFailWith(final String message, boolean condition, final Runnable failAction) {
+        if (!condition) {
+            failAction.run();
+            fail(message);
+        }
     }
 
 }
