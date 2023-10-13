@@ -304,6 +304,14 @@ Polymer({
             type: Number
         },
 
+        /**
+         * Indicates that dialog opened with this action should not have parent dialog associated with it, and therefore can not be closed when closing the parent.
+         */
+        isIndependant: {
+            type: Boolean,
+            value: false
+        },
+
         ////////////////////////////////////// SUBSECTION: NOT MANDATORY PROPERTIES //////////////////////////////////////
         /**
          * The 'currentEntity' should contain the entity that was clicked (result-set actions)
@@ -464,6 +472,7 @@ Polymer({
             this.currentEntity = currentEntity;
             this.chosenProperty = chosenProperty;
             this.rootEntityType = null;
+            this.isIndependant = false;
 
             this._run();
         }.bind(this);
@@ -476,9 +485,20 @@ Polymer({
             this.currentEntity = () => null;
             this.chosenProperty = null;
             this.rootEntityType = rootEntityType;
+            this.isIndependant = false;
 
             this._run();
         }.bind(this);
+
+        self._runIndependedActionForNew = function (rootEntityType) {
+            this.requireSelectedEntities = 'NONE';
+            this.currentEntity = () => null;
+            this.chosenProperty = null;
+            this.rootEntityType = rootEntityType;
+            this.isIndependant = true;
+
+            this._run();
+        }
 
         self._run = (function (event) {
             console.log(this.shortDesc + ": execute");

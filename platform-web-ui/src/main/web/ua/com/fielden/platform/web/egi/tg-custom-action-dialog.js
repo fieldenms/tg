@@ -1489,10 +1489,12 @@ Polymer({
         this.updateStyles();
         this.refit();//Needed to make dialog position fixed.
         
-        const actionsDialog = findParentDialog(action);
-        if (actionsDialog) {
-            actionsDialog._childDialogs.push(this);
-            this._parentDialog = actionsDialog;
+        if (!action.isIndependant) {
+            const actionsDialog = findParentDialog(action);
+            if (actionsDialog) {
+                actionsDialog._childDialogs.push(this);
+                this._parentDialog = actionsDialog;
+            }
         }
         
         if (this._lastElement.wasLoaded()) {

@@ -623,7 +623,7 @@ const TgEntityMasterBehaviorImpl = {
         }).bind(self);
 
         self._newAction = (function() {
-            self.tgOpenMasterAction._runDynamicActionForNew(self.entityType);
+            self.tgOpenMasterAction._runIndependedActionForNew(self.entityType);
         }).bind(self);
 
         self._postSavedDefaultPostExceptionHandler = (function () {
