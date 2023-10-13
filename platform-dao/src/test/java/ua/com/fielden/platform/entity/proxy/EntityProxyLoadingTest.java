@@ -145,11 +145,11 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void null_121_property_within_fetch_model_should_not_be_proxied() {
+    public void one_2_one_property_within_fetch_model_should_not_be_proxied() {
         final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("key").eq().val("CAR2").model();
         final TgVehicle vehicle = coVehicle.getEntity(from(model).with(fetch(TgVehicle.class).with("finDetails")).model());
         shouldNotBeProxy(vehicle, "finDetails");
-        assertNull(vehicle.getFinDetails());
+        assertNotNull(vehicle.getFinDetails());
     }
     
     ///////////////////////////// calculated entity prop (explicitly calculated prop) //////////////////////////////
@@ -419,8 +419,6 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
 
         final TgVehicle car1 = save(new_(TgVehicle.class, "CAR1", "CAR1 DESC").setInitDate(date("2001-01-01 00:00:00")).setModel(m318).setPrice(new Money("20")).setPurchasePrice(new Money("10")).setActive(true).setLeased(false));
         final TgVehicle car2 = save(new_(TgVehicle.class, "CAR2", "CAR2 DESC").setInitDate(date("2007-01-01 00:00:00")).setModel(m316).setPrice(new Money("200")).setPurchasePrice(new Money("100")).setActive(false).setLeased(true).setLastMeterReading(new BigDecimal("105")).setStation(orgUnit5).setReplacedBy(car1));
-
-        save(new_(TgVehicleFinDetails.class, car1).setCapitalWorksNo("CAP_NO1"));
 
         save(new_composite(TgFuelUsage.class, car2, date("2006-02-09 00:00:00")).setQty(new BigDecimal("100")).setFuelType(unleadedFuelType));
         save(new_composite(TgFuelUsage.class, car2, date("2008-02-10 00:00:00")).setQty(new BigDecimal("120")).setFuelType(petrolFuelType));

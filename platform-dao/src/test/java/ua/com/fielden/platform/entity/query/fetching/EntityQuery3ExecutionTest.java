@@ -1084,11 +1084,25 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         final EntityAggregates location = aggregateDao.getEntity(from(qry).with("EQL3", null).with(fetchAggregates().with("lockey")).model());
         assertEquals("WSHOP1", location.get("lockey"));
     }
-    
+
+    @Override
+    public boolean saveDataPopulationScriptToFile() {
+        return false;
+    }
+
+    @Override
+    public boolean useSavedDataPopulationScript() {
+        return false;
+    }
+
     @Override
     protected void populateDomain() {
         super.populateDomain();
-        
+
+        if (useSavedDataPopulationScript()) {
+            return;
+        }
+
         final TgFuelType unleadedFuelType = save(new_(TgFuelType.class, "U", "Unleaded"));
         final TgFuelType petrolFuelType = save(new_(TgFuelType.class, "P", "Petrol"));
 
@@ -1162,8 +1176,6 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
 
         final TeVehicle car1_ = save(new_(TeVehicle.class, "CAR11", "CAR11 DESC").setInitDate(date("2001-01-01 00:00:00")).setModel(m318_).setPrice(new Money("20")).setPurchasePrice(new Money("10")).setActive(true).setLeased(false));
         final TeVehicle car2_ = save(new_(TeVehicle.class, "CAR22", "CAR22 DESC").setInitDate(date("2007-01-01 00:00:00")).setModel(m316_).setPrice(new Money("200")).setPurchasePrice(new Money("100")).setActive(false).setLeased(true).setLastMeterReading(new BigDecimal("105")).setStation(orgUnit5).setReplacedBy(car1_));
-
-        save(new_(TgVehicleFinDetails.class, car1).setCapitalWorksNo("CAP_NO1"));
 
         save(new_composite(TgFuelUsage.class, car2, date("2006-02-09 00:00:00")).setQty(new BigDecimal("100")).setFuelType(unleadedFuelType));
         save(new_composite(TgFuelUsage.class, car2, date("2008-02-10 00:00:00")).setQty(new BigDecimal("120")).setFuelType(petrolFuelType));
