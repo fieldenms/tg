@@ -978,6 +978,7 @@ const TgEntityMasterBehaviorImpl = {
         self._actions = {};
 
         self._actions['REFRESH'] = {
+            entityType: self.entityType,
             shortDesc: 'REFRESH',
             longDesc: 'REFRESH ACTION...',
             enabledStates: ['EDIT'],
@@ -991,6 +992,7 @@ const TgEntityMasterBehaviorImpl = {
         self._notifyActionPathsFor('REFRESH', true);
 
         self._actions['VALIDATE'] = {
+            entityType: self.entityType,
             shortDesc: 'VALIDATE',
             longDesc: 'VALIDATE ACTION...',
             enabledStates: ['EDIT'],
@@ -1001,6 +1003,7 @@ const TgEntityMasterBehaviorImpl = {
         self._notifyActionPathsFor('VALIDATE', true);
 
         self._actions['SAVE'] = {
+            entityType: self.entityType,
             shortDesc: 'SAVE',
             longDesc: 'SAVE ACTION...',
             enabledStates: ['EDIT'],
@@ -1014,6 +1017,7 @@ const TgEntityMasterBehaviorImpl = {
         self._notifyActionPathsFor('SAVE', true);
 
         self._actions['EDIT'] = {
+            entityType: self.entityType,
             shortDesc: 'EDIT',
             longDesc: 'EDIT ACTION...',
             enabledStates: ['VIEW'],
@@ -1037,6 +1041,7 @@ const TgEntityMasterBehaviorImpl = {
         }); */
 
         self._actions['VIEW'] = {
+            entityType: self.entityType,
             shortDesc: 'VIEW',
             longDesc: 'VIEW ACTION...',
             enabledStates: ['EDIT'],

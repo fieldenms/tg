@@ -13,7 +13,8 @@ import '/resources/components/tg-dropdown-switch.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { createEntityActionThenCallback } from '/resources/master/actions/tg-entity-master-closing-utils.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
-import { allDefined } from '/resources/reflection/tg-polymer-utils.js';
+import { allDefined, localStorageKey } from '/resources/reflection/tg-polymer-utils.js';
+
 import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
 import { _isEntity } from '/app/tg-reflector.js';
 // depends on '/resources/filesaver/FileSaver.min.js' 
@@ -52,7 +53,7 @@ const template = html`
         <span>[[shortDesc]]</span>
     </paper-button>
     <paper-fab id="fabButton" mini icon="[[icon]]" on-tap="_asyncRun" hidden$="[[!_isIcon(actionType)]]" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]"></paper-fab>
-    <tg-dropdown-switch raised fragmented vertical-align="bottom" disabled$="[[_disabled]]" hidden$="[[!_isOptionButton(actionType)]]" view-index="0" views="[[_options]]" change-current-view-on-select on-tg-centre-view-change="_runOptionAction"></tg-dropdown-switch>
+    <tg-dropdown-switch raised fragmented vertical-align="bottom" disabled$="[[_disabled]]" hidden$="[[!_isOptionButton(actionType)]]" view-index="[[_optionIdx]]" views="[[_options]]" change-current-view-on-select on-tg-centre-view-change="_runOptionAction"></tg-dropdown-switch>
     <paper-spinner id="spinner" active="[[_working]]" class="blue" style="display: none;" alt="in progress"></paper-spinner>
 `;
 
@@ -64,6 +65,10 @@ Polymer({
     behaviors: [TgFocusRestorationBehavior, TgElementSelectorBehavior],
 
     properties: {
+        /**
+         * The type of entity opened by master that contains this action
+         */
+        entityType: String,
         /**
          * The elevation value forfab button
          */
@@ -244,6 +249,19 @@ Polymer({
         _continuationInProgress: {
             type: Boolean,
             value: false
+        }, 
+
+        /**
+         * The optional action list if this action has more than one action in drop down list.
+         */
+        _options: Array,
+
+        /**
+         * The currently active action index in option button. 
+         */
+        _optionIdx: {
+            type: Number,
+            value: 0,
         }
     },
 
@@ -253,7 +271,7 @@ Polymer({
         };
     },
 
-    observers: ["_updateOptions(actionType, shortDesc, longDesc, role, restrictNewOption)"],
+    observers: ["_updateOptions(actionType, shortDesc, longDesc, role, restrictNewOption)", "_updateActionIndex(entityType, role)"],
 
     created: function () {
         this.run = this._createRun();
@@ -310,11 +328,33 @@ Polymer({
     _runOptionAction: function (e) {
         const itemIdx = e.detail;
         if (this._options && this._options[itemIdx]) {
+            this._saveActionIndex(itemIdx);
             const closeAfterExecution = this._options[itemIdx].closeAfterExecution;
             const subRole = this._options[itemIdx].subRole;
             this.async(function () {
                 this.run(closeAfterExecution, subRole);
             }, 100);
+        }
+    },
+
+    _generateKey: function () {
+        return localStorageKey(`${this.entityType}_${this.role}`);
+    },
+
+    _saveActionIndex: function (index) {
+        localStorage.setItem(this._generateKey(), index);
+    },
+
+    _getActionIndex: function () {
+        return localStorage.getItem(this._generateKey());
+    },
+
+    _updateActionIndex: function (entityType, role) {
+        if (allDefined(arguments)) {
+            const idx = localStorage.getItem(this._generateKey());
+            if (idx) {
+                this._optionIdx = +idx;
+            }
         }
     },
 
