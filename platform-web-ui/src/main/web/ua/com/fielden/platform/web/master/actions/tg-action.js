@@ -28,7 +28,8 @@ const ActionType = {
 const template = html`
     <style>
         :host {
-           position: relative; 
+           position: relative;
+           --dropdown-switch-text-transform: uppercase; 
         }
         #spinner {
             position: absolute;

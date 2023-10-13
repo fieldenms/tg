@@ -25,7 +25,7 @@ const template = html`
             --paper-button-ink-color: rgba(33, 33, 33, .6);
             --paper-button: {
                 margin: 0;
-                text-transform: none;
+                text-transform: var(--dropdown-switch-text-transform, none);
             }
             --paper-button-flat-keyboard-focus: {
                 font-weight: normal;
@@ -42,6 +42,7 @@ const template = html`
         }
         .item-title {
             margin: 0 8px 0 8px;
+            text-transform: var(--dropdown-switch-text-transform, none);
         }
         .dropdown-content {
             padding: 0;
