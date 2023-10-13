@@ -165,14 +165,12 @@ public class UnionEntityVerifier extends AbstractComposableEntityVerifier {
                         .filter(entry -> entry.getValue().size() > 1)
                         .flatMap(entry -> {
                             final List<PropertyElement> properties = entry.getValue();
-                            return properties.stream().map(prop -> new ViolatingElement(
-                                    prop.element(), ERROR, errPropertyHasNonUniqueType(getSimpleName(entity.element()), getSimpleName(prop.element()))));
+                            return properties.stream()
+                                   .map(prop -> new ViolatingElement(prop.element(), ERROR, errPropertyHasNonUniqueType(getSimpleName(entity.element()), getSimpleName(prop.element()))));
                         }).toList();
 
                 if (!violatingProperties.isEmpty()) {
-                    return Optional.of(
-                            new ViolatingElement(entity.element(), ERROR, errMultiplePropertiesOfSameType(getSimpleName(entity.element())))
-                            .addSubElements(violatingProperties));
+                    return of(new ViolatingElement(entity.element(), ERROR, errMultiplePropertiesOfSameType(getSimpleName(entity.element())), violatingProperties));
                 }
 
                 return Optional.empty();

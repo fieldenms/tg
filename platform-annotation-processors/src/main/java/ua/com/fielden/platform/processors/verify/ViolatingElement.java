@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.processors.verify;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 
@@ -44,28 +46,23 @@ public record ViolatingElement(
     }
 
     public ViolatingElement(final Element element, final Kind kind, final String message) {
-        this(element, kind, message, empty(), empty(), new LinkedList<>());
+        this(element, kind, message, empty(), empty(), emptyList());
+    }
+
+    public ViolatingElement(final Element element, final Kind kind, final String message, List<ViolatingElement> subElements) {
+        this(element, kind, message, empty(), empty(), unmodifiableList(subElements));
     }
 
     public ViolatingElement(final Element element, final Kind kind, final String message, final AnnotationMirror annotationMirror) {
-        this(element, kind, message, of(annotationMirror), empty(), new LinkedList<>());
+        this(element, kind, message, of(annotationMirror), empty(), emptyList());
     }
 
     public ViolatingElement(final Element element, final Kind kind, final String message, final AnnotationMirror annotationMirror, final AnnotationValue annotationValue) {
-        this(element, kind, message, of(annotationMirror), of(annotationValue), new LinkedList<>());
-    }
-
-    public ViolatingElement addSubElements(final Collection<ViolatingElement> elements) {
-        this.subElements.addAll(elements);
-        return this;
-    }
-
-    public ViolatingElement addSubElements(final ViolatingElement... elements) {
-        return addSubElements(List.of(elements));
+        this(element, kind, message, of(annotationMirror), of(annotationValue), emptyList());
     }
 
     public List<ViolatingElement> subElements() {
-        return Collections.unmodifiableList(this.subElements);
+        return unmodifiableList(this.subElements);
     }
 
     /**
