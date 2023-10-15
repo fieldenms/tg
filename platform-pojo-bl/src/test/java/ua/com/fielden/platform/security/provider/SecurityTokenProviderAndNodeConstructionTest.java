@@ -58,7 +58,7 @@ public class SecurityTokenProviderAndNodeConstructionTest {
     public void security_token_hierarchy_is_determined_correctly_for_the_specified_path_and_package() {
         final SecurityTokenProvider provider = new SecurityTokenProvider("target/test-classes", "ua.com.fielden.platform.security.provider");
         final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
-        assertEquals("Incorrect number of top security tokens.", 35, topNodes.size());
+        assertEquals("Incorrect number of top security tokens.", 37, topNodes.size());
 
         // skip attachment related security tokens before getting iterator nodesWithSkippedAttachmentTokens
         final Iterator<SecurityTokenNode> superIter = topNodes.stream().skip(18).collect(toList()).iterator();

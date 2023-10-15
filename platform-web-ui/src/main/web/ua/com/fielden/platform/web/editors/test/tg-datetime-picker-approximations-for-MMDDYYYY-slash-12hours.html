@@ -53,9 +53,29 @@
                 const target = '09/29/2007 23:05:34.567', result = '09/29/2007 11:05:34.567PM';
                 test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
             })();
-
+            
+            (() => {
+                const target = '09/29/2007 23:05:34.000', result = '09/29/2007 11:05:34PM';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '09/29/2007 23:05:34', result = '09/29/2007 11:05:34PM';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
             (() => {
                 const target = '09/29/2007 11:03:34.567a', result = '09/29/2007 11:03:34.567AM';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '09/29/2007 11:03:34.000a', result = '09/29/2007 11:03:34AM';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '09/29/2007 11:03:34a', result = '09/29/2007 11:03:34AM';
                 test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
             })();
             
@@ -65,7 +85,27 @@
             })();
             
             (() => {
+                const target = '09/29/2007 11:03:34.000p', result = '09/29/2007 11:03:34PM';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '09/29/2007 11:03:34p', result = '09/29/2007 11:03:34PM';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
                 const target = '09/29/2007 23:05:3.567';
+                test(`[${target}] to itself`, done => incorrectlyApproximates(done, target));
+            })();
+            
+            (() => {
+                const target = '09/29/2007 23:05:3.000';
+                test(`[${target}] to itself`, done => incorrectlyApproximates(done, target));
+            })();
+            
+            (() => {
+                const target = '09/29/2007 23:05:3';
                 test(`[${target}] to itself`, done => incorrectlyApproximates(done, target));
             })();
             
@@ -75,7 +115,27 @@
             })();
             
             (() => {
+                const target = '09/29/2007 23:05:34.00';
+                test(`[${target}] to itself`, done => incorrectlyApproximates(done, target));
+            })();
+            
+            (() => {
+                const target = '09/29/2007 23:05:34.';
+                test(`[${target}] to itself`, done => incorrectlyApproximates(done, target));
+            })();
+            
+            (() => {
                 const target = '9/9/07 21:5:34.567', result = '09/09/2007 9:05:34.567PM';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '9/9/07 21:5:34.000', result = '09/09/2007 9:05:34PM';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '9/9/07 21:5:34', result = '09/09/2007 9:05:34PM';
                 test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
             })();
             
@@ -85,7 +145,27 @@
             })();
             
             (() => {
+                const target = '09/9/7 9:5:34.000  ', result = '09/09/2007 9:05:34AM';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '09/9/7 9:5:34  ', result = '09/09/2007 9:05:34AM';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
                 const target = '9/29/7 9:5 : 34  .  567  ', result = '09/29/2007 9:05:34.567AM';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '9/29/7 9:5 : 34  .  000  ', result = '09/29/2007 9:05:34AM';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '9/29/7 9:5 : 34  ', result = '09/29/2007 9:05:34AM';
                 test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
             })();
             
@@ -93,7 +173,17 @@
                 const target = '09/9/07 9:5:34.567  ', result = '09/09/2007 9:05:34.567AM';
                 test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
             })();
-
+            
+            (() => {
+                const target = '09/9/07 9:5:34.000  ', result = '09/09/2007 9:05:34AM';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '09/9/07 9:5:34  ', result = '09/09/2007 9:05:34AM';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
             (() => {
                 const target = '09/29/2002 11:03', result = '09/29/2002 11:03AM';
                 test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));

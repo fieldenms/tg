@@ -63,7 +63,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  *
  */
 public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> extends AbstractWebResource {
-    private static final String AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY = "@@activeOnlyChanged";
+    public static final String AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY = "@@activeOnlyChanged";
     private static final String CENTRE_DIRTY_KEY = "@@centreDirty";
     public static final String LOAD_MORE_DATA_KEY = "@@loadMoreData";
     
