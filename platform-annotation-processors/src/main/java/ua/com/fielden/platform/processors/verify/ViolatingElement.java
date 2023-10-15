@@ -19,6 +19,7 @@ import javax.tools.Diagnostic;
 import javax.tools.Diagnostic.Kind;
 
 import ua.com.fielden.platform.processors.verify.annotation.RelaxVerification;
+import ua.com.fielden.platform.processors.verify.annotation.RelaxVerificationFactory;
 import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 
@@ -31,19 +32,21 @@ import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
  *
  * @author TG Team
  */
-public class ViolatingElement {
-    private final Element element;
-    private final Kind kind;
-    /** The relaxed kind of this element if it's annotated with {@link RelaxVerification}, otherwise equal to the original kind. */
-    private final Kind relaxedKind;
-    private final String message;
-    private final Optional<AnnotationMirror> annotationMirror;
-    private final Optional<AnnotationValue> annotationValue;
-    private final List<ViolatingElement> subElements;
+public record ViolatingElement (
+        Element element,
+        Kind kind,
+        /** The relaxed kind of this element if it's annotated with {@link RelaxVerification}, otherwise equal to the original kind. */
+        Kind relaxedKind,
+        String message,
+        Optional<AnnotationMirror> annotationMirror,
+        Optional<AnnotationValue> annotationValue,
+        List<ViolatingElement> subElements)
+{
 
     public ViolatingElement (
             final Element element,
             final Kind kind,
+            final Kind relaxedKind,
             final String message,
             final Optional<AnnotationMirror> annotationMirror,
             final Optional<AnnotationValue> annotationValue,
@@ -54,7 +57,7 @@ public class ViolatingElement {
         Objects.requireNonNull(message, "Argument [message] cannot be null.");
         this.element = element;
         this.kind = kind;
-        this.relaxedKind = RelaxVerification.Factory.policyFor(element).map(pol -> pol.relaxedKind(kind)).orElse(kind);
+        this.relaxedKind = RelaxVerificationFactory.policyFor(element).map(pol -> pol.relaxedKind(kind)).orElse(kind);
         this.message = message;
         this.annotationMirror = annotationMirror;
         this.annotationValue = annotationValue;
@@ -62,31 +65,24 @@ public class ViolatingElement {
     }
 
     public ViolatingElement(final Element element, final Kind kind, final String message) {
-        this(element, kind, message, empty(), empty(), emptyList());
+        this(element, kind, null, message, empty(), empty(), emptyList());
     }
 
     public ViolatingElement(final Element element, final Kind kind, final String message, final List<ViolatingElement> subElements) {
-        this(element, kind, message, empty(), empty(), subElements);
+        this(element, kind, null, message, empty(), empty(), subElements);
     }
 
     public ViolatingElement(final Element element, final Kind kind, final String message, final AnnotationMirror annotationMirror) {
-        this(element, kind, message, of(annotationMirror), empty(), emptyList());
+        this(element, kind, null, message, of(annotationMirror), empty(), emptyList());
     }
 
     public ViolatingElement(final Element element, final Kind kind, final String message, final AnnotationMirror annotationMirror, final AnnotationValue annotationValue) {
-        this(element, kind, message, of(annotationMirror), of(annotationValue), emptyList());
+        this(element, kind, null, message, of(annotationMirror), of(annotationValue), emptyList());
     }
 
     public List<ViolatingElement> subElements() {
         return unmodifiableList(this.subElements);
     }
-
-    public Element element() { return element; }
-    public Kind kind() { return kind; }
-    public Kind relaxedKind() { return relaxedKind; }
-    public String message() { return message; }
-    public Optional<AnnotationMirror> annotationMirror() { return annotationMirror; }
-    public Optional<AnnotationValue> annotationValue() { return annotationValue; }
 
     /**
      * Indicates whether this violating element indicates an error (is associated with {@link Diagnostic.Kind#ERROR}).
