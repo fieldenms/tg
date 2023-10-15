@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.processors.verify;
 
-import static java.util.Optional.ofNullable;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -39,40 +39,46 @@ public class ViolatingElement {
     private final String message;
     private final Optional<AnnotationMirror> annotationMirror;
     private final Optional<AnnotationValue> annotationValue;
-    private final List<ViolatingElement> subElements = new LinkedList<>();
+    private final List<ViolatingElement> subElements;
 
-    public ViolatingElement(final Element element, final Kind kind, final String message, final AnnotationMirror annotationMirror, final AnnotationValue annotationValue) {
+    public ViolatingElement (
+            final Element element,
+            final Kind kind,
+            final String message,
+            final Optional<AnnotationMirror> annotationMirror,
+            final Optional<AnnotationValue> annotationValue,
+            final List<ViolatingElement> subElements)
+    {
         Objects.requireNonNull(element, "Argument [element] cannot be null.");
         Objects.requireNonNull(kind, "Argument [kind] cannot be null.");
         Objects.requireNonNull(message, "Argument [message] cannot be null.");
-
         this.element = element;
         this.kind = kind;
         this.relaxedKind = RelaxVerification.Factory.policyFor(element).map(pol -> pol.relaxedKind(kind)).orElse(kind);
         this.message = message;
-        this.annotationMirror = ofNullable(annotationMirror);
-        this.annotationValue = ofNullable(annotationValue);
-    }
-
-    public ViolatingElement(final Element element, final Kind kind, final String message, final AnnotationMirror annotationMirror) {
-        this(element, kind, message, annotationMirror, null);
+        this.annotationMirror = annotationMirror;
+        this.annotationValue = annotationValue;
+        this.subElements = List.copyOf(subElements);
     }
 
     public ViolatingElement(final Element element, final Kind kind, final String message) {
-        this(element, kind, message, null, null);
+        this(element, kind, message, empty(), empty(), emptyList());
     }
 
-    public ViolatingElement addSubElements(final Collection<ViolatingElement> elements) {
-        this.subElements.addAll(elements);
-        return this;
+    public ViolatingElement(final Element element, final Kind kind, final String message, final List<ViolatingElement> subElements) {
+        this(element, kind, message, empty(), empty(), subElements);
     }
 
-    public ViolatingElement addSubElements(final ViolatingElement... elements) {
-        return addSubElements(List.of(elements));
+    public ViolatingElement(final Element element, final Kind kind, final String message, final AnnotationMirror annotationMirror) {
+        this(element, kind, message, of(annotationMirror), empty(), emptyList());
+    }
+
+    public ViolatingElement(final Element element, final Kind kind, final String message, final AnnotationMirror annotationMirror, final AnnotationValue annotationValue) {
+        this(element, kind, message, of(annotationMirror), of(annotationValue), emptyList());
     }
 
     public List<ViolatingElement> subElements() {
-        return Collections.unmodifiableList(this.subElements);
+        return unmodifiableList(this.subElements);
     }
 
     public Element element() { return element; }

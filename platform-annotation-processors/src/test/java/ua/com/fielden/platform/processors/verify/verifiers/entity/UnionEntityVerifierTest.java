@@ -5,6 +5,8 @@ import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUt
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.UnionEntityVerifier.DistinctPropertyEntityTypesVerifier.errMultiplePropertiesOfSameType;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.UnionEntityVerifier.DistinctPropertyEntityTypesVerifier.errPropertyHasNonUniqueType;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.UnionEntityVerifier.EntityTypedPropertyPresenceVerifier.errNoEntityTypedProperties;
+import static ua.com.fielden.platform.processors.verify.verifiers.entity.UnionEntityVerifier.PropertyTypeVerifier.errNonEntityTypedProperty;
+import static ua.com.fielden.platform.processors.verify.verifiers.entity.UnionEntityVerifier.PropertyTypeVerifier.errUnionEntityTypedProperty;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -30,7 +32,7 @@ import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 /**
  * Tests related to the composable verifier {@link UnionEntityVerifier} and its components.
  *
- * @author homedirectory
+ * @author TG Team
  */
 @RunWith(Enclosed.class)
 public class UnionEntityVerifierTest extends AbstractVerifierTest {
@@ -54,7 +56,7 @@ public class UnionEntityVerifierTest extends AbstractVerifierTest {
             final Consumer<TypeSpec> assertor = entity -> {
                 compileAndAssertErrors(List.of(entity),
                         errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), entity.name),
-                        errNoEntityTypedProperties());
+                        errNoEntityTypedProperties(entity.name));
             };
 
             assertor.accept(unionEntityBuilder("Example").build());
@@ -85,7 +87,7 @@ public class UnionEntityVerifierTest extends AbstractVerifierTest {
             final BiConsumer<TypeSpec, List<String>> assertor = (entity, properties) -> {
                 final List<String> errors = new LinkedList<>();
                 errors.add(errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), properties));
-                errors.addAll(properties.stream().map(UnionEntityVerifier.PropertyTypeVerifier::errNonEntityTypedProperty).toList());
+                errors.addAll(properties.stream().map(p -> errNonEntityTypedProperty(entity.name, p)).toList());
                 compileAndAssertErrors(List.of(entity), errors);
             };
 
@@ -108,7 +110,7 @@ public class UnionEntityVerifierTest extends AbstractVerifierTest {
             final BiConsumer<TypeSpec, List<String>> assertor = (entity, properties) -> {
                 final List<String> errors = new LinkedList<>();
                 errors.add(errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), properties));
-                errors.addAll(properties.stream().map(UnionEntityVerifier.PropertyTypeVerifier::errUnionEntityTypedProperty).toList());
+                errors.addAll(properties.stream().map(p -> errUnionEntityTypedProperty(entity.name, p)).toList());
                 compileAndAssertErrors(List.of(entity), errors);
             };
 
@@ -144,8 +146,8 @@ public class UnionEntityVerifierTest extends AbstractVerifierTest {
             compileAndAssertErrors(List.of(entity),
                     errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), entity.name),
                     errMultiplePropertiesOfSameType(entity.name),
-                    errPropertyHasNonUniqueType("prop1"),
-                    errPropertyHasNonUniqueType("prop2"));
+                    errPropertyHasNonUniqueType(entity.name, "prop1"),
+                    errPropertyHasNonUniqueType(entity.name, "prop2"));
         }
 
         @Test

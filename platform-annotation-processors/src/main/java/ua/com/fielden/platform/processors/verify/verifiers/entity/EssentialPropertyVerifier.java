@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asDeclaredType;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.getSimpleName;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.isRawType;
@@ -92,8 +93,7 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
                 // accessor must be declared
                 final Optional<ExecutableElement> maybeAccessor = entityFinder.findDeclaredPropertyAccessor(entity, getSimpleName(property.element()));
                 if (maybeAccessor.isEmpty()) {
-                    return Optional.of(new ViolatingElement(
-                            property.element(), Kind.ERROR, errMissingAccessor(getSimpleName(property.element()))));
+                    return of(new ViolatingElement(property.element(), Kind.ERROR, errMissingAccessor(getSimpleName(property.element()))));
                 }
 
                 final ExecutableElement accessor = maybeAccessor.get();
@@ -105,14 +105,14 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
                     // AND the return type must be parameterised
                     if (isRawType(accessor.getReturnType()) ||
                             !elementFinder.types.isSubtype(property.getType(), accessor.getReturnType())) {
-                        return Optional.of(new ViolatingElement(
+                        return of(new ViolatingElement(
                                 accessor, Kind.ERROR, errCollectionalIncorrectReturnType(getSimpleName(accessor), property.getType().toString())));
                     }
                 }
                 else { /* other properties */
                     // acessor's return type must match the property type
                     if (!elementFinder.types.isSameType(accessor.getReturnType(), property.getType())) {
-                        return Optional.of(new ViolatingElement(
+                        return of(new ViolatingElement(
                                 accessor, Kind.ERROR, errIncorrectReturnType(getSimpleName(accessor), property.getType().toString())));
                     }
                 }
