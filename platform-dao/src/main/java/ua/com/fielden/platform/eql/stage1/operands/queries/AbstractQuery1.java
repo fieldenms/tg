@@ -65,6 +65,7 @@ public abstract class AbstractQuery1 {
     public final OrderBys1 orderings;
     public final Class<? extends AbstractEntity<?>> resultType;
     public final boolean yieldAll;
+    public boolean shouldMaterialiseCalcPropsAsColumnsInSqlQuery;
 
     public AbstractQuery1(final QueryComponents1 queryComponents, final Class<? extends AbstractEntity<?>> resultType) {
         this.joinRoot = queryComponents.joinRoot;
@@ -75,6 +76,7 @@ public abstract class AbstractQuery1 {
         this.orderings = queryComponents.orderings;
         this.resultType = resultType;
         this.yieldAll = queryComponents.yieldAll;
+        this.shouldMaterialiseCalcPropsAsColumnsInSqlQuery = queryComponents.shouldMaterialiseCalcPropsAsColumnsInSqlQuery;
     }
 
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
@@ -176,6 +178,7 @@ public abstract class AbstractQuery1 {
         result = prime * result + ((joinRoot == null) ? 0 : joinRoot.hashCode());
         result = prime * result + yields.hashCode();
         result = prime * result + (yieldAll ? 1231 : 1237);
+        result = prime * result + (shouldMaterialiseCalcPropsAsColumnsInSqlQuery ? 1231 : 1237);
         return result;
     }
 
@@ -198,6 +201,7 @@ public abstract class AbstractQuery1 {
                 Objects.equals(udfConditions, other.udfConditions) &&
                 Objects.equals(groups, other.groups) &&
                 Objects.equals(orderings, other.orderings) &&
-                Objects.equals(yieldAll, other.yieldAll);
+                Objects.equals(yieldAll, other.yieldAll) &&
+                Objects.equals(shouldMaterialiseCalcPropsAsColumnsInSqlQuery, other.shouldMaterialiseCalcPropsAsColumnsInSqlQuery);
     }
 }

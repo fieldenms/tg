@@ -33,29 +33,29 @@ import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
- * Transforms EQL models in form of fluent API tokens to the stage 1 representation. 
- * 
+ * Transforms EQL models in form of fluent API tokens to the stage 1 representation.
+ *
  */
 public class QueryModelToStage1Transformer {
     public final QueryNowValue nowValue;
     public final IFilter filter;
     public final String username;
     private final Map<String, Object> paramValues = new HashMap<>();
-    
+
     public QueryModelToStage1Transformer(final IFilter filter, final String username, final QueryNowValue nowValue, final Map<String, Object> paramValues) {
         this.filter = filter;
         this.username = username;
         this.nowValue = nowValue;
         this.paramValues.putAll(paramValues);
     }
-    
+
     private int sourceId = 0;
-    
+
     public int nextSourceId() {
         sourceId = sourceId + 1;
         return sourceId;
     }
-    
+
     public <T extends AbstractEntity<?>, Q extends QueryModel<T>> ResultQuery1 generateAsResultQuery(final QueryModel<T> qm, final OrderingModel orderModel, final IRetrievalModel<T> fetchModel) {
         return new ResultQuery1(parseTokensIntoComponents(qm, orderModel), qm.getResultType(), fetchModel);
     }
@@ -63,11 +63,11 @@ public class QueryModelToStage1Transformer {
     public <T extends AbstractEntity<?>> SourceQuery1 generateAsCorrelatedSourceQuery(final QueryModel<T> qryModel) {
         return generateAsSourceQuery(qryModel, true);
     }
-        
+
     public <T extends AbstractEntity<?>> SourceQuery1 generateAsUncorrelatedSourceQuery(final QueryModel<T> qryModel) {
         return generateAsSourceQuery(qryModel, false);
     }
-    
+
     private <T extends AbstractEntity<?>> SourceQuery1 generateAsSourceQuery(final QueryModel<T> qryModel, final boolean isCorrelated) {
         return new SourceQuery1(parseTokensIntoComponents(qryModel, null), qryModel.getResultType(), isCorrelated);
     }
@@ -119,13 +119,13 @@ public class QueryModelToStage1Transformer {
         final IJoinNode1<? extends IJoinNode2<?>> fromModel = from.getModel();
         final Conditions1 udfModel = fromModel == null ? emptyConditions : generateUserDataFilteringCondition(qryModel.isFilterable(), filter, username, fromModel.mainSource());
 
-        return new QueryComponents1(fromModel, where.getModel(), udfModel, select.getModel(), groupBy.getModel(), produceOrderBys(orderModel), qryModel.isYieldAll());
+        return new QueryComponents1(fromModel, where.getModel(), udfModel, select.getModel(), groupBy.getModel(), produceOrderBys(orderModel), qryModel.isYieldAll(), qryModel.shouldMaterialiseCalcPropsAsColumnsInSqlQuery);
     }
-    
+
     private Conditions1 generateUserDataFilteringCondition(final boolean filterable, final IFilter filter, final String username, final ISource1<?> mainSource) {
         if (filterable && filter != null) {
             // now there is no need to rely on the main source alias while processing UDF (that's why null can be used until alias parameter is removed from the enhance() method.
-            final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), null, username); 
+            final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), null, username);
             if (filteringCondition != null) {
                 // LOGGER.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() + "]");
                 return new StandAloneConditionBuilder(this, filteringCondition, false).getModel();
@@ -170,7 +170,7 @@ public class QueryModelToStage1Transformer {
         }
         return orderBy.getModel();
     }
-    
+
     public Object getParamValue(final String paramName) {
         return paramValues.get(paramName);
     }

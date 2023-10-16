@@ -39,7 +39,7 @@ import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 public abstract class EqlStage1TestCase extends EqlTestCase {
 
     static int sourceId = 0;
-    
+
     protected static int nextSourceId() {
         sourceId = sourceId + 1;
         return sourceId;
@@ -48,11 +48,11 @@ public abstract class EqlStage1TestCase extends EqlTestCase {
     protected static void resetId() {
         sourceId = 0;
     }
-    
+
     protected static <T extends AbstractEntity<?>> ResultQuery1 resultQry(final EntityResultQueryModel<T> qry) {
         return qb().generateAsResultQuery(qry, null, null);
     }
-    
+
     protected static <T extends AbstractEntity<?>> ResultQuery1 resultQry(final EntityResultQueryModel<T> qry, final Map<String, Object> paramValues) {
         return qb(paramValues).generateAsResultQuery(qry, null, null);
     }
@@ -60,23 +60,23 @@ public abstract class EqlStage1TestCase extends EqlTestCase {
     protected static ResultQuery1 resultQry(final AggregatedResultQueryModel qry) {
         return qb().generateAsResultQuery(qry, null, null);
     }
-    
+
     protected static QueryComponents1 qc1(final IJoinNode1<? extends IJoinNode2<?>> sources, final Conditions1 conditions) {
-        return new QueryComponents1(sources, conditions, emptyConditions, emptyYields, emptyGroupBys, emptyOrderBys, false);
+        return new QueryComponents1(sources, conditions, emptyConditions, emptyYields, emptyGroupBys, emptyOrderBys, false, false);
     }
 
     protected static QueryComponents1 qc1(final IJoinNode1<? extends IJoinNode2<?>> sources, final Conditions1 conditions, final Yields1 yields) {
-        return new QueryComponents1(sources, conditions, emptyConditions, yields, emptyGroupBys, emptyOrderBys, false);
+        return new QueryComponents1(sources, conditions, emptyConditions, yields, emptyGroupBys, emptyOrderBys, false, false);
     }
 
     protected static Yields1 yields(final Yield1 ... yields) {
         if (yields.length > 0) {
-            return new Yields1(asList(yields)); 
+            return new Yields1(asList(yields));
         } else {
             return emptyYields;
         }
     }
-    
+
     protected static Yield1 yieldCountAll(final String alias) {
         return new Yield1(CountAll1.INSTANCE, alias, false);
     }
@@ -88,7 +88,7 @@ public abstract class EqlStage1TestCase extends EqlTestCase {
     protected static Conditions1 conditions(final ICondition1<?> firstCondition) {
         return new Conditions1(false, firstCondition, emptyList());
     }
-    
+
     protected static IJoinNode1<? extends IJoinNode2<?>> sources(final ISource1<? extends ISource2<?>> main) {
         return new JoinLeafNode1(main);
     }
@@ -112,7 +112,7 @@ public abstract class EqlStage1TestCase extends EqlTestCase {
     protected static ComparisonPredicate1 eq(final Prop1 op1, final Prop1 op2) {
         return new ComparisonPredicate1(op1, EQ, op2);
     }
-    
+
     protected static ComparisonPredicate1 ne(final Prop1 op1, final Prop1 op2) {
         return new ComparisonPredicate1(op1, NE, op2);
     }

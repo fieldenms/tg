@@ -33,11 +33,10 @@ import ua.com.fielden.platform.eql.stage2.etc.Yield2;
 import ua.com.fielden.platform.eql.stage2.etc.Yields2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.queries.ResultQuery2;
-import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
-import ua.com.fielden.platform.eql.stage3.sources.ISource3;
+import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
-import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
 /**
  * A structure used for representing the most outer query that is used to actually execute to get some data out.
@@ -59,28 +58,25 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToStag
         if (joinRoot == null) {
             return new ResultQuery2(transformSourceless(context), resultType);
         }
-        final T2<TransformationResult1<? extends IJoinNode2<?>>, Boolean> joinRootTr = transformAndEnhanceJoinRoot(context);
-        final TransformationContext1 enhancedContext = joinRootTr._1.updatedContext;
-        final IJoinNode2<? extends IJoinNode3> joinRoot2 = joinRootTr._1.item;
+        final TransformationResult1<? extends IJoinNode2<?>> joinRootTr = joinRoot.transform(context);
+        final TransformationContext1 enhancedContext = joinRootTr.updatedContext;
+        final IJoinNode2<? extends IJoinNode3> joinRoot2 = joinRootTr.item;
         final Conditions2 whereConditions2 = enhanceWithUserDataFilterConditions(joinRoot2.mainSource(), context.querySourceInfoProvider, whereConditions.transform(enhancedContext));
         final Yields2 yields2 = yields.transform(enhancedContext);
         final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
         final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, joinRoot2.mainSource());
-        final Yields2 enhancedYields2 = enhanceYields(yields2, joinRoot2.mainSource(), joinRootTr._2);
+        final Yields2 enhancedYields2 = enhanceYields(yields2, joinRoot2.mainSource(), isAllAggregated(joinRoot2.mainSource()));
         final QueryComponents2 queryComponents2 = new QueryComponents2(joinRoot2, whereConditions2, enhancedYields2, groups2, orderings2);
 
         return new ResultQuery2(queryComponents2, resultType);
     }
 
-    private T2<TransformationResult1<? extends IJoinNode2<?>>, Boolean> transformAndEnhanceJoinRoot(final TransformationContext1 context) {
-        final TransformationResult1<? extends IJoinNode2<?>> joinRootTr = joinRoot.transform(context);
+    private boolean isAllAggregated(final ISource2<? extends ISource3> mainSource) {
         if (fetchModel == null) {
-            return T2.t2(joinRootTr, false);
+            return false;
         }
 
-        final IJoinNode2<? extends IJoinNode3> joinRoot2 = joinRootTr.item;
         boolean allAggregated = false;
-        final ISource2<? extends ISource3> mainSource = joinRoot2.mainSource();
         if (mainSource.sourceType().equals(fetchModel.getEntityType())) {
             allAggregated = true;
             for (final String primProp : fetchModel.getPrimProps()) {
@@ -91,12 +87,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToStag
             }
         }
 
-        if (!allAggregated) {
-            return T2.t2(joinRootTr, false);
-        } else {
-            // Need to repeat the transformation of joinRoot in order to actually yield all calculated properties. This way they will look as usual properties (contain no aggregation) at query source usage level.
-            return T2.t2(joinRoot.transform(context.cloneForAggregates()), true);
-        }
+        return allAggregated;
     }
 
     /**

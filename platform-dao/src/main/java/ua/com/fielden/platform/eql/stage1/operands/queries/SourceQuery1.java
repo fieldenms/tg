@@ -65,17 +65,18 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToStag
         final Yields2 yields2 = yields.transform(enhancedContext);
         final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
         final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, joinRoot2.mainSource());
-        final Yields2 enhancedYields2 = enhanceYields(yields2, joinRoot2.mainSource(), context.shouldMaterialiseCalcPropsAsColumnsInSqlQuery);
+        final Yields2 enhancedYields2 = enhanceYields(yields2, joinRoot2.mainSource());
         final QueryComponents2 queryComponents2 = new QueryComponents2(joinRoot2, whereConditions2, enhancedYields2, groups2, orderings2);
         return new SourceQuery2(queryComponents2, resultType);
     }
 
-    private Yields2 enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource, final boolean shouldIncludeCalcProps) {
+    private Yields2 enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
         if (yields.getYields().isEmpty() || yieldAll) {
             final List<Yield2> enhancedYields = new ArrayList<>(yields.getYields());
-            for (final Entry<String, AbstractQuerySourceItem<?>> el : mainSource.querySourceInfo().getProps().entrySet()) {
-                if (!el.getValue().hasExpression() || shouldIncludeCalcProps && !(el.getValue().hasAggregation() || el.getValue().implicit)) {
 
+            for (final Entry<String, AbstractQuerySourceItem<?>> el : mainSource.querySourceInfo().getProps().entrySet()) {
+                // need to materialise only those calc props that are neither implicit, nor entity center totals
+                if (!el.getValue().hasExpression() || shouldMaterialiseCalcPropsAsColumnsInSqlQuery && !(el.getValue().hasAggregation() || el.getValue().implicit)) {
                     if (el.getValue() instanceof QuerySourceItemForUnionType) {
                         for (final Entry<String, AbstractQuerySourceItem<?>> sub : ((QuerySourceItemForUnionType<?>) el.getValue()).getProps().entrySet()) {
                             if (isEntityType(sub.getValue().javaType()) && !sub.getValue().hasExpression()) {
@@ -91,7 +92,7 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToStag
                     }
                 }
             }
-            final boolean allGenerated = mainSource.querySourceInfo().isComprehensive && yields.getYields().isEmpty() && !shouldIncludeCalcProps;
+            final boolean allGenerated = mainSource.querySourceInfo().isComprehensive && yields.getYields().isEmpty() && !shouldMaterialiseCalcPropsAsColumnsInSqlQuery;
             // generated yields with shouldIncludeCalcProps=true will produce different QuerySourceInfo from the canonical one (calc props will be yielded, thus turned from calc to persistent)
             // if necessary additional separate cache can be created for such cases (allGeneratedButWithCalcPropsMaterialised)
             return new Yields2(enhancedYields, allGenerated);
