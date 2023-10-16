@@ -6,8 +6,10 @@ import static ua.com.fielden.platform.eql.meta.EntityTypeInfo.getEntityTypeInfo;
 import static ua.com.fielden.platform.eql.meta.EntityTypeInfo.getEntityTypeInfoPair;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.SortedMap;
 
 import org.apache.logging.log4j.Logger;
 
@@ -100,11 +102,11 @@ public class DomainMetadataAnalyser {
         }
     }
 
-    public Collection<PropertyMetadata> getPropertyMetadatasForEntity(final Class<? extends AbstractEntity<?>> entityType) {
-        final AbstractEntityMetadata epm = getEntityMetadata(entityType);
+    public <ET extends AbstractEntity<?>> SortedMap<String, PropertyMetadata> getPropertyMetadatasForEntity(final Class<ET> entityType) {
+        final AbstractEntityMetadata<ET> epm = getEntityMetadata(entityType);
         if (epm == null) {
             throw new IllegalStateException("Missing ppi map for entity type: " + entityType);
         }
-        return epm.getProps().values();
+        return Collections.unmodifiableSortedMap(epm.getProps());
     }
 }

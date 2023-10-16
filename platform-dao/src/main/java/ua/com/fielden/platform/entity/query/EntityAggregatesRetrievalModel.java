@@ -44,4 +44,9 @@ public class EntityAggregatesRetrievalModel<T extends AbstractEntity<?>> extends
         fetch<?> finalFetch = existingFetch != null ? existingFetch.originalFetch.unionWith(fetchModel) : fetchModel;
         addEntityPropFetchModel(propName, new EntityRetrievalModel<>(finalFetch, getDomainMetadataAnalyser(), false));
     }
+
+    @Override
+    public boolean containsOnlyTotals() {
+        return false;
+    }
 }

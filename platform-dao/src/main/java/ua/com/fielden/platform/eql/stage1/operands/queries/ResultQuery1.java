@@ -65,29 +65,10 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToStag
         final Yields2 yields2 = yields.transform(enhancedContext);
         final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
         final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, joinRoot2.mainSource());
-        final Yields2 enhancedYields2 = enhanceYields(yields2, joinRoot2.mainSource(), isAllAggregated(joinRoot2.mainSource()));
+        final Yields2 enhancedYields2 = enhanceYields(yields2, joinRoot2.mainSource());
         final QueryComponents2 queryComponents2 = new QueryComponents2(joinRoot2, whereConditions2, enhancedYields2, groups2, orderings2);
 
         return new ResultQuery2(queryComponents2, resultType);
-    }
-
-    private boolean isAllAggregated(final ISource2<? extends ISource3> mainSource) {
-        if (fetchModel == null) {
-            return false;
-        }
-
-        boolean allAggregated = false;
-        if (mainSource.sourceType().equals(fetchModel.getEntityType())) {
-            allAggregated = true;
-            for (final String primProp : fetchModel.getPrimProps()) {
-                final AbstractQuerySourceItem<?> fetchedProp = mainSource.querySourceInfo().getProps().get(primProp.split("\\.")[0]);
-                if (fetchedProp != null) {
-                    allAggregated = allAggregated && fetchedProp.hasAggregation();
-                }
-            }
-        }
-
-        return allAggregated;
     }
 
     /**
@@ -104,7 +85,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToStag
      * @param allAggregated
      * @return
      */
-    private Yields2 enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource, final boolean allAggregated) {
+    private Yields2 enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
         if (yields.getYields().isEmpty() || yieldAll) {
             final List<Yield2> enhancedYields = new ArrayList<>(yields.getYields());
 
@@ -112,7 +93,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToStag
 
             for (final Entry<String, AbstractQuerySourceItem<?>> l1Prop : mainSource.querySourceInfo().getProps().entrySet()) {
             	// FIXME condition for {@code id} should be removed once the default fetch strategies are adjusted to recognise the presence of {@code id} in synthetic entities.
-                if (fetchModel == null || fetchModel.containsProp(l1Prop.getValue().name) || (!allAggregated && ID.equals(l1Prop.getValue().name) && isSyntheticEntityType(resultType))) {
+                if (fetchModel == null || fetchModel.containsProp(l1Prop.getValue().name) || (!fetchModel.containsOnlyTotals() && ID.equals(l1Prop.getValue().name) && isSyntheticEntityType(resultType))) {
                     final EntityRetrievalModel<? extends AbstractEntity<?>> l1PropFm = fetchModel == null ? null : fetchModel.getRetrievalModels().get(l1Prop.getValue().name);
                     final boolean yieldSubprops = isNotTopFetch && l1PropFm != null && l1Prop.getValue() instanceof QuerySourceItemForEntityType;
 
