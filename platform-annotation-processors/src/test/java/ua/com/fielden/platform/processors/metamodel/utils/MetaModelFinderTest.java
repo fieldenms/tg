@@ -332,7 +332,6 @@ public class MetaModelFinderTest {
                 EntityWithoutDescTitle_extends_EntityWithDescTitleWithoutMetaModelMetaModel.class,
                 ExampleEntityMetaModel.class,
                 ExampleUnionEntityMetaModel.class,
-                ExampleUnionEntityMetaModelAliased.class,
                 KeyTypeAsComposite_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModel.class,
                 KeyTypeAsEntity_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModel.class,
                 KeyTypeAsString_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModel.class,
