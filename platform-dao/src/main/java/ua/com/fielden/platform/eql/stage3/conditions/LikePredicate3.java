@@ -28,9 +28,9 @@ public class LikePredicate3 implements ICondition3 {
     }
 
     private String leftOperandSql(final DbVersion dbVersion) {
-        return options.withCast ? leftOperandWithTypecastingSql(dbVersion) : leftOperand.sql(dbVersion); 
+        return options.withCast ? leftOperandWithTypecastingSql(dbVersion) : leftOperand.sql(dbVersion);
     }
-    
+
     private String leftOperandWithTypecastingSql(final DbVersion dbVersion) {
         if (leftOperand.type() != null && Integer.class == leftOperand.type().javaType()) {
             return format("CAST(%s AS VARCHAR(11))", leftOperand.sql(dbVersion));
@@ -52,7 +52,7 @@ public class LikePredicate3 implements ICondition3 {
             throw new EqlStage3ProcessingException(format("Left operand type [%s] is not supported for operand LIKE.", leftOperand.type()));
         }
     }
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -68,11 +68,11 @@ public class LikePredicate3 implements ICondition3 {
         if (this == obj) {
             return true;
         }
-        
+
         if (!(obj instanceof LikePredicate3)) {
             return false;
         }
-        
+
         final LikePredicate3 other = (LikePredicate3) obj;
 
         return Objects.equals(leftOperand, other.leftOperand) &&
