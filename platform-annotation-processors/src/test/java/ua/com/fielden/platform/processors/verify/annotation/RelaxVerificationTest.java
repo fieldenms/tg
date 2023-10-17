@@ -32,7 +32,7 @@ import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 /**
  * Tests covering logic associated with the {@link RelaxVerification} annotation.
  *
- * @author homedirectory
+ * @author TG Team
  */
 public class RelaxVerificationTest extends AbstractVerifierTest {
 
@@ -50,7 +50,7 @@ public class RelaxVerificationTest extends AbstractVerifierTest {
 
     @Test
     public void elements_with_RelaxationPolicy_INFO_have_messages_reported_with_Kind_OTHER() {
-        final var relaxINFO = AnnotationSpec.get(RelaxVerification.Factory.create(INFO));
+        final var relaxINFO = AnnotationSpec.get(RelaxVerificationFactory.create(INFO));
 
         final TypeSpec example = TypeSpec.classBuilder("Example")
                 .addAnnotation(makeMessageAnnotation("INVALID CLASS", ERROR))
@@ -79,7 +79,7 @@ public class RelaxVerificationTest extends AbstractVerifierTest {
 
     @Test
     public void elements_with_RelaxationPolicy_WARN_have_messages_reported_with_Kind_MANDATORY_WARNING_only_if_the_original_kind_was_ERROR() {
-        final var relaxWARN = AnnotationSpec.get(RelaxVerification.Factory.create(WARN));
+        final var relaxWARN = AnnotationSpec.get(RelaxVerificationFactory.create(WARN));
 
         final TypeSpec example = TypeSpec.classBuilder("Example")
                 .addAnnotation(makeMessageAnnotation("INVALID CLASS", ERROR))
@@ -108,7 +108,7 @@ public class RelaxVerificationTest extends AbstractVerifierTest {
     @Test
     public void enclosed_elements_inherit_the_effect_of_RelaxVerification_annotation_if_enclosed_is_true() {
         final TypeSpec example = TypeSpec.classBuilder("Example")
-                .addAnnotation(AnnotationSpec.get(RelaxVerification.Factory.create(WARN, true)))
+                .addAnnotation(AnnotationSpec.get(RelaxVerificationFactory.create(WARN, true)))
                 .addField(FieldSpec.builder(String.class, "name")
                         .addAnnotation(makeMessageAnnotation("INVALID FIELD", ERROR))
                         .build())
@@ -125,7 +125,7 @@ public class RelaxVerificationTest extends AbstractVerifierTest {
     @Test
     public void enclosed_elements_dont_inherit_the_effect_of_RelaxVerification_annotation_if_enclosed_is_false() {
         final TypeSpec example = TypeSpec.classBuilder("Example")
-                .addAnnotation(AnnotationSpec.get(RelaxVerification.Factory.create(WARN, false)))
+                .addAnnotation(AnnotationSpec.get(RelaxVerificationFactory.create(WARN, false)))
                 .addField(FieldSpec.builder(String.class, "name")
                         .addAnnotation(makeMessageAnnotation("INVALID FIELD", ERROR))
                         .build())

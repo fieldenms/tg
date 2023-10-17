@@ -43,6 +43,23 @@ const template = html`
             /* paper-listbox */
             --paper-listbox-background-color: #fff;
         }
+        #menu ::slotted(paper-item) {
+            margin-left: -8px;
+            padding-left: 0;
+            --icon-display: inherit;
+            --icon-visibility: hidden;
+        }
+        #menu ::slotted(paper-item.notDraggable) {
+            margin-left: 0;
+            padding-left: 16px;
+            --icon-display: none;
+        }
+        #menu ::slotted(paper-item.dragging) {
+            opacity: 0;
+        }
+        #menu:not(.dragging) ::slotted(paper-item:hover){
+            --icon-visibility: visible;
+        }
         :host {
             display: inline-block;
             --paper-item-selected: {
@@ -89,7 +106,7 @@ const template = html`
 
     <app-drawer-layout id="drawerPanel" fullbleed on-app-drawer-transitioned="_appDrawerTransitioned">
         <app-drawer id="drawer" disable-swipe="[[!mobile]]" slot="drawer">
-            <paper-listbox id="menu" attr-for-selected="data-route" selected="{{route}}" style="height: 100%; overflow: auto;">
+            <paper-listbox id="menu" attr-for-selected="data-route" on-dragstart="startDrag" on-dragend="endDrag" on-dragenter="dragEntered" on-dragover="dragOver" selected="{{route}}" style="height: 100%; overflow: auto;">
                 <slot id="menuItems" name="menu-item"></slot>
             </paper-listbox>
         </app-drawer>
@@ -103,6 +120,26 @@ const template = html`
 
 const findMenuItemSection = function (path) {
     return path.find(element => element.tagName === "TG-MASTER-MENU-ITEM-SECTION");
+};
+
+const _updateMenuOrder = function (menuOrder, container) {
+    const menuItems = [...container.querySelectorAll("paper-item:not(.notDraggable)")];
+
+    let nextSibling = menuItems[0];
+    for (let menuIdx = menuOrder.length - 1; menuIdx >= 0; menuIdx--) {
+        const menuItemIdxToAdd = menuItems.findIndex(menuItem => menuItem.getAttribute("item-title") === menuOrder[menuIdx]);
+        if (menuItemIdxToAdd >= 0) {
+            container.insertBefore(menuItems[menuItemIdxToAdd], nextSibling);
+            nextSibling = menuItems[menuItemIdxToAdd];
+        }
+    }
+};
+
+const hideTooltip = function () {
+    const tooltipElement = document.getElementsByTagName('tg-tooltip')[0];
+    if (tooltipElement) {
+        tooltipElement.hide();
+    }
 };
 
 Polymer({
@@ -191,6 +228,22 @@ Polymer({
         },
 
         /**
+         * The name of user that opened compound master with this menu. That is needed to restore and save.
+         */
+        userName: {
+            type: String,
+            value: null
+        },
+
+        /**
+         * The type of entity for which compound master with this menu is opened.
+         */
+        entityType: {
+            type: String,
+            value: null
+        },
+
+        /**
          * The open compound master entity.
          */
         entity: {
@@ -243,7 +296,9 @@ Polymer({
         }
     },
 
-    behaviors: [ IronA11yKeysBehavior, TgFocusRestorationBehavior, IronResizableBehavior ],
+    behaviors: [IronA11yKeysBehavior, TgFocusRestorationBehavior, IronResizableBehavior],
+
+    observers: ["_loadMenuOrder(userName, entityType)"],
 
     listeners: {
         transitionend: '_onTransitionEnd'
@@ -408,6 +463,62 @@ Polymer({
         delete this._cachedParentNode; // remove reference on previous _cachedParentNode to facilitate possible releasing of parentNode from memory
     },
 
+    //Drag from behavior implementation
+    startDrag: function (dragEvent) {
+        this._menuItemToDrag = dragEvent.target.parentElement;
+        this.async(() => {
+            if (this._menuItemToDrag) {
+                this._menuItemToDrag.classList.add("dragging");
+                this.$.menu.classList.add("dragging");
+            }
+        }, 1);
+        dragEvent.dataTransfer.effectAllowed = "copyMove";
+        dragEvent.dataTransfer.setDragImage(this._menuItemToDrag, 12, 24);
+        hideTooltip();
+    },
+
+    endDrag: function (dragEvent) {
+        if (this._menuItemToDrag) {
+            this._menuItemToDrag.classList.remove("dragging");
+            this.$.menu.classList.remove("dragging");
+            this._saveMenuOrder();
+            this._menuItemToDrag = null;
+        }
+    },
+
+    dragOver: function (e) {
+        if (this._menuItemToDrag) {
+            tearDownEvent(e);
+            const siblings = [...this.querySelectorAll("paper-item:not(.dragging):not(.notDraggable)")];
+            const nextSibling = siblings.find(sibling => {
+                const siblingRect = sibling.getBoundingClientRect();
+                return e.clientY <= siblingRect.y + siblingRect.height / 2;
+            });
+            this.insertBefore(this._menuItemToDrag, nextSibling);
+        }
+    },
+
+    dragEntered: function (dropToEvent) {
+        tearDownEvent(dropToEvent);
+    },
+
+    _loadMenuOrder: function (userName, entityType) {
+        if (userName && entityType) {
+            _updateMenuOrder(JSON.parse(localStorage[this._menuStorageKey(userName, entityType)] || "[]"), this);
+        }
+    },
+
+    _saveMenuOrder: function () {
+        if (this.userName && this.entityType) {
+            const menuItems = [...this.querySelectorAll("paper-item:not(.notDraggable)")].map(item => item.getAttribute("item-title"));
+            localStorage[this._menuStorageKey(this.userName, this.entityType)] = JSON.stringify(menuItems);
+        }
+    },
+
+    _menuStorageKey: function (userName, entityType) {
+        return `${userName}_menu_for_${entityType}`;
+    },
+
     _entityChanged: function (newBindingEntity, oldOne) {
         const newEntity = newBindingEntity ? newBindingEntity['@@origin'] : null;
         if (newEntity) {
@@ -415,6 +526,8 @@ Polymer({
                 Object.keys(newEntity.get("entityPresence")).forEach(prop => {
                     this._setHighlightMenuItem(prop, newEntity.get("entityPresence")[prop]);
                 });
+                this.userName = newEntity.get("userName");
+                this.entityType = newEntity.get("key").type().fullClassName();
             }
         }
     },
@@ -470,9 +583,9 @@ Polymer({
     _setHighlightMenuItem: function (menuItemTitle, highlight) {
         const menuItem = this.querySelector('paper-item[item-title="' + menuItemTitle + '"]');
         if (highlight) {
-            menuItem.children[0].style.color = "#039BE5";
+            menuItem.children[1].style.color = "#039BE5";
         } else {
-            menuItem.children[0].style.color = null;
+            menuItem.children[1].style.color = null;
         }
     },
 

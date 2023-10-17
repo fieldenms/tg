@@ -9,7 +9,7 @@ import javax.lang.model.element.Element;
 /**
  * Indicates whether the verification of a program element should be skipped.
  *
- * @author homedirectory
+ * @author TG Team
  */
 @Retention(SOURCE)
 public @interface SkipVerification {

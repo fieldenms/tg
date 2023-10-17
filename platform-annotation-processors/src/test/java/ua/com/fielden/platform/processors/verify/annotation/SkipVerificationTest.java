@@ -20,7 +20,7 @@ import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 /**
  * Test suites related to the {@link SkipVerification} annotation.
  *
- * @author homedirectory
+ * @author TG Team
  */
 @RunWith(Enclosed.class)
 public class SkipVerificationTest {
@@ -41,7 +41,6 @@ public class SkipVerificationTest {
         @Test
         public void ViolatingElement_instances_with_elements_annotated_with_SkipVerification_are_ignored_and_messages_are_not_reported() {
             final TypeSpec example = TypeSpec.classBuilder("Example").addAnnotation(SkipVerification.class).build();
-
             compileAndAssertSuccess(List.of(example));
         }
 

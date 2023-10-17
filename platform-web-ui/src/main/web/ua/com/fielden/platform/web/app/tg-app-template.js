@@ -26,8 +26,12 @@ import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizabl
 
 import { TgEntityMasterBehavior } from '/resources/master/tg-entity-master-behavior.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js'
-import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
+import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
+import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
 import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
+
+let screenWidth = window.screen.availWidth;
+let screenHeight = window.screen.availHeight;
 
 const template = html`
     <style>
@@ -130,6 +134,15 @@ function addAllElements (elementsToAdd, addToArray, removeFromArray) {
         });
     }
     return addToArray;
+}
+
+/**
+ * Should return indicator whether passed overlay (it can be custom action dialog or insertion point) should not react on back button.
+ *
+ * @param {Object} overlay - a custom action dialog or an insertion point
+ */
+function skipHistoryAction (overlay) {
+    return typeof overlay.skipHistoryAction === 'function' && overlay.skipHistoryAction();
 }
 
 Polymer({
@@ -285,7 +298,7 @@ Polymer({
             const historySteps = this.currentHistoryState.currIndex - window.history.state.currIndex;
             // Computes to false/null or the first closable dialog
             // This is relevant if user went backward or forward (mobile device only) and there is overlay open and 'root' page (for e.g. https://tgdev.com:8091) is not opening
-            const currentOverlay = (historySteps !== 0 && isMobileApp() && this._findFirstClosableDialog());
+            const currentOverlay = (historySteps !== 0 && this._findFirstClosableDialog());
             if (currentOverlay) {
                 // disableNextHistoryChange flag is needed to avoid history movements cycling
                 if (!this.disableNextHistoryChange) {
@@ -341,17 +354,20 @@ Polymer({
     /**
      * In case where 'multiple back' occurs then all dialogs will be closed (if able) and multiple history back action will be performed.
      *
-     * This method skips all iron-overlay-behavior elements that contain property 'skipHistoryAction'.
+     * This method skips all overlays and insertion points elements that should 'skipHistoryAction'.
      */
     _closeAllDialogs: function () {
-        const overlays = this._manager._overlays;
+        return this._closeDialogsInTheList(this._manager._overlays) && this._closeDialogsInTheList(InsertionPointManager._insertionPoints);
+    },
+
+    _closeDialogsInTheList : function (overlays) {
         for (let i = overlays.length - 1; i >= 0; i--) {
-            if (!overlays[i].skipHistoryAction) {
+            if (!skipHistoryAction(overlays[i])) {
                 this._closeDialog(overlays[i]);
             }
         }
         for (let i = overlays.length - 1; i >= 0; i--) {
-            if (!overlays[i].skipHistoryAction && overlays[i].opened) {
+            if (overlays[i].opened && !skipHistoryAction(overlays[i])) {
                 return false;
             }
         }
@@ -359,7 +375,7 @@ Polymer({
     },
     
     /**
-     * Performs dialog closing through custom method 'closeDialog' (or in the simplest case just uses iron-overlay-behavior's 'close' method).
+     * Performs dialog/insertion-point closing through custom method 'closeDialog' (or in the simplest case just uses iron-overlay-behavior's 'close' method).
      */
     _closeDialog: function (dialog) {
         if (dialog.closeDialog) {
@@ -370,9 +386,12 @@ Polymer({
     },
     
     _findFirstClosableDialog: function () {
-        const overlays = this._manager._overlays;
+        return this._findFirstClosableDialogFromList(this._manager._overlays) || this._findFirstClosableDialogFromList(InsertionPointManager._insertionPoints);
+    },
+
+    _findFirstClosableDialogFromList: function (overlays) {
         for (let i = overlays.length - 1; i >= 0; i--) {
-            if (!overlays[i].skipHistoryAction && overlays[i].opened) {
+            if (overlays[i].opened && !skipHistoryAction(overlays[i])) {
                 return overlays[i];
             }
         }
@@ -593,8 +612,11 @@ Polymer({
         
         //Add URI (location) change event handler to set history state. 
         window.addEventListener('location-changed', this._replaceStateWithNumber.bind(this));
+
+        //Add resize listener that checks whether screen resolution changed
+        window.addEventListener('resize', this._checkResolution.bind(this));
     },
-    
+
     attached: function () {
         const self = this;
         //@use-empty-console.log
@@ -660,6 +682,17 @@ Polymer({
                 node.scrollIntoView({block: "end", inline: "end", behavior: "smooth"}); // Safari (WebKit) does not support options object (smooth scrolling). We are aiming Chrome for iOS devices at this stage.
             }
         } 
+    },
+
+    /**
+     * Window resize handler that checks whether screen resolution changes and dispatches 'tg-screen-resolution-changed' if it does.
+     */
+    _checkResolution: function () {
+        if (window.screen.availWidth !== screenWidth || window.screen.availHeight !== screenHeight) {
+            screenWidth = window.screen.availWidth;
+            screenHeight = window.screen.availHeight;
+            window.dispatchEvent(new CustomEvent('tg-screen-resolution-changed', {bubbles: true, composed: true, detail: {width: screenWidth, height: screenHeight}}));
+        }
     },
     
     /**

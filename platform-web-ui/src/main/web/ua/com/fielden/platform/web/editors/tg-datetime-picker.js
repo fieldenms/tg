@@ -126,10 +126,15 @@ export class TgDatetimePicker extends TgEditor {
             _timePortionFormats: {
                 type: Array,
                 value: function () {
+                    const fullFormat = moment.localeData().longDateFormat('LTS');
+                    const noMillisFormat = fullFormat ? fullFormat.replace('.SSS', '') : 'LTS';
                     return [
                         'h:m:ss.SSSa',
                         'H:m:ss.SSS',
                         'LTS', // e.g. HH:mm:ss.SSS
+                        'h:m:ssa',
+                        'H:m:ss',
+                        noMillisFormat, // e.g. HH:mm:ss
                         'LT', // e.g. HH:mm
                         'hmma',
                         'Hmm',
