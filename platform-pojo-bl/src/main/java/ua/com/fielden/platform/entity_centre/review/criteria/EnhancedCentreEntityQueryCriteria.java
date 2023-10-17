@@ -18,6 +18,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
@@ -62,7 +63,7 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Supplier<Boolean> centreDirtyGetter;
     private Function<Optional<String>, Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Boolean>> centreDirtyCalculator;
     private Function<Optional<String>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> criteriaValidationPrototypeCreator;
-    private Function<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>, Function<Optional<String>, Function<Optional<Optional<String>>, Function<Optional<Integer>, Map<String, Object>>>>> centreCustomObjectGetter;
+    private Function<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>, Function<Optional<String>, Function<Optional<Optional<String>>, Function<Optional<Integer>, Function<Optional<Optional<String>>, Map<String, Object>>>>>> centreCustomObjectGetter;
     /**
      * This function represents centre query runner for export action which is dependent on configuration of the passed <code>customObject</code>.
      * Running of this fully-fledged query depends on query context (see property centreContextHolder).
@@ -70,6 +71,8 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Function<Map<String, Object>, Stream<AbstractEntity<?>>> exportQueryRunner;
     private Function<Consumer<ICentreDomainTreeManagerAndEnhancer>, ICentreDomainTreeManagerAndEnhancer> centreAdjuster; // returns applied fresh centre
     private Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreColumnWidthsAdjuster;
+    private Supplier<Result> shareValidator;
+    private Supplier<Optional<String>> shareError;
     private CentreContextHolder centreContextHolder;
     private DeviceProfile device;
     private Class<? extends MiWithConfigurationSupport<?>> miType;
@@ -332,12 +335,12 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return centreConfigUuidGetter.apply(saveAsName);
     }
 
-    public void setCentreCustomObjectGetter(final Function<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>, Function<Optional<String>, Function<Optional<Optional<String>>, Function<Optional<Integer>, Map<String, Object>>>>> centreCustomObjectGetter) {
+    public void setCentreCustomObjectGetter(final Function<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>, Function<Optional<String>, Function<Optional<Optional<String>>, Function<Optional<Integer>, Function<Optional<Optional<String>>, Map<String, Object>>>>>> centreCustomObjectGetter) {
         this.centreCustomObjectGetter = centreCustomObjectGetter;
     }
 
-    public Map<String, Object> centreCustomObject(final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> critEntity, final Optional<String> saveAsName, final Optional<Optional<String>> configUuid, final Optional<Integer> preferredView) {
-        return centreCustomObjectGetter.apply(critEntity).apply(saveAsName).apply(configUuid).apply(preferredView);
+    public Map<String, Object> centreCustomObject(final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> critEntity, final Optional<String> saveAsName, final Optional<Optional<String>> configUuid, final Optional<Integer> preferredView, final Optional<Optional<String>> shareError) {
+        return centreCustomObjectGetter.apply(critEntity).apply(saveAsName).apply(configUuid).apply(preferredView).apply(shareError);
     }
 
     public void setCriteriaValidationPrototypeCreator(final Function<Optional<String>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> criteriaValidationPrototypeCreator) {
@@ -380,4 +383,21 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     public CentreContextHolder centreContextHolder() {
         return centreContextHolder;
     }
+
+    public void setShareValidator(final Supplier<Result> shareValidator) {
+        this.shareValidator = shareValidator;
+    }
+
+    public Supplier<Result> shareValidator() {
+        return shareValidator;
+    }
+
+    public void setShareError(final Supplier<Optional<String>> shareError) {
+        this.shareError = shareError;
+    }
+
+    public Supplier<Optional<String>> shareError() {
+        return shareError;
+    }
+
 }

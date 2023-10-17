@@ -9,6 +9,8 @@ import static java.util.UUID.randomUUID;
 import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.CRITERIA_ENTITY_ID;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.pagination.IPage.pageCount;
 import static ua.com.fielden.platform.pagination.IPage.realPageCount;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isAndBeforeDefault;
@@ -22,10 +24,12 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.types.either.Either.left;
 import static ua.com.fielden.platform.types.either.Either.right;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPLIED_CRITERIA_ENTITY_NAME;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.AUTO_RUN;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLink;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLinkOrInherited;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isInherited;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.FETCH_CONFIG_AND_INSTRUMENT;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOpt;
@@ -79,6 +83,7 @@ import ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum;
 import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
 import ua.com.fielden.platform.entity_centre.review.criteria.DynamicColumnForExport;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
@@ -122,6 +127,10 @@ import ua.com.fielden.platform.web.utils.EntityResourceUtils;
  */
 public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtils<T> {
     private static final Logger logger = Logger.getLogger(CentreResourceUtils.class);
+    public static final String CONFIG_DOES_NOT_EXIST = "Configuration does not exist.";
+    private static final String SAVE_MSG = "Please save and try again.";
+    public static final String SAVE_OWN_COPY_MSG = "Only sharing of your own configurations is supported. Please save as your copy and try again.";
+    private static final String DUPLICATE_SAVE_MSG = "Please duplicate, save and try again.";
 
     /**
      * The key for customObject's value containing save-as name.
@@ -155,6 +164,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * The key for customObject's value containing the user name.
      */
     static final String USER_NAME = "userName";
+    /**
+     * The key for customObject's value containing the config share validation error.
+     */
+    static final String SHARE_ERROR = "shareError";
 
     /** Private default constructor to prevent instantiation. */
     private CentreResourceUtils() {
@@ -194,7 +207,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
 
     /**
      * Creates the 'custom object' that contains 'critMetaValues', 'centreDirty' flag (see {@link #createCriteriaMetaValuesCustomObject(Map, boolean, int)},
-     * optional 'saveAsName' value, optional 'saveAsDesc' value and optional 'configUuid' value.
+     * optional 'saveAsName' value, optional 'saveAsDesc' value, optional 'configUuid' value and optional 'shareError' value.
      *
      * @param criteriaMetaValues
      * @param centreDirty
@@ -204,6 +217,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param saveAsDesc -- represents a configuration title's tooltip to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      * @param staleCriteriaMessage
      * @param preferredView -- represents a configuration preferred view index to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
+     * @param shareError -- represents a configuration sharing error message to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      *
      * @return
      */
@@ -216,7 +230,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final Optional<Optional<String>> saveAsDesc,
         final Optional<Optional<String>> staleCriteriaMessage,
         final Optional<Integer> preferredView,
-        final User user
+        final User user,
+        final Optional<Optional<String>> shareError
     ) {
         final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(criteriaMetaValues, centreDirty);
         saveAsName.ifPresent(name -> {
@@ -238,6 +253,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             customObject.put(PREFERRED_VIEW, prefView);
         });
         customObject.put(USER_NAME, user.getKey());
+        shareError.ifPresent(message -> {
+            customObject.put(SHARE_ERROR, message.orElse(null));
+        });
         return customObject;
     }
 
@@ -633,7 +651,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             )
         );
         // creates custom object representing centre information for concrete criteriaEntity and saveAsName
-        validationPrototype.setCentreCustomObjectGetter(appliedCriteriaEntity -> customObjectSaveAsName -> configUuid -> preferredView -> {
+        validationPrototype.setCentreCustomObjectGetter(appliedCriteriaEntity -> customObjectSaveAsName -> configUuid -> preferredView -> shareError -> {
             final ICentreDomainTreeManagerAndEnhancer freshCentre = appliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
             // In both cases (criteria entity valid or not) create customObject with criteriaEntity to be returned and bound into tg-entity-centre after save.
             final Map<String, Object> customObject = createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
@@ -645,7 +663,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 of(validationPrototype.centreTitleAndDesc(customObjectSaveAsName).map(titleDesc -> titleDesc._2)),
                 empty(),
                 preferredView,
-                user
+                user,
+                shareError
             );
             customObject.put(APPLIED_CRITERIA_ENTITY_NAME, appliedCriteriaEntity);
             return customObject;
@@ -767,7 +786,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 createCriteriaEntityWithoutConflicts(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, of(newName), user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel),
                 of(newName),
                 empty(), // no need to update already existing client-side configUuid
-                empty() // no need to update already loaded preferredView
+                empty(), // no need to update already loaded preferredView
+                empty() // no need to update already loaded shareError
             );
         });
         // changes runAutomatically for current saveAsName'd configuration; returns custom object containing centre information
@@ -778,7 +798,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 createCriteriaEntityWithoutConflicts(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, saveAsName, user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel),
                 saveAsName,
                 empty(), // no need to update already existing client-side configUuid
-                empty() // no need to update already loaded preferredView
+                empty(), // no need to update already loaded preferredView
+                empty() // no need to update already loaded shareError
             );
         });
         // performs copying of current configuration with the specified title / desc; makes it preferred; returns custom object containing centre information
@@ -804,11 +825,15 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
 
             // when switching to new configuration we need to make it preferred
             makePreferred(user, miType, newSaveAsName, device, companionFinder, webUiConfig); // it is of 'own save-as' kind -- can be preferred; only 'link / inherited from shared' can not be preferred
+
+            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = createCriteriaEntityWithoutConflicts(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, newSaveAsName, user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+
             return validationPrototype.centreCustomObject(
-                createCriteriaEntityWithoutConflicts(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, newSaveAsName, user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel),
+                appliedCriteriaEntity,
                 newSaveAsName,
                 of(of(newConfigUuid)),
-                empty() // do not update preferredView on client when copying centre configuration
+                empty(), // do not update preferredView on client when copying centre configuration
+                of(appliedCriteriaEntity.shareError().get()) // update shareError after config transitioning
             );
         });
         // returns ordered alphabetically list of 'loadable' configurations for current user
@@ -822,6 +847,58 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 // for embedded centres only default configuration can be preferred, but still named configurations may exist
                 makePreferred(user, miType, saveAsNameToBecomePreferred, device, companionFinder, webUiConfig);
             }
+        });
+        /*
+         * Validates share action context, i.e. returns failure {@link Result} in case where configuration can not be shared and successful {@link Result} otherwise.<br>
+         * <p>
+         * The rules are the following:<br>
+         * 1. default config -- `Please save and try again.`
+         * 2. non-existent config -- `Configuration does not exist.`
+         * 3. loaded link config -- `Please save and try again.`
+         * 4. inherited from shared / base config -- `Only sharing of your own configurations is supported. Please save as your copy and try again.`
+         * 5. inherited from shared / base, deleted upstream, config -- `Please duplicate, save and try again.`
+         * 6. inherited from shared, made unshared -- `Please duplicate, save and try again.`
+         */
+        validationPrototype.setShareValidator(() -> {
+            if (!saveAsName.isPresent()) {
+                return failure(SAVE_MSG); // default configuration (the one with empty saveAsName) can not be shared
+            }
+            final Optional<String> configUuidOpt = validationPrototype.centreConfigUuid(saveAsName);
+            if (!configUuidOpt.isPresent()) {
+                return failure(CONFIG_DOES_NOT_EXIST); // all non-default configurations should have uuid; handle gracefully just in case
+            }
+            final String configUuid = configUuidOpt.get();
+            final Optional<EntityCentreConfig> freshConfigOpt = findConfigOptByUuid(configUuid, user, miType, device, FRESH_CENTRE_NAME, eccCompanion);
+            if (!freshConfigOpt.isPresent()) {
+                return failure(CONFIG_DOES_NOT_EXIST); // configuration does not exist and can not be shared
+            }
+            if (isDefaultOrLinkOrInherited(saveAsName, validationPrototype)) {
+                if (isDefaultOrLink(saveAsName)) {
+                    return failure(SAVE_MSG); // [link] configuration can not be shared
+                }
+                return failure(SAVE_OWN_COPY_MSG); // [inherited from shared; inherited from base] configuration can not be shared
+            }
+            final Optional<EntityCentreConfig> savedConfigOpt = findConfigOptByUuid(configUuid, miType, device, SAVED_CENTRE_NAME, eccCompanion);
+            if (!savedConfigOpt.isPresent() // in case where there is no configuration creator then it was inherited from base / shared and original configuration was deleted; this type of configuration (inherited, no upstream) still can exist and act like own-save as, however it should not be used for sharing
+             || !areEqual(savedConfigOpt.get().getOwner(), user)) { // the creator of configuration is not current user; it means that configuration was made not shared to this user by original creator, and it should not be used for sharing
+                return failure(DUPLICATE_SAVE_MSG);
+            }
+            return successful("Ok");
+        });
+        /*
+         * Validates share action context, i.e. returns non-empty of(String) error message in case where configuration can not be shared and empty Optional otherwise.<br>
+         * <p>
+         * The rules are the following:<br>
+         * 1. default config -- `Please save and try again.`
+         * 2. non-existent config -- `Configuration does not exist.`
+         * 3. loaded link config -- `Please save and try again.`
+         * 4. inherited from shared / base config -- `Only sharing of your own configurations is supported. Please save as your copy and try again.`
+         * 5. inherited from shared / base, deleted upstream, config -- `Please duplicate, save and try again.`
+         * 6. inherited from shared, made unshared -- `Please duplicate, save and try again.`
+         */
+        validationPrototype.setShareError(() -> {
+            final Result shareValidationResult = validationPrototype.shareValidator().get();
+            return shareValidationResult.isSuccessful() ? empty() : of(shareValidationResult.getMessage());
         });
 
         final Field idField = Finder.getFieldByName(validationPrototype.getType(), AbstractEntity.ID);

@@ -50,10 +50,11 @@ public class CentreConfigUtils {
      * @param selectionCrit
      * @param appliedCriteriaEntity
      * @param configUuid -- empty not to update current config uuid on the client; {@code of(empty())} or {@code of("a1b2c3")} to update config uuid on the client for default and named configs respectively
+     * @param shareError -- empty not to update current share validation error message on the client; {@code of(empty())} or {@code of("Please save and try again.")} to update share validation error message on the client
      * @return
      */
-    static Map<String, Object> getCustomObject(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity, final Optional<Optional<String>> configUuid) {
-        return getCustomObject(selectionCrit, appliedCriteriaEntity, selectionCrit.saveAsName(), configUuid, empty());
+    static Map<String, Object> getCustomObject(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity, final Optional<Optional<String>> configUuid, final Optional<Optional<String>> shareError) {
+        return getCustomObject(selectionCrit, appliedCriteriaEntity, selectionCrit.saveAsName(), configUuid, empty(), shareError);
     }
 
     /**
@@ -66,10 +67,11 @@ public class CentreConfigUtils {
      * @param saveAsNameToCompare
      * @param configUuid -- empty not to update current config uuid on the client; {@code of(empty())} or {@code of("a1b2c3")} to update config uuid on the client for default and named configs respectively
      * @param preferredView -- preferred view to apply
+     * @param shareError -- empty not to update current share validation error message on the client; {@code of(empty())} or {@code of("Please save and try again.")} to update share validation error message on the client
      * @return
      */
-    public static Map<String, Object> getCustomObject(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity, final Optional<String> saveAsNameToCompare, final Optional<Optional<String>> configUuid, final Optional<Integer> preferredView) {
-        return selectionCrit.centreCustomObject(appliedCriteriaEntity, saveAsNameToCompare, configUuid, preferredView);
+    public static Map<String, Object> getCustomObject(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity, final Optional<String> saveAsNameToCompare, final Optional<Optional<String>> configUuid, final Optional<Integer> preferredView, final Optional<Optional<String>> shareError) {
+        return selectionCrit.centreCustomObject(appliedCriteriaEntity, saveAsNameToCompare, configUuid, preferredView, shareError);
     }
 
     /**
@@ -82,7 +84,7 @@ public class CentreConfigUtils {
         selectionCrit.clearDefaultCentre(); // clear it first
         selectionCrit.makePreferredConfig(empty()); // then make it preferred; 'default' kind -- can be preferred; only 'link / inherited from shared' can not be preferred
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> newSelectionCrit = selectionCrit.createCriteriaValidationPrototype(empty());
-        return getCustomObject(selectionCrit, newSelectionCrit, empty(), of(empty()) /* update with empty uuid indicating default config */, of(newSelectionCrit.getCentreDomainTreeMangerAndEnhancer().getPreferredView())); // return corresponding custom object
+        return getCustomObject(selectionCrit, newSelectionCrit, empty(), of(empty()) /* update with empty uuid indicating default config */, of(newSelectionCrit.getCentreDomainTreeMangerAndEnhancer().getPreferredView()), of(newSelectionCrit.shareError().get())); // return corresponding custom object
     }
 
     /**

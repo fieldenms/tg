@@ -534,49 +534,6 @@ Polymer({
             tearDownEvent(event);
         }).bind(self);
 
-        if (self.hasAttribute('synchronous-share-action')) {
-            self._run = (function (event) {
-                self.persistActiveElement();
-
-                if (!self.oldIsActionInProgressChanged) {
-                    self.oldIsActionInProgressChanged = self.isActionInProgressChanged.bind(self);
-                    self.isActionInProgressChanged = (newValue, oldValue) => {
-                        self.oldIsActionInProgressChanged(newValue, oldValue);
-                        self._actionInProgress = newValue;
-                    };
-                }
-
-                const context = self._createContextHolderForAction();
-                const ser = self._serialiser.serialise(context);
-                const body = JSON.stringify(ser);
-                const request = new XMLHttpRequest();
-                request.open('POST', '/share-validation', false); // `false` makes the request synchronous
-                request.send(body);
-
-                if (request.status === 200) {
-                    const link = window.location.href;
-                    // TODO self.toaster can be empty?
-                    const deserialisedResult = self._serialiser.deserialise(JSON.parse(request.responseText));
-                    if (self._reflector.isError(deserialisedResult) && deserialisedResult.message) {
-                        const errorMessage = deserialisedResult.message;
-                        if (errorMessage === 'Only sharing of your own configurations is supported. Please save as your copy and try again.') { // TODO
-                            self.toaster.openToastWithoutEntity(errorMessage, true, errorMessage, false)
-                        } else {
-                            self.toaster.openToastWithoutEntity(errorMessage, false, '', false)
-                        }
-                    } else {
-                        navigator.clipboard.writeText(link).then(() => {
-                            self.toaster.openToastWithoutEntity('Copied to clipboard.', true, link, false)
-                        });
-                    }
-                } else {
-                    // TODO
-                }
-
-                tearDownEvent(event);
-            }).bind(self);
-        }
-
         self._onExecuted = (function (e, master, source) {
             //self constatnt is created to have a reference on action in functions created for entity master like postRetrieved, postSaved etc.
             const self = this;

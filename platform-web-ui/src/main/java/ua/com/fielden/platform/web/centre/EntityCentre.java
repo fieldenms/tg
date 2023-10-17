@@ -1139,11 +1139,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         for (int actionIndex = 0; actionIndex < shareActions.size(); actionIndex++) {
             final FunctionalActionElement actionElement = new FunctionalActionElement(shareActions.get(actionIndex), actionIndex, FunctionalActionKind.SHARE);
             importPaths.add(actionElement.importPath());
-            final DomElement renderedShareAction = actionElement.render();
-            if (!actionElement.conf().preAction.isPresent()) {
-                renderedShareAction.attr("synchronous-share-action", true);
-            }
-            shareActionsDom.add(renderedShareAction);
+            shareActionsDom.add(actionElement.render());
             shareActionsObjects.append(prefix + createActionObject(actionElement));
         }
         //////////////////// share actions (END) ////////////////////
