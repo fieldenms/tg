@@ -755,14 +755,14 @@ const TgEntityMasterBehaviorImpl = {
             console.log("_postSaverLoadingFinished");
         }).bind(self);
 
-        self._showDialog = (function (action) {
+        self._showDialog = (function (action, isIndependant) {
             const closeEventChannel = self.uuid;
             const closeEventTopics = ['save.post.success', 'refresh.post.success'];
             this.async(function () {
                 if (this._actionDialog === null) {
                     this._actionDialog = createDialog(self.uuid);
                 }
-                this._actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
+                this._actionDialog.showDialog(action, closeEventChannel, closeEventTopics, isIndependant);
             }.bind(self), 1);
         }).bind(self);
 

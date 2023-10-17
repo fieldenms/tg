@@ -1081,7 +1081,7 @@ Polymer({
      * closeEventChannel -- a channel that is provided from the outside and is used to publish for listening to event that should leade to closing of this dialog.
      * closeEventTopics -- event topics that should be listened to on the channel to close this dialog.
      */
-    showDialog: function(customAction, closeEventChannel, closeEventTopics) {
+    showDialog: function(customAction, closeEventChannel, closeEventTopics, isIndependant) {
         if (this.opened === true) {
             this.$.toaster.text = 'Please close the currently open dialog.';
             this.$.toaster.hasMore = true;
@@ -1119,9 +1119,9 @@ Polymer({
                                         }
                                     }
                                     if (ironRequest && typeof ironRequest.successful !== 'undefined' && ironRequest.successful === true) {
-                                        return Promise.resolve(self._showMaster(customAction, element, closeEventChannel, closeEventTopics, false));
+                                        return Promise.resolve(self._showMaster(customAction, element, closeEventChannel, closeEventTopics, false, isIndependant));
                                     } else  if (ironRequest && ironRequest.response && ironRequest.response.ex && ironRequest.response.ex.continuationTypeStr) {
-                                        return Promise.resolve(self._showMaster(customAction, element, closeEventChannel, closeEventTopics, true));
+                                        return Promise.resolve(self._showMaster(customAction, element, closeEventChannel, closeEventTopics, true, isIndependant));
                                     } else {
                                         return Promise.reject('Retrieval / saving promise was not successful.');
                                     }
@@ -1132,7 +1132,7 @@ Polymer({
                         } else {
                             return Promise.resolve()
                                 .then(function() {
-                                    return Promise.resolve(self._showMaster(customAction, element, closeEventChannel, closeEventTopics, false));
+                                    return Promise.resolve(self._showMaster(customAction, element, closeEventChannel, closeEventTopics, false, isIndependant));
                                 })
                                 .catch(function(error) {
                                     self._finishErroneousOpening();
@@ -1365,7 +1365,7 @@ Polymer({
         this._fireResize = _fireResize;
     },
     
-    _showMaster: function(action, element, closeEventChannel, closeEventTopics, actionWithContinuation) {
+    _showMaster: function(action, element, closeEventChannel, closeEventTopics, actionWithContinuation, isIndependant) {
         this._lastElement = element;
         const self = this;
         if (element.noUI === true) { // is this is the end of action execution?
@@ -1375,7 +1375,7 @@ Polymer({
                 self._removeFromDom();
             }
         } else { // otherwise show master in dialog
-            this._openOnce(closeEventChannel, closeEventTopics, action, null, null);    
+            this._openOnce(closeEventChannel, closeEventTopics, action, null, null, isIndependant);    
         }
     },
     
@@ -1471,7 +1471,7 @@ Polymer({
     /**
      * Starts actual opening of the dialog: adds 'closing' subscriptions, performs refitting and invokes this.open().
      */
-    _openOnce: function(closeEventChannel, closeEventTopics, action, resultsAppearedEvent, resultsDidNotAppearEvent) {
+    _openOnce: function(closeEventChannel, closeEventTopics, action, resultsAppearedEvent, resultsDidNotAppearEvent, isIndependant) {
         this._clearOpeningListeners(resultsAppearedEvent, resultsDidNotAppearEvent);
         const self = this;
         // if there would be a master UI then need to subscribe for this dialog closing messages
@@ -1489,7 +1489,7 @@ Polymer({
         this.updateStyles();
         this.refit();//Needed to make dialog position fixed.
         
-        if (!action.isIndependant) {
+        if (!isIndependant) {
             const actionsDialog = findParentDialog(action);
             if (actionsDialog) {
                 actionsDialog._childDialogs.push(this);

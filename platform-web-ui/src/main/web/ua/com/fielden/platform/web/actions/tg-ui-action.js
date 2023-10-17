@@ -304,14 +304,6 @@ Polymer({
             type: Number
         },
 
-        /**
-         * Indicates that dialog opened with this action should not have parent dialog associated with it, and therefore can not be closed when closing the parent.
-         */
-        isIndependant: {
-            type: Boolean,
-            value: false
-        },
-
         ////////////////////////////////////// SUBSECTION: NOT MANDATORY PROPERTIES //////////////////////////////////////
         /**
          * The 'currentEntity' should contain the entity that was clicked (result-set actions)
@@ -472,7 +464,6 @@ Polymer({
             this.currentEntity = currentEntity;
             this.chosenProperty = chosenProperty;
             this.rootEntityType = null;
-            this.isIndependant = false;
 
             this._run();
         }.bind(this);
@@ -485,7 +476,6 @@ Polymer({
             this.currentEntity = () => null;
             this.chosenProperty = null;
             this.rootEntityType = rootEntityType;
-            this.isIndependant = false;
 
             this._run();
         }.bind(this);
@@ -495,12 +485,11 @@ Polymer({
             this.currentEntity = () => null;
             this.chosenProperty = null;
             this.rootEntityType = rootEntityType;
-            this.isIndependant = true;
 
-            this._run();
+            this._run(null, true);
         }
 
-        self._run = (function (event) {
+        self._run = (function (event, isIndependant) {
             console.log(this.shortDesc + ": execute");
 
             const postMasterInfoRetrieve = function () {
@@ -510,7 +499,7 @@ Polymer({
                     const promise = result instanceof Promise ? result : Promise.resolve(result);
     
                     promise.then(function (value) {
-                        self.showDialog(self);
+                        self.showDialog(self, isIndependant);
                     }, function (error) {
                         self.restoreActionState();
                         if (error instanceof Error) {
@@ -521,7 +510,7 @@ Polymer({
                         }
                     });
                 } else {
-                    this.showDialog(this);
+                    this.showDialog(this, isIndependant);
                 }
             }.bind(this);
 
