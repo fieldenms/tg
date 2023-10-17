@@ -1,13 +1,11 @@
 package ua.com.fielden.platform.processors.metamodel.utils;
 
-import static java.util.stream.Collectors.toCollection;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.METAMODELS_CLASS_QUAL_NAME;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_ALIASED_NAME_SUFFIX;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_NAME_SUFFIX;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_SUPERCLASS;
 
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;

@@ -38,9 +38,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.Types;
-import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
-import javax.tools.ToolProvider;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -58,7 +56,7 @@ import com.squareup.javapoet.TypeVariableName;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderException;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
-import ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileManager;
+import ua.com.fielden.platform.processors.test_utils.CompilationResult;
 import ua.com.fielden.platform.processors.test_utils.exceptions.CompilationException;
 import ua.com.fielden.platform.utils.CollectionUtil;
 
@@ -746,24 +744,18 @@ public class ElementFinderTest {
      * @throws CompilationException if an exception was thrown during annotation processing
      */
     private void processAndEvaluate(final Collection<TypeSpec> typeSpecs, final Consumer<ElementFinder> consumer) {
-        final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        final InMemoryJavaFileManager fileManager = new InMemoryJavaFileManager(compiler.getStandardFileManager(null, null, null));
         final List<JavaFileObject> compilationTargets = typeSpecs.stream()
                 .map(ts -> JavaFile.builder(/*packageName*/ "", ts).build().toJavaFileObject())
                 .toList();
+        final Compilation comp = Compilation.newInMemory(compilationTargets).setOptions(OPTION_PROC_ONLY);
 
-        final Compilation comp = new Compilation(compilationTargets)
-                .setCompiler(compiler)
-                .setFileManager(fileManager)
-                .setOptions(OPTION_PROC_ONLY);
         try {
-            final boolean success = comp.compileAndEvaluate(procEnv -> 
+            final CompilationResult result = comp.compileAndEvaluate(procEnv ->
                 consumer.accept(new ElementFinder(procEnv.getElementUtils(), procEnv.getTypeUtils())));
-            assertTrue("Processing of sources failed.", success);
+            // TODO print diagnostics in case of failure
+            assertTrue("Processing of sources failed.", result.success());
         } catch (final Throwable t) {
             throw new CompilationException(t);
-        } finally {
-            comp.printDiagnostics();
         }
     }
 

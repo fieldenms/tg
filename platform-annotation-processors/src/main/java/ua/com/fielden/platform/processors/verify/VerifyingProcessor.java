@@ -2,8 +2,8 @@ package ua.com.fielden.platform.processors.verify;
 
 import static java.util.stream.Collectors.joining;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -12,9 +12,11 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 
 import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
+import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier;
@@ -32,8 +34,8 @@ import ua.com.fielden.platform.utils.CollectionUtil;
 @SupportedAnnotationTypes("*")
 public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
 
-    private final List<Function<ProcessingEnvironment, IVerifier>> registeredVerifiersProviders = new LinkedList<>();
-    private final List<IVerifier> registeredVerifiers = new LinkedList<>();
+    private final List<Function<ProcessingEnvironment, IVerifier>> registeredVerifiersProviders = new ArrayList<>();
+    private final List<IVerifier> registeredVerifiers = new ArrayList<>();
 
     /** Round-cumulative indicator of whether all verifiers were passed. */
     private boolean passed;
@@ -101,11 +103,19 @@ public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
         boolean roundPassed = true;
 
         for (final IVerifier verifier : registeredVerifiers) {
-            final List<ViolatingElement> violators = verifier.verify(roundEnv);
-            if (!violators.isEmpty()) {
+            final List<ViolatingElement> erronousElements = verifier.verify(roundEnv).stream()
+                    .filter(ve -> !SkipVerification.Factory.shouldSkipVerification(ve.element()))
+                    .filter(ViolatingElement::hasError)
+                    .toList();
+            if (!erronousElements.isEmpty()) {
                 roundPassed = false;
                 printError(errVerifierNotPassedBy(verifier.getClass().getSimpleName(),
-                        violators.stream().map(ve -> ve.element().getSimpleName().toString()).toList()));
+                        erronousElements.stream()
+                            .map(ve -> ve.element().getSimpleName())
+                            .distinct()
+                            .map(Name::toString)
+                            .sorted() /* sort to have a predictable order */
+                            .toList()));
             }
         }
 

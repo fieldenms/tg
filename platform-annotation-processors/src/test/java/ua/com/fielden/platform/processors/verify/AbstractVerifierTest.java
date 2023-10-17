@@ -11,15 +11,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.tools.JavaCompiler;
+import javax.tools.Diagnostic.Kind;
 import javax.tools.JavaFileObject;
-import javax.tools.ToolProvider;
 
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.TypeSpec;
 
 import ua.com.fielden.platform.processors.test_utils.Compilation;
-import ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileManager;
+import ua.com.fielden.platform.processors.test_utils.CompilationResult;
 import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 
 /**
@@ -59,16 +58,12 @@ public abstract class AbstractVerifierTest {
      * @return
      */
     protected final Compilation buildCompilation(final Collection<TypeSpec> typeSpecs) {
-        final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        final InMemoryJavaFileManager fileManager = new InMemoryJavaFileManager(compiler.getStandardFileManager(null, null, null));
         final List<JavaFileObject> compilationTargets = typeSpecs.stream()
                 .map(ts -> JavaFile.builder(/*packageName*/ "", ts).build().toJavaFileObject())
                 .toList();
 
-        return new Compilation(compilationTargets)
+        return Compilation.newInMemory(compilationTargets)
                 .setProcessor(createProcessor())
-                .setCompiler(compiler)
-                .setFileManager(fileManager)
                 .setOptions(OPTION_PROC_ONLY);
     }
 
@@ -80,7 +75,7 @@ public abstract class AbstractVerifierTest {
     /**
      * Another signature for {@link #compileAndAssertErrors(Collection, Collection)}.
      */
-    protected final Compilation compileAndAssertErrors(final Collection<TypeSpec> typeSpecs, final String... expectedErrorMessages) {
+    protected final CompilationResult compileAndAssertErrors(final Collection<TypeSpec> typeSpecs, final String... expectedErrorMessages) {
         return compileAndAssertErrors(typeSpecs, List.of(expectedErrorMessages));
     }
 
@@ -90,25 +85,25 @@ public abstract class AbstractVerifierTest {
      * If some errors were reported that were not expected (i.e. not specified by {@code expectedErrorMessages}) then the assertion fails
      * and all diagnostic messages are printed to standard output.
      *
-     * @return the resulting compilation instance
+     * @return results of the compilation
      */
-    protected final Compilation compileAndAssertErrors(final Collection<TypeSpec> typeSpecs, final Collection<String> expectedErrorMessages) {
+    protected final CompilationResult compileAndAssertErrors(final Collection<TypeSpec> typeSpecs, final Collection<String> expectedErrorMessages) {
         final Compilation compilation = buildCompilation(typeSpecs);
-        final boolean success = compilation.compile();
-        assertTrueOrFailWith("Compilaton should have failed.", !success, () -> compilation.printDiagnostics());
+        final CompilationResult result = compilation.compile();
+        assertTrueOrFailWith("Compilaton should have failed.", result.failure(), () -> result.printDiagnostics());
 
         // first assert that all expected errors were reported
-        final Set<String> uniqueErrorMessages = compilation.getErrors().stream()
+        final Set<String> uniqueErrorMessages = result.errors().stream()
                 .map(err -> err.getMessage(Locale.getDefault())).collect(Collectors.toSet());
         expectedErrorMessages.forEach(
                 msg -> assertTrueOrFailWith("No error was reported with message [%s].".formatted(msg),
-                        uniqueErrorMessages.contains(msg), () -> compilation.printDiagnostics()));
+                        uniqueErrorMessages.contains(msg), () -> result.printDiagnostics()));
 
         // now test for unexpected errors
-        final int diff = compilation.getErrors().size() - expectedErrorMessages.size();
-        assertTrueOrFailWith("%s unexpected error(s) were reported.".formatted(diff), diff == 0, () -> compilation.printDiagnostics());
+        final int diff = result.errors().size() - expectedErrorMessages.size();
+        assertTrueOrFailWith("%s unexpected error(s) were reported.".formatted(diff), diff == 0, () -> result.printDiagnostics());
 
-        return compilation;
+        return result;
     }
 
     /**
@@ -116,14 +111,31 @@ public abstract class AbstractVerifierTest {
      * <p>
      * In the case of an unsuccessful compilation, the assertion fails and all diagnostic messages are printed to standard output.
      *
-     * @return the resulting compilation instance
+     * @return results of the compilation
      */
-    protected final Compilation compileAndAssertSuccess(final Collection<TypeSpec> typeSpecs) {
+    protected final CompilationResult compileAndAssertSuccess(final Collection<TypeSpec> typeSpecs) {
         final Compilation compilation = buildCompilation(typeSpecs);
-        final boolean success = compilation.compile();
-        assertTrueOrFailWith("Compilation should have succeeded.", success, () -> compilation.printDiagnostics());
+        final CompilationResult result = compilation.compile();
+        assertTrueOrFailWith("Compilation should have succeeded.", result.success(), () -> result.printDiagnostics());
 
-        return compilation;
+        return result;
+    }
+
+    /**
+     * Asserts that diagnostic messages of a given kind were reported as a result of a compilation.
+     *
+     * @param result    represents compilation results
+     * @param kind      the message kind
+     * @param messages  the messages, existence of which is to be asserted
+     */
+    protected final void assertMessages(final CompilationResult result, final Kind kind, final String... messages) {
+        Arrays.stream(messages).forEach(msg -> assertMessage(result, kind, msg));
+    }
+
+    private final void assertMessage(final CompilationResult result, final Kind kind, final String message) {
+        assertTrueOrFailWith("No %s was reported with message \"%s\"".formatted(kind, message),
+                result.diagnosticsByKind(kind).stream().anyMatch(diag -> diag.getMessage(Locale.getDefault()).equals(message)),
+                () -> result.printDiagnostics());
     }
 
     private void assertTrueOrFailWith(final String message, boolean condition, final Runnable failAction) {

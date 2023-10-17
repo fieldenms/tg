@@ -15,13 +15,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
-import javax.tools.Diagnostic;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
@@ -249,7 +247,7 @@ public class MetaModelLifecycleTest {
                 .setFileManager(fileManager)
                 .setOptions(Compilation.OPTION_PROC_ONLY);
         try {
-            return compilation.compileAndEvaluate(consumer);
+            return compilation.compileAndEvaluate(consumer).success();
         } catch (final Throwable ex) {
             ex.printStackTrace();
             return false;

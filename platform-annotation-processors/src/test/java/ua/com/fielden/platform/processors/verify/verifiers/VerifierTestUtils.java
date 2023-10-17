@@ -11,21 +11,8 @@ import com.squareup.javapoet.TypeName;
 
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.processors.test_utils.Compilation;
 
 public class VerifierTestUtils {
-
-    /**
-     * A convenient method that replaces 2 repetitive lines of code.
-     * @param compilation
-     * @return
-     * @throws Throwable
-     */
-    public static boolean compileAndPrintDiagnostics(final Compilation compilation) {
-        final boolean success = compilation.compile();
-        compilation.printDiagnostics();
-        return success;
-    }
 
     /**
      * Returns a field builder for entity properties that already includes a {@code private} modifier and {@link IsProperty} annotation.

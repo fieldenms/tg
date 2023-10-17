@@ -8,7 +8,7 @@ import static ua.com.fielden.platform.processors.verify.verifiers.entity.UnionEn
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.UnionEntityVerifier.PropertyTypeVerifier.errNonEntityTypedProperty;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.UnionEntityVerifier.PropertyTypeVerifier.errUnionEntityTypedProperty;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -85,7 +85,7 @@ public class UnionEntityVerifierTest extends AbstractVerifierTest {
         @Test
         public void union_entity_cannot_declare_non_entity_typed_properties() {
             final BiConsumer<TypeSpec, List<String>> assertor = (entity, properties) -> {
-                final List<String> errors = new LinkedList<>();
+                final List<String> errors = new ArrayList<>();
                 errors.add(errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), properties));
                 errors.addAll(properties.stream().map(p -> errNonEntityTypedProperty(entity.name, p)).toList());
                 compileAndAssertErrors(List.of(entity), errors);
@@ -108,7 +108,7 @@ public class UnionEntityVerifierTest extends AbstractVerifierTest {
         @Test
         public void union_entity_cannot_be_composed_of_union_entities() {
             final BiConsumer<TypeSpec, List<String>> assertor = (entity, properties) -> {
-                final List<String> errors = new LinkedList<>();
+                final List<String> errors = new ArrayList<>();
                 errors.add(errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), properties));
                 errors.addAll(properties.stream().map(p -> errUnionEntityTypedProperty(entity.name, p)).toList());
                 compileAndAssertErrors(List.of(entity), errors);
