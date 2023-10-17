@@ -57,7 +57,12 @@ public abstract class AbstractFunction3 extends AbstractSingleOperand3 {
 
     public static String getConvertToStringSqlForMsSql2005(final DbVersion dbVersion, final ISingleOperand3 operand) {
         if (Date.class.equals(operand.type())) {
-            return "CONVERT(VARCHAR(19), " + operand.sql(dbVersion) + ", 120)";
+            final var opSql = operand.sql(dbVersion);
+            final var expression = "case " +
+                                   "when DATEPART(millisecond, %s) = 0 then FORMAT(%s, 'dd/MM/yyyy HH:mm') " +
+                                   "when CAST(FLOOR(DATEPART(millisecond, %s)) as integer) - 1000 * CAST(FLOOR(DATEPART(second, %s)) as integer) > 0 then FORMAT(%s, 'dd/MM/yyyy HH:mm:ss.fff') " +
+                                   "else FORMAT(%s, 'dd/MM/yyyy HH:mm:ss') end";
+            return expression.formatted(opSql, opSql, opSql, opSql, opSql, opSql);
         } else if (String.class.equals(operand.type())) {
             return operand.sql(dbVersion);
         } else {
