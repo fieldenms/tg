@@ -26,6 +26,7 @@ import javax.lang.model.util.Types;
 
 import ua.com.fielden.platform.annotations.metamodel.MetaModelForType;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.Accessor;
 import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
@@ -50,6 +51,7 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class EntityFinder extends ElementFinder {
     public static final Class<?> ROOT_ENTITY_CLASS = AbstractEntity.class;
+    public static final Class<?> UNION_ENTITY_CLASS = AbstractUnionEntity.class;
 
     public EntityFinder(final Elements elements, final Types types) {
         super(elements, types);
@@ -452,6 +454,14 @@ public class EntityFinder extends ElementFinder {
      */
     public boolean isEntityType(final TypeMirror type) {
         return isSubtype(type, ROOT_ENTITY_CLASS);
+    }
+
+    /**
+     * Tests whether the type mirror represents a union entity type, which is defined as any class that extends
+     * {@link AbstractUnionEntity} (itself included).
+     */
+    public boolean isUnionEntityType(final TypeMirror type) {
+        return isSubtype(type, UNION_ENTITY_CLASS);
     }
 
     /**

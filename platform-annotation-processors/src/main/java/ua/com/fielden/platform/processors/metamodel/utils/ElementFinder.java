@@ -399,6 +399,19 @@ public class ElementFinder {
     }
 
     /**
+     * Streams the hierarchy of enclosing elements of the given element.
+     * <p>
+     * For example, if an element representing a field of a class is given, then the hierarchy is likely to have the following form:
+     * {@code [class, package, module]}.
+     *
+     * @param element the element generating the hierarchy
+     * @return a stream of enclosing elements
+     */
+    public static Stream<Element> streamEnclosingElements(final Element element) {
+        return Stream.iterate(element.getEnclosingElement(), elt -> elt != null, elt -> elt.getEnclosingElement());
+    }
+
+    /**
      * The same as {@link #getFieldAnnotations(VariableElement)}, but without annotations {@code ignoredAnnotationsClasses}.
      *
      * @param field

@@ -8,10 +8,7 @@ import java.util.List;
 import javax.annotation.processing.Processor;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
-import javax.tools.ToolProvider;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -70,12 +67,8 @@ public class ProcessingRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-                final JavaFileManager fileManager = new InMemoryJavaFileManager(compiler.getStandardFileManager(null, null, null));
-                final Compilation compilation = new Compilation(javaSources)
+                final Compilation compilation = Compilation.newInMemory(javaSources)
                         .setProcessor(processor)
-                        .setCompiler(compiler)
-                        .setFileManager(fileManager)
                         // perform only annotation processing without subsequent compilation
                         .setOptions(OPTION_PROC_ONLY);
 
