@@ -307,21 +307,23 @@ Polymer({
             var promise = this.action();
             if (promise) {
                 promise
-                    .then(  // first a handler for successful promise execution
-                        createEntityActionThenCallback(self.eventChannel, self.role, subRole, postal, self._afterExecution.bind(self), 
-                                    typeof closeAfterExecution !== 'undefined' ? closeAfterExecution : self.closeAfterExecution),
-                        // and in case of some exceptional situation let's provide a trivial catch handler
-                        function (value) {
-                            console.log('AJAX PROMISE CATCH', value);
-                            if (self.postActionError) {
-                                self.postActionError();
-                            }
-                        })
-                    .then(ironRequest => {
-                        if (ironRequest.successful && subRole === 'new' && typeof self.newAction === 'function') {
-                            self.newAction();
+                .then(ironRequest => {
+                    if (ironRequest.successful && subRole === 'new' && typeof self.newAction === 'function') {
+                        self.newAction();
+                    }
+                    return ironRequest;
+                })
+                .then(  // first a handler for successful promise execution
+                    createEntityActionThenCallback(self.eventChannel, self.role, subRole, postal, self._afterExecution.bind(self), 
+                                typeof closeAfterExecution !== 'undefined' ? closeAfterExecution : self.closeAfterExecution),
+                    // and in case of some exceptional situation let's provide a trivial catch handler
+                    function (value) {
+                        console.log('AJAX PROMISE CATCH', value);
+                        if (self.postActionError) {
+                            self.postActionError();
                         }
-                    });
+                    }
+                );    
             }
         }).bind(this);
     },

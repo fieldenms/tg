@@ -486,10 +486,10 @@ Polymer({
             this.chosenProperty = null;
             this.rootEntityType = rootEntityType;
 
-            this._run(null, true);
+            this._run(null, null, true);
         }
 
-        self._run = (function (event, isIndependant) {
+        self._run = (function (event, detail, isIndependant) {
             console.log(this.shortDesc + ": execute");
 
             const postMasterInfoRetrieve = function () {

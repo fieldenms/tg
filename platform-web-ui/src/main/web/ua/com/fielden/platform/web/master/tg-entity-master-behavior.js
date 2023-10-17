@@ -1,7 +1,7 @@
 import '/resources/egi/tg-custom-action-dialog.js';
 import '/resources/components/postal-lib.js';
 
-import { tearDownEvent, isInHierarchy, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, isInHierarchy, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
 import {createDialog} from '/resources/egi/tg-dialog-util.js';
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
 import { createEntityActionThenCallback } from '/resources/master/actions/tg-entity-master-closing-utils.js';
@@ -623,6 +623,16 @@ const TgEntityMasterBehaviorImpl = {
         }).bind(self);
 
         self._newAction = (function() {
+            const parentDialog = getParentAnd(self, element => element.matches("tg-custom-action-dialog"));
+            if (parentDialog && parentDialog._lastAction) {
+                const originContextCreator = self.tgOpenMasterAction.createContextHolder;
+                const originActionRestorer = self.tgOpenMasterAction.restoreActionState;
+                self.tgOpenMasterAction.createContextHolder = parentDialog._lastAction.createContextHolder.bind(self.tgOpenMasterAction);
+                self.tgOpenMasterAction.restoreActionState = (function () {
+                    this.createContextHolder = originContextCreator;
+                    this.restoreActionState = originActionRestorer;
+                }).bind(self.tgOpenMasterAction);
+            }
             self.tgOpenMasterAction._runIndependedActionForNew(self.entityType);
         }).bind(self);
 
