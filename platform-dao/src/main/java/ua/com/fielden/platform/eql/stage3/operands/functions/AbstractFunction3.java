@@ -63,8 +63,8 @@ public abstract class AbstractFunction3 extends AbstractSingleOperand3 {
             final var expression = "case " +
                                    // TODO dd/MM/yyyy should really only be used for the case of @DateOnly or LocalDate once supported
                                    "when DATEPART(hour, %s) = 0 and DATEPART(minute, %s) = 0 and DATEPART(second, %s) = 0 and DATEPART(millisecond, %s) = 0 then FORMAT(%s, 'dd/MM/yyyy') " +
-                                   "when DATEPART(second, %s) = 0 and DATEPART(millisecond, %s) = 0 then FORMAT(%s, 'dd/MM/yyyy HH:mm')" +
-                                   "when when DATEPART(millisecond, %s) > 0 then FORMAT(%s, 'dd/MM/yyyy HH:mm:ss.fff') " +
+                                   "when DATEPART(second, %s) = 0 and DATEPART(millisecond, %s) = 0 then FORMAT(%s, 'dd/MM/yyyy HH:mm') " +
+                                   "when DATEPART(millisecond, %s) > 0 then FORMAT(%s, 'dd/MM/yyyy HH:mm:ss.fff') " +
                                    "else FORMAT(%s, 'dd/MM/yyyy HH:mm:ss') end";
             return expression.formatted(
                     opSql, opSql, opSql, opSql, opSql,
