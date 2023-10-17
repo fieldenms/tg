@@ -17,7 +17,7 @@ public class QuerySourceItemForComponentType<T> extends AbstractQuerySourceItem<
         super(name, hibType, null);
         this.javaType = javaType;
     }
-    
+
     @Override
     public AbstractQuerySourceItem<T> cloneWithoutExpression() {
         final QuerySourceItemForComponentType<T> result = new QuerySourceItemForComponentType<T>(name, javaType, hibType);
@@ -31,24 +31,19 @@ public class QuerySourceItemForComponentType<T> extends AbstractQuerySourceItem<
     public PropResolutionProgress resolve(final PropResolutionProgress context) {
         return IResolvable.resolve(context, subitems);
     }
-    
-    public QuerySourceItemForComponentType<T> addSubitem(final AbstractQuerySourceItem<?> subitem) { 
+
+    public QuerySourceItemForComponentType<T> addSubitem(final AbstractQuerySourceItem<?> subitem) {
         subitems.put(subitem.name, subitem);
         return this;
     }
-    
+
     public SortedMap<String, AbstractQuerySourceItem<?>> getSubitems() {
         return unmodifiableSortedMap(subitems);
     }
-    
+
     @Override
     public boolean hasExpression() {
         return subitems.values().stream().anyMatch(p -> p.hasExpression());
-    }
-    
-    @Override
-    public boolean hasAggregation() {
-        return subitems.values().stream().anyMatch(p -> p.hasAggregation());
     }
 
     @Override

@@ -42,12 +42,12 @@ public class PathsToTreeTransformer {
         this.querySourceInfoProvider = querySourceInfoProvider;
         this.gen = gen;
     }
-    
+
     public final TreeResultBySources transformFinally(final Set<Prop2> props) {
         final TransformationResult treeResult = transform(props);
         return new TreeResultBySources(treeResult.implicitNodesMap(), groupByExplicitSources(treeResult.expressionsData()), groupByExplicitSources(treeResult.propsData()));
     }
-    
+
     private final TransformationResult transform(final Set<Prop2> props) {
         final Map<Integer, List<ImplicitNode>> nodes = new HashMap<>();
         final List<ExpressionLinks> expressionsLinks = new ArrayList<>();
@@ -64,9 +64,9 @@ public class PathsToTreeTransformer {
 
         return new TransformationResult(unmodifiableMap(nodes), unmodifiableList(propLinks), unmodifiableList(expressionsLinks));
     }
-    
+
     private SourceNodesResult generateImplicitNodesForSource(
-            final ISource2<?> sourceForCalcPropResolution, 
+            final ISource2<?> sourceForCalcPropResolution,
             final List<PendingTail> pendingTails
     ) {
         final Set<String> propsToSkip = sourceForCalcPropResolution.isExplicit() ? new HashSet<String>(pendingTails.stream().map(p -> p.link().name()).toList()) : emptySet();
@@ -114,11 +114,11 @@ public class PathsToTreeTransformer {
     }
 
     private CalcPropsDataAndPendingTails enhanceWithCalcPropsData(
-            final ISource2<?> sourceForCalcPropResolution, 
+            final ISource2<?> sourceForCalcPropResolution,
             final Map<String, CalcPropData> processedCalcData,
             final Set<String> processedProps, // Prop2 name
             final List<PendingTail> incomingTails) {
-        
+
         final Set<String> processedPropsLocal = new HashSet<>();
         processedPropsLocal.addAll(processedProps);
 
@@ -127,7 +127,7 @@ public class PathsToTreeTransformer {
 
         for (final PropChunk calcChunk : getFirstCalcChunks(incomingTails)) {
             if (!processedCalcData.containsKey(calcChunk.name())) { // consider only calc props that have not yet been processed on the previous iteration(s)
-                final Expression1 exp1 = (Expression1) (new StandAloneExpressionBuilder(gen, calcChunk.data().expression)).getResult().getValue();
+                final Expression1 exp1 = (Expression1) (new StandAloneExpressionBuilder(gen, calcChunk.data().expression.expressionModel())).getResult().getValue();
                 final TransformationContext1 prc = (new TransformationContext1(querySourceInfoProvider, true)).cloneWithAdded(sourceForCalcPropResolution);
                 final Expression2 exp2 = exp1.transform(prc);
                 final Set<Prop2> expProps = exp2.collectProps();
@@ -167,7 +167,7 @@ public class PathsToTreeTransformer {
 
         return new CalcPropsDataAndPendingTails(recursivelyEnhanced.calcPropsData, allTails);
     }
-    
+
     private SourceNodeResult generateImplicitNode(final List<PendingTail> tails, final PropChunk firstChunk, final Expression2 expression, final boolean isPartOfCalcProp) {
         final QuerySourceItemForEntityType<?> querySourceInfoItem = (QuerySourceItemForEntityType<?>) firstChunk.data();
         final Source2BasedOnPersistentType implicitSource = new Source2BasedOnPersistentType(querySourceInfoItem.querySourceInfo, gen.nextSourceId(), false, isPartOfCalcProp);
@@ -178,7 +178,7 @@ public class PathsToTreeTransformer {
 
     private static record CalcPropData(Expression2 expr, TransformationResult internalsResult) {
     }
-    
+
     private static record CalcPropsDataAndPendingTails(Map<String, CalcPropData> calcPropsData, List<PendingTail> pendingTails) {
     }
 
@@ -189,8 +189,8 @@ public class PathsToTreeTransformer {
     }
 
     private static record TransformationResult(
-            Map<Integer, List<ImplicitNode>> implicitNodesMap, 
-            List<Prop3Links> propsData, 
+            Map<Integer, List<ImplicitNode>> implicitNodesMap,
+            List<Prop3Links> propsData,
             List<ExpressionLinks> expressionsData) {
     }
 }

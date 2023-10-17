@@ -4,11 +4,12 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.eql.meta.CalcPropInfo;
 import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 
 /**
  * A structure that captures a query source yield-able entity-typed-property resolution related info within a query source of type <code>PARENT</code>.
- * 
+ *
  * @author TG Team
  *
  * @param <T>
@@ -19,20 +20,20 @@ public class QuerySourceItemForEntityType<T extends AbstractEntity<?>> extends A
     public final boolean nonnullable;
 
     public QuerySourceItemForEntityType(final String name, final QuerySourceInfo<T> querySourceInfo, final Object hibType, final boolean nonnullable) {
-        this(name, querySourceInfo, hibType, nonnullable, null, false);
+        this(name, querySourceInfo, hibType, nonnullable, null);
     }
 
-    public QuerySourceItemForEntityType(final String name, final QuerySourceInfo<T> querySourceInfo, final Object hibType, final boolean nonnullable, final ExpressionModel expression, final boolean implicit) {
-        super(name, hibType, expression, implicit);
+    public QuerySourceItemForEntityType(final String name, final QuerySourceInfo<T> querySourceInfo, final Object hibType, final boolean nonnullable, final CalcPropInfo expression) {
+        super(name, hibType, expression);
         this.querySourceInfo = querySourceInfo;
         this.nonnullable = nonnullable;
     }
-    
+
     @Override
     public AbstractQuerySourceItem<T> cloneWithoutExpression() {
         return new QuerySourceItemForEntityType<T>(name, querySourceInfo, hibType, nonnullable);
-    }    
-    
+    }
+
     @Override
     public PropResolutionProgress resolve(final PropResolutionProgress context) {
         return querySourceInfo.resolve(context);

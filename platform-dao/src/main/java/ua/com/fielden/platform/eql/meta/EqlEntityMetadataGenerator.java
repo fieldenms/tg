@@ -67,6 +67,7 @@ import org.hibernate.usertype.CompositeUserType;
 
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -101,7 +102,7 @@ public class EqlEntityMetadataGenerator {
     public static final Type H_DATETIME = DateTimeType.INSTANCE;
     public static final Type H_UTCDATETIME = UtcDateTimeType.INSTANCE;
     public static final Type H_BOOLEAN = YesNoType.INSTANCE;
-    
+
     public static final String Y = "Y";
     public static final String N = "N";
 
@@ -142,7 +143,7 @@ public class EqlEntityMetadataGenerator {
         this.hibTypesDefaults.put(boolean.class, H_BOOLEAN);
         this.hibTypesInjector = hibTypesInjector;
     }
-    
+
     public <T extends AbstractEntity<?>> EqlEntityMetadataPair<T> generate(final EntityTypeInfo<? super T> typeInfo, final Class<T> entityType) {
         try {
             final List<EqlPropertyMetadata> propsMetadata = generatePropertyMetadatasForEntity(typeInfo, entityType);
@@ -182,11 +183,11 @@ public class EqlEntityMetadataGenerator {
 
         return result;
     }
-    
-    // TODO there is a duplicate code within HibernateTypeDeterminer.             
+
+    // TODO there is a duplicate code within HibernateTypeDeterminer.
     /**
      * Determines hibernate type instance (Type/UserType/CustomUserType) for entity property based on provided property's meta information.
-     * 
+     *
      * @param propField
      * @return
      */
@@ -245,9 +246,9 @@ public class EqlEntityMetadataGenerator {
                 }
                 return of(idProperty);
             } else if (isEntityType(getKeyType(entityType))) {
-                return of(new EqlPropertyMetadata.Builder(ID, Long.class, H_ENTITY).expression(expr().prop(KEY).model()).implicit().build());
+                return of(new EqlPropertyMetadata.Builder(ID, Long.class, H_ENTITY).expression(new CalcPropInfo(expr().prop(KEY).model(), true, false)).build());
             } else {
-            	// FIXME reconsider this implementation taking into account its role combined with actual yields information in the process of getting final EntityPropInfo for Synthetic Entity 
+            	// FIXME reconsider this implementation taking into account its role combined with actual yields information in the process of getting final EntityPropInfo for Synthetic Entity
                 return of(idProperty);
             }
         default:
@@ -271,7 +272,7 @@ public class EqlEntityMetadataGenerator {
                 return null;
             }
         } else if (DynamicEntityKey.class.equals(keyType)) {
-            return new EqlPropertyMetadata.Builder(KEY, String.class, H_STRING).expression(generateCompositeKeyEqlExpression((Class<? extends AbstractEntity<DynamicEntityKey>>) entityType)).implicit().required().build();
+            return new EqlPropertyMetadata.Builder(KEY, String.class, H_STRING).expression(new CalcPropInfo(generateCompositeKeyEqlExpression((Class<? extends AbstractEntity<DynamicEntityKey>>) entityType), true, false)).required().build();
         } else {
             final Object keyHibType = typeResolver.basic(keyType.getName());
             switch (category) {
@@ -316,7 +317,7 @@ public class EqlEntityMetadataGenerator {
         return new PropColumn(removeObsoleteUnderscore(columnName), length, precision, scale);
     }
 
-    private static List<EqlPropertyMetadata> getCompositeUserTypeSubpropsMetadata(final ICompositeUserTypeInstantiate hibType, final String parentColumnPrefix, final ExpressionModel expr) {
+    private static List<EqlPropertyMetadata> getCompositeUserTypeSubpropsMetadata(final ICompositeUserTypeInstantiate hibType, final String parentColumnPrefix, final CalcPropInfo expr) {
         final String[] propNames = hibType.getPropertyNames();
         final Object[] propHibTypes = hibType.getPropertyTypes();
         final Class<?> headerPropType = hibType.returnedClass();
@@ -346,9 +347,9 @@ public class EqlEntityMetadataGenerator {
         final List<Field> unionMembers = unionProperties(unionPropType);
         final List<String> unionMembersNames = unionMembers.stream().map(up -> up.getName()).collect(toList());
         final List<EqlPropertyMetadata> subitems = new ArrayList<>();
-        subitems.add(new EqlPropertyMetadata.Builder(KEY, String.class, H_STRING).expression(generateUnionEntityPropertyContextualExpression(unionMembersNames, KEY, contextPropName)).implicit().build());
-        subitems.add(new EqlPropertyMetadata.Builder(ID, Long.class, H_ENTITY).expression(generateUnionEntityPropertyContextualExpression(unionMembersNames, ID, contextPropName)).implicit().build());
-        subitems.add(new EqlPropertyMetadata.Builder(DESC, String.class, H_STRING).expression(generateUnionCommonDescPropExpressionModel(unionMembers, contextPropName)).implicit().build());
+        subitems.add(new EqlPropertyMetadata.Builder(KEY, String.class, H_STRING).expression(new CalcPropInfo(generateUnionEntityPropertyContextualExpression(unionMembersNames, KEY, contextPropName), true, false)).build());
+        subitems.add(new EqlPropertyMetadata.Builder(ID, Long.class, H_ENTITY).expression(new CalcPropInfo(generateUnionEntityPropertyContextualExpression(unionMembersNames, ID, contextPropName), true, false)).build());
+        subitems.add(new EqlPropertyMetadata.Builder(DESC, String.class, H_STRING).expression(new CalcPropInfo(generateUnionCommonDescPropExpressionModel(unionMembers, contextPropName), true, false)).build());
 
         final List<String> commonProps = commonProperties(unionPropType).stream().filter(n -> !DESC.equals(n) && !KEY.equals(n)).collect(toList());
         final Class<?> firstUnionEntityPropType = unionMembers.get(0).getType(); // e.g. WagonSlot in TgBogieLocation
@@ -359,7 +360,7 @@ public class EqlEntityMetadataGenerator {
             final Class<?> javaType = determinePropertyType(firstUnionEntityPropType, commonProp);
             final Object subHibType = getHibernateType(findFieldByName(firstUnionEntityPropType, commonProp));
 
-            subitems.add(new EqlPropertyMetadata.Builder(commonProp, javaType, subHibType).expression(generateUnionEntityPropertyContextualExpression(unionMembersNames, commonProp, contextPropName)).implicit().build());
+            subitems.add(new EqlPropertyMetadata.Builder(commonProp, javaType, subHibType).expression(new CalcPropInfo(generateUnionEntityPropertyContextualExpression(unionMembersNames, commonProp, contextPropName), true, false)).build());
         }
 
         return subitems;
@@ -376,6 +377,7 @@ public class EqlEntityMetadataGenerator {
         final MapTo mapTo = getAnnotation(propField, MapTo.class);
         final IsProperty isProperty = getAnnotation(propField, IsProperty.class);
         final Calculated calculated = getAnnotation(propField, Calculated.class);
+        final boolean aggregatedExpression = calculated == null ? false : CalculatedPropertyCategory.AGGREGATED_EXPRESSION == calculated.category();
 
         final Builder resultInProgress = new EqlPropertyMetadata.Builder(propName, propType, hibType);
 
@@ -400,10 +402,11 @@ public class EqlEntityMetadataGenerator {
                 }
             }
         } else if (calculated != null) {
+            final CalcPropInfo calcPropInfo = new CalcPropInfo(extractExpressionModelFromCalculatedProperty(entityType, propField), false, aggregatedExpression);
             if (!(hibType instanceof ICompositeUserTypeInstantiate)) {
-                return resultInProgress.expression(extractExpressionModelFromCalculatedProperty(entityType, propField)).build();
+                return resultInProgress.expression(calcPropInfo).build();
             } else {
-                return resultInProgress.subitems(getCompositeUserTypeSubpropsMetadata((ICompositeUserTypeInstantiate) hibType, null, extractExpressionModelFromCalculatedProperty(entityType, propField))).build();
+                return resultInProgress.subitems(getCompositeUserTypeSubpropsMetadata((ICompositeUserTypeInstantiate) hibType, null, calcPropInfo)).build();
             }
         } else { // synthetic entity
             if (isUnionEntityType(propType)) {
@@ -432,7 +435,7 @@ public class EqlEntityMetadataGenerator {
 
         // 1-2-1 is not required to exist -- that's why need longer formula -- that's why 1-2-1 is in fact implicitly calculated nullable prop
         final ExpressionModel expressionModel = expr().model(select((Class<? extends AbstractEntity<?>>) propField.getType()).where().prop(KEY).eq().extProp(ID).model()).model();
-        return new EqlPropertyMetadata.Builder(propName, javaType, hibType).notRequired().expression(expressionModel).implicit().build();
+        return new EqlPropertyMetadata.Builder(propName, javaType, hibType).notRequired().expression(new CalcPropInfo(expressionModel, true, false)).build();
     }
 
     public static Table generateTable(final String tableName, final List<EqlPropertyMetadata> propsMetadatas) {

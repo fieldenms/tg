@@ -2,39 +2,33 @@ package ua.com.fielden.platform.eql.meta.query;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.eql.meta.CalcPropInfo;
 
 /**
  * A structure that represents resolution-related info for a query source item of type {@code T} within a query source.
- * 
+ *
  * @author TG Team
  *
  */
 public abstract class AbstractQuerySourceItem<T> implements IResolvable<T> {
     public final String name; //shouldn't contain dots
-    public final ExpressionModel expression;
-    public final boolean implicit;
+    public final CalcPropInfo expression;
     public final Object hibType;
 
-    public AbstractQuerySourceItem(final String name, final Object hibType, final ExpressionModel expression, final boolean implicit) {
+    public AbstractQuerySourceItem(final String name, final Object hibType, final CalcPropInfo expression) {
         this.name = name;
         this.expression = expression;
         this.hibType = hibType;
-        this.implicit = implicit;
-    }
-    
-    public AbstractQuerySourceItem(final String name, final Object hibType, final ExpressionModel expression) {
-        this(name, hibType, expression, false);
     }
 
     public abstract AbstractQuerySourceItem<T> cloneWithoutExpression();
-    
+
     /**
      * Represents a calculated property explicitly defined at the Entity level.
      * @return
      */
     public boolean isExplicitlyCalculated() {
-    	throw new UnsupportedOperationException("TODO implement and use"); 
+    	throw new UnsupportedOperationException("TODO implement and use");
     }
 
     /**
@@ -49,10 +43,10 @@ public abstract class AbstractQuerySourceItem<T> implements IResolvable<T> {
         return expression != null;
     }
 
-    public boolean hasAggregation() {
-        return expression != null && expression.containsAggregations();
+    public boolean isCalculatedPropertyThatCouldBeMaterialisedAsSqlColumn() {
+        return expression != null && !expression.forTotals() && !expression.implicit();
     }
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -60,7 +54,6 @@ public abstract class AbstractQuerySourceItem<T> implements IResolvable<T> {
         result = prime * result + name.hashCode();
         result = prime * result + ((hibType == null) ? 0 : hibType.hashCode());
         result = prime * result + ((expression == null) ? 0 : expression.hashCode());
-        result = prime * result + (implicit ? 1231 : 1237);
         return result;
     }
 
@@ -75,7 +68,7 @@ public abstract class AbstractQuerySourceItem<T> implements IResolvable<T> {
         }
 
         final AbstractQuerySourceItem<?> other = (AbstractQuerySourceItem<?>) obj;
-        
-        return Objects.equals(name, other.name) && Objects.equals(hibType, other.hibType) && Objects.equals(expression, other.expression) && Objects.equals(implicit, other.implicit);
+
+        return Objects.equals(name, other.name) && Objects.equals(hibType, other.hibType) && Objects.equals(expression, other.expression);
     }
 }

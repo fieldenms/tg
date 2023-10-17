@@ -37,8 +37,8 @@ import ua.com.fielden.platform.types.tuples.T3;
  * <p>
  * It is regarded that one such calculated property depends on another if its expression directly or transitively (via other calculated properties) refers to sub-property(ies) of this another calculated property.
  * <p>
- * The knowledge of these dependencies is required for correct sequence of SQL JOINs generation.  
- * 
+ * The knowledge of these dependencies is required for correct sequence of SQL JOINs generation.
+ *
  * @author TG Team
  *
  */
@@ -53,7 +53,7 @@ public class DependentCalcPropsOrder {
                     calcPropsOfEntityType.add(calcPropChunk.name());
                 }
 
-                final Expression1 exp1 = (Expression1) (new StandAloneExpressionBuilder(gen, calcPropChunk.data().expression)).getResult().getValue();
+                final Expression1 exp1 = (Expression1) (new StandAloneExpressionBuilder(gen, calcPropChunk.data().expression.expressionModel())).getResult().getValue();
                 final TransformationContext1 prc = (new TransformationContext1(querySourceInfoProvider, true)).cloneWithAdded(source);
                 try {
                     final Expression2 exp2 = exp1.transform(prc);
@@ -72,11 +72,11 @@ public class DependentCalcPropsOrder {
 
         return orderDependentCalcProps(calcPropsOfEntityType, propDependencies);
     }
-    
-    
+
+
     /**
-     * Enlist prop chunks for all calculated properties of the given entity type. 
-     * 
+     * Enlist prop chunks for all calculated properties of the given entity type.
+     *
      * @param et
      * @return
      */
@@ -108,7 +108,7 @@ public class DependentCalcPropsOrder {
 
     /**
      * Gets list of calc props with subprops given calc prop directly or transitively depends on.
-     * 
+     *
      * @param propName
      * @param calcPropDependencies
      * @return
@@ -126,7 +126,7 @@ public class DependentCalcPropsOrder {
 
     /**
      * Removes from provided map of dependencies those entries, that have no dependencies and there is no dependencies upon them.
-     * 
+     *
      * @param mapOfDependencies
      * @return
      */
@@ -149,11 +149,11 @@ public class DependentCalcPropsOrder {
 
     /**
      * Determines for the given set of Prop2 instances 2 sets of names:
-     * <ol> 
-     * <li> names of first prop chunks of props that are calculated and without subprops 
+     * <ol>
+     * <li> names of first prop chunks of props that are calculated and without subprops
      * <li> names of first prop chunks of props that are calculated and have subprops
      * </ol>
-     * 
+     *
      * @param props
      * @return
      */
@@ -177,7 +177,7 @@ public class DependentCalcPropsOrder {
 
     /**
      * Obtains from that Prop2 path data of its first chunk (name, is it calculated, does it have succeeding chunks).
-     * 
+     *
      * @param propPath
      * @return
      */
