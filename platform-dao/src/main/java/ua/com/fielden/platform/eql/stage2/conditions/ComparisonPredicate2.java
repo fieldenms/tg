@@ -13,7 +13,7 @@ import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.conditions.ComparisonPredicate3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
-public class ComparisonPredicate2 extends AbstractCondition2<ComparisonPredicate3> {
+public class ComparisonPredicate2 implements ICondition2<ComparisonPredicate3> {
     public final ISingleOperand2<? extends ISingleOperand3> leftOperand;
     public final ISingleOperand2<? extends ISingleOperand3> rightOperand;
     public final ComparisonOperator operator;
@@ -43,7 +43,7 @@ public class ComparisonPredicate2 extends AbstractCondition2<ComparisonPredicate
         result.addAll(rightOperand.collectProps());
         return result;
     }
-    
+
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>();

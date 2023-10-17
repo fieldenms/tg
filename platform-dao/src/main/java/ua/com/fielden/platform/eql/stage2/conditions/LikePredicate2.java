@@ -13,7 +13,7 @@ import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.conditions.LikePredicate3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
-public class LikePredicate2 extends AbstractCondition2<LikePredicate3> {
+public class LikePredicate2 implements ICondition2<LikePredicate3> {
     public final ISingleOperand2<? extends ISingleOperand3> leftOperand;
     public final ISingleOperand2<? extends ISingleOperand3> rightOperand;
     public final LikeOptions options;
@@ -43,7 +43,7 @@ public class LikePredicate2 extends AbstractCondition2<LikePredicate3> {
         result.addAll(rightOperand.collectProps());
         return result;
     }
-    
+
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>();
@@ -51,7 +51,7 @@ public class LikePredicate2 extends AbstractCondition2<LikePredicate3> {
         result.addAll(rightOperand.collectEntityTypes());
         return result;
     }
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;

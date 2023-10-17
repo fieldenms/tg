@@ -14,7 +14,7 @@ import ua.com.fielden.platform.eql.stage3.conditions.SetPredicate3;
 import ua.com.fielden.platform.eql.stage3.operands.ISetOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
-public class SetPredicate2 extends AbstractCondition2<SetPredicate3> {
+public class SetPredicate2 implements ICondition2<SetPredicate3> {
     public final ISingleOperand2<? extends ISingleOperand3> leftOperand;
     public final ISetOperand2<? extends ISetOperand3> rightOperand;
     public final boolean negated;
@@ -36,7 +36,7 @@ public class SetPredicate2 extends AbstractCondition2<SetPredicate3> {
         final TransformationResult2<? extends ISetOperand3> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
         return new TransformationResult2<>(new SetPredicate3(leftOperandTr.item, negated, rightOperandTr.item), rightOperandTr.updatedContext);
     }
-    
+
     @Override
     public Set<Prop2> collectProps() {
         final Set<Prop2> result = new HashSet<>();
@@ -52,7 +52,7 @@ public class SetPredicate2 extends AbstractCondition2<SetPredicate3> {
         result.addAll(rightOperand.collectEntityTypes());
         return result;
     }
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -72,9 +72,9 @@ public class SetPredicate2 extends AbstractCondition2<SetPredicate3> {
         if (!(obj instanceof SetPredicate2)) {
             return false;
         }
-        
+
         final SetPredicate2 other = (SetPredicate2) obj;
-        
+
         return Objects.equals(leftOperand, other.leftOperand) &&
                 Objects.equals(rightOperand, other.rightOperand) &&
                 (negated == other.negated);

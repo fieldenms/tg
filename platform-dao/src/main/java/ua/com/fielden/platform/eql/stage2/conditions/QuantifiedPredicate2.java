@@ -16,7 +16,7 @@ import ua.com.fielden.platform.eql.stage3.conditions.QuantifiedPredicate3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.queries.SubQuery3;
 
-public class QuantifiedPredicate2 extends AbstractCondition2<QuantifiedPredicate3> {
+public class QuantifiedPredicate2 implements ICondition2<QuantifiedPredicate3> {
     public final ISingleOperand2<? extends ISingleOperand3> leftOperand;
     public final SubQuery2 rightOperand;
     public final Quantifier quantifier;
@@ -38,7 +38,7 @@ public class QuantifiedPredicate2 extends AbstractCondition2<QuantifiedPredicate
     public TransformationResult2<QuantifiedPredicate3> transform(final TransformationContext2 context) {
         final TransformationResult2<? extends ISingleOperand3> leftOperandTr = leftOperand.transform(context);
         final TransformationResult2<SubQuery3> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
-        
+
         return new TransformationResult2<>(new QuantifiedPredicate3(leftOperandTr.item, operator, quantifier, rightOperandTr.item), rightOperandTr.updatedContext);
     }
 
@@ -49,7 +49,7 @@ public class QuantifiedPredicate2 extends AbstractCondition2<QuantifiedPredicate
         result.addAll(rightOperand.collectProps());
         return result;
     }
-    
+
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>();
@@ -57,7 +57,7 @@ public class QuantifiedPredicate2 extends AbstractCondition2<QuantifiedPredicate
         result.addAll(rightOperand.collectEntityTypes());
         return result;
     }
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -74,11 +74,11 @@ public class QuantifiedPredicate2 extends AbstractCondition2<QuantifiedPredicate
         if (this == obj) {
             return true;
         }
-        
+
         if (!(obj instanceof QuantifiedPredicate2)) {
             return false;
         }
-        
+
         final QuantifiedPredicate2 other = (QuantifiedPredicate2) obj;
 
         return Objects.equals(leftOperand, other.leftOperand) &&

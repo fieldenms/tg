@@ -11,7 +11,7 @@ import ua.com.fielden.platform.eql.stage2.operands.queries.SubQueryForExists2;
 import ua.com.fielden.platform.eql.stage3.conditions.ExistencePredicate3;
 import ua.com.fielden.platform.eql.stage3.operands.queries.SubQueryForExists3;
 
-public class ExistencePredicate2 extends AbstractCondition2<ExistencePredicate3> {
+public class ExistencePredicate2 implements ICondition2<ExistencePredicate3> {
     private final boolean negated;
     private final SubQueryForExists2 subQuery;
 
@@ -30,12 +30,12 @@ public class ExistencePredicate2 extends AbstractCondition2<ExistencePredicate3>
         final TransformationResult2<SubQueryForExists3> subQueryTr = subQuery.transform(context);
         return new TransformationResult2<>(new ExistencePredicate3(negated, subQueryTr.item), subQueryTr.updatedContext);
     }
-    
+
     @Override
     public Set<Prop2> collectProps() {
         return subQuery.collectProps();
     }
-    
+
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return subQuery.collectEntityTypes();
@@ -55,13 +55,13 @@ public class ExistencePredicate2 extends AbstractCondition2<ExistencePredicate3>
         if (this == obj) {
             return true;
         }
-     
+
         if (!(obj instanceof ExistencePredicate2)) {
             return false;
         }
-        
+
         final ExistencePredicate2 other = (ExistencePredicate2) obj;
-        
+
         return Objects.equals(subQuery, other.subQuery) && (negated == other.negated);
     }
 }

@@ -11,7 +11,7 @@ import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.conditions.NullPredicate3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
-public class NullPredicate2 extends AbstractCondition2<NullPredicate3> {
+public class NullPredicate2 implements ICondition2<NullPredicate3> {
     public final ISingleOperand2<? extends ISingleOperand3> operand;
     private final boolean negated;
 
@@ -35,12 +35,12 @@ public class NullPredicate2 extends AbstractCondition2<NullPredicate3> {
     public Set<Prop2> collectProps() {
         return operand.collectProps();
     }
-    
+
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return operand.collectEntityTypes();
     }
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -59,9 +59,9 @@ public class NullPredicate2 extends AbstractCondition2<NullPredicate3> {
         if (!(obj instanceof NullPredicate2)) {
             return false;
         }
-        
+
         final NullPredicate2 other = (NullPredicate2) obj;
-        
+
         return (negated == other.negated) && Objects.equals(operand, other.operand);
     }
 }

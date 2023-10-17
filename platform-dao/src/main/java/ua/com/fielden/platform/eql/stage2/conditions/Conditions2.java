@@ -16,7 +16,7 @@ import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
 
-public class Conditions2 extends AbstractCondition2<Conditions3> {
+public class Conditions2 implements ICondition2<Conditions3> {
     public static final Conditions2 emptyConditions = new Conditions2(false, emptyList());
 
     private final List<List<? extends ICondition2<?>>> allConditionsAsDnf = new ArrayList<>();
@@ -37,12 +37,12 @@ public class Conditions2 extends AbstractCondition2<Conditions3> {
         if (ignore()) {
             return new TransformationResult2<>(null, context);
         }
-        
+
         final List<List<? extends ICondition3>> result = new ArrayList<>();
         TransformationContext2 currentContext = context;
-        
+
         for (final List<? extends ICondition2<?>> andGroup : allConditionsAsDnf) {
-            final List<ICondition3> transformedAndGroup = new ArrayList<>(); 
+            final List<ICondition3> transformedAndGroup = new ArrayList<>();
             for (final ICondition2<? extends ICondition3> andGroupCondition : andGroup) {
                 final TransformationResult2<? extends ICondition3> andGroupConditionTr = andGroupCondition.transform(currentContext);
                 transformedAndGroup.add(andGroupConditionTr.item);
@@ -50,7 +50,7 @@ public class Conditions2 extends AbstractCondition2<Conditions3> {
             }
             result.add(transformedAndGroup);
         }
-        
+
         return new TransformationResult2<>(new Conditions3(negated, result), currentContext);
     }
 
@@ -79,17 +79,17 @@ public class Conditions2 extends AbstractCondition2<Conditions3> {
             return result;
         }
     }
-    
+
     public boolean conditionIsSatisfied(final ICondition2<?> condition) {
         for (final List<? extends ICondition2<?>> conditions : allConditionsAsDnf) {
                 if (!conditionMatchesAnyOf(conditions, condition)) {
                     return false;
                 }
         }
-        
+
         return allConditionsAsDnf.isEmpty() || negated ? false : true;
     }
-    
+
     private boolean conditionMatchesAnyOf(final List<? extends ICondition2<?>> conditions, final ICondition2<?> conditionToMatch) {
         for (final ICondition2<?> condition : conditions) {
             if (condition.equals(conditionToMatch) || (condition instanceof Conditions2 && ((Conditions2) condition).conditionIsSatisfied(conditionToMatch))) {
@@ -117,9 +117,9 @@ public class Conditions2 extends AbstractCondition2<Conditions3> {
         if (!(obj instanceof Conditions2)) {
             return false;
         }
-        
+
         final Conditions2 other = (Conditions2) obj;
-        
+
         return Objects.equals(allConditionsAsDnf, other.allConditionsAsDnf) && (negated == other.negated);
     }
 }
