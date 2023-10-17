@@ -10,7 +10,7 @@ import javax.tools.Diagnostic.Kind;
 /**
  * Informs the {@link MessagePrintingVerifier} about a diagnostic message that should be reported on an element.
  *
- * @author homedirectory
+ * @author TG Team
  */
 @Retention(SOURCE)
 public @interface Message {

@@ -19,7 +19,7 @@ import org.junit.Test;;
 /**
  * Tests covering the {@link RelaxationPolicy} enum.
  *
- * @author homedirectory
+ * @author TG Team
  */
 public class RelaxationPolicyTest {
 

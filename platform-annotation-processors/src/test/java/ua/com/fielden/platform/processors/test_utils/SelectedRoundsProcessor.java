@@ -10,7 +10,7 @@ import javax.lang.model.element.TypeElement;
 /**
  * An abstract annotation processor that processes only the selected rounds. It is designed primarily for testing purposes.
  *
- * @author homedirectory
+ * @author TG Team
  */
 public abstract class SelectedRoundsProcessor extends AbstractProcessor {
 
@@ -35,8 +35,6 @@ public abstract class SelectedRoundsProcessor extends AbstractProcessor {
 
     /**
      * An abstract annotation processor that processes only the first round. It is designed primarily for testing purposes.
-     *
-     * @author homedirectory
      */
     public static abstract class FirstRoundProcessor extends SelectedRoundsProcessor {
         private static final Set<Integer> SELECTED_ROUNDS = Set.of(1);

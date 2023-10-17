@@ -2,7 +2,7 @@ package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -68,7 +68,7 @@ public class EntityRoundEnvironment extends AbstractRoundEnvironment<EntityEleme
      */
     @Override
     public List<ViolatingElement> findViolatingElements(final AbstractEntityElementVerifier verifier) {
-        final List<ViolatingElement> violators = new LinkedList<>();
+        final List<ViolatingElement> violators = new ArrayList<>();
 
         listEntities().stream()
             .map(entity -> verifier.verify(entity))
@@ -87,7 +87,7 @@ public class EntityRoundEnvironment extends AbstractRoundEnvironment<EntityEleme
      * Returns a list containing entity elements that did not pass verification.
      */
     public List<ViolatingElement> findViolatingUnionEntities(final AbstractEntityElementVerifier verifier) {
-        final List<ViolatingElement> violators = new LinkedList<>();
+        final List<ViolatingElement> violators = new ArrayList<>();
 
         listUnionEntities().stream()
             .map(entity -> verifier.verify(entity))
@@ -109,7 +109,7 @@ public class EntityRoundEnvironment extends AbstractRoundEnvironment<EntityEleme
      * @return
      */
     public List<ViolatingElement> findViolatingDeclaredProperties(final AbstractPropertyElementVerifier verifier) {
-        final List<ViolatingElement> violators = new LinkedList<>();
+        final List<ViolatingElement> violators = new ArrayList<>();
 
         listEntities().stream()
             .flatMap(entity -> entityFinder.streamDeclaredProperties(entity).map(prop -> t2(entity, prop)))
@@ -132,7 +132,7 @@ public class EntityRoundEnvironment extends AbstractRoundEnvironment<EntityEleme
      * @return
      */
     public List<ViolatingElement> findViolatingUnionEntityDeclaredProperties(final AbstractPropertyElementVerifier verifier) {
-        final List<ViolatingElement> violators = new LinkedList<>();
+        final List<ViolatingElement> violators = new ArrayList<>();
 
         listUnionEntities().stream()
             .flatMap(entity -> entityFinder.streamDeclaredProperties(entity).map(prop -> t2(entity, prop)))

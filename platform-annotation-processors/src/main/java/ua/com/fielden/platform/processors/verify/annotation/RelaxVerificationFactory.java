@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.processors.verify.annotation;
 
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+
 import java.util.Objects;
 import java.util.Optional;
 
@@ -25,7 +28,7 @@ public record RelaxVerificationFactory(RelaxationPolicy value, boolean enclosed)
         // directly present?
         final RelaxVerification directAnnot = element.getAnnotation(RelaxVerification.class);
         if (directAnnot != null) {
-            return Optional.of(directAnnot.value());
+            return of(directAnnot.value());
         }
 
         // find the first annotated enclosing element and return its policy only if enclosed == true
@@ -33,7 +36,7 @@ public record RelaxVerificationFactory(RelaxationPolicy value, boolean enclosed)
             .map(elt -> elt.getAnnotation(RelaxVerification.class))
             .filter(annot -> annot != null)
             .findFirst()
-            .flatMap(annot -> annot.enclosed() ? Optional.of(annot.value()) : Optional.empty());
+            .flatMap(annot -> annot.enclosed() ? of(annot.value()) : empty());
     }
 
     /**

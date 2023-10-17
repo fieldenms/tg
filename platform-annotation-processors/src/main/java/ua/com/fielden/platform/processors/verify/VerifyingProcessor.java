@@ -2,8 +2,8 @@ package ua.com.fielden.platform.processors.verify;
 
 import static java.util.stream.Collectors.joining;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -34,8 +34,8 @@ import ua.com.fielden.platform.utils.CollectionUtil;
 @SupportedAnnotationTypes("*")
 public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
 
-    private final List<Function<ProcessingEnvironment, IVerifier>> registeredVerifiersProviders = new LinkedList<>();
-    private final List<IVerifier> registeredVerifiers = new LinkedList<>();
+    private final List<Function<ProcessingEnvironment, IVerifier>> registeredVerifiersProviders = new ArrayList<>();
+    private final List<IVerifier> registeredVerifiers = new ArrayList<>();
 
     /** Round-cumulative indicator of whether all verifiers were passed. */
     private boolean passed;

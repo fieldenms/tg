@@ -12,7 +12,7 @@ import ua.com.fielden.platform.processors.verify.verifiers.AbstractVerifier;
  * A simple verifier implementation to simplify the base abstract type instantiation.
  * Designed primarily for testing purposes.
  *
- * @author homedirectory
+ * @author TG Team
  */
 public class SimpleVerifier extends AbstractVerifier<SimpleRoundEnvironment> {
 
