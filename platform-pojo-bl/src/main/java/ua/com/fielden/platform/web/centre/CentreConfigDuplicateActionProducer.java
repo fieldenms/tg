@@ -45,7 +45,7 @@ public class CentreConfigDuplicateActionProducer extends DefaultEntityProducerWi
                 empty(), // update with empty saveAsName indicating default config
                 of(empty()), // update with empty uuid indicating default config
                 of(appliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer().getPreferredView()), // update with preferred view from selection criteria with applied modifications
-                of(selectionCrit().createCriteriaValidationPrototype(empty()).shareError().get()) // update with share error corresponding to default config
+                of(selectionCrit().createCriteriaValidationPrototype(empty()).shareError()) // update with share error corresponding to default config
             ));
         }
         return entity;

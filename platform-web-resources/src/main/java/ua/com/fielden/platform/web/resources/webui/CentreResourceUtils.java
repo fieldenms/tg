@@ -833,7 +833,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 newSaveAsName,
                 of(of(newConfigUuid)),
                 empty(), // do not update preferredView on client when copying centre configuration
-                of(appliedCriteriaEntity.shareError().get()) // update shareError after config transitioning
+                of(appliedCriteriaEntity.shareError()) // update shareError after config transitioning
             );
         });
         // returns ordered alphabetically list of 'loadable' configurations for current user
@@ -849,9 +849,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             }
         });
         /*
-         * Validates share action context, i.e. returns failure {@link Result} in case where configuration can not be shared and successful {@link Result} otherwise.<br>
-         * <p>
-         * The rules are the following:<br>
+         * Validates share action context, i.e. returns failure {@link Result} in case where configuration can not be shared and successful {@link Result} otherwise.
+         *
+         * The rules are the following:
          * 1. default config -- `Please save and try again.`
          * 2. non-existent config -- `Configuration does not exist.`
          * 3. loaded link config -- `Please save and try again.`
@@ -859,7 +859,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
          * 5. inherited from shared / base, deleted upstream, config -- `Please duplicate, save and try again.`
          * 6. inherited from shared, made unshared -- `Please duplicate, save and try again.`
          */
-        validationPrototype.setShareValidator(() -> {
+        final Supplier<Result> shareValidator = () -> {
             if (!saveAsName.isPresent()) {
                 return failure(SAVE_MSG); // default configuration (the one with empty saveAsName) can not be shared
             }
@@ -884,11 +884,11 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 return failure(DUPLICATE_SAVE_MSG);
             }
             return successful("Ok");
-        });
+        };
         /*
-         * Validates share action context, i.e. returns non-empty of(String) error message in case where configuration can not be shared and empty Optional otherwise.<br>
-         * <p>
-         * The rules are the following:<br>
+         * Validates share action context, i.e. returns non-empty of(String) error message in case where configuration can not be shared and empty Optional otherwise.
+         *
+         * The rules are the following:
          * 1. default config -- `Please save and try again.`
          * 2. non-existent config -- `Configuration does not exist.`
          * 3. loaded link config -- `Please save and try again.`
@@ -896,8 +896,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
          * 5. inherited from shared / base, deleted upstream, config -- `Please duplicate, save and try again.`
          * 6. inherited from shared, made unshared -- `Please duplicate, save and try again.`
          */
-        validationPrototype.setShareError(() -> {
-            final Result shareValidationResult = validationPrototype.shareValidator().get();
+        validationPrototype.setShareErrorSupplier(() -> {
+            final Result shareValidationResult = shareValidator.get();
             return shareValidationResult.isSuccessful() ? empty() : of(shareValidationResult.getMessage());
         });
 

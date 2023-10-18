@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity_centre.review.criteria;
 
+import static java.util.Optional.empty;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -18,7 +20,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
-import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
@@ -71,8 +72,7 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Function<Map<String, Object>, Stream<AbstractEntity<?>>> exportQueryRunner;
     private Function<Consumer<ICentreDomainTreeManagerAndEnhancer>, ICentreDomainTreeManagerAndEnhancer> centreAdjuster; // returns applied fresh centre
     private Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreColumnWidthsAdjuster;
-    private Supplier<Result> shareValidator;
-    private Supplier<Optional<String>> shareError;
+    private Supplier<Optional<String>> shareErrorSupplier;
     private CentreContextHolder centreContextHolder;
     private DeviceProfile device;
     private Class<? extends MiWithConfigurationSupport<?>> miType;
@@ -384,20 +384,23 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return centreContextHolder;
     }
 
-    public void setShareValidator(final Supplier<Result> shareValidator) {
-        this.shareValidator = shareValidator;
+    public void setShareErrorSupplier(final Supplier<Optional<String>> shareErrorSupplier) {
+        this.shareErrorSupplier = shareErrorSupplier;
     }
 
-    public Supplier<Result> shareValidator() {
-        return shareValidator;
-    }
-
-    public void setShareError(final Supplier<Optional<String>> shareError) {
-        this.shareError = shareError;
-    }
-
-    public Supplier<Optional<String>> shareError() {
-        return shareError;
+    /**
+     * Validates share action context, i.e. returns non-empty of(String) error message in case where configuration can not be shared and empty Optional otherwise.<br>
+     * <p>
+     * The rules are the following:<br>
+     * 1. default config -- `Please save and try again.`<br>
+     * 2. non-existent config -- `Configuration does not exist.`<br>
+     * 3. loaded link config -- `Please save and try again.`<br>
+     * 4. inherited from shared / base config -- `Only sharing of your own configurations is supported. Please save as your copy and try again.`<br>
+     * 5. inherited from shared / base, deleted upstream, config -- `Please duplicate, save and try again.`<br>
+     * 6. inherited from shared, made unshared -- `Please duplicate, save and try again.`
+     */
+    public Optional<String> shareError() {
+        return shareErrorSupplier != null ? shareErrorSupplier.get() : empty();
     }
 
 }

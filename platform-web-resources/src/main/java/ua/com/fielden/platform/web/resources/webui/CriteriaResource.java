@@ -495,7 +495,7 @@ public class CriteriaResource extends AbstractWebResource {
                 empty(),
                 of(updatedFreshCentre.getPreferredView()),
                 user,
-                of(appliedCriteriaEntity.shareError().get())
+                of(appliedCriteriaEntity.shareError())
             )
         );
     }

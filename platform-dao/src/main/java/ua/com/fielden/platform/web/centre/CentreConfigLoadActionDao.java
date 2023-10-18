@@ -81,7 +81,7 @@ public class CentreConfigLoadActionDao extends CommonEntityDao<CentreConfigLoadA
             selectionCrit.makePreferredConfig(actualSaveAsName); // 'own save-as / inherited from base' kinds -- can be preferred
         }
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> newSelectionCrit = selectionCrit.createCriteriaValidationPrototype(actualSaveAsName);
-        final Map<String, Object> customObject = getCustomObject(selectionCrit, newSelectionCrit, actualSaveAsName, of(selectionCrit.centreConfigUuid(actualSaveAsName)), of(newSelectionCrit.getCentreDomainTreeMangerAndEnhancer().getPreferredView()), of(newSelectionCrit.shareError().get()));
+        final Map<String, Object> customObject = getCustomObject(selectionCrit, newSelectionCrit, actualSaveAsName, of(selectionCrit.centreConfigUuid(actualSaveAsName)), of(newSelectionCrit.getCentreDomainTreeMangerAndEnhancer().getPreferredView()), of(newSelectionCrit.shareError()));
         customObject.put(AUTO_RUN, selectionCrit.centreRunAutomatically(actualSaveAsName));
         entity.setCustomObject(customObject);
         return super.save(entity);
