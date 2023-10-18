@@ -331,7 +331,8 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      * Returns {@link JsCode} suitable for {@link IPreAction} for centre configuration sharing actions.
      * <p>
      * It makes entity centre's {@code _actionInProgress} property true if the action has started and false if it has completed.
-     * This is suitable for asynchronous share actions with UI (where Entity Master opens).
+     * This is suitable for asynchronous share actions (e.g. with UI, where Entity Master opens, or without UI but with some custom server-side producer/companion logic).
+     * Default Share action is synchronous, client-side-only, action (see {@link #centreConfigShareActions()}).
      */
     protected static JsCode promoteShareActionProgressToCentreActions() {
         return jsCode(
@@ -348,7 +349,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     /**
      * Returns {@link JsCode} suitable for {@link IPreAction} for centre configuration sharing actions.
      * <p>
-     * It shows informational toast about inability to share currently loaded configuration.
+     * It shows informational toast about inability to share currently loaded configuration (if sharing validation was indeed erroneous).
      */
     protected static JsCode showToastForShareError() {
         return jsCode(
@@ -365,7 +366,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     /**
      * Returns {@link JsCode} suitable for {@link IPreAction} for centre configuration sharing actions.
      * <p>
-     * It copies currently loaded configuration URL (window.location.href) to the clipboard and shows informational message about it.
+     * It copies currently loaded configuration URL (window.location.href) to the clipboard and shows informational message about it (if sharing validation was successful).
      */
     protected static JsCode copyToClipboardForSuccessfulShare() {
         return jsCode(
@@ -380,8 +381,9 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     @Override
     public List<EntityActionConfig> centreConfigShareActions() {
-        // default Share action only has pre action and is implemented specially through cached shareError property (see #2116);
-        // any custom Share action definition may use this pre-action or, at least, parts of it
+        // default Share action is implemented specially through cached 'shareError' property in its 'preAction';
+        // if Share is not possible it shows toast for an error, otherwise it immediately copies a link to the clipboard and shows toast for a success;
+        // it is very important to copy link inside preAction as a part of UI callback, otherwise we get permission error in Safari browsers (see #2116)
         return asList(
             action(CentreConfigShareAction.class)
             .withContext(context().withSelectionCrit().build())
