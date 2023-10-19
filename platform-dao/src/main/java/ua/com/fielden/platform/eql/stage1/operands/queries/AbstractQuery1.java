@@ -65,7 +65,7 @@ public abstract class AbstractQuery1 {
     public final OrderBys1 orderings;
     public final Class<? extends AbstractEntity<?>> resultType;
     public final boolean yieldAll;
-    public boolean shouldMaterialiseCalcPropsAsColumnsInSqlQuery;
+    public final boolean shouldMaterialiseCalcPropsAsColumnsInSqlQuery;
 
     public AbstractQuery1(final QueryComponents1 queryComponents, final Class<? extends AbstractEntity<?>> resultType) {
         this.joinRoot = queryComponents.joinRoot;
@@ -74,9 +74,9 @@ public abstract class AbstractQuery1 {
         this.yields = queryComponents.yields;
         this.groups = queryComponents.groups;
         this.orderings = queryComponents.orderings;
-        this.resultType = resultType;
         this.yieldAll = queryComponents.yieldAll;
         this.shouldMaterialiseCalcPropsAsColumnsInSqlQuery = queryComponents.shouldMaterialiseCalcPropsAsColumnsInSqlQuery;
+        this.resultType = resultType;
     }
 
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {

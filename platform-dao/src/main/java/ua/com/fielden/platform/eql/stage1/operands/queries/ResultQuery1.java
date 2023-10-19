@@ -74,7 +74,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToStag
     /**
      * Enhances {@code yields}, which were determined during EQL stage2 processing, with additional yields:
      * <ol>
-     * <li> No yields or {@code yieldAll} - adds all properties that belong to {@code mainSource} and are also present in {@code fetchModel}; in case of entity-typed properties, their properties are also included (if they exist in a fetch model) to improve query performance.
+     * <li> No yields or {@code yieldAll} - adds all properties that belong to {@code mainSource} and are also present in {@code fetchModel}; in case of entity-typed properties and being one of the queries, constructed during fetching process (i.e., not the main user query), their properties are also included (if they exist in a fetch model) to improve query performance.
      *      It is important to note that in case of the synthetic entities (excluding the case of fetching totals only), {@code id} is added to the yields.
      *      This is necessary to overcome the current limitation of fetch strategies that ignore {@code id} for synthetic entities.
      * <li> Single yield {@code .modelAsEntity} - enhances the yield with "id" as alias.

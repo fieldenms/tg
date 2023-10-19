@@ -24,7 +24,7 @@ public class ImplicitlyCalculatedPropertiesTest extends AbstractEqlShortcutTest 
     public void expression_for_id_of_synthetic_entity_is_correct() {
         final EntityResultQueryModel<TgAverageFuelUsage> act = select(TgAverageFuelUsage.class).where().prop("id").isNotNull().model();
         final EntityResultQueryModel<TgAverageFuelUsage> exp = select(TgAverageFuelUsage.class).where().prop("key").isNotNull().model();
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
 
     @Test
@@ -39,7 +39,7 @@ public class ImplicitlyCalculatedPropertiesTest extends AbstractEqlShortcutTest 
                 isNotNull().
                 model();
         
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
 
     @Test
@@ -54,7 +54,7 @@ public class ImplicitlyCalculatedPropertiesTest extends AbstractEqlShortcutTest 
                 isNotNull().
                 model();
         
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
 
     @Test
@@ -69,7 +69,7 @@ public class ImplicitlyCalculatedPropertiesTest extends AbstractEqlShortcutTest 
                     end().
                     eq().val(100).model();
         
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
     
     @Test
@@ -84,7 +84,7 @@ public class ImplicitlyCalculatedPropertiesTest extends AbstractEqlShortcutTest 
                     end().
                     eq().val(100).model();
         
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
    
     @Test
@@ -99,7 +99,7 @@ public class ImplicitlyCalculatedPropertiesTest extends AbstractEqlShortcutTest 
                     end().
                     eq().val(100).model();
         
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
 
     @Test
@@ -114,7 +114,7 @@ public class ImplicitlyCalculatedPropertiesTest extends AbstractEqlShortcutTest 
                     end().
                     isNotNull().model();
         
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
 
     @Test
@@ -124,7 +124,7 @@ public class ImplicitlyCalculatedPropertiesTest extends AbstractEqlShortcutTest 
         
         final EntityResultQueryModel<TgBogie> exp = select(TgBogie.class).where().val(null).isNotNull().model();
 
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
     
     @Test
@@ -134,7 +134,7 @@ public class ImplicitlyCalculatedPropertiesTest extends AbstractEqlShortcutTest 
         
         final EntityResultQueryModel<TgReBogieWithHighLoad> exp = select(TgReBogieWithHighLoad.class).where().val(null).isNotNull().model();
         
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
     
     @Test
@@ -149,7 +149,7 @@ public class ImplicitlyCalculatedPropertiesTest extends AbstractEqlShortcutTest 
                     end().
                     isNotNull().model();
         
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
     
     @Test
@@ -161,7 +161,7 @@ public class ImplicitlyCalculatedPropertiesTest extends AbstractEqlShortcutTest 
                     when().prop("location.workshop").isNotNull().then().prop("location.workshop.fuelType").
                     end().isNotNull().model();
         
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
     
     @Test
@@ -176,7 +176,7 @@ public class ImplicitlyCalculatedPropertiesTest extends AbstractEqlShortcutTest 
                 isNotNull().
                 model();
         
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
     
     @Test
@@ -191,7 +191,7 @@ public class ImplicitlyCalculatedPropertiesTest extends AbstractEqlShortcutTest 
                 isNotNull().
                 model();
         
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
 
     @Test
@@ -206,7 +206,7 @@ public class ImplicitlyCalculatedPropertiesTest extends AbstractEqlShortcutTest 
                 isNotNull().
                 model();
         
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
     
     @Test
@@ -221,7 +221,7 @@ public class ImplicitlyCalculatedPropertiesTest extends AbstractEqlShortcutTest 
                 isNotNull().
                 model();
         
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
 
     @Test
@@ -236,7 +236,7 @@ public class ImplicitlyCalculatedPropertiesTest extends AbstractEqlShortcutTest 
                 isNotNull().
                 model();
         
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
 
     @Test
@@ -251,6 +251,6 @@ public class ImplicitlyCalculatedPropertiesTest extends AbstractEqlShortcutTest 
                 isNotNull().
                 model();
         
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
 }

@@ -23,7 +23,7 @@ public class YieldAllTest extends AbstractEqlShortcutTest {
                 yield().prop("version").as("version").
                 modelAsEntity(TgVehicleMake.class);
         
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
     
     @Test
@@ -48,6 +48,6 @@ public class YieldAllTest extends AbstractEqlShortcutTest {
                 yield().prop("refCount").as("refCount").
                 modelAsEntity(BOGIE);
         
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
 }

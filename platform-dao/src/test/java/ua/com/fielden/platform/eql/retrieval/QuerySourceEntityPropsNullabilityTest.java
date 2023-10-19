@@ -357,6 +357,6 @@ public class QuerySourceEntityPropsNullabilityTest extends AbstractEqlShortcutTe
         final var act = startModel.yield().prop(yieldName + ".key").as("result").modelAsAggregate();
         final var expStart = isNullable ? startModel.as("parent").leftJoin(yieldEntityType) : startModel.as("parent").join(yieldEntityType);
         final var exp = expStart.as("child").on().prop("parent." + yieldName).eq().prop("child").yield().prop("child.key").as("result").modelAsAggregate();
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
 }

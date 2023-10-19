@@ -19,7 +19,7 @@ public class UserDataFilteringTest extends AbstractEqlShortcutTest {
         final EntityResultQueryModel<TgAuthor> act = select(TgAuthor.class).model();
         act.setFilterable(true);
         final EntityResultQueryModel<TgAuthor> exp = select(TgAuthor.class).where().prop("key").isNotNull().model();
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
 
     @Test
@@ -27,7 +27,7 @@ public class UserDataFilteringTest extends AbstractEqlShortcutTest {
         final EntityResultQueryModel<TgAuthor> act = select(TgAuthor.class).where().prop("name.key").eq().val("Paul").model();
         act.setFilterable(true);
         final EntityResultQueryModel<TgAuthor> exp = select(TgAuthor.class).where().prop("key").isNotNull().and().prop("name.key").eq().val("Paul").model();
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
 
     @Test
@@ -35,7 +35,7 @@ public class UserDataFilteringTest extends AbstractEqlShortcutTest {
         final EntityResultQueryModel<TgAuthor> act = select(TgAuthor.class).where().prop("name.key").eq().val("Paul").or().prop("name.key").eq().val("John").model();
         act.setFilterable(true);
         final EntityResultQueryModel<TgAuthor> exp = select(TgAuthor.class).where().prop("key").isNotNull().and().begin().prop("name.key").eq().val("Paul").or().prop("name.key").eq().val("John").end().model();
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
 
     @Test 
@@ -43,7 +43,7 @@ public class UserDataFilteringTest extends AbstractEqlShortcutTest {
         final EntityResultQueryModel<TeVehicle> act = select(VEHICLE).model();
         act.setFilterable(true);
         final EntityResultQueryModel<TeVehicle> exp = select(TeVehicle.class).where().begin().prop("key").isNotNull().or().prop("desc").isNotNull().end().model();
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
 
     @Test 
@@ -51,7 +51,7 @@ public class UserDataFilteringTest extends AbstractEqlShortcutTest {
         final EntityResultQueryModel<TeVehicle> act = select(VEHICLE).where().prop("model.make.key").eq().val("MERC").model();
         act.setFilterable(true);
         final EntityResultQueryModel<TeVehicle> exp = select(TeVehicle.class).where().begin().prop("key").isNotNull().or().prop("desc").isNotNull().end().and().prop("model.make.key").eq().val("MERC").model();
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
     
     @Test 
@@ -62,7 +62,7 @@ public class UserDataFilteringTest extends AbstractEqlShortcutTest {
                 begin().prop("key").isNotNull().or().prop("desc").isNotNull().end().
                 and().
                 begin().prop("model.make.key").eq().val("MERC").or().prop("model.desc").isNull().end().model();
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
 
     @Test // case of join without aliases and absence of ambiguity during filter condition resolution
@@ -70,7 +70,7 @@ public class UserDataFilteringTest extends AbstractEqlShortcutTest {
         final EntityResultQueryModel<TeVehicle> act = select(VEHICLE).join(TgOrgUnit5.class).on().prop("station").eq().prop("fuelType").model();
         act.setFilterable(true);
         final EntityResultQueryModel<TeVehicle> exp = select(VEHICLE).as("v").join(TgOrgUnit5.class).on().prop("station").eq().prop("fuelType").where().begin().prop("v.key").isNotNull().or().prop("v.desc").isNotNull().end().model();
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
 
     @Test
@@ -79,7 +79,7 @@ public class UserDataFilteringTest extends AbstractEqlShortcutTest {
         filteredSourceQry.setFilterable(true);
         final EntityResultQueryModel<TgAuthor> actQry = select(filteredSourceQry).model();
         final EntityResultQueryModel<TgAuthor> expQry = select(select(TgAuthor.class).where().prop("key").isNotNull().model()).model();
-        assertModelResultsEquals(expQry, actQry);
+        assertModelResultsAreEqual(expQry, actQry);
     }
 
     @Test
@@ -94,7 +94,7 @@ public class UserDataFilteringTest extends AbstractEqlShortcutTest {
                 and().
                 prop("desc").eq().val("DDD").
                 model();
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
     
     // case of SE with UDF in its model

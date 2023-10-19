@@ -15,11 +15,11 @@ import ua.com.fielden.platform.eql.retrieval.records.QueryModelResult;
 
 public abstract class AbstractEqlShortcutTest extends EqlTestCase {
 
-    protected static <T extends AbstractEntity<?>> void assertModelResultsEquals(final EntityResultQueryModel<T> exp, final EntityResultQueryModel<T> act) {
+    protected static <T extends AbstractEntity<?>> void assertModelResultsAreEqual(final EntityResultQueryModel<T> exp, final EntityResultQueryModel<T> act) {
         assertModelResultsAreEqual(transformToModelResult(exp), transformToModelResult(act));
     }
     
-    protected static void assertModelResultsEquals(final AggregatedResultQueryModel exp, final AggregatedResultQueryModel act) {
+    protected static void assertModelResultsAreEqual(final AggregatedResultQueryModel exp, final AggregatedResultQueryModel act) {
         assertModelResultsAreEqual(transformToModelResult(exp), transformToModelResult(act));
     }
     

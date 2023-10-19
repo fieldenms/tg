@@ -22,7 +22,7 @@ public class Context1DemoTest extends AbstractEqlShortcutTest {
 
         final var exp = act;
         
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
     
     @Test
@@ -40,6 +40,6 @@ public class Context1DemoTest extends AbstractEqlShortcutTest {
 
         final var exp = act;
 
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
 }

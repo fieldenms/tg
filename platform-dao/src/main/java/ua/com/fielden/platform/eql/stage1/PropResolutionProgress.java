@@ -24,15 +24,15 @@ public class PropResolutionProgress {
     }
 
     public PropResolutionProgress registerResolutionAndClone(final AbstractQuerySourceItem<?> propResolutionStep) {
-        final List<AbstractQuerySourceItem<?>> updatedResolved = new ArrayList<>(resolved); 
+        final List<AbstractQuerySourceItem<?>> updatedResolved = new ArrayList<>(resolved);
         updatedResolved.add(propResolutionStep);
         return new PropResolutionProgress(pending.subList(1, pending.size()), updatedResolved);
     }
-    
+
     public List<AbstractQuerySourceItem<?>> getResolved() {
         return unmodifiableList(resolved);
     }
-    
+
     public String getNextPending() {
         return pending.get(0);
     }
@@ -44,8 +44,9 @@ public class PropResolutionProgress {
     private boolean lastPendingIsId() {
         return pending.size() == 1 && pending.get(0).equals(ID);
     }
-    
+
     private boolean lastResolvedHasPersistentEntityType() {
+        // by ensuring that part preceding ID is not just entity, but persistent entity it is achieved that implicit calc-prop of ID on an union entity is not skipped here
         return !resolved.isEmpty() && isPersistedEntityType(resolved.get(resolved.size() - 1).javaType());
     }
 }

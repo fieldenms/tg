@@ -26,7 +26,7 @@ public class AutoYieldTest extends AbstractEqlShortcutTest {
                         yield().val(null).as(ABSENT_ALIAS).
                         modelAsEntity(VEHICLE_FUEL_USAGE)).model();
 
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
 
     @Test
@@ -35,7 +35,7 @@ public class AutoYieldTest extends AbstractEqlShortcutTest {
 
         final var exp = select(VEHICLE).where().prop("model").in().model(select(MODEL).where().prop("make.key").in().values("MERC", "BMW").yield().prop("id").as(ABSENT_ALIAS).modelAsEntity(MODEL)).model();
 
-        assertModelResultsEquals(exp, act);
+        assertModelResultsAreEqual(exp, act);
     }
 
     @Test
