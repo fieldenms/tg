@@ -502,7 +502,11 @@ public class EntityResourceUtils {
         // both criteria and simple entities will be affected
         entity.nonProxiedProperties().filter(mp -> mp.isRequired() && !touchedProps.contains(mp.getName())).forEach(mp -> {
             mp.setRequiredValidationResult(successful(entity));
-            if (!isCriteriaEntity && !mp.isValid()) {
+            // stale validation error for other validator may remain on the property;
+            // this is possible if the property is dependent on other and that other property makes this property required;
+            // before it was made required, the property may have been in error in other validator, and the entity at the time may have been not constructed fully (the property validation state being stale);
+            // need to revalidate without requiredness validation
+            if (!isCriteriaEntity && !mp.isValid()) { // only do this for Entity Master entities and trigger revalidation only for erroneous (after req error clearing) properties
                 mp.revalidate(true);
             }
         });
@@ -521,7 +525,11 @@ public class EntityResourceUtils {
         if (!entity.isPersisted() || isCriteriaEntity) {
             entity.nonProxiedProperties().filter(mp -> mp.isRequired() && touchedProps.contains(mp.getName()) && mp.getValue() == null).forEach(mp -> {
                 mp.setRequiredValidationResult(successful(entity));
-                if (!isCriteriaEntity && !mp.isValid()) {
+                // stale validation error for other validator may remain on the property;
+                // this is possible if the property is dependent on other and that other property makes this property required;
+                // before it was made required, the property may have been in error in other validator, and the entity at the time may have been not constructed fully (the property validation state being stale);
+                // need to revalidate without requiredness validation
+                if (!isCriteriaEntity && !mp.isValid()) { // only do this for Entity Master entities and trigger revalidation only for erroneous (after req error clearing) properties
                     mp.revalidate(true);
                 }
             });
