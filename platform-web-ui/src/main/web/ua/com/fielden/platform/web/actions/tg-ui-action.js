@@ -10,7 +10,7 @@ import '/resources/components/postal-lib.js';
 
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
-import { tearDownEvent, getFirstEntityType } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, getFirstEntityType, deepestActiveElement } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
 import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
@@ -481,7 +481,13 @@ Polymer({
         }.bind(this);
 
         self._run = (function (event) {
-            console.log(this.shortDesc + ": execute");
+            console.log(this.shortDesc + ": execute; activeElement =", deepestActiveElement());
+            const button = this.$ && this.$[this.isIconButton ? 'iActionButton' : 'bActionButton'];
+            const isNotFocused = button && button !== deepestActiveElement();
+            if (isNotFocused) {
+                console.error('imperative focusing');
+                button.focus();
+            }
 
             const postMasterInfoRetrieve = function () {
                 if (this.preAction) {
@@ -527,6 +533,8 @@ Polymer({
                     this.restoreActionState();
                     console.log("The action was rejected with error: " + e);
                 }
+            } else if (isNotFocused) {
+                self.async(() => postMasterInfoRetrieve(), 100);
             } else {
                 postMasterInfoRetrieve();
             }

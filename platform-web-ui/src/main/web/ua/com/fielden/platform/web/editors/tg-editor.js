@@ -545,7 +545,7 @@ export class TgEditor extends PolymerElement {
                 type: Function,
                 value: function () {
                     return (function (event) {
-                        // console.debug("_onChange:", event);
+                        console.error("_onChange:", event, this.propertyName);
                         if (this['_onChange_handler']) {
                             clearTimeout(this['_onChange_handler']);
                         }
@@ -1033,7 +1033,7 @@ export class TgEditor extends PolymerElement {
      * Commits editing value.
      */
     commit () {
-        // console.debug('COMMIT: start.');
+        this.propertyName === 'bulkStore_desc' && console.error('COMMIT: start.', this.propertyName);
         if (this.reflector().isEntity(this.entity)) {
             if (typeof this.entity["@" + this.propertyName + "_uppercase"] !== 'undefined') {
                 var upperCased = this._editingValue.toLocaleUpperCase();
@@ -1045,7 +1045,7 @@ export class TgEditor extends PolymerElement {
             }
             this._commitForDescendants();
         }
-        // console.debug("COMMIT: [", this._editingValue, "] value.");
+        this.propertyName === 'bulkStore_desc' && console.error("COMMIT: [", this._editingValue, "] value.", this.propertyName);
         this._commValue = this._editingValue;
     }
 
@@ -1053,6 +1053,7 @@ export class TgEditor extends PolymerElement {
      * Commits editing value '_editingValue' in case if it is changed from previously committed value '_commValue'.
      */
     commitIfChanged () {
+        console.error('commitIfChanged', this.propertyName);
         if (!this.reflector().equalsEx(this._editingValue, this._commValue)) {
             this.commit();
         }
