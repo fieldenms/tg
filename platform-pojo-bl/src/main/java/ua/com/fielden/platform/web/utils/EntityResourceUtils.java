@@ -224,8 +224,8 @@ public class EntityResourceUtils {
         entity.isValid();
 
         disregardCritOnlyRequiredProperties(entity);
-        disregardUntouchedRequiredProperties(entity, touchedProps);
-        disregardTouchedRequiredPropertiesWithEmptyValue(entity, touchedProps);
+        disregardUntouchedRequiredProperties(entity, touchedProps, isCriteriaEntity);
+        disregardTouchedRequiredPropertiesWithEmptyValue(entity, touchedProps, isCriteriaEntity);
 
         return entity;
     }
@@ -498,10 +498,13 @@ public class EntityResourceUtils {
      * @param touchedProps -- list of 'touched' properties, i.e. those for which editing has occurred during validation lifecycle (maybe returning to original value thus making them unmodified)
      * @return
      */
-    public static <M extends AbstractEntity<?>> M disregardUntouchedRequiredProperties(final M entity, final Set<String> touchedProps) {
+    public static <M extends AbstractEntity<?>> M disregardUntouchedRequiredProperties(final M entity, final Set<String> touchedProps, final boolean isCriteriaEntity) {
         // both criteria and simple entities will be affected
         entity.nonProxiedProperties().filter(mp -> mp.isRequired() && !touchedProps.contains(mp.getName())).forEach(mp -> {
             mp.setRequiredValidationResult(successful(entity));
+            if (!isCriteriaEntity && !mp.isValid()) {
+                mp.revalidate(true);
+            }
         });
         return entity;
     }
@@ -513,11 +516,14 @@ public class EntityResourceUtils {
      * @param touchedProps -- list of 'touched' properties, i.e. those for which editing has occurred during validation lifecycle (maybe returning to original value thus making them unmodified)
      * @return
      */
-    private static <M extends AbstractEntity<?>> M disregardTouchedRequiredPropertiesWithEmptyValue(final M entity, final Set<String> touchedProps) {
+    private static <M extends AbstractEntity<?>> M disregardTouchedRequiredPropertiesWithEmptyValue(final M entity, final Set<String> touchedProps, final boolean isCriteriaEntity) {
         // both criteria and simple non-persisted (new) entities will be affected
-        if (!entity.isPersisted() || EntityQueryCriteria.class.isAssignableFrom(entity.getType())) {
+        if (!entity.isPersisted() || isCriteriaEntity) {
             entity.nonProxiedProperties().filter(mp -> mp.isRequired() && touchedProps.contains(mp.getName()) && mp.getValue() == null).forEach(mp -> {
                 mp.setRequiredValidationResult(successful(entity));
+                if (!isCriteriaEntity && !mp.isValid()) {
+                    mp.revalidate(true);
+                }
             });
         }
         return entity;
