@@ -24,6 +24,7 @@ import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
 import ua.com.fielden.platform.eql.stage1.PropResolution;
 import ua.com.fielden.platform.eql.stage1.QueryComponents1;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.TransformationResult1;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.etc.GroupBys1;
 import ua.com.fielden.platform.eql.stage1.etc.OrderBys1;
@@ -42,6 +43,7 @@ import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
+import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
 /**
@@ -94,7 +96,21 @@ public abstract class AbstractQuery1 {
         return new QueryComponents2(null, whereConditions.transform(context), yields.transform(context), groups.transform(context), orderings.transform(context));
     }
 
-    protected Conditions2 enhanceWithUserDataFilterConditions(final ISource2<? extends ISource3> mainSource, final QuerySourceInfoProvider querySourceInfoProvider, final Conditions2 originalConditions) {
+    protected QueryComponents2 transformQueryComponents(final TransformationContext1 context) {
+        final TransformationResult1<? extends IJoinNode2<?>> joinRootTr = joinRoot.transform(context);
+        final TransformationContext1 enhancedContext = joinRootTr.updatedContext;
+        final IJoinNode2<? extends IJoinNode3> joinRoot2 = joinRootTr.item;
+        final Conditions2 whereConditions2 = enhanceWithUserDataFilterConditions(joinRoot2.mainSource(), context.querySourceInfoProvider, whereConditions.transform(enhancedContext));
+        final Yields2 yields2 = yields.transform(enhancedContext);
+        final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
+        final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, joinRoot2.mainSource());
+        final Yields2 enhancedYields2 = enhanceYields(yields2, joinRoot2.mainSource());
+        return new QueryComponents2(joinRoot2, whereConditions2, enhancedYields2, groups2, orderings2);
+    }
+
+    abstract protected Yields2 enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource);
+
+    private Conditions2 enhanceWithUserDataFilterConditions(final ISource2<? extends ISource3> mainSource, final QuerySourceInfoProvider querySourceInfoProvider, final Conditions2 originalConditions) {
         if (udfConditions.isEmpty()) {
             return originalConditions;
         }

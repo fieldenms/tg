@@ -15,7 +15,7 @@ import ua.com.fielden.platform.sample.domain.TeFuelUsageByType;
 public class AutoYieldTest extends AbstractEqlShortcutTest {
 
     @Test
-    public void auto_yield_in_typeless_subquery_yields_null_value_aliased_as_empty_string() {
+    public void auto_yield_in_subquery_for_exists_yields_null_value_aliased_as_empty_string() {
         final var act = select(VEHICLE_FUEL_USAGE).where().prop("vehicle.key").eq().val("A001").and().
                 notExists(select(VEHICLE_FUEL_USAGE).where().prop("vehicle").eq().extProp("vehicle").and().prop("date").gt().extProp("date").
                         model()).model();

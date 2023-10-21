@@ -18,18 +18,11 @@ import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForUnionType;
 import ua.com.fielden.platform.eql.stage1.ITransformableToStage2;
 import ua.com.fielden.platform.eql.stage1.QueryComponents1;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
-import ua.com.fielden.platform.eql.stage1.TransformationResult1;
-import ua.com.fielden.platform.eql.stage2.QueryComponents2;
-import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
-import ua.com.fielden.platform.eql.stage2.etc.GroupBys2;
-import ua.com.fielden.platform.eql.stage2.etc.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.etc.Yield2;
 import ua.com.fielden.platform.eql.stage2.etc.Yields2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.queries.SourceQuery2;
-import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
-import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
 /**
@@ -54,23 +47,11 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToStag
     public SourceQuery2 transform(final TransformationContext1 context) {
         final TransformationContext1 localContext = isCorrelated ? context : new TransformationContext1(context.querySourceInfoProvider, context.isForCalcProp);
 
-        if (joinRoot == null) {
-            return new SourceQuery2(transformSourceless(localContext), resultType);
-        }
-
-        final TransformationResult1<? extends IJoinNode2<?>> joinRootTr = joinRoot.transform(localContext);
-        final TransformationContext1 enhancedContext = joinRootTr.updatedContext;
-        final IJoinNode2<? extends IJoinNode3> joinRoot2 = joinRootTr.item;
-        final Conditions2 whereConditions2 = enhanceWithUserDataFilterConditions(joinRoot2.mainSource(), context.querySourceInfoProvider, whereConditions.transform(enhancedContext));
-        final Yields2 yields2 = yields.transform(enhancedContext);
-        final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
-        final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, joinRoot2.mainSource());
-        final Yields2 enhancedYields2 = enhanceYields(yields2, joinRoot2.mainSource());
-        final QueryComponents2 queryComponents2 = new QueryComponents2(joinRoot2, whereConditions2, enhancedYields2, groups2, orderings2);
-        return new SourceQuery2(queryComponents2, resultType);
+        return new SourceQuery2(joinRoot == null ? transformSourceless(localContext) : transformQueryComponents(localContext), resultType);
     }
 
-    private Yields2 enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
+    @Override
+    protected Yields2 enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
         if (yields.getYields().isEmpty() || yieldAll) {
             final List<Yield2> enhancedYields = new ArrayList<>(yields.getYields());
 

@@ -10,18 +10,14 @@ import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage1.QueryComponents1;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
-import ua.com.fielden.platform.eql.stage1.TransformationResult1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.QueryComponents2;
-import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
-import ua.com.fielden.platform.eql.stage2.etc.GroupBys2;
-import ua.com.fielden.platform.eql.stage2.etc.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.etc.Yield2;
 import ua.com.fielden.platform.eql.stage2.etc.Yields2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.queries.SubQuery2;
-import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
-import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
+import ua.com.fielden.platform.eql.stage2.sources.ISource2;
+import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
 /**
  * A structure used for representing queries in WHERE/ON conditions, yielding, grouping, and ordering.
@@ -42,23 +38,14 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
 
     @Override
     public SubQuery2 transform(final TransformationContext1 context) {
-        final TransformationContext1 localContext = context;
 
         if (joinRoot == null) {
-            final QueryComponents2 qb = transformSourceless(localContext);
+            final QueryComponents2 qb = transformSourceless(context);
             return new SubQuery2(qb, enhance(null, qb.yields), false);
         }
 
-        final TransformationResult1<? extends IJoinNode2<?>> joinRootTr = joinRoot.transform(localContext);
-        final TransformationContext1 enhancedContext = joinRootTr.updatedContext;
-        final IJoinNode2<? extends IJoinNode3> joinRoot2 = joinRootTr.item;
-        final Conditions2 whereConditions2 = enhanceWithUserDataFilterConditions(joinRoot2.mainSource(), context.querySourceInfoProvider, whereConditions.transform(enhancedContext));
-        final Yields2 yields2 = yields.transform(enhancedContext);
-        final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
-        final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, joinRoot2.mainSource());
-        final Yields2 enhancedYields2 = enhanceYields(yields2, joinRoot2);
-        final QueryComponents2 queryComponents2 = new QueryComponents2(joinRoot2, whereConditions2, enhancedYields2, groups2, orderings2);
-        return new SubQuery2(queryComponents2, enhance(resultType, enhancedYields2), isRefetchOnlyQuery());
+        final QueryComponents2 queryComponents2 = transformQueryComponents(context);
+        return new SubQuery2(queryComponents2, enhance(resultType, queryComponents2.yields), isRefetchOnlyQuery());
     }
 
     private static PropType enhance(final Class<?> resultType, final Yields2 yields) {
@@ -72,11 +59,12 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
         return whereConditions.isIdEqualsExtId();
     }
 
-    private static Yields2 enhanceYields(final Yields2 yields, final IJoinNode2<? extends IJoinNode3> joinRoot2) {
+    @Override
+    protected Yields2 enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
         if (!yields.getYields().isEmpty()) {
             return yields;
-        } else if (joinRoot2.mainSource().querySourceInfo().getProps().containsKey(ID)) {
-            return new Yields2(listOf(new Yield2(new Prop2(joinRoot2.mainSource(), listOf(joinRoot2.mainSource().querySourceInfo().getProps().get(ID))), ABSENT_ALIAS, false)));
+        } else if (mainSource.querySourceInfo().getProps().containsKey(ID)) {
+            return new Yields2(listOf(new Yield2(new Prop2(mainSource, listOf(mainSource.querySourceInfo().getProps().get(ID))), ABSENT_ALIAS, false)));
         } else {
             throw new EqlStage1ProcessingException(ERR_AUTO_YIELD_IMPOSSIBLE_FOR_QUERY_WITH_MAIN_SOURCE_HAVING_NO_ID);
         }

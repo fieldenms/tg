@@ -21,7 +21,7 @@ import ua.com.fielden.platform.eql.stage2.etc.Yields2;
 
 public class Yields1 {
     public static final Yields1 emptyYields = new Yields1(emptyList());
-    
+
     private final SortedMap<String, Yield1> yieldsMap = new TreeMap<String, Yield1>();
 
     public Yields1(final List<Yield1> yields) {
@@ -29,13 +29,9 @@ public class Yields1 {
             addYield(yield);
         }
     }
-    
+
     public Yields2 transform(final TransformationContext1 context) {
-        if (yieldsMap.isEmpty()) {
-            return Yields2.emptyYields;
-        } else {
-            return new Yields2(yieldsMap.values().stream().map(el -> el.transform(context)).collect(toList()));    
-        }
+        return yieldsMap.isEmpty() ? Yields2.emptyYields : new Yields2(yieldsMap.values().stream().map(el -> el.transform(context)).collect(toList()));
     }
 
     public void addYield(final Yield1 yield) {
@@ -48,11 +44,11 @@ public class Yields1 {
     public Collection<Yield1> getYields() {
         return unmodifiableCollection(yieldsMap.values());
     }
-    
+
     public SortedMap<String, Yield1> getYieldsMap() {
         return unmodifiableSortedMap(yieldsMap);
     }
-    
+
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return yieldsMap.isEmpty() ? emptySet() : yieldsMap.values().stream().map(el -> el.operand.collectEntityTypes()).flatMap(Set::stream).collect(toSet());
     }
@@ -74,9 +70,9 @@ public class Yields1 {
         if (!(obj instanceof Yields1)) {
             return false;
         }
-        
+
         final Yields1 other = (Yields1) obj;
-        
+
         return yieldsMap.equals(other.yieldsMap);
     }
 }
