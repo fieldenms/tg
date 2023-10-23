@@ -33,6 +33,7 @@ import ua.com.fielden.platform.sample.domain.TeVehicle;
 import ua.com.fielden.platform.sample.domain.TeVehicleModel;
 import ua.com.fielden.platform.sample.domain.TeWorkOrder;
 import ua.com.fielden.platform.sample.domain.TgSynBogie;
+import ua.com.fielden.platform.sample.domain.TgVehicle;
 
 public class QmToStage3TransformationTest extends EqlStage3TestCase {
 
@@ -77,12 +78,12 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
 
         final Source3BasedOnTable ou5 = source(ORG5, 1);
 
-        final Source3BasedOnTable veh1 = source(VEHICLE, 2);
+        final Source3BasedOnTable veh1 = source(TgVehicle.class, 2);
         final IJoinNode3 subQrySources1 = sources(veh1);
         final Conditions3 subQryConditions1 = cond(eq(entityProp("station", veh1, ORG5), idProp(ou5)));
         final SubQuery3 expSubQry1 = subqry(subQrySources1, subQryConditions1, yields(new Yield3(new AverageOf3(prop("price.amount", veh1, BIGDECIMAL_PROP_TYPE), false, BIGDECIMAL_PROP_TYPE), ABSENT_ALIAS, nextSqlId(), BIGDECIMAL_PROP_TYPE)), BIGDECIMAL_PROP_TYPE);
 
-        final Source3BasedOnTable veh2 = source(VEHICLE, 3);
+        final Source3BasedOnTable veh2 = source(TgVehicle.class, 3);
         final IJoinNode3 subQrySources2 = sources(veh2);
         final Conditions3 subQryConditions2 = cond(eq(entityProp("station", veh2, ORG5), idProp(ou5)));
         final SubQuery3 expSubQry2 = subqry(subQrySources2, subQryConditions2, yields(new Yield3(new AverageOf3(prop("purchasePrice.amount", veh2, BIGDECIMAL_PROP_TYPE), false, BIGDECIMAL_PROP_TYPE), ABSENT_ALIAS, nextSqlId(), BIGDECIMAL_PROP_TYPE)), BIGDECIMAL_PROP_TYPE);

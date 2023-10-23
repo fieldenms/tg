@@ -46,13 +46,13 @@ public class TgOrgUnit5 extends AbstractEntity<DynamicEntityKey> {
     @Readonly
     @Calculated
     private Money averageVehPrice;
-    protected static final ExpressionModel averageVehPrice_ = expr().model(select(TeVehicle.class).where().prop("station").eq().extProp(ID).yield().avgOf().prop("price").modelAsPrimitive()).model();
+    protected static final ExpressionModel averageVehPrice_ = expr().model(select(TgVehicle.class).where().prop("station").eq().extProp(ID).yield().avgOf().prop("price").modelAsPrimitive()).model();
 
     @IsProperty
     @Readonly
     @Calculated
     private Money averageVehPurchasePrice;
-    protected static final ExpressionModel averageVehPurchasePrice_ = expr().model(select(TeVehicle.class).where().prop("station").eq().extProp(ID).yield().avgOf().prop("purchasePrice").modelAsPrimitive()).model();
+    protected static final ExpressionModel averageVehPurchasePrice_ = expr().model(select(TgVehicle.class).where().prop("station").eq().extProp(ID).yield().avgOf().prop("purchasePrice").modelAsPrimitive()).model();
 
     @IsProperty
     @Readonly
