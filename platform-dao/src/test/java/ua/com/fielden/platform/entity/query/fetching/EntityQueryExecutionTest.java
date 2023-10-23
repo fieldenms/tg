@@ -1862,8 +1862,10 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     public void calculated_props_are_actually_yielded_in_the_source_query_if_the_top_query_yields_are_all_recognised_as_totals_in_case_of_persistent_entity() {
         // SELECT from SELECT here is emulating the approach utilised by DynamicQueryBuilder.createJoinCondition() method in order to overcome MSSQL inability to aggregate scalar sub-queries.
         final EntityResultQueryModel<TgOrgUnit5WithSummaries> qry = select(select(TgOrgUnit5WithSummaries.class).model().setShouldMaterialiseCalcPropsAsColumnsInSqlQuery(true)).model();
-        final TgOrgUnit5WithSummaries summaryEntity = getInstance(TgOrgUnit5WithSummariesCo.class).getEntity(from(qry).with(fetchNone(TgOrgUnit5WithSummaries.class).with("minVehiclesCount")).model());
+        final TgOrgUnit5WithSummaries summaryEntity = getInstance(TgOrgUnit5WithSummariesCo.class).
+                getEntity(from(qry).with(fetchNone(TgOrgUnit5WithSummaries.class).with("minVehiclesCount").with("maxAverageVehiclePrice")).model());
         assertEquals(Integer.valueOf(1), summaryEntity.getMinVehiclesCount());
+        assertEquals(new Money(new BigDecimal(200)), summaryEntity.getMaxAverageVehiclePrice());
     }
 
     @Test

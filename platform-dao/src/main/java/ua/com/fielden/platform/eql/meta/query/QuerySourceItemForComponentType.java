@@ -47,6 +47,11 @@ public class QuerySourceItemForComponentType<T> extends AbstractQuerySourceItem<
     }
 
     @Override
+    public boolean isCalculatedPropertyThatCouldBeMaterialisedAsSqlColumn() {
+        return subitems.values().stream().anyMatch(p -> p.isCalculatedPropertyThatCouldBeMaterialisedAsSqlColumn());
+    }
+
+    @Override
     public Class<T> javaType() {
         return javaType;
     }
