@@ -76,7 +76,7 @@ import ua.com.fielden.platform.types.Money;
 
 public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     private final IEntityAggregatesOperations aggregateDao = getInstance(IEntityAggregatesOperations.class);
-    
+
     @Test
     public void eql3_query_executes_correctly_for_vehicle_deep_tree() {
         final EntityResultQueryModel<TeVehicle> qry = select(TeVehicle.class).
@@ -95,10 +95,10 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
                 yield().prop("model.make.key").as("model.make.key").
                 yield().prop("model.make.desc").as("model.make.desc").
                 modelAsEntity(TeVehicle.class);
-        
+
         getInstance(ITeVehicle.class).getAllEntities(from(qry).with("EQL3", null).model());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly_for_vehicle_deep_tree_without_headers() {
         final EntityResultQueryModel<TeVehicle> qry = select(TeVehicle.class).
@@ -115,7 +115,7 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
                 yield().prop("model.make.key").as("model.make.key").
                 yield().prop("model.make.desc").as("model.make.desc").
                 modelAsEntity(TeVehicle.class);
-        
+
         getInstance(ITeVehicle.class).getAllEntities(from(qry).with("EQL3", null).model());
     }
 
@@ -134,21 +134,21 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
                 modelAsEntity(EntityWithTaxMoney.class);
         getInstance(EntityWithTaxMoneyDao.class).getAllEntities(from(qry).model());
     }
-    
+
     @Test
     public void test_complex_money_yielding3_() {
         final EntityResultQueryModel<EntityWithTaxMoney> qry = select().
                 yield().val(new BigDecimal("100.6")).as("money.amount").
                 yield().val(new BigDecimal("20.2")).as("money.taxAmount").
-                yield().val(Currency.getAvailableCurrencies().iterator().next()).as("money.currency").    
+                yield().val(Currency.getAvailableCurrencies().iterator().next()).as("money.currency").
                 modelAsEntity(EntityWithTaxMoney.class);
         getInstance(EntityWithTaxMoneyDao.class).getAllEntities(from(qry).model());
     }
-    
+
     private List<EntityAggregates> run(final AggregatedResultQueryModel qry) {
         return aggregateDao.getAllEntities(from(qry).with("EQL3", null).model());
     }
-    
+
     private void run(final ICompoundCondition0<? extends AbstractEntity<?>> qryStart) {
         run(qryStart.yield().countAll().as("KOUNT").modelAsAggregate());
     }
@@ -165,7 +165,7 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
                 modelAsAggregate();
         run(qry);
     }
-    
+
     @Test
     public void eql3_query_executes_correctly2() {
         final AggregatedResultQueryModel qry = select(TeVehicle.class).as("veh").
@@ -175,10 +175,10 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
                 yield().prop("veh.replacedBy.key").as("replacedByVehiclekey").
                 yield().caseWhen().prop("veh.key").eq().prop("veh.replacedBy.key").then().prop("veh.key").otherwise().prop("veh.replacedBy.key").endAsStr(5).as("cwts").
                 modelAsAggregate();
-        
+
         run(qry);
     }
-    
+
     @Test
     public void eql3_query_executes_correctly3() {
         final AggregatedResultQueryModel qry = select(TeVehicle.class).as("veh").
@@ -188,10 +188,10 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
                 yield().prop("veh.replacedBy.key").as("replacedByVehiclekey").
                 yield().caseWhen().prop("veh.key").eq().prop("veh.replacedBy.key").then().prop("veh.key").otherwise().prop("veh.replacedBy.key").endAsStr(5).as("cwts").
                 modelAsAggregate();
-        
+
         run(qry);
     }
-    
+
     @Test
     public void eql3_query_executes_correctly4() {
         final AggregatedResultQueryModel qry = select(TeVehicle.class).as("veh").
@@ -201,9 +201,9 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
                 yield().prop("veh.replacedBy.key").as("replacedByVehiclekey").
                 yield().caseWhen().prop("veh.key").eq().prop("veh.replacedBy.key").then().prop("veh.key").otherwise().prop("veh.replacedBy.key").endAsStr(5).as("cwts").
                 modelAsAggregate();
-        
+
         final AggregatedResultQueryModel qry2 = select(qry).yield().prop("vehicleKey").as("vk").modelAsAggregate();
-        
+
         run(qry2);
     }
 
@@ -216,9 +216,9 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
                 yield().prop("veh.replacedBy.key").as("replacedByVehiclekey").
                 yield().caseWhen().prop("veh.key").eq().prop("veh.replacedBy.key").then().prop("veh.key").otherwise().prop("veh.replacedBy.key").endAsStr(5).as("cwts").
                 modelAsAggregate();
-        
+
         final AggregatedResultQueryModel qry2 = select(qry).where().prop("vehicle").isNotNull().yield().prop("vehicle.key").as("vk").modelAsAggregate();
-        
+
         run(qry2);
     }
 
@@ -229,9 +229,9 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
                         select(TeVehicle.class).where().prop("replacedBy").eq().extProp("veh.id").model()).
                 yield().prop("veh.replacedBy").as("vehicle").
                 modelAsAggregate();
-        
+
         final AggregatedResultQueryModel qry2 = select(qry).where().prop("vehicle").isNotNull().yield().prop("vehicle.key").as("vk").modelAsAggregate();
-        
+
         run(qry2);
     }
 
@@ -242,11 +242,11 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
                         select(TeVehicle.class).where().prop("replacedBy").eq().extProp("veh.id").model()).
                 yield().prop("veh.replacedBy").as("vehicle").
                 modelAsAggregate();
-        
+
         final AggregatedResultQueryModel qry2 = select(qry).where().prop("vehicle.station.name").isNull().yield().prop("vehicle").as("vk").modelAsAggregate();
-        
+
         final AggregatedResultQueryModel qry3 = select(qry2).where().prop("vk.model").isNotNull().yield().prop("vk.model.make.key").as("makeKey").modelAsAggregate();
-        
+
         run(qry3);
     }
 
@@ -264,12 +264,12 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     public void eql3_query_executes_correctly10() {
         run(select(TeWorkOrder.class).where().anyOfProps("vehicle.modelMakeKey").isNotNull());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly11() {
         run(select(TeWorkOrder.class).where().anyOfProps("vehicle.modelMakeKey2").isNotNull());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly12() {
         run(select(TeWorkOrder.class).where().anyOfProps("model.makeKey2").isNotNull());
@@ -284,7 +284,7 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     public void eql3_query_executes_correctly14() {
         run(select(TeVehicle.class).where().anyOfProps("calcModel").isNotNull());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly15() {
         run(select(TeVehicleMake.class).where().anyOfProps("c7").isNotNull());
@@ -299,7 +299,7 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     public void eql3_query_executes_correctly17() {
         run(select(TeVehicleMake.class).where().anyOfProps("c3").isNotNull());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly18() {
         run(select(TeVehicleMake.class).where().anyOfProps("c8").isNotNull());
@@ -309,22 +309,22 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     public void eql3_query_executes_correctly19() {
         run(select(TeWorkOrder.class).where().anyOfProps("vehicle.modelMakeKey", "vehicle.model.make.key").isNotNull());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly20() {
         run(select(TeWorkOrder.class).where().anyOfProps("vehicle.modelKey", "vehicle.model.key").isNotNull());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly21() {
         run(select(TeVehicle.class).where().anyOfProps("modelKey", "modelDesc").isNotNull());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly22() {
         run(select(TeVehicle.class).where().anyOfProps("modelMakeKey2", "make.key").isNotNull());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly23() {
         run(select(TeVehicle.class).where().anyOfProps("replacedBy.modelMakeKey2", "modelMakeKey2").isNotNull());
@@ -348,59 +348,59 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     @Test
     public void eql3_query_executes_correctly27() {
         run(select(TeVehicle.class).where().anyOfProps(
-                "modelKey", 
-                "modelKey2", 
-                "modelDesc", 
-                "stationName", 
-                "modelMakeDesc", 
-                "modelMake", 
-                "modelMake2", 
-                "modelMakeKey", 
+                "modelKey",
+                "modelKey2",
+                "modelDesc",
+                "stationName",
+                "modelMakeDesc",
+                "modelMake",
+                "modelMake2",
+                "modelMakeKey",
                 "modelMakeKey2",
-                "modelMakeKey3", 
-                "modelMakeKey4", 
+                "modelMakeKey3",
+                "modelMakeKey4",
                 "modelMakeKey5",
-                "modelMakeKey6", 
-                "modelMakeKey7", 
-                "modelMakeKey8", 
+                "modelMakeKey6",
+                "modelMakeKey7",
+                "modelMakeKey8",
                 "make.key"
                 ).isNotNull());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly28() {
         run(select(TeVehicle.class).where().anyOfProps(
-                "modelKey", 
-                "modelKey2", 
-                "modelDesc", 
-                "stationName", 
-                "modelMakeDesc", 
-                "modelMake", 
-                "modelMake2", 
-                "modelMakeKey", 
+                "modelKey",
+                "modelKey2",
+                "modelDesc",
+                "stationName",
+                "modelMakeDesc",
+                "modelMake",
+                "modelMake2",
+                "modelMakeKey",
                 "modelMakeKey2",
-                "modelMakeKey3", 
-                "modelMakeKey4", 
+                "modelMakeKey3",
+                "modelMakeKey4",
                 "modelMakeKey5",
-                "modelMakeKey6", 
-                "modelMakeKey7", 
-                "modelMakeKey8", 
+                "modelMakeKey6",
+                "modelMakeKey7",
+                "modelMakeKey8",
                 "make.key",
-                "replacedBy.modelKey", 
-                "replacedBy.modelKey2", 
-                "replacedBy.modelDesc", 
-                "replacedBy.stationName", 
-                "replacedBy.modelMakeDesc", 
-                "replacedBy.modelMake", 
-                "replacedBy.modelMake2", 
-                "replacedBy.modelMakeKey", 
+                "replacedBy.modelKey",
+                "replacedBy.modelKey2",
+                "replacedBy.modelDesc",
+                "replacedBy.stationName",
+                "replacedBy.modelMakeDesc",
+                "replacedBy.modelMake",
+                "replacedBy.modelMake2",
+                "replacedBy.modelMakeKey",
                 "replacedBy.modelMakeKey2",
-                "replacedBy.modelMakeKey3", 
-                "replacedBy.modelMakeKey4", 
+                "replacedBy.modelMakeKey3",
+                "replacedBy.modelMakeKey4",
                 "replacedBy.modelMakeKey5",
-                "replacedBy.modelMakeKey6", 
-                "replacedBy.modelMakeKey7", 
-                "replacedBy.modelMakeKey8", 
+                "replacedBy.modelMakeKey6",
+                "replacedBy.modelMakeKey7",
+                "replacedBy.modelMakeKey8",
                 "replacedBy.make.key"
                 ).isNotNull());
     }
@@ -408,53 +408,53 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     @Test
     public void eql3_query_executes_correctly29() {
         run(select(TeVehicle.class).where().anyOfProps(
-                "modelKey", 
-                "modelKey2", 
-                "modelDesc", 
-                "stationName", 
-                "modelMakeDesc", 
-                "modelMake", 
-                "modelMake2", 
-                "modelMakeKey", 
+                "modelKey",
+                "modelKey2",
+                "modelDesc",
+                "stationName",
+                "modelMakeDesc",
+                "modelMake",
+                "modelMake2",
+                "modelMakeKey",
                 "modelMakeKey2",
-                "modelMakeKey3", 
-                "modelMakeKey4", 
+                "modelMakeKey3",
+                "modelMakeKey4",
                 "modelMakeKey5",
-                "modelMakeKey6", 
-                "modelMakeKey7", 
-                "modelMakeKey8", 
+                "modelMakeKey6",
+                "modelMakeKey7",
+                "modelMakeKey8",
                 "make.key",
-                "replacedBy.modelKey", 
-                "replacedBy.modelKey2", 
-                "replacedBy.modelDesc", 
-                "replacedBy.stationName", 
-                "replacedBy.modelMakeDesc", 
-                "replacedBy.modelMake", 
-                "replacedBy.modelMake2", 
-                "replacedBy.modelMakeKey", 
+                "replacedBy.modelKey",
+                "replacedBy.modelKey2",
+                "replacedBy.modelDesc",
+                "replacedBy.stationName",
+                "replacedBy.modelMakeDesc",
+                "replacedBy.modelMake",
+                "replacedBy.modelMake2",
+                "replacedBy.modelMakeKey",
                 "replacedBy.modelMakeKey2",
-                "replacedBy.modelMakeKey3", 
-                "replacedBy.modelMakeKey4", 
+                "replacedBy.modelMakeKey3",
+                "replacedBy.modelMakeKey4",
                 "replacedBy.modelMakeKey5",
-                "replacedBy.modelMakeKey6", 
-                "replacedBy.modelMakeKey7", 
-                "replacedBy.modelMakeKey8", 
+                "replacedBy.modelMakeKey6",
+                "replacedBy.modelMakeKey7",
+                "replacedBy.modelMakeKey8",
                 "replacedBy.make.key",
-                "replacedBy.replacedBy.modelKey", 
-                "replacedBy.replacedBy.modelKey2", 
-                "replacedBy.replacedBy.modelDesc", 
-                "replacedBy.replacedBy.stationName", 
-                "replacedBy.replacedBy.modelMakeDesc", 
-                "replacedBy.replacedBy.modelMake", 
-                "replacedBy.replacedBy.modelMake2", 
-                "replacedBy.replacedBy.modelMakeKey", 
+                "replacedBy.replacedBy.modelKey",
+                "replacedBy.replacedBy.modelKey2",
+                "replacedBy.replacedBy.modelDesc",
+                "replacedBy.replacedBy.stationName",
+                "replacedBy.replacedBy.modelMakeDesc",
+                "replacedBy.replacedBy.modelMake",
+                "replacedBy.replacedBy.modelMake2",
+                "replacedBy.replacedBy.modelMakeKey",
                 "replacedBy.replacedBy.modelMakeKey2",
-                "replacedBy.replacedBy.modelMakeKey3", 
-                "replacedBy.replacedBy.modelMakeKey4", 
+                "replacedBy.replacedBy.modelMakeKey3",
+                "replacedBy.replacedBy.modelMakeKey4",
                 "replacedBy.replacedBy.modelMakeKey5",
-                "replacedBy.replacedBy.modelMakeKey6", 
-                "replacedBy.replacedBy.modelMakeKey7", 
-                "replacedBy.replacedBy.modelMakeKey8", 
+                "replacedBy.replacedBy.modelMakeKey6",
+                "replacedBy.replacedBy.modelMakeKey7",
+                "replacedBy.replacedBy.modelMakeKey8",
                 "replacedBy.replacedBy.make.key"
                 ).isNotNull());
     }
@@ -500,7 +500,7 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     public void eql3_query_executes_correctly34() {
         run(select(TgOrgUnit1.class).where().exists( //
                 select(TgOrgUnit2.class).where().prop("parent").eq().extProp("id").and().exists( //
-                        select(TgOrgUnit3.class).where().prop("parent").eq().extProp("id").and().exists( // 
+                        select(TgOrgUnit3.class).where().prop("parent").eq().extProp("id").and().exists( //
                         select(TgOrgUnit4.class).where().prop("parent").eq().extProp("id").and().exists( //
                         select(TgOrgUnit5.class).where().prop("parent").eq().extProp("id").and().prop("name").isNotNull(). //
                         model()). //
@@ -519,31 +519,31 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     public void eql3_query_executes_correctly36() {
         run(select(TeWorkOrder.class).where().anyOfProps("vehicleReplacedBy.replacedBy.modelMake2.key").isNotNull());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly37() {
         run(select(TeWorkOrder.class).where().anyOfProps("vehicleReplacedBy.replacedBy.modelMake2.key", "vehicle.replacedBy.modelMake2.key").isNotNull());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly38() {
         final EntityResultQueryModel<TeVehicle> qry = select(TeVehicle.class).where().prop("model.make.key").isNotNull().model();
-        
+
         run(select(qry).where().anyOfProps("id", "modelMake").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly39() {
         final AggregatedResultQueryModel qry = select(TeWorkOrder.class).where().prop("actCost.amount").isNotNull().yield().prop("vehicle").as("vh").modelAsAggregate();
-        
+
         run(select(qry).where().prop("vh.lastFuelUsageQty").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly40() {
         final AggregatedResultQueryModel qry1 = select(TeWorkOrder.class).where().prop("actCost.amount").isNotNull().yield().prop("vehicle").as("vh").modelAsAggregate();
         final AggregatedResultQueryModel qry2 = select(TeWorkOrder.class).where().prop("estCost.amount").isNotNull().yield().prop("vehicle").as("vh").modelAsAggregate();
-        
+
         run(select(qry1, qry2).where().prop("vh.lastFuelUsageQty").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
     }
 
@@ -551,18 +551,18 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     @Ignore //TODO EQL3+
     public void eql3_query_executes_correctly41() {
         final EntityResultQueryModel<TeVehicle> qry = select(TeWorkOrder.class).yield().prop("vehicle").modelAsEntity(TeVehicle.class);
-        
+
         run(select(qry).where().prop("lastFuelUsageQty").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
         run(select(qry).where().prop("key").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly41_2() {
         final EntityResultQueryModel<TeVehicle> qry = select(TeWorkOrder.class).yield().prop("vehicle").modelAsEntity(TeVehicle.class);
-        
+
         run(select(TeVehicle.class).where().prop("replacedBy").in().model(qry).yield().countAll().as("KOUNT").modelAsAggregate());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly42() {
         run(select(TeWorkOrder.class).where().prop("vehicle.modelMakeKey6").eq().prop("makeKey"));
@@ -572,12 +572,12 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     public void eql3_query_executes_correctly43() {
         run(select(TeWorkOrder.class).where().prop("vehicle.modelMakeKey6").eq().iVal(null));
     }
-    
+
     @Test
     @Ignore //TODO EQL3+
     public void eql3_query_executes_correctly44() {
         final AggregatedResultQueryModel qry = select(TeVehicle.class).yield().prop("id").as("vehicle").modelAsAggregate();
-        
+
         run(select(qry).where().prop("vehicle.lastFuelUsageQty").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
     }
 
@@ -585,7 +585,7 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     public void eql3_query_executes_correctly45() {
         run(select(TeVehicleFuelUsage.class).where().prop("key").isNull().or().prop("key").eq().val("HOH").or().prop("qty").gt().val(0).or().prop("vehicle.active").eq().val(true));
     }
-    
+
     @Test
     public void eql3_query_executes_correctly46() {
         run(select(TeVehicleFuelUsage.class).where().exists(select(TeVehicle.class).where().prop("key").eq().val("A101").model()));
@@ -593,27 +593,27 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
 
     @Test
     public void eql3_query_executes_correctly47() {
-        // 
+        //
         final AggregatedResultQueryModel qry1 = select().yield().expr(intValue(1)).as("position").yield().expr(intValue(100)).as("value").modelAsAggregate();
         final AggregatedResultQueryModel qry2 = select().yield().expr(intValue(2)).as("position").yield().expr(intValue(200)).as("value").modelAsAggregate();
         final AggregatedResultQueryModel qry3 = select().yield().expr(intValue(3)).as("position").yield().expr(intValue(300)).as("value").modelAsAggregate();
         final AggregatedResultQueryModel qry4 = select().yield().expr(intValue(4)).as("position").yield().expr(intValue(400)).as("value").modelAsAggregate();
         final AggregatedResultQueryModel qry5 = select().yield().expr(intValue(5)).as("position").yield().expr(intValue(500)).as("value").modelAsAggregate();
-        
+
         final List<EntityAggregates> result = run(select(qry1, qry2, qry3, qry4, qry5).where().prop("position").gt().val(2).yield().sumOf().prop("value").as("QTY").modelAsAggregate());
         assertEquals("1200", result.get(0).get("QTY").toString());
     }
-    
+
     //wrapping into CASEWHEN to make H2 happy with value type
     private static ExpressionModel intValue(final int value) {
         return EntityQueryUtils.expr().caseWhen().val(0).isNotNull().then().val(value).endAsInt().model();
     }
-    
+
     @Test
     public void eql3_query_executes_correctly48() {
         run(select(TeVehicle.class).where().prop("lastFuelUsage.qty").gt().val(100));
     }
-    
+
     @Test
     public void eql3_query_executes_correctly49() {
         final EntityResultQueryModel<TeVehicleModel> qry = select(TeVehicleModel.class).model();
@@ -642,12 +642,12 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     public void eql3_query_executes_correctly53() {
         run(select(TeVehicle.class).where().prop("lastFuelUsage.qty").gt().val(100));
     }
-    
+
     @Test
     public void eql3_query_executes_correctly54() {
         run(select(TeVehicle.class).leftJoin(TeVehicleFuelUsage.class).as("lastFuelUsage1").on().prop("lastFuelUsage").eq().prop("lastFuelUsage1.id").where().prop("lastFuelUsage1.qty").gt().val(100));
     }
-    
+
     @Test
     public void eql3_query_executes_correctly55() {
         try {
@@ -656,7 +656,7 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         } catch (final Exception e) {
         }
     }
-    
+
     @Test
     @Ignore // h2 doesn't allow correlated subqueries in FROM stmt
     public void eql3_query_executes_correctly56() {
@@ -667,7 +667,7 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
 
         run(qry);
     }
-    
+
     @Test
     public void eql3_query_executes_correctly57() {
         run(select(TeAverageFuelUsage.class).where().prop("key.modelMakeKey6").isNotNull());
@@ -681,7 +681,7 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
             System.out.println(item.getId() + " : " + item.getKey() + " : " + item.getQty());
         }
     }
-    
+
     @Test
     public void eql3_query_executes_correctly59() {
         final ITeVehicleModel co = getInstance(ITeVehicleModel.class);
@@ -695,14 +695,14 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         final EntityResultQueryModel<TgEntityWithComplexSummaries> qry = select(TgEntityWithComplexSummaries.class).model();
         co.getAllEntities(from(qry).with("EQL3", null).model());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly61() {
         final TgEntityWithComplexSummariesThatActuallyDeclareThoseSummariesCo co = co(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class);
         final EntityResultQueryModel<TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries> qry = select(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class).model();
         co.getAllEntities(from(qry).with("EQL3", null).with(fetchIdOnly(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class).without("id").with("costPerKm")).model());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly62() {
         final ITeVehicleModel co = getInstance(ITeVehicleModel.class);
@@ -710,18 +710,18 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         qry.setFilterable(true);
         co.getAllEntities(from(qry).with("EQL3", null).with(fetch(TeVehicleModel.class).with("makeKey2")).model());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly63() {
         final List<EntityAggregates> result = run(select(TgVehicle.class).where().prop("key").eq().val("CAR1").yield().prop("active").as("active").modelAsAggregate());
         assertEquals(true, result.get(0).get("active"));
     }
-    
+
     @Test
     public void eql3_query_executes_correctly64() {
         run(select(TgVehicle.class).where().prop("finDetails.capitalWorksNo").isNotNull());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly65() {
         run(select(TgBogie.class).where().anyOfProps("location.workshop.key", "location.wagonSlot.wagon", "location.wagonSlot.key").isNotNull());
@@ -753,7 +753,7 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).model();
         co.getAllEntities(from(qry).with("EQL3", null).with(fetch(TgBogie.class).with("location", fetch(TgBogieLocation.class).with("wagonSlot").with("workshop"))).model());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly71() {
         final ITgBogie co = getInstance(ITgBogie.class);
@@ -775,12 +775,12 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     public void eql3_query_executes_correctly74() {
         run(select(TgVehicle.class).where().prop("sumOfPrices").lt().val(100));
     }
-    
+
     @Test
     public void eql3_query_executes_correctly75() {
         run(select(TgVehicle.class).where().prop("sumOfPrices.amount").lt().val(100));
     }
-    
+
     @Test
     public void eql3_query_executes_correctly76() {
         final ITgVehicle co = getInstance(ITgVehicle.class);
@@ -789,7 +789,7 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         System.out.println(items.size());
         System.out.println(items.get(0).getConstValueProp());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly77() {
         final ITeVehicleFuelUsage co = getInstance(ITeVehicleFuelUsage.class);
@@ -810,14 +810,14 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).model();
         co.getAllEntities(from(qry).with("EQL3", null).with(orderBy().prop("lastFuelUsage.key").desc().model()).model());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly80() {
         final ITgVehicle co = getInstance(ITgVehicle.class);
         final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).as("a").model();
         co.getAllEntities(from(qry).with("EQL3", null).with(orderBy().prop("a.lastFuelUsage.key").desc().model()).model());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly81() {
         final ITgVehicle co = getInstance(ITgVehicle.class);
@@ -838,28 +838,28 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         final EntityResultQueryModel<TeVehicle> qry = select(TeVehicle.class).model();
         co.getAllEntities(from(qry).with("EQL3", null).with(orderBy().prop("key").desc().model()).model());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly84() {
         final ITeVehicleFuelUsage co = getInstance(ITeVehicleFuelUsage.class);
         final EntityResultQueryModel<TeVehicleFuelUsage> qry = select(TeVehicleFuelUsage.class).model();
         co.getAllEntities(from(qry).with("EQL3", null).with(orderBy().prop("date").desc().prop("vehicle.initDate").desc().model()).model());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly85() {
         final ITeVehicle co = getInstance(ITeVehicle.class);
         final EntityResultQueryModel<TeVehicle> qry = select(TeVehicle.class).model();
         co.getAllEntities(from(qry).with("EQL3", null).with(orderBy().yield("key").desc().model()).model());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly86() {
         final ITeVehicle co = getInstance(ITeVehicle.class);
         final EntityResultQueryModel<TeVehicle> qry = select(TeVehicle.class).model();
         co.getAllEntities(from(qry).with("EQL3", null).with(orderBy().yield("purchasePrice").desc().model()).model());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly87() {
         final ITeVehicle co = getInstance(ITeVehicle.class);
@@ -880,7 +880,7 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         final EntityResultQueryModel<TeVehicleFuelUsage> qry = select(TeVehicleFuelUsage.class).model();
         co.getAllEntities(from(qry).with("EQL3", null).with(orderBy().yield("vehicle.purchasePrice.amount").desc().model()).model());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly90() {
         final ITeVehicleFuelUsage co = getInstance(ITeVehicleFuelUsage.class);
@@ -921,30 +921,30 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     @Test
     public void eql3_query_executes_correctly95() {
         final ITgOrgUnit5 co = getInstance(ITgOrgUnit5.class);
-        final EntityResultQueryModel<TgOrgUnit5> qry = select(TgOrgUnit5.class).where().anyOfProps("maxVehPrice", "maxVehPurchasePrice").gt().val(0).model();
+        final EntityResultQueryModel<TgOrgUnit5> qry = select(TgOrgUnit5.class).where().anyOfProps("averageVehPrice", "averageVehPurchasePrice").gt().val(0).model();
         co.getAllEntities(from(qry).with("EQL3", null).with(fetchKeyAndDescOnly(TgOrgUnit5.class)).model());
-    }     
-    
+    }
+
     @Test
     public void eql3_query_executes_correctly96() {
         final ITeVehicleModel co = getInstance(ITeVehicleModel.class);
         final EntityResultQueryModel<TeVehicleModel> qry = select(TeVehicleModel.class).where().anyOfProps("make", "make.id", "make.key").isNotNull().model();
         co.getAllEntities(from(qry).with("EQL3", null).with(fetchKeyAndDescOnly(TeVehicleModel.class)).model());
-    }     
+    }
 
     @Test
     public void eql3_query_executes_correctly97() {
         final ITeVehicleModel co = getInstance(ITeVehicleModel.class);
         final EntityResultQueryModel<TeVehicleModel> qry = select(TeVehicleModel.class).where().anyOfProps("make.id", "make", "make.key").isNotNull().model();
         co.getAllEntities(from(qry).with("EQL3", null).with(fetchKeyAndDescOnly(TeVehicleModel.class)).model());
-    }     
+    }
 
     @Test
     public void eql3_query_executes_correctly98() {
         final ITeVehicleModel co = getInstance(ITeVehicleModel.class);
         final EntityResultQueryModel<TeVehicleModel> qry = select(TeVehicleModel.class).where().anyOfProps("make", "make.id", "make.key").isNotNull().model();
         co.getAllEntities(from(qry).with("EQL3", null).with(fetchKeyAndDescOnly(TeVehicleModel.class)).model());
-    }     
+    }
 
     @Test
     public void eql3_query_executes_correctly99() {
@@ -953,7 +953,7 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         System.out.println(res.get(0).get("makeid").toString());
         System.out.println(res.get(0).get("make").toString());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly100() {
         final AggregatedResultQueryModel qry = select(TeVehicle.class).yield().prop("modelMake2").as("make").yield().prop("modelMake2.id").as("makeid").modelAsAggregate();
@@ -971,20 +971,20 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     public void eql3_query_executes_correctly102() {
         final AggregatedResultQueryModel qry = select(TeWorkOrder.class).groupBy().prop("vehicle.lastFuelUsage.key").yield().val(1).as("a").modelAsAggregate();
         final List<EntityAggregates> res = aggregateDao.getAllEntities(from(qry).with("EQL3", null).with(orderBy().prop("vehicle.lastFuelUsage.key").asc().model()).model());
-    }     
-    
+    }
+
     @Test
     public void eql3_query_executes_correctly103() {
         final AggregatedResultQueryModel qry = select(TeVehicleFuelUsage.class).groupBy().prop("key").yield().val(1).as("a").modelAsAggregate();
         final List<EntityAggregates> res = aggregateDao.getAllEntities(from(qry).with("EQL3", null).with(orderBy().prop("key").asc().model()).model());
-    }  
+    }
 
     @Test
     public void eql3_query_executes_correctly104_() {
         final AggregatedResultQueryModel qry = select(TgVehicle.class).yield().prop("lastFuelUsageQty").as("a").modelAsAggregate();
         aggregateDao.getAllEntities(from(qry).with("EQL3", null).with(orderBy().yield("a").asc().model()).model());
     }
- 
+
     @Test
     public void eql3_query_executes_correctly105() {
         run(select(TeVehicle.class).where().anyOfProps("modelMakeKey7").isNotNull());
@@ -994,17 +994,17 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     public void eql3_query_executes_correctly106() {
         run(select(TeVehicle.class).where().anyOfProps("modelMake2.key").isNotNull());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly107() {
         run(select(TgBogie.class).where().prop("location.fuelType").isNotNull());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly108() {
         run(select(TeVehicle.class).where().anyOfProps("avgRepPrice").isNotNull());
     }
-    
+
     @Test
     public void eql3_query_executes_correctly109() {
         run(select(TeVehicle.class).where().anyOfProps("modelMakeKey8").isNotNull());
@@ -1018,7 +1018,7 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         assertTrue(location.get("l").getClass().getName().startsWith(TgBogieLocation.class.getName()));
         assertEquals("WSHOP1", ((TgWorkshop) location.get("l.workshop")).getKey());
     }
-    
+
     @Test
     @Ignore
     public void union_property_type_is_preserved_when_yielded_from_query_based_qry_source() {
@@ -1029,7 +1029,7 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         assertEquals("WSHOP1", ((TgWorkshop) location.get("loc.workshop")).getKey());
         assertEquals("WSHOP1", location.get("l.key"));
     }
-    
+
     @Test
     @Ignore
     public void union_property_type_calc_prop_is_preserved_when_yielded_from_query_based_qry_source() {
@@ -1072,7 +1072,7 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         final TgBogie bogie5 = save(new_(TgBogie.class, "BOGIE5", "Bogie 5"));
         final TgBogie bogie6 = save(new_(TgBogie.class, "BOGIE6", "Bogie 6"));
         final TgBogie bogie7 = save(new_(TgBogie.class, "BOGIE7", "Bogie 7"));
-        
+
         final TgWagon wagon1 = save(new_(TgWagon.class, "WAGON1", "Wagon 1"));
         final TgWagon wagon2 = save(new_(TgWagon.class, "WAGON2", "Wagon 2"));
 
@@ -1087,12 +1087,12 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
 
         save(new_composite(TgWagonSlot.class, wagon2, 1).setBogie(bogie5));
         save(new_composite(TgWagonSlot.class, wagon2, 2).setBogie(bogie6));
-        
+
         final TgWagonSlot wagonSlot = save(new_composite(TgWagonSlot.class, wagon2, 3).setBogie(bogie7).setFuelType(petrolFuelType));
         final TgBogieLocation slotLocation = co$(TgBogieLocation.class).new_();
         slotLocation.setWagonSlot(wagonSlot);
         save(bogie7.setLocation(slotLocation));
-        
+
         final TgOrgUnit1 orgUnit1 = save(new_(TgOrgUnit1.class, "orgunit1", "desc orgunit1"));
         final TgOrgUnit2 orgUnit2 = save(new_composite(TgOrgUnit2.class, orgUnit1, "orgunit2"));
         final TgOrgUnit3 orgUnit3 = save(new_composite(TgOrgUnit3.class, orgUnit2, "orgunit3"));
