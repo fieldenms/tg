@@ -9,8 +9,8 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.eql.retrieval.EntityHibernateRetrievalQueryProducer.produceQueryWithPagination;
 import static ua.com.fielden.platform.eql.retrieval.EntityHibernateRetrievalQueryProducer.produceQueryWithoutPagination;
 import static ua.com.fielden.platform.eql.retrieval.EntityResultTreeBuilder.build;
+import static ua.com.fielden.platform.eql.retrieval.EqlQueryTransformer.transform;
 import static ua.com.fielden.platform.eql.retrieval.HibernateScalarsExtractor.getSortedScalars;
-import static ua.com.fielden.platform.eql.stage3.EqlQueryTransformer.transform;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
 import java.util.List;

@@ -1,10 +1,9 @@
-package ua.com.fielden.platform.eql.stage3;
+package ua.com.fielden.platform.eql.retrieval;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.QueryProcessingModel;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
-import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.queries.ResultQuery1;

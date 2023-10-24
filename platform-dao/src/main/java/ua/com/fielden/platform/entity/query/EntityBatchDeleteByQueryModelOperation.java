@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity.query;
 
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.eql.stage3.EqlQueryTransformer.transform;
+import static ua.com.fielden.platform.eql.retrieval.EqlQueryTransformer.transform;
 
 import java.util.Collections;
 import java.util.Map;
