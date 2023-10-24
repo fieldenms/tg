@@ -6,9 +6,9 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import org.junit.Test;
 
 import ua.com.fielden.platform.eql.meta.EqlStage2TestCase;
-import ua.com.fielden.platform.eql.stage2.etc.Yields2;
 import ua.com.fielden.platform.eql.stage2.queries.ResultQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
+import ua.com.fielden.platform.eql.stage2.sundries.Yields2;
 
 public class ResultQueryAutoYieldTest extends EqlStage2TestCase {
 

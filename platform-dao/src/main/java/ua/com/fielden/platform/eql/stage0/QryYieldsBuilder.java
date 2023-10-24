@@ -1,13 +1,13 @@
 package ua.com.fielden.platform.eql.stage0;
 
-import static ua.com.fielden.platform.eql.stage1.etc.Yields1.EMPTY_YIELDS;
+import static ua.com.fielden.platform.eql.stage1.sundries.Yields1.EMPTY_YIELDS;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
-import ua.com.fielden.platform.eql.stage1.etc.Yield1;
-import ua.com.fielden.platform.eql.stage1.etc.Yields1;
+import ua.com.fielden.platform.eql.stage1.sundries.Yield1;
+import ua.com.fielden.platform.eql.stage1.sundries.Yields1;
 import ua.com.fielden.platform.utils.Pair;
 
 public class QryYieldsBuilder extends AbstractTokensBuilder {

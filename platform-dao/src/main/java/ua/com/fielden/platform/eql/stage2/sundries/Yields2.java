@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.stage2.etc;
+package ua.com.fielden.platform.eql.stage2.sundries;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
@@ -21,8 +21,8 @@ import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.Value2;
-import ua.com.fielden.platform.eql.stage3.etc.Yield3;
-import ua.com.fielden.platform.eql.stage3.etc.Yields3;
+import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
+import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
 
 public class Yields2 {
     public static final Yields2 EMPTY_YIELDS = new Yields2(emptyList());

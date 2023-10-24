@@ -1,13 +1,13 @@
 package ua.com.fielden.platform.eql.stage0;
 
-import static ua.com.fielden.platform.eql.stage1.etc.GroupBys1.EMPTY_GROUP_BYS;
+import static ua.com.fielden.platform.eql.stage1.sundries.GroupBys1.EMPTY_GROUP_BYS;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
-import ua.com.fielden.platform.eql.stage1.etc.GroupBy1;
-import ua.com.fielden.platform.eql.stage1.etc.GroupBys1;
+import ua.com.fielden.platform.eql.stage1.sundries.GroupBy1;
+import ua.com.fielden.platform.eql.stage1.sundries.GroupBys1;
 import ua.com.fielden.platform.utils.Pair;
 
 public class QryGroupsBuilder extends AbstractTokensBuilder {

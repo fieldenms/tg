@@ -1,13 +1,13 @@
 package ua.com.fielden.platform.eql.stage0;
 
-import static ua.com.fielden.platform.eql.stage1.etc.OrderBys1.EMPTY_ORDER_BYS;
+import static ua.com.fielden.platform.eql.stage1.sundries.OrderBys1.EMPTY_ORDER_BYS;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
-import ua.com.fielden.platform.eql.stage1.etc.OrderBy1;
-import ua.com.fielden.platform.eql.stage1.etc.OrderBys1;
+import ua.com.fielden.platform.eql.stage1.sundries.OrderBy1;
+import ua.com.fielden.platform.eql.stage1.sundries.OrderBys1;
 import ua.com.fielden.platform.utils.Pair;
 
 public class QryOrderingsBuilder extends AbstractTokensBuilder {

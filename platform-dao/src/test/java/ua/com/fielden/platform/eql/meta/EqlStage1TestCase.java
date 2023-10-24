@@ -7,9 +7,9 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperat
 import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.AND;
 import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.OR;
 import static ua.com.fielden.platform.eql.stage1.conditions.Conditions1.EMPTY_CONDITIONS;
-import static ua.com.fielden.platform.eql.stage1.etc.GroupBys1.EMPTY_GROUP_BYS;
-import static ua.com.fielden.platform.eql.stage1.etc.OrderBys1.EMPTY_ORDER_BYS;
-import static ua.com.fielden.platform.eql.stage1.etc.Yields1.EMPTY_YIELDS;
+import static ua.com.fielden.platform.eql.stage1.sundries.GroupBys1.EMPTY_GROUP_BYS;
+import static ua.com.fielden.platform.eql.stage1.sundries.OrderBys1.EMPTY_ORDER_BYS;
+import static ua.com.fielden.platform.eql.stage1.sundries.Yields1.EMPTY_YIELDS;
 
 import java.util.Map;
 
@@ -22,8 +22,6 @@ import ua.com.fielden.platform.eql.stage1.conditions.CompoundCondition1;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.conditions.ICondition1;
 import ua.com.fielden.platform.eql.stage1.conditions.NullPredicate1;
-import ua.com.fielden.platform.eql.stage1.etc.Yield1;
-import ua.com.fielden.platform.eql.stage1.etc.Yields1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage1.operands.Prop1;
 import ua.com.fielden.platform.eql.stage1.operands.functions.CountAll1;
@@ -32,6 +30,8 @@ import ua.com.fielden.platform.eql.stage1.sources.ISource1;
 import ua.com.fielden.platform.eql.stage1.sources.IJoinNode1;
 import ua.com.fielden.platform.eql.stage1.sources.JoinLeafNode1;
 import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnPersistentType;
+import ua.com.fielden.platform.eql.stage1.sundries.Yield1;
+import ua.com.fielden.platform.eql.stage1.sundries.Yields1;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;

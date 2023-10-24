@@ -30,12 +30,6 @@ import ua.com.fielden.platform.eql.stage3.conditions.ComparisonPredicate3;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
 import ua.com.fielden.platform.eql.stage3.conditions.NullPredicate3;
-import ua.com.fielden.platform.eql.stage3.etc.GroupBy3;
-import ua.com.fielden.platform.eql.stage3.etc.GroupBys3;
-import ua.com.fielden.platform.eql.stage3.etc.OrderBy3;
-import ua.com.fielden.platform.eql.stage3.etc.OrderBys3;
-import ua.com.fielden.platform.eql.stage3.etc.Yield3;
-import ua.com.fielden.platform.eql.stage3.etc.Yields3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.Prop3;
 import ua.com.fielden.platform.eql.stage3.operands.functions.CountAll3;
@@ -48,6 +42,12 @@ import ua.com.fielden.platform.eql.stage3.sources.JoinInnerNode3;
 import ua.com.fielden.platform.eql.stage3.sources.JoinLeafNode3;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnQueries;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnTable;
+import ua.com.fielden.platform.eql.stage3.sundries.GroupBy3;
+import ua.com.fielden.platform.eql.stage3.sundries.GroupBys3;
+import ua.com.fielden.platform.eql.stage3.sundries.OrderBy3;
+import ua.com.fielden.platform.eql.stage3.sundries.OrderBys3;
+import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
+import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
 
 public abstract class EqlStage3TestCase extends EqlTestCase {
     public static int sqlId = 0;

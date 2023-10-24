@@ -10,8 +10,8 @@ import java.util.Map;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.eql.stage3.etc.Yield3;
 import ua.com.fielden.platform.eql.stage3.queries.SourceQuery3;
+import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
 
 public class Source3BasedOnQueries extends AbstractSource3 {
     private final List<SourceQuery3> models = new ArrayList<>();

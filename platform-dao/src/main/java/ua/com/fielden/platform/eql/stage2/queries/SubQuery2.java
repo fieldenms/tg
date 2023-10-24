@@ -9,11 +9,11 @@ import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.QueryComponents3;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
-import ua.com.fielden.platform.eql.stage3.etc.GroupBys3;
-import ua.com.fielden.platform.eql.stage3.etc.OrderBys3;
-import ua.com.fielden.platform.eql.stage3.etc.Yields3;
 import ua.com.fielden.platform.eql.stage3.queries.SubQuery3;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
+import ua.com.fielden.platform.eql.stage3.sundries.GroupBys3;
+import ua.com.fielden.platform.eql.stage3.sundries.OrderBys3;
+import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
 
 public class SubQuery2 extends AbstractQuery2 implements ISingleOperand2<SubQuery3> {
     public final boolean isRefetchOnly;

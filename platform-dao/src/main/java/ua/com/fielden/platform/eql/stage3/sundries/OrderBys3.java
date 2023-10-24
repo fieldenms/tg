@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.stage3.etc;
+package ua.com.fielden.platform.eql.stage3.sundries;
 
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.joining;

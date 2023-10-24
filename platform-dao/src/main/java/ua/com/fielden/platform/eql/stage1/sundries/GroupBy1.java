@@ -1,11 +1,11 @@
-package ua.com.fielden.platform.eql.stage1.etc;
+package ua.com.fielden.platform.eql.stage1.sundries;
 
 import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
-import ua.com.fielden.platform.eql.stage2.etc.GroupBy2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.sundries.GroupBy2;
 
 public class GroupBy1 {
     public final ISingleOperand1<? extends ISingleOperand2<?>> operand;

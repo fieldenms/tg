@@ -6,8 +6,8 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.YI
 
 import ua.com.fielden.platform.entity.query.fluent.enums.QueryTokens;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
-import ua.com.fielden.platform.eql.stage1.etc.OrderBy1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
+import ua.com.fielden.platform.eql.stage1.sundries.OrderBy1;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.utils.Pair;
 

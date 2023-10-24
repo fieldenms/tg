@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.eql.stage1;
 
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
-import ua.com.fielden.platform.eql.stage1.etc.GroupBys1;
-import ua.com.fielden.platform.eql.stage1.etc.OrderBys1;
-import ua.com.fielden.platform.eql.stage1.etc.Yields1;
 import ua.com.fielden.platform.eql.stage1.sources.IJoinNode1;
+import ua.com.fielden.platform.eql.stage1.sundries.GroupBys1;
+import ua.com.fielden.platform.eql.stage1.sundries.OrderBys1;
+import ua.com.fielden.platform.eql.stage1.sundries.Yields1;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 
 /**

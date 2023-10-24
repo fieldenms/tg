@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.stage1.etc;
+package ua.com.fielden.platform.eql.stage1.sundries;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
@@ -11,7 +11,7 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
-import ua.com.fielden.platform.eql.stage2.etc.OrderBys2;
+import ua.com.fielden.platform.eql.stage2.sundries.OrderBys2;
 
 public class OrderBys1 {
     public static final OrderBys1 EMPTY_ORDER_BYS = new OrderBys1(emptyList());

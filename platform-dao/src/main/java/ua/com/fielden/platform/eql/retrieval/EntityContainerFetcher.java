@@ -37,8 +37,8 @@ import ua.com.fielden.platform.eql.retrieval.records.EntityTree;
 import ua.com.fielden.platform.eql.retrieval.records.QueryModelResult;
 import ua.com.fielden.platform.eql.retrieval.records.YieldedColumn;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
-import ua.com.fielden.platform.eql.stage3.etc.Yields3;
 import ua.com.fielden.platform.eql.stage3.queries.ResultQuery3;
+import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
 import ua.com.fielden.platform.streaming.SequentialGroupingStream;
 import ua.com.fielden.platform.utils.IDates;
 

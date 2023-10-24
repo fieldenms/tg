@@ -11,11 +11,11 @@ import ua.com.fielden.platform.eql.stage2.QueryComponents2;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
-import ua.com.fielden.platform.eql.stage2.etc.GroupBys2;
-import ua.com.fielden.platform.eql.stage2.etc.OrderBys2;
-import ua.com.fielden.platform.eql.stage2.etc.Yields2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
+import ua.com.fielden.platform.eql.stage2.sundries.GroupBys2;
+import ua.com.fielden.platform.eql.stage2.sundries.OrderBys2;
+import ua.com.fielden.platform.eql.stage2.sundries.Yields2;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 
 public abstract class AbstractQuery2 {

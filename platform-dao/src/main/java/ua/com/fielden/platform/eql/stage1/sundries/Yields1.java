@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.stage1.etc;
+package ua.com.fielden.platform.eql.stage1.sundries;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
@@ -17,7 +17,7 @@ import java.util.TreeMap;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
-import ua.com.fielden.platform.eql.stage2.etc.Yields2;
+import ua.com.fielden.platform.eql.stage2.sundries.Yields2;
 
 public class Yields1 {
     public static final Yields1 EMPTY_YIELDS = new Yields1(emptyList());

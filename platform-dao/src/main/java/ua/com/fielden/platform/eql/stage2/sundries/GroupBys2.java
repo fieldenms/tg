@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.stage2.etc;
+package ua.com.fielden.platform.eql.stage2.sundries;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
@@ -15,8 +15,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
-import ua.com.fielden.platform.eql.stage3.etc.GroupBy3;
-import ua.com.fielden.platform.eql.stage3.etc.GroupBys3;
+import ua.com.fielden.platform.eql.stage3.sundries.GroupBy3;
+import ua.com.fielden.platform.eql.stage3.sundries.GroupBys3;
 
 public class GroupBys2 {
     public static final GroupBys2 EMPTY_GROUP_BYS = new GroupBys2(emptyList());

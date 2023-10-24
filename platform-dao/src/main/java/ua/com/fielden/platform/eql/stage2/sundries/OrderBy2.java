@@ -1,13 +1,13 @@
-package ua.com.fielden.platform.eql.stage2.etc;
+package ua.com.fielden.platform.eql.stage2.sundries;
 
 import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
-import ua.com.fielden.platform.eql.stage3.etc.OrderBy3;
-import ua.com.fielden.platform.eql.stage3.etc.Yields3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.eql.stage3.sundries.OrderBy3;
+import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
 
 public class OrderBy2 {
     public final ISingleOperand2<? extends ISingleOperand3> operand;

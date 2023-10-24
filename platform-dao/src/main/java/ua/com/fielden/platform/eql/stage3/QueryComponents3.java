@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.eql.stage3;
 
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
-import ua.com.fielden.platform.eql.stage3.etc.GroupBys3;
-import ua.com.fielden.platform.eql.stage3.etc.OrderBys3;
-import ua.com.fielden.platform.eql.stage3.etc.Yields3;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
+import ua.com.fielden.platform.eql.stage3.sundries.GroupBys3;
+import ua.com.fielden.platform.eql.stage3.sundries.OrderBys3;
+import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
 
 /**
  * Represents all structural query parts (components) obtained as the result of stage 2 to stage 3 transformation.
