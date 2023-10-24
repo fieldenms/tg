@@ -8,7 +8,7 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.stage3.Table;
+import ua.com.fielden.platform.eql.meta.Table;
 
 public class EntityBatchDeleteByIdsOperation<T extends AbstractEntity<?>> {
     private final Session session;

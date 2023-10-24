@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.stage3;
+package ua.com.fielden.platform.eql.meta;
 
 import java.util.Map;
 

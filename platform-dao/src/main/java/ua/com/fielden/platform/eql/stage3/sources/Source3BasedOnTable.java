@@ -3,7 +3,7 @@ package ua.com.fielden.platform.eql.stage3.sources;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.eql.stage3.Table;
+import ua.com.fielden.platform.eql.meta.Table;
 
 public class Source3BasedOnTable extends AbstractSource3 {
     public final String tableName;

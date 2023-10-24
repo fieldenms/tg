@@ -15,7 +15,6 @@ import java.util.concurrent.ConcurrentMap;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation.TableStructForBatchInsertion;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
-import ua.com.fielden.platform.eql.stage3.Table;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 
 public class EqlEntityMetadataHolder {

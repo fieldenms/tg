@@ -11,11 +11,11 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.EqlEntityMetadataHolder;
+import ua.com.fielden.platform.eql.meta.Table;
 import ua.com.fielden.platform.eql.stage2.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.sources.ImplicitNode;
 import ua.com.fielden.platform.eql.stage2.sources.enhance.Prop3Lite;
 import ua.com.fielden.platform.eql.stage2.sources.enhance.TreeResultBySources;
-import ua.com.fielden.platform.eql.stage3.Table;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.types.tuples.T2;
 
