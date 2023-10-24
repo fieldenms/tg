@@ -5,7 +5,7 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
-import ua.com.fielden.platform.eql.stage1.operands.queries.SubQueryForExists1;
+import ua.com.fielden.platform.eql.stage1.queries.SubQueryForExists1;
 import ua.com.fielden.platform.eql.stage2.conditions.ExistencePredicate2;
 
 public class ExistencePredicate1 implements ICondition1<ExistencePredicate2> {

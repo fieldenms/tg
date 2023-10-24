@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.stage3.operands.queries;
+package ua.com.fielden.platform.eql.stage3.queries;
 
 import ua.com.fielden.platform.eql.stage3.QueryComponents3;
 

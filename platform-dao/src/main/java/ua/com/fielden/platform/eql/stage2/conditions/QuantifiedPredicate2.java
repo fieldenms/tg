@@ -10,11 +10,11 @@ import ua.com.fielden.platform.entity.query.fluent.enums.Quantifier;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
-import ua.com.fielden.platform.eql.stage2.operands.queries.SubQuery2;
+import ua.com.fielden.platform.eql.stage2.queries.SubQuery2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.conditions.QuantifiedPredicate3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
-import ua.com.fielden.platform.eql.stage3.operands.queries.SubQuery3;
+import ua.com.fielden.platform.eql.stage3.queries.SubQuery3;
 
 public class QuantifiedPredicate2 implements ICondition2<QuantifiedPredicate3> {
     public final ISingleOperand2<? extends ISingleOperand3> leftOperand;

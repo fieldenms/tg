@@ -13,8 +13,8 @@ import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
-import ua.com.fielden.platform.eql.stage2.operands.queries.SourceQuery2;
-import ua.com.fielden.platform.eql.stage3.operands.queries.SourceQuery3;
+import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
+import ua.com.fielden.platform.eql.stage3.queries.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnQueries;
 
 public class Source2BasedOnQueries extends AbstractSource2 implements ISource2<Source3BasedOnQueries> {

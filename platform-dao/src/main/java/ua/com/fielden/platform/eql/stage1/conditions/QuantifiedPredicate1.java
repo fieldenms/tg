@@ -9,7 +9,7 @@ import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.enums.Quantifier;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
-import ua.com.fielden.platform.eql.stage1.operands.queries.SubQuery1;
+import ua.com.fielden.platform.eql.stage1.queries.SubQuery1;
 import ua.com.fielden.platform.eql.stage2.conditions.QuantifiedPredicate2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 

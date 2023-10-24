@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.stage2.operands.queries;
+package ua.com.fielden.platform.eql.stage2.queries;
 
 import static java.util.Collections.emptySet;
 

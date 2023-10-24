@@ -19,7 +19,7 @@ import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.conditions.NullPredicate2;
 import ua.com.fielden.platform.eql.stage2.etc.Yield2;
 import ua.com.fielden.platform.eql.stage2.operands.AbstractSingleOperand2;
-import ua.com.fielden.platform.eql.stage2.operands.queries.SourceQuery2;
+import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
 
 public class YieldInfoNodesGenerator {
     public static Collection<YieldInfoNode> generate(final List<SourceQuery2> models) {

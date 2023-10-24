@@ -9,7 +9,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.meta.EqlStage1TestCase;
-import ua.com.fielden.platform.eql.stage1.operands.queries.ResultQuery1;
+import ua.com.fielden.platform.eql.stage1.queries.ResultQuery1;
 import ua.com.fielden.platform.sample.domain.TeVehicleModel;
 
 public class QueryShortcutsTest extends EqlStage1TestCase {

@@ -26,8 +26,8 @@ import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForEntityType;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForPrimType;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
-import ua.com.fielden.platform.eql.stage1.operands.queries.SourceQuery1;
-import ua.com.fielden.platform.eql.stage2.operands.queries.SourceQuery2;
+import ua.com.fielden.platform.eql.stage1.queries.SourceQuery1;
+import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnQueries;
 
 public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries> {

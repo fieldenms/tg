@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.stage2.operands.queries;
+package ua.com.fielden.platform.eql.stage2.queries;
 
 import ua.com.fielden.platform.eql.stage2.ITransformableToStage3;
 import ua.com.fielden.platform.eql.stage2.QueryComponents2;
@@ -9,7 +9,7 @@ import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.etc.GroupBys3;
 import ua.com.fielden.platform.eql.stage3.etc.OrderBys3;
 import ua.com.fielden.platform.eql.stage3.etc.Yields3;
-import ua.com.fielden.platform.eql.stage3.operands.queries.SubQueryForExists3;
+import ua.com.fielden.platform.eql.stage3.queries.SubQueryForExists3;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 
 public class SubQueryForExists2 extends AbstractQuery2 implements ITransformableToStage3<SubQueryForExists3> {

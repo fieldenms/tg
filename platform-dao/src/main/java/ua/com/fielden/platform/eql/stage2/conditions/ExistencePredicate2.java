@@ -7,9 +7,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
-import ua.com.fielden.platform.eql.stage2.operands.queries.SubQueryForExists2;
+import ua.com.fielden.platform.eql.stage2.queries.SubQueryForExists2;
 import ua.com.fielden.platform.eql.stage3.conditions.ExistencePredicate3;
-import ua.com.fielden.platform.eql.stage3.operands.queries.SubQueryForExists3;
+import ua.com.fielden.platform.eql.stage3.queries.SubQueryForExists3;
 
 public class ExistencePredicate2 implements ICondition2<ExistencePredicate3> {
     private final boolean negated;

@@ -9,7 +9,7 @@ import static ua.com.fielden.platform.eql.stage0.YieldBuilder.ABSENT_ALIAS;
 import org.junit.Test;
 
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
-import ua.com.fielden.platform.eql.stage1.operands.queries.SubQuery1;
+import ua.com.fielden.platform.eql.stage1.queries.SubQuery1;
 import ua.com.fielden.platform.sample.domain.TeFuelUsageByType;
 
 public class AutoYieldTest extends AbstractEqlShortcutTest {

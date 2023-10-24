@@ -64,7 +64,7 @@ import ua.com.fielden.platform.eql.stage1.conditions.QuantifiedPredicate1;
 import ua.com.fielden.platform.eql.stage1.conditions.SetPredicate1;
 import ua.com.fielden.platform.eql.stage1.operands.ISetOperand1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
-import ua.com.fielden.platform.eql.stage1.operands.queries.SubQuery1;
+import ua.com.fielden.platform.eql.stage1.queries.SubQuery1;
 import ua.com.fielden.platform.eql.stage2.conditions.ICondition2;
 import ua.com.fielden.platform.eql.stage2.operands.ISetOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
