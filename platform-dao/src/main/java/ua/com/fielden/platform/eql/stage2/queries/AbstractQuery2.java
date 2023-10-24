@@ -16,7 +16,12 @@ import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.eql.stage2.sundries.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.sundries.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.sundries.Yields2;
+import ua.com.fielden.platform.eql.stage3.QueryComponents3;
+import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
+import ua.com.fielden.platform.eql.stage3.sundries.GroupBys3;
+import ua.com.fielden.platform.eql.stage3.sundries.OrderBys3;
+import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
 
 public abstract class AbstractQuery2 {
 
@@ -36,6 +41,16 @@ public abstract class AbstractQuery2 {
         this.resultType = resultType;
     }
 
+    protected TransformationResult2<QueryComponents3> transformQueryComponents(final TransformationContext2 context) {
+        final TransformationResult2<? extends IJoinNode3> joinRootTr = joinRoot != null ? joinRoot.transform(context) : transformNone(context);
+        final TransformationResult2<Conditions3> whereConditionsTr = whereConditions.transform(joinRootTr.updatedContext);
+        final TransformationResult2<Yields3> yieldsTr = yields.transform(whereConditionsTr.updatedContext);
+        final TransformationResult2<GroupBys3> groupsTr = groups.transform(yieldsTr.updatedContext);
+        final TransformationResult2<OrderBys3> orderingsTr = orderings.transform(groupsTr.updatedContext, yieldsTr.item);
+
+        return new TransformationResult2<>(new QueryComponents3(joinRootTr.item, whereConditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item), orderingsTr.updatedContext);
+    }
+
     public Set<Prop2> collectProps() {
         final Set<Prop2> result = new HashSet<>();
         result.addAll(joinRoot != null ? joinRoot.collectProps() : emptySet());
@@ -43,7 +58,7 @@ public abstract class AbstractQuery2 {
         result.addAll(yields.collectProps());
         result.addAll(groups.collectProps());
         result.addAll(orderings.collectProps());
-        
+
         return result;
     }
 
@@ -54,10 +69,10 @@ public abstract class AbstractQuery2 {
         result.addAll(yields.collectEntityTypes());
         result.addAll(groups.collectEntityTypes());
         result.addAll(orderings.collectEntityTypes());
-        
+
         return result;
     }
-    
+
     protected static TransformationResult2<IJoinNode3> transformNone(final TransformationContext2 context) {
         return new TransformationResult2<IJoinNode3>(null, context);
     }

@@ -5,12 +5,7 @@ import ua.com.fielden.platform.eql.stage2.QueryComponents2;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage3.QueryComponents3;
-import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.queries.SubQueryForExists3;
-import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
-import ua.com.fielden.platform.eql.stage3.sundries.GroupBys3;
-import ua.com.fielden.platform.eql.stage3.sundries.OrderBys3;
-import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
 
 public class SubQueryForExists2 extends AbstractQuery2 implements ITransformableToStage3<SubQueryForExists3> {
 
@@ -20,15 +15,8 @@ public class SubQueryForExists2 extends AbstractQuery2 implements ITransformable
 
     @Override
     public TransformationResult2<SubQueryForExists3> transform(final TransformationContext2 context) {
-        final TransformationResult2<? extends IJoinNode3> joinRootTr = joinRoot != null ? joinRoot.transform(context) : transformNone(context);
-        final TransformationResult2<Conditions3> whereConditionsTr = whereConditions.transform(joinRootTr.updatedContext);
-        final TransformationResult2<Yields3> yieldsTr = yields.transform(whereConditionsTr.updatedContext);
-        final TransformationResult2<GroupBys3> groupsTr = groups.transform(yieldsTr.updatedContext);
-        final TransformationResult2<OrderBys3> orderingsTr = orderings.transform(groupsTr.updatedContext, yieldsTr.item);
-
-        final QueryComponents3 queryComponents3 = new QueryComponents3(joinRootTr.item, whereConditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item);
-
-        return new TransformationResult2<>(new SubQueryForExists3(queryComponents3), orderingsTr.updatedContext);
+        final TransformationResult2<QueryComponents3> queryComponentsTr = transformQueryComponents(context);
+        return new TransformationResult2<>(new SubQueryForExists3(queryComponentsTr.item), queryComponentsTr.updatedContext);
     }
 
     @Override
