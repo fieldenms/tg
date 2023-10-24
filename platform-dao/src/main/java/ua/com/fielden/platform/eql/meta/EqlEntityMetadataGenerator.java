@@ -106,7 +106,7 @@ public class EqlEntityMetadataGenerator {
     public static final String Y = "Y";
     public static final String N = "N";
 
-    public static final List<String> specialProps = unmodifiableListOf(ID, KEY, VERSION);
+    public static final List<String> SPECIAL_PROPS = unmodifiableListOf(ID, KEY, VERSION);
 
     private final PropColumn id;
     private final PropColumn version;
@@ -301,7 +301,7 @@ public class EqlEntityMetadataGenerator {
                       isAnnotationPresent(propField, CritOnly.class) ||
                       isOne2One_association(entityType, propField.getName()) ||
                       category == QUERY_BASED) &&
-                      !specialProps.contains(propField.getName()) &&
+                      !SPECIAL_PROPS.contains(propField.getName()) &&
                       !(Collection.class.isAssignableFrom(propField.getType()) && hasLinkProperty(entityType, propField.getName())))
              .collect(toList());
     }

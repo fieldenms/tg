@@ -25,7 +25,7 @@ import ua.com.fielden.platform.eql.stage3.etc.Yield3;
 import ua.com.fielden.platform.eql.stage3.etc.Yields3;
 
 public class Yields2 {
-    public static final Yields2 emptyYields = new Yields2(emptyList());
+    public static final Yields2 EMPTY_YIELDS = new Yields2(emptyList());
     
     private final SortedMap<String, Yield2> yieldsMap = new TreeMap<String, Yield2>();
     public final boolean allGenerated;

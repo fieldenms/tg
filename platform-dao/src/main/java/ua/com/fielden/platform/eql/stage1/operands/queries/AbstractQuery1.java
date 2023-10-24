@@ -6,9 +6,9 @@ import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.eql.stage1.operands.Prop1.enhancePath;
 import static ua.com.fielden.platform.eql.stage2.KeyPropertyExtractor.extract;
 import static ua.com.fielden.platform.eql.stage2.KeyPropertyExtractor.needsExtraction;
-import static ua.com.fielden.platform.eql.stage2.conditions.Conditions2.emptyConditions;
-import static ua.com.fielden.platform.eql.stage2.etc.GroupBys2.emptyGroupBys;
-import static ua.com.fielden.platform.eql.stage2.etc.OrderBys2.emptyOrderBys;
+import static ua.com.fielden.platform.eql.stage2.conditions.Conditions2.EMPTY_CONDITIONS;
+import static ua.com.fielden.platform.eql.stage2.etc.GroupBys2.EMPTY_GROUP_BYS;
+import static ua.com.fielden.platform.eql.stage2.etc.OrderBys2.EMPTY_ORDER_BYS;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -119,15 +119,15 @@ public abstract class AbstractQuery1 {
         final Conditions2 udfConditions2 = udfConditions.transform(localContext);
 
         if (originalConditions.ignore()) {
-            return udfConditions2.ignore() ? emptyConditions : udfConditions2;
+            return udfConditions2.ignore() ? EMPTY_CONDITIONS : udfConditions2;
         } else {
             return udfConditions2.ignore() ? originalConditions : new Conditions2(false, asList(asList(udfConditions2, originalConditions)));
         }
     }
 
     protected static GroupBys2 enhance(final GroupBys2 groupBys) {
-        if (groupBys.equals(emptyGroupBys)) {
-            return emptyGroupBys;
+        if (groupBys.equals(EMPTY_GROUP_BYS)) {
+            return EMPTY_GROUP_BYS;
         }
 
         final List<GroupBy2> enhanced = groupBys.getGroups().stream().map(group -> enhance(group)).flatMap(List::stream).collect(Collectors.toList());
@@ -135,8 +135,8 @@ public abstract class AbstractQuery1 {
     }
 
     protected static OrderBys2 enhance(final OrderBys2 orderBys, final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
-        if (orderBys.equals(emptyOrderBys)) {
-            return emptyOrderBys;
+        if (orderBys.equals(EMPTY_ORDER_BYS)) {
+            return EMPTY_ORDER_BYS;
         }
 
         final List<OrderBy2> enhanced = new ArrayList<>();

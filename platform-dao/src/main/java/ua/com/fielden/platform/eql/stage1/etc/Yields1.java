@@ -20,7 +20,7 @@ import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage2.etc.Yields2;
 
 public class Yields1 {
-    public static final Yields1 emptyYields = new Yields1(emptyList());
+    public static final Yields1 EMPTY_YIELDS = new Yields1(emptyList());
 
     private final SortedMap<String, Yield1> yieldsMap = new TreeMap<String, Yield1>();
 
@@ -31,7 +31,7 @@ public class Yields1 {
     }
 
     public Yields2 transform(final TransformationContext1 context) {
-        return yieldsMap.isEmpty() ? Yields2.emptyYields : new Yields2(yieldsMap.values().stream().map(el -> el.transform(context)).collect(toList()));
+        return yieldsMap.isEmpty() ? Yields2.EMPTY_YIELDS : new Yields2(yieldsMap.values().stream().map(el -> el.transform(context)).collect(toList()));
     }
 
     public void addYield(final Yield1 yield) {

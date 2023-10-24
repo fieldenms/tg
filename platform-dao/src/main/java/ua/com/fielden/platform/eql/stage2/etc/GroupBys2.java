@@ -19,7 +19,7 @@ import ua.com.fielden.platform.eql.stage3.etc.GroupBy3;
 import ua.com.fielden.platform.eql.stage3.etc.GroupBys3;
 
 public class GroupBys2 {
-    public static final GroupBys2 emptyGroupBys = new GroupBys2(emptyList());
+    public static final GroupBys2 EMPTY_GROUP_BYS = new GroupBys2(emptyList());
     
     private final List<GroupBy2> groups;
 

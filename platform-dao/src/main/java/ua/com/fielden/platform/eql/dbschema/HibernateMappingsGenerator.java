@@ -6,7 +6,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.eql.meta.EntityCategory.PERSISTENT;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.specialProps;
+import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.SPECIAL_PROPS;
 import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
@@ -167,7 +167,7 @@ public class HibernateMappingsGenerator {
         }
 
         for (final EqlPropertyMetadata ppi : propsMetadata) {
-            if (ppi.expressionModel == null && !specialProps.contains(ppi.name) && (ppi.column != null || ppi.subitems().stream().anyMatch(e -> e.column != null))) {
+            if (ppi.expressionModel == null && !SPECIAL_PROPS.contains(ppi.name) && (ppi.column != null || ppi.subitems().stream().anyMatch(e -> e.column != null))) {
                 sb.append(generatePropertyMappingFromPropertyMetadata(ppi));
             }
         }

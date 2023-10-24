@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage0;
 
-import static ua.com.fielden.platform.eql.stage1.etc.OrderBys1.emptyOrderBys;
+import static ua.com.fielden.platform.eql.stage1.etc.OrderBys1.EMPTY_ORDER_BYS;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,7 +44,7 @@ public class QryOrderingsBuilder extends AbstractTokensBuilder {
         }
         
         if (getTokens().isEmpty()) {
-            return emptyOrderBys;
+            return EMPTY_ORDER_BYS;
         }
         
         final List<OrderBy1> models = new ArrayList<>();

@@ -20,7 +20,7 @@ import ua.com.fielden.platform.eql.stage3.etc.OrderBys3;
 import ua.com.fielden.platform.eql.stage3.etc.Yields3;
 
 public class OrderBys2 {
-    public static final OrderBys2 emptyOrderBys = new OrderBys2(emptyList());
+    public static final OrderBys2 EMPTY_ORDER_BYS = new OrderBys2(emptyList());
     
     private final List<OrderBy2> models;
 

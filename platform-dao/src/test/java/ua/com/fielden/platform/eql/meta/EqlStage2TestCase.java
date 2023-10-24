@@ -5,10 +5,10 @@ import static java.util.Collections.emptyMap;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
-import static ua.com.fielden.platform.eql.stage2.conditions.Conditions2.emptyConditions;
-import static ua.com.fielden.platform.eql.stage2.etc.GroupBys2.emptyGroupBys;
-import static ua.com.fielden.platform.eql.stage2.etc.OrderBys2.emptyOrderBys;
-import static ua.com.fielden.platform.eql.stage2.etc.Yields2.emptyYields;
+import static ua.com.fielden.platform.eql.stage2.conditions.Conditions2.EMPTY_CONDITIONS;
+import static ua.com.fielden.platform.eql.stage2.etc.GroupBys2.EMPTY_GROUP_BYS;
+import static ua.com.fielden.platform.eql.stage2.etc.OrderBys2.EMPTY_ORDER_BYS;
+import static ua.com.fielden.platform.eql.stage2.etc.Yields2.EMPTY_YIELDS;
 import static ua.com.fielden.platform.eql.stage2.etc.Yields2.nullYields;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
@@ -120,18 +120,18 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static QueryComponents2 qc2(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions, final Yields2 yields) {
-        return new QueryComponents2(sources, conditions, yields, emptyGroupBys, emptyOrderBys);
+        return new QueryComponents2(sources, conditions, yields, EMPTY_GROUP_BYS, EMPTY_ORDER_BYS);
     }
 
     protected static QueryComponents2 qc2(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions, final Yields2 yields, final OrderBys2 orderBys) {
-        return new QueryComponents2(sources, conditions, yields, emptyGroupBys, orderBys);
+        return new QueryComponents2(sources, conditions, yields, EMPTY_GROUP_BYS, orderBys);
     }
 
     protected static Yields2 mkYields(final Yield2... yields) {
         if (yields.length > 0) {
             return new Yields2(asList(yields)); 
         } else {
-            return emptyYields;
+            return EMPTY_YIELDS;
         }
     }
 
@@ -151,7 +151,7 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
         if (orderBys.length > 0) {
             return new OrderBys2(asList(orderBys));    
         } else {
-            return emptyOrderBys;
+            return EMPTY_ORDER_BYS;
         }
     }
 
@@ -281,23 +281,23 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static SourceQuery2 srcqry(final IJoinNode2<? extends IJoinNode3> sources, final Yields2 yields) {
-        return new SourceQuery2(qc2(sources, emptyConditions, yields), EntityAggregates.class);
+        return new SourceQuery2(qc2(sources, EMPTY_CONDITIONS, yields), EntityAggregates.class);
     }
 
     protected static ResultQuery2 qry(final IJoinNode2<? extends IJoinNode3> sources, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType) {
-        return new ResultQuery2(qc2(sources, emptyConditions, yields), resultType);
+        return new ResultQuery2(qc2(sources, EMPTY_CONDITIONS, yields), resultType);
     }
 
     protected static ResultQuery2 qry(final IJoinNode2<? extends IJoinNode3> sources, final Yields2 yields, final OrderBys2 orderBys, final Class<? extends AbstractEntity<?>> resultType) {
-        return new ResultQuery2(qc2(sources, emptyConditions, yields, orderBys), resultType);
+        return new ResultQuery2(qc2(sources, EMPTY_CONDITIONS, yields, orderBys), resultType);
     }
 
     protected static ResultQuery2 qry(final IJoinNode2<? extends IJoinNode3> sources, final Yields2 yields) {
-        return new ResultQuery2(qc2(sources, emptyConditions, yields), EntityAggregates.class);
+        return new ResultQuery2(qc2(sources, EMPTY_CONDITIONS, yields), EntityAggregates.class);
     }
 
     protected static ResultQuery2 qryCountAll(final IJoinNode2<? extends IJoinNode3> sources) {
-        return new ResultQuery2(qc2(sources, emptyConditions, mkYields(yieldCountAll("KOUNT"))), EntityAggregates.class);
+        return new ResultQuery2(qc2(sources, EMPTY_CONDITIONS, mkYields(yieldCountAll("KOUNT"))), EntityAggregates.class);
     }
 
     protected static SubQuery2 subqry(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType) {
@@ -305,10 +305,10 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static SubQueryForExists2 typelessSubqry(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions) {
-        return new SubQueryForExists2(new QueryComponents2(sources, conditions, nullYields, emptyGroupBys, emptyOrderBys));
+        return new SubQueryForExists2(new QueryComponents2(sources, conditions, nullYields, EMPTY_GROUP_BYS, EMPTY_ORDER_BYS));
     }
 
     protected static SubQuery2 subqry(final IJoinNode2<? extends IJoinNode3> sources, final Yields2 yields, final PropType resultType) {
-        return new SubQuery2(qc2(sources, emptyConditions, yields), resultType, false);
+        return new SubQuery2(qc2(sources, EMPTY_CONDITIONS, yields), resultType, false);
     }
 }

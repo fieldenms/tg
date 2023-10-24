@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage0;
 
-import static ua.com.fielden.platform.eql.stage1.etc.GroupBys1.emptyGroupBys;
+import static ua.com.fielden.platform.eql.stage1.etc.GroupBys1.EMPTY_GROUP_BYS;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +27,7 @@ public class QryGroupsBuilder extends AbstractTokensBuilder {
         }
         
         if (getTokens().isEmpty()) {
-            return emptyGroupBys;
+            return EMPTY_GROUP_BYS;
         }
         
         final List<GroupBy1> groups = new ArrayList<>();

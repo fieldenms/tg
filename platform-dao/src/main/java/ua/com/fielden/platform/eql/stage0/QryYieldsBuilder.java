@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage0;
 
-import static ua.com.fielden.platform.eql.stage1.etc.Yields1.emptyYields;
+import static ua.com.fielden.platform.eql.stage1.etc.Yields1.EMPTY_YIELDS;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +30,7 @@ public class QryYieldsBuilder extends AbstractTokensBuilder {
         }
         
         if (getTokens().isEmpty()) {
-            return emptyYields;
+            return EMPTY_YIELDS;
         }
 
         final List<Yield1> yields= new ArrayList<>();

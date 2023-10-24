@@ -20,8 +20,8 @@ import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.conditions.ICondition2;
 
 public class Conditions1 implements ICondition1<Conditions2> {
-    public static final Conditions1 emptyConditions = new Conditions1(false, null, emptyList());
-    private static final ComparisonPredicate1 idEqualsExtIdCondition = new ComparisonPredicate1(new Prop1(ID, false), EQ, new Prop1(ID, true));
+    public static final Conditions1 EMPTY_CONDITIONS = new Conditions1(false, null, emptyList());
+    private static final ComparisonPredicate1 ID_EQUALS_EXT_ID_CONDITION = new ComparisonPredicate1(new Prop1(ID, false), EQ, new Prop1(ID, true));
 
     public final boolean negated;
     public final ICondition1<? extends ICondition2<?>> firstCondition;
@@ -38,7 +38,7 @@ public class Conditions1 implements ICondition1<Conditions2> {
     }
     
     public boolean isIdEqualsExtId() {
-        return !negated && otherConditions.isEmpty() && idEqualsExtIdCondition.equals(firstCondition);
+        return !negated && otherConditions.isEmpty() && ID_EQUALS_EXT_ID_CONDITION.equals(firstCondition);
     }
 
     private List<List<ICondition1<? extends ICondition2<?>>>> formDnf() {
@@ -72,7 +72,7 @@ public class Conditions1 implements ICondition1<Conditions2> {
     @Override
     public Conditions2 transform(final TransformationContext1 context) {
         if (isEmpty()) {
-            return Conditions2.emptyConditions;
+            return Conditions2.EMPTY_CONDITIONS;
         }
         
         final List<List<? extends ICondition2<?>>> transformed = formDnf().stream()
@@ -84,7 +84,7 @@ public class Conditions1 implements ICondition1<Conditions2> {
                 .filter(transformedAndGroup -> !transformedAndGroup.isEmpty())
                 .collect(toList());
         
-        return transformed.isEmpty() ? Conditions2.emptyConditions : new Conditions2(negated, transformed);
+        return transformed.isEmpty() ? Conditions2.EMPTY_CONDITIONS : new Conditions2(negated, transformed);
     }
 
     @Override

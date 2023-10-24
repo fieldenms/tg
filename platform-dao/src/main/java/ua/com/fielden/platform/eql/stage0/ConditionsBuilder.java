@@ -29,7 +29,7 @@ public class ConditionsBuilder extends AbstractTokensBuilder {
         }
         final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
         if (!iterator.hasNext()) {
-            return Conditions1.emptyConditions;
+            return Conditions1.EMPTY_CONDITIONS;
         } else {
             final ICondition1<? extends ICondition2<?>> firstCondition = (ICondition1<? extends ICondition2<?>>) iterator.next().getValue();
             final List<CompoundCondition1> otherConditions = new ArrayList<>();

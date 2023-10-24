@@ -14,7 +14,7 @@ import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage2.etc.GroupBys2;
 
 public class GroupBys1 {
-    public static final GroupBys1 emptyGroupBys = new GroupBys1(emptyList());
+    public static final GroupBys1 EMPTY_GROUP_BYS = new GroupBys1(emptyList());
     
     private final List<GroupBy1> groups;
 
@@ -24,7 +24,7 @@ public class GroupBys1 {
 
     public GroupBys2 transform(final TransformationContext1 context) {
         if (groups.isEmpty()) {
-            return GroupBys2.emptyGroupBys;
+            return GroupBys2.EMPTY_GROUP_BYS;
         } else {
             return new GroupBys2(groups.stream().map(el -> el.transform(context)).collect(toList()));    
         }

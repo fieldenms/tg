@@ -3,7 +3,7 @@ package ua.com.fielden.platform.eql.stage0;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ORDER_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QUERY_TOKEN;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.SORT_ORDER;
-import static ua.com.fielden.platform.eql.stage1.conditions.Conditions1.emptyConditions;
+import static ua.com.fielden.platform.eql.stage1.conditions.Conditions1.EMPTY_CONDITIONS;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -117,7 +117,7 @@ public class QueryModelToStage1Transformer {
         }
 
         final IJoinNode1<? extends IJoinNode2<?>> fromModel = from.getModel();
-        final Conditions1 udfModel = fromModel == null ? emptyConditions : generateUserDataFilteringCondition(qryModel.isFilterable(), filter, username, fromModel.mainSource());
+        final Conditions1 udfModel = fromModel == null ? EMPTY_CONDITIONS : generateUserDataFilteringCondition(qryModel.isFilterable(), filter, username, fromModel.mainSource());
 
         return new QueryComponents1(fromModel, where.getModel(), udfModel, select.getModel(), groupBy.getModel(), produceOrderBys(orderModel), qryModel.isYieldAll(), qryModel.shouldMaterialiseCalcPropsAsColumnsInSqlQuery);
     }
@@ -132,7 +132,7 @@ public class QueryModelToStage1Transformer {
             }
         }
 
-        return emptyConditions;
+        return EMPTY_CONDITIONS;
     }
 
     private List<Pair<TokenCategory, Object>> linearizeTokens(final List<Pair<TokenCategory, Object>> tokens) {

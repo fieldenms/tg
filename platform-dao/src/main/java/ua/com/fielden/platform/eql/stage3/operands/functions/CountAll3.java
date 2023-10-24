@@ -12,10 +12,10 @@ public class CountAll3 extends AbstractFunction3 {
         super(INTEGER_PROP_TYPE);
     }
 
-    private static final String sql = "COUNT(*)";
+    private static final String COUNT_ALL_SQL = "COUNT(*)";
     
     @Override
     public String sql(final DbVersion dbVersion) {
-        return sql;
+        return COUNT_ALL_SQL;
     }
 }

@@ -6,10 +6,10 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperat
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.AND;
 import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.OR;
-import static ua.com.fielden.platform.eql.stage1.conditions.Conditions1.emptyConditions;
-import static ua.com.fielden.platform.eql.stage1.etc.GroupBys1.emptyGroupBys;
-import static ua.com.fielden.platform.eql.stage1.etc.OrderBys1.emptyOrderBys;
-import static ua.com.fielden.platform.eql.stage1.etc.Yields1.emptyYields;
+import static ua.com.fielden.platform.eql.stage1.conditions.Conditions1.EMPTY_CONDITIONS;
+import static ua.com.fielden.platform.eql.stage1.etc.GroupBys1.EMPTY_GROUP_BYS;
+import static ua.com.fielden.platform.eql.stage1.etc.OrderBys1.EMPTY_ORDER_BYS;
+import static ua.com.fielden.platform.eql.stage1.etc.Yields1.EMPTY_YIELDS;
 
 import java.util.Map;
 
@@ -62,18 +62,18 @@ public abstract class EqlStage1TestCase extends EqlTestCase {
     }
 
     protected static QueryComponents1 qc1(final IJoinNode1<? extends IJoinNode2<?>> sources, final Conditions1 conditions) {
-        return new QueryComponents1(sources, conditions, emptyConditions, emptyYields, emptyGroupBys, emptyOrderBys, false, false);
+        return new QueryComponents1(sources, conditions, EMPTY_CONDITIONS, EMPTY_YIELDS, EMPTY_GROUP_BYS, EMPTY_ORDER_BYS, false, false);
     }
 
     protected static QueryComponents1 qc1(final IJoinNode1<? extends IJoinNode2<?>> sources, final Conditions1 conditions, final Yields1 yields) {
-        return new QueryComponents1(sources, conditions, emptyConditions, yields, emptyGroupBys, emptyOrderBys, false, false);
+        return new QueryComponents1(sources, conditions, EMPTY_CONDITIONS, yields, EMPTY_GROUP_BYS, EMPTY_ORDER_BYS, false, false);
     }
 
     protected static Yields1 yields(final Yield1 ... yields) {
         if (yields.length > 0) {
             return new Yields1(asList(yields));
         } else {
-            return emptyYields;
+            return EMPTY_YIELDS;
         }
     }
 

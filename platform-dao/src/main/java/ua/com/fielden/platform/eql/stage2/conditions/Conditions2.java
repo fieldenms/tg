@@ -17,7 +17,7 @@ import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
 
 public class Conditions2 implements ICondition2<Conditions3> {
-    public static final Conditions2 emptyConditions = new Conditions2(false, emptyList());
+    public static final Conditions2 EMPTY_CONDITIONS = new Conditions2(false, emptyList());
 
     private final List<List<? extends ICondition2<?>>> allConditionsAsDnf = new ArrayList<>();
     private final boolean negated;
