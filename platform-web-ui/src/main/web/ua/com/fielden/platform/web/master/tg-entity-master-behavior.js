@@ -54,6 +54,25 @@ const findFirstInputToFocus = (preferredOnly, editors) => {
            null;
 };
 
+const findFirstOpenedDialogInHierarchy = function (dialog) {
+    let parentDialog = dialog;
+    while(parentDialog && parentDialog.parentElement === null) {
+        parentDialog = getParentAnd(parentDialog._lastAction, element => element.matches('tg-custom-action-dialog'));
+    }
+    return parentDialog;
+}
+
+const findFirstViewWithNewAction = function (dialog, viewWithAction) {
+    let parentDialog = dialog
+    let parentView = viewWithAction;
+    while (parentDialog && parentDialog.parentElement === null) {
+        parentView = getParentAnd(parentDialog._lastAction, element => element._createContextHolder && element.tgOpenMasterAction);
+        parentDialog = getParentAnd(parentDialog._lastAction, element => element.matches('tg-custom-action-dialog'));
+        
+    }
+    return parentView;
+}
+
 /**
  * Check whether an element is visible in its 'tg-scrollable-component' viewport.
  * If there is no 'tg-scrollable-component' ancestor then returns 'true' (no need to re-scroll).
@@ -622,18 +641,18 @@ const TgEntityMasterBehaviorImpl = {
             return potentiallySavedOrNewEntity.isValidWithoutException();
         }).bind(self);
 
-        self._newAction = (function() {
-            const parentDialog = getParentAnd(self, element => element.matches("tg-custom-action-dialog"));
-            if (parentDialog && parentDialog._lastAction) {
-                const originContextCreator = self.tgOpenMasterAction.createContextHolder;
-                const originActionRestorer = self.tgOpenMasterAction.restoreActionState;
-                self.tgOpenMasterAction.createContextHolder = parentDialog._lastAction.createContextHolder.bind(self.tgOpenMasterAction);
-                self.tgOpenMasterAction.restoreActionState = (function () {
+        self._newAction = (function(parentDialog, contextCreator) {
+            const firstViewWithNewAction = findFirstViewWithNewAction(parentDialog, self);
+            if (firstViewWithNewAction) {
+                const originContextCreator = firstViewWithNewAction.tgOpenMasterAction.createContextHolder;
+                const originActionRestorer = firstViewWithNewAction.tgOpenMasterAction.restoreActionState;
+                firstViewWithNewAction.tgOpenMasterAction.createContextHolder = contextCreator;
+                firstViewWithNewAction.tgOpenMasterAction.restoreActionState = (function () {
                     this.createContextHolder = originContextCreator;
                     this.restoreActionState = originActionRestorer;
-                }).bind(self.tgOpenMasterAction);
+                }).bind(firstViewWithNewAction);
+                firstViewWithNewAction.tgOpenMasterAction._runIndependedActionForNew(self.entityType);
             }
-            self.tgOpenMasterAction._runIndependedActionForNew(self.entityType);
         }).bind(self);
 
         self._postSavedDefaultPostExceptionHandler = (function () {
@@ -995,8 +1014,8 @@ const TgEntityMasterBehaviorImpl = {
             action: function () {
                 return self.retrieve();
             },
-            newAction: function() {
-                self._newAction();
+            newAction: function(parentDialog, contextCreator) {
+                self._newAction(parentDialog, contextCreator);
             }
         };
         self._notifyActionPathsFor('REFRESH', true);
@@ -1020,8 +1039,8 @@ const TgEntityMasterBehaviorImpl = {
             action: function () {
                 return self.save();
             },
-            newAction: function() {
-                self._newAction();
+            newAction: function(parentDialog, contextCreator) {
+                self._newAction(parentDialog, contextCreator);
             }
         };
         self._notifyActionPathsFor('SAVE', true);

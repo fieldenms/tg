@@ -64,6 +64,18 @@ const entityCentreTemplate = html`
         
         <!--@custom-share-actions-->
         <tg-ui-action
+            id="tgOpenMasterAction"
+            ui-role='ICON'
+            show-dialog='[[_showDialog]]'
+            toaster='[[toaster]]'
+            create-context-holder='[[_createContextHolder]]'
+            dynamic-action
+            attrs='[[_tgOpenMasterActionAttrs]]'
+            require-selection-criteria='false'
+            require-master-entity='true'
+            hidden>
+        </tg-ui-action>
+        <tg-ui-action
             id="tgOpenHelpMasterAction"
             ui-role='ICON'
             component-uri = '/master_ui/ua.com.fielden.platform.entity.UserDefinableHelp'

@@ -13,7 +13,7 @@ import '/resources/components/tg-dropdown-switch.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { createEntityActionThenCallback } from '/resources/master/actions/tg-entity-master-closing-utils.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
-import { allDefined, localStorageKey } from '/resources/reflection/tg-polymer-utils.js';
+import { allDefined, localStorageKey, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
 
 import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
 import { _isEntity } from '/app/tg-reflector.js';
@@ -306,10 +306,12 @@ Polymer({
             this._working = true;
             var promise = this.action();
             if (promise) {
-                promise
-                .then(ironRequest => {
-                    if (ironRequest.successful && subRole === 'new' && typeof self.newAction === 'function') {
-                        self.newAction();
+                let parentDialog;
+                let parentContextCreator;
+                promise.then(ironRequest => {
+                    parentDialog = getParentAnd(self, element => element.matches("tg-custom-action-dialog"));
+                    if (parentDialog && parentDialog._lastAction) {
+                        parentContextCreator = parentDialog._lastAction.createContextHolder;
                     }
                     return ironRequest;
                 })
@@ -323,7 +325,13 @@ Polymer({
                             self.postActionError();
                         }
                     }
-                );    
+                )
+                .then(ironRequest => {
+                    if (ironRequest.successful && subRole === 'new' && typeof self.newAction === 'function') {
+                        self.newAction(parentDialog, parentContextCreator);
+                    }
+                    return ironRequest;
+                });    
             }
         }).bind(this);
     },

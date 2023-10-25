@@ -31,6 +31,18 @@ const TgEntityCentreTemplateBehaviorImpl = {
             value : false
         },
         /**
+         * Represents the action that allows to open entity master for specified entity type.
+         */
+        tgOpenMasterAction: {
+            type: Object,
+            value: null
+        },
+
+        /**
+         * Attributes for the action that allows to open entity master for specified entity type.
+         */
+        _tgOpenMasterActionAttrs: Object,
+        /**
          * Attributes for the action that opens help entity master for this entity centre.
          */
         _tgOpenHelpMasterActionAttrs: Object,
@@ -138,6 +150,14 @@ const TgEntityCentreTemplateBehaviorImpl = {
                 this.showRefreshToast();
             }
         });
+        /////////////////////////////////////////////////////////////////////////////////
+
+        ///////////////// initialise tgOpenMasterAction properties //////////////////////
+        this._tgOpenMasterActionAttrs = {
+            currentState: 'EDIT',
+            centreUuid: this.uuid
+        };
+        this.tgOpenMasterAction = this.$.tgOpenMasterAction;
         /////////////////////////////////////////////////////////////////////////////////
 
         //////////////////Initialise tgOpenHelpMasterAction properties///////////////////
