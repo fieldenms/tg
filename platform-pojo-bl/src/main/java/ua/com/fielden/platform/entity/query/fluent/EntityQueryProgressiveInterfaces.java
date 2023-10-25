@@ -16,9 +16,9 @@ import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 /**
  * Class for collecting all interfaces, which are part of Entity Query
  * Progressive Interfaces.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public interface EntityQueryProgressiveInterfaces {
 
@@ -35,21 +35,21 @@ public interface EntityQueryProgressiveInterfaces {
 
 		/**
 		 * Case-insensitive 'like'.
-		 * 
+		 *
 		 * @return
 		 */
 		IComparisonOperand<T, ET> iLike();
 
         /**
          * Like that casts its left operand to string in case it is integer.
-         * 
+         *
          * @return
          */
         IComparisonOperand<T, ET> likeWithCast();
 
         /**
          * Case-insensitive 'like' that casts its left operand to string in case it is integer.
-         * 
+         *
          * @return
          */
         IComparisonOperand<T, ET> iLikeWithCast();
@@ -62,49 +62,49 @@ public interface EntityQueryProgressiveInterfaces {
 
 		/**
 		 * Negated case-insensitive 'like'.
-		 * 
+		 *
 		 * @return
 		 */
 		IComparisonOperand<T, ET> notILike();
 
 		/**
 		 * Equal.
-		 * 
+		 *
 		 * @return
 		 */
 		IComparisonQuantifiedOperand<T, ET> eq();
 
 		/**
 		 * Not equal.
-		 * 
+		 *
 		 * @return
 		 */
 		IComparisonQuantifiedOperand<T, ET> ne();
 
 		/**
 		 * Greater than.
-		 * 
+		 *
 		 * @return
 		 */
 		IComparisonQuantifiedOperand<T, ET> gt();
 
 		/**
 		 * Less than.
-		 * 
+		 *
 		 * @return
 		 */
 		IComparisonQuantifiedOperand<T, ET> lt();
 
 		/**
 		 * Greater or equal.
-		 * 
+		 *
 		 * @return
 		 */
 		IComparisonQuantifiedOperand<T, ET> ge();
 
 		/**
 		 * Less or equal.
-		 * 
+		 *
 		 * @return
 		 */
 		IComparisonQuantifiedOperand<T, ET> le();
@@ -113,7 +113,7 @@ public interface EntityQueryProgressiveInterfaces {
 	interface IBeginCondition<T> {
 		/**
 		 * Starts new group of conditions (opens new parenthesis).
-		 * 
+		 *
 		 * @return
 		 */
 		T begin();
@@ -121,7 +121,7 @@ public interface EntityQueryProgressiveInterfaces {
 		/**
 		 * Starts new negated group of conditions (opens new parenthesis with
 		 * NOT preceding it).
-		 * 
+		 *
 		 * @return
 		 */
 		T notBegin();
@@ -130,7 +130,7 @@ public interface EntityQueryProgressiveInterfaces {
 	interface IEndCondition<T> {
 		/**
 		 * Closes parenthesis of the nearest condition group.
-		 * 
+		 *
 		 * @return
 		 */
 		T end();
@@ -145,46 +145,46 @@ public interface EntityQueryProgressiveInterfaces {
 	interface ISingleOperand<T, ET extends AbstractEntity<?>> {
 		/**
 		 * Property.
-		 * 
+		 *
 		 * @return
 		 */
 		T prop(final String propertyName);
 
 		/**
 		 * Property.
-		 * 
+		 *
 		 * @return
 		 */
 		T prop(final Enum<?> propertyName);
-		
+
 		T prop(final IConvertableToPath propertyName);
 
 		/**
 		 * External property (property from master query(ies).
-		 * 
+		 *
 		 * @return
 		 */
 		T extProp(final String propertyName);
 
 		/**
 		 * External property (property from master query(ies).
-		 * 
+		 *
 		 * @return
 		 */
 		T extProp(final Enum<?> propertyName);
-		
+
 		T extProp(final IConvertableToPath propertyName);
 
 		/**
 		 * Value.
-		 * 
+		 *
 		 * @return
 		 */
 		T val(final Object value);
 
 		/**
 		 * Ignore value -- ignore condition with this operator if null is passed as an argument.
-		 * 
+		 *
 		 * @return
 		 */
 		T iVal(final Object value);
@@ -195,14 +195,14 @@ public interface EntityQueryProgressiveInterfaces {
 
 		/**
 		 * Ignore parameter -- ignore condition with this operator if null is passed as an argument.
-		 * 
+		 *
 		 * @return
 		 */
 		T iParam(final String paramName);
 
 		/**
 		 * Ignore parameter -- ignore condition with this operator if null is passed as an argument.
-		 * 
+		 *
 		 * @return
 		 */
 		T iParam(final Enum<?> paramName);
@@ -211,7 +211,7 @@ public interface EntityQueryProgressiveInterfaces {
 
 		/**
 		 * Expression.
-		 * 
+		 *
 		 * @return
 		 */
 		T expr(final ExpressionModel Expr);
@@ -236,14 +236,14 @@ public interface EntityQueryProgressiveInterfaces {
 		IFunctionLastArgument<T, ET> monthOf();
 
 		IFunctionLastArgument<T, ET> yearOf();
-		
+
 		IFunctionLastArgument<T, ET> dayOfWeekOf();
 
 		IIfNullFunctionArgument<T, ET> ifNull();
 
 		/**
 		 * Start of an expression for adding a time interval, which is represented by an integer value, to some target value, property or a model result of type {@link Date}.
-		 * 
+		 *
 		 * @return
 		 */
 		IDateAddIntervalFunctionArgument<T, ET> addTimeIntervalOf();
@@ -262,7 +262,7 @@ public interface EntityQueryProgressiveInterfaces {
 	interface IMultipleOperand<T, ET extends AbstractEntity<?>> //
 			extends ISingleOperand<T, ET> {
 		T anyOfProps(final String... propertyNames);
-		
+
 		T anyOfProps(final IConvertableToPath... propertyNames);
 
 		T anyOfValues(final Object... values);
@@ -271,7 +271,7 @@ public interface EntityQueryProgressiveInterfaces {
 
 		/**
 		 * Shortcut for the group of OR-ed iParam(..) calls.
-		 * 
+		 *
 		 * @return
 		 */
 		T anyOfIParams(final String... paramNames);
@@ -281,7 +281,7 @@ public interface EntityQueryProgressiveInterfaces {
 		T anyOfExpressions(final ExpressionModel... Expressions);
 
 		T allOfProps(final String... propertyNames);
-		
+
 		T allOfProps(final IConvertableToPath... propertyNames);
 
 		T allOfValues(final Object... values);
@@ -290,7 +290,7 @@ public interface EntityQueryProgressiveInterfaces {
 
 		/**
 		 * Shortcut for the group of AND-ed iParam(..) calls.
-		 * 
+		 *
 		 * @return
 		 */
 		T allOfIParams(final String... paramNames);
@@ -309,29 +309,29 @@ public interface EntityQueryProgressiveInterfaces {
 	}
 
 	interface ISingleConditionOperator<T extends ILogicalOperator<?>> {
-		T exists(final QueryModel subQuery);
+		T exists(final QueryModel<?> subQuery);
 
-		T notExists(final QueryModel subQuery);
+		T notExists(final QueryModel<?> subQuery);
 
-		T existsAnyOf(final QueryModel... subQueries);
+		T existsAnyOf(final QueryModel<?>... subQueries);
 
-		T notExistsAnyOf(final QueryModel... subQueries);
+		T notExistsAnyOf(final QueryModel<?>... subQueries);
 
-		T existsAllOf(final QueryModel... subQueries);
+		T existsAllOf(final QueryModel<?>... subQueries);
 
-		T notExistsAllOf(final QueryModel... subQueries);
-		
+		T notExistsAllOf(final QueryModel<?>... subQueries);
+
         /**
          * Applies value of crit-only property {@code critPropName} (including mnemonics) to persistent property {@code propName} and generates appropriate condition model (as per
          * {@link ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder#buildAtomicCondition(ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty, String)}
          * logic).
-         * 
+         *
          * @param propName
          * @param critPropName
          * @return
          */
         T critCondition(final String propName, final String critPropName);
-        
+
         /**
          * The same as {@link #critCondition(String, String)}, but with {@link IConvertableToPath} parameters.
          * @param prop
@@ -339,7 +339,7 @@ public interface EntityQueryProgressiveInterfaces {
          * @return
          */
         T critCondition(final IConvertableToPath prop, final IConvertableToPath critProp);
-		
+
         /**
          * Applies value of crit-only property {@code critPropName} (including mnemonics) to persistent collectional property {@code propName} represented by collection in
          * {@code collectionQueryStart} and enhances this query with generated appropriate condition model (as per {@link ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder#buildAtomicCondition(ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty, String)}
@@ -347,7 +347,7 @@ public interface EntityQueryProgressiveInterfaces {
          * <p>
          * Rules for applying mnemonics and search values onto collectional properties have been specified as follows, where {@code v} -- value, {@code n} -- negation,
          * {@code m} -- indicates presence of mnemonics. For more information refer <a href="https://github.com/fieldenms/tg/issues/947">issue 947</a>.
-         * 
+         *
          * <pre>
          * v n m
          * + + +  not (exists collectional element that matches any of the values || empty) == there are no collectional elements that match any of values && not empty
@@ -359,7 +359,7 @@ public interface EntityQueryProgressiveInterfaces {
          * - - +  empty
          * - - -  no condition
          * </pre>
-         * 
+         *
          * @param collectionQueryStart
          * @param propName
          * @param critPropName
@@ -374,9 +374,9 @@ public interface EntityQueryProgressiveInterfaces {
 
 	interface IQuantifiedOperand<T, ET extends AbstractEntity<?>> //
 			extends IMultipleOperand<T, ET> {
-		T all(final SingleResultQueryModel subQuery);
+		T all(final SingleResultQueryModel<?> subQuery);
 
-		T any(final SingleResultQueryModel subQuery);
+		T any(final SingleResultQueryModel<?> subQuery);
 	}
 
 	interface IComparisonQuantifiedOperand<T, ET extends AbstractEntity<?>> //
@@ -391,14 +391,14 @@ public interface EntityQueryProgressiveInterfaces {
 		<E extends Object> T values(final E... values);
 
 		T props(final String... properties);
-		
+
 		T props(final IConvertableToPath... properties);
 
 		T params(final String... paramNames);
 
 		T iParams(final String... paramNames);
 
-		T model(final SingleResultQueryModel model);
+		T model(final SingleResultQueryModel<?> model);
 		// beginSet();
 	}
 
@@ -426,7 +426,7 @@ public interface EntityQueryProgressiveInterfaces {
 	interface IDateDiffFunction<T, ET extends AbstractEntity<?>> {
 		/**
 		 * Indicates difference between more recent date and earlier date.
-		 * 
+		 *
 		 * @return
 		 */
 		IDateDiffFunctionArgument<T, ET> between();
@@ -445,12 +445,12 @@ public interface EntityQueryProgressiveInterfaces {
 
 		IDateDiffFunction<T, ET> years();
 	}
-	
+
 	interface IDateAddIntervalFunctionTo<T, ET extends AbstractEntity<?>> {
 	    /**
 	     * A junction to be used for specifying where to the time interval should be added.
 	     * Whatever follows ({@code val}, {@code prop}, {@code model} or an expression) must be computable to a value of type {@link Date}.
-	     * 
+	     *
 	     * @return
 	     */
 		IFunctionLastArgument<T, ET> to();
@@ -487,7 +487,7 @@ public interface EntityQueryProgressiveInterfaces {
 	}
 
 	/**
-	 * A contract to specify the units of measure for time interval operations. 
+	 * A contract to specify the units of measure for time interval operations.
 	 *
 	 * @param <T>
 	 * @param <ET>
@@ -505,7 +505,7 @@ public interface EntityQueryProgressiveInterfaces {
 
 		IDateAddIntervalFunctionTo<T, ET> years();
 	}
-	
+
 	interface IIfNullFunctionThen<T, ET extends AbstractEntity<?>> {
 		IFunctionLastArgument<T, ET> then();
 	}
@@ -598,11 +598,11 @@ public interface EntityQueryProgressiveInterfaces {
 			extends IJoin<ET> {
 		IJoin<ET> as(final String alias);
 	}
-	
+
     interface IFromNone<ET extends AbstractEntity<?>> //
             extends ICompleted<ET> {
     }
-	
+
 
 	public interface IPlainJoin<ET extends AbstractEntity<?>> //
 			extends ICompleted<ET> {
@@ -1005,7 +1005,7 @@ public interface EntityQueryProgressiveInterfaces {
         IOrderingItemCloseable desc();
     }
 
-	
+
 	interface IOrderingItemCloseable //
 			extends IOrderingItem {
 		OrderingModel model();
