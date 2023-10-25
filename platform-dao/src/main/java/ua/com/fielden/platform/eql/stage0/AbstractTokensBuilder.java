@@ -355,7 +355,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         case EXPR_TOKENS:
             return (ISingleOperand1<? extends ISingleOperand2<?>>) new StandAloneExpressionBuilder(queryBuilder, (ExpressionModel) value).getResult().getValue();
         case EQUERY_TOKENS:
-            return queryBuilder.generateAsSubquery((QueryModel<?>) value);
+            return queryBuilder.generateAsSubQuery((QueryModel<?>) value);
         default:
             throw new RuntimeException("Unrecognised token category for SingleOperand: " + cat);
         }
@@ -431,7 +431,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
             singleCat = EXPR_TOKENS;
             break;
         case EQUERY_TOKENS:
-            return new QueryBasedSet1(queryBuilder.generateAsSubquery((QueryModel) value));
+            return new QueryBasedSet1(queryBuilder.generateAsSubQuery((QueryModel) value));
         default:
             throw new RuntimeException("Unrecognised token category for SingleOperand: " + cat);
         }

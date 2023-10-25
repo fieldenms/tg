@@ -217,14 +217,14 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 
     private ICondition1<? extends ICondition2<?>> getPlainQuantifiedPredicate() {
         final ISingleOperand1<? extends ISingleOperand2<?>> firstOperand = getModelForSingleOperand(firstCat(), firstValue());
-        final SubQuery1 secondOperand = getQueryBuilder().generateAsSubquery((QueryModel<?>) thirdValue());
+        final SubQuery1 secondOperand = getQueryBuilder().generateAsSubQuery((QueryModel<?>) thirdValue());
         final Quantifier quantifier = ANY_OPERATOR == thirdCat() ? ANY : ALL;
         return new QuantifiedPredicate1(firstOperand, (ComparisonOperator) secondValue(), quantifier, secondOperand);
     }
 
     private Conditions1 getMultipleQuantifiedPredicate() {
         final List<ISingleOperand1<? extends ISingleOperand2<?>>> operands = getModelForMultipleOperands(firstCat(), firstValue());
-        final SubQuery1 secondOperand = getQueryBuilder().generateAsSubquery((QueryModel<?>) thirdValue());
+        final SubQuery1 secondOperand = getQueryBuilder().generateAsSubQuery((QueryModel<?>) thirdValue());
         final Quantifier quantifier = ANY_OPERATOR == thirdCat() ? ANY : ALL;
         final List<ICondition1<? extends ICondition2<?>>> conditions = new ArrayList<>();
         for (final ISingleOperand1<? extends ISingleOperand2<?>> operand : operands) {
@@ -365,7 +365,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     }
 
     private ExistencePredicate1 getPlainExistencePredicate() {
-        return new ExistencePredicate1((Boolean) firstValue(), getQueryBuilder().generateAsTypelessSubquery((QueryModel<?>) secondValue()));
+        return new ExistencePredicate1((Boolean) firstValue(), getQueryBuilder().generateAsSubQueryForExists((QueryModel<?>) secondValue()));
     }
 
     private SetPredicate1 getPlainSetPredicate() {
@@ -389,7 +389,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     private Conditions1 getMultipleExistencePredicate() {
         final List<ICondition1<? extends ICondition2<?>>> conditions = new ArrayList<>();
         for (final QueryModel<?> qm : (List<QueryModel<?>>) secondValue()) {
-            conditions.add(new ExistencePredicate1((Boolean) firstValue(), getQueryBuilder().generateAsTypelessSubquery(qm)));
+            conditions.add(new ExistencePredicate1((Boolean) firstValue(), getQueryBuilder().generateAsSubQueryForExists(qm)));
         }
         final LogicalOperator logicalOperator = ANY_OF_EQUERY_TOKENS == secondCat() ? OR : AND;
         return getGroup(conditions, logicalOperator);

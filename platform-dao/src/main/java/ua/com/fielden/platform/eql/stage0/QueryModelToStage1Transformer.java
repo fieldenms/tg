@@ -72,11 +72,11 @@ public class QueryModelToStage1Transformer {
         return new SourceQuery1(parseTokensIntoComponents(qryModel, null), qryModel.getResultType(), isCorrelated);
     }
 
-    public SubQuery1 generateAsSubquery(final QueryModel<?> qryModel) {
+    public SubQuery1 generateAsSubQuery(final QueryModel<?> qryModel) {
         return new SubQuery1(parseTokensIntoComponents(qryModel, null), qryModel.getResultType());
     }
 
-    public SubQueryForExists1 generateAsTypelessSubquery(final QueryModel<?> qryModel) {
+    public SubQueryForExists1 generateAsSubQueryForExists(final QueryModel<?> qryModel) {
         return new SubQueryForExists1(parseTokensIntoComponents(qryModel, null));
     }
 
