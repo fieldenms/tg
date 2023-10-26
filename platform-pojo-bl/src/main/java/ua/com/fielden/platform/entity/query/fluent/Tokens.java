@@ -114,6 +114,7 @@ import static ua.com.fielden.platform.utils.Pair.pair;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -130,6 +131,7 @@ import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
+import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -222,8 +224,8 @@ final class Tokens {
         return add(CRIT_COND_OPERATOR, pair(propName, critPropName));
     }
 
-    public Tokens critCondition(final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName) {
-        return add(CRIT_COND_OPERATOR, pair(t2(collectionQueryStart, propName), critPropName));
+    public Tokens critCondition(final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName, final Optional<Object> defaultValue) {
+        return add(CRIT_COND_OPERATOR, pair(t2(collectionQueryStart, propName), t2(critPropName, defaultValue)));
     }
 
     public Tokens isNull(final boolean negated) {
