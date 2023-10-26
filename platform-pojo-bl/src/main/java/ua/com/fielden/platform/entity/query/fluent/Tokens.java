@@ -115,6 +115,7 @@ import static ua.com.fielden.platform.utils.Pair.pair;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -136,9 +137,9 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Contains internal structure (incrementally collected building blocks) of the entity query request.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 final class Tokens {
     private final List<Pair<TokenCategory, Object>> values = new ArrayList<>();
@@ -166,7 +167,7 @@ final class Tokens {
         result.values.addAll(values);
         return result;
     }
-    
+
     private Tokens add(final TokenCategory cat, final Object value) {
         final Tokens result = cloneTokens();
         result.values.add(new Pair<TokenCategory, Object>(cat, value));
@@ -187,7 +188,7 @@ final class Tokens {
     private static List<String> convertToString(final List<IConvertableToPath> paths) {
         return paths.stream().map(e -> e.toPath()).collect(toList());
     }
-    
+
     public Tokens and() {
         return add(LOGICAL_OPERATOR, AND);
     }
@@ -228,8 +229,8 @@ final class Tokens {
         return add(CRIT_COND_OPERATOR, pair(propName, critPropName));
     }
 
-    public Tokens critCondition(final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName) {
-        return add(CRIT_COND_OPERATOR, pair(t2(collectionQueryStart, propName), critPropName));
+    public Tokens critCondition(final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName, final Optional<Object> defaultValue) {
+        return add(CRIT_COND_OPERATOR, pair(t2(collectionQueryStart, propName), t2(critPropName, defaultValue)));
     }
 
     public Tokens isNull(final boolean negated) {
@@ -583,7 +584,7 @@ final class Tokens {
     public Tokens order(OrderingModel order) {
         return add(ORDER_TOKENS, order);
     }
-    
+
     public Tokens asc() {
         return add(SORT_ORDER, ASC);
     }
@@ -615,7 +616,7 @@ final class Tokens {
     public Tokens yield() {
         return add(QUERY_TOKEN, YIELD);
     }
-    
+
     public Tokens yieldAll() {
         final Tokens result = cloneTokens();
         result.yieldAll = true;
@@ -638,7 +639,7 @@ final class Tokens {
         this.mainSourceType = EntityAggregates.class;
         return add(QUERY_TOKEN, FROM, VALUES_AS_QRY_SOURCE, EntityAggregates.class);
     }
-    
+
     public <E extends AbstractEntity<?>> Tokens from(final Class<E> entityType) {
         if (entityType == null) {
             throw new IllegalArgumentException("Missing entity type in query: " + this.values);
@@ -732,13 +733,13 @@ final class Tokens {
 		if (this == obj) {
 			return true;
 		}
-		
+
 		if (!(obj instanceof Tokens)) {
 		    return false;
 		}
-		
+
 		final Tokens that = (Tokens) obj;
-		
+
 		return equalsEx(this.mainSourceType, that.mainSourceType) &&
 		       equalsEx(this.yieldAll, that.yieldAll) &&
 		       equalsEx(this.values, that.values);
