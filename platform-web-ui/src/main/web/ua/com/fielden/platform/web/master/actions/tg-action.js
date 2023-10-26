@@ -1,6 +1,8 @@
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
+import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
+
 import '/resources/polymer/@polymer/paper-fab/paper-fab.js';
 import '/resources/polymer/@polymer/paper-button/paper-button.js';
 import '/resources/polymer/@polymer/paper-spinner/paper-spinner.js';
@@ -29,7 +31,11 @@ const template = html`
     <style>
         :host {
            position: relative;
-           --dropdown-switch-text-transform: uppercase; 
+           --dropdown-switch-text-transform: uppercase;
+           @apply --layout-horizontal;
+        }
+        .action-item {
+            @apply --layout-flex;
         }
         #spinner {
             position: absolute;
@@ -45,16 +51,20 @@ const template = html`
             --paper-spinner-layer-3-color: var(--paper-blue-500);
             --paper-spinner-layer-4-color: var(--paper-blue-500);
         }
-
+        tg-dropdown-switch {
+            --tg-switch-button-style: {
+                padding: 0.4em 0.57em;
+           };
+        }
         [hidden] {
             display: none !important;
         }
     </style>
-    <paper-button id="actionButton" hidden$="[[!_isButton(actionType)]]" raised roll="button" on-tap="_asyncRun" style="width:100%" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]">
+    <paper-button id="actionButton" class="action-item" hidden$="[[!_isButton(actionType)]]" raised roll="button" on-tap="_asyncRun" style="width:100%" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]">
         <span>[[shortDesc]]</span>
     </paper-button>
-    <paper-fab id="fabButton" mini icon="[[icon]]" on-tap="_asyncRun" hidden$="[[!_isIcon(actionType)]]" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]"></paper-fab>
-    <tg-dropdown-switch raised fragmented vertical-align="bottom" disabled$="[[_disabled]]" hidden$="[[!_isOptionButton(actionType)]]" view-index="[[_optionIdx]]" views="[[_options]]" change-current-view-on-select on-tg-centre-view-change="_runOptionAction"></tg-dropdown-switch>
+    <paper-fab id="fabButton" class="action-item" mini icon="[[icon]]" on-tap="_asyncRun" hidden$="[[!_isIcon(actionType)]]" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]"></paper-fab>
+    <tg-dropdown-switch class="action-item" raised fragmented vertical-align="bottom" disabled$="[[_disabled]]" hidden$="[[!_isOptionButton(actionType)]]" view-index="[[_optionIdx]]" views="[[_options]]" make-drop-down-width-the-same-as-button change-current-view-on-select on-tg-centre-view-change="_runOptionAction"></tg-dropdown-switch>
     <paper-spinner id="spinner" active="[[_working]]" class="blue" style="display: none;" alt="in progress"></paper-spinner>
 `;
 
@@ -362,7 +372,7 @@ Polymer({
 
     _updateActionIndex: function (entityType, role) {
         if (allDefined(arguments)) {
-            const idx = localStorage.getItem(this._generateKey());
+            const idx = this._getActionIndex();
             if (idx) {
                 this._optionIdx = +idx;
             }

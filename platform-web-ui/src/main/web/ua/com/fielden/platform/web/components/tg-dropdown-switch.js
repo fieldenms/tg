@@ -30,12 +30,20 @@ const template = html`
             --paper-button-flat-keyboard-focus: {
                 font-weight: normal;
             }
+            --tg-switch-button-style: {
+                padding: 8px 12px;
+            }
         }
-        .view-item {
-            padding: 8px 12px 8px 12px;
+        .main, .view-item {
             cursor: pointer;
+            padding: 8px 12px;
             @apply --layout-horizontal;
+            @apply --layout-flex;
             @apply --layout-center;
+            
+        }
+        .main {
+            @apply --tg-switch-button-style;
         }
         .view-item:focus, .main[dropdown-opened] {
             background-color: rgba(33, 33, 33, .15);
@@ -43,6 +51,7 @@ const template = html`
         .item-title {
             margin: 0 8px 0 8px;
             text-transform: var(--dropdown-switch-text-transform, none);
+            @apply --layout-flex;
         }
         .dropdown-content {
             padding: 0;
@@ -70,7 +79,7 @@ const template = html`
             transform: scale(1, -1);
         }
     </style>
-    <paper-button id="trigger" raised="[[raised]]" class="view-item main" dropdown-opened$="[[dropDownOpened]]" on-tap="_runActionOrShowView" tooltip-text$=[[mainButtonTooltipText]]>
+    <paper-button id="trigger" raised="[[raised]]" class="main" dropdown-opened$="[[dropDownOpened]]" on-tap="_runActionOrShowView" tooltip-text$=[[mainButtonTooltipText]]>
         <iron-icon hidden$="[[!_currentView.icon]]" icon="[[_currentView.icon]]" style$="[[_currentView.iconStyle]]"></iron-icon>
         <span class="truncate item-title" style$="[[_calcButtonStyle(buttonWidth)]]">[[_currentView.title]]</span>
         <iron-icon icon="icons:arrow-drop-down" on-tap="_showViews" dropdown-opened$="[[dropDownOpened]]"></iron-icon>
@@ -121,6 +130,10 @@ export class TgDropdownSwitch extends mixinBehaviors([TgElementSelectorBehavior]
                 value: false,
                 reflectToAttribute: true
             },
+            makeDropDownWidthTheSameAsButton: {
+                type: Boolean,
+                value: false
+            },
             _currentView: Object
         };
     }
@@ -166,10 +179,12 @@ export class TgDropdownSwitch extends mixinBehaviors([TgElementSelectorBehavior]
         if (this.fragmented) {
             tearDownEvent(e);
         }
-        if (!this.changeCurrentViewOnSelect) {
-            this.$.availableViews.selected = this.viewIndex;
-        }
+        this.$.availableViews.selected = this.viewIndex;
         this.$.dropdown.verticalOffset = this.$.trigger.offsetHeight;
+        if (this.makeDropDownWidthTheSameAsButton) {
+            this.$.dropdown.style.width = this.$.trigger.offsetWidth + "px";
+        }
+
         this.$.dropdown.open();
     }
 
@@ -184,10 +199,12 @@ export class TgDropdownSwitch extends mixinBehaviors([TgElementSelectorBehavior]
     _changeView(e) {
         const selectedViewIndex = +e.detail.item.getAttribute("view-index");
         this.$.dropdown.close();
-        if (this.changeCurrentViewOnSelect) {
-            this.viewIndex = selectedViewIndex;
+        if (this.viewIndex !== selectedViewIndex) {
+            if (this.changeCurrentViewOnSelect) {
+                this.viewIndex = selectedViewIndex;
+            }
+            this.dispatchEvent(new CustomEvent('tg-centre-view-change',  { bubbles: true, composed: true, detail: selectedViewIndex }));
         }
-        this.dispatchEvent(new CustomEvent('tg-centre-view-change',  { bubbles: true, composed: true, detail: selectedViewIndex }));
     }
 }
 

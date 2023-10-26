@@ -58,10 +58,9 @@ public class DefaultEntityAction<T extends AbstractEntity<?>> extends AbstractAc
         if ("save".equals(this.name().toLowerCase())) {
             attrs.put("id", "_saveAction");
         }
-        if (("save".equals(this.name().toLowerCase()) || "refresh".equals(this.name().toLowerCase()))
-                && this.entityType.isAnnotationPresent(MapEntityTo.class)) {
+        if (this.isActionWitOptions()) {
             attrs.put("action-type", "optionbutton");
-            if (entityType.isAnnotationPresent(RestrictCreationByUsers.class) || AbstractEntity.class.isAssignableFrom(AnnotationReflector.getKeyType(this.entityType))) {
+            if (isNewRestricted()) {
                 attrs.put("restrict-new-option", true);
             }
         }
@@ -80,6 +79,14 @@ public class DefaultEntityAction<T extends AbstractEntity<?>> extends AbstractAc
         return attrs;
     }
 
+    private boolean isNewRestricted() {
+        return this.entityType.isAnnotationPresent(RestrictCreationByUsers.class) || AbstractEntity.class.isAssignableFrom(AnnotationReflector.getKeyType(this.entityType));
+    }
+
+    private boolean isActionWitOptions () {
+        return ("save".equals(this.name().toLowerCase()) || "refresh".equals(this.name().toLowerCase())) && this.entityType.isAnnotationPresent(MapEntityTo.class);
+    }
+
     private String postActionFunction() {
         return postActionFunction;
     }
@@ -90,7 +97,14 @@ public class DefaultEntityAction<T extends AbstractEntity<?>> extends AbstractAc
 
     @Override
     public DomElement render() {
-        return new DomElement(this.actionComponentName()).attrs(createAttributes()).attrs(createCustomAttributes());
+        return new DomElement(this.actionComponentName()).attrs(createAttributes()).attrs(createCustomAttributes()).style(createStyle());
+    }
+
+    private String[] createStyle() {
+        if (this.isActionWitOptions()) {
+            return new String[] {"min-width: 160px;"};
+        }
+        return new String[] {};
     }
 
     @Override
