@@ -77,7 +77,7 @@ abstract class ConditionalOperand<T1 extends IComparisonOperator<T2, ET>, T2 ext
     @Override
     public T2 critCondition(final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName, final Object defaultValue) {
         if (!(defaultValue instanceof List) && !(defaultValue instanceof String) && !(defaultValue instanceof ua.com.fielden.platform.types.tuples.T2)) {
-            throw new EqlException(format("Argument [defaultValue] for property [%s] in a [critCondition] call should either be a list of strings or string or a tuple (T2).", propName));
+            throw new EqlException(format("Argument [defaultValue] for property [%s] in a [critCondition] call should either be a list of strings, a string, or a tuple (T2).", propName));
         }
         return nextForConditionalOperand(getTokens().critCondition(collectionQueryStart, propName, critPropName, Optional.of(defaultValue)));
     }
