@@ -192,15 +192,13 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         if (qp != null && qp.isEmptyWithoutMnemonics()) {
             final Optional<Object> maybeDefaultValue = props.getValue() instanceof T2 ? ((T2<String, Optional<Object>>) props.getValue())._2 : empty();
             maybeDefaultValue.ifPresent(dv -> {
-                if (dv instanceof List) {
+                if (dv instanceof List || dv instanceof String) {
                     qp.setValue(dv);
-                }
-                else if (dv instanceof T2) {
+                } else if (dv instanceof T2) {
                     final T2<?,?> t2 = (T2<?,?>) dv;
                     qp.setValue(t2._1);
                     qp.setValue2(t2._2);
-                }
-                else {
+                } else {
                     throw new EqlException(format("Default value for property [%s] in a [critCondition] call has unsupported type [%s].", critOnlyPropName, dv.getClass()));
                 }
             });
@@ -226,7 +224,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         qp.setNot(originalNot);
         return result;
     }
-    
+
     /**
      * The following rules are used to build {@code ConditionModel}.
      * <pre>
@@ -249,7 +247,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         final ConditionModel criteriaCondition = prepareCollectionalCritCondition(qp, propName);
         final EntityResultQueryModel<?> anyItems = collectionQueryStart.model();
         final EntityResultQueryModel<?> matchingItems = collectionQueryStart.and().condition(criteriaCondition).model();
-        
+
         if (!hasValue) {
             return !orNull ? emptyCondition()/*---,-+-*/ : (not ? cond().exists(anyItems).model()/*-++*/ : cond().notExists(anyItems).model())/*--+*/;
         } else if (not){
