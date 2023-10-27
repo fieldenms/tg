@@ -227,7 +227,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
         final Quantifier quantifier = ANY_OPERATOR == thirdCat() ? ANY : ALL;
         final List<ICondition1<? extends ICondition2<?>>> conditions = new ArrayList<>();
         for (final ISingleOperand1<? extends ISingleOperand2<?>> operand : operands) {
-            // also this secondOperand can be created before loop, in order to be consistent with source ID generation logic, it has to be created within the loop.
+            // although this secondOperand can be created before loop, in order to be consistent with source ID generation logic, it has to be created within the loop.
             final SubQuery1 secondOperand = getQueryBuilder().generateAsSubQuery((QueryModel<?>) thirdValue());
             conditions.add(new QuantifiedPredicate1(operand, (ComparisonOperator) secondValue(), quantifier, secondOperand));
         }
@@ -380,7 +380,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 
         final List<ICondition1<? extends ICondition2<?>>> conditions = new ArrayList<>();
         for (final ISingleOperand1<? extends ISingleOperand2<?>> operand : operands) {
-            // also this setOperand can be created before loop, in order to be consistent with source ID generation logic, it has to be created within the loop.
+            // although this setOperand can be created before loop, in order to be consistent with source ID generation logic, it has to be created within the loop.
             final ISetOperand1<? extends ISetOperand2<?>> setOperand = getModelForSetOperand(thirdCat(), thirdValue());
             conditions.add(new SetPredicate1(operand, (Boolean) secondValue(), setOperand));
         }
