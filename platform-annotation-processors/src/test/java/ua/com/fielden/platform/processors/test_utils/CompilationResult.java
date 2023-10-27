@@ -1,14 +1,13 @@
 package ua.com.fielden.platform.processors.test_utils;
 
-import static java.util.stream.Collectors.joining;
-
+import javax.tools.Diagnostic;
+import javax.tools.Diagnostic.Kind;
+import javax.tools.JavaFileObject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import javax.tools.Diagnostic;
-import javax.tools.Diagnostic.Kind;
-import javax.tools.JavaFileObject;
+import static java.util.stream.Collectors.joining;
 
 /**
  * Represents results of a compilation: status (success/failure) and collected diagnostics.

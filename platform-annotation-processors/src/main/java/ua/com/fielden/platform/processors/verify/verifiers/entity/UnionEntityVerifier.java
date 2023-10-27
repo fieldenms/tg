@@ -1,19 +1,5 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static javax.tools.Diagnostic.Kind.ERROR;
-import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asTypeElementOfTypeMirror;
-import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.getSimpleName;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.type.TypeMirror;
-
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
@@ -28,6 +14,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asTypeElementOfTypeMirror;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.getSimpleName;

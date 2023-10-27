@@ -1,12 +1,11 @@
 package ua.com.fielden.platform.processors.verify.test_utils;
 
-import java.util.List;
+import ua.com.fielden.platform.processors.verify.ViolatingElement;
+import ua.com.fielden.platform.processors.verify.verifiers.AbstractVerifier;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
-
-import ua.com.fielden.platform.processors.verify.ViolatingElement;
-import ua.com.fielden.platform.processors.verify.verifiers.AbstractVerifier;
+import java.util.List;
 
 /**
  * A simple verifier implementation to simplify the base abstract type instantiation.

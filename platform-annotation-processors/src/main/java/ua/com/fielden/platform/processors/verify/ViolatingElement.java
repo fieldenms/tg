@@ -1,23 +1,5 @@
 package ua.com.fielden.platform.processors.verify;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.unmodifiableList;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-
-import javax.annotation.processing.Messager;
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
-import javax.tools.Diagnostic;
-import javax.tools.Diagnostic.Kind;
-
 import ua.com.fielden.platform.processors.verify.annotation.RelaxVerification;
 import ua.com.fielden.platform.processors.verify.annotation.RelaxVerificationFactory;
 import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
@@ -27,9 +9,14 @@ import javax.annotation.processing.Messager;
 import javax.lang.model.element.*;
 import javax.tools.Diagnostic;
 import javax.tools.Diagnostic.Kind;
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
-import static java.util.Optional.ofNullable;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 
 /**
  * Represents an element that did not pass verification by some {@link IVerifier}. An instance of this class might also hold a list of

@@ -1,11 +1,28 @@
 package ua.com.fielden.platform.processors.metamodel;
 
-import static java.lang.String.format;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION;
+import com.squareup.javapoet.AnnotationSpec;
+import com.squareup.javapoet.JavaFile;
+import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeSpec;
+import org.apache.commons.io.FileUtils;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import ua.com.fielden.platform.annotations.metamodel.DomainEntity;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
+import ua.com.fielden.platform.processors.metamodel.elements.MetaModelsElement;
+import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
+import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
+import ua.com.fielden.platform.processors.test_utils.Compilation;
+import ua.com.fielden.platform.processors.test_utils.exceptions.TestCaseConfigException;
 
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
+import javax.tools.*;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.nio.charset.StandardCharsets;
@@ -16,35 +33,9 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.Modifier;
-import javax.lang.model.element.TypeElement;
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.StandardLocation;
-import javax.tools.ToolProvider;
-
-import org.apache.commons.io.FileUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import com.squareup.javapoet.AnnotationSpec;
-import com.squareup.javapoet.JavaFile;
-import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeSpec;
-
-import ua.com.fielden.platform.annotations.metamodel.DomainEntity;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
-import ua.com.fielden.platform.processors.metamodel.elements.MetaModelsElement;
-import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
-import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
-import ua.com.fielden.platform.processors.test_utils.Compilation;
-import ua.com.fielden.platform.processors.test_utils.exceptions.TestCaseConfigException;
+import static java.lang.String.format;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION;
 
 /**
  * Tests that verify correctness of the meta-model generation lifecycle. More specification, how a meta-model behaves across multiple compilation cycles in response to the evolution of a domain model.

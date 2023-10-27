@@ -14,7 +14,6 @@ import java.util.Set;
 
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 /**
  * A test case for {@link MetaModelsElement}.

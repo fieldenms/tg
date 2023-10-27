@@ -1,11 +1,10 @@
 package ua.com.fielden.platform.processors.test_utils;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.TypeElement;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * An abstract annotation processor that processes only the selected rounds. It is designed primarily for testing purposes.

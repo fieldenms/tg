@@ -1,15 +1,5 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import javax.annotation.processing.Messager;
-import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.element.TypeElement;
-
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.verify.AbstractRoundEnvironment;
@@ -18,7 +8,7 @@ import ua.com.fielden.platform.processors.verify.ViolatingElement;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.TypeElement;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
