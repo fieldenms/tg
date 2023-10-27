@@ -20,16 +20,16 @@ public class QueryShortcutsTest extends EqlStage1TestCase {
         final ResultQuery1 explicitQry = resultQry(explicitModel);
         assertTrue(("Query models are different!\nShortcut:\n" + shortcutQry.toString() + "\nExplicit:\n" + explicitQry.toString()), shortcutQry.equals(explicitQry));
     }
-    
+
     public static void assertModelsEquals(final AggregatedResultQueryModel shortcutModel, final AggregatedResultQueryModel explicitModel) {
         final ResultQuery1 shortcutQry = resultQry(shortcutModel);
         final ResultQuery1 explicitQry = resultQry(explicitModel);
         assertTrue(("Query models are different!\nShortcut:\n" + shortcutQry.toString() + "\nExplicit:\n" + explicitQry.toString()), shortcutQry.equals(explicitQry));
     }
-    
+
     //////////////////////////////////////////////////// ANY/ALL shortcuts ///////////////////////////////////////////
     @Test
-    public void test_multiple_vs_single_comparison_test() {
+    public void multiple_vs_single_comparison_predicate_is_expanded_correctly() {
         assertModelsEquals(//
         select(VEHICLE).where().anyOfProps("key", "desc").eq().val("MERC").model(), //
 
@@ -37,7 +37,7 @@ public class QueryShortcutsTest extends EqlStage1TestCase {
     }
 
     @Test
-    public void test_multiple_vs_single_comparison_test_with_only_one_operand() {
+    public void multiple_vs_single_comparison_predicate_with_only_one_operand_is_expanded_correctly() {
         assertModelsEquals(//
         select(VEHICLE).where().anyOfProps("model").eq().val("MERC").model(), //
 
@@ -45,7 +45,7 @@ public class QueryShortcutsTest extends EqlStage1TestCase {
     }
 
     @Test
-    public void test_single_vs_multiple_comparison_test() {
+    public void single_vs_multiple_comparison_predicate_is_expanded_correctly() {
         assertModelsEquals(//
         select(VEHICLE).where().prop("model").eq().anyOfValues("MERC", "AUDI").model(), //
 
@@ -53,7 +53,7 @@ public class QueryShortcutsTest extends EqlStage1TestCase {
     }
 
     @Test
-    public void test_single_vs_multiple_comparison_test_with_only_one_operand() {
+    public void single_vs_multiple_comparison_predicate_with_only_one_operand_is_expanded_correctly() {
         assertModelsEquals(//
         select(VEHICLE).where().prop("model").eq().anyOfValues("MERC").model(), //
 
@@ -61,7 +61,7 @@ public class QueryShortcutsTest extends EqlStage1TestCase {
     }
 
     @Test
-    public void test_all_of_vs_any_of_like_test() {
+    public void all_of_vs_any_of_like_predicate_is_expanded_correctly() {
         assertModelsEquals(//
         select(VEHICLE).where().allOfProps("model.key", "model.make.key").like().anyOfValues("MERC%", "AUDI%", "BMW%").model(), //
 
@@ -72,7 +72,7 @@ public class QueryShortcutsTest extends EqlStage1TestCase {
     }
 
     @Test
-    public void test_set_test_with_values_and_multiple_operand() {
+    public void set_predicate_with_values_and_multiple_operand_is_expanded_correctly() {
         assertModelsEquals(//
         select(VEHICLE).where().anyOfProps("key", "desc").in().values("sta1", "sta2").model(), //
 
@@ -80,7 +80,7 @@ public class QueryShortcutsTest extends EqlStage1TestCase {
     }
 
     @Test
-    public void test_multiple_quantified_test() {
+    public void multiple_quantified_predicate_is_expanded_correctly() {
         final EntityResultQueryModel<TeVehicleModel> vehModels = select(MODEL).model();
         assertModelsEquals(//
         select(VEHICLE).where().anyOfProps("key", "desc").eq().any(vehModels).model(), //
