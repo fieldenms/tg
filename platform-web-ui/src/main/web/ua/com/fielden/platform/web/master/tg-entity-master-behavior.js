@@ -644,14 +644,7 @@ const TgEntityMasterBehaviorImpl = {
         self._newAction = (function(parentDialog, contextCreator) {
             const firstViewWithNewAction = findFirstViewWithNewAction(parentDialog, self);
             if (firstViewWithNewAction) {
-                const originContextCreator = firstViewWithNewAction.tgOpenMasterAction.createContextHolder;
-                const originActionRestorer = firstViewWithNewAction.tgOpenMasterAction.restoreActionState;
-                firstViewWithNewAction.tgOpenMasterAction.createContextHolder = contextCreator;
-                firstViewWithNewAction.tgOpenMasterAction.restoreActionState = (function () {
-                    this.createContextHolder = originContextCreator;
-                    this.restoreActionState = originActionRestorer;
-                }).bind(firstViewWithNewAction);
-                firstViewWithNewAction.tgOpenMasterAction._runIndependedActionForNew(self.entityType);
+                firstViewWithNewAction.tgOpenMasterAction._runDynamicActionForNew(self.entityType);
             }
         }).bind(self);
 
@@ -784,14 +777,14 @@ const TgEntityMasterBehaviorImpl = {
             console.log("_postSaverLoadingFinished");
         }).bind(self);
 
-        self._showDialog = (function (action, isIndependant) {
+        self._showDialog = (function (action) {
             const closeEventChannel = self.uuid;
             const closeEventTopics = ['save.post.success', 'refresh.post.success'];
             this.async(function () {
                 if (this._actionDialog === null) {
                     this._actionDialog = createDialog(self.uuid);
                 }
-                this._actionDialog.showDialog(action, closeEventChannel, closeEventTopics, isIndependant);
+                this._actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
             }.bind(self), 1);
         }).bind(self);
 

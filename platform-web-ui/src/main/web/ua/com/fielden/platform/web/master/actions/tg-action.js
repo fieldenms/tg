@@ -411,6 +411,7 @@ Polymer({
                     index: 2,
                     title: shortDesc + " & NEW",
                     desc: longDesc + " & NEW",
+                    closeAfterExecution: true,
                     subRole: "new"
                 });
             }

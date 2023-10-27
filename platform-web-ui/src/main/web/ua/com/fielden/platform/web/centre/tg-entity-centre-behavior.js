@@ -987,7 +987,7 @@ const TgEntityCentreBehaviorImpl = {
                 });
         }).bind(self);
 
-        self._showDialog = (function (action, isIndependant) {
+        self._showDialog = (function (action) {
             const closeEventChannel = self.uuid;
             const closeEventTopics = ['save.post.success', 'refresh.post.success'];
             if (!self.$.egi.isEditing()) {
@@ -995,7 +995,7 @@ const TgEntityCentreBehaviorImpl = {
                     if (this.actionDialog === null) {
                         this.actionDialog = createDialog(self.uuid + '');
                     }
-                    this.actionDialog.showDialog(action, closeEventChannel, closeEventTopics, isIndependant);
+                    this.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
                 }.bind(self), 1);
             } else {
                 this._showToastWithMessage(MSG_SAVE_OR_CANCEL);

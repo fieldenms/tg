@@ -158,6 +158,9 @@ const TgEntityCentreTemplateBehaviorImpl = {
             centreUuid: this.uuid
         };
         this.tgOpenMasterAction = this.$.tgOpenMasterAction;
+        if (!this.embedded) {
+            this.tgOpenMasterAction.requireMasterEntity = 'false';
+        }
         /////////////////////////////////////////////////////////////////////////////////
 
         //////////////////Initialise tgOpenHelpMasterAction properties///////////////////

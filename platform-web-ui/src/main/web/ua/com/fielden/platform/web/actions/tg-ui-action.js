@@ -480,16 +480,7 @@ Polymer({
             this._run();
         }.bind(this);
 
-        self._runIndependedActionForNew = function (rootEntityType) {
-            this.requireSelectedEntities = 'NONE';
-            this.currentEntity = () => null;
-            this.chosenProperty = null;
-            this.rootEntityType = rootEntityType;
-
-            this._run(null, null, true);
-        }
-
-        self._run = (function (event, detail, isIndependant) {
+        self._run = (function (event, detail) {
             console.log(this.shortDesc + ": execute");
 
             const postMasterInfoRetrieve = function () {
@@ -499,7 +490,7 @@ Polymer({
                     const promise = result instanceof Promise ? result : Promise.resolve(result);
     
                     promise.then(function (value) {
-                        self.showDialog(self, isIndependant);
+                        self.showDialog(self);
                     }, function (error) {
                         self.restoreActionState();
                         if (error instanceof Error) {
@@ -510,7 +501,7 @@ Polymer({
                         }
                     });
                 } else {
-                    this.showDialog(this, isIndependant);
+                    this.showDialog(this);
                 }
             }.bind(this);
 
