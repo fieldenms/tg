@@ -1,8 +1,14 @@
 package ua.com.fielden.platform.processors.test_utils;
 
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import ua.com.fielden.platform.exceptions.AbstractPlatformRuntimeException;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 
+import javax.annotation.processing.*;
+import javax.lang.model.SourceVersion;
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.lang.reflect.InvocationTargetException;
@@ -12,19 +18,8 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
-import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.Completion;
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.annotation.processing.Processor;
-import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.SourceVersion;
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
-
-import ua.com.fielden.platform.exceptions.AbstractPlatformRuntimeException;
-import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * This class represents a listener of annotation processors. It wraps a processor instance and provides the ability to insert

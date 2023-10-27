@@ -1,8 +1,11 @@
 package ua.com.fielden.platform.processors.appdomain.annotation;
 
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.CLASS;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor;
+import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 
+import javax.lang.model.AnnotatedConstruct;
+import javax.lang.model.type.TypeMirror;
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -10,12 +13,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import javax.lang.model.AnnotatedConstruct;
-import javax.lang.model.type.TypeMirror;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor;
-import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.CLASS;
 
 /**
  * Annotation that is used by the {@link ApplicationDomainProcessor} to record registered entity types in a generated {@code ApplicationDomain}.

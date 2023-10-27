@@ -2,11 +2,10 @@ package ua.com.fielden.platform.processors;
 
 import com.google.common.base.Stopwatch;
 import com.squareup.javapoet.AnnotationSpec;
+import ua.com.fielden.platform.processors.exceptions.ProcessorInitializationException;
 import ua.com.fielden.platform.processors.metamodel.elements.utils.TypeElementCache;
 import ua.com.fielden.platform.processors.utils.CodeGenerationUtils;
 
-import java.util.*;
-import java.util.regex.Pattern;
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
@@ -14,8 +13,9 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
+import java.util.*;
+import java.util.regex.Pattern;
 
-import ua.com.fielden.platform.processors.exceptions.ProcessorInitializationException;
 import static java.lang.Boolean.parseBoolean;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static javax.tools.Diagnostic.Kind.NOTE;

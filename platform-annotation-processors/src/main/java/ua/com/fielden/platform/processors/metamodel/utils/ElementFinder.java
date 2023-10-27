@@ -1,18 +1,5 @@
 package ua.com.fielden.platform.processors.metamodel.utils;
 
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
-import static java.util.stream.Stream.iterate;
-import static ua.com.fielden.platform.utils.StreamUtils.stopAfter;
-
-import java.lang.annotation.Annotation;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
-
 import ua.com.fielden.platform.processors.metamodel.elements.AbstractForwardingElement;
 import ua.com.fielden.platform.processors.metamodel.elements.utils.TypeElementCache;
 import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderException;
@@ -28,8 +15,11 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.TypeKindVisitor14;
 import javax.lang.model.util.Types;
 import java.lang.annotation.Annotation;
+import java.util.*;
+import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;

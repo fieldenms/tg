@@ -1,11 +1,5 @@
 package ua.com.fielden.platform.processors.verify;
 
-import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
-import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccess;
-import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertTrueOrFailWith;
-
-import java.util.*;
-import java.util.stream.Collectors;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.TypeSpec;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
@@ -14,9 +8,12 @@ import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.tools.JavaFileObject;
+import java.util.*;
+import java.util.stream.Collectors;
 
-import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
+import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccess;
+import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertTrueOrFailWith;
 
 /**
  * Base class for unit tests targeted at {@link IVerifier} implementations.

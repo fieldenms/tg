@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.processors.verify.annotation;
 
-import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertMessages;
-
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
@@ -20,6 +18,7 @@ import java.util.List;
 import static javax.tools.Diagnostic.Kind.*;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertMessages;
 import static ua.com.fielden.platform.processors.verify.annotation.RelaxationPolicy.INFO;
 import static ua.com.fielden.platform.processors.verify.annotation.RelaxationPolicy.WARN;
 

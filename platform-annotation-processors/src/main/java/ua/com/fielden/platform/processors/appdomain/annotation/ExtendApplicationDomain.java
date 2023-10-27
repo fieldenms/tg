@@ -1,8 +1,9 @@
 package ua.com.fielden.platform.processors.appdomain.annotation;
 
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.SOURCE;
+import ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor;
+import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 
+import javax.lang.model.type.TypeMirror;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.ArrayList;
@@ -11,10 +12,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
-import javax.lang.model.type.TypeMirror;
-
-import ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor;
-import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 /**
  * Should be used to annotate a type (<i>extension point</i>) that provides additional information for the generation of {@code ApplicationDomain}.

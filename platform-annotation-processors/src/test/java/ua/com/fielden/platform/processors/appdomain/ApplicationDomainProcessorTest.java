@@ -1,49 +1,11 @@
 package ua.com.fielden.platform.processors.appdomain;
 
-import static javax.lang.model.element.Modifier.ABSTRACT;
-import static javax.lang.model.element.Modifier.PUBLIC;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor.PACKAGE_OPTION;
-import static ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor.ERR_AT_MOST_ONE_EXTENSION_POINT_IS_ALLOWED;
-import static ua.com.fielden.platform.processors.test_utils.CollectionTestUtils.assertEqualByContents;
-import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
-import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertMessages;
-import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccessWithoutProcessingErrors;
-import static ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileObjects.createJavaSource;
-import static ua.com.fielden.platform.processors.test_utils.TestUtils.assertPresent;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
-
-import javax.annotation.processing.Processor;
-import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.element.TypeElement;
-import javax.tools.Diagnostic.Kind;
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.StandardLocation;
-import javax.tools.ToolProvider;
-
-import org.apache.commons.io.FileUtils;
-import org.junit.Test;
-
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeSpec;
-
+import org.apache.commons.io.FileUtils;
+import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.processors.appdomain.annotation.ExtendApplicationDomain;
@@ -57,6 +19,33 @@ import ua.com.fielden.platform.processors.test_utils.CompilationResult;
 import ua.com.fielden.platform.processors.test_utils.ProcessorListener;
 import ua.com.fielden.platform.processors.test_utils.ProcessorListener.AbstractRoundListener;
 import ua.com.fielden.platform.processors.test_utils.exceptions.TestCaseConfigException;
+
+import javax.annotation.processing.Processor;
+import javax.annotation.processing.RoundEnvironment;
+import javax.lang.model.element.TypeElement;
+import javax.tools.Diagnostic.Kind;
+import javax.tools.*;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
+
+import static javax.lang.model.element.Modifier.ABSTRACT;
+import static javax.lang.model.element.Modifier.PUBLIC;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor.PACKAGE_OPTION;
+import static ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor.ERR_AT_MOST_ONE_EXTENSION_POINT_IS_ALLOWED;
+import static ua.com.fielden.platform.processors.test_utils.CollectionTestUtils.assertEqualByContents;
+import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
+import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertMessages;
+import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccessWithoutProcessingErrors;
+import static ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileObjects.createJavaSource;
+import static ua.com.fielden.platform.processors.test_utils.TestUtils.assertPresent;
 
 /**
  * A test suite related to {@link ApplicationDomainProcessor}.

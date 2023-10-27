@@ -1,12 +1,11 @@
 package ua.com.fielden.platform.processors.test_utils;
 
-import static org.junit.Assert.fail;
-
+import javax.tools.Diagnostic.Kind;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
-import javax.tools.Diagnostic.Kind;
+import static org.junit.Assert.fail;
 
 /**
  * A collection of test utilities to assist in working with {@link Compilation} and {@link CompilationResult}.
