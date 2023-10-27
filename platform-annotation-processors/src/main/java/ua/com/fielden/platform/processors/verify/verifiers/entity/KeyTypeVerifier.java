@@ -1,22 +1,6 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
-import java.util.List;
-import java.util.Optional;
-
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeMirror;
-import javax.tools.Diagnostic.Kind;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractEntityWithInputStream;
-import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
-import ua.com.fielden.platform.entity.AbstractPersistentEntity;
-import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
-import ua.com.fielden.platform.entity.NoKey;
+import ua.com.fielden.platform.entity.*;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
@@ -26,17 +10,32 @@ import ua.com.fielden.platform.processors.verify.ViolatingElement;
 import ua.com.fielden.platform.ref_hierarchy.AbstractTreeEntry;
 import ua.com.fielden.platform.web.action.AbstractFunEntityForDataExport;
 
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.ErrorType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+import javax.tools.Diagnostic.Kind;
+import java.util.List;
+import java.util.Optional;
+
 /**
  * Performs verification of a domain model with respect to the {@link KeyType} annotation.
  * <p>
  * The following conditions will cause verification failure:
  * <ol>
- *  <li>Entity definition is missing {@link KeyType} i.e., neither the entity type nor its super types have this annotation declared. Abstract entities should be able have no {@link KeyType} annotation present.</li>
+ *  <li>Entity definition is missing {@link KeyType}, i.e., neither the entity type nor its super types have this annotation
+ *  declared. Abstract entities should be able to have no {@link KeyType} annotation present.</li>
  *  <li>The type of key as defined by {@link KeyType} does not match the one specified as the type argument to {@link AbstractEntity}.</li>
  *  <li>Child entity declares {@link KeyType} that does not match the type at the super type level.</li>
  *  <li>Entity declares property {@code key} having a type that does not match the one defined by {@link KeyType}.
  *      Additionally, if {@link NoKey} is specified, then it's forbidden to declare property {@code key}.</li>
  * </ol>
+ * Most contexts where an {@linkplain ErrorType unresolved type} is encountered are not subject to verification because
+ * erroneous definitions are inherently incorrect.
  *
  * @author TG Team
  */
@@ -98,7 +97,7 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
     // e.g. Sub extends Super<KeyType>, where Super<K> extends AbstractEntity<K>
     /**
      * The type of key as defined by {@link KeyType} must match the one specified as the type argument to the direct supertype,
-     * if it is a member of the {@link AbstractEntity} type family (i.e. is parameterized with a key type).
+     * if it is a member of the {@link AbstractEntity} type family (i.e., is parameterized with a key type).
      */
     static class KeyTypeValueMatchesAbstractEntityTypeArgument extends AbstractEntityVerifier {
         static final String SUPERTYPE_MUST_BE_PARAMETERIZED_WITH_ENTITY_KEY_TYPE = "Supertype must be parameterized with entity key type.";
@@ -148,17 +147,27 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
 
                 final AnnotationValue keyTypeAnnotValue = entityFinder.getKeyTypeAnnotationValue(keyTypeAnnotMirror);
                 final TypeMirror actualKeyTypeMirror = (TypeMirror) keyTypeAnnotValue.getValue();
+                if (actualKeyTypeMirror.getKind() == TypeKind.ERROR)
+                    return Optional.empty();
 
                 final DeclaredType entitySuperclassType = (DeclaredType) entity.getSuperclass();
+                if (entitySuperclassType.getKind() == TypeKind.ERROR)
+                    return Optional.empty();
 
                 final List<? extends TypeMirror> parentTypeArgs = entitySuperclassType.getTypeArguments();
                 if (parentTypeArgs.isEmpty()) {
                     return Optional.of(new ViolatingElement(entity.element(), Kind.ERROR, SUPERTYPE_MUST_BE_PARAMETERIZED_WITH_ENTITY_KEY_TYPE));
                 }
                 // abstract entities accept a single type argument
-                else if (!typeUtils.isSameType(parentTypeArgs.get(0), actualKeyTypeMirror)) {
-                    return Optional.of(new ViolatingElement(entity.element(), Kind.ERROR, KEY_TYPE_MUST_MATCH_THE_TYPE_ARGUMENT_TO_ABSTRACT_ENTITY,
-                            keyTypeAnnotMirror, keyTypeAnnotValue));
+                else {
+                    TypeMirror typeArg = parentTypeArgs.get(0);
+                    if (typeArg.getKind() == TypeKind.ERROR)
+                        return Optional.empty();
+
+                    if (!typeUtils.isSameType(typeArg, actualKeyTypeMirror)) {
+                        return Optional.of(new ViolatingElement(entity.element(), Kind.ERROR, KEY_TYPE_MUST_MATCH_THE_TYPE_ARGUMENT_TO_ABSTRACT_ENTITY,
+                                keyTypeAnnotMirror, keyTypeAnnotValue));
+                    }
                 }
 
                 return Optional.empty();
@@ -197,7 +206,12 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
                 if (maybeEntityKeyTypeAnnotMirror.isEmpty()) {
                     return Optional.empty();
                 }
+
                 final AnnotationMirror entityKeyTypeAnnotMirror = maybeEntityKeyTypeAnnotMirror.get();
+                final AnnotationValue entityKeyTypeAnnotValue = entityFinder.getKeyTypeAnnotationValue(entityKeyTypeAnnotMirror);
+                final TypeMirror entityKeyTypeMirror = (TypeMirror) entityKeyTypeAnnotValue.getValue();
+                if (entityKeyTypeMirror.getKind() == TypeKind.ERROR)
+                    return Optional.empty();
 
                 final Optional<EntityElement> maybeParent = entityFinder.getParent(entity);
                 // skip non-child entities and those with an abstract parent
@@ -208,13 +222,10 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
                 final EntityElement parent = maybeParent.get();
 
                 final Optional<TypeMirror> parentKeyTypeMirror = entityFinder.determineKeyType(parent);
-                // parent might be missing @KeyType, which should have been detected by KeyTypePresence verifier-part, so we ignore this case
-                if (parentKeyTypeMirror.isEmpty()) {
+                // parent might be missing @KeyType, which should have been detected by KeyTypePresence verifier, so we ignore this case
+                if (parentKeyTypeMirror.map(t -> t.getKind() == TypeKind.ERROR).orElse(true)) {
                     return Optional.empty();
                 }
-
-                final AnnotationValue entityKeyTypeAnnotValue = entityFinder.getKeyTypeAnnotationValue(entityKeyTypeAnnotMirror);
-                final TypeMirror entityKeyTypeMirror = (TypeMirror) entityKeyTypeAnnotValue.getValue();
 
                 if (!typeUtils.isSameType(parentKeyTypeMirror.get(), entityKeyTypeMirror)) {
                     return Optional.of(new ViolatingElement(entity.element(), Kind.ERROR,
@@ -264,13 +275,19 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
                     return Optional.empty();
                 }
                 final TypeMirror keyType = maybeKeyType.get();
+                if (keyType.getKind() == TypeKind.ERROR)
+                    return Optional.empty();
 
+                // keyProp might have an unresolved type but we still let this verifier run because declaration of property
+                // key along with @KeyType(NoKey.class) is incorrect regardless of its type
                 if (elementFinder.isSameType(keyType, NoKey.class)) {
                     return Optional.of(new ViolatingElement(keyProp.element(), Kind.ERROR,
                             ENTITY_WITH_NOKEY_AS_KEY_TYPE_CAN_NOT_DECLARE_PROPERTY_KEY));
                 } else {
                     final TypeMirror keyPropType = keyProp.getType();
-                    if (!typeUtils.isSameType(keyPropType, keyType)) {
+                    if (keyPropType.getKind() == TypeKind.ERROR) {
+                        return Optional.empty();
+                    } else if (!typeUtils.isSameType(keyPropType, keyType)) {
                         return Optional.of(new ViolatingElement(keyProp.element(), Kind.ERROR,
                                 KEY_PROPERTY_TYPE_MUST_BE_CONSISTENT_WITH_KEYTYPE_DEFINITION));
                     }

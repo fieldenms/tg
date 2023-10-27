@@ -1,12 +1,10 @@
 package ua.com.fielden.platform.processors.metamodel.elements;
 
-import javax.lang.model.element.Modifier;
-
-import java.util.Objects;
-
-import javax.lang.model.element.TypeElement;
-
 import com.squareup.javapoet.ClassName;
+
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
+import java.util.Objects;
 
 /**
  * A convenient wrapper around {@link TypeElement} to represent an entity element.

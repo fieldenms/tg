@@ -1,11 +1,10 @@
 package ua.com.fielden.platform.processors.verify.test_utils;
 
-import java.util.ArrayList;
-import java.util.List;
+import ua.com.fielden.platform.processors.verify.ViolatingElement;
 
 import javax.annotation.processing.ProcessingEnvironment;
-
-import ua.com.fielden.platform.processors.verify.ViolatingElement;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A verifier that finds all elements annotated with {@link Message} and for each found element reports the specified message

@@ -1,13 +1,8 @@
 package ua.com.fielden.platform.processors.metamodel.elements;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Objects;
-import java.util.Set;
-import java.util.function.Supplier;
-
 import javax.lang.model.element.TypeElement;
+import java.util.*;
+import java.util.function.Supplier;
 
 /**
  * A convenient wrapper around {@code TypeElement}, which represents an entry point to all domain meta-models (i.e., class {@code MetaModels} 

@@ -1,16 +1,14 @@
 package ua.com.fielden.platform.processors.verify.verifiers;
 
-import java.lang.reflect.Type;
-
-import javax.lang.model.element.Modifier;
-
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
-
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
+
+import javax.lang.model.element.Modifier;
+import java.lang.reflect.Type;
 
 public class VerifierTestUtils {
 

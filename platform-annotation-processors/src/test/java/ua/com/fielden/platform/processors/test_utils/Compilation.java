@@ -1,11 +1,7 @@
 package ua.com.fielden.platform.processors.test_utils;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Consumer;
+import ua.com.fielden.platform.processors.test_utils.exceptions.CompilationException;
+import ua.com.fielden.platform.types.try_wrapper.ThrowableConsumer;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -13,15 +9,11 @@ import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
-import javax.tools.DiagnosticCollector;
-import javax.tools.JavaCompiler;
+import javax.tools.*;
 import javax.tools.JavaCompiler.CompilationTask;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.ToolProvider;
 
-import ua.com.fielden.platform.processors.test_utils.exceptions.CompilationException;
-import ua.com.fielden.platform.types.try_wrapper.ThrowableConsumer;
+import java.util.*;
+import java.util.function.Consumer;
 
 /**
  * An abstraction for compiling java sources that is based on {@link CompilationTask} with the primary purpose of evaluating additional statements in the annotation processing environment.

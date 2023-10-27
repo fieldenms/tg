@@ -1,28 +1,25 @@
 package ua.com.fielden.platform.processors.verify;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Stream;
-
-import javax.annotation.processing.Processor;
-import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.element.TypeElement;
-import javax.tools.JavaFileObject;
-
-import org.junit.Test;
-
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.TypeSpec;
-
+import org.junit.Test;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.test_utils.ExampleAnnotation;
 import ua.com.fielden.platform.processors.test_utils.SelectedRoundsProcessor;
 import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 import ua.com.fielden.platform.processors.verify.test_utils.SimpleRoundEnvironment;
+
+import javax.annotation.processing.Processor;
+import javax.annotation.processing.RoundEnvironment;
+import javax.lang.model.element.TypeElement;
+import javax.tools.JavaFileObject;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * A test case for {@link AbstractRoundEnvironment}.

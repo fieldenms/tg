@@ -1,14 +1,13 @@
 package ua.com.fielden.platform.processors.verify.test_utils;
 
-import java.util.List;
+import ua.com.fielden.platform.processors.verify.AbstractRoundEnvironment;
+import ua.com.fielden.platform.processors.verify.IElementVerifier;
+import ua.com.fielden.platform.processors.verify.ViolatingElement;
 
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
-
-import ua.com.fielden.platform.processors.verify.AbstractRoundEnvironment;
-import ua.com.fielden.platform.processors.verify.IElementVerifier;
-import ua.com.fielden.platform.processors.verify.ViolatingElement;
+import java.util.List;
 
 /**
  * A simple round environment wrapper type to simplify instantiation of the base abstract type.
