@@ -14,7 +14,7 @@ import ua.com.fielden.platform.processors.verify.ViolatingElement;
  * A simple round environment wrapper type to simplify instantiation of the base abstract type.
  * Designed primarily for testing purposes.
  *
- * @author homedirectory
+ * @author TG Team
  */
 public class SimpleRoundEnvironment extends AbstractRoundEnvironment<Element, IElementVerifier<Element>> {
 

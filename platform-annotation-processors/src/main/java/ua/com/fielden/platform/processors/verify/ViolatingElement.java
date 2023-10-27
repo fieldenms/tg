@@ -1,6 +1,25 @@
 package ua.com.fielden.platform.processors.verify;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+
+import javax.annotation.processing.Messager;
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
+import javax.tools.Diagnostic;
+import javax.tools.Diagnostic.Kind;
+
 import ua.com.fielden.platform.processors.verify.annotation.RelaxVerification;
+import ua.com.fielden.platform.processors.verify.annotation.RelaxVerificationFactory;
 import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 
@@ -21,56 +40,57 @@ import static java.util.Optional.ofNullable;
  *
  * @author TG Team
  */
-public class ViolatingElement {
-    private final Element element;
-    private final Kind kind;
-    /** The relaxed kind of this element if it's annotated with {@link RelaxVerification}, otherwise equal to the original kind. */
-    private final Kind relaxedKind;
-    private final String message;
-    private final Optional<AnnotationMirror> annotationMirror;
-    private final Optional<AnnotationValue> annotationValue;
-    private final List<ViolatingElement> subElements = new LinkedList<>();
+public record ViolatingElement (
+        Element element,
+        Kind kind,
+        /** The relaxed kind of this element if it's annotated with {@link RelaxVerification}, otherwise equal to the original kind. */
+        Kind relaxedKind,
+        String message,
+        Optional<AnnotationMirror> annotationMirror,
+        Optional<AnnotationValue> annotationValue,
+        List<ViolatingElement> subElements)
+{
 
-    public ViolatingElement(final Element element, final Kind kind, final String message, final AnnotationMirror annotationMirror, final AnnotationValue annotationValue) {
+    public ViolatingElement (
+            final Element element,
+            final Kind kind,
+            final Kind relaxedKind,
+            final String message,
+            final Optional<AnnotationMirror> annotationMirror,
+            final Optional<AnnotationValue> annotationValue,
+            final List<ViolatingElement> subElements)
+    {
         Objects.requireNonNull(element, "Argument [element] cannot be null.");
         Objects.requireNonNull(kind, "Argument [kind] cannot be null.");
         Objects.requireNonNull(message, "Argument [message] cannot be null.");
-
         this.element = element;
         this.kind = kind;
-        this.relaxedKind = RelaxVerification.Factory.policyFor(element).map(pol -> pol.relaxedKind(kind)).orElse(kind);
+        this.relaxedKind = RelaxVerificationFactory.policyFor(element).map(pol -> pol.relaxedKind(kind)).orElse(kind);
         this.message = message;
-        this.annotationMirror = ofNullable(annotationMirror);
-        this.annotationValue = ofNullable(annotationValue);
-    }
-
-    public ViolatingElement(final Element element, final Kind kind, final String message, final AnnotationMirror annotationMirror) {
-        this(element, kind, message, annotationMirror, null);
+        this.annotationMirror = annotationMirror;
+        this.annotationValue = annotationValue;
+        this.subElements = List.copyOf(subElements);
     }
 
     public ViolatingElement(final Element element, final Kind kind, final String message) {
-        this(element, kind, message, null, null);
+        this(element, kind, null, message, empty(), empty(), emptyList());
     }
 
-    public ViolatingElement addSubElements(final Collection<ViolatingElement> elements) {
-        this.subElements.addAll(elements);
-        return this;
+    public ViolatingElement(final Element element, final Kind kind, final String message, final List<ViolatingElement> subElements) {
+        this(element, kind, null, message, empty(), empty(), subElements);
     }
 
-    public ViolatingElement addSubElements(final ViolatingElement... elements) {
-        return addSubElements(List.of(elements));
+    public ViolatingElement(final Element element, final Kind kind, final String message, final AnnotationMirror annotationMirror) {
+        this(element, kind, null, message, of(annotationMirror), empty(), emptyList());
+    }
+
+    public ViolatingElement(final Element element, final Kind kind, final String message, final AnnotationMirror annotationMirror, final AnnotationValue annotationValue) {
+        this(element, kind, null, message, of(annotationMirror), of(annotationValue), emptyList());
     }
 
     public List<ViolatingElement> subElements() {
-        return Collections.unmodifiableList(this.subElements);
+        return unmodifiableList(this.subElements);
     }
-
-    public Element element() { return element; }
-    public Kind kind() { return kind; }
-    public Kind relaxedKind() { return relaxedKind; }
-    public String message() { return message; }
-    public Optional<AnnotationMirror> annotationMirror() { return annotationMirror; }
-    public Optional<AnnotationValue> annotationValue() { return annotationValue; }
 
     /**
      * Indicates whether this violating element indicates an error (is associated with {@link Diagnostic.Kind#ERROR}).

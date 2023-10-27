@@ -16,6 +16,7 @@
             <groupId>fielden</groupId>
             <artifactId>platform-annotations</artifactId>
             <version>${project.version}</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>fielden</groupId>

@@ -91,7 +91,7 @@ import ua.com.fielden.platform.utils.MiscUtilities;
  *
  */
 public class EntityResourceUtils {
-    private static final String CONFLICT_WARNING = "This property has recently been changed by another user.";
+    private static final String CONFLICT_WARNING = "This property has been recently changed.";
     public static final String CENTRE_CONFIG_CONFLICT_WARNING = "Configuration with this title already exists.";
     public static final String ERR_MORE_THEN_ONE_ENTITY_FOUND = "Please choose a specific value explicitly from a drop-down.";
     private static final String RESOLVE_CONFLICT_INSTRUCTION = "Please either edit the value back to [%s] to resolve the conflict or cancel all of your changes.";
@@ -237,8 +237,8 @@ public class EntityResourceUtils {
         entity.isValid();
 
         disregardCritOnlyRequiredProperties(entity);
-        disregardUntouchedRequiredProperties(entity, touchedProps);
-        disregardTouchedRequiredPropertiesWithEmptyValue(entity, touchedProps);
+        disregardUntouchedRequiredProperties(entity, touchedProps, isCriteriaEntity);
+        disregardTouchedRequiredPropertiesWithEmptyValue(entity, touchedProps, isCriteriaEntity);
 
         return entity;
     }
@@ -533,10 +533,17 @@ public class EntityResourceUtils {
      * @param touchedProps -- list of 'touched' properties, i.e. those for which editing has occurred during validation lifecycle (maybe returning to original value thus making them unmodified)
      * @return
      */
-    public static <M extends AbstractEntity<?>> M disregardUntouchedRequiredProperties(final M entity, final Set<String> touchedProps) {
+    public static <M extends AbstractEntity<?>> M disregardUntouchedRequiredProperties(final M entity, final Set<String> touchedProps, final boolean isCriteriaEntity) {
         // both criteria and simple entities will be affected
         entity.nonProxiedProperties().filter(mp -> mp.isRequired() && !touchedProps.contains(mp.getName())).forEach(mp -> {
             mp.setRequiredValidationResult(successful(entity));
+            // stale validation error for other validator may remain on the property;
+            // this is possible if the property is dependent on other and that other property makes this property required;
+            // before it was made required, the property may have been in error in other validator, and the entity at the time may have been not constructed fully (the property validation state being stale);
+            // need to revalidate without requiredness validation
+            if (!isCriteriaEntity && !mp.isValid()) { // only do this for Entity Master entities and trigger revalidation only for erroneous (after req error clearing) properties
+                mp.revalidate(true);
+            }
         });
         return entity;
     }
@@ -548,11 +555,18 @@ public class EntityResourceUtils {
      * @param touchedProps -- list of 'touched' properties, i.e. those for which editing has occurred during validation lifecycle (maybe returning to original value thus making them unmodified)
      * @return
      */
-    private static <M extends AbstractEntity<?>> M disregardTouchedRequiredPropertiesWithEmptyValue(final M entity, final Set<String> touchedProps) {
+    private static <M extends AbstractEntity<?>> M disregardTouchedRequiredPropertiesWithEmptyValue(final M entity, final Set<String> touchedProps, final boolean isCriteriaEntity) {
         // both criteria and simple non-persisted (new) entities will be affected
-        if (!entity.isPersisted() || EntityQueryCriteria.class.isAssignableFrom(entity.getType())) {
+        if (!entity.isPersisted() || isCriteriaEntity) {
             entity.nonProxiedProperties().filter(mp -> mp.isRequired() && touchedProps.contains(mp.getName()) && mp.getValue() == null).forEach(mp -> {
                 mp.setRequiredValidationResult(successful(entity));
+                // stale validation error for other validator may remain on the property;
+                // this is possible if the property is dependent on other and that other property makes this property required;
+                // before it was made required, the property may have been in error in other validator, and the entity at the time may have been not constructed fully (the property validation state being stale);
+                // need to revalidate without requiredness validation
+                if (!isCriteriaEntity && !mp.isValid()) { // only do this for Entity Master entities and trigger revalidation only for erroneous (after req error clearing) properties
+                    mp.revalidate(true);
+                }
             });
         }
         return entity;

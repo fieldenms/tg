@@ -1,9 +1,10 @@
 package ua.com.fielden.platform.processors.test_utils;
 
+import static java.util.stream.Collectors.joining;
+
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.tools.Diagnostic;
 import javax.tools.Diagnostic.Kind;
@@ -12,7 +13,7 @@ import javax.tools.JavaFileObject;
 /**
  * Represents results of a compilation: status (success/failure) and collected diagnostics.
  *
- * @author homedirectory
+ * @author TG Team
  */
 public final class CompilationResult {
 
@@ -21,7 +22,7 @@ public final class CompilationResult {
 
     CompilationResult(final boolean success, final List<Diagnostic<? extends JavaFileObject>> diagnostics) {
         this.success = success;
-        this.diagnostics = new LinkedList<>(diagnostics);
+        this.diagnostics = new ArrayList<>(diagnostics);
     }
 
     public boolean success() {
@@ -69,7 +70,7 @@ public final class CompilationResult {
 
     /** A convenient method that prints collected diagnostics to {@link System#out}. */
     public void printDiagnostics() {
-        System.out.println(diagnostics.stream().map(Diagnostic::toString).collect(Collectors.joining("\n")));
+        System.out.println(diagnostics.stream().map(Diagnostic::toString).collect(joining("\n")));
     }
 
 }

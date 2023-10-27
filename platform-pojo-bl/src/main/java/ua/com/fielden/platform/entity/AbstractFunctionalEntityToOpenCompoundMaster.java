@@ -45,6 +45,20 @@ public abstract class AbstractFunctionalEntityToOpenCompoundMaster<K extends Abs
     @Title("Is Calculated?")
     private boolean calculated = false;
 
+    @IsProperty
+    @Title(value = "User Name", desc = "User name that opens compound master")
+    private String userName;
+
+    @Observable
+    public AbstractFunctionalEntityToOpenCompoundMaster<K> setUserName(final String userName) {
+        this.userName = userName;
+        return this;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
     @Observable
     public AbstractFunctionalEntityToOpenCompoundMaster<K> setCalculated(final boolean calculated) {
         this.calculated = calculated;

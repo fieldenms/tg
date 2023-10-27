@@ -27,7 +27,7 @@ import ua.com.fielden.platform.processors.verify.test_utils.SimpleRoundEnvironme
 /**
  * A test case for {@link AbstractRoundEnvironment}.
  *
- * @author homedirectory
+ * @author TG Team
  */
 public class AbstractRoundEnvironmentTest {
 

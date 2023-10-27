@@ -10,6 +10,9 @@ import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
+import ua.com.fielden.platform.entity.validation.RestrictCommasValidator;
+import ua.com.fielden.platform.entity.validation.RestrictExtraWhitespaceValidator;
+import ua.com.fielden.platform.entity.validation.RestrictNonPrintableCharactersValidator;
 import ua.com.fielden.platform.web.centre.definers.CentreConfigCommitActionDashboardableDefiner;
 import ua.com.fielden.platform.web.centre.validators.CentreConfigCommitActionTitleValidator;
 
@@ -26,10 +29,13 @@ import ua.com.fielden.platform.web.centre.validators.CentreConfigCommitActionTit
  */
 @DescTitle(value = "Description", desc = "Centre configuration description.")
 public abstract class AbstractCentreConfigCommitAction extends AbstractCentreConfigAction {
-    
+
     @IsProperty
     @Title(value = "Title", desc = "Centre configuration title.")
-    @BeforeChange(@Handler(CentreConfigCommitActionTitleValidator.class))
+    @BeforeChange({@Handler(RestrictExtraWhitespaceValidator.class),
+                   @Handler(RestrictCommasValidator.class),
+                   @Handler(RestrictNonPrintableCharactersValidator.class),
+                   @Handler(CentreConfigCommitActionTitleValidator.class)})
     private String title;
     
     @IsProperty
