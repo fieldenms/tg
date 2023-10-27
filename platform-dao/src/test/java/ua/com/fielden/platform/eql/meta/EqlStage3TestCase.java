@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Before;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.QueryProcessingModel;
@@ -57,6 +59,15 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
         return sqlId;
     }
 
+    protected static void resetSqlId() {
+        sqlId = 0;
+    }
+
+    @Before
+    public void setUp() {
+        resetSqlId();
+    }
+
     private static final <E extends AbstractEntity<?>> ResultQuery3 transform(final QueryProcessingModel<E, ?> qem) {
         return EqlQueryTransformer.transform(qem, filter, null, dates, metadata()).item;
     }
@@ -64,7 +75,7 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
     protected static <T extends AbstractEntity<?>> ResultQuery3 qryCountAll(final ICompoundCondition0<T> unfinishedQry) {
         return qry(unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate());
     }
-    
+
     protected static <T extends AbstractEntity<?>> ResultQuery3 qryCountAll(final ICompleted<T> unfinishedQry) {
         return qry(unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate());
     }
@@ -89,7 +100,7 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
         qry.setFilterable(true);
         return qry(qry);
     }
-    
+
     protected static <T extends AbstractEntity<?>> ResultQuery3 qry(final EntityResultQueryModel<T> qry) {
         return transform(new QueryProcessingModel<T, EntityResultQueryModel<T>>(qry, null, null, emptyMap(), true));
     }
@@ -98,7 +109,7 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
         qry.setFilterable(true);
         return qry(qry);
     }
-    
+
     protected static Source3BasedOnTable source(final Class<? extends AbstractEntity<?>> sourceType, final Integer sourceForContextId) {
         return new Source3BasedOnTable(metadata().entityMetadataHolder.getTableForEntityType(sourceType), sourceForContextId, nextSqlId());
     }

@@ -20,9 +20,9 @@ public class Yield2 {
     }
 
     public TransformationResult2<Yield3> transform(final TransformationContext2 context) {
-        final TransformationContext2 newContext = context.cloneWithNextSqlId();
-        final TransformationResult2<? extends ISingleOperand3> operandTransformationResult = operand.transform(newContext);
-        return new TransformationResult2<>(new Yield3(operandTransformationResult.item, alias, newContext.sqlId, operand.type()), operandTransformationResult.updatedContext);
+        final TransformationResult2<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
+        final TransformationContext2 updatedContext = operandTransformationResult.updatedContext.cloneWithNextSqlId();
+        return new TransformationResult2<>(new Yield3(operandTransformationResult.item, alias, updatedContext.sqlId, operand.type()), updatedContext);
     }
 
     @Override
@@ -44,9 +44,9 @@ public class Yield2 {
         if (!(obj instanceof Yield2)) {
             return false;
         }
-        
+
         final Yield2 other = (Yield2) obj;
-        
+
         return Objects.equals(operand, other.operand) && Objects.equals(alias, other.alias) && (hasNonnullableHint == other.hasNonnullableHint);
     }
 }

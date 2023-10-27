@@ -20,7 +20,7 @@ import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnQueries;
 public class Source2BasedOnQueries extends AbstractSource2 implements ISource2<Source3BasedOnQueries> {
     private final List<SourceQuery2> models = new ArrayList<>();
     public final boolean isSyntheticEntity;
-    
+
     public Source2BasedOnQueries(final List<SourceQuery2> models, final String alias, final Integer id, final QuerySourceInfo<?> querySourceInfo, final boolean isSyntheticEntity, final boolean isExplicit, final boolean isPartOfCalcProp) {
         super(id, alias, querySourceInfo, isExplicit, isPartOfCalcProp);
         this.models.addAll(models);
@@ -31,7 +31,7 @@ public class Source2BasedOnQueries extends AbstractSource2 implements ISource2<S
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return isSyntheticEntity ? Set.of(sourceType()) : models.stream().map(el -> el.collectEntityTypes()).flatMap(Set::stream).collect(toSet());
     }
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -46,7 +46,7 @@ public class Source2BasedOnQueries extends AbstractSource2 implements ISource2<S
         if (this == obj) {
             return true;
         }
-        
+
         if (!super.equals(obj)) {
             return false;
         }
@@ -54,7 +54,7 @@ public class Source2BasedOnQueries extends AbstractSource2 implements ISource2<S
         if (!(obj instanceof Source2BasedOnQueries)) {
             return false;
         }
-        
+
         final Source2BasedOnQueries other = (Source2BasedOnQueries) obj;
 
         return Objects.equals(models, other.models) && Objects.equals(isSyntheticEntity, other.isSyntheticEntity);
@@ -62,18 +62,19 @@ public class Source2BasedOnQueries extends AbstractSource2 implements ISource2<S
 
     @Override
     public TransformationResult2<Source3BasedOnQueries> transform(final TransformationContext2 context) {
-        
+
         final List<SourceQuery3> transformedQueries = new ArrayList<>();
-        TransformationContext2 currentContext = context.cloneWithNextSqlId();
-        final int sqlId = currentContext.sqlId;
-        
+        TransformationContext2 currentContext = context;
+
         for (final SourceQuery2 model : models) {
             final TransformationResult2<SourceQuery3> modelTr = model.transform(currentContext);
             transformedQueries.add(modelTr.item);
-            currentContext = modelTr.updatedContext; // TODO should be just resolutionContext with propsResolutions added from this model transformation   
+            currentContext = modelTr.updatedContext;
         }
-           
-        final Source3BasedOnQueries transformedSource = new Source3BasedOnQueries(transformedQueries, id, sqlId);
+
+        currentContext = currentContext.cloneWithNextSqlId();
+
+        final Source3BasedOnQueries transformedSource = new Source3BasedOnQueries(transformedQueries, id, currentContext.sqlId);
         return new TransformationResult2<>(transformedSource, currentContext);
     }
 
@@ -85,7 +86,7 @@ public class Source2BasedOnQueries extends AbstractSource2 implements ISource2<S
         }
         return result;
     }
-    
+
     @Override
     public String toString() {
         return sourceType().getSimpleName();

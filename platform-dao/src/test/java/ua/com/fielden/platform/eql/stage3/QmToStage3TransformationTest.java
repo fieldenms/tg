@@ -125,10 +125,11 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
 
         final Source3BasedOnTable vehSource = source(VEHICLE, 1);
         final IJoinNode3 vehSources = sources(vehSource);
+        final Yields3 vehYields = yields(yieldCountAll("qty"));
+
         final ISingleOperand3 vehModelProp = entityProp("model", vehSource, MODEL);
         final ISingleOperand3 modelIdProp = idProp(modelSource);
         final Conditions3 vehConditions = or(eq(vehModelProp, modelIdProp));
-        final Yields3 vehYields = yields(yieldCountAll("qty"));
 
         final SourceQuery3 vehSourceQry = srcqry(vehSources, vehConditions, vehYields);
 
@@ -255,9 +256,9 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().prop("make.key").isNotNull());
 
         final Source3BasedOnTable wo = source(WORK_ORDER, 1);
+        final Source3BasedOnTable make = source(MAKE, 4);
         final Source3BasedOnTable veh = source(VEHICLE, 2);
         final Source3BasedOnTable model = source(MODEL, 3);
-        final Source3BasedOnTable make = source(MAKE, 4);
 
         final IJoinNode3 subQrySources =
                 ij(
@@ -455,8 +456,8 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(VEHICLE).where().anyOfProps("modelMakeKey2", "make.key", "model.make.key").isNotNull());
 
         final Source3BasedOnTable veh = source(VEHICLE, 1);
-        final Source3BasedOnTable model = source(MODEL, 3);
         final Source3BasedOnTable makeA = source(MAKE, 2);
+        final Source3BasedOnTable model = source(MODEL, 3);
         final Source3BasedOnTable make = source(MAKE, 4);
 
         final IJoinNode3 sources =
@@ -482,8 +483,8 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(VEHICLE).where().anyOfProps("modelMakeKey2", "make.key").isNotNull());
 
         final Source3BasedOnTable veh = source(VEHICLE, 1);
-        final Source3BasedOnTable model = source(MODEL, 3);
         final Source3BasedOnTable makeA = source(MAKE, 2);
+        final Source3BasedOnTable model = source(MODEL, 3);
         final Source3BasedOnTable make = source(MAKE, 4);
 
         final IJoinNode3 sources =
@@ -509,9 +510,9 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(VEHICLE).where().anyOfProps("model.make.key", "make.key").isNotNull());
 
         final Source3BasedOnTable veh = source(VEHICLE, 1);
+        final Source3BasedOnTable makeA = source(MAKE, 2);
         final Source3BasedOnTable model = source(MODEL, 3);
         final Source3BasedOnTable make = source(MAKE, 4);
-        final Source3BasedOnTable makeA = source(MAKE, 2);
 
         final IJoinNode3 sources =
                 ij(
@@ -806,10 +807,10 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
 
         final Source3BasedOnTable veh = source(VEHICLE, 1);
         final Source3BasedOnTable repVeh = source(VEHICLE, 3);
-        final Source3BasedOnTable ou5e = source(ORG5, 2);
-        final Source3BasedOnTable ou5eou4 = source(ORG4, 6);
         final Source3BasedOnTable ou5 = source(ORG5, 4);
         final Source3BasedOnTable ou4 = source(ORG4, 5);
+        final Source3BasedOnTable ou5e = source(ORG5, 2);
+        final Source3BasedOnTable ou5eou4 = source(ORG4, 6);
 
         final IJoinNode3 sources =
                 ij(

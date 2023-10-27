@@ -24,9 +24,9 @@ public class Source2BasedOnPersistentType extends AbstractSource2 implements ISo
 
     @Override
     public TransformationResult2<Source3BasedOnTable> transform(final TransformationContext2 context) {
-        final TransformationContext2 newContext = context.cloneWithNextSqlId();
-        final Source3BasedOnTable transformedSource = new Source3BasedOnTable(newContext.getTable(sourceType()), id, newContext.sqlId);
-        return new TransformationResult2<>(transformedSource, newContext);
+        final TransformationContext2 updatedContext = context.cloneWithNextSqlId();
+        final Source3BasedOnTable transformedSource = new Source3BasedOnTable(updatedContext.getTable(sourceType()), id, updatedContext.sqlId);
+        return new TransformationResult2<>(transformedSource, updatedContext);
     }
 
     @Override
