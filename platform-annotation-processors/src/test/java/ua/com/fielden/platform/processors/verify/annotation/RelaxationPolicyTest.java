@@ -1,25 +1,23 @@
 package ua.com.fielden.platform.processors.verify.annotation;
 
-import static javax.tools.Diagnostic.Kind.ERROR;
-import static javax.tools.Diagnostic.Kind.MANDATORY_WARNING;
-import static javax.tools.Diagnostic.Kind.OTHER;
-import static javax.tools.Diagnostic.Kind.WARNING;
-import static org.junit.Assert.assertEquals;
-import static ua.com.fielden.platform.processors.verify.annotation.RelaxationPolicy.INFO;
-import static ua.com.fielden.platform.processors.verify.annotation.RelaxationPolicy.WARN;
+import org.junit.Test;
 
+import javax.tools.Diagnostic.Kind;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.tools.Diagnostic.Kind;
+import static javax.tools.Diagnostic.Kind.*;
+import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.processors.verify.annotation.RelaxationPolicy.INFO;
+import static ua.com.fielden.platform.processors.verify.annotation.RelaxationPolicy.WARN;
 
-import org.junit.Test;;
+;
 
 /**
  * Tests covering the {@link RelaxationPolicy} enum.
  *
- * @author homedirectory
+ * @author TG Team
  */
 public class RelaxationPolicyTest {
 

@@ -1,15 +1,13 @@
 package ua.com.fielden.platform.processors.test_utils;
 
+import com.google.testing.compile.JavaFileObjects;
+import ua.com.fielden.platform.processors.test_utils.exceptions.PackageNotFoundException;
+
+import javax.tools.JavaFileObject;
 import java.io.File;
 import java.net.URL;
 import java.util.List;
 import java.util.stream.Stream;
-
-import javax.tools.JavaFileObject;
-
-import com.google.testing.compile.JavaFileObjects;
-
-import ua.com.fielden.platform.processors.test_utils.exceptions.PackageNotFoundException;
 
 /**
  * Set of utilities to work with Java files.

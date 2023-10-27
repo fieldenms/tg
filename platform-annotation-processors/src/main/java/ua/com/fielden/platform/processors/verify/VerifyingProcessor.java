@@ -13,8 +13,8 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -39,8 +39,8 @@ import static java.util.stream.Collectors.joining;
 @SupportedAnnotationTypes("*")
 public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
 
-    private final List<Function<ProcessingEnvironment, IVerifier>> registeredVerifiersProviders = new LinkedList<>();
-    private final List<IVerifier> registeredVerifiers = new LinkedList<>();
+    private final List<Function<ProcessingEnvironment, IVerifier>> registeredVerifiersProviders = new ArrayList<>();
+    private final List<IVerifier> registeredVerifiers = new ArrayList<>();
 
     /** Round-cumulative indicator of whether all verifiers were passed. */
     private boolean passed;

@@ -1,26 +1,23 @@
 package ua.com.fielden.platform.processors.verify.annotation;
 
-import java.util.List;
-
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.tools.Diagnostic.Kind;
-
+import com.squareup.javapoet.TypeSpec;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
-
-import com.squareup.javapoet.TypeSpec;
-
 import ua.com.fielden.platform.processors.verify.AbstractVerifierTest;
 import ua.com.fielden.platform.processors.verify.ViolatingElement;
 import ua.com.fielden.platform.processors.verify.test_utils.SimpleRoundEnvironment;
 import ua.com.fielden.platform.processors.verify.test_utils.SimpleVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.tools.Diagnostic.Kind;
+import java.util.List;
+
 /**
  * Test suites related to the {@link SkipVerification} annotation.
  *
- * @author homedirectory
+ * @author TG Team
  */
 @RunWith(Enclosed.class)
 public class SkipVerificationTest {
@@ -41,7 +38,6 @@ public class SkipVerificationTest {
         @Test
         public void ViolatingElement_instances_with_elements_annotated_with_SkipVerification_are_ignored_and_messages_are_not_reported() {
             final TypeSpec example = TypeSpec.classBuilder("Example").addAnnotation(SkipVerification.class).build();
-
             compileAndAssertSuccess(List.of(example));
         }
 

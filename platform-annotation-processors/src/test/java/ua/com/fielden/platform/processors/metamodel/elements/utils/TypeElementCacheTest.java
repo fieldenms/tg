@@ -1,26 +1,18 @@
 package ua.com.fielden.platform.processors.metamodel.elements.utils;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+import com.google.testing.compile.CompilationRule;
+import org.junit.After;
+import org.junit.Rule;
+import org.junit.Test;
 
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
-
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
-
-import com.google.testing.compile.CompilationRule;
+import static org.junit.Assert.*;
 
 /**
  * A test case for {@link TypeElementCache}.

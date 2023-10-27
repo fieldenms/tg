@@ -1,18 +1,17 @@
 package ua.com.fielden.platform.processors.verify.test_utils;
 
-import java.util.LinkedList;
-import java.util.List;
+import ua.com.fielden.platform.processors.verify.ViolatingElement;
 
 import javax.annotation.processing.ProcessingEnvironment;
-
-import ua.com.fielden.platform.processors.verify.ViolatingElement;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A verifier that finds all elements annotated with {@link Message} and for each found element reports the specified message
  * of the specified kind. This verifier enables a convenient technique for making assertions about reported messages in tests.
  * To get started, simply annotate an input element with {@link Message} and then assert the existence of the reported message.
  *
- * @author homedirectory
+ * @author TG Team
  */
 public class MessagePrintingVerifier extends SimpleVerifier {
 
@@ -22,7 +21,7 @@ public class MessagePrintingVerifier extends SimpleVerifier {
 
     @Override
     protected List<ViolatingElement> verify(final SimpleRoundEnvironment roundEnv) {
-        final List<ViolatingElement> violators = new LinkedList<>();
+        final List<ViolatingElement> violators = new ArrayList<>();
 
         roundEnv.getElementsAnnotatedWith(Message.class).stream()
         .map(elt -> {

@@ -8,7 +8,7 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 /**
  * Indicates whether the verification of a program element should be skipped.
  *
- * @author homedirectory
+ * @author TG Team
  */
 @Retention(SOURCE)
 public @interface SkipVerification {

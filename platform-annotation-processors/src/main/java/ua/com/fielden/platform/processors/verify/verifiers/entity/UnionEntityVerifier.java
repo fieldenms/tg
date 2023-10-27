@@ -14,6 +14,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asTypeElementOfTypeMirror;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.getSimpleName;
@@ -21,17 +23,23 @@ import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.g
 /**
  * Composable verifier for union entities. Verification rules include:
  * <ol>
- *  <li>There should be at least 1 entity-typed property.</li>
- *  <li>Only entity-typed properties are permitted. However, these should not be union entities themselves
- *  (i.e., nesting of union entities is not supported).</li>
+ *  <li>There should be at least one entity-typed property.</li>
+ *  <li>Only entity-typed properties are permitted. However, those should not be union entities themselves
+ *  (i.e., nesting of union entities are not supported).</li>
  *  <li>There should be at most one property of a particular entity type (i.e., multiple properties of the same entity type are disallowed).</li>
  * </ol>
  * Most contexts where an {@linkplain ErrorType unresolved type} is encountered are not subject to verification because
  * erroneous definitions are inherently incorrect.
  *
- * @author homedirectory
+ * @author TG Team
  */
 public class UnionEntityVerifier extends AbstractComposableEntityVerifier {
+
+    private static final String ERR_NO_ENTITY_TYPED_PROPERTIES = "Union entity [%s] requires at least one entity-typed property.";
+    private static final String ERR_NON_ENTITY_TYPED_PROPS = "Union entity [%s] should declare only entity-typed properties. Property [%s] is not entity-typed.";
+    private static final String ERR_UNION_ENTITY_TYPED_PROPS = "Union entity [%s] should not declare properties of a union entity type. Property [%s] is of a union entity type.";
+    private static final String ERR_MULTIPLE_PROPS_OF_SAME_TYPE = "Union entity [%s] should not declare multiple properties of the same entity type.";
+    private static final String ERR_PROPS_WITH_SAME_TYPE = "Union entity [%s] should not declare properties of the same type. Property [%s] has the same type as some other property.";
 
     public UnionEntityVerifier(final ProcessingEnvironment processingEnv) {
         super(processingEnv);
@@ -50,8 +58,8 @@ public class UnionEntityVerifier extends AbstractComposableEntityVerifier {
      */
     static class EntityTypedPropertyPresenceVerifier extends AbstractEntityVerifier {
 
-        public static final String errNoEntityTypedProperties() {
-            return "A union entity must declare at least 1 entity-typed property";
+        public static final String errNoEntityTypedProperties(final String entityName) {
+            return ERR_NO_ENTITY_TYPED_PROPERTIES.formatted(entityName);
         }
 
         protected EntityTypedPropertyPresenceVerifier(final ProcessingEnvironment processingEnv) {
@@ -71,9 +79,9 @@ public class UnionEntityVerifier extends AbstractComposableEntityVerifier {
             @Override
             public Optional<ViolatingElement> verify(final EntityElement entity) {
                 if (entityFinder.streamDeclaredProperties(entity).anyMatch(prop -> entityFinder.isEntityType(prop.getType()))) {
-                    return Optional.empty();
+                    return empty();
                 }
-                return Optional.of(new ViolatingElement(entity.element(), ERROR, errNoEntityTypedProperties()));
+                return of(new ViolatingElement(entity.element(), ERROR, errNoEntityTypedProperties(getSimpleName(entity.element()))));
             }
         }
     }
@@ -84,12 +92,12 @@ public class UnionEntityVerifier extends AbstractComposableEntityVerifier {
      */
     static class PropertyTypeVerifier extends AbstractEntityVerifier {
 
-        public static final String errNonEntityTypedProperty(final String property) {
-            return "A union entity shall declare only entity-typed properties. Property [%s] is not of entity type.".formatted(property);
+        public static final String errNonEntityTypedProperty(final String entityName, final String propName) {
+            return ERR_NON_ENTITY_TYPED_PROPS.formatted(entityName, propName);
         }
 
-        public static final String errUnionEntityTypedProperty(final String property) {
-            return "A union entity can't be composed of other union entities. Property [%s] is of a union entity type.".formatted(property);
+        public static final String errUnionEntityTypedProperty(final String entityName, final String propName) {
+            return ERR_UNION_ENTITY_TYPED_PROPS.formatted(entityName, propName);
         }
 
         protected PropertyTypeVerifier(final ProcessingEnvironment processingEnv) {
@@ -113,12 +121,10 @@ public class UnionEntityVerifier extends AbstractComposableEntityVerifier {
                     return Optional.empty();
                 }
                 if (!entityFinder.isEntityType(propType)) {
-                    return Optional.of(new ViolatingElement(
-                            property.element(), ERROR, errNonEntityTypedProperty(getSimpleName(property.element()))));
+                    return of(new ViolatingElement(property.element(), ERROR, errNonEntityTypedProperty(getSimpleName(entity.element()), getSimpleName(property.element()))));
                 }
                 if (entityFinder.isUnionEntityType(propType)) {
-                    return Optional.of(new ViolatingElement(
-                            property.element(), ERROR, errUnionEntityTypedProperty(getSimpleName(property.element()))));
+                    return of(new ViolatingElement(property.element(), ERROR, errUnionEntityTypedProperty(getSimpleName(entity.element()), getSimpleName(property.element()))));
                 }
 
                 return Optional.empty();
@@ -131,12 +137,12 @@ public class UnionEntityVerifier extends AbstractComposableEntityVerifier {
      */
     static class DistinctPropertyEntityTypesVerifier extends AbstractEntityVerifier {
 
-        public static String errMultiplePropertiesOfSameType(final String entity) {
-            return "Union entity [%s] can't have multiple properties of the same entity type.".formatted(entity);
+        public static String errMultiplePropertiesOfSameType(final String entityName) {
+            return ERR_MULTIPLE_PROPS_OF_SAME_TYPE.formatted(entityName);
         }
 
-        public static String errPropertyHasNonUniqueType(final String property) {
-            return "Property [%s] has the same type as some other property of this union entity.".formatted(property);
+        public static String errPropertyHasNonUniqueType(final String entityName, final String propName) {
+            return ERR_PROPS_WITH_SAME_TYPE.formatted(entityName, propName);
         }
 
         protected DistinctPropertyEntityTypesVerifier(final ProcessingEnvironment processingEnv) {
@@ -165,14 +171,12 @@ public class UnionEntityVerifier extends AbstractComposableEntityVerifier {
                         .filter(entry -> entry.getValue().size() > 1)
                         .flatMap(entry -> {
                             final List<PropertyElement> properties = entry.getValue();
-                            return properties.stream().map(prop -> new ViolatingElement(
-                                    prop.element(), ERROR, errPropertyHasNonUniqueType(getSimpleName(prop.element()))));
+                            return properties.stream()
+                                   .map(prop -> new ViolatingElement(prop.element(), ERROR, errPropertyHasNonUniqueType(getSimpleName(entity.element()), getSimpleName(prop.element()))));
                         }).toList();
 
                 if (!violatingProperties.isEmpty()) {
-                    return Optional.of(
-                            new ViolatingElement(entity.element(), ERROR, errMultiplePropertiesOfSameType(getSimpleName(entity.element())))
-                            .addSubElements(violatingProperties));
+                    return of(new ViolatingElement(entity.element(), ERROR, errMultiplePropertiesOfSameType(getSimpleName(entity.element())), violatingProperties));
                 }
 
                 return Optional.empty();

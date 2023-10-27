@@ -9,7 +9,7 @@ import java.util.EnumMap;
  * Verification relaxation policy. The constants of this enumerated class describe the various policies for relaxing verification.
  * They are used along with the {@link RelaxVerification} annotation to specify the degree to which verification should be relaxed.
  *
- * @author homedirectory
+ * @author TG Team
  */
 public enum RelaxationPolicy {
     /**

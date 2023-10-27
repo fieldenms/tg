@@ -910,13 +910,15 @@ export class TgEntityEditor extends TgEditor {
             if (elementExists !== this.result) {
                 document.body.appendChild(this.result);
             }
+            // need to call highlight matched parts to build the DOM for the result dialog to ensure its correct positioning
+            this.result.highlightMatchedParts(this._searchQuery);
 
             // now let's open the dialog to display the result, but only if it is not opened yet...
             if (this.result.opened) {
                 this._resultOpened();
             } else {
                 if (this.result.visibleHeightUnderEditorIsSmall()) {
-                    this.scrollIntoView({block: "center", inline: "center"}); // behavior: "smooth"
+                    this.scrollIntoView(); // behavior: "smooth"
                     // need to wait at least 400 ms for smooth scrolling to complete... let's instead disable it
                     setTimeout(function () {
                         this._showResult(this.result);
@@ -1006,10 +1008,8 @@ export class TgEntityEditor extends TgEditor {
             if (!this._isInputFocused()) {
                 this._focusResult();
             }
-            // indicate that the autocompleter dialog was opened and
-            // highlight matched parts of the items found
+            // indicate that the autocompleter dialog was opened
             this.opened = true;
-            this.result.highlightMatchedParts(this._searchQuery);
         } else {
             this.opened = true;
             this.result.cancel(e);

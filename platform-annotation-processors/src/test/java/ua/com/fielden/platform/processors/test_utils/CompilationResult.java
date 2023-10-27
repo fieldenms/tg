@@ -4,12 +4,12 @@ import javax.tools.Diagnostic;
 import javax.tools.Diagnostic.Kind;
 import javax.tools.JavaFileObject;
 import java.util.*;
-import java.util.stream.Collectors;
+import static java.util.stream.Collectors.joining;
 
 /**
  * Represents results of a compilation: status (success/failure) and collected diagnostics.
  *
- * @author homedirectory
+ * @author TG Team
  */
 public final class CompilationResult {
 
@@ -21,7 +21,7 @@ public final class CompilationResult {
     CompilationResult(final boolean success, final List<Diagnostic<? extends JavaFileObject>> diagnostics,
                       final List<Throwable> processingErrors, final Collection<? extends JavaFileObject> generatedSources) {
         this.success = success;
-        this.diagnostics = new LinkedList<>(diagnostics);
+        this.diagnostics = new ArrayList<>(diagnostics);
         this.processingErrors = new ArrayList<>(processingErrors);
         this.generatedSources = List.copyOf(generatedSources);
     }
@@ -79,7 +79,7 @@ public final class CompilationResult {
 
     /** A convenient method that prints collected diagnostics to {@link System#out}. */
     public void printDiagnostics() {
-        System.out.println(diagnostics.stream().map(Diagnostic::toString).collect(Collectors.joining("\n")));
+        System.out.println(diagnostics.stream().map(Diagnostic::toString).collect(joining("\n")));
     }
 
 }
