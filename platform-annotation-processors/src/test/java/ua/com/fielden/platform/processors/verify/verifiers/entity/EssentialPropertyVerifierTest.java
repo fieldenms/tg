@@ -1,54 +1,15 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
-import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor.APPLICATION_DOMAIN_SIMPLE_NAME;
-import static ua.com.fielden.platform.processors.test_utils.CollectionTestUtils.assertEqualByContents;
-import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
-import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccessWithoutProcessingErrors;
-import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.compileWithTempStorage;
-import static ua.com.fielden.platform.processors.test_utils.TestUtils.assertPresent;
-import static ua.com.fielden.platform.processors.verify.VerifyingProcessor.errVerifierNotPassedBy;
-import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.propertyBuilder;
-import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.setterBuilder;
-import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.CollectionalPropertyVerifier.errMustBeFinal;
-import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyAccessorVerifier.errCollectionalIncorrectReturnType;
-import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyAccessorVerifier.errIncorrectReturnType;
-import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyAccessorVerifier.errMissingAccessor;
-import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertySetterVerifier.errIncorrectParameters;
-import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertySetterVerifier.errMissingObservable;
-import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertySetterVerifier.errMissingSetter;
-import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertySetterVerifier.errNotPublicNorProtected;
-import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier.errEntityTypeMustBeRegistered;
-import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier.errInvalidCollectionTypeArg;
-
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Stream;
-
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.annotation.processing.Processor;
-import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.element.Modifier;
-import javax.lang.model.element.TypeElement;
-
 import com.squareup.javapoet.*;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
-
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.processors.appdomain.ApplicationDomainElement;
 import ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor;
-import ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessorTest;
 import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
-import ua.com.fielden.platform.processors.test_utils.Compilation;
-import ua.com.fielden.platform.processors.test_utils.CompilationResult;
-import ua.com.fielden.platform.processors.test_utils.CompilationTestUtils;
-import ua.com.fielden.platform.processors.test_utils.ProcessorListener;
 import ua.com.fielden.platform.processors.verify.AbstractVerifierTest;
 import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier;
@@ -58,12 +19,16 @@ import javax.lang.model.element.Modifier;
 import java.util.*;
 import java.util.function.Function;
 
+import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
+import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccessWithoutProcessingErrors;
+import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.compileWithTempStorage;
 import static ua.com.fielden.platform.processors.verify.VerifyingProcessor.errVerifierNotPassedBy;
 import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.propertyBuilder;
 import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.setterBuilder;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.CollectionalPropertyVerifier.errMustBeFinal;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyAccessorVerifier.*;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertySetterVerifier.*;
+import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier.errEntityTypeMustBeRegistered;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier.errInvalidCollectionTypeArg;
 
 /**

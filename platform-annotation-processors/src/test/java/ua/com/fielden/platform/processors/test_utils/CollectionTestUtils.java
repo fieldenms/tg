@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.processors.test_utils;
 
-import static org.junit.Assert.fail;
+import ua.com.fielden.platform.utils.CollectionUtil;
 
 import java.util.Collection;
 
-import ua.com.fielden.platform.utils.CollectionUtil;
+import static org.junit.Assert.fail;
 
 /**
  * General-purpose test utilities for operating on {@link Collection}s.

@@ -4,9 +4,8 @@ import com.squareup.javapoet.JavaFile;
 import org.apache.commons.io.FileUtils;
 import ua.com.fielden.platform.processors.test_utils.exceptions.TestCaseConfigException;
 
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileObjects.createJavaSource;
-
+import javax.tools.Diagnostic.Kind;
+import javax.tools.*;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -18,8 +17,8 @@ import java.util.Locale;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import javax.tools.*;
-import javax.tools.Diagnostic.Kind;
+import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileObjects.createJavaSource;
 
 /**
  * A collection of test utilities to assist in working with {@link Compilation} and {@link CompilationResult}.

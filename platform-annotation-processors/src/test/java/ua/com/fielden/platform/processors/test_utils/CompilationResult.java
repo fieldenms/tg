@@ -3,7 +3,11 @@ package ua.com.fielden.platform.processors.test_utils;
 import javax.tools.Diagnostic;
 import javax.tools.Diagnostic.Kind;
 import javax.tools.JavaFileObject;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
 import static java.util.stream.Collectors.joining;
 
 /**

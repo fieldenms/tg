@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.processors.test_utils;
 
-import static org.junit.Assert.assertTrue;
-
 import java.util.Optional;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * A collection of general-purpose test utilities.

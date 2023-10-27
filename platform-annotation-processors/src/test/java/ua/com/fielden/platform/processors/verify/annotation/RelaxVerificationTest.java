@@ -18,9 +18,9 @@ import java.util.List;
 import static javax.tools.Diagnostic.Kind.*;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertMessages;
 import static ua.com.fielden.platform.processors.verify.annotation.RelaxationPolicy.INFO;
 import static ua.com.fielden.platform.processors.verify.annotation.RelaxationPolicy.WARN;
-import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertMessages;
 
 /**
  * Tests covering logic associated with the {@link RelaxVerification} annotation.
