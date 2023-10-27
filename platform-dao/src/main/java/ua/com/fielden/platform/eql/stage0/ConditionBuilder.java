@@ -78,7 +78,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     private final static List<TokenCategory> setOperands = listOf(SET_OF_PROPS, SET_OF_PARAMS, SET_OF_IPARAMS, SET_OF_VALUES, EQUERY_TOKENS, SET_OF_EXPR_TOKENS);
     private final static List<TokenCategory> quantifiers = listOf(ANY_OPERATOR, ALL_OPERATOR);
     private final static List<TokenCategory> mutlipleOperands = new ArrayList<>();
-    
+
     static {
         mutlipleOperands.addAll(mutlipleAllOperands);
         mutlipleOperands.addAll(mutlipleAnyOperands);
@@ -224,10 +224,11 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 
     private Conditions1 getMultipleQuantifiedPredicate() {
         final List<ISingleOperand1<? extends ISingleOperand2<?>>> operands = getModelForMultipleOperands(firstCat(), firstValue());
-        final SubQuery1 secondOperand = getQueryBuilder().generateAsSubQuery((QueryModel<?>) thirdValue());
         final Quantifier quantifier = ANY_OPERATOR == thirdCat() ? ANY : ALL;
         final List<ICondition1<? extends ICondition2<?>>> conditions = new ArrayList<>();
         for (final ISingleOperand1<? extends ISingleOperand2<?>> operand : operands) {
+            // also this secondOperand can be created before loop, in order to be consistent with source ID generation logic, it has to be created within the loop.
+            final SubQuery1 secondOperand = getQueryBuilder().generateAsSubQuery((QueryModel<?>) thirdValue());
             conditions.add(new QuantifiedPredicate1(operand, (ComparisonOperator) secondValue(), quantifier, secondOperand));
         }
         final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(firstCat()) ? OR : AND;
@@ -376,10 +377,11 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 
     private Conditions1 getMultipleSetPredicate() {
         final List<ISingleOperand1<? extends ISingleOperand2<?>>> operands = getModelForMultipleOperands(firstCat(), firstValue());
-        final ISetOperand1<? extends ISetOperand2<?>> setOperand = getModelForSetOperand(thirdCat(), thirdValue());
 
         final List<ICondition1<? extends ICondition2<?>>> conditions = new ArrayList<>();
         for (final ISingleOperand1<? extends ISingleOperand2<?>> operand : operands) {
+            // also this setOperand can be created before loop, in order to be consistent with source ID generation logic, it has to be created within the loop.
+            final ISetOperand1<? extends ISetOperand2<?>> setOperand = getModelForSetOperand(thirdCat(), thirdValue());
             conditions.add(new SetPredicate1(operand, (Boolean) secondValue(), setOperand));
         }
         final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(firstCat()) ? OR : AND;

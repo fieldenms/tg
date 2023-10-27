@@ -13,6 +13,8 @@ import static ua.com.fielden.platform.eql.stage1.sundries.Yields1.EMPTY_YIELDS;
 
 import java.util.Map;
 
+import org.junit.Before;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -26,15 +28,15 @@ import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage1.operands.Prop1;
 import ua.com.fielden.platform.eql.stage1.operands.functions.CountAll1;
 import ua.com.fielden.platform.eql.stage1.queries.ResultQuery1;
-import ua.com.fielden.platform.eql.stage1.sources.ISource1;
 import ua.com.fielden.platform.eql.stage1.sources.IJoinNode1;
+import ua.com.fielden.platform.eql.stage1.sources.ISource1;
 import ua.com.fielden.platform.eql.stage1.sources.JoinLeafNode1;
 import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage1.sundries.Yield1;
 import ua.com.fielden.platform.eql.stage1.sundries.Yields1;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
-import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
+import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 
 public abstract class EqlStage1TestCase extends EqlTestCase {
 
@@ -47,6 +49,11 @@ public abstract class EqlStage1TestCase extends EqlTestCase {
 
     protected static void resetId() {
         sourceId = 0;
+    }
+
+    @Before
+    public void setUp() {
+        resetId();
     }
 
     protected static <T extends AbstractEntity<?>> ResultQuery1 resultQry(final EntityResultQueryModel<T> qry) {
