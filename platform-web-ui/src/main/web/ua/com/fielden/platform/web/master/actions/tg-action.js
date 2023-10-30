@@ -34,6 +34,12 @@ const template = html`
            --dropdown-switch-text-transform: uppercase;
            @apply --layout-horizontal;
         }
+        :host([role="save"]) tg-dropdown-switch {
+            --tg-dropdown-switch-activated: {
+                color: white;
+                background-color: var(--paper-green-600);
+           };
+        }
         .action-item {
             @apply --layout-flex;
         }
@@ -64,7 +70,7 @@ const template = html`
         <span>[[shortDesc]]</span>
     </paper-button>
     <paper-fab id="fabButton" class="action-item" mini icon="[[icon]]" on-tap="_asyncRun" hidden$="[[!_isIcon(actionType)]]" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]"></paper-fab>
-    <tg-dropdown-switch class="action-item" raised fragmented vertical-align="bottom" disabled$="[[_disabled]]" hidden$="[[!_isOptionButton(actionType)]]" view-index="[[_optionIdx]]" views="[[_options]]" make-drop-down-width-the-same-as-button change-current-view-on-select on-tg-centre-view-change="_runOptionAction"></tg-dropdown-switch>
+    <tg-dropdown-switch class="action-item" raised fragmented vertical-align="bottom" disabled="[[_optionButtonDisabled]]" activated="[[_optionButtonActive]]" hidden$="[[!_isOptionButton(actionType)]]" view-index="[[_optionIdx]]" views="[[_options]]" do-not-highlight-when-drop-down-opened make-drop-down-width-the-same-as-button change-current-view-on-select on-tg-centre-view-change="_runOptionAction"></tg-dropdown-switch>
     <paper-spinner id="spinner" active="[[_working]]" class="blue" style="display: none;" alt="in progress"></paper-spinner>
 `;
 
@@ -136,7 +142,7 @@ Polymer({
          * This API property is made to be used by outside logic to control enablement of the action.
          * If this property equals to false then action is guaranteed to be disabled.
          * Otherwise -- enablement is based on whether the action is in progress (_innerEnabled) and whether currentState is in enableStates list.
-         * See method _isDisabled for more details.
+         * See method _buttonStateChanged for more details.
          */
         outerEnabled: {
             type: Boolean,
@@ -166,7 +172,8 @@ Polymer({
          */
         _disabled: {
             type: Boolean,
-            computed: "_isDisabled(enabledStates, currentState, _innerEnabled, outerEnabled)"
+            readOnly: true,
+            value: true
         },
 
         /**
@@ -273,6 +280,24 @@ Polymer({
         _optionIdx: {
             type: Number,
             value: 0,
+        },
+
+        /**
+         * Indicates whether option bitton should be disabled or not.
+         */
+        _optionButtonDisabled: {
+            type: Boolean,
+            value: true,
+            readOnly: true
+        },
+
+        /**
+         * Indicates whether option button should be highlighted (for example when entity was modified) or not (if master's entity wasn't modified).
+         */
+        _optionButtonActive: {
+            type: Boolean,
+            value: false,
+            readOnly: true
         }
     },
 
@@ -282,7 +307,7 @@ Polymer({
         };
     },
 
-    observers: ["_updateOptions(actionType, shortDesc, longDesc, role, restrictNewOption)", "_updateActionIndex(entityType, role)"],
+    observers: ["_updateOptions(actionType, shortDesc, longDesc, role, restrictNewOption)", "_updateActionIndex(entityType, role)", "_buttonStateChanged(enabledStates, currentState, _innerEnabled, outerEnabled)"],
 
     created: function () {
         this.run = this._createRun();
@@ -420,15 +445,14 @@ Polymer({
         }
     },
 
-    /**
-     * Returns whether the action is disabled in current moment.
-     */
-    _isDisabled: function (enabledStates, currentState, _innerEnabled, outerEnabled) {
+    _buttonStateChanged: function (enabledStates, currentState, _innerEnabled, outerEnabled) {
         if (!allDefined(arguments)) {
             return true;
         }
-        // console.log("_isDisabled: enabledStates == ", enabledStates, "currentState == ", currentState, "_innerEnabled == ", _innerEnabled, "outerEnabled == ", outerEnabled);
-        return outerEnabled === false ? true : (!(enabledStates.indexOf(currentState) >= 0 && _innerEnabled));
+        const innerEnableState = !enabledStates.indexOf(currentState) >= 0 && _innerEnabled;
+        this._set_optionButtonDisabled(!innerEnableState);
+        this._set_optionButtonActive(outerEnabled);
+        this._set_disabled(outerEnabled === false ? true : !innerEnableState);
     },
 
     /* Timer callback that performs spinner activation. */

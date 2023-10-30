@@ -34,6 +34,9 @@ const template = html`
                 padding: 8px 12px;
             }
         }
+        paper-button[activated] {
+            @apply --tg-dropdown-switch-activated;
+        }
         .main, .view-item {
             cursor: pointer;
             padding: 8px 12px;
@@ -45,7 +48,7 @@ const template = html`
         .main {
             @apply --tg-switch-button-style;
         }
-        .view-item:focus, .main[dropdown-opened] {
+        .view-item:focus, .main[dropdown-opened][highlight-when-opened] {
             background-color: rgba(33, 33, 33, .15);
         }
         .item-title {
@@ -79,7 +82,7 @@ const template = html`
             transform: scale(1, -1);
         }
     </style>
-    <paper-button id="trigger" raised="[[raised]]" class="main" dropdown-opened$="[[dropDownOpened]]" on-tap="_runActionOrShowView" tooltip-text$=[[mainButtonTooltipText]]>
+    <paper-button id="trigger" raised="[[raised]]" activated$="[[activated]]" disabled$="[[disabled]]" class="main" dropdown-opened$="[[dropDownOpened]]" highlight-when-opened$="[[!doNotHighlightWhenDropDownOpened]]" on-tap="_runActionOrShowView" tooltip-text$=[[mainButtonTooltipText]]>
         <iron-icon hidden$="[[!_currentView.icon]]" icon="[[_currentView.icon]]" style$="[[_currentView.iconStyle]]"></iron-icon>
         <span class="truncate item-title" style$="[[_calcButtonStyle(buttonWidth)]]">[[_currentView.title]]</span>
         <iron-icon icon="icons:arrow-drop-down" on-tap="_showViews" dropdown-opened$="[[dropDownOpened]]"></iron-icon>
@@ -133,6 +136,20 @@ export class TgDropdownSwitch extends mixinBehaviors([TgElementSelectorBehavior]
             makeDropDownWidthTheSameAsButton: {
                 type: Boolean,
                 value: false
+            },
+            doNotHighlightWhenDropDownOpened: {
+                type: Boolean,
+                value: false
+            },
+            disabled: {
+                type: Boolean,
+                value: false,
+                reflectToAttribute: true
+            },
+            activated: {
+                type: Boolean,
+                value: false,
+                reflectToAttribute: true
             },
             _currentView: Object
         };
