@@ -123,9 +123,9 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
         final ProxyInterceptor interceptor = new ProxyInterceptor();
         try {
             final DomainMetadata domainMetadata = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), testDomain, DbVersion.H2);
-            final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata);
+            final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata.eqlDomainMetadata);
             final Configuration cfg = new Configuration();
-            
+
             try {
                 cfg.addInputStream(new ByteArrayInputStream(HibernateMappingsGenerator.generateMappings(domainMetadata.eqlDomainMetadata).getBytes("UTF8")));
             } catch (final MappingException | UnsupportedEncodingException e) {
@@ -141,7 +141,7 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
                 dbProps.setProperty("hibernate.connection.url", format("jdbc:h2:%s;INIT=SET REFERENTIAL_INTEGRITY FALSE", databaseUri));
                 cfg.addProperties(dbProps);
             }
-            
+
             hibernateUtil = new HibernateUtil(interceptor, cfg);
             hibernateModule = new DaoTestHibernateModule(hibernateUtil.getSessionFactory(), domainMetadata, idOnlyProxiedEntityTypeCache);
             injector = new ApplicationInjectorFactory().add(hibernateModule).add(new NewUserNotifierMockBindingModule()).add(new LegacyConnectionModule(new Provider() {

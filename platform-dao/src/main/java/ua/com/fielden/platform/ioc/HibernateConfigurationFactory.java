@@ -91,8 +91,8 @@ public class HibernateConfigurationFactory {
                 applicationEntityTypes, //
                 determineDbVersion(props),
                 determineEql2(props));
-        
-        idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata);
+
+        idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata.eqlDomainMetadata);
 
         final String generatedMappings = HibernateMappingsGenerator.generateMappings(domainMetadata.eqlDomainMetadata);
 
@@ -108,7 +108,7 @@ public class HibernateConfigurationFactory {
     public static DbVersion determineDbVersion(final Properties props) {
         return determineDbVersion(props.getProperty(DIALECT));
     }
-    
+
     private static boolean determineEql2(final Properties props) {
         final String prop = props.getProperty("eql2");
         return (prop != null && prop.toLowerCase().equals("true"));
@@ -132,7 +132,7 @@ public class HibernateConfigurationFactory {
     }
 
     public Configuration build() {
-        setSafely(cfg, "hibernate.current_session_context_class", "thread");        
+        setSafely(cfg, "hibernate.current_session_context_class", "thread");
 
         setSafely(cfg, SHOW_SQL, "false");
         setSafely(cfg, FORMAT_SQL, "true");
