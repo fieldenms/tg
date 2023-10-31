@@ -22,14 +22,14 @@ public abstract class AbstractQuery3 {
     public final Class<?> resultType;
 
     public AbstractQuery3(final QueryComponents3 queryComponents, final Class<?> resultType) {
-        this.joinRoot = queryComponents.joinRoot;
-        this.whereConditions = queryComponents.whereConditions;
-        this.yields = queryComponents.yields;
-        this.groups = queryComponents.groups;
-        this.orderings = queryComponents.orderings;
+        this.joinRoot = queryComponents.joinRoot();
+        this.whereConditions = queryComponents.whereConditions();
+        this.yields = queryComponents.yields();
+        this.groups = queryComponents.groups();
+        this.orderings = queryComponents.orderings();
         this.resultType = resultType;
     }
-    
+
     public String sql(final DbVersion dbVersion) {
         final StringBuffer sb = new StringBuffer();
         sb.append(yields.sql(dbVersion));

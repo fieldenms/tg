@@ -12,24 +12,13 @@ import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
  * This class is used as a convenience to keep all the query components together.
  *
  */
-public class QueryComponents1 {
-    public final IJoinNode1<? extends IJoinNode2<?>> joinRoot;
-    public final Conditions1 whereConditions;
-    public final Conditions1 udfConditions; //User data filtering conditions
-    public final Yields1 yields;
-    public final GroupBys1 groups;
-    public final OrderBys1 orderings;
-    public final boolean yieldAll;
-    public final boolean shouldMaterialiseCalcPropsAsColumnsInSqlQuery;
-
-    public QueryComponents1(final IJoinNode1<? extends IJoinNode2<?>> joinRoot, final Conditions1 whereConditions, final Conditions1 udfConditions, final Yields1 yields, final GroupBys1 groups, final OrderBys1 orderings, final boolean yieldAll, final boolean shouldMaterialiseCalcPropsAsColumnsInSqlQuery) {
-        this.joinRoot = joinRoot;
-        this.whereConditions = whereConditions;
-        this.udfConditions = udfConditions;
-        this.yields = yields;
-        this.groups = groups;
-        this.orderings = orderings;
-        this.yieldAll = yieldAll;
-        this.shouldMaterialiseCalcPropsAsColumnsInSqlQuery = shouldMaterialiseCalcPropsAsColumnsInSqlQuery;
-    }
+public record QueryComponents1(
+                IJoinNode1<? extends IJoinNode2<?>> joinRoot,
+                Conditions1 whereConditions,
+                Conditions1 udfConditions,
+                Yields1 yields,
+                GroupBys1 groups,
+                OrderBys1 orderings,
+                boolean yieldAll,
+                boolean shouldMaterialiseCalcPropsAsColumnsInSqlQuery) {
 }

@@ -10,20 +10,13 @@ import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 /**
  * Represents all structural query parts (components) obtained as the result of stage 1 to stage 2 transformation.
  * This class is used as a convenience to keep all the query components together.
- * 
+ *
+ * @param joinRoot -- if not null represents a FROM part of SQL query; otherwise it means that query yields are derived either from values or from props of outer query sources.
  */
-public class QueryComponents2 {
-    public final IJoinNode2<? extends IJoinNode3> joinRoot;
-    public final Conditions2 whereConditions;
-    public final Yields2 yields;
-    public final GroupBys2 groups;
-    public final OrderBys2 orderings;
-
-    public QueryComponents2(final IJoinNode2<? extends IJoinNode3> joinRoot, final Conditions2 whereConditions, final Yields2 yields, final GroupBys2 groups, final OrderBys2 orderings) {
-        this.joinRoot = joinRoot;
-        this.whereConditions = whereConditions;
-        this.yields = yields;
-        this.groups = groups;
-        this.orderings = orderings;
-    }
+public record QueryComponents2(
+        IJoinNode2<? extends IJoinNode3> joinRoot,
+        Conditions2 whereConditions,
+        Yields2 yields,
+        GroupBys2 groups,
+        OrderBys2 orderings) {
 }

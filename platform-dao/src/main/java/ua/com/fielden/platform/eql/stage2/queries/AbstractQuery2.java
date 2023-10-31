@@ -33,16 +33,22 @@ public abstract class AbstractQuery2 {
     public final Class<?> resultType;
 
     public AbstractQuery2(final QueryComponents2 queryComponents, final Class<?> resultType) {
-        this.joinRoot = queryComponents.joinRoot;
-        this.whereConditions = queryComponents.whereConditions;
-        this.yields = queryComponents.yields;
-        this.groups = queryComponents.groups;
-        this.orderings = queryComponents.orderings;
+        this.joinRoot = queryComponents.joinRoot();
+        this.whereConditions = queryComponents.whereConditions();
+        this.yields = queryComponents.yields();
+        this.groups = queryComponents.groups();
+        this.orderings = queryComponents.orderings();
         this.resultType = resultType;
     }
 
+    /**
+     * Transforms all query components to stage 3.
+     *
+     * @param context
+     * @return
+     */
     protected TransformationResult2<QueryComponents3> transformQueryComponents(final TransformationContext2 context) {
-        final TransformationResult2<? extends IJoinNode3> joinRootTr = joinRoot != null ? joinRoot.transform(context) : transformNone(context);
+        final TransformationResult2<? extends IJoinNode3> joinRootTr = joinRoot != null ? joinRoot.transform(context) : new TransformationResult2<IJoinNode3>(null, context);
         final TransformationResult2<Conditions3> whereConditionsTr = whereConditions.transform(joinRootTr.updatedContext);
         final TransformationResult2<Yields3> yieldsTr = yields.transform(whereConditionsTr.updatedContext);
         final TransformationResult2<GroupBys3> groupsTr = groups.transform(yieldsTr.updatedContext);
@@ -71,10 +77,6 @@ public abstract class AbstractQuery2 {
         result.addAll(orderings.collectEntityTypes());
 
         return result;
-    }
-
-    protected static TransformationResult2<IJoinNode3> transformNone(final TransformationContext2 context) {
-        return new TransformationResult2<IJoinNode3>(null, context);
     }
 
     @Override

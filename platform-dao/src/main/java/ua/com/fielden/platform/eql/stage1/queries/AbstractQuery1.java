@@ -70,14 +70,14 @@ public abstract class AbstractQuery1 {
     public final boolean shouldMaterialiseCalcPropsAsColumnsInSqlQuery;
 
     public AbstractQuery1(final QueryComponents1 queryComponents, final Class<? extends AbstractEntity<?>> resultType) {
-        this.joinRoot = queryComponents.joinRoot;
-        this.whereConditions = queryComponents.whereConditions;
-        this.udfConditions = queryComponents.udfConditions;
-        this.yields = queryComponents.yields;
-        this.groups = queryComponents.groups;
-        this.orderings = queryComponents.orderings;
-        this.yieldAll = queryComponents.yieldAll;
-        this.shouldMaterialiseCalcPropsAsColumnsInSqlQuery = queryComponents.shouldMaterialiseCalcPropsAsColumnsInSqlQuery;
+        this.joinRoot = queryComponents.joinRoot();
+        this.whereConditions = queryComponents.whereConditions();
+        this.udfConditions = queryComponents.udfConditions();
+        this.yields = queryComponents.yields();
+        this.groups = queryComponents.groups();
+        this.orderings = queryComponents.orderings();
+        this.yieldAll = queryComponents.yieldAll();
+        this.shouldMaterialiseCalcPropsAsColumnsInSqlQuery = queryComponents.shouldMaterialiseCalcPropsAsColumnsInSqlQuery();
         this.resultType = resultType;
     }
 
@@ -92,11 +92,23 @@ public abstract class AbstractQuery1 {
         return result;
     }
 
+    /**
+     * Transforms all query components to stage 2 for the queries with no source.
+     *
+     * @param context
+     * @return
+     */
     protected QueryComponents2 transformSourceless(final TransformationContext1 context) {
-        return new QueryComponents2(null, whereConditions.transform(context), yields.transform(context), groups.transform(context), orderings.transform(context));
+        return new QueryComponents2(null /*joinRoot*/, whereConditions.transform(context), yields.transform(context), groups.transform(context), orderings.transform(context));
     }
 
-    protected QueryComponents2 transformQueryComponents(final TransformationContext1 context) {
+    /**
+     * Transforms all query components to stage 2.
+     *
+     * @param context
+     * @return
+     */
+    protected final QueryComponents2 transformQueryComponents(final TransformationContext1 context) {
         final TransformationResult1<? extends IJoinNode2<?>> joinRootTr = joinRoot.transform(context);
         final TransformationContext1 enhancedContext = joinRootTr.updatedContext;
         final IJoinNode2<? extends IJoinNode3> joinRoot2 = joinRootTr.item;
@@ -108,8 +120,23 @@ public abstract class AbstractQuery1 {
         return new QueryComponents2(joinRoot2, whereConditions2, enhancedYields2, groups2, orderings2);
     }
 
+    /**
+     * Should add implicit yields, if required. This logic depends on a specific query kind.
+     *
+     * @param yields
+     * @param mainSource
+     * @return
+     */
     abstract protected Yields2 enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource);
 
+    /**
+     * Injects user-defined filtering conditions into the main source WHERE conditions.
+     *
+     * @param mainSource
+     * @param querySourceInfoProvider
+     * @param originalConditions
+     * @return
+     */
     private Conditions2 enhanceWithUserDataFilterConditions(final ISource2<? extends ISource3> mainSource, final QuerySourceInfoProvider querySourceInfoProvider, final Conditions2 originalConditions) {
         if (udfConditions.isEmpty()) {
             return originalConditions;
