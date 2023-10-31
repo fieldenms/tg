@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage0;
 
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
+import static java.util.Optional.empty;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.emptyCondition;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EQUERY_TOKENS;
@@ -22,7 +23,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.enums.Functions;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
@@ -69,9 +72,9 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Abstract builder to accumulate tokens until ready for respective model creation.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public abstract class AbstractTokensBuilder implements ITokensBuilder {
     private final ITokensBuilder parent;
@@ -183,7 +186,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
                 setChild(new GroupedConditionsBuilder(this, queryBuilder, (Boolean) value));
                 break;
             case CRIT_COND_OPERATOR: //
-                tokens.add(pair(GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, critConditionOperatorModel((Pair<Object, String>) value), false).getModel()));
+                tokens.add(pair(GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, critConditionOperatorModel((Pair<Object, Object>) value), false).getModel()));
                 break;
             case COND_TOKENS: //
                 tokens.add(pair(GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, (ConditionModel) value, false).getModel()));
@@ -205,10 +208,26 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         }
     }
 
-    private ConditionModel critConditionOperatorModel(final Pair<Object, String> props) {
-        final String critOnlyPropName = props.getValue();
+    private ConditionModel critConditionOperatorModel(final Pair<Object, Object> props) {
+        final String critOnlyPropName = props.getValue() instanceof String ? (String) props.getValue() : ((T2<String, Optional<Object>>) props.getValue())._1;
         final String critOnlyPropParamName = queryPropertyParamName(critOnlyPropName);
         final QueryProperty qp = (QueryProperty) getParamValue(critOnlyPropParamName);
+        if (qp != null && qp.isEmptyWithoutMnemonics()) {
+            final Optional<Object> maybeDefaultValue = props.getValue() instanceof T2 ? ((T2<String, Optional<Object>>) props.getValue())._2 : empty();
+            maybeDefaultValue.ifPresent(dv -> {
+                if (dv instanceof List || dv instanceof String) {
+                    qp.setValue(dv);
+                }
+                else if (dv instanceof T2) {
+                    final T2<?,?> t2 = (T2<?,?>) dv;
+                    qp.setValue(t2._1);
+                    qp.setValue2(t2._2);
+                }
+                else {
+                    throw new EqlException(format("Default value for property [%s] in a [critCondition] call has unsupported type [%s].", critOnlyPropName, dv.getClass()));
+                }
+            });
+        }
         if (qp == null || qp.isEmptyWithoutMnemonics()) {
             return emptyCondition();
         } else if (props.getKey() instanceof String) {
@@ -230,7 +249,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         qp.setNot(originalNot);
         return result;
     }
-    
+
     /**
      * The following rules are used to build {@code ConditionModel}.
      * <pre>
@@ -253,7 +272,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         final ConditionModel criteriaCondition = prepareCollectionalCritCondition(qp, propName);
         final EntityResultQueryModel<?> anyItems = collectionQueryStart.model();
         final EntityResultQueryModel<?> matchingItems = collectionQueryStart.and().condition(criteriaCondition).model();
-        
+
         if (!hasValue) {
             return !orNull ? emptyCondition()/*---,-+-*/ : (not ? cond().exists(anyItems).model()/*-++*/ : cond().notExists(anyItems).model())/*--+*/;
         } else if (not){
@@ -308,7 +327,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     protected TokenCategory getLastCat() {
         return !tokens.isEmpty() ? tokens.get(tokens.size() - 1).getKey() : null;
     }
-    
+
     protected Object getLastValue() {
         return !tokens.isEmpty() ? tokens.get(tokens.size() - 1).getValue() : null;
     }

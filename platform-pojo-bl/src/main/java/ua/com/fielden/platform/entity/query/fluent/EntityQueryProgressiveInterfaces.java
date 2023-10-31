@@ -367,6 +367,24 @@ public interface EntityQueryProgressiveInterfaces {
          */
         T critCondition(final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName);
 
+        /**
+         * The same as {@link #critCondition(ICompoundCondition0, String, String)}, but with a default value for the criterion.
+         * This value would be used only if the criterion is empty (i.e., no value and no mnemonic).
+         * <p>
+         * There are 3 primary types that get recognised for {@code defaultValue}:
+         * <ul>
+         * <li> {@code List} - used to pass a list of strings, suitable for selection criteria associated with entity-typed properties.
+         * <li> {@code String} - used to pass a string, suitable for selection criteria associated with String-typed properties.
+         * <li> {@code T2} - a pair of values, suitable for representing default values for boolean, numeric, and date properties.
+         * </ul>
+         * @param collectionQueryStart
+         * @param propName
+         * @param critPropName
+         * @param defaultValue
+         * @return
+         */
+        T critCondition(final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName, final Object defaultValue);
+
 		T condition(final ConditionModel condition);
 
 		T negatedCondition(final ConditionModel condition);
