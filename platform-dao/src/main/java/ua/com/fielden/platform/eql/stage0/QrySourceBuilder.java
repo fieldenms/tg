@@ -28,7 +28,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * This builder is responsible for converting EQL tokens (effectively an AST of sorts) starting with the part that represents FROM or JOIN, and completing at the level of ALIAS (which could be absent).
- * 
+ *
  * @author TG Team
  *
  */
@@ -57,7 +57,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
     private boolean isNothingAsSourceWithoutAlias() {
         return getSize() == 1 && VALUES_AS_QRY_SOURCE.equals(firstCat());
     }
-    
+
     @Override
     public boolean isClosing() {
         return false;
@@ -66,14 +66,14 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
     private Pair<TokenCategory, Object> buildResultForQrySourceBasedOnEntityType() {
         final Class<AbstractEntity<?>> resultType = (Class<AbstractEntity<?>>) firstValue();
         if (isPersistedEntityType(resultType)) {
-            return pair(QRY_SOURCE, new JoinLeafNode1(new Source1BasedOnPersistentType(resultType, (String) secondValue(), getQueryBuilder().nextSourceId())));    
+            return pair(QRY_SOURCE, new JoinLeafNode1(new Source1BasedOnPersistentType(resultType, (String) secondValue(), getQueryBuilder().nextSourceId())));
         } else if (isSyntheticEntityType(resultType) || isSyntheticBasedOnPersistentEntityType(resultType) || isUnionEntityType(resultType)) {
             return pair(QRY_SOURCE, buildQrySourceBasedOnSyntheticEntityType(resultType, (String) secondValue()));
         } else {
             throw new EqlStage1ProcessingException("Unexpected situation occurred.");
         }
     }
-    
+
     private <T extends AbstractEntity<?>> JoinLeafNode1 buildQrySourceBasedOnSyntheticEntityType(final Class<T> resultType, final String alias) {
         final EntityTypeInfo<?> parentInfo = getEntityTypeInfo(resultType);
         final List<SourceQuery1> queries = new ArrayList<>();
@@ -82,7 +82,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         }
         return new JoinLeafNode1(new Source1BasedOnQueries(queries, alias, getQueryBuilder().nextSourceId(), resultType));
     }
-    
+
     private Pair<TokenCategory, Object> buildResultForQrySourceBasedOnQueries() {
         final List<SourceQuery1> queries = new ArrayList<>();
         final String alias = secondValue();
@@ -103,7 +103,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         } else if (isNothingAsSourceWithoutAlias()) {
             return pair(QRY_SOURCE, null);
         } else {
-            throw new RuntimeException("Unable to get result - unrecognised state.");
+            throw new EqlStage1ProcessingException("Unable to get result - unrecognised state.");
         }
     }
 }
