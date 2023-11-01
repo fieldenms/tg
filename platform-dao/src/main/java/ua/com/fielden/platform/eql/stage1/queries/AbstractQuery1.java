@@ -59,6 +59,8 @@ import ua.com.fielden.platform.eql.stage3.sources.ISource3;
  */
 public abstract class AbstractQuery1 {
 
+    public static final String ERR_CANNOT_FIND_YIELD_FOR_ORDER_BY = "Cannot find yield [%s] used within order by operation.";
+
     public final IJoinNode1<? extends IJoinNode2<?>> joinRoot;
     public final Conditions1 whereConditions;
     public final Conditions1 udfConditions;
@@ -195,7 +197,7 @@ public abstract class AbstractQuery1 {
             }
         }
 
-        throw new EqlStage1ProcessingException("Cannot find yield [" + original.yieldName + "]!");
+        throw new EqlStage1ProcessingException(ERR_CANNOT_FIND_YIELD_FOR_ORDER_BY.formatted(original.yieldName));
     }
 
     private static List<OrderBy2> transformForOperand(final ISingleOperand2<?> operand, final boolean isDesc) {
