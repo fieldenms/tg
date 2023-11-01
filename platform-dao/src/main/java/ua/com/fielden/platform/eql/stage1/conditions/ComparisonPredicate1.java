@@ -11,6 +11,11 @@ import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.conditions.ComparisonPredicate2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 
+/**
+ * A predicate for SQL's <=, <, >=, >, =, != statement.
+ *
+ * @author TG Team
+ */
 public class ComparisonPredicate1 implements ICondition1<ComparisonPredicate2> {
     private final ISingleOperand1<? extends ISingleOperand2<?>> leftOperand;
     private final ISingleOperand1<? extends ISingleOperand2<?>> rightOperand;
@@ -34,7 +39,7 @@ public class ComparisonPredicate1 implements ICondition1<ComparisonPredicate2> {
         result.addAll(rightOperand.collectEntityTypes());
         return result;
     }
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;

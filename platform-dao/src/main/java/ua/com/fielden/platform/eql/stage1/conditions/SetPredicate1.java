@@ -12,6 +12,11 @@ import ua.com.fielden.platform.eql.stage2.conditions.SetPredicate2;
 import ua.com.fielden.platform.eql.stage2.operands.ISetOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 
+/**
+ * A predicate for SQL's IN / NOT IN statement.
+ *
+ * @author TG Team
+ */
 public class SetPredicate1 implements ICondition1<SetPredicate2> {
     private final ISingleOperand1<? extends ISingleOperand2<?>> leftOperand;
     private final ISetOperand1<? extends ISetOperand2<?>> rightOperand;
@@ -27,7 +32,7 @@ public class SetPredicate1 implements ICondition1<SetPredicate2> {
     public SetPredicate2 transform(final TransformationContext1 context) {
         return new SetPredicate2(leftOperand.transform(context), negated, rightOperand.transform(context));
     }
-    
+
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>();
@@ -55,9 +60,9 @@ public class SetPredicate1 implements ICondition1<SetPredicate2> {
         if (!(obj instanceof SetPredicate1)) {
             return false;
         }
-        
+
         final SetPredicate1 other = (SetPredicate1) obj;
-        
+
         return Objects.equals(leftOperand, other.leftOperand) &&
                 Objects.equals(rightOperand, other.rightOperand) &&
                 Objects.equals(negated, other.negated);

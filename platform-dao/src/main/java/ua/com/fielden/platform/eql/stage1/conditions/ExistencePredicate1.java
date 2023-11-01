@@ -8,6 +8,11 @@ import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.queries.SubQueryForExists1;
 import ua.com.fielden.platform.eql.stage2.conditions.ExistencePredicate2;
 
+/**
+ * A predicate for SQL's EXISTS / NOT EXISTS statement.
+ *
+ * @author TG Team
+ */
 public class ExistencePredicate1 implements ICondition1<ExistencePredicate2> {
     private final boolean negated;
     private final SubQueryForExists1 subQuery;
@@ -26,7 +31,7 @@ public class ExistencePredicate1 implements ICondition1<ExistencePredicate2> {
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return subQuery.collectEntityTypes();
     }
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -41,11 +46,11 @@ public class ExistencePredicate1 implements ICondition1<ExistencePredicate2> {
         if (this == obj) {
             return true;
         }
-        
+
         if (!(obj instanceof ExistencePredicate1)) {
             return false;
         }
-        
+
         final ExistencePredicate1 other = (ExistencePredicate1) obj;
 
         return Objects.equals(negated, other.negated) && Objects.equals(subQuery, other.subQuery);

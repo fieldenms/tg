@@ -13,6 +13,11 @@ import ua.com.fielden.platform.eql.stage1.queries.SubQuery1;
 import ua.com.fielden.platform.eql.stage2.conditions.QuantifiedPredicate2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 
+/**
+ * A predicate for SQL's ANY / ALL statement (i.e., {@code WHERE propX > ALL (SELECT someprop FROM ....)} .
+ *
+ * @author TG Team
+ */
 public class QuantifiedPredicate1 implements ICondition1<QuantifiedPredicate2> {
     private final ISingleOperand1<? extends ISingleOperand2<?>> leftOperand;
     private final SubQuery1 rightOperand;
@@ -30,7 +35,7 @@ public class QuantifiedPredicate1 implements ICondition1<QuantifiedPredicate2> {
     public QuantifiedPredicate2 transform(final TransformationContext1 context) {
         return new QuantifiedPredicate2(leftOperand.transform(context), operator, quantifier, rightOperand.transform(context));
     }
-    
+
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>();
@@ -59,9 +64,9 @@ public class QuantifiedPredicate1 implements ICondition1<QuantifiedPredicate2> {
         if (!(obj instanceof QuantifiedPredicate1)) {
             return false;
         }
-        
+
         final QuantifiedPredicate1 other = (QuantifiedPredicate1) obj;
-        
+
         return Objects.equals(leftOperand, other.leftOperand) &&
                 Objects.equals(rightOperand, other.rightOperand) &&
                 Objects.equals(quantifier, other.quantifier) &&

@@ -11,6 +11,12 @@ import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.conditions.LikePredicate2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 
+/**
+ * A predicate for SQL's LIKE / NOT LIKE statement.
+ * Additionally holds information about case sensitivity.
+ *
+ * @author TG Team
+ */
 public class LikePredicate1 implements ICondition1<LikePredicate2> {
     private final ISingleOperand1<? extends ISingleOperand2<?>> leftOperand;
     private final ISingleOperand1<? extends ISingleOperand2<?>> rightOperand;
@@ -26,7 +32,7 @@ public class LikePredicate1 implements ICondition1<LikePredicate2> {
     public LikePredicate2 transform(final TransformationContext1 context) {
         return new LikePredicate2(leftOperand.transform(context), rightOperand.transform(context), options);
     }
-    
+
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>();
@@ -50,13 +56,13 @@ public class LikePredicate1 implements ICondition1<LikePredicate2> {
         if (this == obj) {
             return true;
         }
-        
+
         if (!(obj instanceof LikePredicate1)) {
             return false;
         }
-        
+
         final LikePredicate1 other = (LikePredicate1) obj;
-        
+
         return Objects.equals(leftOperand, other.leftOperand) &&
                 Objects.equals(rightOperand, other.rightOperand) &&
                 Objects.equals(options, other.options);
