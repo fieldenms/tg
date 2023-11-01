@@ -1,6 +1,13 @@
 package ua.com.fielden.platform.web.view.master.api.actions.entity.impl;
 
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang.StringUtils.join;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.dom.DomElement;
@@ -93,6 +100,27 @@ public class DefaultEntityAction<T extends AbstractEntity<?>> extends AbstractAc
 
     private String postActionErrorFunction() {
         return postActionErrorFunction;
+    }
+
+    private String augmentShortcutWith(final String shortcut, final String key) {
+        final List<List<String>> shortcuts = listOf(shortcut.split(" ")).stream().map(i -> listOf(i.split("\\+"))).collect(toList());
+        return shortcuts.stream().map(i -> {
+            i.add(1, key);
+            return join(i, "+");
+        }).collect(joining(" "));
+    }
+
+    @Override
+    public void setShortcut(final String shortcut) {
+        final List<String> shortcuts = new ArrayList<>();
+        shortcuts.add(shortcut);
+        if (this.isActionWitOptions()) {
+            shortcuts.add(augmentShortcutWith(shortcut, "shift"));
+            if (!this.isNewRestricted()) {
+                shortcuts.add(augmentShortcutWith(shortcut, "alt"));
+            }
+        }
+        super.setShortcut(join(shortcuts, " "));
     }
 
     @Override

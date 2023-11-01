@@ -34,6 +34,9 @@ const template = html`
            --dropdown-switch-text-transform: uppercase;
            @apply --layout-horizontal;
         }
+        :host([action-disabled]) {
+            pointer-events: none;
+        }
         :host([role="save"]) tg-dropdown-switch {
             --tg-dropdown-switch-activated: {
                 color: white;
@@ -70,7 +73,7 @@ const template = html`
         <span>[[shortDesc]]</span>
     </paper-button>
     <paper-fab id="fabButton" class="action-item" mini icon="[[icon]]" on-tap="_asyncRun" hidden$="[[!_isIcon(actionType)]]" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]"></paper-fab>
-    <tg-dropdown-switch class="action-item" raised fragmented vertical-align="bottom" disabled="[[_optionButtonDisabled]]" activated="[[_optionButtonActive]]" hidden$="[[!_isOptionButton(actionType)]]" view-index="[[_optionIdx]]" views="[[_options]]" do-not-highlight-when-drop-down-opened make-drop-down-width-the-same-as-button change-current-view-on-select on-tg-centre-view-change="_runOptionAction"></tg-dropdown-switch>
+    <tg-dropdown-switch id="dropdownButton" class="action-item" raised fragmented vertical-align="bottom" disabled="[[_optionButtonDisabled]]" activated="[[_optionButtonActive]]" hidden$="[[!_isOptionButton(actionType)]]" view-index="[[_optionIdx]]" views="[[_options]]" do-not-highlight-when-drop-down-opened make-drop-down-width-the-same-as-button change-current-view-on-select on-tg-centre-view-change="_runOptionAction"></tg-dropdown-switch>
     <paper-spinner id="spinner" active="[[_working]]" class="blue" style="display: none;" alt="in progress"></paper-spinner>
 `;
 
@@ -307,7 +310,7 @@ Polymer({
         };
     },
 
-    observers: ["_updateOptions(actionType, shortDesc, longDesc, role, restrictNewOption)", "_updateActionIndex(entityType, role)", "_buttonStateChanged(enabledStates, currentState, _innerEnabled, outerEnabled)"],
+    observers: ["_updateOptions(actionType, shortDesc, longDesc, role, restrictNewOption, shortcut)", "_updateActionIndex(entityType, role)", "_buttonStateChanged(enabledStates, currentState, _innerEnabled, outerEnabled, actionType)"],
 
     created: function () {
         this.run = this._createRun();
@@ -416,8 +419,9 @@ Polymer({
         return ActionType.OPTIONBUTTON === actionType;
     },
 
-    _updateOptions: function (actionType, shortDesc, longDesc, role, restrictNewOption) {
+    _updateOptions: function (actionType, shortDesc, longDesc, role, restrictNewOption, shortcut) {
         if (allDefined(arguments) && this._isOptionButton(actionType)) {
+            const separateShortcuts = shortcut.split(" ");
             this._options = [
                 {
                     index: 0,
@@ -428,7 +432,8 @@ Polymer({
                     title: shortDesc + " & CLOSE",
                     desc: longDesc + " & CLOSE",
                     closeAfterExecution: true,
-                    subRole: "close"
+                    subRole: "close",
+                    shortcut: separateShortcuts.filter(i => i.includes("shift"))
                 }
             ];
             if (!restrictNewOption) {
@@ -437,7 +442,8 @@ Polymer({
                     title: shortDesc + " & NEW",
                     desc: longDesc + " & NEW",
                     closeAfterExecution: true,
-                    subRole: "new"
+                    subRole: "new",
+                    shortcut: separateShortcuts.filter(i => i.includes("alt"))
                 });
             }
         } else {
@@ -445,7 +451,7 @@ Polymer({
         }
     },
 
-    _buttonStateChanged: function (enabledStates, currentState, _innerEnabled, outerEnabled) {
+    _buttonStateChanged: function (enabledStates, currentState, _innerEnabled, outerEnabled, actionType) {
         if (!allDefined(arguments)) {
             return true;
         }
@@ -453,6 +459,11 @@ Polymer({
         this._set_optionButtonDisabled(!innerEnableState);
         this._set_optionButtonActive(outerEnabled);
         this._set_disabled(outerEnabled === false ? true : !innerEnableState);
+        if (this._isOptionButton(actionType) ? this._optionButtonDisabled : this._disabled) {
+            this.setAttribute("action-disabled", "");
+        } else {
+            this.removeAttribute("action-disabled");
+        }
     },
 
     /* Timer callback that performs spinner activation. */
@@ -524,11 +535,23 @@ Polymer({
         }
     },
 
-    _asyncRun: function () {
+    _asyncRun: function (shortcut) {
         // it is critical to execute the actual logic that is intended for an on-tap action in async
         // with a relatively long delay to make sure that all required changes
         this.async(function () {
-            this.run(this.closeAfterExecution, '');
+            let subRole = '';
+            let closeAfterExecution = this.closeAfterExecution;
+            if (shortcut && this._options) {
+                const matchedOption = this._options.find(o => o.shortcut && o.shortcut.indexOf(shortcut) >= 0);
+                if (matchedOption) {
+                    subRole = matchedOption.subRole;
+                    closeAfterExecution = matchedOption.closeAfterExecution;
+                } else {
+                    subRole = this._options[this.$.dropdownButton.viewIndex].subRole || '';
+                    closeAfterExecution = this._options[this.$.dropdownButton.viewIndex].closeAfterExecution;
+                }
+            }
+            this.run(closeAfterExecution, subRole);
         }, 100);
     }
 });

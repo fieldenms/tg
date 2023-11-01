@@ -34,6 +34,9 @@ const template = html`
                 padding: 8px 12px;
             }
         }
+        :host([disabled]) {
+            pointer-events: none;
+        }
         paper-button[activated] {
             @apply --tg-dropdown-switch-activated;
         }
