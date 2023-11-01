@@ -399,8 +399,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         if (paramValue != null) {
             return preprocessValue(paramValue);
         } else {
-            return null; //TODO think through
-            //throw new RuntimeException("No value has been provided for parameter with name [" + paramName + "]");
+            return null; //TODO Once context of operand is available (future feature) -- throw exception for all contexts except YIELD (as NULL operands can't be used in SQL conditions, groupings, etc).
         }
     }
 

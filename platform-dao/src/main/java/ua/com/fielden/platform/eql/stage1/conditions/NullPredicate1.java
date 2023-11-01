@@ -20,6 +20,13 @@ import ua.com.fielden.platform.eql.stage2.conditions.NullPredicate2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 
+/**
+ * A predicate for SQL's IS NULL / IS NOT NULL statement.
+ * Supports operands of union type by checking every member for nullability.
+ *
+ * @author TG Team
+ *
+ */
 public class NullPredicate1 implements ICondition1<ICondition2<?>> {
     private final ISingleOperand1<? extends ISingleOperand2<?>> operand;
     private final boolean negated;
@@ -60,7 +67,7 @@ public class NullPredicate1 implements ICondition1<ICondition2<?>> {
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return operand.collectEntityTypes();
     }
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;

@@ -19,6 +19,15 @@ import ua.com.fielden.platform.eql.stage1.operands.Prop1;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.conditions.ICondition2;
 
+/**
+ * Represents a group of conditions combined with logical OR or AND.
+ *
+ * Conditions are analysed for the subject of being ignored. Conditions get ignored if their operand(s) are empty ({@code iVal(null)} or {@code iParam(null)}).
+ * In order to determine, which conditions can be ignored a DNF-like structure is built (disjunction of conjunctions).
+ *
+ * @author TG Team
+ *
+ */
 public class Conditions1 implements ICondition1<Conditions2> {
     public static final Conditions1 EMPTY_CONDITIONS = new Conditions1(false, null, emptyList());
     private static final ComparisonPredicate1 ID_EQUALS_EXT_ID_CONDITION = new ComparisonPredicate1(new Prop1(ID, false), EQ, new Prop1(ID, true));
@@ -36,7 +45,7 @@ public class Conditions1 implements ICondition1<Conditions2> {
     public boolean isEmpty() {
         return firstCondition == null;
     }
-    
+
     public boolean isIdEqualsExtId() {
         return !negated && otherConditions.isEmpty() && ID_EQUALS_EXT_ID_CONDITION.equals(firstCondition);
     }
@@ -74,16 +83,16 @@ public class Conditions1 implements ICondition1<Conditions2> {
         if (isEmpty()) {
             return Conditions2.EMPTY_CONDITIONS;
         }
-        
+
         final List<List<? extends ICondition2<?>>> transformed = formDnf().stream()
-                .map(andGroup -> 
+                .map(andGroup ->
                                   andGroup.stream().map(andGroupCondition -> andGroupCondition.transform(context))
                                                    .filter(andGroupConditionTransformed -> !andGroupConditionTransformed.ignore())
                                                    .collect(toList())
                     )
                 .filter(transformedAndGroup -> !transformedAndGroup.isEmpty())
                 .collect(toList());
-        
+
         return transformed.isEmpty() ? Conditions2.EMPTY_CONDITIONS : new Conditions2(negated, transformed);
     }
 
@@ -97,7 +106,7 @@ public class Conditions1 implements ICondition1<Conditions2> {
             return result;
         }
     }
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -117,9 +126,9 @@ public class Conditions1 implements ICondition1<Conditions2> {
         if (!(obj instanceof Conditions1)) {
             return false;
         }
-        
+
         final Conditions1 other = (Conditions1) obj;
-        
+
         return Objects.equals(firstCondition, other.firstCondition) &&
                 Objects.equals(otherConditions, other.otherConditions) &&
                 Objects.equals(negated, other.negated);

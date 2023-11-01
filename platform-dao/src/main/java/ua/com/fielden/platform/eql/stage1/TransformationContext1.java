@@ -10,6 +10,13 @@ import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
+/**
+ * A helper construct to assist with Prop1 to Prop2 transformation (aka property resolution).
+ * Its core idea is to maintain a stack of query sources that get accumulated during the query transformation process.
+ * The stack of query source is searched for property attribution -- source where a property belongs to. In case of more than one matching source or no source, an exception is raised.
+ *
+ * @author TG Team
+ */
 public final class TransformationContext1 {
     public final List<List<ISource2<? extends ISource3>>> sourcesForNestedQueries; // in reverse order -- the first list is for the deepest nested query
     public final QuerySourceInfoProvider querySourceInfoProvider;

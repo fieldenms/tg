@@ -11,13 +11,18 @@ import static ua.com.fielden.platform.eql.stage2.sundries.GroupBys2.EMPTY_GROUP_
 import static ua.com.fielden.platform.eql.stage2.sundries.OrderBys2.EMPTY_ORDER_BYS;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
@@ -116,6 +121,7 @@ public abstract class AbstractQuery1 {
         final Yields2 yields2 = yields.transform(enhancedContext);
         final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
         final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, joinRoot2.mainSource());
+        // it is important to enhance yields after orderings to enable functioning of 'orderBy().yield(..)' in application to properties rather than true yields
         final Yields2 enhancedYields2 = enhanceYields(yields2, joinRoot2.mainSource());
         return new QueryComponents2(joinRoot2, whereConditions2, enhancedYields2, groups2, orderings2);
     }
@@ -194,7 +200,7 @@ public abstract class AbstractQuery1 {
             }
         }
 
-        throw new EqlStage1ProcessingException("Can't find yield [" + original.yieldName + "]!");
+        throw new EqlStage1ProcessingException("Cannot find yield [" + original.yieldName + "]!");
     }
 
     private static List<OrderBy2> transformForOperand(final ISingleOperand2<?> operand, final boolean isDesc) {
