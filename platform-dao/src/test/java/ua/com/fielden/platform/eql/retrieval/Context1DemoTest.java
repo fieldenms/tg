@@ -5,41 +5,153 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
-
 public class Context1DemoTest extends AbstractEqlShortcutTest {
 
     @Test
-    public void auto_yield_in_typeless_subquery_yields_null_value_aliased_as_empty_string() {
-        final var act = select(VEHICLE_FUEL_USAGE).where().prop("vehicle.key").eq().val("A001").and().
-                notExists(select(VEHICLE_FUEL_USAGE).where().prop("vehicle").eq().extProp("vehicle").and().prop("date").gt().extProp("date").
-                        model()).model();
-
-
-        final var exp = act;
-        
-        assertModelResultsAreEqual(exp, act);
+    public void demo_1() {
+        final var mr = transformToModelResult(
+                select(VEHICLE).
+                where().
+                prop("station").isNotNull().
+                yield().countAll().as("kount").modelAsAggregate()
+                );
+        System.out.println(mr.sql());
     }
-    
+
     @Test
-    public void eql3_query_executes_correctly34() {
-        final var act = select(TgOrgUnit1.class).where().exists( //
-                select(TgOrgUnit2.class).where().prop("parent").eq().extProp("id").and().exists( //
-                        select(TgOrgUnit3.class).where().prop("parent").eq().extProp("id").and().exists( // 
-                        select(TgOrgUnit4.class).where().prop("parent").eq().extProp("id").and().exists( //
-                        select(TgOrgUnit5.class).where().prop("parent").eq().extProp("id").and().prop("name").isNotNull(). //
-                        model()). //
-                        model()). //
-                        model()). //
-                        model()). //
-                and().prop("id").isNotNull().model();
+    public void demo_2() {
+        final var mr = transformToModelResult(
+                select(VEHICLE).
+                leftJoin(ORG5).as("s").
+                on().
+                prop("station").eq().prop("s").
+                where().
+                prop("name").eq().val(1000).
+                yield().countAll().as("kount").modelAsAggregate()
+                );
+        System.out.println(mr.sql());
+    }
 
-        final var exp = act;
+    @Test
+    public void demo_3() {
+        final var mr = transformToModelResult(
+                select(VEHICLE).
+                leftJoin(ORG5).as("s").
+                on().
+                prop("station").eq().prop("s").
+                leftJoin(MODEL).as("m").
+                on().
+                prop("model").eq().prop("m").
+                where().
+                prop("name").eq().val(5000).
+                and().
+                prop("m.make").eq().val(17).
+                yield().countAll().as("kount").modelAsAggregate()
+                );
+        System.out.println(mr.sql());
+    }
 
-        assertModelResultsAreEqual(exp, act);
+    @Test
+    public void demo_4() {
+        final var mr = transformToModelResult(
+                select(VEHICLE).
+                where().
+                exists(
+                        select(ORG5).
+                        where().
+                        prop("id").eq().prop("station").
+                        and().
+                        prop("name").eq().val(5000).
+                        model()
+                        ).
+                yield().countAll().as("kount").modelAsAggregate()
+                );
+        System.out.println(mr.sql());
+    }
+
+
+    @Test
+    public void demo_5() {
+        final var mr = transformToModelResult(
+                select(VEHICLE).
+                where().
+                exists(
+                        select(ORG5).
+                        where().
+                        prop("id").eq().prop("station").
+                        and().
+                        exists(
+                                select(ORG4).
+                                where().
+                                prop("id").eq().extProp("parent").
+                                and().
+                                prop("name").eq().val(4000).
+                                model()
+                                ).
+                        model()
+                        ).
+                yield().countAll().as("kount").modelAsAggregate()
+                );
+        System.out.println(mr.sql());
+    }
+
+    @Test
+    public void demo_6() {
+        final var mr = transformToModelResult(
+                select(VEHICLE).
+                where().
+                exists(
+                        select(ORG5).
+                        where().
+                        prop("id").eq().prop("station").
+                        and().
+                        exists(
+                                select(ORG4).
+                                where().
+                                prop("id").eq().extProp("parent").
+                                and().
+                                exists(
+                                        select(ORG3).
+                                        where().
+                                        prop("id").eq().extProp("parent").
+                                        and().
+                                        prop("name").eq().val(3000).
+                                        model()
+                                        ).
+                                model()
+                                ).
+                        model()
+                        ).
+                yield().countAll().as("kount").modelAsAggregate()
+                );
+        System.out.println(mr.sql());
+    }
+
+    @Test
+    public void demo_7() {
+        final var mr = transformToModelResult(
+                select(VEHICLE).
+                where().
+                exists(
+                        select(ORG5).as("o5").
+                        join(ORG4).as("o4").
+                        on().
+                        prop("o5.parent").eq().prop("o4").
+                        where().
+                        prop("o5").eq().prop("station").
+                        and().
+                        exists(
+                                select(ORG3).
+                                where().
+                                prop("id").eq().prop("o4.parent").
+                                and().
+                                prop("name").eq().val(3000).
+                                model()
+                                ).
+                        model()
+                        ).
+                yield().countAll().as("kount").modelAsAggregate()
+                );
+        System.out.println(mr.sql());
     }
 }
