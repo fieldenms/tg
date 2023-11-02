@@ -812,6 +812,15 @@ const TgEntityMasterBehaviorImpl = {
                 this.focusPreferredView();
             }
         });
+
+        // Don't close this master on save action if it is a part of compound master.
+        const menuSectionParent = getParentAnd(self, element => element.matches('tg-master-menu-item-section'));
+        if (menuSectionParent) {
+            const saveButton = queryElements(self, "tg-action[role='save']")[0];
+            if (saveButton) {
+                saveButton.closeAfterExecution = false;
+            }
+        }
         
     }, // end of ready callback
 
