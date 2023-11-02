@@ -34,7 +34,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
-import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
+import ua.com.fielden.platform.eql.exceptions.EqlStage0ProcessingException;
 import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage0.functions.AbsOfBuilder;
 import ua.com.fielden.platform.eql.stage0.functions.AddDateIntervalBuilder;
@@ -498,7 +498,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
             singleCat = EQUERY_TOKENS;
             break;
         default:
-            throw new EqlStage1ProcessingException(format("Unrecognised token category [%s] for MultipleOperand.", cat));
+            throw new EqlStage0ProcessingException(format("Unrecognised token category [%s] for MultipleOperand.", cat));
         }
 
         for (final Object singleValue : (List<Object>) value) {

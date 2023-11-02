@@ -18,7 +18,7 @@ import java.util.List;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
-import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
+import ua.com.fielden.platform.eql.exceptions.EqlStage0ProcessingException;
 import ua.com.fielden.platform.eql.meta.EntityTypeInfo;
 import ua.com.fielden.platform.eql.stage1.queries.SourceQuery1;
 import ua.com.fielden.platform.eql.stage1.sources.JoinLeafNode1;
@@ -70,7 +70,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         } else if (isSyntheticEntityType(resultType) || isSyntheticBasedOnPersistentEntityType(resultType) || isUnionEntityType(resultType)) {
             return pair(QRY_SOURCE, buildQrySourceBasedOnSyntheticEntityType(resultType, (String) secondValue()));
         } else {
-            throw new EqlStage1ProcessingException("Unexpected situation occurred.");
+            throw new EqlStage0ProcessingException("Unexpected situation occurred.");
         }
     }
 
@@ -103,7 +103,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         } else if (isNothingAsSourceWithoutAlias()) {
             return pair(QRY_SOURCE, null);
         } else {
-            throw new EqlStage1ProcessingException("Unable to get result - unrecognised state.");
+            throw new EqlStage0ProcessingException("Unable to get result - unrecognised state.");
         }
     }
 }
