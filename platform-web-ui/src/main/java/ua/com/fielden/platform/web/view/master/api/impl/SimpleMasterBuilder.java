@@ -130,7 +130,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
     public static Optional<String> getShortcut(final MasterActions masterAction) {
         if (MasterActions.REFRESH == masterAction) {
-            return Optional.of("ctrl+r meta+r");
+            return Optional.of("ctrl+x meta+x");
         } else if (MasterActions.SAVE == masterAction) {
             return Optional.of("ctrl+s meta+s");
         } else if (MasterActions.VALIDATE == masterAction || MasterActions.EDIT == masterAction || MasterActions.VIEW == masterAction) {

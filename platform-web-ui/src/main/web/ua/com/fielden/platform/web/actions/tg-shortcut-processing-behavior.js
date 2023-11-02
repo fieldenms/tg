@@ -1,6 +1,10 @@
 import { tearDownEvent, deepestActiveElement } from '/resources/reflection/tg-polymer-utils.js';
 import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
 
+const isInput = function (element) {
+    return element.tagName === 'INPUT' || element.nodeName === 'INPUT' || element.tagName === 'TEXTAREA' || element.nodeName === 'TEXTAREA';
+}
+
 export const TgShortcutProcessingBehavior = {
 
     /**
@@ -33,6 +37,12 @@ export const TgShortcutProcessingBehavior = {
      * Finds 'shortcut' action and runs it.
      */
     _findAndRun: function (shortcut, elementTags, customKeyEventTarget) {
+        const activeElement = deepestActiveElement();
+        if (activeElement && shortcut === 'ctrl+x' 
+            && isInput(activeElement) && !activeElement.disabled 
+            && document.getSelection().toString()) {
+                return null;
+        }
         for (let elementTag of elementTags) {
             const actionElement = this._findVisibleEnabledActionElement(elementTag, shortcut, customKeyEventTarget);
             if (actionElement) {
