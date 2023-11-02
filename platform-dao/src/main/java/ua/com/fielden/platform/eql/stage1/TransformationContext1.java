@@ -18,6 +18,8 @@ import ua.com.fielden.platform.eql.stage3.sources.ISource3;
  * @author TG Team
  */
 public final class TransformationContext1 {
+    public static boolean SHOW_INTERNALS = false;
+
     public final List<List<ISource2<? extends ISource3>>> sourcesForNestedQueries; // in reverse order -- the first list is for the deepest nested query
     public final QuerySourceInfoProvider querySourceInfoProvider;
     public final boolean isForCalcProp; // indicates that this context is used to transform calc-prop expression.
@@ -30,6 +32,9 @@ public final class TransformationContext1 {
         this.querySourceInfoProvider = querySourceInfoProvider;
         this.sourcesForNestedQueries = sourcesForNestedQueries;
         this.isForCalcProp = isForCalcProp;
+        if (SHOW_INTERNALS) {
+            System.out.println(toString());
+        }
     }
 
     public TransformationContext1 cloneWithAdded(final ISource2<? extends ISource3> transformedSource) {
@@ -53,5 +58,23 @@ public final class TransformationContext1 {
 
     public List<ISource2<? extends ISource3>> getCurrentLevelSources() {
         return sourcesForNestedQueries.get(0);
+    }
+
+    @Override
+    public String toString() {
+        final StringBuffer sb = new StringBuffer();
+
+        int level = sourcesForNestedQueries.size();
+
+        sb.append("TransformationContext1 " + hashCode() + ":\n");
+        for (final List<ISource2<? extends ISource3>> levelSources : sourcesForNestedQueries) {
+            sb.append("  Level: " + level + (level == sourcesForNestedQueries.size() ? " (innermost)" : (level == 1 ? " (outermost)" : "")) + "\n");
+            level = level - 1;
+            for (final ISource2<? extends ISource3> src : levelSources) {
+                sb.append("    " + src.sourceType().getSimpleName() + (src.alias() != null ? " (" + src.alias() + ")" : "") + " -- " + src.getClass().getSimpleName() +  "\n");
+            }
+        }
+
+        return sb.toString();
     }
 }

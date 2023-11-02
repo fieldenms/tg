@@ -3,9 +3,28 @@ package ua.com.fielden.platform.eql.retrieval;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 
-public class Context1DemoTest extends AbstractEqlShortcutTest {
+import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+
+public class TransformationContext1DemoTest extends AbstractEqlShortcutTest {
+    @Rule
+    public TestName name = new TestName();
+
+    @Before
+    public void setUp() {
+        System.out.println("\nEXECUTING TEST [%s]:\n".formatted(name.getMethodName()));
+        TransformationContext1.SHOW_INTERNALS = true;
+    }
+
+    @After
+    public void tearDown() {
+        TransformationContext1.SHOW_INTERNALS = false;
+    }
 
     @Test
     public void demo_1() {
