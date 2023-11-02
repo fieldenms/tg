@@ -165,7 +165,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
             setChild(new ConcatFunctionBuilder(this, queryBuilder));
             break;
         default:
-            throw new RuntimeException("Unrecognised function token: " + function);
+            throw new EqlStage0ProcessingException("Unrecognised function token: " + function);
         }
     }
 
@@ -348,7 +348,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
             final QueryNowValue qnv = queryBuilder.nowValue;
             return new Value1(qnv != null ? qnv.get() : null);
         default:
-            throw new RuntimeException("Unrecognised zero agrument function: " + function);
+            throw new EqlStage0ProcessingException("Unrecognised zero agrument function: " + function);
         }
     }
 
@@ -376,7 +376,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         case EQUERY_TOKENS:
             return queryBuilder.generateAsSubQuery((QueryModel<?>) value);
         default:
-            throw new RuntimeException("Unrecognised token category for SingleOperand: " + cat);
+            throw new EqlStage0ProcessingException("Unrecognised token category for SingleOperand: " + cat);
         }
     }
 
@@ -451,7 +451,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         case EQUERY_TOKENS:
             return new QueryBasedSet1(queryBuilder.generateAsSubQuery((QueryModel) value));
         default:
-            throw new RuntimeException("Unrecognised token category for SingleOperand: " + cat);
+            throw new EqlStage0ProcessingException("Unrecognised token category for SingleOperand: " + cat);
         }
 
         final List<ISingleOperand1<? extends ISingleOperand2<?>>> result = new ArrayList<>();

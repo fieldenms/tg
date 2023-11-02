@@ -9,6 +9,7 @@ import java.util.List;
 import ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.eql.exceptions.EqlStage0ProcessingException;
 import ua.com.fielden.platform.eql.stage1.operands.CompoundSingleOperand1;
 import ua.com.fielden.platform.eql.stage1.operands.Expression1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
@@ -33,7 +34,7 @@ public class StandAloneExpressionBuilder extends AbstractTokensBuilder {
     @Override
     public Pair<TokenCategory, Object> getResult() {
         if (getChild() != null) {
-            throw new RuntimeException("Unable to produce result - unfinished model state!");
+            throw new EqlStage0ProcessingException("Unable to produce result - unfinished model state!");
         }
 
         final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();

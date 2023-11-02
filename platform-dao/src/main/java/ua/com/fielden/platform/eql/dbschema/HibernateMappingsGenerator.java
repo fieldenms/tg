@@ -21,6 +21,7 @@ import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.EqlEntityMetadata;
 import ua.com.fielden.platform.eql.meta.EqlPropertyMetadata;
@@ -36,7 +37,7 @@ public class HibernateMappingsGenerator {
     private static final Logger LOGGER = getLogger(HibernateMappingsGenerator.class);
 
     public static final String ID_SEQUENCE_NAME = "TG_ENTITY_ID_SEQ";
-    
+
     public static String generateMappings(final EqlDomainMetadata domainMetadata) {
         final StringBuffer sb = new StringBuffer();
         sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
@@ -51,7 +52,7 @@ public class HibernateMappingsGenerator {
                     sb.append(generateEntityClassMapping(entry.entityType, domainMetadata.entityMetadataHolder.getTableForEntityType(entry.entityType).name, sortPropsMetadata(entry.props()), domainMetadata.dbVersion));
                 } catch (final Exception e) {
                     e.printStackTrace();
-                    throw new RuntimeException("Couldn't generate mapping for " + entry.entityType.getName() + " due to: " + e.getMessage());
+                    throw new EqlMetadataGenerationException("Couldn't generate mapping for " + entry.entityType.getName() + " due to: " + e.getMessage());
                 }
                 sb.append("\n");
             }
@@ -62,7 +63,7 @@ public class HibernateMappingsGenerator {
         LOGGER.debug("\n\n" + result + "\n\n");
         return result;
     }
-    
+
     private static final Collection<EqlPropertyMetadata> sortPropsMetadata(final List<EqlPropertyMetadata> propMds) {
         final SortedMap<String, EqlPropertyMetadata> sorted = new TreeMap<>();
         for (final EqlPropertyMetadata propMd : propMds) {
@@ -156,7 +157,7 @@ public class HibernateMappingsGenerator {
         if (isOneToOne(type)) {
             sb.append(generateOneToOneEntityIdMapping(id.name, id.column.name, id.hibType.getClass().getName()));
         } else {
-            sb.append(generateEntityIdMapping(id.name, id.column.name, id.hibType.getClass().getName(), dbVersion));    
+            sb.append(generateEntityIdMapping(id.name, id.column.name, id.hibType.getClass().getName(), dbVersion));
         }
         final EqlPropertyMetadata version = propsMetadata.stream().filter(e -> VERSION.equals(e.name)).findAny().get();
         sb.append(generateEntityVersionMapping(version.name, version.column.name, version.hibType.getClass().getName()));
@@ -187,9 +188,9 @@ public class HibernateMappingsGenerator {
             return generateUnionEntityPropertyMapping(propMetadata);
         } else if (isPersistedEntityType(propMetadata.javaType)) {
             if (KEY.equals(propMetadata.name)) {
-                return generateOneToOnePropertyMapping(propMetadata.name, propMetadata.javaType);    
+                return generateOneToOnePropertyMapping(propMetadata.name, propMetadata.javaType);
             } else {
-                return generateManyToOnePropertyMapping(propMetadata.name, propMetadata.column.name, propMetadata.javaType);    
+                return generateManyToOnePropertyMapping(propMetadata.name, propMetadata.column.name, propMetadata.javaType);
             }
         } else {
             final List<String> columns = new ArrayList<>();
@@ -198,7 +199,7 @@ public class HibernateMappingsGenerator {
                     columns.add(subitem.column.name);
                 }
             }
-            final PropColumn singleColumn = propMetadata.subitems().size() == 1 ? propMetadata.subitems().get(0).column : propMetadata.column;  
+            final PropColumn singleColumn = propMetadata.subitems().size() == 1 ? propMetadata.subitems().get(0).column : propMetadata.column;
             return generatePlainPropertyMapping(propMetadata.name, singleColumn, singleColumn == null ? columns : emptyList(), propMetadata.hibType.getClass().getName());
         }
     }

@@ -53,6 +53,7 @@ import ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator;
 import ua.com.fielden.platform.entity.query.fluent.enums.Quantifier;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
+import ua.com.fielden.platform.eql.exceptions.EqlStage0ProcessingException;
 import ua.com.fielden.platform.eql.stage1.conditions.ComparisonPredicate1;
 import ua.com.fielden.platform.eql.stage1.conditions.CompoundCondition1;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
@@ -206,7 +207,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
         } else if (isMultipleQuantifiedPredicate()) {
             return getMultipleQuantifiedPredicate();
         } else {
-            throw new RuntimeException("Unrecognised result");
+            throw new EqlStage0ProcessingException("Unrecognised result");
         }
     }
 

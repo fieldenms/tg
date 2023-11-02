@@ -6,6 +6,7 @@ import java.util.List;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
+import ua.com.fielden.platform.eql.exceptions.EqlStage0ProcessingException;
 import ua.com.fielden.platform.eql.stage1.conditions.CompoundCondition1;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.conditions.ICondition1;
@@ -32,7 +33,7 @@ public class StandAloneConditionBuilder extends AbstractTokensBuilder {
 
     public Conditions1 getModel() {
         if (getChild() != null) {
-            throw new RuntimeException("Unable to produce result - unfinished model state!");
+            throw new EqlStage0ProcessingException("Unable to produce result - unfinished model state!");
         }
 
         final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
@@ -47,6 +48,6 @@ public class StandAloneConditionBuilder extends AbstractTokensBuilder {
 
     @Override
     public Pair<TokenCategory, Object> getResult() {
-        throw new RuntimeException("Not applicable!");
+        throw new EqlStage0ProcessingException("Not applicable!");
     }
 }
