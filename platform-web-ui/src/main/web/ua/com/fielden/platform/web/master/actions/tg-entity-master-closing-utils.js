@@ -19,7 +19,7 @@ export const createEntityActionThenCallback = function (eventChannel, role, subR
                 // this case pertains to entit editing
                 // such approach enables continuous creation of entities as per issue #285
                 // (https://github.com/fieldenms/tg/issues/285)
-                if (role === 'save' &&
+                if (role === 'save' && !subRole && 
                     ironRequest.entityPersistent === true &&
                     !ironRequest.entityId &&
                     ironRequest.entityContinuation === false) {

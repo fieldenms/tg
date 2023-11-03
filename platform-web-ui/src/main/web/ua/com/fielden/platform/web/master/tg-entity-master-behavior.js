@@ -603,11 +603,9 @@ const TgEntityMasterBehaviorImpl = {
                         action.success = true;
                         console.log('postActionSuccess: ' + actionDesc, functionalEntity);
                         const saveButton = queryElements(self, "tg-action[role='save']")[0];
-                        self.save(functionalEntity, continuationProperty)
-                            .then(
-                                createEntityActionThenCallback(self.centreUuid, 'save', '', postal, null, saveButton ? saveButton.closeAfterExecution : true),
-                                function (value) { console.log('AJAX PROMISE CATCH', value); }
-                            );
+                        if (saveButton) {
+                            saveButton._asyncRunAfterContinuation(functionalEntity, continuationProperty);
+                        }
                     };
                     actionModel.postActionError = function (functionalEntity) {
                         console.log('postActionError: ' + actionDesc, functionalEntity);
@@ -1038,8 +1036,8 @@ const TgEntityMasterBehaviorImpl = {
             shortDesc: 'SAVE',
             longDesc: 'SAVE ACTION...',
             enabledStates: ['EDIT'],
-            action: function () {
-                return self.save();
+            action: function (continuation, continuationProperty) {
+                return self.save(continuation, continuationProperty);
             },
             newAction: function(parentDialog, contextCreator) {
                 self._newAction(parentDialog, contextCreator);

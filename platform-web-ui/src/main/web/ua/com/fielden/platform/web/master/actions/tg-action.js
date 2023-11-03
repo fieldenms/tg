@@ -252,13 +252,6 @@ Polymer({
         },
 
         /**
-         * Executes the action.
-         */
-        run: {
-            type: Function
-        },
-
-        /**
          * Custom focusing callback which will be called after action is executed. Please, note that standard focus restoration logic is still
          * working.
          */
@@ -327,7 +320,7 @@ Polymer({
      */
     _createRun: function () {
         const self = this;
-        return (function (closeAfterExecution, subRole) {
+        return (function (closeAfterExecution, subRole, continuation, continuationProperty) {
             self.persistActiveElement();
 
             this._innerEnabled = false;
@@ -342,7 +335,9 @@ Polymer({
 
             // start the action
             this._working = true;
-            var promise = this.action();
+            this._lastSubRole = subRole;
+            this._lastCloseAfterExecution = typeof closeAfterExecution !== 'undefined' ? closeAfterExecution : self.closeAfterExecution;
+            var promise = this.action(continuation, continuationProperty);
             if (promise) {
                 let parentDialog;
                 let parentContextCreator;
@@ -354,8 +349,7 @@ Polymer({
                     return ironRequest;
                 })
                 .then(  // first a handler for successful promise execution
-                    createEntityActionThenCallback(self.eventChannel, self.role, subRole, postal, self._afterExecution.bind(self), 
-                                typeof closeAfterExecution !== 'undefined' ? closeAfterExecution : self.closeAfterExecution),
+                    createEntityActionThenCallback(self.eventChannel, self.role, this._lastSubRole, postal, self._afterExecution.bind(self), this._lastCloseAfterExecution),
                     // and in case of some exceptional situation let's provide a trivial catch handler
                     function (value) {
                         console.log('AJAX PROMISE CATCH', value);
@@ -552,6 +546,12 @@ Polymer({
                 }
             }
             this.run(closeAfterExecution, subRole);
+        }, 100);
+    },
+
+    _asyncRunAfterContinuation: function (continuation, continuationProperty) {
+        this.async(function () {
+            this.run(this._lastCloseAfterExecution, this._lastSubRole, continuation, continuationProperty);
         }, 100);
     }
 });
