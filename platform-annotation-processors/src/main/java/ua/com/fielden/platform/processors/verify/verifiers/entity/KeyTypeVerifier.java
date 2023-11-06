@@ -133,26 +133,29 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
                 if (maybeKeyTypeAnnotMirror.isEmpty()) {
                     return Optional.empty();
                 }
+
                 final AnnotationMirror keyTypeAnnotMirror = maybeKeyTypeAnnotMirror.get();
 
                 final Optional<EntityElement> maybeParent = entityFinder.getParent(entity);
                 if (maybeParent.isEmpty()) {
                     return Optional.empty();
                 }
-                final EntityElement parent = maybeParent.get();
 
+                final EntityElement parent = maybeParent.get();
                 if (!isOneOfAbstracts(parent)) {
                     return Optional.empty();
                 }
 
                 final AnnotationValue keyTypeAnnotValue = entityFinder.getKeyTypeAnnotationValue(keyTypeAnnotMirror);
                 final TypeMirror actualKeyTypeMirror = (TypeMirror) keyTypeAnnotValue.getValue();
-                if (actualKeyTypeMirror.getKind() == TypeKind.ERROR)
+                if (actualKeyTypeMirror.getKind() == TypeKind.ERROR) {
                     return Optional.empty();
+                }
 
                 final DeclaredType entitySuperclassType = (DeclaredType) entity.getSuperclass();
-                if (entitySuperclassType.getKind() == TypeKind.ERROR)
+                if (entitySuperclassType.getKind() == TypeKind.ERROR) {
                     return Optional.empty();
+                }
 
                 final List<? extends TypeMirror> parentTypeArgs = entitySuperclassType.getTypeArguments();
                 if (parentTypeArgs.isEmpty()) {
@@ -161,8 +164,9 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
                 // abstract entities accept a single type argument
                 else {
                     TypeMirror typeArg = parentTypeArgs.get(0);
-                    if (typeArg.getKind() == TypeKind.ERROR)
+                    if (typeArg.getKind() == TypeKind.ERROR) {
                         return Optional.empty();
+                    }
 
                     if (!typeUtils.isSameType(typeArg, actualKeyTypeMirror)) {
                         return Optional.of(new ViolatingElement(entity.element(), Kind.ERROR, KEY_TYPE_MUST_MATCH_THE_TYPE_ARGUMENT_TO_ABSTRACT_ENTITY,
@@ -210,8 +214,9 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
                 final AnnotationMirror entityKeyTypeAnnotMirror = maybeEntityKeyTypeAnnotMirror.get();
                 final AnnotationValue entityKeyTypeAnnotValue = entityFinder.getKeyTypeAnnotationValue(entityKeyTypeAnnotMirror);
                 final TypeMirror entityKeyTypeMirror = (TypeMirror) entityKeyTypeAnnotValue.getValue();
-                if (entityKeyTypeMirror.getKind() == TypeKind.ERROR)
+                if (entityKeyTypeMirror.getKind() == TypeKind.ERROR) {
                     return Optional.empty();
+                }
 
                 final Optional<EntityElement> maybeParent = entityFinder.getParent(entity);
                 // skip non-child entities and those with an abstract parent
@@ -219,8 +224,8 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
                 if (maybeParent.map(elt -> ElementFinder.isAbstract(elt)).orElse(true)) {
                     return Optional.empty();
                 }
-                final EntityElement parent = maybeParent.get();
 
+                final EntityElement parent = maybeParent.get();
                 final Optional<TypeMirror> parentKeyTypeMirror = entityFinder.determineKeyType(parent);
                 // parent might be missing @KeyType, which should have been detected by KeyTypePresence verifier, so we ignore this case
                 if (parentKeyTypeMirror.map(t -> t.getKind() == TypeKind.ERROR).orElse(true)) {
@@ -267,17 +272,17 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
                 if (maybeKeyProp.isEmpty()) {
                     return Optional.empty();
                 }
-                final PropertyElement keyProp = maybeKeyProp.get();
 
+                final PropertyElement keyProp = maybeKeyProp.get();
                 final Optional<TypeMirror> maybeKeyType = entityFinder.determineKeyType(entity);
                 // missing @KeyType could mean an abstract entity or an invalid definition, either way this verifier has other responsibilities
                 if (maybeKeyType.isEmpty()) {
                     return Optional.empty();
                 }
                 final TypeMirror keyType = maybeKeyType.get();
-                if (keyType.getKind() == TypeKind.ERROR)
+                if (keyType.getKind() == TypeKind.ERROR) {
                     return Optional.empty();
-
+                }
                 // keyProp might have an unresolved type but we still let this verifier run because declaration of property
                 // key along with @KeyType(NoKey.class) is incorrect regardless of its type
                 if (elementFinder.isSameType(keyType, NoKey.class)) {
