@@ -860,7 +860,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 resetMetaStateForCriteriaValidationPrototype(
                         validationPrototype,
                         EntityResourceUtils.getOriginalManagedType(validationPrototype.getType(), cdtmae)//
-                ), new LinkedHashSet<>()//
+                ), new LinkedHashSet<>(), true /* isCriteriaEntity */
         );
     }
 
