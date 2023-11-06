@@ -25,12 +25,7 @@ const TgEntityMasterTemplateBehaviorImpl = {
         /**
          * Attributes for the action that allows to open entity master for specified entity-typed property.
          */
-        _tgOpenMasterActionAttrs: Object,
-
-        /**
-         * Attributes for the action that opens help entity master for this entity master.
-         */
-        _tgOpenHelpMasterActionAttrs: Object
+        _tgOpenMasterActionAttrs: Object
     },
 
     ready: function () {
@@ -50,12 +45,6 @@ const TgEntityMasterTemplateBehaviorImpl = {
             centreUuid: self.uuid
         };
         self.tgOpenMasterAction = self.$.tgOpenMasterAction;
-
-        self._tgOpenHelpMasterActionAttrs = {
-            entityType: "ua.com.fielden.platform.entity.UserDefinableHelp",
-            currentState: 'EDIT',
-            centreUuid: self.uuid
-        }
 
         self._currentEntityForHelp = function() {
             return () => self._currEntity;

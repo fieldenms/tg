@@ -41,11 +41,7 @@ const TgEntityCentreTemplateBehaviorImpl = {
         /**
          * Attributes for the action that allows to open entity master for specified entity type.
          */
-        _tgOpenMasterActionAttrs: Object,
-        /**
-         * Attributes for the action that opens help entity master for this entity centre.
-         */
-        _tgOpenHelpMasterActionAttrs: Object,
+        _tgOpenMasterActionAttrs: Object
     },
 
     created: function () {
@@ -164,12 +160,6 @@ const TgEntityCentreTemplateBehaviorImpl = {
         /////////////////////////////////////////////////////////////////////////////////
 
         //////////////////Initialise tgOpenHelpMasterAction properties///////////////////
-
-        this._tgOpenHelpMasterActionAttrs = {
-            entityType: "ua.com.fielden.platform.entity.UserDefinableHelp",
-            currentState: 'EDIT',
-            centreUuid: this.uuid
-        }
 
         this._preOpenHelpMasterAction = function (action) {
             action.shortDesc = this._reflector.getType(this.entityType).entityTitle() + " Centre Help";
