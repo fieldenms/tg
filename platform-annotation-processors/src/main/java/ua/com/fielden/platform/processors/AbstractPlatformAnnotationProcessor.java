@@ -1,27 +1,37 @@
 package ua.com.fielden.platform.processors;
 
-import com.google.common.base.Stopwatch;
-import com.squareup.javapoet.AnnotationSpec;
-import ua.com.fielden.platform.processors.exceptions.ProcessorInitializationException;
-import ua.com.fielden.platform.processors.metamodel.elements.utils.TypeElementCache;
-import ua.com.fielden.platform.processors.utils.CodeGenerationUtils;
+import static java.lang.Boolean.parseBoolean;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static javax.tools.Diagnostic.Kind.NOTE;
 
-import javax.annotation.processing.*;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.StringJoiner;
+import java.util.regex.Pattern;
+
+import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.Filer;
+import javax.annotation.processing.Messager;
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
-import java.util.*;
-import java.util.regex.Pattern;
 
-import static java.lang.Boolean.parseBoolean;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static javax.tools.Diagnostic.Kind.NOTE;
+import com.google.common.base.Stopwatch;
+import com.squareup.javapoet.AnnotationSpec;
+
+import ua.com.fielden.platform.processors.exceptions.ProcessorInitializationException;
+import ua.com.fielden.platform.processors.metamodel.elements.utils.TypeElementCache;
+import ua.com.fielden.platform.processors.utils.CodeGenerationUtils;
 
 /**
- * An abstract platform-level annotation processor to be extended by specific implementations. 
+ * An abstract platform-level annotation processor to be extended by specific implementations.
  * It provides common processor behaviour mostly concerned with initialization and per-round logging.
  * <p>
  * Subclasses are responsible for implementing {@link #processRound(Set, RoundEnvironment)}, which is called by a known method
@@ -61,14 +71,16 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
     public static final String PACKAGE_OPTION = "package";
     protected String packageName = "fielden";
 
+    private static final Pattern REGEX_JAVA_PACKAGE_NAME = Pattern.compile("([a-zA-Z]\\w*\\.)*[a-zA-Z]\\w*");
+
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
-        super.init(processingEnv); 
+        super.init(processingEnv);
         this.messager = processingEnv.getMessager();
         this.filer = processingEnv.getFiler();
         this.elementUtils = processingEnv.getElementUtils();
         this.typeUtils = processingEnv.getTypeUtils();
-        this.roundNumber = this.batchRoundNumber = 0; 
+        this.roundNumber = this.batchRoundNumber = 0;
         this.pastLastRound = false;
 
         final Map<String, String> options = processingEnv.getOptions();
@@ -101,7 +113,7 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
             TypeElementCache.recordStats();
         }
         Optional.ofNullable(options.get(PACKAGE_OPTION)).ifPresent(pkg -> {
-            if (!Pattern.matches("([a-zA-Z]\\w*\\.)*[a-zA-Z]\\w*", pkg)) {
+            if (!REGEX_JAVA_PACKAGE_NAME.matcher(pkg).matches()) {
                 throw new ProcessorInitializationException("Option \"%s\" specifies an illegal package name \"%s\".".formatted(PACKAGE_OPTION, pkg));
             }
             this.packageName = pkg;
@@ -155,7 +167,7 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
      * performed by the abstraction.
      * <p>
      * For more details refer to the documentation of {@link #process(Set, RoundEnvironment)}.
-     * 
+     *
      * @param annotations
      * @param roundEnv
      * @return
