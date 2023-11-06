@@ -1,31 +1,9 @@
 package ua.com.fielden.platform.processors.metamodel;
 
-import static java.lang.String.format;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_ALIASED_NAME_SUFFIX;
-import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_NAME_SUFFIX;
-
-import java.util.List;
-import java.util.Optional;
-
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
-
 import org.apache.commons.lang3.StringUtils;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
@@ -34,28 +12,28 @@ import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
-import ua.com.fielden.platform.processors.test_entities.EntityWithDescTitle;
-import ua.com.fielden.platform.processors.test_entities.EntityWithEntityTypedAndOrdinaryProps;
-import ua.com.fielden.platform.processors.test_entities.EntityWithKeyTypeNoKey;
-import ua.com.fielden.platform.processors.test_entities.EntityWithKeyTypeOfEntityType;
-import ua.com.fielden.platform.processors.test_entities.EntityWithOrdinaryProps;
-import ua.com.fielden.platform.processors.test_entities.EntityWithPropertyDesc;
-import ua.com.fielden.platform.processors.test_entities.EntityWithoutDescTitleAndPropertyDesc;
-import ua.com.fielden.platform.processors.test_entities.EntityWithoutDescTitleAndPropertyDesc_extends_EntityWithPropertyDescWithoutMetaModel;
-import ua.com.fielden.platform.processors.test_entities.EntityWithoutDescTitle_extends_EntityWithDescTitleWithoutMetaModel;
-import ua.com.fielden.platform.processors.test_entities.KeyTypeAsComposite_SubEntityExtendingAbstractSuperEntityWithoutKeyType;
-import ua.com.fielden.platform.processors.test_entities.KeyTypeAsEntity_SubEntityExtendingAbstractSuperEntityWithoutKeyType;
-import ua.com.fielden.platform.processors.test_entities.KeyTypeAsString_SubEntityExtendingAbstractSuperEntityWithoutKeyType;
-import ua.com.fielden.platform.processors.test_entities.KeyType_AbstractSuperEntityWithoutKeyType;
-import ua.com.fielden.platform.processors.test_entities.NonPersistentButDomainEntity;
-import ua.com.fielden.platform.processors.test_entities.NonPersistentButWithMetaModelEntity;
-import ua.com.fielden.platform.processors.test_entities.PersistentEntity;
-import ua.com.fielden.platform.processors.test_entities.SubEntity;
-import ua.com.fielden.platform.processors.test_entities.SuperEntity;
+import ua.com.fielden.platform.processors.test_entities.*;
 import ua.com.fielden.platform.processors.test_entities.meta.SubEntityMetaModel;
 import ua.com.fielden.platform.processors.test_utils.ProcessingRule;
 import ua.com.fielden.platform.processors.test_utils.exceptions.TestCaseConfigException;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
+import java.util.List;
+import java.util.Optional;
+
+import static java.lang.String.format;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_ALIASED_NAME_SUFFIX;
+import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_NAME_SUFFIX;
 
 
 /**
@@ -78,9 +56,9 @@ public class MetaModelStructureTest {
     public static void setupOnce() {
         // these values are guaranteed to have been initialized since the class rule will evaluate this method during the last round of processing
         typeUtils = rule.getTypes();
-        elementFinder = new ElementFinder(rule.getElements(), rule.getTypes());
-        entityFinder = new EntityFinder(rule.getElements(), rule.getTypes());
-        metaModelFinder = new MetaModelFinder(rule.getElements(), rule.getTypes());
+        elementFinder = new ElementFinder(rule.getProcessingEnvironment());
+        entityFinder = new EntityFinder(rule.getProcessingEnvironment());
+        metaModelFinder = new MetaModelFinder(rule.getProcessingEnvironment());
         validateSetup();
     }
     

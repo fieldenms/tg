@@ -1,10 +1,9 @@
 package ua.com.fielden.platform.processors.verify.annotation;
 
-import static java.lang.annotation.RetentionPolicy.SOURCE;
-
+import javax.lang.model.element.Element;
 import java.lang.annotation.Retention;
 
-import javax.lang.model.element.Element;
+import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 /**
  * Indicates whether the verification of a program element should be skipped.

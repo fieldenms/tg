@@ -1,18 +1,17 @@
 package ua.com.fielden.platform.processors.metamodel.elements;
 
-import static java.lang.String.format;
-
-import java.math.BigDecimal;
-import java.util.Objects;
+import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelException;
+import ua.com.fielden.platform.utils.CollectionUtil;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import java.math.BigDecimal;
+import java.util.Objects;
 
-import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelException;
-import ua.com.fielden.platform.utils.CollectionUtil;
+import static java.lang.String.format;
 
 /**
  * A convenient wrapper around {@link VariableElement} to represent a property element.

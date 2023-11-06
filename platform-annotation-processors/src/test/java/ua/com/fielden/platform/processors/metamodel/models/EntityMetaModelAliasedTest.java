@@ -1,16 +1,12 @@
 package ua.com.fielden.platform.processors.metamodel.models;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertThrows;
-
-import org.junit.Test;
-
 import metamodels.MetaModels;
+import org.junit.Test;
 import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelAliasedException;
 import ua.com.fielden.platform.processors.test_entities.meta.EntityWithEntityTypedAndOrdinaryPropsMetaModel;
 import ua.com.fielden.platform.processors.test_entities.meta.ExampleEntityMetaModelAliased;
+
+import static org.junit.Assert.*;
 
 /**
  * Tests that cover meta-model aliasing capabilities.

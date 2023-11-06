@@ -1,14 +1,13 @@
 package ua.com.fielden.platform.processors.metamodel.concepts;
 
-import static java.lang.String.format;
-
-import java.util.Objects;
-
 import com.squareup.javapoet.ClassName;
-
 import ua.com.fielden.platform.processors.metamodel.MetaModelConstants;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
+
+import java.util.Objects;
+
+import static java.lang.String.format;
 
 /**
  * This class represents an abstraction for a meta-model that needs to be generated as opposed to a meta-model that was already generated. The latter is represented by {@link MetaModelElement}. 

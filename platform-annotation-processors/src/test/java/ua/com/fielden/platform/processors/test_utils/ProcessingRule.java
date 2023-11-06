@@ -1,18 +1,18 @@
 package ua.com.fielden.platform.processors.test_utils;
 
-import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
+import org.junit.rules.TestRule;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
 
-import java.util.Collection;
-import java.util.List;
-
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.JavaFileObject;
+import java.util.Collection;
+import java.util.List;
 
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
+import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
 
 /**
  * Implementation of {@link org.junit.rules.TestRule} that runs test methods during the last round of annotation processing.
@@ -31,8 +31,7 @@ public class ProcessingRule implements TestRule {
 
     private Collection<? extends JavaFileObject> javaSources;
     private Processor processor;
-    private Elements elements;
-    private Types types;
+    private ProcessingEnvironment processingEnvironment;
 
     /**
      * Only a single annotation processor is allowed per rule to ensure that the processing environment is not shared with other processors, 
@@ -73,20 +72,23 @@ public class ProcessingRule implements TestRule {
                         .setOptions(OPTION_PROC_ONLY);
 
                 compilation.compileAndEvaluatef((procEnv) -> {
-                    elements = procEnv.getElementUtils();
-                    types = procEnv.getTypeUtils();
+                    processingEnvironment = procEnv;
                     base.evaluate();
                 });
             }
         };
     }
 
+    public ProcessingEnvironment getProcessingEnvironment() {
+        return processingEnvironment;
+    }
+
     public Elements getElements() {
-        return elements;
+        return processingEnvironment.getElementUtils();
     }
 
     public Types getTypes() {
-        return types;
+        return processingEnvironment.getTypeUtils();
     }
 
 }

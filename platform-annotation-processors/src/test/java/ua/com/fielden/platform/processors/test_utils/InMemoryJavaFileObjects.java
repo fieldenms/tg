@@ -1,12 +1,11 @@
 package ua.com.fielden.platform.processors.test_utils;
 
-import static java.lang.String.format;
-
-import java.net.URI;
-
 import javax.tools.JavaFileManager.Location;
 import javax.tools.JavaFileObject.Kind;
 import javax.tools.StandardLocation;
+import java.net.URI;
+
+import static java.lang.String.format;
 
 /**
  * Utility class for performing operations related to {@link InMemoryJavaFileObject}.

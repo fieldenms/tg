@@ -1,16 +1,14 @@
 package ua.com.fielden.platform.processors.metamodel.elements;
 
-import java.util.Objects;
-import java.util.Set;
-import java.util.function.Function;
+import com.squareup.javapoet.ClassName;
+import ua.com.fielden.platform.processors.metamodel.concepts.MetaModelConcept;
 
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
-
-import com.squareup.javapoet.ClassName;
-
-import ua.com.fielden.platform.processors.metamodel.concepts.MetaModelConcept;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
 
 /**
  * Represents a source code of a meta-model for a corresponding domain entity.

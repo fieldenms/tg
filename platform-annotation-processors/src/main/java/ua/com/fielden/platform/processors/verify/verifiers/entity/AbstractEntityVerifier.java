@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
+import ua.com.fielden.platform.processors.verify.verifiers.AbstractVerifier;
+
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
-
-import ua.com.fielden.platform.processors.verify.verifiers.AbstractVerifier;
 
 /**
  * Base verifier type to be subclassed by entity-oriented verifiers. Utilises {@link EntityRoundEnvironment}.
