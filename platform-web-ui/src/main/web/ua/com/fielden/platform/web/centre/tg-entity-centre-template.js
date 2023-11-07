@@ -88,6 +88,7 @@ const entityCentreTemplate = html`
             require-selected-entities='NONE'
             require-master-entity='false'
             pre-action = '[[_preOpenHelpMasterAction]]'
+            modify-functional-entity = '[[_modifyHelpEntity]]'
             post-action-success = '[[_postOpenHelpMasterAction]]'
             hidden>
         </tg-ui-action>

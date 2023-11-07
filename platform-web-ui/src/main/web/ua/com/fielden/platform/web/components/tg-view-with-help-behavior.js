@@ -25,7 +25,11 @@ export const TgViewWithHelpBehavior = {
         this._helpMouseDownEventHandler = this._helpMouseDownEventHandler.bind(this);
         this._helpMouseUpEventHandler = this._helpMouseUpEventHandler.bind(this);
         this._postOpenHelpMasterAction = this._postOpenHelpMasterAction.bind(this);
+        this._modifyHelpEntity = this._modifyHelpEntity.bind(this);
         this._showHelpDialog = this._showHelpDialog.bind(this);
+    },
+
+    attached: function () {
         this._tgOpenHelpMasterActionAttrs = {
             entityType: "ua.com.fielden.platform.entity.UserDefinableHelp",
             currentState: 'EDIT',
@@ -82,6 +86,13 @@ export const TgViewWithHelpBehavior = {
             //Reset action type and timer;
             this._helpActionLongPress = false;
             this._helpActionTimer = null;
+        }
+    },
+
+    _modifyHelpEntity: function (bindingEntity, master, action) {
+        const saveButton = master.shadowRoot.querySelector("tg-action[role='save']");
+        if (saveButton) {
+            saveButton.closeAfterExecution = bindingEntity.get("id") === null;
         }
     },
 

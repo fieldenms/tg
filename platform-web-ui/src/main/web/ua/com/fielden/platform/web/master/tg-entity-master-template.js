@@ -37,6 +37,7 @@ const template = html`<!-- TODO layout vertical -->
         require-master-entity='false'
         current-entity = '[[_currentEntityForHelp()]]'
         pre-action = '[[_preOpenHelpMasterAction]]'
+        modify-functional-entity = '[[_modifyHelpEntity]]'
         post-action-success = '[[_postOpenHelpMasterAction]]'
         hidden>
     </tg-ui-action>
