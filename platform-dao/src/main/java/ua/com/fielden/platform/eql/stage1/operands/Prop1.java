@@ -23,6 +23,9 @@ import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
 public class Prop1 implements ISingleOperand1<Prop2> {
+
+    public static final String ERR_CANNOT_RESOLVE_PROPERTY = "Cannot resolve property [%s].";
+
     public final String propPath;
     public final boolean external;
 
@@ -48,7 +51,7 @@ public class Prop1 implements ISingleOperand1<Prop2> {
             }
         }
 
-        throw new EqlStage1ProcessingException(format("Cannot resolve property [%s].", propPath));
+        throw new EqlStage1ProcessingException(ERR_CANNOT_RESOLVE_PROPERTY.formatted(propPath));
     }
 
     public static final List<AbstractQuerySourceItem<?>> enhancePath(final List<AbstractQuerySourceItem<?>> originalPath) {
