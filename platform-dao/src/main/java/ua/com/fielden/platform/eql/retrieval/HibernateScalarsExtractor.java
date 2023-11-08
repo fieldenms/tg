@@ -16,11 +16,13 @@ import ua.com.fielden.platform.eql.retrieval.records.ValueTree;
 
 /**
  * Utility class for getting ordered list of {@link HibernateScalar Hibernate scalars} from {@link EntityTree}.
- * 
+ *
  * @author TG Team
  *
  */
 public class HibernateScalarsExtractor {
+
+    private HibernateScalarsExtractor() {}
 
     public static <E extends AbstractEntity<?>> List<HibernateScalar> getSortedScalars(final EntityTree<E> entityTree) {
         final SortedMap<Integer, HibernateScalar> result = new TreeMap<>();
@@ -29,7 +31,7 @@ public class HibernateScalarsExtractor {
         }
         return unmodifiableList(new ArrayList<HibernateScalar>(result.values()));
     }
-    
+
     private static <E extends AbstractEntity<?>> List<QueryResultLeaf> getLeavesFromEntityTree(final EntityTree<E> entityTree) {
         final List<QueryResultLeaf> result = new ArrayList<>();
 

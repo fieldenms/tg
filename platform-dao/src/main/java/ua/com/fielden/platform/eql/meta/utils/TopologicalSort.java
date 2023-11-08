@@ -10,10 +10,12 @@ import java.util.Set;
 
 public class TopologicalSort {
 
+    private TopologicalSort() {}
+
     public static <T> List<T> sortTopologically(final Map<T, Set<T>> mapOfDependencies) {
         final List<T> sorted = new ArrayList<>();
         final Map<T, Set<T>> localMapOfDependencies = makeDefensiveCopy(mapOfDependencies);
-        
+
         while (!localMapOfDependencies.isEmpty()) {
             T nextSorted = null;
             // let's find the first item without dependencies and regard it as "sorted"
@@ -27,7 +29,7 @@ public class TopologicalSort {
             sorted.add(nextSorted);
             localMapOfDependencies.remove(nextSorted); // removing "sorted" item from map of remaining items
 
-            // removing "sorted" item from dependencies of remaining items 
+            // removing "sorted" item from dependencies of remaining items
             for (final Entry<T, Set<T>> el : localMapOfDependencies.entrySet()) {
                 el.getValue().remove(nextSorted);
             }
@@ -35,7 +37,7 @@ public class TopologicalSort {
 
         return sorted;
     }
-    
+
     private static <T> Map<T, Set<T>> makeDefensiveCopy(final Map<T, Set<T>> mapOfDependencies) {
         final Map<T, Set<T>> result = new HashMap<>();
         for (final Entry<T, Set<T>> entry : mapOfDependencies.entrySet()) {

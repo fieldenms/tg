@@ -15,6 +15,8 @@ import ua.com.fielden.platform.eql.retrieval.records.HibernateScalar;
 public class EntityHibernateRetrievalQueryProducer {
     //private static final Logger LOGGER = getLogger(EntityHibernateRetrievalQueryProducer.class);
 
+    private EntityHibernateRetrievalQueryProducer() {}
+
     public static Query<?> produceQueryWithPagination(final Session session, final String sql, final List<HibernateScalar> retrievedColumns, final Map<String, Object> queryParams, final Integer pageNumber, final Integer pageCapacity) {
         // LOGGER.debug("\nSQL:\n   " + sql + "\n");
         final NativeQuery<?> sqlQuery = session.createNativeQuery(sql);
@@ -35,7 +37,7 @@ public class EntityHibernateRetrievalQueryProducer {
             // LOGGER.debug("adding scalar: alias = [" + hibScalar.column() + "] type = [" + hibScalar.hibType() + "]");
         }
     }
-    
+
     private static void specifyParamValuesToHibernateQuery(final NativeQuery<?> query, final Map<String, Object> queryParams) {
         // LOGGER.debug("\nPARAMS:\n   " + queryParams + "\n");
         for (final Map.Entry<String, Object> paramEntry : queryParams.entrySet()) {

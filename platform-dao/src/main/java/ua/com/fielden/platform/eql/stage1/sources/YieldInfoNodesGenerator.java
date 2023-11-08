@@ -22,6 +22,9 @@ import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.sundries.Yield2;
 
 public class YieldInfoNodesGenerator {
+
+    private YieldInfoNodesGenerator() {}
+
     public static Collection<YieldInfoNode> generate(final List<SourceQuery2> models) {
         final List<YieldInfoTail> yieldsInfo = new ArrayList<>();
         for (final YieldInfo yield : generateYieldInfos(models)) {
@@ -30,12 +33,12 @@ public class YieldInfoNodesGenerator {
 
         return group(yieldsInfo).values();
     }
-    
+
     private static List<YieldInfo> generateYieldInfos(final List<SourceQuery2> models) {
         if (models.size() == 1) {
             return models.get(0).yields.getYields().stream().map(yield -> new YieldInfo(yield.alias, yield.operand.type(), determineNonnullability(new YieldAndConditions(yield, models.get(0).whereConditions)))).collect(toList());
         } else {
-            final List<YieldInfo> result = new ArrayList<>(); 
+            final List<YieldInfo> result = new ArrayList<>();
             final Map<String, List<YieldAndConditions>> yieldMatrix = generateYieldMatrixFromQueryModels(models);
             validateYieldsMatrix(yieldMatrix, models.size());
             for (final Entry<String, List<YieldAndConditions>> yieldEntry : yieldMatrix.entrySet()) {
@@ -44,11 +47,11 @@ public class YieldInfoNodesGenerator {
             return result;
         }
     }
-    
+
     private static boolean determineNonnullability(final YieldAndConditions yieldAndConditions) {
         return yieldAndConditions.yield().hasNonnullableHint || yieldAndConditions.yield().operand.isNonnullableEntity() || yieldAndConditions.conditions().conditionIsSatisfied(new NullPredicate2(yieldAndConditions.yield().operand, true));
     }
-    
+
     private static boolean determineNonnullability(final List<YieldAndConditions> yieldVariants) {
         for (final YieldAndConditions yield : yieldVariants) {
             if (!determineNonnullability(yield)) {
@@ -65,7 +68,7 @@ public class YieldInfoNodesGenerator {
                 propTypes.add(yieldVariant.yield.operand.type());
             }
         }
-        
+
         if (propTypes.isEmpty()) {
             return null;
         } else if (propTypes.size() == 1) {
@@ -74,9 +77,9 @@ public class YieldInfoNodesGenerator {
             return AbstractSingleOperand2.getTypeHighestPrecedence(propTypes);
         }
     }
-    
+
     private static Map<String, List<YieldAndConditions>> generateYieldMatrixFromQueryModels(final List<SourceQuery2> models) {
-        final Map<String, List<YieldAndConditions>> yieldsMatrix = new HashMap<>();        
+        final Map<String, List<YieldAndConditions>> yieldsMatrix = new HashMap<>();
         for (final SourceQuery2 entQuery : models) {
             for (final Yield2 yield : entQuery.yields.getYields()) {
                 final List<YieldAndConditions> foundYields = yieldsMatrix.get(yield.alias);
@@ -99,7 +102,7 @@ public class YieldInfoNodesGenerator {
             }
         }
     }
-    
+
     private static Map<String, YieldInfoNode> group(final List<YieldInfoTail> yieldsData) {
         final Map<String, List<YieldInfoTail>> yieldsTreeData = new HashMap<>(); // tails starting from the same common part but already without it
         final Map<String, YieldInfo> yieldsWithoutSubprops = new HashMap<>();
@@ -130,10 +133,10 @@ public class YieldInfoNodesGenerator {
 
         return result;
     }
-    
+
     private static record YieldAndConditions(Yield2 yield, Conditions2 conditions) {}
-    
+
     private static record YieldInfo(String name, PropType propType, boolean nonnullable) {}
-    
+
     private static record YieldInfoTail(List<String> name, PropType propType, boolean nonnullable) {}
 }

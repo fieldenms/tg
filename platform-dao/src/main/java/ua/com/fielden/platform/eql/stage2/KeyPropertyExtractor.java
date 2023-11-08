@@ -16,6 +16,8 @@ import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 
 public class KeyPropertyExtractor {
 
+    private KeyPropertyExtractor() {}
+
     public static List<Prop2> extract(final Prop2 original) {
         final AbstractQuerySourceItem<?> operandPropLastMember = original.lastPart();
         if (needsExtraction(operandPropLastMember)) {
