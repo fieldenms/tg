@@ -1,14 +1,14 @@
 package ua.com.fielden.platform.eql.stage2.sources.enhance;
 
 /**
- * Lightweight representation of the respective Prop3 instance -- contains all ingredients of Prop3 identity.
- * 
- * Used within the process of building associations between Prop2 and the corresponding Prop3 item.
- * 
- * @param propPath -- name from the respective Prop3 instance
- * 
- * @param sourceId -- source.id() from the respective Prop3 instance
- * 
+ * Data structure for capturing core data for creation of the respective {@code Prop3} instance.
+ *
+ * Used in the process of building associations between {@code Prop2} and the corresponding {@code Prop3} item.
+ *
+ * @param name -- name for the respective {@code Prop3} instance to be created
+ *
+ * @param sourceId -- id for lookup of the source for the respective {@code Prop3} instance to be created
+ *
  * @author TG Team
  *
  */

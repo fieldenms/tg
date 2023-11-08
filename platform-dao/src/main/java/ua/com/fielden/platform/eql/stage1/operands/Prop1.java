@@ -33,7 +33,7 @@ public class Prop1 implements ISingleOperand1<Prop2> {
 
     @Override
     public Prop2 transform(final TransformationContext1 context) {
-        
+
         final Iterator<List<ISource2<? extends ISource3>>> it = context.sourcesForNestedQueries.iterator();
         if (external) {
             it.next();
@@ -48,9 +48,9 @@ public class Prop1 implements ISingleOperand1<Prop2> {
             }
         }
 
-        throw new EqlStage1ProcessingException(format("Can't resolve property [%s].", propPath));
+        throw new EqlStage1ProcessingException(format("Cannot resolve property [%s].", propPath));
     }
-    
+
     public static final List<AbstractQuerySourceItem<?>> enhancePath(final List<AbstractQuerySourceItem<?>> originalPath) {
         final AbstractQuerySourceItem<?> lastResolutionItem = originalPath.get(originalPath.size() - 1);
         if (lastResolutionItem instanceof QuerySourceItemForComponentType && ((QuerySourceItemForComponentType<?>) lastResolutionItem).getSubitems().size() == 1) {
@@ -61,7 +61,7 @@ public class Prop1 implements ISingleOperand1<Prop2> {
         }
         return originalPath;
     }
-    
+
     public static PropResolution resolvePropAgainstSource(final ISource2<? extends ISource3> source, final Prop1 prop) {
         final PropResolutionProgress asIsResolution = source.querySourceInfo().resolve(new PropResolutionProgress(prop.propPath));
         if (source.alias() != null && (prop.propPath.startsWith(source.alias() + ".") || prop.propPath.equals(source.alias()))) {
@@ -77,7 +77,7 @@ public class Prop1 implements ISingleOperand1<Prop2> {
         }
         return asIsResolution.isSuccessful() ? new PropResolution(source, asIsResolution.getResolved()) : null;
     }
-    
+
     private static PropResolution resolveProp(final List<ISource2<? extends ISource3>> sources, final Prop1 prop) {
         final List<PropResolution> result = new ArrayList<>();
         for (final ISource2<? extends ISource3> source : sources) {
@@ -98,7 +98,7 @@ public class Prop1 implements ISingleOperand1<Prop2> {
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return emptySet();
     }
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -117,7 +117,7 @@ public class Prop1 implements ISingleOperand1<Prop2> {
         if (!(obj instanceof Prop1)) {
             return false;
         }
-        
+
         final Prop1 other = (Prop1) obj;
 
         return Objects.equals(propPath, other.propPath) && (external == other.external);
