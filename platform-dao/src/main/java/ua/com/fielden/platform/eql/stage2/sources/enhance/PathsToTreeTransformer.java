@@ -9,7 +9,7 @@ import static ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTrans
 import static ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.groupByExplicitSources;
 import static ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.groupByFirstChunk;
 import static ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.groupBySource;
-import static ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.orderImplicitNodes;
+import static ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.orderHelperNodes;
 import static ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.tailFromProp;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
@@ -30,7 +30,7 @@ import ua.com.fielden.platform.eql.stage1.operands.Expression1;
 import ua.com.fielden.platform.eql.stage2.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
-import ua.com.fielden.platform.eql.stage2.sources.ImplicitNode;
+import ua.com.fielden.platform.eql.stage2.sources.HelperNodeForImplicitJoins;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
 
 public class PathsToTreeTransformer {
@@ -45,19 +45,19 @@ public class PathsToTreeTransformer {
 
     public final TreeResultBySources transformFinally(final Set<Prop2> props) {
         final TransformationResult treeResult = transform(props);
-        return new TreeResultBySources(treeResult.implicitNodesMap(), groupByExplicitSources(treeResult.expressionsData()), groupByExplicitSources(treeResult.propsData()));
+        return new TreeResultBySources(treeResult.helperNodesMap(), groupByExplicitSources(treeResult.expressionsData()), groupByExplicitSources(treeResult.propsData()));
     }
 
     private final TransformationResult transform(final Set<Prop2> props) {
-        final Map<Integer, List<ImplicitNode>> nodes = new HashMap<>();
+        final Map<Integer, List<HelperNodeForImplicitJoins>> nodes = new HashMap<>();
         final List<ExpressionLinks> expressionsLinks = new ArrayList<>();
         final List<Prop3Links> propLinks = new ArrayList<>();
 
         for (final SourceTails sourceTails : groupBySource(props)) {
-            final SourceNodesResult genRes = generateImplicitNodesForSource(sourceTails.source(), sourceTails.tails());
+            final SourceNodesResult genRes = generateHelperNodesForSource(sourceTails.source(), sourceTails.tails());
 
             nodes.put(sourceTails.source().id(), genRes.sourceNodes);
-            nodes.putAll(genRes.transformationResult.implicitNodesMap());
+            nodes.putAll(genRes.transformationResult.helperNodesMap());
             expressionsLinks.addAll(genRes.transformationResult.expressionsData());
             propLinks.addAll(genRes.transformationResult.propsData());
         }
@@ -65,15 +65,15 @@ public class PathsToTreeTransformer {
         return new TransformationResult(unmodifiableMap(nodes), unmodifiableList(propLinks), unmodifiableList(expressionsLinks));
     }
 
-    private SourceNodesResult generateImplicitNodesForSource(
+    private SourceNodesResult generateHelperNodesForSource(
             final ISource2<?> sourceForCalcPropResolution,
             final List<PendingTail> pendingTails
     ) {
         final Set<String> propsToSkip = sourceForCalcPropResolution.isExplicit() ? new HashSet<String>(pendingTails.stream().map(p -> p.link().name()).toList()) : emptySet();
         final CalcPropsDataAndPendingTails procRes = enhanceWithCalcPropsData(sourceForCalcPropResolution, emptyMap(), propsToSkip, pendingTails);
 
-        final List<ImplicitNode> listOfNodes = new ArrayList<>();
-        final Map<Integer, List<ImplicitNode>> otherSourcesNodes = new HashMap<>();
+        final List<HelperNodeForImplicitJoins> listOfNodes = new ArrayList<>();
+        final Map<Integer, List<HelperNodeForImplicitJoins>> otherSourcesNodes = new HashMap<>();
         final List<ExpressionLinks> expressionLinks = new ArrayList<>();
         final List<Prop3Links> propLinks = new ArrayList<>();
 
@@ -82,7 +82,7 @@ public class PathsToTreeTransformer {
             final CalcPropData cpd = procRes.calcPropsData.get(propEntry.firstChunk().name());
 
             if (cpd != null) {
-                otherSourcesNodes.putAll(cpd.internalsResult.implicitNodesMap());
+                otherSourcesNodes.putAll(cpd.internalsResult.helperNodesMap());
                 expressionLinks.addAll(cpd.internalsResult.expressionsData());
                 propLinks.addAll(cpd.internalsResult.propsData());
             }
@@ -98,9 +98,9 @@ public class PathsToTreeTransformer {
             }
 
             if (!propEntry.tails().isEmpty()) {
-                final SourceNodeResult genRes = generateImplicitNode(propEntry.tails(), propEntry.firstChunk(), expression, sourceForCalcPropResolution.isPartOfCalcProp());
+                final SourceNodeResult genRes = generateHelperNode(propEntry.tails(), propEntry.firstChunk(), expression, sourceForCalcPropResolution.isPartOfCalcProp());
                 listOfNodes.add(genRes.sourceNode);
-                otherSourcesNodes.putAll(genRes.transformationResult.implicitNodesMap());
+                otherSourcesNodes.putAll(genRes.transformationResult.helperNodesMap());
                 expressionLinks.addAll(genRes.transformationResult.expressionsData());
                 propLinks.addAll(genRes.transformationResult.propsData());
             }
@@ -108,7 +108,7 @@ public class PathsToTreeTransformer {
 
         final List<String> orderedCalcPropsForType = isUnionEntityType(sourceForCalcPropResolution.sourceType()) || sourceForCalcPropResolution.sourceType().equals(EntityAggregates.class) ? emptyList() : querySourceInfoProvider.getCalcPropsOrder(sourceForCalcPropResolution.sourceType());
 
-        final List<ImplicitNode> orderedNodes = orderImplicitNodes(listOfNodes, orderedCalcPropsForType);
+        final List<HelperNodeForImplicitJoins> orderedNodes = orderHelperNodes(listOfNodes, orderedCalcPropsForType);
 
         return new SourceNodesResult(unmodifiableList(orderedNodes), new TransformationResult(unmodifiableMap(otherSourcesNodes), unmodifiableList(propLinks), unmodifiableList(expressionLinks)));
     }
@@ -168,11 +168,11 @@ public class PathsToTreeTransformer {
         return new CalcPropsDataAndPendingTails(recursivelyEnhanced.calcPropsData, allTails);
     }
 
-    private SourceNodeResult generateImplicitNode(final List<PendingTail> tails, final PropChunk firstChunk, final Expression2 expression, final boolean isPartOfCalcProp) {
+    private SourceNodeResult generateHelperNode(final List<PendingTail> tails, final PropChunk firstChunk, final Expression2 expression, final boolean isPartOfCalcProp) {
         final QuerySourceItemForEntityType<?> querySourceInfoItem = (QuerySourceItemForEntityType<?>) firstChunk.data();
         final Source2BasedOnPersistentType implicitSource = new Source2BasedOnPersistentType(querySourceInfoItem.querySourceInfo, gen.nextSourceId(), false, isPartOfCalcProp);
-        final SourceNodesResult result = generateImplicitNodesForSource(implicitSource, tails);
-        final ImplicitNode node = new ImplicitNode(firstChunk.name(), expression, querySourceInfoItem.nonnullable, implicitSource, result.sourceNodes);
+        final SourceNodesResult result = generateHelperNodesForSource(implicitSource, tails);
+        final HelperNodeForImplicitJoins node = new HelperNodeForImplicitJoins(firstChunk.name(), expression, querySourceInfoItem.nonnullable, implicitSource, result.sourceNodes);
         return new SourceNodeResult(node, result.transformationResult);
     }
 
@@ -182,14 +182,14 @@ public class PathsToTreeTransformer {
     private static record CalcPropsDataAndPendingTails(Map<String, CalcPropData> calcPropsData, List<PendingTail> pendingTails) {
     }
 
-    private static record SourceNodesResult(List<ImplicitNode> sourceNodes, TransformationResult transformationResult) {
+    private static record SourceNodesResult(List<HelperNodeForImplicitJoins> sourceNodes, TransformationResult transformationResult) {
     }
 
-    private static record SourceNodeResult(ImplicitNode sourceNode, TransformationResult transformationResult) {
+    private static record SourceNodeResult(HelperNodeForImplicitJoins sourceNode, TransformationResult transformationResult) {
     }
 
     private static record TransformationResult(
-            Map<Integer, List<ImplicitNode>> implicitNodesMap,
+            Map<Integer, List<HelperNodeForImplicitJoins>> helperNodesMap,
             List<Prop3Links> propsData,
             List<ExpressionLinks> expressionsData) {
     }

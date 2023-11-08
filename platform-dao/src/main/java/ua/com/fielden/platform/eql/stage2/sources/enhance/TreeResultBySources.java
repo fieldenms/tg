@@ -6,15 +6,15 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.eql.stage2.operands.Expression2;
-import ua.com.fielden.platform.eql.stage2.sources.ImplicitNode;
+import ua.com.fielden.platform.eql.stage2.sources.HelperNodeForImplicitJoins;
 
 public record TreeResultBySources (
-        Map<Integer, List<ImplicitNode>> implicitNodesMap, 
+        Map<Integer, List<HelperNodeForImplicitJoins>> helperNodesMap, 
         Map<Integer, Map<String, Expression2>> calcPropsResolutions,
         Map<Integer, Map<String, Prop3Lite>> plainPropsResolutions) {
     
     public TreeResultBySources {
-        implicitNodesMap = copyOf(implicitNodesMap);
+        helperNodesMap = copyOf(helperNodesMap);
         calcPropsResolutions = copyOf(calcPropsResolutions);
         plainPropsResolutions = copyOf(plainPropsResolutions);
     }

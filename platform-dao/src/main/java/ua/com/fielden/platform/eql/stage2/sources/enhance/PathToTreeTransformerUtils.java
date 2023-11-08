@@ -16,11 +16,18 @@ import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForComponentType;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForUnionType;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
-import ua.com.fielden.platform.eql.stage2.sources.ImplicitNode;
+import ua.com.fielden.platform.eql.stage2.sources.HelperNodeForImplicitJoins;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
 
+/**
+ * A collection of helper methods to perform core logic of {@link PathToTreeTransformer}.
+ *
+ * @author TG Team
+ */
 public class PathToTreeTransformerUtils {
+
+    private PathToTreeTransformerUtils() {}
 
     public static PendingTail tailFromProp(final Prop2 prop) {
         return new PendingTail(new Prop2Lite(prop.propPath, prop.source.id()), convertPathToChunks(prop.getPath()));
@@ -40,10 +47,10 @@ public class PathToTreeTransformerUtils {
         }
         return result.values().stream().map(el -> new SourceTails(el._1, unmodifiableList(el._2))).toList();
     }
-    
+
     public static Collection<FirstChunkGroup> groupByFirstChunk(final List<PendingTail> tails) {
         final SortedMap<String, T3<PropChunk, List<Prop2Lite>, List<PendingTail>>> firstChunkDataMap = new TreeMap<>(); //need predictable order for testing purposes
-        
+
         for (final PendingTail pt : tails) {
             final PropChunk first = pt.tail().get(0);
             T3<PropChunk, List<Prop2Lite>, List<PendingTail>> existing = firstChunkDataMap.get(first.name());
@@ -55,16 +62,16 @@ public class PathToTreeTransformerUtils {
             if (pt.tail().size() == 1) {
                 existing._2.add(pt.link());
             } else {
-                existing._3.add(new PendingTail(pt.link(), pt.tail().subList(1, pt.tail().size())));    
+                existing._3.add(new PendingTail(pt.link(), pt.tail().subList(1, pt.tail().size())));
             }
         }
-        
+
         return firstChunkDataMap.values().stream().map(el -> new FirstChunkGroup(el._1, unmodifiableList(el._2), unmodifiableList(el._3))).toList();
     }
 
     /**
      * Obtains unique set of first chunks (only calculated) from the collection of pending tails.
-     * 
+     *
      * @param props
      * @return
      */
@@ -82,18 +89,18 @@ public class PathToTreeTransformerUtils {
     }
 
     /**
-     * Establishes proper sequence of implicit nodes to be used for JOINs generation later on.
-     * 
+     * Establishes proper sequence of helper nodes to be used for JOINs generation later on.
+     *
      * @param all
      * @param dependentCalcPropOrderFromMetadata
      * @return
      */
-    public static List<ImplicitNode> orderImplicitNodes(final List<ImplicitNode> all, final List<String> dependentCalcPropOrderFromMetadata) {
-        final Map<String, ImplicitNode> dependentCalcPropNodes = new HashMap<>();
-        final List<ImplicitNode> independentCalcPropNodes = new ArrayList<>();
-        final List<ImplicitNode> result = new ArrayList<>(); // includes all non-calc prop nodes 
+    public static List<HelperNodeForImplicitJoins> orderHelperNodes(final List<HelperNodeForImplicitJoins> all, final List<String> dependentCalcPropOrderFromMetadata) {
+        final Map<String, HelperNodeForImplicitJoins> dependentCalcPropNodes = new HashMap<>();
+        final List<HelperNodeForImplicitJoins> independentCalcPropNodes = new ArrayList<>();
+        final List<HelperNodeForImplicitJoins> result = new ArrayList<>(); // includes all non-calc prop nodes
 
-        for (final ImplicitNode node : all) {
+        for (final HelperNodeForImplicitJoins node : all) {
             if (node.expr == null) {
                 result.add(node); // adding all non-calc nodes first
             } else if (dependentCalcPropOrderFromMetadata.contains(node.name)) {
@@ -103,11 +110,11 @@ public class PathToTreeTransformerUtils {
             }
         }
 
-        result.addAll(independentCalcPropNodes); // adding all independent calc prop nodes 
+        result.addAll(independentCalcPropNodes); // adding all independent calc prop nodes
 
         // adding all dependent calc prop nodes in the order as specified in their metadata
         for (final String calcProp : dependentCalcPropOrderFromMetadata) {
-            final ImplicitNode foundCalcProp = dependentCalcPropNodes.get(calcProp);
+            final HelperNodeForImplicitJoins foundCalcProp = dependentCalcPropNodes.get(calcProp);
             if (foundCalcProp != null) {
                 result.add(foundCalcProp);
             }
@@ -130,7 +137,7 @@ public class PathToTreeTransformerUtils {
 
         return result;
     }
-    
+
     public static <T> Map<Integer, Map<String, T>> groupByExplicitSources(final List<? extends AbstractLinks<T>> resolutionsLinks) {
         final Map<Integer, Map<String, T>> resolutionsData = new HashMap<>();
         for (final AbstractLinks<T> item : resolutionsLinks) {
@@ -143,7 +150,7 @@ public class PathToTreeTransformerUtils {
                 existingSourceMap.put(link.name(), item.resolution);
             }
         }
-        
+
         return resolutionsData;
     }
 }

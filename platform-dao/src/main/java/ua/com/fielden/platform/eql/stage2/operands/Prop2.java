@@ -64,7 +64,7 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
         if (lastPart().hasExpression()) {
             final Expression2 expr2 = context.resolveExpression(source.id(), propPath);
             final TransformationResult2<Expression3> exprTr = expr2.transform(context);
-            return new TransformationResult2<>(exprTr.item.isSingle() ? exprTr.item.first : exprTr.item, exprTr.updatedContext);
+            return new TransformationResult2<>(exprTr.item.isSingleOperandExpression() ? exprTr.item.firstOperand : exprTr.item, exprTr.updatedContext);
         } else {
             final T2<String, ISource3> resolution = context.resolve(source.id(), propPath);
             return new TransformationResult2<>(new Prop3(resolution._1, resolution._2, type), context);

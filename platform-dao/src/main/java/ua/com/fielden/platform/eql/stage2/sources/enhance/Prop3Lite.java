@@ -7,7 +7,7 @@ package ua.com.fielden.platform.eql.stage2.sources.enhance;
  *
  * @param name -- name for the respective {@code Prop3} instance to be created
  *
- * @param sourceId -- id for lookup of the source for the respective {@code Prop3} instance to be created
+ * @param sourceId -- id to lookup a source for the respective {@code Prop3} instance to be created
  *
  * @author TG Team
  *
