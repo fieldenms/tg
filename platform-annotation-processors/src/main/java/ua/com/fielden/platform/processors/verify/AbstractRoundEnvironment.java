@@ -1,19 +1,18 @@
 package ua.com.fielden.platform.processors.verify;
 
-import static java.util.stream.Collectors.toSet;
+import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 
+import javax.annotation.processing.Messager;
+import javax.annotation.processing.RoundEnvironment;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.TypeElement;
 import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.annotation.processing.Messager;
-import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.TypeElement;
-
-import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
+import static java.util.stream.Collectors.toSet;
 
 /**
  * A base class for wrappers around {@link RoundEnvironment} that shall provide additional functionality, such as finding specific elements and

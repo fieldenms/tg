@@ -1,11 +1,10 @@
 package ua.com.fielden.platform.processors.verify.test_utils;
 
-import static java.lang.annotation.RetentionPolicy.SOURCE;
-
+import javax.tools.Diagnostic.Kind;
 import java.lang.annotation.Retention;
 import java.util.Objects;
 
-import javax.tools.Diagnostic.Kind;
+import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 /**
  * Informs the {@link MessagePrintingVerifier} about a diagnostic message that should be reported on an element.

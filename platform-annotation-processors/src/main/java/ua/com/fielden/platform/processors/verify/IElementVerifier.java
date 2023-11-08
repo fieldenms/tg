@@ -1,10 +1,9 @@
 package ua.com.fielden.platform.processors.verify;
 
-import java.util.Optional;
+import ua.com.fielden.platform.processors.verify.verifiers.AbstractVerifier;
 
 import javax.annotation.processing.RoundEnvironment;
-
-import ua.com.fielden.platform.processors.verify.verifiers.AbstractVerifier;
+import java.util.Optional;
 
 /**
  * A contract for implementing verification of elements in a {@link RoundEnvironment}, such as classes, fields and methods.

@@ -1,18 +1,12 @@
 package ua.com.fielden.platform.processors.metamodel.elements;
 
+import ua.com.fielden.platform.processors.metamodel.exceptions.ForwardingElementException;
+
+import javax.lang.model.element.*;
+import javax.lang.model.type.TypeMirror;
 import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Set;
-
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ElementVisitor;
-import javax.lang.model.element.Modifier;
-import javax.lang.model.element.Name;
-import javax.lang.model.type.TypeMirror;
-
-import ua.com.fielden.platform.processors.metamodel.exceptions.ForwardingElementException;
 
 /**
  * A base type that implements {@link Element} and acts as a wrapper around an {@code element} instance, where all the {@link Element} contract calls are forwarded to {@code element}. 

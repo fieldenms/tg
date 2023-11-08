@@ -1,13 +1,8 @@
 package ua.com.fielden.platform.processors.metamodel.elements;
 
-import java.util.List;
-
-import javax.lang.model.element.Element;
-import javax.lang.model.element.Name;
-import javax.lang.model.element.NestingKind;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.TypeParameterElement;
+import javax.lang.model.element.*;
 import javax.lang.model.type.TypeMirror;
+import java.util.List;
 
 /**
  * A base type that implements {@link TypeElement}, which is a subtype of {@link Element}.

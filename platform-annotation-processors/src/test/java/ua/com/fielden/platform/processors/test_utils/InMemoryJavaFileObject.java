@@ -1,23 +1,15 @@
 package ua.com.fielden.platform.processors.test_utils;
 
-import static java.lang.String.format;
+import com.google.common.io.ByteSource;
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.io.StringWriter;
-import java.io.Writer;
+import javax.tools.JavaFileObject;
+import javax.tools.SimpleJavaFileObject;
+import java.io.*;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.Optional;
 
-import javax.tools.JavaFileObject;
-import javax.tools.SimpleJavaFileObject;
-
-import com.google.common.io.ByteSource;
+import static java.lang.String.format;
 
 /**
  * Implementation of {@link JavaFileObject} that is stored in memory.

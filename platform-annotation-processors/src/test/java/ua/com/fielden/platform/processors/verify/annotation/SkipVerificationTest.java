@@ -1,21 +1,18 @@
 package ua.com.fielden.platform.processors.verify.annotation;
 
-import java.util.List;
-
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.tools.Diagnostic.Kind;
-
+import com.squareup.javapoet.TypeSpec;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
-
-import com.squareup.javapoet.TypeSpec;
-
 import ua.com.fielden.platform.processors.verify.AbstractVerifierTest;
 import ua.com.fielden.platform.processors.verify.ViolatingElement;
 import ua.com.fielden.platform.processors.verify.test_utils.SimpleRoundEnvironment;
 import ua.com.fielden.platform.processors.verify.test_utils.SimpleVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
+
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.tools.Diagnostic.Kind;
+import java.util.List;
 
 /**
  * Test suites related to the {@link SkipVerification} annotation.

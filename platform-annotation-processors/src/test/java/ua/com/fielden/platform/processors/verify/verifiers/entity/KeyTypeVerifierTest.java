@@ -1,5 +1,18 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
+import com.squareup.javapoet.*;
+import org.junit.Test;
+import org.junit.experimental.runners.Enclosed;
+import org.junit.runner.RunWith;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.NoKey;
+import ua.com.fielden.platform.processors.verify.AbstractVerifierTest;
+import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
+
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.Modifier;
+import java.util.List;
+
 import static ua.com.fielden.platform.processors.verify.VerifyingProcessor.errVerifierNotPassedBy;
 import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.propertyBuilder;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier.AT_KEY_TYPE_CLASS;
@@ -9,26 +22,6 @@ import static ua.com.fielden.platform.processors.verify.verifiers.entity.KeyType
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier.KeyTypePresence.ENTITY_DEFINITION_IS_MISSING_KEY_TYPE;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier.KeyTypeValueMatchesAbstractEntityTypeArgument.KEY_TYPE_MUST_MATCH_THE_TYPE_ARGUMENT_TO_ABSTRACT_ENTITY;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier.KeyTypeValueMatchesAbstractEntityTypeArgument.SUPERTYPE_MUST_BE_PARAMETERIZED_WITH_ENTITY_KEY_TYPE;
-
-import java.util.List;
-
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.Modifier;
-
-import org.junit.Test;
-import org.junit.experimental.runners.Enclosed;
-import org.junit.runner.RunWith;
-
-import com.squareup.javapoet.AnnotationSpec;
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeName;
-import com.squareup.javapoet.TypeSpec;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.NoKey;
-import ua.com.fielden.platform.processors.verify.AbstractVerifierTest;
-import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 
 /**
  * Tests related to the composable verifier {@link KeyTypeVerifier} and its components.

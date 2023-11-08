@@ -1,40 +1,11 @@
 package ua.com.fielden.platform.processors.metamodel.utils;
 
-import static java.util.stream.Collectors.toCollection;
-import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION;
-import static ua.com.fielden.platform.utils.Pair.pair;
-
-import java.lang.annotation.Annotation;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Stream;
-
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
-
 import ua.com.fielden.platform.annotations.metamodel.MetaModelForType;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.Accessor;
 import ua.com.fielden.platform.entity.Mutator;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.EntityTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
@@ -43,6 +14,22 @@ import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderExce
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.*;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.TypeKindVisitor14;
+import javax.tools.Diagnostic;
+import java.lang.annotation.Annotation;
+import java.util.Optional;
+import java.util.*;
+import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.toCollection;
+import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 /**
  * A collection of utility functions to finding various elements in application to an entity abstraction of type {@link EntityElement}.
@@ -53,8 +40,8 @@ public class EntityFinder extends ElementFinder {
     public static final Class<?> ROOT_ENTITY_CLASS = AbstractEntity.class;
     public static final Class<?> UNION_ENTITY_CLASS = AbstractUnionEntity.class;
 
-    public EntityFinder(final Elements elements, final Types types) {
-        super(elements, types);
+    public EntityFinder(final ProcessingEnvironment procEnv) {
+        super(procEnv);
     }
 
     /**
@@ -100,10 +87,6 @@ public class EntityFinder extends ElementFinder {
 
     /**
      * Returns an optional describing a property element that represents a property of {@code entityElement} named {@code propName}.
-     *
-     * @param entity
-     * @param propName
-     * @return
      */
     public Optional<PropertyElement> findDeclaredProperty(final EntityElement entityElement, final String propName) {
         return streamDeclaredProperties(entityElement)
@@ -134,15 +117,13 @@ public class EntityFinder extends ElementFinder {
     }
 
     /**
-     * Returns an unmodifiable set of properties, which are inherited by entity, represented by {@code entityElement}.
+     * Returns an unmodifiable set of properties, which are inherited by an entity.
      * <p>
      * Property uniqueness is described by {@link PropertyElement#equals(Object)}.
      * Entity hierarchy is traversed in natural order.
      * <p>
-     * A property is defined simply as a field annotated with {@link IsProperty}. For more detailed processing use {@link #processProperties(Set, EntityElement)}.
-     *
-     * @param entity
-     * @return
+     * A property is defined simply as a field annotated with {@link IsProperty}. For more detailed processing use
+     * {@link #processProperties(Collection, EntityElement)}.
      */
     public Set<PropertyElement> findInheritedProperties(final EntityElement entity) {
         return streamInheritedFields(entity, ROOT_ENTITY_CLASS)
@@ -399,9 +380,7 @@ public class EntityFinder extends ElementFinder {
     /**
      * Returns a pair of entity title and description as specified by the annotation {@link EntityTitle}.
      * 
-     * @param propElement
-     * @return
-     * @throws ElementFinderException if {@link EntityTitle} does not have element {@code desc} 
+     * @throws ElementFinderException if {@link EntityTitle} does not have element {@code desc}
      *                                or values of elements {@code value} and {@code desc} cannot be type casted to String
      */
     public Pair<String, String> getEntityTitleAndDesc(final EntityElement entityElement) {
@@ -426,11 +405,8 @@ public class EntityFinder extends ElementFinder {
     /**
      * Returns an annotation value representing the actual key type specified by the {@link KeyType} annotation.
      * <p>
-     * A runtime exception is thrown in case {@link KeyType#value()} could not be obtained, which might happend only if {@code annotMirror}
-     * does not represent {@link KeyType}.
-     * 
-     * @param atKeyType - annotation mirror representing the {@link KeyType} annotation.
-     * @return
+     * A runtime exception is thrown in case {@link KeyType#value()} could not be obtained, which might happend only if
+     * {@code annotMirror} does not represent {@link KeyType}.
      */
     public AnnotationValue getKeyTypeAnnotationValue(final AnnotationMirror annotMirror) {
         return findAnnotationValue(annotMirror, "value")
@@ -447,17 +423,15 @@ public class EntityFinder extends ElementFinder {
     }
 
     /**
-     * Tests whether the type mirror represents an entity type, which is defined as any class that extends {@link AbstractEntity} (itself included).
-     *
-     * @param element
-     * @return
+     * Tests whether the type mirror represents an entity type, which is defined as any subtype of {@link AbstractEntity}
+     * (itself included).
      */
     public boolean isEntityType(final TypeMirror type) {
         return isSubtype(type, ROOT_ENTITY_CLASS);
     }
 
     /**
-     * Tests whether the type mirror represents a union entity type, which is defined as any class that extends
+     * Tests whether the type mirror represents a union entity type, which is defined as any subtype of
      * {@link AbstractUnionEntity} (itself included).
      */
     public boolean isUnionEntityType(final TypeMirror type) {
@@ -502,12 +476,20 @@ public class EntityFinder extends ElementFinder {
      * @return
      */
     public boolean isPropertyOfDomainEntityType(final PropertyElement propElement) {
-        final TypeMirror type = propElement.getType();
-        if (type.getKind() != TypeKind.DECLARED) {
+        return propElement.getType().accept(IS_PROPERTY_OF_DOMAIN_ENTITY_TYPE_VISITOR, null);
+    }
+
+    private final TypeKindVisitor14<Boolean, Void> IS_PROPERTY_OF_DOMAIN_ENTITY_TYPE_VISITOR = new TypeKindVisitor14<>() {
+        @Override
+        public Boolean visitDeclared(DeclaredType t, Void unused) {
+            return isEntityThatNeedsMetaModel(asTypeElement(t));
+        }
+
+        @Override
+        protected Boolean defaultAction(TypeMirror e, Void unused) {
             return false;
         }
-        return isEntityThatNeedsMetaModel(asTypeElementOfTypeMirror(type));
-    }
+    };
 
     /**
      * Tests whether the property element represents a collectional property.
@@ -543,10 +525,8 @@ public class EntityFinder extends ElementFinder {
 
     /**
      * Returns the immediate parent entity type of the entity element. 
-     * Empty optional is returned if {@code element} represents {@link AbstractEntity}.
-     * 
-     * @param element
-     * @return
+     * Empty optional is returned if {@code element} represents {@link AbstractEntity} or the element's superclass could
+     * not be resolved.
      */
     public Optional<EntityElement> getParent(final EntityElement element) {
         return streamParents(element).findFirst();
@@ -567,19 +547,16 @@ public class EntityFinder extends ElementFinder {
     }
 
     /**
-     * Returns an optional describing the entity element on which a given meta-model is based by looking at its {@link MetaModelForType} annotation.
-     * <p>
-     * Entity type might be missing due to renaming/removal. In such cases an empty optional is returned.
-     *
-     * @param mme
-     * @return
-     * @throws ElementFinderException if the meta-model element is missing {@link MetaModelForType}
+     * Returns an optional describing the underlying entity of a given meta-model by analysing its {@link MetaModelForType}
+     * annotation. If this annotation is not present, then a warning is reported and an empty optional returned.
+     * If the underlying entity is missing (e.g., due to renaming/removal), then an empty optional is returned.
      */
     public Optional<EntityElement> findEntityForMetaModel(final MetaModelElement mme) {
         final MetaModelForType annot = mme.getAnnotation(MetaModelForType.class);
         if (annot == null) {
-            throw new ElementFinderException("Meta-model [%s] is missing [%s] annotation.".formatted(
-                    mme.getSimpleName(), MetaModelForType.class.getSimpleName()));
+            messager.printMessage(Diagnostic.Kind.WARNING, "Meta-model [%s] is missing @[%s].".formatted(
+                    mme.getQualifiedName(), MetaModelForType.class.getSimpleName()));
+            return Optional.empty();
         }
         final TypeMirror entityType = getAnnotationElementValueOfClassType(annot, a -> a.value());
         // missing types have TypeKind.ERROR

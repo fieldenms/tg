@@ -1,14 +1,13 @@
 package ua.com.fielden.platform.processors.verify.verifiers;
 
-import static java.util.stream.Collectors.toUnmodifiableList;
+import ua.com.fielden.platform.processors.verify.AbstractRoundEnvironment;
+import ua.com.fielden.platform.processors.verify.ViolatingElement;
 
+import javax.annotation.processing.ProcessingEnvironment;
 import java.util.Collections;
 import java.util.List;
 
-import javax.annotation.processing.ProcessingEnvironment;
-
-import ua.com.fielden.platform.processors.verify.AbstractRoundEnvironment;
-import ua.com.fielden.platform.processors.verify.ViolatingElement;
+import static java.util.stream.Collectors.toUnmodifiableList;
 
 /**
  * Abstract representation of a verifier that is composed of other more specific verifiers (also called <i>components</i>).

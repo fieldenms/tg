@@ -1,14 +1,13 @@
 package ua.com.fielden.platform.processors.verify.annotation;
 
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
+import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 
+import javax.lang.model.element.Element;
 import java.util.Objects;
 import java.util.Optional;
 
-import javax.lang.model.element.Element;
-
-import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 
 /**
  * A factory for construction of policies for relaxing element verification.
