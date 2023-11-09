@@ -52,7 +52,7 @@ import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.a
  *      domain entity types are deregistered.</li>
  * </ul>
  *
- * Renaming of java sources by means of the IDE refactoring capabilites should automatically lead to the respective renaming in the generated
+ * Renaming of java sources by means of the IDE refactoring capabilities should automatically lead to the respective renaming in the generated
  * {@code ApplicationDomain}.
  * <p>
  * To exclude application-level entity types from registration, annotation {@link SkipEntityRegistration} should be used.

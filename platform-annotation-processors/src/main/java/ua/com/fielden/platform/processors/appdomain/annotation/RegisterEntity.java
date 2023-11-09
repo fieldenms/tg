@@ -13,7 +13,7 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 /**
- * An annotation that should be used in conjuction with {@link ExtendApplicationDomain} to register additional domain entity types.
+ * An annotation that should be used in conjunction with {@link ExtendApplicationDomain} to register additional domain entity types.
  *
  * @see ApplicationDomainProcessor
  *
