@@ -67,7 +67,7 @@ const template = html`
         <span>[[shortDesc]]</span>
     </paper-button>
     <paper-fab id="fabButton" class="action-item" mini icon="[[icon]]" on-tap="_asyncRun" hidden$="[[!_isIcon(excludeNew, excludeClose, icon)]]" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]"></paper-fab>
-    <tg-dropdown-switch id="dropdownButton" class="action-item" raised fragmented vertical-align="bottom" disabled="[[_optionButtonDisabled]]" activated="[[_optionButtonActive]]" hidden$="[[!_isOptionButton(excludeNew, excludeClose, icon)]]" view-index="[[_optionIdx]]" views="[[_options]]" do-not-highlight-when-drop-down-opened make-drop-down-width-the-same-as-button change-current-view-on-select on-tg-centre-view-change="_runOptionAction"></tg-dropdown-switch>
+    <tg-dropdown-switch id="dropdownButton" class="action-item" raised fragmented vertical-align="bottom" main-button-tooltip-text="Select an action" disabled="[[_optionButtonDisabled]]" activated="[[_optionButtonActive]]" hidden$="[[!_isOptionButton(excludeNew, excludeClose, icon)]]" view-index="[[_optionIdx]]" views="[[_options]]" do-not-highlight-when-drop-down-opened make-drop-down-width-the-same-as-button change-current-view-on-select on-tg-centre-view-change="_runOptionAction"></tg-dropdown-switch>
     <paper-spinner id="spinner" active="[[_working]]" class="blue" style="display: none;" alt="in progress"></paper-spinner>
 `;
 
