@@ -14,12 +14,14 @@ import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionC
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig4;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig4AfterExecutionClose;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig5;
+import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfigWithoutClose;
+import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfigWithoutNew;
 import ua.com.fielden.platform.web.view.master.api.actions.impl.AbstractAction;
 import ua.com.fielden.platform.web.view.master.api.helpers.IActionBarLayoutConfig1;
 import ua.com.fielden.platform.web.view.master.api.helpers.ILayoutConfigWithDimensionsAndDone;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
-public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityActionConfig0<T>, IEntityActionConfig1<T>, IEntityActionConfig2<T>, IEntityActionConfig3<T>, IEntityActionConfig4<T>, IEntityActionConfig5<T>, IActionBarLayoutConfig1<T> {
+public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityActionConfig0<T>, IEntityActionConfig1<T>, IEntityActionConfig2<T>, IEntityActionConfig3<T>, IEntityActionConfig4<T>, IEntityActionConfig5<T>, IActionBarLayoutConfig1<T>, IEntityActionConfigWithoutNew<T>{
 
     private final AbstractAction action;
     private final SimpleMasterBuilder<T> simpleMasterBuilder;
@@ -86,6 +88,28 @@ public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityA
     @Override
     public IEntityActionConfig5<T> keepMasterOpenAfterExecution() {
         action.setCloseAfterExecution(false);
+        return this;
+    }
+
+    @Override
+    public IEntityActionConfigWithoutNew<T> addSaveAction() {
+        return simpleMasterBuilder.addSaveAction();
+    }
+
+    @Override
+    public IEntityActionConfigWithoutNew<T> addCancelAction() {
+        return simpleMasterBuilder.addCancelAction();
+    }
+
+    @Override
+    public IEntityActionConfigWithoutClose<T> excludeNew() {
+        action.setExcludeNew(true);
+        return this;
+    }
+
+    @Override
+    public IEntityActionConfig0<T> excludeClose() {
+        action.setExcludeClose(true);
         return this;
     }
 

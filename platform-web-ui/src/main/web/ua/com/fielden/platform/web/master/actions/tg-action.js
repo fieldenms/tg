@@ -21,12 +21,6 @@ import { enhanceStateRestoration } from '/resources/components/tg-global-error-h
 import { _isEntity } from '/app/tg-reflector.js';
 // depends on '/resources/filesaver/FileSaver.min.js' 
 
-const ActionType = {
-    ICON: "icon",
-    BUTTON: "button",
-    OPTIONBUTTON: "optionbutton"
-}
-
 const template = html`
     <style>
         :host {
@@ -69,11 +63,11 @@ const template = html`
             display: none !important;
         }
     </style>
-    <paper-button id="actionButton" class="action-item" hidden$="[[!_isButton(actionType)]]" raised roll="button" on-tap="_asyncRun" style="width:100%" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]">
+    <paper-button id="actionButton" class="action-item" hidden$="[[!_isButton(excludeNew, excludeClose, icon)]]" raised roll="button" on-tap="_asyncRun" style="width:100%" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]">
         <span>[[shortDesc]]</span>
     </paper-button>
-    <paper-fab id="fabButton" class="action-item" mini icon="[[icon]]" on-tap="_asyncRun" hidden$="[[!_isIcon(actionType)]]" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]"></paper-fab>
-    <tg-dropdown-switch id="dropdownButton" class="action-item" raised fragmented vertical-align="bottom" disabled="[[_optionButtonDisabled]]" activated="[[_optionButtonActive]]" hidden$="[[!_isOptionButton(actionType)]]" view-index="[[_optionIdx]]" views="[[_options]]" do-not-highlight-when-drop-down-opened make-drop-down-width-the-same-as-button change-current-view-on-select on-tg-centre-view-change="_runOptionAction"></tg-dropdown-switch>
+    <paper-fab id="fabButton" class="action-item" mini icon="[[icon]]" on-tap="_asyncRun" hidden$="[[!_isIcon(excludeNew, excludeClose, icon)]]" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]"></paper-fab>
+    <tg-dropdown-switch id="dropdownButton" class="action-item" raised fragmented vertical-align="bottom" disabled="[[_optionButtonDisabled]]" activated="[[_optionButtonActive]]" hidden$="[[!_isOptionButton(excludeNew, excludeClose, icon)]]" view-index="[[_optionIdx]]" views="[[_options]]" do-not-highlight-when-drop-down-opened make-drop-down-width-the-same-as-button change-current-view-on-select on-tg-centre-view-change="_runOptionAction"></tg-dropdown-switch>
     <paper-spinner id="spinner" active="[[_working]]" class="blue" style="display: none;" alt="in progress"></paper-spinner>
 `;
 
@@ -128,15 +122,16 @@ Polymer({
          * The icon specificator (string id).
          */
         icon: {
-            type: String
-        },
-
-        actionType: {
             type: String,
-            value: ActionType.BUTTON //also can be ICON or OPTIONBUTTON
+            value: ''
         },
 
-        restrictNewOption: {
+        excludeNew: {
+            type: Boolean,
+            value: false
+        },
+
+        excludeClose: {
             type: Boolean,
             value: false
         },
@@ -303,7 +298,7 @@ Polymer({
         };
     },
 
-    observers: ["_updateOptions(actionType, shortDesc, longDesc, role, restrictNewOption, shortcut)", "_updateActionIndex(entityType, role)", "_buttonStateChanged(enabledStates, currentState, _innerEnabled, outerEnabled, actionType)"],
+    observers: ["_updateOptions(shortDesc, longDesc, role, excludeNew, excludeClose, icon, shortcut)", "_updateActionIndex(entityType, role)", "_buttonStateChanged(enabledStates, currentState, _innerEnabled, outerEnabled, excludeNew, excludeClose, icon)"],
 
     created: function () {
         this.run = this._createRun();
@@ -401,44 +396,47 @@ Polymer({
     _updateActionIndex: function (entityType, role) {
         if (allDefined(arguments)) {
             const idx = this._getActionIndex();
-            if (idx) {
+            if (idx && this._options.find(opt => opt.index === +idx)) {
                 this._optionIdx = +idx;
             }
         }
     },
 
-    _isButton: function (actionType) {
-        return ActionType.BUTTON === actionType;
+    _isButton: function (excludeNew, excludeClose, icon) {
+        return excludeNew && excludeClose && !icon;
     },
 
-    _isIcon: function (actionType) {
-        return ActionType.ICON === actionType;
+    _isIcon: function (excludeNew, excludeClose, icon) {
+        return excludeNew && excludeClose && icon;
     },
 
-    _isOptionButton: function (actionType) {
-        return ActionType.OPTIONBUTTON === actionType;
+    _isOptionButton: function (excludeNew, excludeClose, icon) {
+        return (!excludeNew || !excludeClose) && !icon;
     },
 
-    _updateOptions: function (actionType, shortDesc, longDesc, role, restrictNewOption, shortcut) {
-        if (allDefined(arguments) && this._isOptionButton(actionType)) {
+    _updateOptions: function (shortDesc, longDesc, role, excludeNew, excludeClose, icon, shortcut) {
+        if (allDefined(arguments) && this._isOptionButton(excludeNew, excludeClose, icon)) {
             const separateShortcuts = shortcut.split(" ");
-            this._options = [
+            const options = [
                 {
                     index: 0,
                     title: shortDesc,
                     desc: longDesc,
-                }, {
-                    index: 1,
+                }
+            ];
+            if (!excludeClose) {
+                options.push({
+                    index: options.length,
                     title: shortDesc + " & CLOSE",
                     desc: longDesc + " & CLOSE",
                     closeAfterExecution: true,
                     subRole: "close",
                     shortcut: separateShortcuts.filter(i => i.includes("shift"))
-                }
-            ];
-            if (!restrictNewOption) {
-                this._options.push({
-                    index: 2,
+                });
+            }
+            if (!excludeNew) {
+                options.push({
+                    index: options.length,
                     title: shortDesc + " & NEW",
                     desc: longDesc + " & NEW",
                     closeAfterExecution: true,
@@ -446,12 +444,13 @@ Polymer({
                     shortcut: separateShortcuts.filter(i => i.includes("alt"))
                 });
             }
+            this._options = options;
         } else {
             delete this._options;
         }
     },
 
-    _buttonStateChanged: function (enabledStates, currentState, _innerEnabled, outerEnabled, actionType) {
+    _buttonStateChanged: function (enabledStates, currentState, _innerEnabled, outerEnabled, excludeNew, excludeClose, icon) {
         if (!allDefined(arguments)) {
             return true;
         }
@@ -459,7 +458,7 @@ Polymer({
         this._set_optionButtonDisabled(!innerEnableState);
         this._set_optionButtonActive(outerEnabled);
         this._set_disabled(outerEnabled === false ? true : !innerEnableState);
-        if (this._isOptionButton(actionType) ? this._optionButtonDisabled : this._disabled) {
+        if (this._isOptionButton(excludeNew, excludeClose, icon) ? this._optionButtonDisabled : this._disabled) {
             this.setAttribute("action-disabled", "");
         } else {
             this.removeAttribute("action-disabled");

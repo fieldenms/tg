@@ -43,6 +43,7 @@ import ua.com.fielden.platform.web.view.master.api.ISimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig0;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig5;
+import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfigWithoutNew;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.DefaultEntityAction;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig;
 import ua.com.fielden.platform.web.view.master.api.actions.impl.AbstractAction;
@@ -111,6 +112,16 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         final EntityActionConfig<T> entityAction = new EntityActionConfig<T>(action, this);
         entityActions.add(entityAction);
         return entityAction;
+    }
+
+    @Override
+    public IEntityActionConfigWithoutNew<T> addSaveAction() {
+        return (IEntityActionConfigWithoutNew<T>) addAction(MasterActions.SAVE);
+    }
+
+    @Override
+    public IEntityActionConfigWithoutNew<T> addCancelAction() {
+        return (IEntityActionConfigWithoutNew<T>) addAction(MasterActions.REFRESH);
     }
 
     @Override

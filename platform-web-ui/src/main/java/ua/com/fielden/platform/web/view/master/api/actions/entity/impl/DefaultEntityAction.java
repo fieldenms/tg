@@ -42,6 +42,12 @@ public class DefaultEntityAction<T extends AbstractEntity<?>> extends AbstractAc
         this.entityType = entityType;
         this.postActionFunction = postActionFunction;
         this.postActionErrorFunction = postActionErrorFunction;
+        if (this.isActionWithOptions()) {
+            this.setExcludeClose(false);
+            if (!this.isNewRestricted()) {
+                this.setExcludeNew(false);
+            }
+        }
     }
 
     /*
@@ -65,12 +71,10 @@ public class DefaultEntityAction<T extends AbstractEntity<?>> extends AbstractAc
         if ("save".equals(this.name().toLowerCase())) {
             attrs.put("id", "_saveAction");
         }
-        if (this.isActionWitOptions()) {
-            attrs.put("action-type", "optionbutton");
-            if (isNewRestricted()) {
-                attrs.put("restrict-new-option", true);
-            }
-        }
+
+        attrs.put("exclude-new", this.isExcludeNew());
+        attrs.put("exclude-close", this.isExcludeClose());
+
         attrs.put("role", this.name().toLowerCase());
         if (focusingCallback() != null) {
             attrs.put("focusing-callback", "[[" + focusingCallback() + "]]");
@@ -90,7 +94,7 @@ public class DefaultEntityAction<T extends AbstractEntity<?>> extends AbstractAc
         return this.entityType.isAnnotationPresent(RestrictCreationByUsers.class) || AbstractEntity.class.isAssignableFrom(AnnotationReflector.getKeyType(this.entityType));
     }
 
-    private boolean isActionWitOptions () {
+    private boolean isActionWithOptions () {
         return ("save".equals(this.name().toLowerCase()) || "refresh".equals(this.name().toLowerCase())) && this.entityType.isAnnotationPresent(MapEntityTo.class);
     }
 
@@ -111,17 +115,19 @@ public class DefaultEntityAction<T extends AbstractEntity<?>> extends AbstractAc
     }
 
     @Override
-    public void setShortcut(final String shortcut) {
+    public String shortcut() {
+        final String shortcut = super.shortcut();
         final List<String> shortcuts = new ArrayList<>();
         shortcuts.add(shortcut);
-        if (this.isActionWitOptions()) {
+        if (!this.isExcludeClose()) {
             shortcuts.add(augmentShortcutWith(shortcut, "shift"));
-            if (!this.isNewRestricted()) {
-                shortcuts.add(augmentShortcutWith(shortcut, "alt"));
-            }
         }
-        super.setShortcut(join(shortcuts, " "));
+        if (!this.isExcludeNew()) {
+            shortcuts.add(augmentShortcutWith(shortcut, "alt"));
+        }
+        return join(shortcuts, " ");
     }
+
 
     @Override
     public DomElement render() {
@@ -129,7 +135,7 @@ public class DefaultEntityAction<T extends AbstractEntity<?>> extends AbstractAc
     }
 
     private String[] createStyle() {
-        if (this.isActionWitOptions()) {
+        if (this.isActionWithOptions()) {
             return new String[] {"min-width: 160px;"};
         }
         return new String[] {};
