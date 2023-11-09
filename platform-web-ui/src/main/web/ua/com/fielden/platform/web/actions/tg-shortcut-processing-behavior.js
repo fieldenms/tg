@@ -38,7 +38,7 @@ export const TgShortcutProcessingBehavior = {
      */
     _findAndRun: function (shortcut, elementTags, customKeyEventTarget) {
         const activeElement = deepestActiveElement();
-        if (activeElement && shortcut === 'ctrl+x' 
+        if (activeElement && (shortcut === 'ctrl+x' || shortcut === 'meta+x') 
             && isInput(activeElement) && !activeElement.disabled 
             && document.getSelection().toString()) {
                 return null;
