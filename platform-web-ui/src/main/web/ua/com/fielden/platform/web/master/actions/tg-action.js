@@ -298,6 +298,10 @@ Polymer({
         };
     },
 
+    attached: function () {
+        this._updateActionIndex(this.entityType, this.role);
+    },
+
     observers: ["_updateOptions(shortDesc, longDesc, role, excludeNew, excludeClose, icon, shortcut)", "_updateActionIndex(entityType, role)", "_buttonStateChanged(enabledStates, currentState, _innerEnabled, outerEnabled, excludeNew, excludeClose, icon)"],
 
     created: function () {
