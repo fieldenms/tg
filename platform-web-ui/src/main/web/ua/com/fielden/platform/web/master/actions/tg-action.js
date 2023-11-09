@@ -319,14 +319,13 @@ Polymer({
      * Creates the 'Run' function. Invokes 'action' and handles spinner appropriately.
      */
     _createRun: function () {
-        const self = this;
         return (function (closeAfterExecution, subRole, continuation, continuationProperty) {
-            self.persistActiveElement();
+            this.persistActiveElement();
 
             this._innerEnabled = false;
             console.log(this.shortDesc + ": execute");
 
-            self.persistActiveElement(self.focusingCallback);
+            this.persistActiveElement(this.focusingCallback);
 
             if (this._startSpinnerTimer) {
                 clearTimeout(this._startSpinnerTimer);
@@ -336,31 +335,38 @@ Polymer({
             // start the action
             this._working = true;
             this._lastSubRole = subRole;
-            this._lastCloseAfterExecution = typeof closeAfterExecution !== 'undefined' ? closeAfterExecution : self.closeAfterExecution;
-            var promise = this.action(continuation, continuationProperty);
+            this._lastCloseAfterExecution = typeof closeAfterExecution !== 'undefined' ? closeAfterExecution : this.closeAfterExecution;
+            const promise = this.action(continuation, continuationProperty);
             if (promise) {
                 let parentDialog;
                 let parentContextCreator;
                 promise.then(ironRequest => {
-                    parentDialog = getParentAnd(self, element => element.matches("tg-custom-action-dialog"));
+                    parentDialog = getParentAnd(this, element => element.matches("tg-custom-action-dialog"));
                     if (parentDialog && parentDialog._lastAction) {
                         parentContextCreator = parentDialog._lastAction.createContextHolder;
                     }
                     return ironRequest;
                 })
                 .then(  // first a handler for successful promise execution
-                    createEntityActionThenCallback(self.eventChannel, self.role, this._lastSubRole, postal, self._afterExecution.bind(self), this._lastCloseAfterExecution),
+                    createEntityActionThenCallback(this.eventChannel, this.role, this._lastSubRole, postal, this._afterExecution.bind(this), this._lastCloseAfterExecution),
                     // and in case of some exceptional situation let's provide a trivial catch handler
-                    function (value) {
+                    value => {
                         console.log('AJAX PROMISE CATCH', value);
-                        if (self.postActionError) {
-                            self.postActionError();
+                        if (this.postActionError) {
+                            this.postActionError();
                         }
                     }
                 )
                 .then(ironRequest => {
-                    if (ironRequest.successful && subRole === 'new' && typeof self.newAction === 'function') {
-                        self.newAction(parentDialog, parentContextCreator);
+                    if ((!ironRequest || !ironRequest.successful) && this.role === 'refresh' && subRole === 'close') {
+                        postal.publish({
+                            channel: this.eventChannel,
+                            topic: this.role + '.post.success',
+                            data: {canClose: this._lastCloseAfterExecution}
+                        });
+                    }
+                    if (ironRequest && ironRequest.successful && subRole === 'new' && typeof this.newAction === 'function') {
+                        this.newAction(parentDialog, parentContextCreator);
                     }
                     return ironRequest;
                 });    
