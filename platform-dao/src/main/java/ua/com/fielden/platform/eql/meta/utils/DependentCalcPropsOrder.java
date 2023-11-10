@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.meta.utils;
 
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.eql.meta.utils.TopologicalSort.sortTopologically;
+import static ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.isHeaderProperty;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
@@ -18,9 +19,8 @@ import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.eql.exceptions.EqlStage2ProcessingException;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
-import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForComponentType;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
-import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForUnionType;
+import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForComponentType;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage0.StandAloneExpressionBuilder;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
@@ -189,7 +189,7 @@ public class DependentCalcPropsOrder {
         for (final AbstractQuerySourceItem<?> querySourceItemInfo : propPath) {
             propLength = propLength + 1;
             currentPropName = (currentPropName != null) ? currentPropName + "." + querySourceItemInfo.name : querySourceItemInfo.name;
-            if (!(querySourceItemInfo instanceof QuerySourceItemForComponentType || querySourceItemInfo instanceof QuerySourceItemForUnionType)) {
+            if (!isHeaderProperty(querySourceItemInfo)) {
                 return t3(currentPropName, querySourceItemInfo.hasExpression(), propPath.size() > propLength);
             }
         }

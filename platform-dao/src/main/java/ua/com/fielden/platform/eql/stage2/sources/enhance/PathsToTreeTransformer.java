@@ -29,9 +29,13 @@ import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.Expression1;
 import ua.com.fielden.platform.eql.stage2.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
-import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.HelperNodeForImplicitJoins;
+import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
+import ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.FirstChunkGroup;
+import ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.PendingTail;
+import ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.Prop2Lite;
+import ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.SourceTails;
 
 public class PathsToTreeTransformer {
 
@@ -49,9 +53,9 @@ public class PathsToTreeTransformer {
     }
 
     private final TransformationResult transform(final Set<Prop2> props) {
-        final Map<Integer, List<HelperNodeForImplicitJoins>> nodes = new HashMap<>();
-        final List<ExpressionLinks> expressionsLinks = new ArrayList<>();
-        final List<Prop3Links> propLinks = new ArrayList<>();
+        final var nodes = new HashMap<Integer, List<HelperNodeForImplicitJoins>>();
+        final var expressionsLinks = new ArrayList<ExpressionLinks>();
+        final var propLinks = new ArrayList<Prop3Links>();
 
         for (final SourceTails sourceTails : groupBySource(props)) {
             final SourceNodesResult genRes = generateHelperNodesForSource(sourceTails.source(), sourceTails.tails());
@@ -192,5 +196,33 @@ public class PathsToTreeTransformer {
             Map<Integer, List<HelperNodeForImplicitJoins>> helperNodesMap,
             List<Prop3Links> propsData,
             List<ExpressionLinks> expressionsData) {
+    }
+
+    static class ExpressionLinks extends AbstractLinks<Expression2> {
+
+        public ExpressionLinks(final List<Prop2Lite> links, final Expression2 resolution) {
+            super(links, resolution);
+        }
+    }
+
+    static class Prop3Links extends AbstractLinks<Prop3Lite>{
+        public Prop3Links(final List<Prop2Lite> links, final Prop3Lite resolution) {
+            super(links, resolution);
+        }
+    }
+
+    static class AbstractLinks<T> {
+        public final List<Prop2Lite> links;
+        public final T resolution;
+
+        public AbstractLinks(final List<Prop2Lite> links, final T resolution) {
+            this.links = links;
+            this.resolution = resolution;
+        }
+
+        @Override
+        public String toString() {
+            return this.getClass().getSimpleName() +" [links = " + links +", resolution = " + resolution + "]";
+        }
     }
 }

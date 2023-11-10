@@ -15,8 +15,9 @@ import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForComponentType;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForUnionType;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
-import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.HelperNodeForImplicitJoins;
+import ua.com.fielden.platform.eql.stage2.sources.ISource2;
+import ua.com.fielden.platform.eql.stage2.sources.enhance.PathsToTreeTransformer.AbstractLinks;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
 
@@ -33,7 +34,7 @@ public class PathToTreeTransformerUtils {
         return new PendingTail(new Prop2Lite(prop.propPath, prop.source.id()), convertPathToChunks(prop.getPath()));
     }
 
-    public static final Collection<SourceTails> groupBySource(final Set<Prop2> props) {
+    public static final List<SourceTails> groupBySource(final Set<Prop2> props) {
         final SortedMap<Integer, T2<ISource2<?>, List<PendingTail>>> result = new TreeMap<>(); //need predictable order for testing purposes
         for (final Prop2 prop : props) {
             final T2<ISource2<?>, List<PendingTail>> existing = result.get(prop.source.id());
@@ -128,7 +129,7 @@ public class PathToTreeTransformerUtils {
         String currentPropName = null;
         for (final AbstractQuerySourceItem<?> querySourceInfoItem : propPath) {
             currentPropName = (currentPropName != null) ? currentPropName + "." + querySourceInfoItem.name : querySourceInfoItem.name;
-            if (!(querySourceInfoItem instanceof QuerySourceItemForComponentType || querySourceInfoItem instanceof QuerySourceItemForUnionType)) {
+            if (!isHeaderProperty(querySourceInfoItem)) {
                 // need to finalise and reset currentPropName
                 result.add(new PropChunk(currentPropName, querySourceInfoItem));
                 currentPropName = null;
@@ -136,6 +137,16 @@ public class PathToTreeTransformerUtils {
         }
 
         return result;
+    }
+
+    /**
+     * A predicate that determines whether {@code querySourceItem} represents a header for a component or union type property.
+     *
+     * @param querySourceItem
+     * @return
+     */
+    public static boolean isHeaderProperty(final AbstractQuerySourceItem<?> querySourceItem) {
+        return querySourceItem instanceof QuerySourceItemForComponentType || querySourceItem instanceof QuerySourceItemForUnionType;
     }
 
     public static <T> Map<Integer, Map<String, T>> groupByExplicitSources(final List<? extends AbstractLinks<T>> resolutionsLinks) {
@@ -153,4 +164,35 @@ public class PathToTreeTransformerUtils {
 
         return resolutionsData;
     }
+
+    static record SourceTails(ISource2<?> source, List<PendingTail> tails) {
+    }
+
+ // there are 2 types: 1) tail corresponds to link, 2) tail is shorter (as left side being converted into nodes)
+    static record PendingTail(Prop2Lite link, List<PropChunk> tail) {
+        public PendingTail {
+            tail = List.copyOf(tail);
+        }
+    }
+
+    static record FirstChunkGroup(
+            PropChunk firstChunk,
+            List<Prop2Lite> origins, // originals props for which `firstChunk` happened to be the last PropChunk in their pending tail
+            List<PendingTail> tails // tails that follow `firstChunk`
+    ) {
+    }
+
+    /**
+     * Lightweight representation of the respective {@code Prop2} instance -- contains all ingredients of {@code Prop2} identity.
+     *
+     * Used within the process of building associations between {@code Prop2} and the corresponding {@code Prop3} item.
+     *
+     * @param propPath -- propPath from the respective existing {@code Prop2} instance
+     *
+     * @param sourceId -- {@code source.id()} from the respective existing {@code Prop2} instance
+     *
+     * @author TG Team
+     *
+     */
+    static record Prop2Lite (String name, Integer sourceId) {}
 }
