@@ -99,7 +99,7 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
         }
 
 
-        final boolean wasNew = !entity.isPersisted();
+        final boolean wasNew = false; // !entity.isPersisted();
         final TgPersistentEntityWithProperties saved = super.save(entity);
         changeSubject.publish(saved);
 

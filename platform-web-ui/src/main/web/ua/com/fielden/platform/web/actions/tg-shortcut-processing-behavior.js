@@ -85,8 +85,6 @@ export const TgShortcutProcessingBehavior = {
     _isEnabled: function (actionElement, elementTag) {
         if (elementTag === 'paper-button' || elementTag === 'paper-icon-button' || elementTag === 'tg-action') {
             return window.getComputedStyle(actionElement)['pointer-events'] !== 'none';
-        } else if (elementTag === 'tg-action') {
-            return window.getComputedStyle(actionElement)['pointer-events'] !== 'none';
         } else if (elementTag === 'tg-ui-action') {
             return !actionElement.isActionInProgress;
         } else {

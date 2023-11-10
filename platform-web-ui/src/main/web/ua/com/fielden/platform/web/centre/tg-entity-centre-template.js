@@ -231,8 +231,8 @@ const egiMasterTemplate = html`
         _process-saver-error="[[_processSaverError]]"
         _saver-loading="{{_saverLoading}}">
             <!--@egi_editors-->
-            <tg-action slot="cancel-button" class="master-cancel-action" action-type="icon" icon="clear" enabled-states='[[_actions.REFRESH.enabledStates]]' short-desc='Cancel' long-desc='Cancel changes' current-state='[[currentState]]' action='[[closeMaster]]' post-action='{{_postClose}}'></tg-action>
-            <tg-action slot="save-button" class="master-save-action" action-type="icon" icon="check" enabled-states='[[_actions.SAVE.enabledStates]]' short-desc='Save' long-desc='Save changes' current-state='[[currentState]]' id='_saveAction' action='[[_actions.SAVE.action]]' post-action='{{_postSavedDefault}}' post-action-error='{{_postSavedDefaultError}}'></tg-action>
+            <tg-action slot="cancel-button" class="master-cancel-action" exclude-new exclude-close icon="clear" enabled-states='[[_actions.REFRESH.enabledStates]]' short-desc='Cancel' long-desc='Cancel changes' current-state='[[currentState]]' action='[[closeMaster]]' post-action='{{_postClose}}'></tg-action>
+            <tg-action slot="save-button" class="master-save-action" exclude-new exclude-close icon="check" enabled-states='[[_actions.SAVE.enabledStates]]' short-desc='Save' long-desc='Save changes' current-state='[[currentState]]' id='_saveAction' action='[[_actions.SAVE.action]]' post-action='{{_postSavedDefault}}' post-action-error='{{_postSavedDefaultError}}'></tg-action>
     </tg-entity-master>`;
 
 Polymer({

@@ -480,7 +480,7 @@ Polymer({
             this._run();
         }.bind(this);
 
-        self._run = (function (event, detail) {
+        self._run = (function (event) {
             console.log(this.shortDesc + ": execute");
 
             const postMasterInfoRetrieve = function () {

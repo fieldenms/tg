@@ -46,7 +46,6 @@ import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionC
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfigWithoutNew;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.DefaultEntityAction;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig;
-import ua.com.fielden.platform.web.view.master.api.actions.impl.AbstractAction;
 import ua.com.fielden.platform.web.view.master.api.helpers.IActionBarLayoutConfig1;
 import ua.com.fielden.platform.web.view.master.api.helpers.IComplete;
 import ua.com.fielden.platform.web.view.master.api.helpers.ILayoutConfig;
@@ -100,16 +99,16 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
     @Override
     public IEntityActionConfig0<T> addAction(final MasterActions masterAction) {
-        final AbstractAction action = new DefaultEntityAction(masterAction.name(), this.entityType, getPostAction(masterAction), getPostActionError(masterAction));
+        final DefaultEntityAction<T> defaultEntityAction = new DefaultEntityAction<T>(masterAction.name(), this.entityType, getPostAction(masterAction), getPostActionError(masterAction));
         final Optional<String> shortcut = getShortcut(masterAction);
         if (shortcut.isPresent()) {
-            action.setShortcut(shortcut.get()); // default value of shortcut if present
+            defaultEntityAction.setShortcut(shortcut.get()); // default value of shortcut if present
         }
         final Optional<String> focusingCallback = getFocusingCallback(masterAction);
         if (focusingCallback.isPresent()) {
-            action.setFocusingCallback(focusingCallback.get()); // default value of focusingCallback if present
+            defaultEntityAction.setFocusingCallback(focusingCallback.get()); // default value of focusingCallback if present
         }
-        final EntityActionConfig<T> entityAction = new EntityActionConfig<T>(action, this);
+        final EntityActionConfig<T> entityAction = new EntityActionConfig<T>(defaultEntityAction, this);
         entityActions.add(entityAction);
         return entityAction;
     }
@@ -131,7 +130,6 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     }
 
     public static Optional<String> getFocusingCallback(final MasterActions masterAction) {
-        //TODO Consider SAVE_AND_NEW and SAVE_AND_CLOSE
         if (MasterActions.SAVE == masterAction) {
             return Optional.of("focusViewBound"); // focuses enabled input or other subcomponent on SAVE completion either from actual tap or shortcut activation; see 'focusViewBound' in 'tg-entity-master-behavior'
         } else {

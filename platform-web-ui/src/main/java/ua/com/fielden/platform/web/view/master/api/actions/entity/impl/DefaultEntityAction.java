@@ -27,7 +27,6 @@ import ua.com.fielden.platform.web.view.master.api.actions.impl.AbstractAction;
  *
  */
 public class DefaultEntityAction<T extends AbstractEntity<?>> extends AbstractAction implements IRenderable, IExecutable {
-    private final Class<T> entityType;
     private final String postActionFunction;
     private final String postActionErrorFunction;
 
@@ -39,30 +38,15 @@ public class DefaultEntityAction<T extends AbstractEntity<?>> extends AbstractAc
      */
     public DefaultEntityAction(final String name, final Class<T> entityType, final String postActionFunction, final String postActionErrorFunction) {
         super(name, "master/actions/tg-action");
-        this.entityType = entityType;
         this.postActionFunction = postActionFunction;
         this.postActionErrorFunction = postActionErrorFunction;
-        if (this.isActionWithOptions()) {
+        if (isActionWithOptions(name, entityType)) {
             this.setExcludeClose(false);
-            if (!this.isNewRestricted()) {
+            if (!isNewRestricted(entityType)) {
                 this.setExcludeNew(false);
             }
         }
     }
-
-    /*
-     * if ((masterAction  == MasterActions.SAVE || masterAction  == MasterActions.REFRESH) && entityType.isAnnotationPresent(MapEntityTo.class) && !AbstractEntity.class.isAssignableFrom(AnnotationReflector.getKeyType(entityType))) {
-            final DefaultEntityAction saveAction = new DefaultEntityAction(masterAction.name(), getPostAction(masterAction), getPostActionError(masterAction));
-            final MasterActions actionAndClose = MasterActions.valueOf(masterAction.name() + "_AND_CLOSE");
-            final DefaultEntityAction andClose = new DefaultEntityAction(actionAndClose.name(), getPostAction(actionAndClose), getPostActionError(actionAndClose));
-            if (entityType.isAnnotationPresent(RestrictCreationByUsers.class)) {
-                return new EntityActionWithOptions(saveAction, andClose);
-            }
-            final MasterActions actionAndNew = MasterActions.valueOf(masterAction.name() + "_AND_NEW");
-            final DefaultEntityAction andNew = new DefaultEntityAction(actionAndNew.name(), getPostAction(actionAndNew), getPostActionError(actionAndNew));
-            return new EntityActionWithOptions(saveAction, andClose, andNew);
-        }
-     */
 
     @Override
     protected Map<String, Object> createCustomAttributes() {
@@ -90,12 +74,12 @@ public class DefaultEntityAction<T extends AbstractEntity<?>> extends AbstractAc
         return attrs;
     }
 
-    private boolean isNewRestricted() {
-        return this.entityType.isAnnotationPresent(RestrictCreationByUsers.class) || AbstractEntity.class.isAssignableFrom(AnnotationReflector.getKeyType(this.entityType));
+    private static <T extends AbstractEntity<?>> boolean isNewRestricted(final Class<T> entityType) {
+        return entityType.isAnnotationPresent(RestrictCreationByUsers.class) || AbstractEntity.class.isAssignableFrom(AnnotationReflector.getKeyType(entityType));
     }
 
-    private boolean isActionWithOptions () {
-        return ("save".equals(this.name().toLowerCase()) || "refresh".equals(this.name().toLowerCase())) && this.entityType.isAnnotationPresent(MapEntityTo.class);
+    private static <T extends AbstractEntity<?>> boolean isActionWithOptions (final String name, final Class<T> entityType) {
+        return ("save".equals(name.toLowerCase()) || "refresh".equals(name.toLowerCase())) && entityType.isAnnotationPresent(MapEntityTo.class);
     }
 
     private String postActionFunction() {
@@ -135,7 +119,7 @@ public class DefaultEntityAction<T extends AbstractEntity<?>> extends AbstractAc
     }
 
     private String[] createStyle() {
-        if (this.isActionWithOptions()) {
+        if (!this.isExcludeClose() || !this.isExcludeNew()) {
             return new String[] {"min-width: 160px;"};
         }
         return new String[] {};

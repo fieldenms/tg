@@ -7,7 +7,6 @@ import '/resources/polymer/@polymer/paper-fab/paper-fab.js';
 import '/resources/polymer/@polymer/paper-button/paper-button.js';
 import '/resources/polymer/@polymer/paper-spinner/paper-spinner.js';
 import '/resources/polymer/@polymer/paper-styles/color.js';
-import '/resources/polymer/@polymer/paper-item/paper-item.js';
 
 import '/resources/components/postal-lib.js';
 import '/resources/components/tg-dropdown-switch.js';
@@ -261,7 +260,7 @@ Polymer({
         }, 
 
         /**
-         * The optional action list if this action has more than one action in drop down list.
+         * The optional action list that becomes defined if this action has more than one action in drop down list.
          */
         _options: Array,
 
@@ -274,7 +273,7 @@ Polymer({
         },
 
         /**
-         * Indicates whether option bitton should be disabled or not.
+         * Indicates whether option button should be disabled or not.
          */
         _optionButtonDisabled: {
             type: Boolean,
@@ -338,12 +337,8 @@ Polymer({
             const promise = this.action(continuation, continuationProperty);
             if (promise) {
                 let parentDialog;
-                let parentContextCreator;
                 promise.then(ironRequest => {
                     parentDialog = getParentAnd(this, element => element.matches("tg-custom-action-dialog"));
-                    if (parentDialog && parentDialog._lastAction) {
-                        parentContextCreator = parentDialog._lastAction.createContextHolder;
-                    }
                     return ironRequest;
                 })
                 .then(  // first a handler for successful promise execution
@@ -365,7 +360,7 @@ Polymer({
                         });
                     }
                     if (ironRequest && ironRequest.successful && subRole === 'new' && typeof this.newAction === 'function') {
-                        this.newAction(parentDialog, parentContextCreator);
+                        this.newAction(parentDialog);
                     }
                     return ironRequest;
                 });    

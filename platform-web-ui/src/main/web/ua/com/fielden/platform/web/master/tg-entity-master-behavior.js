@@ -1,10 +1,9 @@
 import '/resources/egi/tg-custom-action-dialog.js';
 import '/resources/components/postal-lib.js';
 
-import { tearDownEvent, isInHierarchy, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
 import {createDialog} from '/resources/egi/tg-dialog-util.js';
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
-import { createEntityActionThenCallback } from '/resources/master/actions/tg-entity-master-closing-utils.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { TgRequiredPropertiesFocusTraversalBehavior } from '/resources/components/tg-required-properties-focus-traversal-behavior.js';
 import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
@@ -53,14 +52,6 @@ const findFirstInputToFocus = (preferredOnly, editors) => {
            firstInput ? { inputToFocus: firstInput, preferred: false } :
            null;
 };
-
-const findFirstOpenedDialogInHierarchy = function (dialog) {
-    let parentDialog = dialog;
-    while(parentDialog && parentDialog.parentElement === null) {
-        parentDialog = getParentAnd(parentDialog._lastAction, element => element.matches('tg-custom-action-dialog'));
-    }
-    return parentDialog;
-}
 
 const findFirstViewWithNewAction = function (dialog, viewWithAction) {
     let parentDialog = dialog
@@ -639,7 +630,7 @@ const TgEntityMasterBehaviorImpl = {
             return potentiallySavedOrNewEntity.isValidWithoutException();
         }).bind(self);
 
-        self._newAction = (function(parentDialog, contextCreator) {
+        self._newAction = (function(parentDialog) {
             const firstViewWithNewAction = findFirstViewWithNewAction(parentDialog, self);
             if (firstViewWithNewAction) {
                 firstViewWithNewAction.tgOpenMasterAction._runDynamicActionForNew(self.entityType);
@@ -1014,8 +1005,8 @@ const TgEntityMasterBehaviorImpl = {
             action: function () {
                 return self.retrieve();
             },
-            newAction: function(parentDialog, contextCreator) {
-                self._newAction(parentDialog, contextCreator);
+            newAction: function(parentDialog) {
+                self._newAction(parentDialog);
             }
         };
         self._notifyActionPathsFor('REFRESH', true);
@@ -1039,8 +1030,8 @@ const TgEntityMasterBehaviorImpl = {
             action: function (continuation, continuationProperty) {
                 return self.save(continuation, continuationProperty);
             },
-            newAction: function(parentDialog, contextCreator) {
-                self._newAction(parentDialog, contextCreator);
+            newAction: function(parentDialog) {
+                self._newAction(parentDialog);
             }
         };
         self._notifyActionPathsFor('SAVE', true);

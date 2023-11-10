@@ -20,7 +20,17 @@ public interface IEntityActionConfig<T extends AbstractEntity<?>> {
 
     IEntityActionConfig0<T> addAction(final MasterActions masterAction);
 
+    /**
+     * Adds SAVE action that allows to exclude separate options (close and/or new)
+     *
+     * @return
+     */
     IEntityActionConfigWithoutNew<T> addSaveAction();
 
+    /**
+     * Adds CANCEL action that allows to exclude separate options (close and/or new)
+     *
+     * @return
+     */
     IEntityActionConfigWithoutNew<T> addCancelAction();
 }
