@@ -158,7 +158,7 @@ public class PathToTreeTransformerUtils {
                     existingSourceMap = new HashMap<String, T>();
                     resolutionsData.put(link.sourceId(), existingSourceMap);
                 }
-                existingSourceMap.put(link.name(), item.resolution);
+                existingSourceMap.put(link.propPath(), item.resolution);
             }
         }
 
@@ -194,5 +194,5 @@ public class PathToTreeTransformerUtils {
      * @author TG Team
      *
      */
-    static record Prop2Lite (String name, Integer sourceId) {}
+    static record Prop2Lite (String propPath, Integer sourceId) {}
 }

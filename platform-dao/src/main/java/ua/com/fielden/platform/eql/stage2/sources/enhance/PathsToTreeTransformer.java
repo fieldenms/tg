@@ -73,13 +73,13 @@ public class PathsToTreeTransformer {
             final ISource2<?> sourceForCalcPropResolution,
             final List<PendingTail> pendingTails
     ) {
-        final Set<String> propsToSkip = sourceForCalcPropResolution.isExplicit() ? new HashSet<String>(pendingTails.stream().map(p -> p.link().name()).toList()) : emptySet();
+        final Set<String> propsToSkip = sourceForCalcPropResolution.isExplicit() ? new HashSet<String>(pendingTails.stream().map(p -> p.link().propPath()).toList()) : emptySet();
         final CalcPropsDataAndPendingTails procRes = enhanceWithCalcPropsData(sourceForCalcPropResolution, emptyMap(), propsToSkip, pendingTails);
 
-        final List<HelperNodeForImplicitJoins> listOfNodes = new ArrayList<>();
-        final Map<Integer, List<HelperNodeForImplicitJoins>> otherSourcesNodes = new HashMap<>();
-        final List<ExpressionLinks> expressionLinks = new ArrayList<>();
-        final List<Prop3Links> propLinks = new ArrayList<>();
+        final var listOfNodes = new ArrayList<HelperNodeForImplicitJoins>();
+        final var otherSourcesNodes = new HashMap<Integer, List<HelperNodeForImplicitJoins>>();
+        final var expressionLinks = new ArrayList<ExpressionLinks>();
+        final var propLinks = new ArrayList<Prop3Links>();
 
         for (final FirstChunkGroup propEntry : groupByFirstChunk(procRes.pendingTails)) {
 
