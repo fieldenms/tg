@@ -824,6 +824,7 @@ const TgEntityMasterBehaviorImpl = {
         }
         this.fire('tg-entity-master-detached', this, { node: this._cachedParentNode }); // start event bubbling on previous parent node from which this entity master has already been detached
         delete this._cachedParentNode; // remove reference on previous _cachedParentNode to facilitate possible releasing of parentNode from memory
+        this._resetState(); // existing state may cause problems for cached masters: for example previous entity was new and valid and next one invalid -- blocks closing of dialog with error
     },
 
     /**
