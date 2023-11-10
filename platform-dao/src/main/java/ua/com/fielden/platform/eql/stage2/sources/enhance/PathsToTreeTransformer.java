@@ -159,11 +159,13 @@ public class PathsToTreeTransformer {
             }
         }
 
-        processedCalcDataLocal.putAll(processedCalcData); //lets now add incoming data to the locally discovered in order to path it further down the recursive process
+        processedCalcDataLocal.putAll(processedCalcData); // let's now add incoming data to the locally discovered in order to path it further down the recursive process
 
         // let's recursively enhance newly added tails (as they can have unprocessed calc props among them)
-        final CalcPropsDataAndPendingTails recursivelyEnhanced = addedTails.isEmpty() ? new CalcPropsDataAndPendingTails(unmodifiableMap(processedCalcDataLocal), emptyList())
-                : enhanceWithCalcPropsData(sourceForCalcPropResolution, processedCalcDataLocal, processedPropsLocal, addedTails); //processedPropsLocal is passed here as enhancement is done within calc props of the same source -- the same level
+        final var recursivelyEnhanced = addedTails.isEmpty()
+                                        ? new CalcPropsDataAndPendingTails(unmodifiableMap(processedCalcDataLocal), emptyList())
+                                        // processedPropsLocal is passed here as enhancement is performed within calc props of the same source and therefore the same level
+                                        : enhanceWithCalcPropsData(sourceForCalcPropResolution, processedCalcDataLocal, processedPropsLocal, addedTails);
 
         final List<PendingTail> allTails = new ArrayList<>();
         allTails.addAll(incomingTails);

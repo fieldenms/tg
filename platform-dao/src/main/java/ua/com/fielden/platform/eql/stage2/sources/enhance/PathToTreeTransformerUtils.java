@@ -71,12 +71,12 @@ public class PathToTreeTransformerUtils {
     }
 
     /**
-     * Obtains unique set of first chunks (only calculated) from the collection of pending tails.
+     * Obtains unique set of first chunks (only calculated) from the list of pending tails.
      *
      * @param props
      * @return
      */
-    public static Collection<PropChunk> getFirstCalcChunks(final Collection<PendingTail> props) {
+    public static Collection<PropChunk> getFirstCalcChunks(final List<PendingTail> props) {
         final SortedMap<String, PropChunk> result = new TreeMap<>(); //need predictable order for testing purposes
 
         for (final PendingTail propEntry : props) {
