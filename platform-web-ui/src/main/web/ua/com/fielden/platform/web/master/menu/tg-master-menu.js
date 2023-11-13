@@ -661,14 +661,16 @@ Polymer({
     },
 
     _refreshCompoundMaster: function (data, envelope) {
-        this._isRefreshCycle = true;
+        if (!data.canClose) {
+            this._isRefreshCycle = true;
 
-        // promotes saved entity (main or detail) id into compound master "opener" in case of successful save
-        if (envelope.topic === 'save.post.success') {
-            this.augmentCompoundMasterOpenerWith(data.id);
+            // promotes saved entity (main or detail) id into compound master "opener" in case of successful save
+            if (envelope.topic === 'save.post.success') {
+                this.augmentCompoundMasterOpenerWith(data.id);
+            }
+
+            this.refreshCompoundMaster();
         }
-
-        this.refreshCompoundMaster();
     },
 
     _getMasterEntityChanged: function (newValue, oldValue) {
