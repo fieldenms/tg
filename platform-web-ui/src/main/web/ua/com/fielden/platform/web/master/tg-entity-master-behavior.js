@@ -182,6 +182,13 @@ const TgEntityMasterBehaviorImpl = {
             type: String
         },
 
+        /**
+         * Represents the dynamic action that allows to open entity master for specified entity or new entity.
+         */
+        tgOpenMasterAction: {
+            type: Object
+        },
+
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
         //////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -810,10 +817,15 @@ const TgEntityMasterBehaviorImpl = {
                 saveButton.closeAfterExecution = false;
             }
         }
-        
+
+        // Create open master action function
+        self.tgOpenMasterAction = self._createOpenMasterAction();
+        self.shadowRoot.appendChild(self.tgOpenMasterAction);
     }, // end of ready callback
 
     attached: function () {
+        //centre UUID of open master action should bee updated as far as some masters receives their uuid later at attache phase.
+        this.tgOpenMasterAction.attrs.centreUuid = this.uuid;
         this._cachedParentNode = this.parentNode;
         this.fire('tg-entity-master-attached', this, { node: this._cachedParentNode }); // as in 'detached', start bubbling on parent node
     },
@@ -1073,6 +1085,24 @@ const TgEntityMasterBehaviorImpl = {
             postAction: function (e) { }
         };
         self._notifyActionPathsFor('VIEW', false);
+    },
+
+    _createOpenMasterAction: function () {
+        const action = document.createElement('tg-ui-action');
+        action.uiRole = 'ICON'
+        action.showDialog = this._showDialog;
+        action.toaster = this.toaster;
+        action.createContextHolder = this._createContextHolder;
+        action.dynamicAction = true;
+        action.attrs = {
+            currentState: 'EDIT',
+            centreUuid: this.uuid
+        };
+        action.requireSelectionCriteria = 'false';
+        action.requireMasterEntity = 'true'
+        action.setAttribute("id", "tgOpenMasterAction");
+        action.setAttribute('hidden', '');
+        return action;
     },
 
     /**

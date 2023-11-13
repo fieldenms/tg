@@ -13,21 +13,6 @@ import { TgViewWithHelpBehavior } from '/resources/components/tg-view-with-help-
 
 const TgEntityMasterTemplateBehaviorImpl = {
 
-    properties: {
-        /**
-         * Represents the action that allows to open entity master for specified entity-typed property.
-         */
-        tgOpenMasterAction: {
-            type: Object,
-            value: null
-        },
-
-        /**
-         * Attributes for the action that allows to open entity master for specified entity-typed property.
-         */
-        _tgOpenMasterActionAttrs: Object
-    },
-
     ready: function () {
         const self = this;
         self.isMasterTemplate = true;
@@ -38,13 +23,6 @@ const TgEntityMasterTemplateBehaviorImpl = {
         if (self.uuid === undefined) {
             self.uuid = self.is + '/' + generateUUID();
         }
-
-        // initialise tgOpenMasterAction properties
-        self._tgOpenMasterActionAttrs = {
-            currentState: 'EDIT',
-            centreUuid: self.uuid
-        };
-        self.tgOpenMasterAction = self.$.tgOpenMasterAction;
 
         self._currentEntityForHelp = function() {
             return () => self._currEntity;
