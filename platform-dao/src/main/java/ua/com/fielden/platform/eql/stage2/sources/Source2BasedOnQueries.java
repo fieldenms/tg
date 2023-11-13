@@ -10,8 +10,8 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
-import ua.com.fielden.platform.eql.stage2.TransformationContext2;
-import ua.com.fielden.platform.eql.stage2.TransformationResult2;
+import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
+import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
 import ua.com.fielden.platform.eql.stage3.queries.SourceQuery3;
@@ -61,13 +61,13 @@ public class Source2BasedOnQueries extends AbstractSource2 implements ISource2<S
     }
 
     @Override
-    public TransformationResult2<Source3BasedOnQueries> transform(final TransformationContext2 context) {
+    public TransformationResultFromStage2To3<Source3BasedOnQueries> transform(final TransformationContextFromStage2To3 context) {
 
         final List<SourceQuery3> transformedQueries = new ArrayList<>();
-        TransformationContext2 currentContext = context;
+        TransformationContextFromStage2To3 currentContext = context;
 
         for (final SourceQuery2 model : models) {
-            final TransformationResult2<SourceQuery3> modelTr = model.transform(currentContext);
+            final TransformationResultFromStage2To3<SourceQuery3> modelTr = model.transform(currentContext);
             transformedQueries.add(modelTr.item);
             currentContext = modelTr.updatedContext;
         }
@@ -75,7 +75,7 @@ public class Source2BasedOnQueries extends AbstractSource2 implements ISource2<S
         currentContext = currentContext.cloneWithNextSqlId();
 
         final Source3BasedOnQueries transformedSource = new Source3BasedOnQueries(transformedQueries, id, currentContext.sqlId);
-        return new TransformationResult2<>(transformedSource, currentContext);
+        return new TransformationResultFromStage2To3<>(transformedSource, currentContext);
     }
 
     @Override

@@ -23,8 +23,8 @@ import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
 import ua.com.fielden.platform.eql.stage1.PropResolution;
 import ua.com.fielden.platform.eql.stage1.QueryComponents1;
-import ua.com.fielden.platform.eql.stage1.TransformationContext1;
-import ua.com.fielden.platform.eql.stage1.TransformationResult1;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
+import ua.com.fielden.platform.eql.stage1.TransformationResultFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.operands.Prop1;
 import ua.com.fielden.platform.eql.stage1.sources.IJoinNode1;
@@ -100,7 +100,7 @@ public abstract class AbstractQuery1 {
      * @param context
      * @return
      */
-    protected QueryComponents2 transformSourceless(final TransformationContext1 context) {
+    protected QueryComponents2 transformSourceless(final TransformationContextFromStage1To2 context) {
         return new QueryComponents2(null /*joinRoot*/, whereConditions.transform(context), yields.transform(context), groups.transform(context), orderings.transform(context));
     }
 
@@ -110,9 +110,9 @@ public abstract class AbstractQuery1 {
      * @param context
      * @return
      */
-    protected final QueryComponents2 transformQueryComponents(final TransformationContext1 context) {
-        final TransformationResult1<? extends IJoinNode2<?>> joinRootTr = joinRoot.transform(context);
-        final TransformationContext1 enhancedContext = joinRootTr.updatedContext;
+    protected final QueryComponents2 transformQueryComponents(final TransformationContextFromStage1To2 context) {
+        final TransformationResultFromStage1To2<? extends IJoinNode2<?>> joinRootTr = joinRoot.transform(context);
+        final TransformationContextFromStage1To2 enhancedContext = joinRootTr.updatedContext;
         final IJoinNode2<? extends IJoinNode3> joinRoot2 = joinRootTr.item;
         final Conditions2 whereConditions2 = enhanceWithUserDataFilterConditions(joinRoot2.mainSource(), context.querySourceInfoProvider, whereConditions.transform(enhancedContext));
         final Yields2 yields2 = yields.transform(enhancedContext);
@@ -145,7 +145,7 @@ public abstract class AbstractQuery1 {
             return originalConditions;
         }
 
-        final TransformationContext1 localContext = (new TransformationContext1(querySourceInfoProvider, false)).cloneWithAdded(mainSource);
+        final TransformationContextFromStage1To2 localContext = (new TransformationContextFromStage1To2(querySourceInfoProvider, false)).cloneWithAdded(mainSource);
         final Conditions2 udfConditions2 = udfConditions.transform(localContext);
 
         if (originalConditions.ignore()) {
@@ -171,7 +171,7 @@ public abstract class AbstractQuery1 {
 
         final List<OrderBy2> enhanced = new ArrayList<>();
 
-        for (final OrderBy2 original : orderBys.getModels()) {
+        for (final OrderBy2 original : orderBys.getOrderBys()) {
             enhanced.addAll(original.operand != null ? transformForOperand(original.operand, original.isDesc) :
                 transformForYield(original, yields, mainSource));
         }

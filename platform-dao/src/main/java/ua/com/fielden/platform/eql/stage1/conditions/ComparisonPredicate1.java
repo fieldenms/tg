@@ -6,7 +6,7 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
-import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.conditions.ComparisonPredicate2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
@@ -28,7 +28,7 @@ public class ComparisonPredicate1 implements ICondition1<ComparisonPredicate2> {
     }
 
     @Override
-    public ComparisonPredicate2 transform(final TransformationContext1 context) {
+    public ComparisonPredicate2 transform(final TransformationContextFromStage1To2 context) {
         return new ComparisonPredicate2(leftOperand.transform(context), operator, rightOperand.transform(context));
     }
 

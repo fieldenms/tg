@@ -15,8 +15,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForEntityType;
-import ua.com.fielden.platform.eql.stage2.TransformationContext2;
-import ua.com.fielden.platform.eql.stage2.TransformationResult2;
+import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
+import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage3.operands.Expression3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
@@ -60,14 +60,14 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
     }
 
     @Override
-    public TransformationResult2<ISingleOperand3> transform(final TransformationContext2 context) {
+    public TransformationResultFromStage2To3<ISingleOperand3> transform(final TransformationContextFromStage2To3 context) {
         if (lastPart().hasExpression()) {
             final Expression2 expr2 = context.resolveExpression(source.id(), propPath);
-            final TransformationResult2<Expression3> exprTr = expr2.transform(context);
-            return new TransformationResult2<>(exprTr.item.isSingleOperandExpression() ? exprTr.item.firstOperand : exprTr.item, exprTr.updatedContext);
+            final TransformationResultFromStage2To3<Expression3> exprTr = expr2.transform(context);
+            return new TransformationResultFromStage2To3<>(exprTr.item.isSingleOperandExpression() ? exprTr.item.firstOperand : exprTr.item, exprTr.updatedContext);
         } else {
             final T2<String, ISource3> resolution = context.resolve(source.id(), propPath);
-            return new TransformationResult2<>(new Prop3(resolution._1, resolution._2, type), context);
+            return new TransformationResultFromStage2To3<>(new Prop3(resolution._1, resolution._2, type), context);
         }
     }
 

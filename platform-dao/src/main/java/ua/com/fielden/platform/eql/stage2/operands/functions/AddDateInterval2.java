@@ -3,8 +3,8 @@ package ua.com.fielden.platform.eql.stage2.operands.functions;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit;
-import ua.com.fielden.platform.eql.stage2.TransformationContext2;
-import ua.com.fielden.platform.eql.stage2.TransformationResult2;
+import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
+import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.functions.AddDateInterval3;
@@ -18,10 +18,10 @@ public class AddDateInterval2 extends TwoOperandsFunction2<AddDateInterval3> {
     }
 
     @Override
-    public TransformationResult2<AddDateInterval3> transform(final TransformationContext2 context) {
-        final TransformationResult2<? extends ISingleOperand3> firstOperandTr = operand1.transform(context);
-        final TransformationResult2<? extends ISingleOperand3> secondOperandTr = operand2.transform(firstOperandTr.updatedContext);
-        return new TransformationResult2<>(new AddDateInterval3(firstOperandTr.item, intervalUnit, secondOperandTr.item, type), secondOperandTr.updatedContext);
+    public TransformationResultFromStage2To3<AddDateInterval3> transform(final TransformationContextFromStage2To3 context) {
+        final TransformationResultFromStage2To3<? extends ISingleOperand3> firstOperandTr = operand1.transform(context);
+        final TransformationResultFromStage2To3<? extends ISingleOperand3> secondOperandTr = operand2.transform(firstOperandTr.updatedContext);
+        return new TransformationResultFromStage2To3<>(new AddDateInterval3(firstOperandTr.item, intervalUnit, secondOperandTr.item, type), secondOperandTr.updatedContext);
     }
     
     @Override

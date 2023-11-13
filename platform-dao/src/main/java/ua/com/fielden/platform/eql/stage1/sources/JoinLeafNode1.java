@@ -4,8 +4,8 @@ import java.util.Objects;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.stage1.TransformationContext1;
-import ua.com.fielden.platform.eql.stage1.TransformationResult1;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
+import ua.com.fielden.platform.eql.stage1.TransformationResultFromStage1To2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.JoinLeafNode2;
 
@@ -17,9 +17,9 @@ public class JoinLeafNode1 implements IJoinNode1<JoinLeafNode2> {
     }
 
     @Override
-    public TransformationResult1<JoinLeafNode2> transform(TransformationContext1 context) {
+    public TransformationResultFromStage1To2<JoinLeafNode2> transform(TransformationContextFromStage1To2 context) {
         final ISource2<?> mainTransformed = source.transform(context);
-        return new TransformationResult1<>(new JoinLeafNode2(mainTransformed), context.cloneWithAdded(mainTransformed));
+        return new TransformationResultFromStage1To2<>(new JoinLeafNode2(mainTransformed), context.cloneWithAdded(mainTransformed));
     }
     
     @Override

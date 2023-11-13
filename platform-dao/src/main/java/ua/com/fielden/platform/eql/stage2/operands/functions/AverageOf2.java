@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.operands.functions;
 
-import ua.com.fielden.platform.eql.stage2.TransformationContext2;
-import ua.com.fielden.platform.eql.stage2.TransformationResult2;
+import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
+import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.functions.AverageOf3;
@@ -15,9 +15,9 @@ public class AverageOf2 extends SingleOperandFunction2<AverageOf3> {
     }
 
     @Override
-    public TransformationResult2<AverageOf3> transform(final TransformationContext2 context) {
-        final TransformationResult2<? extends ISingleOperand3> operandTr = operand.transform(context);
-        return new TransformationResult2<>(new AverageOf3(operandTr.item, distinct, type), operandTr.updatedContext);
+    public TransformationResultFromStage2To3<AverageOf3> transform(final TransformationContextFromStage2To3 context) {
+        final TransformationResultFromStage2To3<? extends ISingleOperand3> operandTr = operand.transform(context);
+        return new TransformationResultFromStage2To3<>(new AverageOf3(operandTr.item, distinct, type), operandTr.updatedContext);
     }
     
     @Override

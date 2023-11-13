@@ -9,8 +9,8 @@ import java.util.Objects;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.stage2.TransformationContext2;
-import ua.com.fielden.platform.eql.stage2.TransformationResult2;
+import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
+import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.OperandsBasedSet3;
 
@@ -22,16 +22,16 @@ public class OperandsBasedSet2 implements ISetOperand2<OperandsBasedSet3> {
     }
 
     @Override
-    public TransformationResult2<OperandsBasedSet3> transform(final TransformationContext2 context) {
+    public TransformationResultFromStage2To3<OperandsBasedSet3> transform(final TransformationContextFromStage2To3 context) {
         final List<ISingleOperand3> transformedOperands = new ArrayList<>();
-        TransformationContext2 currentContext = context;
+        TransformationContextFromStage2To3 currentContext = context;
         for (final ISingleOperand2<? extends ISingleOperand3> singleOperand : operands) {
-            final TransformationResult2<? extends ISingleOperand3> operandTr = singleOperand.transform(currentContext);
+            final TransformationResultFromStage2To3<? extends ISingleOperand3> operandTr = singleOperand.transform(currentContext);
             transformedOperands.add(operandTr.item);
             currentContext = operandTr.updatedContext;
         }
 
-        return new TransformationResult2<>(new OperandsBasedSet3(transformedOperands), currentContext);
+        return new TransformationResultFromStage2To3<>(new OperandsBasedSet3(transformedOperands), currentContext);
     }
 
     @Override

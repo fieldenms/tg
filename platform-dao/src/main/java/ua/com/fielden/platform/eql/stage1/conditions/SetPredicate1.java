@@ -5,7 +5,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.ISetOperand1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.conditions.SetPredicate2;
@@ -29,7 +29,7 @@ public class SetPredicate1 implements ICondition1<SetPredicate2> {
     }
 
     @Override
-    public SetPredicate2 transform(final TransformationContext1 context) {
+    public SetPredicate2 transform(final TransformationContextFromStage1To2 context) {
         return new SetPredicate2(leftOperand.transform(context), negated, rightOperand.transform(context));
     }
 

@@ -10,8 +10,8 @@ import java.util.Objects;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.stage2.TransformationContext2;
-import ua.com.fielden.platform.eql.stage2.TransformationResult2;
+import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
+import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
@@ -33,25 +33,25 @@ public class Conditions2 implements ICondition2<Conditions3> {
     }
 
     @Override
-    public TransformationResult2<Conditions3> transform(final TransformationContext2 context) {
+    public TransformationResultFromStage2To3<Conditions3> transform(final TransformationContextFromStage2To3 context) {
         if (ignore()) {
-            return new TransformationResult2<>(null, context);
+            return new TransformationResultFromStage2To3<>(null, context);
         }
 
         final List<List<? extends ICondition3>> result = new ArrayList<>();
-        TransformationContext2 currentContext = context;
+        TransformationContextFromStage2To3 currentContext = context;
 
         for (final List<? extends ICondition2<?>> andGroup : allConditionsAsDnf) {
             final List<ICondition3> transformedAndGroup = new ArrayList<>();
             for (final ICondition2<? extends ICondition3> andGroupCondition : andGroup) {
-                final TransformationResult2<? extends ICondition3> andGroupConditionTr = andGroupCondition.transform(currentContext);
+                final TransformationResultFromStage2To3<? extends ICondition3> andGroupConditionTr = andGroupCondition.transform(currentContext);
                 transformedAndGroup.add(andGroupConditionTr.item);
                 currentContext = andGroupConditionTr.updatedContext;
             }
             result.add(transformedAndGroup);
         }
 
-        return new TransformationResult2<>(new Conditions3(negated, result), currentContext);
+        return new TransformationResultFromStage2To3<>(new Conditions3(negated, result), currentContext);
     }
 
     @Override
@@ -82,9 +82,9 @@ public class Conditions2 implements ICondition2<Conditions3> {
 
     public boolean conditionIsSatisfied(final ICondition2<?> condition) {
         for (final List<? extends ICondition2<?>> conditions : allConditionsAsDnf) {
-                if (!conditionMatchesAnyOf(conditions, condition)) {
-                    return false;
-                }
+            if (!conditionMatchesAnyOf(conditions, condition)) {
+                return false;
+            }
         }
 
         return allConditionsAsDnf.isEmpty() || negated ? false : true;

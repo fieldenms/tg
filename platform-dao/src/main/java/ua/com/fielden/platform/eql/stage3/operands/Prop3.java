@@ -7,11 +7,13 @@ import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
 public class Prop3 extends AbstractSingleOperand3 {
+
     /**
      * Ordinarily property name, but in case of union-type property this name contains a subproperty of the union type (e.g., "location.workshop").
      * If component types were to be supported, then it could also include lower level component attribute name (e.g., "cost.amount").
      */
     public final String name;
+
     /**
      * Either table or query where property {@code name} lives.
      */
@@ -27,7 +29,7 @@ public class Prop3 extends AbstractSingleOperand3 {
     public String sql(final DbVersion dbVersion) {
         return source.column(name);
     }
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -42,17 +44,17 @@ public class Prop3 extends AbstractSingleOperand3 {
         if (this == obj) {
             return true;
         }
-        
+
         if (!super.equals(obj)) {
             return false;
         }
-        
+
         if (!(obj instanceof Prop3)) {
             return false;
         }
-        
+
         final Prop3 other = (Prop3) obj;
-        
+
         return Objects.equals(name, other.name) && Objects.equals(source, other.source);
     }
 }

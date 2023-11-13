@@ -7,7 +7,7 @@ import java.util.Set;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.enums.Quantifier;
-import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage1.queries.SubQuery1;
 import ua.com.fielden.platform.eql.stage2.conditions.QuantifiedPredicate2;
@@ -32,7 +32,7 @@ public class QuantifiedPredicate1 implements ICondition1<QuantifiedPredicate2> {
     }
 
     @Override
-    public QuantifiedPredicate2 transform(final TransformationContext1 context) {
+    public QuantifiedPredicate2 transform(final TransformationContextFromStage1To2 context) {
         return new QuantifiedPredicate2(leftOperand.transform(context), operator, quantifier, rightOperand.transform(context));
     }
 

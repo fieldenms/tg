@@ -14,7 +14,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.Prop1;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.conditions.ICondition2;
@@ -79,7 +79,7 @@ public class Conditions1 implements ICondition1<Conditions2> {
     }
 
     @Override
-    public Conditions2 transform(final TransformationContext1 context) {
+    public Conditions2 transform(final TransformationContextFromStage1To2 context) {
         if (isEmpty()) {
             return Conditions2.EMPTY_CONDITIONS;
         }

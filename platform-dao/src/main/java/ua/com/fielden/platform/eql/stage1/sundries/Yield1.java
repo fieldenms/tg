@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.stage1.sundries;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.sundries.Yield2;
@@ -18,7 +18,7 @@ public class Yield1 {
         this.hasNonnullableHint = hasNonnullableHint;
     }
     
-    public Yield2 transform(final TransformationContext1 context) {
+    public Yield2 transform(final TransformationContextFromStage1To2 context) {
         return new Yield2(operand.transform(context), alias, hasNonnullableHint);
     }
 

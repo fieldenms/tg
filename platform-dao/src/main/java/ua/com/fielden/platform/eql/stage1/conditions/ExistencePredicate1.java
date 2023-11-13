@@ -4,7 +4,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.queries.SubQueryForExists1;
 import ua.com.fielden.platform.eql.stage2.conditions.ExistencePredicate2;
 
@@ -23,7 +23,7 @@ public class ExistencePredicate1 implements ICondition1<ExistencePredicate2> {
     }
 
     @Override
-    public ExistencePredicate2 transform(final TransformationContext1 context) {
+    public ExistencePredicate2 transform(final TransformationContextFromStage1To2 context) {
         return new ExistencePredicate2(negated, subQuery.transform(context));
     }
 

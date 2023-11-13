@@ -6,8 +6,8 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
-import ua.com.fielden.platform.eql.stage1.TransformationContext1;
-import ua.com.fielden.platform.eql.stage1.TransformationResult1;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
+import ua.com.fielden.platform.eql.stage1.TransformationResultFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
@@ -28,12 +28,12 @@ public class JoinInnerNode1 implements IJoinNode1<JoinInnerNode2> {
     }
 
     @Override
-    public TransformationResult1<JoinInnerNode2> transform(final TransformationContext1 context) {
-        final TransformationResult1<? extends IJoinNode2<?>> lsTransformed = leftNode.transform(context);
-        final TransformationResult1<? extends IJoinNode2<?>> rsTransformed = rightNode.transform(context);
-        final TransformationContext1 updatedContext = context.cloneWithAdded(lsTransformed.updatedContext.getCurrentLevelSources(), rsTransformed.updatedContext.getCurrentLevelSources());
+    public TransformationResultFromStage1To2<JoinInnerNode2> transform(final TransformationContextFromStage1To2 context) {
+        final TransformationResultFromStage1To2<? extends IJoinNode2<?>> lsTransformed = leftNode.transform(context);
+        final TransformationResultFromStage1To2<? extends IJoinNode2<?>> rsTransformed = rightNode.transform(context);
+        final TransformationContextFromStage1To2 updatedContext = context.cloneWithAdded(lsTransformed.updatedContext.getCurrentLevelSources(), rsTransformed.updatedContext.getCurrentLevelSources());
         final Conditions2 jcTransformed = joinConditions.transform(updatedContext);
-        return new TransformationResult1<>(new JoinInnerNode2(lsTransformed.item, rsTransformed.item, joinType, jcTransformed), updatedContext);
+        return new TransformationResultFromStage1To2<>(new JoinInnerNode2(lsTransformed.item, rsTransformed.item, joinType, jcTransformed), updatedContext);
     }
 
     @Override

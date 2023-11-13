@@ -17,18 +17,18 @@ import ua.com.fielden.platform.eql.stage3.sources.ISource3;
  *
  * @author TG Team
  */
-public final class TransformationContext1 {
+public final class TransformationContextFromStage1To2 {
     public static boolean SHOW_INTERNALS = false;
 
     public final List<List<ISource2<? extends ISource3>>> sourcesForNestedQueries; // in reverse order -- the first list is for the deepest nested query
     public final QuerySourceInfoProvider querySourceInfoProvider;
     public final boolean isForCalcProp; // indicates that this context is used to transform calc-prop expression.
 
-    public TransformationContext1(final QuerySourceInfoProvider querySourceInfoProvider, final boolean isForCalcProp) {
+    public TransformationContextFromStage1To2(final QuerySourceInfoProvider querySourceInfoProvider, final boolean isForCalcProp) {
         this(querySourceInfoProvider, emptyList(), isForCalcProp);
     }
 
-    private TransformationContext1(final QuerySourceInfoProvider querySourceInfoProvider, final List<List<ISource2<? extends ISource3>>> sourcesForNestedQueries, final boolean isForCalcProp) {
+    private TransformationContextFromStage1To2(final QuerySourceInfoProvider querySourceInfoProvider, final List<List<ISource2<? extends ISource3>>> sourcesForNestedQueries, final boolean isForCalcProp) {
         this.querySourceInfoProvider = querySourceInfoProvider;
         this.sourcesForNestedQueries = sourcesForNestedQueries;
         this.isForCalcProp = isForCalcProp;
@@ -37,23 +37,23 @@ public final class TransformationContext1 {
         }
     }
 
-    public TransformationContext1 cloneWithAdded(final ISource2<? extends ISource3> transformedSource) {
+    public TransformationContextFromStage1To2 cloneWithAdded(final ISource2<? extends ISource3> transformedSource) {
         final List<ISource2<? extends ISource3>> current = new ArrayList<>();
         current.add(transformedSource);
         final List<List<ISource2<? extends ISource3>>> newSourcesForNestedQueries = new ArrayList<>();
         newSourcesForNestedQueries.add(unmodifiableList(current));
         newSourcesForNestedQueries.addAll(sourcesForNestedQueries); // all lists within added list are already unmodifiable
-        return new TransformationContext1(querySourceInfoProvider, unmodifiableList(newSourcesForNestedQueries), isForCalcProp);
+        return new TransformationContextFromStage1To2(querySourceInfoProvider, unmodifiableList(newSourcesForNestedQueries), isForCalcProp);
     }
 
-    public TransformationContext1 cloneWithAdded(final List<ISource2<? extends ISource3>> leftNodeSources, final List<ISource2<? extends ISource3>> rightNodeSources) {
+    public TransformationContextFromStage1To2 cloneWithAdded(final List<ISource2<? extends ISource3>> leftNodeSources, final List<ISource2<? extends ISource3>> rightNodeSources) {
         final List<ISource2<? extends ISource3>> current = new ArrayList<>();
         current.addAll(leftNodeSources);
         current.addAll(rightNodeSources);
         final List<List<ISource2<? extends ISource3>>> newSourcesForNestedQueries = new ArrayList<>();
         newSourcesForNestedQueries.add(unmodifiableList(current));
         newSourcesForNestedQueries.addAll(sourcesForNestedQueries); // all lists within added list are already unmodifiable
-        return new TransformationContext1(querySourceInfoProvider, unmodifiableList(newSourcesForNestedQueries), isForCalcProp);
+        return new TransformationContextFromStage1To2(querySourceInfoProvider, unmodifiableList(newSourcesForNestedQueries), isForCalcProp);
     }
 
     public List<ISource2<? extends ISource3>> getCurrentLevelSources() {

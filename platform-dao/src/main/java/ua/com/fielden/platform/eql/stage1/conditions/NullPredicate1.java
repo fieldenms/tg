@@ -12,7 +12,7 @@ import java.util.Set;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForUnionType;
-import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.conditions.ICondition2;
@@ -37,7 +37,7 @@ public class NullPredicate1 implements ICondition1<ICondition2<?>> {
     }
 
     @Override
-    public ICondition2<?> transform(final TransformationContext1 context) {
+    public ICondition2<?> transform(final TransformationContextFromStage1To2 context) {
         final ISingleOperand2<?> transformedOperand = operand.transform(context);
         if (transformedOperand instanceof Prop2 && isUnionEntityType(((Prop2) transformedOperand).type.javaType())) {
             final Prop2 prop = (Prop2) transformedOperand;

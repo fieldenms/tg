@@ -4,8 +4,8 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage2.QueryComponents2;
-import ua.com.fielden.platform.eql.stage2.TransformationContext2;
-import ua.com.fielden.platform.eql.stage2.TransformationResult2;
+import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
+import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.QueryComponents3;
 import ua.com.fielden.platform.eql.stage3.queries.SubQuery3;
@@ -21,9 +21,9 @@ public class SubQuery2 extends AbstractQuery2 implements ISingleOperand2<SubQuer
     }
 
     @Override
-    public TransformationResult2<SubQuery3> transform(final TransformationContext2 context) {
-        final TransformationResult2<QueryComponents3> queryComponentsTr = transformQueryComponents(context);
-        return new TransformationResult2<>(new SubQuery3(queryComponentsTr.item, type), queryComponentsTr.updatedContext);
+    public TransformationResultFromStage2To3<SubQuery3> transform(final TransformationContextFromStage2To3 context) {
+        final TransformationResultFromStage2To3<QueryComponents3> queryComponentsTr = transformQueryComponents(context);
+        return new TransformationResultFromStage2To3<>(new SubQuery3(queryComponentsTr.item, type), queryComponentsTr.updatedContext);
     }
 
     @Override

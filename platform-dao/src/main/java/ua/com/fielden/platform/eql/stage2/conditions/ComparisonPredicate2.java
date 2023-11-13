@@ -6,8 +6,8 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
-import ua.com.fielden.platform.eql.stage2.TransformationContext2;
-import ua.com.fielden.platform.eql.stage2.TransformationResult2;
+import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
+import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.conditions.ComparisonPredicate3;
@@ -30,10 +30,10 @@ public class ComparisonPredicate2 implements ICondition2<ComparisonPredicate3> {
     }
 
     @Override
-    public TransformationResult2<ComparisonPredicate3> transform(final TransformationContext2 context) {
-        final TransformationResult2<? extends ISingleOperand3> leftOperandTr = leftOperand.transform(context);
-        final TransformationResult2<? extends ISingleOperand3> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
-        return new TransformationResult2<>(new ComparisonPredicate3(leftOperandTr.item, operator, rightOperandTr.item), rightOperandTr.updatedContext);
+    public TransformationResultFromStage2To3<ComparisonPredicate3> transform(final TransformationContextFromStage2To3 context) {
+        final TransformationResultFromStage2To3<? extends ISingleOperand3> leftOperandTr = leftOperand.transform(context);
+        final TransformationResultFromStage2To3<? extends ISingleOperand3> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
+        return new TransformationResultFromStage2To3<>(new ComparisonPredicate3(leftOperandTr.item, operator, rightOperandTr.item), rightOperandTr.updatedContext);
     }
 
     @Override

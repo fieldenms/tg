@@ -21,9 +21,9 @@ import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForComponentType;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForEntityType;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForUnionType;
-import ua.com.fielden.platform.eql.stage1.ITransformableToStage2;
+import ua.com.fielden.platform.eql.stage1.ITransformableFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.QueryComponents1;
-import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.queries.ResultQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
@@ -37,7 +37,7 @@ import ua.com.fielden.platform.eql.stage3.sources.ISource3;
  * The most important fact about yields in this structure is that fetch models are used for auto-yielding in case of no explicit yields or {@code yieldAll}.
  *
  */
-public class ResultQuery1 extends AbstractQuery1 implements ITransformableToStage2<ResultQuery2> {
+public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromStage1To2<ResultQuery2> {
 
     public final IRetrievalModel<?> fetchModel;
 
@@ -47,7 +47,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToStag
     }
 
     @Override
-    public ResultQuery2 transform(final TransformationContext1 context) {
+    public ResultQuery2 transform(final TransformationContextFromStage1To2 context) {
         return new ResultQuery2(joinRoot == null ? transformSourceless(context) : transformQueryComponents(context), resultType);
     }
 

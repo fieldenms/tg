@@ -9,7 +9,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 
-import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 
 public class TransformationContext1DemoTest extends AbstractEqlShortcutTest {
     @Rule
@@ -18,12 +18,12 @@ public class TransformationContext1DemoTest extends AbstractEqlShortcutTest {
     @Before
     public void setUp() {
         System.out.println("\nEXECUTING TEST [%s]:\n".formatted(name.getMethodName()));
-        TransformationContext1.SHOW_INTERNALS = true;
+        TransformationContextFromStage1To2.SHOW_INTERNALS = true;
     }
 
     @After
     public void tearDown() {
-        TransformationContext1.SHOW_INTERNALS = false;
+        TransformationContextFromStage1To2.SHOW_INTERNALS = false;
     }
 
     @Test

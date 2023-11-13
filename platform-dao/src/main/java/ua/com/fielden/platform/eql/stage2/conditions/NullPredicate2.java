@@ -4,8 +4,8 @@ import java.util.Objects;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.stage2.TransformationContext2;
-import ua.com.fielden.platform.eql.stage2.TransformationResult2;
+import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
+import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.conditions.NullPredicate3;
@@ -26,9 +26,9 @@ public class NullPredicate2 implements ICondition2<NullPredicate3> {
     }
 
     @Override
-    public TransformationResult2<NullPredicate3> transform(final TransformationContext2 context) {
-        final TransformationResult2<? extends ISingleOperand3> operandTr = operand.transform(context);
-        return new TransformationResult2<>(new NullPredicate3(operandTr.item, negated), operandTr.updatedContext);
+    public TransformationResultFromStage2To3<NullPredicate3> transform(final TransformationContextFromStage2To3 context) {
+        final TransformationResultFromStage2To3<? extends ISingleOperand3> operandTr = operand.transform(context);
+        return new TransformationResultFromStage2To3<>(new NullPredicate3(operandTr.item, negated), operandTr.updatedContext);
     }
 
     @Override

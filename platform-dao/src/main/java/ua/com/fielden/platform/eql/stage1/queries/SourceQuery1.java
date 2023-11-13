@@ -15,9 +15,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForComponentType;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForUnionType;
-import ua.com.fielden.platform.eql.stage1.ITransformableToStage2;
+import ua.com.fielden.platform.eql.stage1.ITransformableFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.QueryComponents1;
-import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
@@ -31,7 +31,7 @@ import ua.com.fielden.platform.eql.stage3.sources.ISource3;
  * <p>
  * The specificity of this structure pertains to the fact that in case of no explicit yields or {@code yieldAll}, yields are derived from the main source of the query. No fetch models affect this.
  */
-public class SourceQuery1 extends AbstractQuery1 implements ITransformableToStage2<SourceQuery2> {
+public class SourceQuery1 extends AbstractQuery1 implements ITransformableFromStage1To2<SourceQuery2> {
 
     /**
      * All simple queries as source queries are accessible for correlation. Source queries derived from synthetic entities can't be correlated.
@@ -44,8 +44,8 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToStag
     }
 
     @Override
-    public SourceQuery2 transform(final TransformationContext1 context) {
-        final TransformationContext1 localContext = isCorrelated ? context : new TransformationContext1(context.querySourceInfoProvider, context.isForCalcProp);
+    public SourceQuery2 transform(final TransformationContextFromStage1To2 context) {
+        final TransformationContextFromStage1To2 localContext = isCorrelated ? context : new TransformationContextFromStage1To2(context.querySourceInfoProvider, context.isForCalcProp);
 
         return new SourceQuery2(joinRoot == null ? transformSourceless(localContext) : transformQueryComponents(localContext), resultType);
     }

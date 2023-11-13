@@ -13,7 +13,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
-import ua.com.fielden.platform.eql.stage2.TransformationResult2;
+import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage3.queries.ResultQuery3;
 
 public class EntityBatchDeleteByQueryModelOperation {
@@ -34,11 +34,11 @@ public class EntityBatchDeleteByQueryModelOperation {
         final EqlDomainMetadata eqlDomainMetadata = executionContext.getEqlDomainMetadata();
         final AggregatedResultQueryModel finalModel = select(model.getResultType()).where().prop(ID).in().model(model).yield().prop(ID).as(ID).modelAsAggregate();
         final String tableName = eqlDomainMetadata.entityMetadataHolder.getTableForEntityType(model.getResultType()).name;
-        final TransformationResult2<ResultQuery3> s2tr = transform(new QueryProcessingModel(finalModel, null, null, paramValues, true), null, null, executionContext.dates(), eqlDomainMetadata); 
+        final TransformationResultFromStage2To3<ResultQuery3> s2tr = transform(new QueryProcessingModel(finalModel, null, null, paramValues, true), null, null, executionContext.dates(), eqlDomainMetadata); 
         final ResultQuery3 entQuery3 = s2tr.item;
         final String selectionSql = entQuery3.sql(eqlDomainMetadata.dbVersion);
         final String deletionSql = produceDeletionSql(selectionSql, tableName, eqlDomainMetadata.dbVersion);
-        return new DeletionModel(deletionSql, s2tr.updatedContext.getParamValues());
+        return new DeletionModel(deletionSql, s2tr.updatedContext.getSqlParamValues());
     }
 
     private String produceDeletionSql(final String selectionSql, final String tableName, final DbVersion dbVersion) {

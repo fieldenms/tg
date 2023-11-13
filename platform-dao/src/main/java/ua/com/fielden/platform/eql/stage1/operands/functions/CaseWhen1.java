@@ -10,7 +10,7 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.ITypeCast;
-import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.conditions.ICondition1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.conditions.ICondition2;
@@ -33,7 +33,7 @@ public class CaseWhen1 extends AbstractFunction1<CaseWhen2> {
     }
 
     @Override
-    public CaseWhen2 transform(final TransformationContext1 context) {
+    public CaseWhen2 transform(final TransformationContextFromStage1To2 context) {
         final List<T2<ICondition2<? extends ICondition3>, ISingleOperand2<? extends ISingleOperand3>>> transformedWhenThenPairs = new ArrayList<>();
         for (final T2<ICondition1<? extends ICondition2<?>>, ISingleOperand1<? extends ISingleOperand2<?>>> pair : whenThenPairs) {
             final ICondition2<?> conditionTransformed = pair._1.transform(context);

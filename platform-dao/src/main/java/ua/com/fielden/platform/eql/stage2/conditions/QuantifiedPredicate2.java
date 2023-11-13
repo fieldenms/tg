@@ -7,8 +7,8 @@ import java.util.Set;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.enums.Quantifier;
-import ua.com.fielden.platform.eql.stage2.TransformationContext2;
-import ua.com.fielden.platform.eql.stage2.TransformationResult2;
+import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
+import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.queries.SubQuery2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
@@ -35,11 +35,11 @@ public class QuantifiedPredicate2 implements ICondition2<QuantifiedPredicate3> {
     }
 
     @Override
-    public TransformationResult2<QuantifiedPredicate3> transform(final TransformationContext2 context) {
-        final TransformationResult2<? extends ISingleOperand3> leftOperandTr = leftOperand.transform(context);
-        final TransformationResult2<SubQuery3> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
+    public TransformationResultFromStage2To3<QuantifiedPredicate3> transform(final TransformationContextFromStage2To3 context) {
+        final TransformationResultFromStage2To3<? extends ISingleOperand3> leftOperandTr = leftOperand.transform(context);
+        final TransformationResultFromStage2To3<SubQuery3> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
 
-        return new TransformationResult2<>(new QuantifiedPredicate3(leftOperandTr.item, operator, quantifier, rightOperandTr.item), rightOperandTr.updatedContext);
+        return new TransformationResultFromStage2To3<>(new QuantifiedPredicate3(leftOperandTr.item, operator, quantifier, rightOperandTr.item), rightOperandTr.updatedContext);
     }
 
     @Override

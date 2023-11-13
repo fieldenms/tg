@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.stage1.sundries;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.sundries.GroupBy2;
@@ -14,7 +14,7 @@ public class GroupBy1 {
         this.operand = operand;
     }
 
-    public GroupBy2 transform(final TransformationContext1 context) {
+    public GroupBy2 transform(final TransformationContextFromStage1To2 context) {
         return new GroupBy2(operand.transform(context));
     }
 

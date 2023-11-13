@@ -10,8 +10,8 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.PropType;
-import ua.com.fielden.platform.eql.stage2.TransformationContext2;
-import ua.com.fielden.platform.eql.stage2.TransformationResult2;
+import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
+import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage3.operands.Value3;
 import ua.com.fielden.platform.types.tuples.T2;
 
@@ -27,11 +27,11 @@ public class Value2 implements ISingleOperand2<Value3> {
         this.value = value;
         this.ignoreNull = ignoreNull;
     }
-    
+
     private boolean needsParameter() {
         return !(value == null || value instanceof Integer || Y.equals(value) || N.equals(value));
     }
-    
+
     @Override
     public boolean ignore() {
         return ignoreNull && value == null;
@@ -45,20 +45,20 @@ public class Value2 implements ISingleOperand2<Value3> {
     public PropType type() {
         return value == null ? null : new PropType(value.getClass(), hibTypeFromJavaType(value.getClass())); // TODO provide proper hibType once value original (not converted) will be taken into account.
     }
-    
+
     @Override
     public boolean isNonnullableEntity() {
-        return false; // should be FALSE even if value is not null as there is no guarantee of presence of entity with such ID in DB 
+        return false; // should be FALSE even if value is not null as there is no guarantee of presence of entity with such ID in DB
     }
-    
+
     @Override
-    public TransformationResult2<Value3> transform(final TransformationContext2 context) {
+    public TransformationResultFromStage2To3<Value3> transform(final TransformationContextFromStage2To3 context) {
         if (needsParameter()) {
-            final T2<String, TransformationContext2> paramTr = context.obtainParamNameAndUpdateContext(value);
+            final T2<String, TransformationContextFromStage2To3> paramTr = context.obtainParamNameAndUpdateContext(value);
             final Value3 transformed = new Value3(value, paramTr._1, type());
-            return new TransformationResult2<>(transformed, paramTr._2);
+            return new TransformationResultFromStage2To3<>(transformed, paramTr._2);
         } else {
-            return new TransformationResult2<>(new Value3(value, null, type()), context);
+            return new TransformationResultFromStage2To3<>(new Value3(value, type()), context);
         }
     }
 
@@ -66,7 +66,7 @@ public class Value2 implements ISingleOperand2<Value3> {
     public Set<Prop2> collectProps() {
         return emptySet();
     }
-    
+
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return emptySet();
@@ -92,7 +92,7 @@ public class Value2 implements ISingleOperand2<Value3> {
         }
 
         final Value2 other = (Value2) obj;
-        
+
         return Objects.equals(value, other.value) && ignoreNull == other.ignoreNull;
     }
 }

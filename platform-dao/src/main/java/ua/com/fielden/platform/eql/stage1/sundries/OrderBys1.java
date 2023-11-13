@@ -10,7 +10,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage2.sundries.OrderBys2;
 
 public class OrderBys1 {
@@ -22,7 +22,7 @@ public class OrderBys1 {
         this.models = models;
     }
 
-    public OrderBys2 transform(final TransformationContext1 context) {
+    public OrderBys2 transform(final TransformationContextFromStage1To2 context) {
         if (models.isEmpty()) {
             return OrderBys2.EMPTY_ORDER_BYS;
         } else {

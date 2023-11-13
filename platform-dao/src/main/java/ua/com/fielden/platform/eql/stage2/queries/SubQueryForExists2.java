@@ -1,22 +1,22 @@
 package ua.com.fielden.platform.eql.stage2.queries;
 
-import ua.com.fielden.platform.eql.stage2.ITransformableToStage3;
+import ua.com.fielden.platform.eql.stage2.ITransformableFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.QueryComponents2;
-import ua.com.fielden.platform.eql.stage2.TransformationContext2;
-import ua.com.fielden.platform.eql.stage2.TransformationResult2;
+import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
+import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage3.QueryComponents3;
 import ua.com.fielden.platform.eql.stage3.queries.SubQueryForExists3;
 
-public class SubQueryForExists2 extends AbstractQuery2 implements ITransformableToStage3<SubQueryForExists3> {
+public class SubQueryForExists2 extends AbstractQuery2 implements ITransformableFromStage2To3<SubQueryForExists3> {
 
     public SubQueryForExists2(final QueryComponents2 queryComponents) {
         super(queryComponents, null);
     }
 
     @Override
-    public TransformationResult2<SubQueryForExists3> transform(final TransformationContext2 context) {
-        final TransformationResult2<QueryComponents3> queryComponentsTr = transformQueryComponents(context);
-        return new TransformationResult2<>(new SubQueryForExists3(queryComponentsTr.item), queryComponentsTr.updatedContext);
+    public TransformationResultFromStage2To3<SubQueryForExists3> transform(final TransformationContextFromStage2To3 context) {
+        final TransformationResultFromStage2To3<QueryComponents3> queryComponentsTr = transformQueryComponents(context);
+        return new TransformationResultFromStage2To3<>(new SubQueryForExists3(queryComponentsTr.item), queryComponentsTr.updatedContext);
     }
 
     @Override

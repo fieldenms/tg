@@ -10,8 +10,8 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.PropType;
-import ua.com.fielden.platform.eql.stage2.TransformationContext2;
-import ua.com.fielden.platform.eql.stage2.TransformationResult2;
+import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
+import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage3.operands.CompoundSingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.Expression3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
@@ -28,16 +28,16 @@ public class Expression2 extends AbstractSingleOperand2 implements ISingleOperan
     }
     
     @Override
-    public TransformationResult2<Expression3> transform(final TransformationContext2 context) {
+    public TransformationResultFromStage2To3<Expression3> transform(final TransformationContextFromStage2To3 context) {
         final List<CompoundSingleOperand3> transformed = new ArrayList<>();
-        final TransformationResult2<? extends ISingleOperand3> firstTr = first.transform(context);
-        TransformationContext2 currentContext = firstTr.updatedContext;
+        final TransformationResultFromStage2To3<? extends ISingleOperand3> firstTr = first.transform(context);
+        TransformationContextFromStage2To3 currentContext = firstTr.updatedContext;
         for (final CompoundSingleOperand2 item : items) {
-            final TransformationResult2<? extends ISingleOperand3> itemTr = item.operand.transform(currentContext);
+            final TransformationResultFromStage2To3<? extends ISingleOperand3> itemTr = item.operand.transform(currentContext);
             transformed.add(new CompoundSingleOperand3(itemTr.item, item.operator));
             currentContext = itemTr.updatedContext;
         }
-        return new TransformationResult2<>(new Expression3(firstTr.item, transformed, type), currentContext);
+        return new TransformationResultFromStage2To3<>(new Expression3(firstTr.item, transformed, type), currentContext);
     }
 
     @Override

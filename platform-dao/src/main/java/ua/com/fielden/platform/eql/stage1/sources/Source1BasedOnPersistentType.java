@@ -3,7 +3,7 @@ package ua.com.fielden.platform.eql.stage1.sources;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
 
 public class Source1BasedOnPersistentType extends AbstractSource1<Source2BasedOnPersistentType> {
@@ -13,7 +13,7 @@ public class Source1BasedOnPersistentType extends AbstractSource1<Source2BasedOn
     }
 
     @Override
-    public Source2BasedOnPersistentType transform(final TransformationContext1 context) {
+    public Source2BasedOnPersistentType transform(final TransformationContextFromStage1To2 context) {
         return new Source2BasedOnPersistentType(context.querySourceInfoProvider.getModelledQuerySourceInfo(sourceType()), alias, id, true, context.isForCalcProp);
     }
 

@@ -17,8 +17,8 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.stage2.TransformationContext2;
-import ua.com.fielden.platform.eql.stage2.TransformationResult2;
+import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
+import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.Value2;
 import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
@@ -51,15 +51,15 @@ public class Yields2 {
         return unmodifiableSortedMap(yieldsMap);
     }
     
-    public TransformationResult2<Yields3> transform(final TransformationContext2 context) {
+    public TransformationResultFromStage2To3<Yields3> transform(final TransformationContextFromStage2To3 context) {
         final List<Yield3> yieldsList = new ArrayList<>(); 
-        TransformationContext2 currentContext = context;
+        TransformationContextFromStage2To3 currentContext = context;
         for (final Yield2 yield : yieldsMap.values()) {
-            final TransformationResult2<Yield3> yieldTr = yield.transform(currentContext);
+            final TransformationResultFromStage2To3<Yield3> yieldTr = yield.transform(currentContext);
             currentContext = yieldTr.updatedContext;
             yieldsList.add(yieldTr.item);
         }
-        return new TransformationResult2<>(new Yields3(yieldsList), currentContext);
+        return new TransformationResultFromStage2To3<>(new Yields3(yieldsList), currentContext);
     }
     
     public Set<Prop2> collectProps() {

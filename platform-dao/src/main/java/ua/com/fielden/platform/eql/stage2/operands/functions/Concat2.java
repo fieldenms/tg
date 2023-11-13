@@ -10,8 +10,8 @@ import java.util.Objects;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.stage2.TransformationContext2;
-import ua.com.fielden.platform.eql.stage2.TransformationResult2;
+import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
+import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
@@ -27,15 +27,15 @@ public class Concat2 extends AbstractFunction2<Concat3> {
     }
 
     @Override
-    public TransformationResult2<Concat3> transform(final TransformationContext2 context) {
+    public TransformationResultFromStage2To3<Concat3> transform(final TransformationContextFromStage2To3 context) {
         final List<ISingleOperand3> transformed = new ArrayList<>();
-        TransformationContext2 currentContext = context;
+        TransformationContextFromStage2To3 currentContext = context;
         for (final ISingleOperand2<? extends ISingleOperand3> operand : operands) {
-            final TransformationResult2<? extends ISingleOperand3> operandTr = operand.transform(currentContext);
+            final TransformationResultFromStage2To3<? extends ISingleOperand3> operandTr = operand.transform(currentContext);
             transformed.add(operandTr.item);
             currentContext = operandTr.updatedContext;
         }
-        return new TransformationResult2<>(new Concat3(transformed, type), currentContext);
+        return new TransformationResultFromStage2To3<>(new Concat3(transformed, type), currentContext);
     }
 
     @Override

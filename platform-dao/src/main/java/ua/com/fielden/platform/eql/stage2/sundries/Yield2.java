@@ -2,8 +2,8 @@ package ua.com.fielden.platform.eql.stage2.sundries;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.stage2.TransformationContext2;
-import ua.com.fielden.platform.eql.stage2.TransformationResult2;
+import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
+import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
@@ -19,10 +19,10 @@ public class Yield2 {
         this.hasNonnullableHint = hasNonnullableHint;
     }
 
-    public TransformationResult2<Yield3> transform(final TransformationContext2 context) {
-        final TransformationResult2<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
-        final TransformationContext2 updatedContext = operandTransformationResult.updatedContext.cloneWithNextSqlId();
-        return new TransformationResult2<>(new Yield3(operandTransformationResult.item, alias, updatedContext.sqlId, operand.type()), updatedContext);
+    public TransformationResultFromStage2To3<Yield3> transform(final TransformationContextFromStage2To3 context) {
+        final TransformationResultFromStage2To3<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
+        final TransformationContextFromStage2To3 updatedContext = operandTransformationResult.updatedContext.cloneWithNextSqlId();
+        return new TransformationResultFromStage2To3<>(new Yield3(operandTransformationResult.item, alias, updatedContext.sqlId, operand.type()), updatedContext);
     }
 
     @Override

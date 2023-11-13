@@ -39,7 +39,7 @@ import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForPrimType;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForUnionType;
 import ua.com.fielden.platform.eql.meta.utils.DependentCalcPropsOrder;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
-import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.queries.SourceQuery1;
 import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnQueries;
 import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
@@ -111,7 +111,7 @@ public class QuerySourceInfoProvider {
      * @return
      */
     private <T extends AbstractEntity<?>> QuerySourceInfo<?> generateModelledQuerySourceInfoForSyntheticType(final Class<? extends AbstractEntity<?>> entityType, final List<SourceQuery1> queries) {
-        final TransformationContext1 context = new TransformationContext1(this, false);
+        final TransformationContextFromStage1To2 context = new TransformationContextFromStage1To2(this, false);
         final List<SourceQuery2> transformedQueries = queries.stream().map(m -> m.transform(context)).collect(toList());
         return Source1BasedOnQueries.produceQuerySourceInfoForEntityType(this, transformedQueries, entityType, true);
     }

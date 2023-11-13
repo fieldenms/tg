@@ -14,8 +14,8 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.PropType;
-import ua.com.fielden.platform.eql.stage2.TransformationContext2;
-import ua.com.fielden.platform.eql.stage2.TransformationResult2;
+import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
+import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.conditions.ComparisonPredicate3;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
@@ -50,8 +50,8 @@ public class JoinLeafNode2 implements IJoinNode2<IJoinNode3> {
     }
 
     @Override
-    public TransformationResult2<IJoinNode3> transform(TransformationContext2 context) {
-        final TransformationResult2<? extends ISource3> explicitSourceTr = source.transform(context);
+    public TransformationResultFromStage2To3<IJoinNode3> transform(TransformationContextFromStage2To3 context) {
+        final TransformationResultFromStage2To3<? extends ISource3> explicitSourceTr = source.transform(context);
         return generateJoinNode(explicitSourceTr.item, context.getHelperNodesForSource(source.id()), explicitSourceTr.updatedContext);
     }
 
@@ -63,19 +63,19 @@ public class JoinLeafNode2 implements IJoinNode2<IJoinNode3> {
      * @param context
      * @return
      */
-    private static TransformationResult2<IJoinNode3> generateJoinNode(final ISource3 source, final List<HelperNodeForImplicitJoins> helperNodes, final TransformationContext2 context) {
+    private static TransformationResultFromStage2To3<IJoinNode3> generateJoinNode(final ISource3 source, final List<HelperNodeForImplicitJoins> helperNodes, final TransformationContextFromStage2To3 context) {
         // registering source within transformation context
-        TransformationContext2 currentContext = context.cloneWithSource(source);
+        TransformationContextFromStage2To3 currentContext = context.cloneWithSource(source);
         IJoinNode3 currentJoinNode = new JoinLeafNode3(source);
 
         // enhancing current join node with helper nodes
         for (final HelperNodeForImplicitJoins helperNode : helperNodes) {
-            final TransformationResult2<JoinInnerNode3> tr = joinImplicitNode(currentJoinNode, helperNode, source, currentContext);
+            final TransformationResultFromStage2To3<JoinInnerNode3> tr = joinImplicitNode(currentJoinNode, helperNode, source, currentContext);
             currentJoinNode = tr.item;
             currentContext = tr.updatedContext;
         }
 
-        return new TransformationResult2<>(currentJoinNode, currentContext);
+        return new TransformationResultFromStage2To3<>(currentJoinNode, currentContext);
     }
 
     /**
@@ -87,17 +87,17 @@ public class JoinLeafNode2 implements IJoinNode2<IJoinNode3> {
      * @param context
      * @return
      */
-    private static TransformationResult2<JoinInnerNode3> joinImplicitNode(final IJoinNode3 currentJoinNode, final HelperNodeForImplicitJoins helperNode, final ISource3 rootSource, final TransformationContext2 context) {
-        final TransformationResult2<? extends ISource3> tr = helperNode.source.transform(context);
+    private static TransformationResultFromStage2To3<JoinInnerNode3> joinImplicitNode(final IJoinNode3 currentJoinNode, final HelperNodeForImplicitJoins helperNode, final ISource3 rootSource, final TransformationContextFromStage2To3 context) {
+        final TransformationResultFromStage2To3<? extends ISource3> tr = helperNode.source.transform(context);
         final ISource3 addedSource = tr.item;
-        TransformationContext2 currentContext = tr.updatedContext;
+        TransformationContextFromStage2To3 currentContext = tr.updatedContext;
 
         final ISingleOperand3 leftOperand;
 
         if (helperNode.expr == null) {
             leftOperand = new Prop3(helperNode.name, rootSource, new PropType(helperNode.source.sourceType(), H_ENTITY));
         } else {
-            final TransformationResult2<Expression3> exprTransRes = helperNode.expr.transform(currentContext);
+            final TransformationResultFromStage2To3<Expression3> exprTransRes = helperNode.expr.transform(currentContext);
             leftOperand = exprTransRes.item.isSingleOperandExpression() ? exprTransRes.item.firstOperand : exprTransRes.item;
             currentContext = exprTransRes.updatedContext;
         }
@@ -105,8 +105,8 @@ public class JoinLeafNode2 implements IJoinNode2<IJoinNode3> {
         final Prop3 rightOperand = new Prop3(ID, addedSource, LONG_PROP_TYPE);
         final ComparisonPredicate3 comparisonPredicate = new ComparisonPredicate3(leftOperand, EQ, rightOperand);
         final Conditions3 joinOnConditions = new Conditions3(false, asList(asList(comparisonPredicate)));
-        final TransformationResult2<IJoinNode3> implicitJoinNodeTr = generateJoinNode(addedSource, helperNode.subnodes(), currentContext);
-        return new TransformationResult2<>(new JoinInnerNode3(currentJoinNode, implicitJoinNodeTr.item, (helperNode.nonnullable ? IJ : LJ), joinOnConditions), implicitJoinNodeTr.updatedContext);
+        final TransformationResultFromStage2To3<IJoinNode3> implicitJoinNodeTr = generateJoinNode(addedSource, helperNode.subnodes(), currentContext);
+        return new TransformationResultFromStage2To3<>(new JoinInnerNode3(currentJoinNode, implicitJoinNodeTr.item, (helperNode.nonnullable ? IJ : LJ), joinOnConditions), implicitJoinNodeTr.updatedContext);
     }
 
     @Override

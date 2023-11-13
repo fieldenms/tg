@@ -5,8 +5,8 @@ import java.util.Set;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 
-public interface ITransformableToStage3<T> {
-    TransformationResult2<T> transform(TransformationContext2 context);
+public interface ITransformableFromStage2To3<T> {
+    TransformationResultFromStage2To3<T> transform(TransformationContextFromStage2To3 context);
 
     Set<Prop2> collectProps();
     

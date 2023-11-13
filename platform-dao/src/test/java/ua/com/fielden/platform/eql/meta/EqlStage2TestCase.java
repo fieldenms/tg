@@ -31,7 +31,7 @@ import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForComponentType;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForUnionType;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
-import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.Prop1;
 import ua.com.fielden.platform.eql.stage2.QueryComponents2;
 import ua.com.fielden.platform.eql.stage2.conditions.ComparisonPredicate2;
@@ -89,13 +89,13 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
 
     protected static <T extends AbstractEntity<?>> ResultQuery2 qryCountAll(final ICompoundCondition0<T> unfinishedQry, final Map<String, Object> paramValues) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
-        final TransformationContext1 context = new TransformationContext1(querySourceInfoProvider(), false);
+        final TransformationContextFromStage1To2 context = new TransformationContextFromStage1To2(querySourceInfoProvider(), false);
         return qb(paramValues).generateAsResultQuery(countQry, null, null).transform(context);
     }
 
     protected static <T extends AbstractEntity<?>> T2<QueryModelToStage1Transformer, ResultQuery2> qryCountAll2(final ICompoundCondition0<T> unfinishedQry, final Map<String, Object> paramValues) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
-        final TransformationContext1 context = new TransformationContext1(querySourceInfoProvider(), false);
+        final TransformationContextFromStage1To2 context = new TransformationContextFromStage1To2(querySourceInfoProvider(), false);
         final QueryModelToStage1Transformer qb = qb(paramValues);
         return t2(qb, qb.generateAsResultQuery(countQry, null, null).transform(context));
     }
@@ -105,17 +105,17 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static <T extends AbstractEntity<?>> ResultQuery2 qry(final EntityResultQueryModel<T> qry, final OrderingModel order) {
-        final TransformationContext1 context = new TransformationContext1(querySourceInfoProvider(), false);
+        final TransformationContextFromStage1To2 context = new TransformationContextFromStage1To2(querySourceInfoProvider(), false);
         return qb().generateAsResultQuery(qry, order, new EntityRetrievalModel<T>(EntityQueryUtils.fetch(qry.getResultType()), DOMAIN_METADATA_ANALYSER)).transform(context);
     }
 
     protected static ResultQuery2 qry(final AggregatedResultQueryModel qry, final OrderingModel order) {
-        final TransformationContext1 context = new TransformationContext1(querySourceInfoProvider(), false);
+        final TransformationContextFromStage1To2 context = new TransformationContextFromStage1To2(querySourceInfoProvider(), false);
         return qb().generateAsResultQuery(qry, order, null).transform(context);
     }
 
     protected static ResultQuery2 qry(final AggregatedResultQueryModel qry) {
-        final TransformationContext1 context = new TransformationContext1(querySourceInfoProvider(), false);
+        final TransformationContextFromStage1To2 context = new TransformationContextFromStage1To2(querySourceInfoProvider(), false);
         return qb().generateAsResultQuery(qry, null, null).transform(context);
     }
 

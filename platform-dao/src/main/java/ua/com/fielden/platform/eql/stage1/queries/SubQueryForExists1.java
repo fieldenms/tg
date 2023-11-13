@@ -2,9 +2,9 @@ package ua.com.fielden.platform.eql.stage1.queries;
 
 import static ua.com.fielden.platform.eql.stage2.sundries.Yields2.nullYields;
 
-import ua.com.fielden.platform.eql.stage1.ITransformableToStage2;
+import ua.com.fielden.platform.eql.stage1.ITransformableFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.QueryComponents1;
-import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage2.queries.SubQueryForExists2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sundries.Yields2;
@@ -17,14 +17,14 @@ import ua.com.fielden.platform.eql.stage3.sources.ISource3;
  * What is important is the presence of records in the result.
  *
  */
-public class SubQueryForExists1 extends AbstractQuery1 implements ITransformableToStage2<SubQueryForExists2> {
+public class SubQueryForExists1 extends AbstractQuery1 implements ITransformableFromStage1To2<SubQueryForExists2> {
 
     public SubQueryForExists1(final QueryComponents1 queryComponents) {
         super(queryComponents, null);
     }
 
     @Override
-    public SubQueryForExists2 transform(final TransformationContext1 context) {
+    public SubQueryForExists2 transform(final TransformationContextFromStage1To2 context) {
         return new SubQueryForExists2(joinRoot == null ? transformSourceless(context) : transformQueryComponents(context));
     }
 

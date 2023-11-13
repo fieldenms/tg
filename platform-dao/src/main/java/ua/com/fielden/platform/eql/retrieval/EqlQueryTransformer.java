@@ -5,10 +5,10 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.QueryProcessingModel;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
-import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.queries.ResultQuery1;
-import ua.com.fielden.platform.eql.stage2.TransformationContext2;
-import ua.com.fielden.platform.eql.stage2.TransformationResult2;
+import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
+import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.queries.ResultQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.enhance.PathsToTreeTransformer;
 import ua.com.fielden.platform.eql.stage3.queries.ResultQuery3;
@@ -32,7 +32,7 @@ public class EqlQueryTransformer {
 
     private EqlQueryTransformer() {}
 
-    public static final <E extends AbstractEntity<?>> TransformationResult2<ResultQuery3> transform(
+    public static final <E extends AbstractEntity<?>> TransformationResultFromStage2To3<ResultQuery3> transform(
             final QueryProcessingModel<E, ?> qem,
             final IFilter filter,
             final String username,
@@ -41,11 +41,11 @@ public class EqlQueryTransformer {
         final QueryModelToStage1Transformer gen = new QueryModelToStage1Transformer(filter, username, new QueryNowValue(dates), qem.getParamValues());
         final ResultQuery1 query1 = gen.generateAsResultQuery(qem.queryModel, qem.orderModel, qem.fetchModel);
 
-        final TransformationContext1 context1 = new TransformationContext1(eqlDomainMetadata.querySourceInfoProvider, false);
+        final TransformationContextFromStage1To2 context1 = new TransformationContextFromStage1To2(eqlDomainMetadata.querySourceInfoProvider, false);
 		final ResultQuery2 query2 = query1.transform(context1);
 
 		final PathsToTreeTransformer p2tt = new PathsToTreeTransformer(eqlDomainMetadata.querySourceInfoProvider, gen);
-        final TransformationContext2 context2 = new TransformationContext2(p2tt.transformFinally(query2.collectProps()), eqlDomainMetadata.entityMetadataHolder);
+        final TransformationContextFromStage2To3 context2 = new TransformationContextFromStage2To3(p2tt.transformFinally(query2.collectProps()), eqlDomainMetadata.entityMetadataHolder);
 		return query2.transform(context2);
     }
 }

@@ -7,8 +7,8 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
-import ua.com.fielden.platform.eql.stage2.TransformationContext2;
-import ua.com.fielden.platform.eql.stage2.TransformationResult2;
+import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
+import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnTable;
 
@@ -23,10 +23,10 @@ public class Source2BasedOnPersistentType extends AbstractSource2 implements ISo
     }
 
     @Override
-    public TransformationResult2<Source3BasedOnTable> transform(final TransformationContext2 context) {
-        final TransformationContext2 updatedContext = context.cloneWithNextSqlId();
+    public TransformationResultFromStage2To3<Source3BasedOnTable> transform(final TransformationContextFromStage2To3 context) {
+        final TransformationContextFromStage2To3 updatedContext = context.cloneWithNextSqlId();
         final Source3BasedOnTable transformedSource = new Source3BasedOnTable(updatedContext.getTable(sourceType()), id, updatedContext.sqlId);
-        return new TransformationResult2<>(transformedSource, updatedContext);
+        return new TransformationResultFromStage2To3<>(transformedSource, updatedContext);
     }
 
     @Override

@@ -9,7 +9,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage1.QueryComponents1;
-import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.QueryComponents2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
@@ -37,7 +37,7 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
     }
 
     @Override
-    public SubQuery2 transform(final TransformationContext1 context) {
+    public SubQuery2 transform(final TransformationContextFromStage1To2 context) {
 
         if (joinRoot == null) {
             final QueryComponents2 qb = transformSourceless(context);

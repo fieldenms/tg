@@ -8,8 +8,8 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.QueryComponents2;
-import ua.com.fielden.platform.eql.stage2.TransformationContext2;
-import ua.com.fielden.platform.eql.stage2.TransformationResult2;
+import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
+import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
@@ -47,14 +47,14 @@ public abstract class AbstractQuery2 {
      * @param context
      * @return
      */
-    protected TransformationResult2<QueryComponents3> transformQueryComponents(final TransformationContext2 context) {
-        final TransformationResult2<? extends IJoinNode3> joinRootTr = joinRoot != null ? joinRoot.transform(context) : new TransformationResult2<IJoinNode3>(null, context);
-        final TransformationResult2<Conditions3> whereConditionsTr = whereConditions.transform(joinRootTr.updatedContext);
-        final TransformationResult2<Yields3> yieldsTr = yields.transform(whereConditionsTr.updatedContext);
-        final TransformationResult2<GroupBys3> groupsTr = groups.transform(yieldsTr.updatedContext);
-        final TransformationResult2<OrderBys3> orderingsTr = orderings.transform(groupsTr.updatedContext, yieldsTr.item);
+    protected TransformationResultFromStage2To3<QueryComponents3> transformQueryComponents(final TransformationContextFromStage2To3 context) {
+        final TransformationResultFromStage2To3<? extends IJoinNode3> joinRootTr = joinRoot != null ? joinRoot.transform(context) : new TransformationResultFromStage2To3<IJoinNode3>(null, context);
+        final TransformationResultFromStage2To3<Conditions3> whereConditionsTr = whereConditions.transform(joinRootTr.updatedContext);
+        final TransformationResultFromStage2To3<Yields3> yieldsTr = yields.transform(whereConditionsTr.updatedContext);
+        final TransformationResultFromStage2To3<GroupBys3> groupsTr = groups.transform(yieldsTr.updatedContext);
+        final TransformationResultFromStage2To3<OrderBys3> orderingsTr = orderings.transform(groupsTr.updatedContext, yieldsTr.item);
 
-        return new TransformationResult2<>(new QueryComponents3(joinRootTr.item, whereConditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item), orderingsTr.updatedContext);
+        return new TransformationResultFromStage2To3<>(new QueryComponents3(joinRootTr.item, whereConditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item), orderingsTr.updatedContext);
     }
 
     public Set<Prop2> collectProps() {

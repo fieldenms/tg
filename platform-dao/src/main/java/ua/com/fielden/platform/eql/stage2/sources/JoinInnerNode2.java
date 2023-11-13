@@ -6,8 +6,8 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
-import ua.com.fielden.platform.eql.stage2.TransformationContext2;
-import ua.com.fielden.platform.eql.stage2.TransformationResult2;
+import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
+import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
@@ -29,11 +29,11 @@ public class JoinInnerNode2 implements IJoinNode2<JoinInnerNode3> {
     }
 
     @Override
-    public TransformationResult2<JoinInnerNode3> transform(TransformationContext2 context) {
-        final TransformationResult2<? extends IJoinNode3> lsTransformed = leftNode.transform(context);
-        final TransformationResult2<? extends IJoinNode3> rsTransformed = rightNode.transform(lsTransformed.updatedContext);
-        final TransformationResult2<Conditions3> jcTransformed = joinConditions.transform(rsTransformed.updatedContext);
-        return new TransformationResult2<>(new JoinInnerNode3(lsTransformed.item, rsTransformed.item, joinType, jcTransformed.item), jcTransformed.updatedContext);
+    public TransformationResultFromStage2To3<JoinInnerNode3> transform(TransformationContextFromStage2To3 context) {
+        final TransformationResultFromStage2To3<? extends IJoinNode3> lsTransformed = leftNode.transform(context);
+        final TransformationResultFromStage2To3<? extends IJoinNode3> rsTransformed = rightNode.transform(lsTransformed.updatedContext);
+        final TransformationResultFromStage2To3<Conditions3> jcTransformed = joinConditions.transform(rsTransformed.updatedContext);
+        return new TransformationResultFromStage2To3<>(new JoinInnerNode3(lsTransformed.item, rsTransformed.item, joinType, jcTransformed.item), jcTransformed.updatedContext);
     }
 
     @Override
