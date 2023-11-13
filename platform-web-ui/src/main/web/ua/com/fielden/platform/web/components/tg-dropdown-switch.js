@@ -88,7 +88,7 @@ const template = html`
     <paper-button id="trigger" raised="[[raised]]" activated$="[[activated]]" disabled$="[[disabled]]" class="main" dropdown-opened$="[[dropDownOpened]]" highlight-when-opened$="[[!doNotHighlightWhenDropDownOpened]]" on-tap="_runActionOrShowView" tooltip-text$="[[_getMainButtonTooltip(fragmented, mainButtonTooltipText, _currentView.desc)]]">
         <iron-icon hidden$="[[!_currentView.icon]]" icon="[[_currentView.icon]]" style$="[[_currentView.iconStyle]]"></iron-icon>
         <span class="truncate item-title" style$="[[_calcButtonStyle(buttonWidth)]]">[[_currentView.title]]</span>
-        <iron-icon icon="icons:arrow-drop-down" on-tap="_showViews" dropdown-opened$="[[dropDownOpened]]" tooltip-text$="[[_getDropDownIconTooltip(fragmented, mainButtonTooltipText)]]"></iron-icon>
+        <iron-icon icon="icons:arrow-drop-down" on-tap="_showViews" dropdown-opened$="[[dropDownOpened]]" tooltip-text$="[[mainButtonTooltipText]]"></iron-icon>
     </paper-button>
     <iron-dropdown id="dropdown" horizontal-align="left" vertical-align="[[verticalAlign]]" restore-focus-on-close always-on-top on-iron-overlay-opened="_dropdownOpened" on-iron-overlay-closed="_dropdownClosed">
         <paper-listbox id="availableViews" class="dropdown-content" slot="dropdown-content" attr-for-selected="view-index" on-iron-select="_changeView">
@@ -188,13 +188,6 @@ export class TgDropdownSwitch extends mixinBehaviors([TgElementSelectorBehavior]
         return mainButtonTooltipText;
     }
 
-    _getDropDownIconTooltip(fragmented, mainButtonTooltipText) {
-        if (fragmented) {
-            return mainButtonTooltipText;
-        }
-        return "";
-    }
-
     _updateViews(views, viewIndex) {
         if (allDefined(arguments) && viewIndex !== null && viewIndex >= 0) {
             this._currentView = views.find(view => view.index === viewIndex);
@@ -210,9 +203,7 @@ export class TgDropdownSwitch extends mixinBehaviors([TgElementSelectorBehavior]
     }
 
     _showViews(e) {
-        if (this.fragmented) {
-            tearDownEvent(e);
-        }
+        tearDownEvent(e);
         this.$.availableViews.selected = this.viewIndex;
         this.$.dropdown.verticalOffset = this.$.trigger.offsetHeight;
         if (this.makeDropDownWidthTheSameAsButton) {

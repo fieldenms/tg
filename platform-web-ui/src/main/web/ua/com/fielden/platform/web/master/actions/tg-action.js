@@ -395,7 +395,7 @@ Polymer({
     _updateActionIndex: function (entityType, role) {
         if (allDefined(arguments)) {
             const idx = this._getActionIndex();
-            if (idx && this._options.find(opt => opt.index === +idx)) {
+            if (idx && this._options && this._options.find(opt => opt.index === +idx)) {
                 this._optionIdx = +idx;
             }
         }
