@@ -50,7 +50,7 @@ public class PathToTreeTransformerUtils {
     }
 
     public static Collection<FirstChunkGroup> groupByFirstChunk(final List<PendingTail> tails) {
-        final SortedMap<String, T3<PropChunk, List<Prop2Lite>, List<PendingTail>>> firstChunkDataMap = new TreeMap<>(); //need predictable order for testing purposes
+        final SortedMap<String, T3<PropChunk, List<Prop2Lite>, List<PendingTail>>> firstChunkDataMap = new TreeMap<>(); // need predictable order for testing purposes
 
         for (final PendingTail pt : tails) {
             final PropChunk first = pt.tail().get(0);
@@ -116,7 +116,7 @@ public class PathToTreeTransformerUtils {
         // adding all dependent calc prop nodes in the order as specified in their metadata
         for (final String calcProp : dependentCalcPropOrderFromMetadata) {
             final HelperNodeForImplicitJoins foundCalcProp = dependentCalcPropNodes.get(calcProp);
-            if (foundCalcProp != null) {
+            if (foundCalcProp != null) { // TODO why to check null condition?
                 result.add(foundCalcProp);
             }
         }

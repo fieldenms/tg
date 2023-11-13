@@ -12,4 +12,4 @@ package ua.com.fielden.platform.eql.stage2.sources.enhance;
  * @author TG Team
  *
  */
-public record Prop3Lite (String name, Integer sourceId) {}
+public record DataForProp3 (String name, Integer sourceId) {}

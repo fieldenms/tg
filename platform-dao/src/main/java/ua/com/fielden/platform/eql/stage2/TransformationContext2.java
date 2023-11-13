@@ -14,7 +14,7 @@ import ua.com.fielden.platform.eql.meta.EqlEntityMetadataHolder;
 import ua.com.fielden.platform.eql.meta.Table;
 import ua.com.fielden.platform.eql.stage2.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.sources.HelperNodeForImplicitJoins;
-import ua.com.fielden.platform.eql.stage2.sources.enhance.Prop3Lite;
+import ua.com.fielden.platform.eql.stage2.sources.enhance.DataForProp3;
 import ua.com.fielden.platform.eql.stage2.sources.enhance.TreeResultBySources;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -87,7 +87,7 @@ public class TransformationContext2 {
     }
 
     public T2<String, ISource3> resolve(final Integer sourceId, final String path) {
-        final Prop3Lite leafProp = treeResultBySources.plainPropsResolutions().get(sourceId).get(path);
+        final DataForProp3 leafProp = treeResultBySources.plainPropsResolutions().get(sourceId).get(path);
         return t2(leafProp.name(), sourcesByIds.get(leafProp.sourceId()));
     }
     

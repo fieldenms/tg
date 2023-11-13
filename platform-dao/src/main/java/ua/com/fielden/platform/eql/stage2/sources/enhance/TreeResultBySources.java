@@ -11,7 +11,7 @@ import ua.com.fielden.platform.eql.stage2.sources.HelperNodeForImplicitJoins;
 public record TreeResultBySources (
         Map<Integer, List<HelperNodeForImplicitJoins>> helperNodesMap,
         Map<Integer, Map<String, Expression2>> calcPropsResolutions,
-        Map<Integer, Map<String, Prop3Lite>> plainPropsResolutions) {
+        Map<Integer, Map<String, DataForProp3>> plainPropsResolutions) {
 
     public TreeResultBySources {
         helperNodesMap = copyOf(helperNodesMap);

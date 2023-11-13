@@ -85,19 +85,21 @@ public class PathsToTreeTransformer {
 
             final CalcPropData cpd = procRes.calcPropsData.get(propEntry.firstChunk().name());
 
-            if (cpd != null) {
+            final Expression2 expression;
+            if (cpd == null) {
+                expression = null;
+            } else {
+                expression = cpd.expr;
                 otherSourcesNodes.putAll(cpd.internalsResult.helperNodesMap());
                 expressionLinks.addAll(cpd.internalsResult.expressionsData());
                 propLinks.addAll(cpd.internalsResult.propsData());
             }
 
-            final Expression2 expression = cpd != null ? cpd.expr : null;
-
             if (!propEntry.origins().isEmpty()) {
-                if (expression != null) {
-                    expressionLinks.add(new ExpressionLinks(unmodifiableList(propEntry.origins()), expression));
+                if (expression == null) {
+                    propLinks.add(new Prop3Links(unmodifiableList(propEntry.origins()), new DataForProp3(propEntry.firstChunk().name(), sourceForCalcPropResolution.id())));
                 } else {
-                    propLinks.add(new Prop3Links(unmodifiableList(propEntry.origins()), new Prop3Lite(propEntry.firstChunk().name(), sourceForCalcPropResolution.id())));
+                    expressionLinks.add(new ExpressionLinks(unmodifiableList(propEntry.origins()), expression));
                 }
             }
 
@@ -176,7 +178,7 @@ public class PathsToTreeTransformer {
 
     private SourceNodeResult generateHelperNode(final List<PendingTail> tails, final PropChunk firstChunk, final Expression2 expression, final boolean isPartOfCalcProp) {
         final QuerySourceItemForEntityType<?> querySourceInfoItem = (QuerySourceItemForEntityType<?>) firstChunk.data();
-        final Source2BasedOnPersistentType implicitSource = new Source2BasedOnPersistentType(querySourceInfoItem.querySourceInfo, gen.nextSourceId(), false, isPartOfCalcProp);
+        final Source2BasedOnPersistentType implicitSource = new Source2BasedOnPersistentType(querySourceInfoItem.querySourceInfo, gen.nextSourceId(), false /*isExplicit*/, isPartOfCalcProp);
         final SourceNodesResult result = generateHelperNodesForSource(implicitSource, tails);
         final HelperNodeForImplicitJoins node = new HelperNodeForImplicitJoins(firstChunk.name(), expression, querySourceInfoItem.nonnullable, implicitSource, result.sourceNodes);
         return new SourceNodeResult(node, result.transformationResult);
@@ -207,8 +209,8 @@ public class PathsToTreeTransformer {
         }
     }
 
-    static class Prop3Links extends AbstractLinks<Prop3Lite>{
-        public Prop3Links(final List<Prop2Lite> links, final Prop3Lite resolution) {
+    static class Prop3Links extends AbstractLinks<DataForProp3> {
+        public Prop3Links(final List<Prop2Lite> links, final DataForProp3 resolution) {
             super(links, resolution);
         }
     }
