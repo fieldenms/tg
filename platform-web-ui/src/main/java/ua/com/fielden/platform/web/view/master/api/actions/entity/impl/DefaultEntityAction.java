@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.join;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -12,7 +13,6 @@ import java.util.Map;
 
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.RestrictCreationByUsers;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
@@ -79,7 +79,7 @@ public class DefaultEntityAction<T extends AbstractEntity<?>> extends AbstractAc
     }
 
     private static <T extends AbstractEntity<?>> boolean isActionWithOptions (final String name, final Class<T> entityType) {
-        return ("save".equals(name.toLowerCase()) || "refresh".equals(name.toLowerCase())) && entityType.isAnnotationPresent(MapEntityTo.class);
+        return ("save".equals(name.toLowerCase()) || "refresh".equals(name.toLowerCase())) && isPersistedEntityType(entityType);
     }
 
     private String postActionFunction() {

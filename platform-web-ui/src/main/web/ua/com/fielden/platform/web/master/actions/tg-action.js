@@ -533,7 +533,7 @@ Polymer({
         }
     },
 
-    _asyncRun: function (shortcut) {
+    _asyncRun: function (e, detail, shortcut) {
         // it is critical to execute the actual logic that is intended for an on-tap action in async
         // with a relatively long delay to make sure that all required changes
         this.async(function () {

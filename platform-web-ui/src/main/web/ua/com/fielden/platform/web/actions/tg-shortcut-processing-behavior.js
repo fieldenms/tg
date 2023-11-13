@@ -99,7 +99,7 @@ export const TgShortcutProcessingBehavior = {
         if (elementTag === 'paper-button' || elementTag === 'paper-icon-button') {
             return actionElement.dispatchEvent(new Event('tap')); // the most simplistic tap event without coordinates in which tapping is supposed to occur -- no focusing / ripple effect is observed after such event dispatching
         } else if (elementTag === 'tg-action') {
-            return actionElement._asyncRun(shortcut);
+            return actionElement._asyncRun(null, null, shortcut);
         } else if (elementTag === 'tg-ui-action') {
             return actionElement._run();
         } else {
