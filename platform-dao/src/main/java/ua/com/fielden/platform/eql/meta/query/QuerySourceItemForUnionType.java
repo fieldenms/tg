@@ -10,12 +10,9 @@ import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 
 /**
- * A structure that captures a query source yield-able entity-typed-property resolution related info within a query source of type <code>PARENT</code>.
- * 
- * @author TG Team
+ * A structure that represents a query source item of union type {@code T}.
  *
- * @param <T>
- * @param <PARENT>
+ * @author TG Team
  */
 public class QuerySourceItemForUnionType<T extends AbstractUnionEntity> extends AbstractQuerySourceItem<T> {
     private final Class<T> javaType;
@@ -26,7 +23,7 @@ public class QuerySourceItemForUnionType<T extends AbstractUnionEntity> extends 
         this.javaType = javaType;
         this.subitems.putAll(props);
     }
-    
+
     @Override
     public AbstractQuerySourceItem<T> cloneWithoutExpression() {
         return new QuerySourceItemForUnionType<T>(name, javaType, hibType, subitems);
@@ -36,7 +33,7 @@ public class QuerySourceItemForUnionType<T extends AbstractUnionEntity> extends 
     public PropResolutionProgress resolve(final PropResolutionProgress context) {
         return IResolvable.resolve(context, subitems);
     }
-    
+
     public SortedMap<String, AbstractQuerySourceItem<?>> getProps() {
         return unmodifiableSortedMap(subitems);
     }

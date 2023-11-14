@@ -3,17 +3,13 @@ package ua.com.fielden.platform.eql.meta.query;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.meta.CalcPropInfo;
 import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 
 /**
- * A structure that captures a query source yield-able entity-typed-property resolution related info within a query source of type <code>PARENT</code>.
+ * A structure that represents a query source item of entity type {@code T}.
  *
  * @author TG Team
- *
- * @param <T>
- * @param <PARENT>
  */
 public class QuerySourceItemForEntityType<T extends AbstractEntity<?>> extends AbstractQuerySourceItem<T> {
     public final QuerySourceInfo<T> querySourceInfo;
