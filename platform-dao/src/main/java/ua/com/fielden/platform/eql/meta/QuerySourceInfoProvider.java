@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.eql.meta;
 
-import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toConcurrentMap;
 import static java.util.stream.Collectors.toList;
 import static org.apache.logging.log4j.LogManager.getLogger;
@@ -49,9 +48,9 @@ import ua.com.fielden.platform.utils.EntityUtils;
 public class QuerySourceInfoProvider {
     private static final Logger LOGGER = getLogger(QuerySourceInfoProvider.class);
 
-    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, QuerySourceInfo<?>> declaredQuerySourceInfoMap; // by "declared" here it is meant that all (as defined by EqlEntityMetadata) properties are included (even those with no way of getting data from db for them)
-    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, QuerySourceInfo<?>> modelledQuerySourceInfoMap; // by "modelled" here it is meant that only properties with db data are included (table/query column, calculated expression)
-    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, List<SourceQuery1>> seModels;
+    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, QuerySourceInfo<?>> declaredQuerySourceInfoMap; // "declared" means that all properties (as defined by EqlEntityMetadata) are included (even those with no way of getting data from a db for them)
+    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, QuerySourceInfo<?>> modelledQuerySourceInfoMap; // "modelled" means that only those properties are included that are either mapped to a table/query column or are calculated.
+    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, List<SourceQuery1>> seModels; // models for Synthetic Entities (SE), transformed to stage 1.
     private final ConcurrentMap<String, List<String>> entityTypesDependentCalcPropsOrder = new ConcurrentHashMap<>();
     public final EqlEntityMetadataHolder entityMetadataHolder;
 
@@ -61,7 +60,7 @@ public class QuerySourceInfoProvider {
         modelledQuerySourceInfoMap = new ConcurrentHashMap<>(entityMetadataHolder.entityPropsMetadata().size());
         seModels = new ConcurrentHashMap<>(entityMetadataHolder.entityPropsMetadata().size());
 
-        final QueryModelToStage1Transformer gen = new QueryModelToStage1Transformer(null, null, null, emptyMap());
+        final var qmToS1Transformer = new QueryModelToStage1Transformer();
 
         declaredQuerySourceInfoMap.putAll(entityMetadataHolder.entityPropsMetadata().entrySet().stream().collect(toConcurrentMap(k -> k.getKey(), k -> new QuerySourceInfo<>(k.getKey(), true))));
         declaredQuerySourceInfoMap.values().stream().forEach(ei -> ei.addProps(generateQuerySourceItems(declaredQuerySourceInfoMap, entityMetadataHolder.entityPropsMetadata().get(ei.javaType()).props())));
@@ -74,7 +73,7 @@ public class QuerySourceInfoProvider {
         final Map<Class<? extends AbstractEntity<?>>, Set<Class<? extends AbstractEntity<?>>>> seDependencies = new HashMap<>();
         for (final EqlEntityMetadata<?> el : entityMetadataHolder.entityPropsMetadata().values()) {
             if (el.typeInfo.category == QUERY_BASED) {
-                final T2<List<SourceQuery1>, Set<Class<? extends AbstractEntity<?>>>> res = generateModelsAndDependenciesForSyntheticType(el.typeInfo, gen);
+                final T2<List<SourceQuery1>, Set<Class<? extends AbstractEntity<?>>>> res = generateModelsAndDependenciesForSyntheticType(el.typeInfo, qmToS1Transformer);
                 seModels.put(el.entityType, res._1);
                 seDependencies.put(el.entityType, res._2.stream().filter(cl -> isSyntheticEntityType(cl)).collect(Collectors.toSet()));
             }
@@ -92,9 +91,7 @@ public class QuerySourceInfoProvider {
         }
 
         for (final QuerySourceInfo<?> querySourceInfo : modelledQuerySourceInfoMap.values()) {
-            //if (isPersistedEntityType(querySourceInfo.javaType())) { // currently it's assumed that SE's don't have calc props with interdependencies.
-                entityTypesDependentCalcPropsOrder.put(querySourceInfo.javaType().getName(), DependentCalcPropsOrder.orderDependentCalcProps(this, gen, querySourceInfo));
-            //}
+            entityTypesDependentCalcPropsOrder.put(querySourceInfo.javaType().getName(), DependentCalcPropsOrder.orderDependentCalcProps(this, qmToS1Transformer, querySourceInfo));
         }
     }
 
@@ -145,21 +142,26 @@ public class QuerySourceInfoProvider {
                         }
                     }
                     props.add(new QuerySourceItemForUnionType<>(name, ((Class<? extends AbstractUnionEntity>) javaType), hibType, subprops));
-                } else if (isPersistedEntityType(javaType)) {
+                }
+                else if (isPersistedEntityType(javaType)) {
                     props.add(new QuerySourceItemForEntityType<>(name, allQuerySourceInfos.get(javaType), hibType, el.required, expr));
+                    // TODO may be used for future improvement related to treating ID property as if it is an entity, while yielding ID property within EntityAggregates result model.
                     //                } else if (ID.equals(name)){
                     //                    querySourceInfo.addProp(new EntityTypePropInfo(name, allEntitiesInfo.get(querySourceInfo.javaType()), hibType, required, expr));
-                } else {
-                    if (el.subitems().isEmpty()) {
-                        props.add(new QuerySourceItemForPrimType<>(name, javaType, hibType, expr));
-                    } else {
-                        final QuerySourceItemForComponentType<?> propTpi = new QuerySourceItemForComponentType<>(name, javaType, hibType);
-                        for (final EqlPropertyMetadata sub : el.subitems()) {
-                            final CalcPropInfo subExpr = sub.expressionModel;
-                            propTpi.addSubitem(new QuerySourceItemForPrimType<>(sub.name, sub.javaType, sub.hibType, subExpr));
-                        }
-                        props.add(propTpi);
+                }
+                // If subitems are not empty then we have a property of a component type, such as Money.
+                else if (!el.subitems().isEmpty()) {
+                    final QuerySourceItemForComponentType<?> propTpi = new QuerySourceItemForComponentType<>(name, javaType, hibType);
+                    for (final EqlPropertyMetadata sub : el.subitems()) {
+                        final CalcPropInfo subExpr = sub.expressionModel;
+                        propTpi.addSubitem(new QuerySourceItemForPrimType<>(sub.name, sub.javaType, sub.hibType, subExpr));
                     }
+                    props.add(propTpi);
+                }
+                // Finally, if nothing else, the property must be of some primitive type or a type with a custom Hibernate converter:
+                // String, Long, Integer, BigDecimal, Date, boolean, Colour, Hyperlink, PropertyDescriptor, SecurityToken.
+                else {
+                    props.add(new QuerySourceItemForPrimType<>(name, javaType, hibType, expr));
                 }
             }
         }
