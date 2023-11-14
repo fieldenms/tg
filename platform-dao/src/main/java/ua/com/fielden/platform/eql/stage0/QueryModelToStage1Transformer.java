@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage0;
 
+import static java.util.Collections.emptyMap;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ORDER_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QUERY_TOKEN;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.SORT_ORDER;
@@ -26,9 +27,9 @@ import ua.com.fielden.platform.eql.stage1.queries.ResultQuery1;
 import ua.com.fielden.platform.eql.stage1.queries.SourceQuery1;
 import ua.com.fielden.platform.eql.stage1.queries.SubQuery1;
 import ua.com.fielden.platform.eql.stage1.queries.SubQueryForExists1;
+import ua.com.fielden.platform.eql.stage1.sources.IJoinNode1;
 import ua.com.fielden.platform.eql.stage1.sources.ISource1;
 import ua.com.fielden.platform.eql.stage1.sundries.OrderBys1;
-import ua.com.fielden.platform.eql.stage1.sources.IJoinNode1;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -47,6 +48,10 @@ public class QueryModelToStage1Transformer {
         this.username = username;
         this.nowValue = nowValue;
         this.paramValues.putAll(paramValues);
+    }
+
+    public QueryModelToStage1Transformer() {
+        this(null, null, null, emptyMap());
     }
 
     private int sourceId = 0;
