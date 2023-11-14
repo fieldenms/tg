@@ -11,7 +11,7 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.EqlEntityMetadataHolder;
-import ua.com.fielden.platform.eql.meta.Table;
+import ua.com.fielden.platform.eql.meta.EqlTable;
 import ua.com.fielden.platform.eql.stage2.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.sources.HelperNodeForImplicitJoins;
 import ua.com.fielden.platform.eql.stage2.sources.enhance.DataForProp3;
@@ -48,7 +48,7 @@ public class TransformationContextFromStage2To3 {
         this.paramId = paramId;
     }
 
-    public Table getTable(final Class<? extends AbstractEntity<?>> sourceType) {
+    public EqlTable getTable(final Class<? extends AbstractEntity<?>> sourceType) {
         return eqlEntityMetadataHolder.getTableForEntityType(sourceType);
     }
 

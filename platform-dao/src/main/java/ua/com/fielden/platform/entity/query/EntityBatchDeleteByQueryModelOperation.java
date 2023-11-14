@@ -33,8 +33,8 @@ public class EntityBatchDeleteByQueryModelOperation {
     private <T extends AbstractEntity<?>> DeletionModel getModelSql(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
         final EqlDomainMetadata eqlDomainMetadata = executionContext.getEqlDomainMetadata();
         final AggregatedResultQueryModel finalModel = select(model.getResultType()).where().prop(ID).in().model(model).yield().prop(ID).as(ID).modelAsAggregate();
-        final String tableName = eqlDomainMetadata.entityMetadataHolder.getTableForEntityType(model.getResultType()).name;
-        final TransformationResultFromStage2To3<ResultQuery3> s2tr = transform(new QueryProcessingModel(finalModel, null, null, paramValues, true), null, null, executionContext.dates(), eqlDomainMetadata); 
+        final String tableName = eqlDomainMetadata.entityMetadataHolder.getTableForEntityType(model.getResultType()).name();
+        final TransformationResultFromStage2To3<ResultQuery3> s2tr = transform(new QueryProcessingModel(finalModel, null, null, paramValues, true), null, null, executionContext.dates(), eqlDomainMetadata);
         final ResultQuery3 entQuery3 = s2tr.item;
         final String selectionSql = entQuery3.sql(eqlDomainMetadata.dbVersion);
         final String deletionSql = produceDeletionSql(selectionSql, tableName, eqlDomainMetadata.dbVersion);

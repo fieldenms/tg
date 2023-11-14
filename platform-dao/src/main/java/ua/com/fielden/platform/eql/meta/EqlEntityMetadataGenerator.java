@@ -437,7 +437,7 @@ public class EqlEntityMetadataGenerator {
         return new EqlPropertyMetadata.Builder(propName, javaType, hibType).notRequired().expression(new CalcPropInfo(expressionModel, true, false)).build();
     }
 
-    public static Table generateTable(final String tableName, final List<EqlPropertyMetadata> propsMetadatas) {
+    public static EqlTable generateEqlTable(final String tableName, final List<EqlPropertyMetadata> propsMetadatas) {
         final Map<String, String> columns = new HashMap<>();
         for (final EqlPropertyMetadata el : propsMetadatas) {
 
@@ -452,7 +452,7 @@ public class EqlEntityMetadataGenerator {
             }
         }
 
-        return new Table(tableName, columns);
+        return new EqlTable(tableName, columns);
     }
 
     /**

@@ -4,7 +4,7 @@ import static java.util.Collections.unmodifiableMap;
 import static ua.com.fielden.platform.eql.meta.EntityCategory.PERSISTENT;
 import static ua.com.fielden.platform.eql.meta.EntityCategory.PURE;
 import static ua.com.fielden.platform.eql.meta.EntityTypeInfo.getEntityTypeInfo;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.generateTable;
+import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.generateEqlTable;
 import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.generateTableWithPropColumnInfo;
 
 import java.util.List;
@@ -19,7 +19,7 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 
 public class EqlEntityMetadataHolder {
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EqlEntityMetadata<?>> entityPropsMetadata;
-    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, Table> tables = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EqlTable> tables = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, TableStructForBatchInsertion> tableStructsForBatchInsertion = new ConcurrentHashMap<>();
 
     private final EqlEntityMetadataGenerator eemg;
@@ -35,7 +35,7 @@ public class EqlEntityMetadataHolder {
                     entityPropsMetadata.put(pd.entityType(), pd.eqlEntityMetadata());
 
                     if (parentInfo.category == PERSISTENT) {
-                        tables.put(entityType, generateTable(parentInfo.tableName, pd.eqlEntityMetadata().props()));
+                        tables.put(entityType, generateEqlTable(parentInfo.tableName, pd.eqlEntityMetadata().props()));
                         tableStructsForBatchInsertion.put(entityType.getName(), generateTableWithPropColumnInfo(parentInfo.tableName, pd.eqlEntityMetadata().props()));
                     }
                 }
@@ -49,7 +49,7 @@ public class EqlEntityMetadataHolder {
         return unmodifiableMap(entityPropsMetadata);
     }
     
-    public Table getTableForEntityType(final Class<? extends AbstractEntity<?>> entityType) {
+    public EqlTable getTableForEntityType(final Class<? extends AbstractEntity<?>> entityType) {
         return tables.get(DynamicEntityClassLoader.getOriginalType(entityType));
     }
 

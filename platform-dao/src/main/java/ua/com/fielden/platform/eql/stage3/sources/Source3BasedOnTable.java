@@ -3,14 +3,14 @@ package ua.com.fielden.platform.eql.stage3.sources;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.eql.meta.Table;
+import ua.com.fielden.platform.eql.meta.EqlTable;
 
 public class Source3BasedOnTable extends AbstractSource3 {
     public final String tableName;
-    
-    public Source3BasedOnTable(final Table table, final Integer id, final int sqlId) {
-        super("T_" + sqlId, id, table.columns);
-        this.tableName = table.name;
+
+    public Source3BasedOnTable(final EqlTable table, final Integer id, final int sqlId) {
+        super("T_" + sqlId, id, table.columns());
+        this.tableName = table.name();
     }
 
     @Override
@@ -23,7 +23,7 @@ public class Source3BasedOnTable extends AbstractSource3 {
         // TODO Auto-generated method stub
         return "QrySource3BasedOnTable [" + tableName +"]";
     }
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -37,17 +37,17 @@ public class Source3BasedOnTable extends AbstractSource3 {
         if (this == obj) {
             return true;
         }
-        
+
         if (!super.equals(obj)) {
             return false;
         }
-        
+
         if (!(obj instanceof Source3BasedOnTable)) {
             return false;
         }
-        
+
         final Source3BasedOnTable other = (Source3BasedOnTable) obj;
-        
+
         return Objects.equals(tableName, other.tableName);
     }
 }
