@@ -826,6 +826,7 @@ const TgEntityMasterBehaviorImpl = {
     attached: function () {
         //centre UUID of open master action should bee updated as far as some masters receives their uuid later at attache phase.
         this.tgOpenMasterAction.attrs.centreUuid = this.uuid;
+        this._resetState(); // existing state may cause problems for cached masters: for example previous entity was new and valid and next one invalid -- blocks closing of dialog with error
         this._cachedParentNode = this.parentNode;
         this.fire('tg-entity-master-attached', this, { node: this._cachedParentNode }); // as in 'detached', start bubbling on parent node
     },
@@ -836,7 +837,6 @@ const TgEntityMasterBehaviorImpl = {
         }
         this.fire('tg-entity-master-detached', this, { node: this._cachedParentNode }); // start event bubbling on previous parent node from which this entity master has already been detached
         delete this._cachedParentNode; // remove reference on previous _cachedParentNode to facilitate possible releasing of parentNode from memory
-        this._resetState(); // existing state may cause problems for cached masters: for example previous entity was new and valid and next one invalid -- blocks closing of dialog with error
     },
 
     /**
