@@ -641,6 +641,10 @@ const TgEntityMasterBehaviorImpl = {
             const firstViewWithNewAction = findFirstViewWithNewAction(parentDialog, self);
             if (firstViewWithNewAction) {
                 firstViewWithNewAction.tgOpenMasterAction._runDynamicActionForNew(self.entityType);
+            } else if (parentDialog && parentDialog._lastAction) {
+                const newAction = this._createOpenMasterAction();
+                newAction.createContextHolder = parentDialog._lastAction.createContextHolder;
+                newAction._runDynamicActionForNew(self.entityType);
             }
         }).bind(self);
 
