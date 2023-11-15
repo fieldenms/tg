@@ -13,6 +13,7 @@ import java.util.Map;
 
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.annotation.RestrictCreationByUsers;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
@@ -79,7 +80,7 @@ public class DefaultEntityAction<T extends AbstractEntity<?>> extends AbstractAc
     }
 
     private static <T extends AbstractEntity<?>> boolean isActionWithOptions (final String name, final Class<T> entityType) {
-        return ("save".equals(name.toLowerCase()) || "refresh".equals(name.toLowerCase())) && isPersistedEntityType(entityType);
+        return ("save".equals(name.toLowerCase()) || "refresh".equals(name.toLowerCase())) && isPersistedEntityType(entityType) && !AbstractFunctionalEntityWithCentreContext.class.isAssignableFrom(entityType);
     }
 
     private String postActionFunction() {
