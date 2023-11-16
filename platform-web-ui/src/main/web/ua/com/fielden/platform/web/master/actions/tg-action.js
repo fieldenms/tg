@@ -453,7 +453,7 @@ Polymer({
         if (!allDefined(arguments)) {
             return true;
         }
-        const innerEnableState = !enabledStates.indexOf(currentState) >= 0 && _innerEnabled;
+        const innerEnableState = enabledStates.indexOf(currentState) >= 0 && _innerEnabled;
         this._set_optionButtonDisabled(!innerEnableState);
         this._set_optionButtonActive(outerEnabled);
         this._set_disabled(outerEnabled === false ? true : !innerEnableState);

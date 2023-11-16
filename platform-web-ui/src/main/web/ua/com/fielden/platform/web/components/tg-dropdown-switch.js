@@ -37,7 +37,7 @@ const template = html`
         :host([disabled]) {
             pointer-events: none;
         }
-        paper-button[activated] {
+        paper-button[activated]:not([disabled]) {
             @apply --tg-dropdown-switch-activated;
         }
         .main, .view-item {
