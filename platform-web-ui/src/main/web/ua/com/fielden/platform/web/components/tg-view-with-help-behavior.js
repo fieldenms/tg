@@ -90,7 +90,7 @@ export const TgViewWithHelpBehavior = {
     },
 
     _modifyHelpEntity: function (bindingEntity, master, action) {
-        const saveButton = master.shadowRoot.querySelector("tg-action[role='save']");
+        const saveButton = master.$._saveAction;
         if (saveButton) {
             saveButton.closeAfterExecution = bindingEntity.get("id") === null;
         }

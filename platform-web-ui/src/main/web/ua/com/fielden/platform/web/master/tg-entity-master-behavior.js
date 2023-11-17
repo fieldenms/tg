@@ -554,7 +554,7 @@ const TgEntityMasterBehaviorImpl = {
                 const elementName = 'tg-' + continuationType._simpleClassName() + '-master';
                 const actionDesc = continuationType._simpleClassName() + '-' + continuationProperty;
 
-                let action = this.querySelector('tg-ui-action[continuation-property="' + continuationProperty + '"]');
+                let action = this.shadowRoot.querySelector('tg-ui-action[continuation-property="' + continuationProperty + '"]');
                 if (!action) {
                     const actionModel = document.createElement('dom-bind');
                     actionModel.innerHTML =
@@ -600,7 +600,7 @@ const TgEntityMasterBehaviorImpl = {
                     actionModel.postActionSuccess = function (functionalEntity) {
                         action.success = true;
                         console.log('postActionSuccess: ' + actionDesc, functionalEntity);
-                        const saveButton = queryElements(self, "tg-action[role='save']")[0];
+                        const saveButton = self.$._saveAction;
                         if (saveButton) {
                             saveButton._asyncRunAfterContinuation(functionalEntity, continuationProperty);
                         }
@@ -618,7 +618,7 @@ const TgEntityMasterBehaviorImpl = {
                     action.isActionInProgressChanged = (function (newValue, oldValue) {
                         oldIsActionInProgressChanged(newValue, oldValue);
                         if (newValue === false && !action.success) { // only enable parent master if action has failed (perhaps during retrieval or on save), otherwise leave enabling logic to the parent master itself (saving of parent master should govern that)
-                            const saveButton = queryElements(self, "tg-action[role='save']")[0];
+                            const saveButton = self.$._saveAction;
                             if (saveButton) {
                                 saveButton.cancelContinuation();
                             }
@@ -821,7 +821,7 @@ const TgEntityMasterBehaviorImpl = {
         // Don't close this master on save action if it is a part of compound master.
         const menuSectionParent = getParentAnd(self, element => element.matches('tg-master-menu-item-section'));
         if (menuSectionParent) {
-            const saveButton = queryElements(self, "tg-action[role='save']")[0];
+            const saveButton = self.$._saveAction;
             if (saveButton) {
                 saveButton.closeAfterExecution = false;
             }
