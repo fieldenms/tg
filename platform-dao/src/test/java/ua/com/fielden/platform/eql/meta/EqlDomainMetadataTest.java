@@ -11,9 +11,9 @@ import ua.com.fielden.platform.eql.meta.utils.DependentCalcPropsOrder;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
 
 public class EqlDomainMetadataTest extends EqlTestCase {
-    
+
     @Test
-    public void vehicle_dependent_calc_props_order_is_correct() {
+    public void topological_sorting_of_directly_and_transitively_dependent_calc_props_ensures_correct_order() {
         final List<String> actOrder = DependentCalcPropsOrder.orderDependentCalcProps(querySourceInfoProvider(), qb(), querySourceInfoProvider().getModelledQuerySourceInfo(TeVehicle.class));
         final Integer replacedByTwicePosition = actOrder.indexOf("replacedByTwice");
         final Integer theSameVehiclePosition = actOrder.indexOf("theSameVehicle");
