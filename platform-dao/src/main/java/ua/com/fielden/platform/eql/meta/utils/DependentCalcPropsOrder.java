@@ -35,9 +35,9 @@ import ua.com.fielden.platform.types.tuples.T3;
 /**
  * Utility class used to determine dependencies between those calculated props of the given entity type that are entities themselves.
  * <p>
- * It is regarded that one such calculated property depends on another if its expression directly or transitively (via other calculated properties) refers to sub-property(ies) of this another calculated property.
+ * It is regarded that one such calculated property depends on another if its expression directly or transitively (via other calculated properties) refers to sub-property(ies) of that other calculated property.
  * <p>
- * The knowledge of these dependencies is required for correct sequence of SQL JOINs generation.
+ * The knowledge of these dependencies is required to generate correct sequence of SQL JOINs.
  *
  * @author TG Team
  *
@@ -47,34 +47,37 @@ public class DependentCalcPropsOrder {
     private DependentCalcPropsOrder() {}
 
     public static List<String> orderDependentCalcProps(final QuerySourceInfoProvider querySourceInfoProvider, final QueryModelToStage1Transformer gen, final QuerySourceInfo<?> querySourceInfo) {
+
+        // TODO provide more explicit way to determine dependencies between calc props for different kinds of SEs
+        //      currently it works for persistent entities and may work for SE types
+        //      check whether the use of Source2BasedOnPersistentType is applicable to SE types
         final Source2BasedOnPersistentType source = new Source2BasedOnPersistentType(querySourceInfo, gen.nextSourceId(), true, true);
         final Map<String, T2<Set<String>, Set<String>>> propDependencies = new HashMap<>();
         final List<String> calcPropsOfEntityType = new ArrayList<>();
         for (final PropChunk calcPropChunk : determineCalcPropChunks(querySourceInfo)) {
-                if (isEntityType(calcPropChunk.data().javaType())) {
-                    calcPropsOfEntityType.add(calcPropChunk.name());
-                }
+            if (isEntityType(calcPropChunk.data().javaType())) {
+                calcPropsOfEntityType.add(calcPropChunk.name());
+            }
 
-                final Expression1 exp1 = (Expression1) (new StandAloneExpressionBuilder(gen, calcPropChunk.data().expression.expressionModel())).getResult().getValue();
-                final TransformationContextFromStage1To2 prc = (new TransformationContextFromStage1To2(querySourceInfoProvider, true)).cloneWithAdded(source);
-                try {
-                    final Expression2 exp2 = exp1.transform(prc);
-                    final Set<Prop2> expProps = exp2.collectProps();
-                    final Set<Prop2> externalProps = new HashSet<>();
-                    for (final Prop2 prop2 : expProps) {
-                        if (prop2.source.id().equals(source.id())) {
-                            externalProps.add(prop2);
-                        }
+            final Expression1 exp1 = (Expression1) new StandAloneExpressionBuilder(gen, calcPropChunk.data().expression.expressionModel()).getResult().getValue();
+            final TransformationContextFromStage1To2 prc = TransformationContextFromStage1To2.forCalcPropContext(querySourceInfoProvider).cloneWithAdded(source);
+            try {
+                final Expression2 exp2 = exp1.transform(prc);
+                final Set<Prop2> expProps = exp2.collectProps();
+                final Set<Prop2> externalProps = new HashSet<>();
+                for (final Prop2 prop2 : expProps) {
+                    if (prop2.source.id().equals(source.id())) {
+                        externalProps.add(prop2);
                     }
-                    propDependencies.put(calcPropChunk.name(), determineCalcPropChunksSets(externalProps));
-                } catch (final Exception e) {
-                    throw new EqlException("There is an error in expression of calculated property [" + querySourceInfo.javaType().getSimpleName() + ":" + calcPropChunk.name() + "]: " + e.getMessage());
                 }
+                propDependencies.put(calcPropChunk.name(), determineCalcPropChunksSets(externalProps));
+            } catch (final Exception e) {
+                throw new EqlException("There is an error in expression of calculated property [%s.%s]: %s".formatted(querySourceInfo.javaType().getSimpleName(), calcPropChunk.name(), e.getMessage()));
+            }
         }
 
         return orderDependentCalcProps(calcPropsOfEntityType, propDependencies);
     }
-
 
     /**
      * Enlist prop chunks for all calculated properties of the given entity type.
@@ -152,7 +155,7 @@ public class DependentCalcPropsOrder {
     /**
      * Determines for the given set of Prop2 instances 2 sets of names:
      * <ol>
-     * <li> names of first prop chunks of props that are calculated and without subprops
+     * <li> names of first prop chunks of props that are calculated and have no subprops
      * <li> names of first prop chunks of props that are calculated and have subprops
      * </ol>
      *

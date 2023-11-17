@@ -16,15 +16,15 @@ import ua.com.fielden.platform.eql.meta.PropType;
 
 public abstract class AbstractSingleOperand2 {
     public final PropType type;
-    
+
     public AbstractSingleOperand2(final PropType type) {
         this.type = type;
     }
-    
+
     public AbstractSingleOperand2(final Set<PropType> types) {
         this.type = getTypeHighestPrecedence(types);
     }
-    
+
     public static PropType getTypeHighestPrecedence(final Set<PropType> types) {
         if (types.size() == 1) {
             return types.iterator().next();
@@ -45,10 +45,10 @@ public abstract class AbstractSingleOperand2 {
         } else if (types.contains(STRING_PROP_TYPE)){
             return STRING_PROP_TYPE;
         } else {
-            throw new EqlException("Can't determine type with highest precedence for such set :" + types);
+            throw new EqlException("Can't determine type with the highest precedence for set " + types);
         }
     }
-    
+
     public PropType type() {
         return type;
     }

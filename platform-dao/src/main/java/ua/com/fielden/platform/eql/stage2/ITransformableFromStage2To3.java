@@ -9,11 +9,11 @@ public interface ITransformableFromStage2To3<T> {
     TransformationResultFromStage2To3<T> transform(TransformationContextFromStage2To3 context);
 
     Set<Prop2> collectProps();
-    
+
     /**
      * Traverses given element structure and returns a set of all entity types (persistent and synthetic) that are referenced there via select(..) or join(..) operators.
-     * Such traversal should also include calculated properties expressions from properties resolution paths. 
-     * 
+     * TODO Potentially such traversal should also include calculated properties expressions from properties resolution paths.
+     *
      * @return
      */
     Set<Class<? extends AbstractEntity<?>>> collectEntityTypes();

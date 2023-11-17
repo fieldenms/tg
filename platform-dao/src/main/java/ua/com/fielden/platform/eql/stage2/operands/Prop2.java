@@ -33,15 +33,15 @@ import ua.com.fielden.platform.types.tuples.T2;
  * Dot-notated path may also contain "headers" such as union-typed property or component-typed property (e.g., {@link Money}). The parts of the path that represent such properties exist mainly to preserve the structure of dot-notated properties.
  * For example, property {@code vehicle.model.make.avgPrice.amount} will be resolved to 5 parts, where the part corresponding to {@code avgPrice} will be a "header", without any retrievable value.
  * At a later processing stage such "header" parts get combined into "chunks" (represented by {@link ua.com.fielden.platform.eql.stage2.sources.enhance.PropChunk PropChunk}) that have retrievable values.
- * In the current example such chunk would correspond to {@code avgPrice.amount}.   
- * 
+ * In the current example such chunk would correspond to {@code avgPrice.amount}.
+ *
  * @author TG Team
  *
  */
 public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISingleOperand3> {
-    public final ISource2<? extends ISource3> source; // An explicit qry source to which a given property gets resolved (e.g., Vehicle.class in case of select(Vehicle) ...). 
-    private final List<AbstractQuerySourceItem<?>> path; // A sequence of individual properties in a dot-notated property (path), resolved to their source. 
-    public final String propPath; // An explicit property name used in '.prop(...)' (e.g., "model.make.key" in case of select(Vehicle.class).where().prop("model.make.key")... ). 
+    public final ISource2<? extends ISource3> source; // An explicit qry source to which a given property gets resolved (e.g., Vehicle.class in case of select(Vehicle) ...).
+    private final List<AbstractQuerySourceItem<?>> path; // A sequence of individual properties in a dot-notated property (path), resolved to their source.
+    public final String propPath; // An explicit property name used in '.prop(...)' (e.g., "model.make.key" in case of select(Vehicle.class).where().prop("model.make.key")... ).
 
     public Prop2(final ISource2<? extends ISource3> source, final List<AbstractQuerySourceItem<?>> path) {
         this(source, path, false);
@@ -53,7 +53,7 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
         this.path = path;
         this.propPath = path.stream().map(k -> k.name).collect(Collectors.joining("."));
     }
-    
+
     private static PropType obtainPropType(final List<AbstractQuerySourceItem<?>> path) {
         final AbstractQuerySourceItem<?> lastElement = path.stream().reduce((first, second) -> second).orElse(null);
         return new PropType(lastElement.javaType(), lastElement.hibType);
@@ -80,35 +80,35 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return emptySet(); //TODO explore within calc-prop expressions on the prop path (also add prop result type in case it's SE itself)
     }
-    
+
     public List<AbstractQuerySourceItem<?>> getPath() {
         return unmodifiableList(path);
     }
-    
+
     public AbstractQuerySourceItem<?> lastPart() {
         return path.get(path.size() - 1);
     }
-    
+
     @Override
     public boolean ignore() {
         return false;
     }
-    
+
     @Override
     public boolean isNonnullableEntity() {
         if (ID.equals(propPath)) {
-            return true; // TODO this is temporary fix to be able to treat such primitive prop correctly until distinction between usual 1ong and PK long is introduced.
+            return true; // TODO this is a temporary fix to be able to treat such primitive prop correctly until distinction between usual 1ong and PK long is introduced.
         }
-        
+
         for (final AbstractQuerySourceItem<?> querySourceInfoItem : path) {
             if (!isNonnullableEntity(querySourceInfoItem)) {
                 return false;
             }
         }
-        
+
         return true;
     }
-    
+
     private static boolean isNonnullableEntity(final AbstractQuerySourceItem<?> querySourceInfoItem) {
         return querySourceInfoItem instanceof QuerySourceItemForEntityType ? ((QuerySourceItemForEntityType<?>) querySourceInfoItem).nonnullable : false;
     }
