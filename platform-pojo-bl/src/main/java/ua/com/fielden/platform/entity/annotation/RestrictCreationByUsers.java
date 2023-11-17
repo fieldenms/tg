@@ -16,4 +16,5 @@ import java.lang.annotation.Target;
 @Target(TYPE)
 public @interface RestrictCreationByUsers {
 
+    String value() default "The entity can not be created due to presence of RestrictCreationByUsers annotation";
 }
