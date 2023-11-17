@@ -15,7 +15,7 @@ public class EqlPropertyMetadata {
     public final boolean critOnly;
 
     public final PropColumn column;
-    private final List<EqlPropertyMetadata> subitems;
+    public final List<EqlPropertyMetadata> subitems;
     public final CalcPropInfo expressionModel;
 
     private EqlPropertyMetadata(final Builder builder) {
@@ -25,12 +25,8 @@ public class EqlPropertyMetadata {
         required = builder.required;
         critOnly = builder.critOnly;
         column = builder.column;
-        subitems = builder.subitems;
+        subitems = unmodifiableList(builder.subitems);
         expressionModel = builder.expressionModel;
-    }
-
-    public List<EqlPropertyMetadata> subitems() {
-        return unmodifiableList(subitems);
     }
 
     public boolean isVirtualKey() {

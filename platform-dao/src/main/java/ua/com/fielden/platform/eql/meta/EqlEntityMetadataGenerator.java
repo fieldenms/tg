@@ -443,8 +443,8 @@ public class EqlEntityMetadataGenerator {
 
             if (el.column != null) {
                 columns.put(el.name, el.column.name);
-            } else if (!el.subitems().isEmpty()) {
-                for (final EqlPropertyMetadata subitem : el.subitems()) {
+            } else if (!el.subitems.isEmpty()) {
+                for (final EqlPropertyMetadata subitem : el.subitems) {
                     if (subitem.expressionModel == null) {
                         columns.put(el.name + "." + subitem.name, subitem.column.name);
                     }
@@ -468,14 +468,14 @@ public class EqlEntityMetadataGenerator {
             if (!el.name.equals(ID) && !el.name.equals(VERSION)) {
                 if (el.column != null) {
                     columns.add(new PropColumnInfo(isPersistedEntityType(el.javaType) ? el.name + "." + ID : el.name, el.column.name, el.hibType));
-                } else if (!el.subitems().isEmpty()) {
+                } else if (!el.subitems.isEmpty()) {
                     if (el.hibType instanceof CompositeUserType) {
-                        final List<String> columnNames = el.subitems().stream().filter(s -> s.column != null /* only relevant for persistent props */).map(s -> s.column.name).collect(toList());
+                        final List<String> columnNames = el.subitems.stream().filter(s -> s.column != null /* only relevant for persistent props */).map(s -> s.column.name).collect(toList());
                         if (!columnNames.isEmpty()) { // there was at least 1 persistent property
                             columns.add(new PropColumnInfo(el.name, columnNames, el.hibType));
                         }
                     } else {
-                        for (final EqlPropertyMetadata subitem : el.subitems()) {
+                        for (final EqlPropertyMetadata subitem : el.subitems) {
                             if (subitem.column != null) {
                                 columns.add(new PropColumnInfo((el.name + "." + subitem.name + (isPersistedEntityType(subitem.javaType) ? "." + ID : "")), subitem.column.name, subitem.hibType));
                             }

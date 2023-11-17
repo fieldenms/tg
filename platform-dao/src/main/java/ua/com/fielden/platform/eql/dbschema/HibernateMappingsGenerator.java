@@ -112,7 +112,7 @@ public class HibernateMappingsGenerator {
     private static String generateUnionEntityPropertyMapping(final EqlPropertyMetadata info) {
         final StringBuffer sb = new StringBuffer();
         sb.append("\t<component name=\"" + info.name + "\" class=\"" + info.javaType.getName() + "\">\n");
-        for (final EqlPropertyMetadata subpropField : info.subitems()) {
+        for (final EqlPropertyMetadata subpropField : info.subitems) {
             if (subpropField.column != null) {
                 sb.append("\t\t<many-to-one name=\"" + subpropField.name + "\" class=\"" + subpropField.javaType.getName() + "\" column = \"" + subpropField.column.name.toUpperCase() + "\"/>\n");
             }
@@ -168,7 +168,7 @@ public class HibernateMappingsGenerator {
         }
 
         for (final EqlPropertyMetadata ppi : propsMetadata) {
-            if (ppi.expressionModel == null && !SPECIAL_PROPS.contains(ppi.name) && (ppi.column != null || ppi.subitems().stream().anyMatch(e -> e.column != null))) {
+            if (ppi.expressionModel == null && !SPECIAL_PROPS.contains(ppi.name) && (ppi.column != null || ppi.subitems.stream().anyMatch(e -> e.column != null))) {
                 sb.append(generatePropertyMappingFromPropertyMetadata(ppi));
             }
         }
@@ -194,12 +194,12 @@ public class HibernateMappingsGenerator {
             }
         } else {
             final List<String> columns = new ArrayList<>();
-            for (final EqlPropertyMetadata subitem : propMetadata.subitems()) {
+            for (final EqlPropertyMetadata subitem : propMetadata.subitems) {
                 if (subitem.expressionModel == null) {
                     columns.add(subitem.column.name);
                 }
             }
-            final PropColumn singleColumn = propMetadata.subitems().size() == 1 ? propMetadata.subitems().get(0).column : propMetadata.column;
+            final PropColumn singleColumn = propMetadata.subitems.size() == 1 ? propMetadata.subitems.get(0).column : propMetadata.column;
             return generatePlainPropertyMapping(propMetadata.name, singleColumn, singleColumn == null ? columns : emptyList(), propMetadata.hibType.getClass().getName());
         }
     }
