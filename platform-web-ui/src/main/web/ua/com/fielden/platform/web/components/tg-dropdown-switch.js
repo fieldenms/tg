@@ -85,10 +85,10 @@ const template = html`
             transform: scale(1, -1);
         }
     </style>
-    <paper-button id="trigger" raised="[[raised]]" activated$="[[activated]]" disabled$="[[disabled]]" class="main" dropdown-opened$="[[dropDownOpened]]" highlight-when-opened$="[[!doNotHighlightWhenDropDownOpened]]" on-tap="_runActionOrShowView" tooltip-text$="[[_getMainButtonTooltip(fragmented, mainButtonTooltipText, _currentView.desc)]]">
+    <paper-button id="trigger" raised="[[raised]]" activated$="[[activated]]" disabled$="[[disabled]]" class="main" dropdown-opened$="[[dropDownOpened]]" highlight-when-opened$="[[!doNotHighlightWhenDropDownOpened]]" on-tap="_runActionOrShowView" tooltip-text$="[[_getMainButtonTooltip(fragmented, dropdownButtonTooltipText, _currentView.desc, mainButtonTooltipText)]]">
         <iron-icon hidden$="[[!_currentView.icon]]" icon="[[_currentView.icon]]" style$="[[_currentView.iconStyle]]"></iron-icon>
         <span class="truncate item-title" style$="[[_calcButtonStyle(buttonWidth)]]">[[_currentView.title]]</span>
-        <iron-icon icon="icons:arrow-drop-down" on-tap="_showViews" dropdown-opened$="[[dropDownOpened]]" tooltip-text$="[[mainButtonTooltipText]]"></iron-icon>
+        <iron-icon icon="icons:arrow-drop-down" on-tap="_showViews" dropdown-opened$="[[dropDownOpened]]" tooltip-text$="[[dropdownButtonTooltipText]]"></iron-icon>
     </paper-button>
     <iron-dropdown id="dropdown" horizontal-align="left" vertical-align="[[verticalAlign]]" restore-focus-on-close always-on-top on-iron-overlay-opened="_dropdownOpened" on-iron-overlay-closed="_dropdownClosed">
         <paper-listbox id="availableViews" class="dropdown-content" slot="dropdown-content" attr-for-selected="view-index" on-iron-select="_changeView">
@@ -127,7 +127,11 @@ export class TgDropdownSwitch extends mixinBehaviors([TgElementSelectorBehavior]
                 value: false,
                 reflectToAttribute: true
             },
-            mainButtonTooltipText:{
+            dropdownButtonTooltipText: {
+                type: String,
+                value: "Choose a view."
+            },
+            mainButtonTooltipText: {
                 type: String,
                 value: "Choose a view."
             },
@@ -181,11 +185,11 @@ export class TgDropdownSwitch extends mixinBehaviors([TgElementSelectorBehavior]
         return "";
     }
 
-    _getMainButtonTooltip(fragmented, mainButtonTooltipText, currentViewDesc) {
+    _getMainButtonTooltip(fragmented, dropdownButtonTooltipText, currentViewDesc, mainButtonTooltipText) {
         if (fragmented) {
-            return currentViewDesc;
+            return currentViewDesc + mainButtonTooltipText;
         }
-        return mainButtonTooltipText;
+        return dropdownButtonTooltipText;
     }
 
     _updateViews(views, viewIndex) {

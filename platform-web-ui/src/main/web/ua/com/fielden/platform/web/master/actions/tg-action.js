@@ -18,7 +18,27 @@ import { allDefined, localStorageKey, getParentAnd } from '/resources/reflection
 
 import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
 import { _isEntity } from '/app/tg-reflector.js';
-// depends on '/resources/filesaver/FileSaver.min.js' 
+// depends on '/resources/filesaver/FileSaver.min.js'
+
+const createDescWithShortcut = function(desc, shortcuts) {
+    
+    const splittedShortcuts = shortcuts.map(s => s.split('+')).map(as => as.map(s => {
+        const button = s === 'meta' ? 'cmd' : s;
+        return button.charAt(0).toUpperCase() + button.slice(1)
+    }));
+
+    const shortcutMaps = [];
+    splittedShortcuts.forEach(shortcut => {
+        shortcut.forEach((s, idx) => {
+            if (!shortcutMaps[idx]) {
+                shortcutMaps[idx] = {};
+            }
+            shortcutMaps[idx][s] = s;
+        });
+    });
+
+    return desc + ", " + shortcutMaps.map(obj => Object.keys(obj).join("/")).join(" + ");
+}
 
 const template = html`
     <style>
@@ -66,7 +86,7 @@ const template = html`
         <span>[[shortDesc]]</span>
     </paper-button>
     <paper-fab id="fabButton" class="action-item" mini icon="[[icon]]" on-tap="_asyncRun" hidden$="[[!_isIcon(excludeNew, excludeClose, icon)]]" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]"></paper-fab>
-    <tg-dropdown-switch id="dropdownButton" class="action-item" raised fragmented vertical-align="bottom" main-button-tooltip-text="Select an action" disabled="[[_optionButtonDisabled]]" activated="[[_optionButtonActive]]" hidden$="[[!_isOptionButton(excludeNew, excludeClose, icon)]]" view-index="[[_optionIdx]]" views="[[_options]]" do-not-highlight-when-drop-down-opened make-drop-down-width-the-same-as-button change-current-view-on-select on-tg-centre-view-change="_runOptionAction"></tg-dropdown-switch>
+    <tg-dropdown-switch id="dropdownButton" class="action-item" raised fragmented vertical-align="bottom" main-button-tooltip-text="[[_generateMainShortcutTooltip(shortcut)]]" dropdown-button-tooltip-text="Select an action" disabled="[[_optionButtonDisabled]]" activated="[[_optionButtonActive]]" hidden$="[[!_isOptionButton(excludeNew, excludeClose, icon)]]" view-index="[[_optionIdx]]" views="[[_options]]" do-not-highlight-when-drop-down-opened make-drop-down-width-the-same-as-button change-current-view-on-select on-tg-centre-view-change="_runOptionAction"></tg-dropdown-switch>
     <paper-spinner id="spinner" active="[[_working]]" class="blue" style="display: none;" alt="in progress"></paper-spinner>
 `;
 
@@ -420,14 +440,14 @@ Polymer({
                 {
                     index: 0,
                     title: shortDesc,
-                    desc: longDesc,
+                    desc: longDesc
                 }
             ];
             if (!excludeClose) {
                 options.push({
                     index: options.length,
                     title: shortDesc + " & CLOSE",
-                    desc: longDesc + " & CLOSE",
+                    desc: createDescWithShortcut(longDesc + " & CLOSE", separateShortcuts.filter(i => i.includes("shift"))),
                     closeAfterExecution: true,
                     subRole: "close",
                     shortcut: separateShortcuts.filter(i => i.includes("shift"))
@@ -437,7 +457,7 @@ Polymer({
                 options.push({
                     index: options.length,
                     title: shortDesc + " & NEW",
-                    desc: longDesc + " & NEW",
+                    desc: createDescWithShortcut(longDesc + " & NEW", separateShortcuts.filter(i => i.includes("alt"))),
                     closeAfterExecution: true,
                     subRole: "new",
                     shortcut: separateShortcuts.filter(i => i.includes("alt"))
@@ -447,6 +467,10 @@ Polymer({
         } else {
             delete this._options;
         }
+    },
+
+    _generateMainShortcutTooltip: function (shortcut) {
+        return createDescWithShortcut('', shortcut.split(" ").filter(i => !i.includes("shift") && !i.includes("alt")));
     },
 
     _buttonStateChanged: function (enabledStates, currentState, _innerEnabled, outerEnabled, excludeNew, excludeClose, icon) {
