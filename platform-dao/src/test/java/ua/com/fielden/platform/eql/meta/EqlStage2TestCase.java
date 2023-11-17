@@ -71,9 +71,9 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
     protected static AbstractQuerySourceItem<?> pi(final Class<?> type, final String propName, final String subPropName) {
         final AbstractQuerySourceItem<?> querySourceInfoItem = querySourceInfoProvider().getModelledQuerySourceInfo((Class<? extends AbstractEntity<?>>) type).getProps().get(propName);
         if (querySourceInfoItem instanceof QuerySourceItemForComponentType) {
-            return (AbstractQuerySourceItem<?>) ((QuerySourceItemForComponentType<?>) querySourceInfoItem).getSubitems().get(subPropName);
+            return ((QuerySourceItemForComponentType<?>) querySourceInfoItem).getSubitems().get(subPropName);
         } else if (querySourceInfoItem instanceof QuerySourceItemForUnionType) {
-            return (AbstractQuerySourceItem<?>) ((QuerySourceItemForUnionType<?>) querySourceInfoItem).getProps().get(subPropName);
+            return ((QuerySourceItemForUnionType<?>) querySourceInfoItem).getProps().get(subPropName);
         } else {
             throw new EqlException("Can't obtain metadata for property " + propName + " and subproperty " + subPropName + " within type " + type);
         }
@@ -89,13 +89,13 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
 
     protected static <T extends AbstractEntity<?>> ResultQuery2 qryCountAll(final ICompoundCondition0<T> unfinishedQry, final Map<String, Object> paramValues) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
-        final TransformationContextFromStage1To2 context = new TransformationContextFromStage1To2(querySourceInfoProvider(), false);
+        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider());
         return qb(paramValues).generateAsResultQuery(countQry, null, null).transform(context);
     }
 
     protected static <T extends AbstractEntity<?>> T2<QueryModelToStage1Transformer, ResultQuery2> qryCountAll2(final ICompoundCondition0<T> unfinishedQry, final Map<String, Object> paramValues) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
-        final TransformationContextFromStage1To2 context = new TransformationContextFromStage1To2(querySourceInfoProvider(), false);
+        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider());
         final QueryModelToStage1Transformer qb = qb(paramValues);
         return t2(qb, qb.generateAsResultQuery(countQry, null, null).transform(context));
     }
@@ -105,17 +105,17 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static <T extends AbstractEntity<?>> ResultQuery2 qry(final EntityResultQueryModel<T> qry, final OrderingModel order) {
-        final TransformationContextFromStage1To2 context = new TransformationContextFromStage1To2(querySourceInfoProvider(), false);
+        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider());
         return qb().generateAsResultQuery(qry, order, new EntityRetrievalModel<T>(EntityQueryUtils.fetch(qry.getResultType()), DOMAIN_METADATA_ANALYSER)).transform(context);
     }
 
     protected static ResultQuery2 qry(final AggregatedResultQueryModel qry, final OrderingModel order) {
-        final TransformationContextFromStage1To2 context = new TransformationContextFromStage1To2(querySourceInfoProvider(), false);
+        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider());
         return qb().generateAsResultQuery(qry, order, null).transform(context);
     }
 
     protected static ResultQuery2 qry(final AggregatedResultQueryModel qry) {
-        final TransformationContextFromStage1To2 context = new TransformationContextFromStage1To2(querySourceInfoProvider(), false);
+        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider());
         return qb().generateAsResultQuery(qry, null, null).transform(context);
     }
 
@@ -129,7 +129,7 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
 
     protected static Yields2 mkYields(final Yield2... yields) {
         if (yields.length > 0) {
-            return new Yields2(asList(yields)); 
+            return new Yields2(asList(yields));
         } else {
             return EMPTY_YIELDS;
         }
@@ -149,7 +149,7 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
 
     protected static OrderBys2 orderBys(final OrderBy2... orderBys) {
         if (orderBys.length > 0) {
-            return new OrderBys2(asList(orderBys));    
+            return new OrderBys2(asList(orderBys));
         } else {
             return EMPTY_ORDER_BYS;
         }
@@ -194,7 +194,7 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
     protected static IJoinNode2<? extends IJoinNode3> ij(final ISource2<? extends ISource3> leftSource, final ISource2<? extends ISource3> rightSource, final Conditions2 conditions) {
         return new JoinInnerNode2(new JoinLeafNode2(leftSource), new JoinLeafNode2(rightSource), IJ, conditions);
     }
-    
+
     //    protected static CompoundSource1 lj(final IQrySource1<? extends IQrySource2<?>> source, final ICondition1<?> firstCondition) {
     //        return new CompoundSource1(source, LJ, conditions(firstCondition));
     //    }
@@ -202,7 +202,7 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
     //    protected static CompoundSource1 ij(final IQrySource1<? extends IQrySource2<?>> source, final ICondition1<?> firstCondition) {
     //        return new CompoundSource1(source, IJ, conditions(firstCondition));
     //    }
-    //    
+    //
     //    protected static CompoundCondition1 and(final ICondition1<?> condition) {
     //        return new CompoundCondition1(AND, condition);
     //    }

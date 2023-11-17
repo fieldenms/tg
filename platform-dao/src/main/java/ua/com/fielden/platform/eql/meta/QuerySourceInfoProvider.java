@@ -104,13 +104,12 @@ public class QuerySourceInfoProvider {
     /**
      * Only properties that are present in SE yields are preserved.
      *
-     * @param parentInfo
      * @return
      */
     private <T extends AbstractEntity<?>> QuerySourceInfo<?> generateModelledQuerySourceInfoForSyntheticType(final Class<? extends AbstractEntity<?>> entityType, final List<SourceQuery1> queries) {
-        final TransformationContextFromStage1To2 context = new TransformationContextFromStage1To2(this, false);
+        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.forMainContext(this);
         final List<SourceQuery2> transformedQueries = queries.stream().map(m -> m.transform(context)).collect(toList());
-        return Source1BasedOnQueries.produceQuerySourceInfoForEntityType(this, transformedQueries, entityType, true);
+        return Source1BasedOnQueries.produceQuerySourceInfoForEntityType(this, transformedQueries, entityType, true /*isComprehensive*/);
     }
 
     public List<String> getCalcPropsOrder(final Class<? extends AbstractEntity<?>> entityType) {
@@ -129,7 +128,7 @@ public class QuerySourceInfoProvider {
 
                 if (isUnionEntityType(javaType)) {
                     final SortedMap<String, AbstractQuerySourceItem<?>> subprops = new TreeMap<>();
-                    for (final EqlPropertyMetadata sub : el.subitems()) {
+                    for (final EqlPropertyMetadata sub : el.subitems) {
                         if (sub.expressionModel == null) {
                             subprops.put(sub.name, new QuerySourceItemForEntityType<>(sub.name, allQuerySourceInfos.get(sub.javaType), sub.hibType, false, null));
                         } else {
@@ -150,9 +149,9 @@ public class QuerySourceInfoProvider {
                     //                    querySourceInfo.addProp(new EntityTypePropInfo(name, allEntitiesInfo.get(querySourceInfo.javaType()), hibType, required, expr));
                 }
                 // If subitems are not empty then we have a property of a component type, such as Money.
-                else if (!el.subitems().isEmpty()) {
+                else if (!el.subitems.isEmpty()) {
                     final QuerySourceItemForComponentType<?> propTpi = new QuerySourceItemForComponentType<>(name, javaType, hibType);
-                    for (final EqlPropertyMetadata sub : el.subitems()) {
+                    for (final EqlPropertyMetadata sub : el.subitems) {
                         final CalcPropInfo subExpr = sub.expressionModel;
                         propTpi.addSubitem(new QuerySourceItemForPrimType<>(sub.name, sub.javaType, sub.hibType, subExpr));
                     }

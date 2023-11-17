@@ -41,7 +41,7 @@ public class EqlQueryTransformer {
         final QueryModelToStage1Transformer gen = new QueryModelToStage1Transformer(filter, username, new QueryNowValue(dates), qem.getParamValues());
         final ResultQuery1 query1 = gen.generateAsResultQuery(qem.queryModel, qem.orderModel, qem.fetchModel);
 
-        final TransformationContextFromStage1To2 context1 = new TransformationContextFromStage1To2(eqlDomainMetadata.querySourceInfoProvider, false);
+        final TransformationContextFromStage1To2 context1 = TransformationContextFromStage1To2.forMainContext(eqlDomainMetadata.querySourceInfoProvider);
 		final ResultQuery2 query2 = query1.transform(context1);
 
 		final PathsToTreeTransformer p2tt = new PathsToTreeTransformer(eqlDomainMetadata.querySourceInfoProvider, gen);

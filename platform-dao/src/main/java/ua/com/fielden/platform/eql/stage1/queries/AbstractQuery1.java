@@ -145,7 +145,7 @@ public abstract class AbstractQuery1 {
             return originalConditions;
         }
 
-        final TransformationContextFromStage1To2 localContext = (new TransformationContextFromStage1To2(querySourceInfoProvider, false)).cloneWithAdded(mainSource);
+        final TransformationContextFromStage1To2 localContext = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider).cloneWithAdded(mainSource);
         final Conditions2 udfConditions2 = udfConditions.transform(localContext);
 
         if (originalConditions.ignore()) {

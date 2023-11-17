@@ -2,9 +2,12 @@ package ua.com.fielden.platform.eql.stage1;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
+import static org.apache.logging.log4j.LogManager.getLogger;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
@@ -18,14 +21,31 @@ import ua.com.fielden.platform.eql.stage3.sources.ISource3;
  * @author TG Team
  */
 public final class TransformationContextFromStage1To2 {
-    public static boolean SHOW_INTERNALS = false;
+    private static final Logger LOGGER = getLogger(TransformationContextFromStage1To2.class);
+    private static boolean SHOW_INTERNALS = false;
 
     public final List<List<ISource2<? extends ISource3>>> sourcesForNestedQueries; // in reverse order -- the first list is for the deepest nested query
     public final QuerySourceInfoProvider querySourceInfoProvider;
     public final boolean isForCalcProp; // indicates that this context is used to transform calc-prop expression.
 
-    public TransformationContextFromStage1To2(final QuerySourceInfoProvider querySourceInfoProvider, final boolean isForCalcProp) {
+    private TransformationContextFromStage1To2(final QuerySourceInfoProvider querySourceInfoProvider, final boolean isForCalcProp) {
         this(querySourceInfoProvider, emptyList(), isForCalcProp);
+    }
+
+    public static TransformationContextFromStage1To2 forCalcPropContext(final QuerySourceInfoProvider querySourceInfoProvider) {
+        return new TransformationContextFromStage1To2(querySourceInfoProvider, true);
+    }
+
+    public static TransformationContextFromStage1To2 forMainContext(final QuerySourceInfoProvider querySourceInfoProvider) {
+        return new TransformationContextFromStage1To2(querySourceInfoProvider, false);
+    }
+
+    public static void showInternals() {
+        SHOW_INTERNALS = true;
+    }
+
+    public static void hideInternals() {
+        SHOW_INTERNALS = false;
     }
 
     private TransformationContextFromStage1To2(final QuerySourceInfoProvider querySourceInfoProvider, final List<List<ISource2<? extends ISource3>>> sourcesForNestedQueries, final boolean isForCalcProp) {
@@ -33,7 +53,7 @@ public final class TransformationContextFromStage1To2 {
         this.sourcesForNestedQueries = sourcesForNestedQueries;
         this.isForCalcProp = isForCalcProp;
         if (SHOW_INTERNALS) {
-            System.out.println(toString());
+            LOGGER.info(toString());
         }
     }
 

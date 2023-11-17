@@ -18,12 +18,12 @@ public class TransformationContext1DemoTest extends AbstractEqlShortcutTest {
     @Before
     public void setUp() {
         System.out.println("\nEXECUTING TEST [%s]:\n".formatted(name.getMethodName()));
-        TransformationContextFromStage1To2.SHOW_INTERNALS = true;
+        TransformationContextFromStage1To2.showInternals();
     }
 
     @After
     public void tearDown() {
-        TransformationContextFromStage1To2.SHOW_INTERNALS = false;
+        TransformationContextFromStage1To2.hideInternals();
     }
 
     @Test

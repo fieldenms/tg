@@ -134,7 +134,7 @@ public class PathsToTreeTransformer {
         for (final PropChunk calcChunk : getFirstCalcChunks(incomingTails)) {
             if (!processedCalcData.containsKey(calcChunk.name())) { // consider only calc props that have not yet been processed on the previous iteration(s)
                 final Expression1 exp1 = (Expression1) (new StandAloneExpressionBuilder(gen, calcChunk.data().expression.expressionModel())).getResult().getValue();
-                final TransformationContextFromStage1To2 prc = (new TransformationContextFromStage1To2(querySourceInfoProvider, true)).cloneWithAdded(sourceForCalcPropResolution);
+                final TransformationContextFromStage1To2 prc = TransformationContextFromStage1To2.forCalcPropContext(querySourceInfoProvider).cloneWithAdded(sourceForCalcPropResolution);
                 final Expression2 exp2 = exp1.transform(prc);
                 final Set<Prop2> expProps = exp2.collectProps();
                 // separate into external and internal
