@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
+
 public class TopologicalSort {
 
     private TopologicalSort() {}
@@ -24,6 +26,10 @@ public class TopologicalSort {
                     nextSorted = el.getKey();
                     break;
                 }
+            }
+
+            if (nextSorted == null) {
+                throw new EqlMetadataGenerationException("Circular reference in: %n%s".formatted(mapOfDependencies));
             }
 
             sorted.add(nextSorted);
