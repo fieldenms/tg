@@ -33,7 +33,7 @@ import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnQueries;
 public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries> {
     public static final String ERR_CONFLICT_BETWEEN_YIELDED_AND_DECLARED_PROP_TYPE = "There is a problem while trying to determine the type for property [%s] of a query source based on queries with result type [%s].\n"
             + "Declared type is [%s].\nActual yield type is [%s].";
-    
+
     private final List<SourceQuery1> models = new ArrayList<>();
     private final boolean isSyntheticEntity;
 
@@ -51,36 +51,39 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
             for (final SourceQuery1 model : models) {
                 modelsResultTypes.add(model.resultType);
             }
-            
+
             if (modelsResultTypes.size() != 1) {
                 throw new EqlStage1ProcessingException("Models of query source have different result types " + modelsResultTypes + ". While making select(..) or join(..)/leftJoin(..) from multiple models it should be ensured that they are of the same result type.");
-            }        
+            }
 
-            return modelsResultTypes.iterator().next();    
+            return modelsResultTypes.iterator().next();
         }
     }
-    
+
     @Override
     public Source2BasedOnQueries transform(final TransformationContextFromStage1To2 context) {
         final List<SourceQuery2> transformedQueries = models.stream().map(m -> m.transform(context)).collect(toList());
         final QuerySourceInfo<?> ei = obtainQuerySourceInfo(context.querySourceInfoProvider, transformedQueries, sourceType(), isSyntheticEntity);
         return new Source2BasedOnQueries(transformedQueries, alias, id, ei, isSyntheticEntity, true, context.isForCalcProp);
     }
-    
+
     public static <T extends AbstractEntity<?>> QuerySourceInfo<T> produceQuerySourceInfoForEntityType(final QuerySourceInfoProvider querySourceInfoProvider, final List<SourceQuery2> models, final Class<T> sourceType, final boolean isComprehensive) {
         final SortedMap<String, AbstractQuerySourceItem<?>> declaredProps = EntityAggregates.class.equals(sourceType) ? emptySortedMap() : querySourceInfoProvider.getDeclaredQuerySourceInfo(sourceType).getProps();
         final Collection<YieldInfoNode> yieldInfoNodes = YieldInfoNodesGenerator.generate(models);
-        final Map<String, AbstractQuerySourceItem<?>> createdProps = new HashMap<>(); 
+        final Map<String, AbstractQuerySourceItem<?>> createdProps = new HashMap<>();
         for (final YieldInfoNode yield : yieldInfoNodes) {
-            final AbstractQuerySourceItem<?> declaredProp = declaredProps.get(yield.name);
+            final AbstractQuerySourceItem<?> declaredProp = declaredProps.get(yield.name());
             if (declaredProp != null) {
                 // The only thing that has to be taken from declared is its structure (in case of UE or complex value)
-                if (declaredProp instanceof QuerySourceItemForEntityType<?>) { // TODO here we assume that yield is of ET (this will help to handle the case of yielding ID, which currently is just long only.
-                    final QuerySourceItemForEntityType<?> declaredEntityTypeQuerySourceInfoItem = (QuerySourceItemForEntityType<?>) declaredProp;
-                    if (!(yield.propType == null || isEntityType(yield.propType.javaType()) && yield.propType.javaType().equals(declaredEntityTypeQuerySourceInfoItem.javaType()) || Long.class.equals(yield.propType.javaType()))) {
-                        throw new EqlStage1ProcessingException(format(ERR_CONFLICT_BETWEEN_YIELDED_AND_DECLARED_PROP_TYPE, declaredEntityTypeQuerySourceInfoItem.name, sourceType.getName(), declaredEntityTypeQuerySourceInfoItem.javaType().getName(), yield.propType.javaType().getName()));
+                if (declaredProp instanceof QuerySourceItemForEntityType<?> declaredEntityTypeQuerySourceInfoItem) { // here we assume that yield is of ET (this will help to handle the case of yielding ID, which currently is just long only.
+                    if (yield.propType() == null ||
+                        yield.propType().javaType() == declaredEntityTypeQuerySourceInfoItem.javaType() ||
+                        yield.propType().javaType() == Long.class
+                    ) {
+                        createdProps.put(yield.name(), new QuerySourceItemForEntityType<>(yield.name(), querySourceInfoProvider.getModelledQuerySourceInfo((Class<? extends AbstractEntity<?>>) declaredProp.javaType()), declaredEntityTypeQuerySourceInfoItem.hibType, yield.nonnullable()));
+                    } else {
+                        throw new EqlStage1ProcessingException(format(ERR_CONFLICT_BETWEEN_YIELDED_AND_DECLARED_PROP_TYPE, declaredEntityTypeQuerySourceInfoItem.name, sourceType.getName(), declaredEntityTypeQuerySourceInfoItem.javaType().getName(), yield.propType().javaType().getName()));
                     }
-                    createdProps.put(yield.name, new QuerySourceItemForEntityType<>(yield.name, querySourceInfoProvider.getModelledQuerySourceInfo((Class<? extends AbstractEntity<?>>) declaredProp.javaType()), declaredEntityTypeQuerySourceInfoItem.hibType, yield.nonnullable));
                 } else {
                     // TODO need to ensure that in case of UE or complex value all declared subprops match yielded ones.
                     // TODO need actual (based on yield) rather than declared info (similar to not declared props section below).
@@ -88,15 +91,13 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
                 }
             } else {
                 // adding not declared props
-                createdProps.put(yield.name, yield.propType != null && isEntityType(yield.propType.javaType())
-                        ? new QuerySourceItemForEntityType<>(yield.name, querySourceInfoProvider.getModelledQuerySourceInfo((Class<? extends AbstractEntity<?>>) yield.propType.javaType()), H_ENTITY, yield.nonnullable)
-                        : new QuerySourceItemForPrimType<>(yield.name, yield.propType != null ? yield.propType.javaType() : null, yield.propType != null ? yield.propType.hibType() : null));
+                createdProps.put(yield.name(), yield.propType() != null && isEntityType(yield.propType().javaType())
+                        ? new QuerySourceItemForEntityType<>(yield.name(), querySourceInfoProvider.getModelledQuerySourceInfo((Class<? extends AbstractEntity<?>>) yield.propType().javaType()), H_ENTITY, yield.nonnullable())
+                        : new QuerySourceItemForPrimType<>(yield.name(), yield.propType() != null ? yield.propType().javaType() : null, yield.propType() != null ? yield.propType().hibType() : null));
             }
         }
 
-        // including all calc-props, which haven't been yielded explicitly
-
-        // In case of ad-hoc added calc props (e.g. totals) -- they should be included here
+        // include all calc-props, which haven't been yielded explicitly
         for (final AbstractQuerySourceItem<?> prop : declaredProps.values()) {
             if (prop.hasExpression() && !createdProps.containsKey(prop.name)) {
                 createdProps.put(prop.name, prop);
@@ -105,7 +106,7 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
 
         return new QuerySourceInfo<>(sourceType, isComprehensive, createdProps.values());
     }
-    
+
     private static QuerySourceInfo<?> obtainQuerySourceInfo(final QuerySourceInfoProvider querySourceInfoProvider, final List<SourceQuery2> models, final Class<? extends AbstractEntity<?>> sourceType, final boolean isSyntheticEntity) {
         if (isSyntheticEntity || allGenerated(models)) {
             return querySourceInfoProvider.getModelledQuerySourceInfo(sourceType);
@@ -113,7 +114,7 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
             return produceQuerySourceInfoForEntityType(querySourceInfoProvider, models, sourceType, false);
         }
     }
-    
+
     private static boolean allGenerated(final List<SourceQuery2> models) {
         final boolean allGenerated = true;
         for (SourceQuery2 sourceQuery2 : models) {
@@ -128,7 +129,7 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return isSyntheticEntity ? Set.of(sourceType()) : models.stream().map(el -> el.collectEntityTypes()).flatMap(Set::stream).collect(toSet());
     }
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -143,11 +144,11 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
         if (this == obj) {
             return true;
         }
-        
+
         if (!super.equals(obj)) {
             return false;
         }
-        
+
         if (!(obj instanceof Source1BasedOnQueries)) {
             return false;
         }
