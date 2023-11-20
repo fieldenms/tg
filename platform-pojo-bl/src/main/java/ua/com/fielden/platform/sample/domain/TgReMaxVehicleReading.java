@@ -13,7 +13,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 @CompanionObject(TgReMaxVehicleReadingCo.class)
 public class TgReMaxVehicleReading extends AbstractEntity<TgVehicle> {
 
-    private static final EntityResultQueryModel<TgReMaxVehicleReading> model_ = //
+    protected static final EntityResultQueryModel<TgReMaxVehicleReading> model_ = //
             select(TgMeterReading.class). //
                     groupBy().prop("vehicle"). //
                     yield().prop("vehicle").as("key"). //

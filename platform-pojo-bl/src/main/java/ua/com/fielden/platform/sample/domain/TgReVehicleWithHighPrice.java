@@ -9,14 +9,15 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
 @CompanionObject(TgReVehicleWithHighPriceCo.class)
 public class TgReVehicleWithHighPrice extends TgVehicle {
+
     protected static final EntityResultQueryModel<TgReVehicleWithHighPrice> model_ = select(TgVehicle.class)
             .where().prop("price").ge().val(100000)
             .yieldAll()
             .modelAsEntity(TgReVehicleWithHighPrice.class);
-    
+
     @IsProperty
     private TgVehicleTechDetails techDetails;
-    
+
     @IsProperty
     private TgAverageFuelUsage averageFuelUsage;
 
