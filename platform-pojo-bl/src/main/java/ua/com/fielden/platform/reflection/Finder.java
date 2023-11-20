@@ -1095,7 +1095,7 @@ public class Finder {
     }
 
     /**
-     * Determines whether specified property is one2one association.
+     * Determines whether specified property is one-2-one association.
      * <p>
      * The rule is following : if the type of property contains the "key" of the type of property parent or the "key" that is assignable from property parent and property parent has "id" property then return <code>true</code>, otherwise <code>false</code>.
      *
@@ -1109,12 +1109,12 @@ public class Finder {
             final Class<?> masterType = DynamicEntityClassLoader.getOriginalType(PropertyTypeDeterminator.transform(type, dotNotationExp).getKey());
             final Class<?> propertyTypeKeyType = DynamicEntityClassLoader.getOriginalType(PropertyTypeDeterminator.determinePropertyType(propertyType, KEY));
 
-            if (propertyTypeKeyType.equals(masterType) ||
-                    propertyTypeKeyType.isAssignableFrom(masterType) // covers the case when there are synthetic entities derived from persistent (or synthetic with ID) entities with 1-2-1 property
-                            && isEntityType(propertyTypeKeyType)
-                            && (isPersistedEntityType(propertyTypeKeyType) || isSyntheticBasedOnPersistentEntityType((Class<? extends AbstractEntity<?>>) propertyTypeKeyType))) {
-                return true;
-            }
+            return // either property type's key is the same as the master entity type
+                   propertyTypeKeyType == masterType ||
+                   // or the property type's key is compatible with the master entity type, which covers 2 possible cases:
+                   // 1. a persistent entity that extends another persistent entity,
+                   // 2. a synthetic entity, derived from a persistent entity (synthetic with ID).
+                   propertyTypeKeyType.isAssignableFrom(masterType) && (isPersistedEntityType(propertyTypeKeyType) || isSyntheticBasedOnPersistentEntityType((Class<? extends AbstractEntity<?>>) propertyTypeKeyType));
         }
         return false;
     }
