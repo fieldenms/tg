@@ -198,7 +198,7 @@ export class TgDropdownSwitch extends mixinBehaviors([TgElementSelectorBehavior]
     _updateViews(views, viewIndex) {
         if (allDefined(arguments) && viewIndex !== null && viewIndex >= 0) {
             this._currentView = views.find(view => view.index === viewIndex);
-            this.viewIndex = this._currentView.index;
+            this.viewIndex = this._currentView ? this._currentView.index : 0;
         }
     }
 
