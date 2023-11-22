@@ -55,7 +55,7 @@ public class User extends ActivatableAbstractEntity<String> {
     public static final String BASED_ON_USER = "basedOnUser";
     public static final String EMAIL = "email";
     public static final String SSO_ONLY = "ssoOnly";
-    public static final String USER_NAME_REGEX = "^\\w+$"; // permits only letters and digits, must not permit SECRET_RESET_UUID_SEPERATOR
+    public static final String USER_NAME_REGEX = "^(?!.*" + UserSecret.SECRET_RESET_UUID_SEPERATOR + ").*$"; // match anything, but SECRET_RESET_UUID_SEPERATOR by using negative lookahead assertion
 
     /**
      * This is an enumeration for listing all system in-built accounts.
