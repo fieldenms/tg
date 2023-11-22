@@ -352,7 +352,7 @@ Polymer({
             this._working = true;
             this._lastSubRole = subRole;
             this._lastCloseAfterExecution = typeof closeAfterExecution !== 'undefined' ? closeAfterExecution : this.closeAfterExecution;
-            const wasPersistedBeforeAction = this.entity.isPersisted();
+            const wasPersistedBeforeAction = this.entity && this.entity.isPersisted(); // EGI master have no '& NEW' options for SAVE / CANCEL and also doesn't bind 'entity' property
             const promise = this.action(continuation, continuationProperty);
             if (promise) {
                 let parentDialog;
