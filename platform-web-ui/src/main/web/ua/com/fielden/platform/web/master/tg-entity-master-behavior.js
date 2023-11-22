@@ -637,10 +637,14 @@ const TgEntityMasterBehaviorImpl = {
             return potentiallySavedOrNewEntity.isValidWithoutException();
         }).bind(self);
 
-        self._newAction = (function(parentDialog) {
+        self._newAction = (function(parentDialog, wasPersistedBeforeAction) {
             const firstViewWithNewAction = findFirstViewWithNewAction(parentDialog, self);
             if (firstViewWithNewAction) {
-                firstViewWithNewAction.tgOpenMasterAction._runDynamicActionForNew(self.entityType);
+                if (wasPersistedBeforeAction) {
+                    firstViewWithNewAction.tgOpenMasterAction._runDynamicActionForNew(self.entityType);
+                } else {
+                    parentDialog._lastAction._run();
+                }
             } else if (parentDialog && parentDialog._lastAction) {
                 const newAction = this._createOpenMasterAction();
                 newAction.requireMasterEntity = 'false';
@@ -1027,8 +1031,8 @@ const TgEntityMasterBehaviorImpl = {
             action: function () {
                 return self.retrieve();
             },
-            newAction: function(parentDialog) {
-                self._newAction(parentDialog);
+            newAction: function(parentDialog, wasPersistedBeforeAction) {
+                self._newAction(parentDialog, wasPersistedBeforeAction);
             }
         };
         self._notifyActionPathsFor('REFRESH', true);
@@ -1052,8 +1056,8 @@ const TgEntityMasterBehaviorImpl = {
             action: function (continuation, continuationProperty) {
                 return self.save(continuation, continuationProperty);
             },
-            newAction: function(parentDialog) {
-                self._newAction(parentDialog);
+            newAction: function(parentDialog, wasPersistedBeforeAction) {
+                self._newAction(parentDialog, wasPersistedBeforeAction);
             }
         };
         self._notifyActionPathsFor('SAVE', true);

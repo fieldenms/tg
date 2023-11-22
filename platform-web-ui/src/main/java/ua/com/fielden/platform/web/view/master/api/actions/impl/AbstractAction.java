@@ -163,6 +163,7 @@ public abstract class AbstractAction implements IImportable {
 
         final String actionSelector = "_actions." + this.name();
         attrs.put("entity-type", "[[" + actionSelector + ".entityType]]");
+        attrs.put("entity", "[[_currEntity]]");
         attrs.put("enabled-states", "[[" + actionSelector + ".enabledStates]]");
         attrs.put("short-desc", "[[" + actionSelector + ".shortDesc]]");
         attrs.put("long-desc", "[[" + actionSelector + ".longDesc]]");

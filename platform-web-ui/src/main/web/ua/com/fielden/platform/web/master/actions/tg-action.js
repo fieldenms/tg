@@ -102,6 +102,12 @@ Polymer({
          * The type of entity opened by master that contains this action
          */
         entityType: String,
+
+        /**
+         * The entity of master where this action is placed. 
+         */
+        entity: Object,
+        
         /**
          * The elevation value forfab button
          */
@@ -346,6 +352,7 @@ Polymer({
             this._working = true;
             this._lastSubRole = subRole;
             this._lastCloseAfterExecution = typeof closeAfterExecution !== 'undefined' ? closeAfterExecution : this.closeAfterExecution;
+            const wasPersistedBeforeAction = this.entity.isPersisted();
             const promise = this.action(continuation, continuationProperty);
             if (promise) {
                 let parentDialog;
@@ -372,7 +379,7 @@ Polymer({
                         });
                     }
                     if (ironRequest && ironRequest.successful && subRole === 'new' && typeof this.newAction === 'function') {
-                        this.newAction(parentDialog);
+                        this.newAction(parentDialog, wasPersistedBeforeAction);
                     }
                     return ironRequest;
                 });    
