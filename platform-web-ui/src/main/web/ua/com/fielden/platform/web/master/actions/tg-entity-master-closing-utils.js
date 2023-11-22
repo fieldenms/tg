@@ -29,7 +29,7 @@ export const createEntityActionThenCallback = function (eventChannel, role, subR
                 // action with role 'refresh' should only encourage closing in cases
                 // where the returned after refresh entity is new (aka not persisted) as per issue #916
                 // (https://github.com/fieldenms/tg/issues/916)
-                if (role === 'refresh' && subRole !== 'close' && ironRequest.entityId) {
+                if (role === 'refresh' && !subRole && ironRequest.entityId) {
                     dataValue.canClose = false;
                 }
 
