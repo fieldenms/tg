@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.view.master.api.actions.entity.impl;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.join;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresentForClass;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
@@ -76,7 +77,7 @@ public class DefaultEntityAction<T extends AbstractEntity<?>> extends AbstractAc
     }
 
     private static <T extends AbstractEntity<?>> boolean isNewRestricted(final Class<T> entityType) {
-        return entityType.isAnnotationPresent(RestrictCreationByUsers.class) || AbstractEntity.class.isAssignableFrom(AnnotationReflector.getKeyType(entityType));
+        return isAnnotationPresentForClass(RestrictCreationByUsers.class, entityType)|| AbstractEntity.class.isAssignableFrom(AnnotationReflector.getKeyType(entityType));
     }
 
     private static <T extends AbstractEntity<?>> boolean isActionWithOptions (final String name, final Class<T> entityType) {

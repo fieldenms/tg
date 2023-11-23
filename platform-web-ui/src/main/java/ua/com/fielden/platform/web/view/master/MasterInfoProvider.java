@@ -6,6 +6,7 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresentForClass;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
@@ -24,7 +25,6 @@ import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.annotation.RestrictCreationByUsers;
 import ua.com.fielden.platform.master.MasterInfo;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.web.PrefDim;
@@ -181,7 +181,7 @@ public class MasterInfoProvider {
      * @param type -- entity type
      */
     private static MasterInfo buildConfiguredNewEntityMasterActionInfo(final IWebUiBuilder webUiBuilder, final Class<? extends AbstractEntity<?>> type) {
-        if (AnnotationReflector.isAnnotationPresentForClass(RestrictCreationByUsers.class, type)) {
+        if (isAnnotationPresentForClass(RestrictCreationByUsers.class, type)) {
             return null;
         }
         try {
