@@ -1,7 +1,7 @@
 import '/resources/egi/tg-custom-action-dialog.js';
 import '/resources/components/postal-lib.js';
 
-import { tearDownEvent, isInHierarchy, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
 import {createDialog} from '/resources/egi/tg-dialog-util.js';
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
 import { createEntityActionThenCallback } from '/resources/master/actions/tg-entity-master-closing-utils.js';
@@ -53,6 +53,17 @@ const findFirstInputToFocus = (preferredOnly, editors) => {
            firstInput ? { inputToFocus: firstInput, preferred: false } :
            null;
 };
+
+const findFirstViewWithNewAction = function (dialog, viewWithAction) {
+    let parentDialog = dialog
+    let parentView = viewWithAction;
+    while (parentDialog && parentDialog.parentElement === null) {
+        parentView = getParentAnd(parentDialog._lastAction, element => element._createContextHolder && element.tgOpenMasterAction);
+        parentDialog = getParentAnd(parentDialog._lastAction, element => element.matches('tg-custom-action-dialog'));
+        
+    }
+    return parentView;
+}
 
 /**
  * Check whether an element is visible in its 'tg-scrollable-component' viewport.
@@ -172,6 +183,13 @@ const TgEntityMasterBehaviorImpl = {
             type: String
         },
 
+        /**
+         * Represents the dynamic action that allows to open entity master for specified entity or new entity.
+         */
+        tgOpenMasterAction: {
+            type: Object
+        },
+
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
         //////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -185,6 +203,13 @@ const TgEntityMasterBehaviorImpl = {
          * Default implementation for postSaved callback.
          */
         _postSavedDefault: {
+            type: Function
+        },
+
+        /**
+         * Action that creates opens new dialog for new entity. This action will be provided fro SAVE and REFRESH actions to run new action after successful save or refresh actions.
+         */
+        _newAction: {
             type: Function
         },
 
@@ -530,7 +555,7 @@ const TgEntityMasterBehaviorImpl = {
                 const elementName = 'tg-' + continuationType._simpleClassName() + '-master';
                 const actionDesc = continuationType._simpleClassName() + '-' + continuationProperty;
 
-                let action = this.querySelector('tg-ui-action[continuation-property="' + continuationProperty + '"]');
+                let action = this.shadowRoot.querySelector('tg-ui-action[continuation-property="' + continuationProperty + '"]');
                 if (!action) {
                     const actionModel = document.createElement('dom-bind');
                     actionModel.innerHTML =
@@ -576,12 +601,16 @@ const TgEntityMasterBehaviorImpl = {
                     actionModel.postActionSuccess = function (functionalEntity) {
                         action.success = true;
                         console.log('postActionSuccess: ' + actionDesc, functionalEntity);
-                        const saveButton = queryElements(self, "tg-action[role='save']")[0];
-                        self.save(functionalEntity, continuationProperty)
-                            .then(
-                                createEntityActionThenCallback(self.centreUuid, 'save', postal, null, saveButton ? saveButton.closeAfterExecution : true),
-                                function (value) { console.log('AJAX PROMISE CATCH', value); }
-                            );
+                        const saveButton = self.$._saveAction;
+                        if (saveButton) {
+                            saveButton._asyncRunAfterContinuation(functionalEntity, continuationProperty);
+                        } else {
+                            self.save(functionalEntity, continuationProperty)
+                                .then(
+                                    createEntityActionThenCallback(self.centreUuid, 'save', '', postal, null, true),
+                                    function (value) { console.log('AJAX PROMISE CATCH', value); }
+                                );
+                        }
                     };
                     actionModel.postActionError = function (functionalEntity) {
                         console.log('postActionError: ' + actionDesc, functionalEntity);
@@ -596,7 +625,7 @@ const TgEntityMasterBehaviorImpl = {
                     action.isActionInProgressChanged = (function (newValue, oldValue) {
                         oldIsActionInProgressChanged(newValue, oldValue);
                         if (newValue === false && !action.success) { // only enable parent master if action has failed (perhaps during retrieval or on save), otherwise leave enabling logic to the parent master itself (saving of parent master should govern that)
-                            const saveButton = queryElements(self, "tg-action[role='save']")[0];
+                            const saveButton = self.$._saveAction;
                             if (saveButton) {
                                 saveButton.cancelContinuation();
                             }
@@ -613,6 +642,22 @@ const TgEntityMasterBehaviorImpl = {
             }
 
             return potentiallySavedOrNewEntity.isValidWithoutException();
+        }).bind(self);
+
+        self._newAction = (function(parentDialog, wasPersistedBeforeAction) {
+            const firstViewWithNewAction = findFirstViewWithNewAction(parentDialog, self);
+            if (firstViewWithNewAction) {
+                if (wasPersistedBeforeAction) {
+                    firstViewWithNewAction.tgOpenMasterAction._runDynamicActionForNew(self.entityType);
+                } else {
+                    parentDialog._lastAction._run();
+                }
+            } else if (parentDialog && parentDialog._lastAction) {
+                const newAction = this._createOpenMasterAction();
+                newAction.requireMasterEntity = 'false';
+                newAction.createContextHolder = parentDialog._lastAction.createContextHolder;
+                newAction._runDynamicActionForNew(self.entityType);
+            }
         }).bind(self);
 
         self._postSavedDefaultPostExceptionHandler = (function () {
@@ -745,7 +790,11 @@ const TgEntityMasterBehaviorImpl = {
         }).bind(self);
 
         self._showDialog = (function (action) {
-            const closeEventChannel = self.uuid;
+            //Calculate close event channel for dialog. It should be the same as action's centreUuid.
+            //This is done because action's centreUuid is set into centreUuid of the master opened by specified action and inserted into 
+            //opening dialog. Then the master's centreUuid is used as closeEventChannel for tg-action.
+            //|| this.uuid is used as fallback in case if action's centreUuid wasn't defined.
+            const closeEventChannel = action.attrs.centreUuid || this.uuid;
             const closeEventTopics = ['save.post.success', 'refresh.post.success'];
             this.async(function () {
                 if (this._actionDialog === null) {
@@ -779,10 +828,25 @@ const TgEntityMasterBehaviorImpl = {
                 this.focusPreferredView();
             }
         });
-        
+
+        // Don't close this master on save action if it is a part of compound master.
+        const menuSectionParent = getParentAnd(self, element => element.matches('tg-master-menu-item-section'));
+        if (menuSectionParent) {
+            const saveButton = self.$._saveAction;
+            if (saveButton) {
+                saveButton.closeAfterExecution = false;
+            }
+        }
+
+        // Create open master action function
+        self.tgOpenMasterAction = self._createOpenMasterAction();
+        self.shadowRoot.appendChild(self.tgOpenMasterAction);
     }, // end of ready callback
 
     attached: function () {
+        //centre UUID of open master action should bee updated as far as some masters receives their uuid later at attache phase.
+        this.tgOpenMasterAction.attrs.centreUuid = this.uuid;
+        this._resetState(); // existing state may cause problems for cached masters: for example previous entity was new and valid and next one invalid -- blocks closing of dialog with error
         this._cachedParentNode = this.parentNode;
         this.fire('tg-entity-master-attached', this, { node: this._cachedParentNode }); // as in 'detached', start bubbling on parent node
     },
@@ -967,15 +1031,21 @@ const TgEntityMasterBehaviorImpl = {
         self._actions = {};
 
         self._actions['REFRESH'] = {
+            entityType: self.entityType,
             shortDesc: 'REFRESH',
             longDesc: 'REFRESH ACTION...',
             enabledStates: ['EDIT'],
             action: function () {
                 return self.retrieve();
+            },
+            newAction: function(parentDialog, wasPersistedBeforeAction) {
+                self._newAction(parentDialog, wasPersistedBeforeAction);
             }
         };
         self._notifyActionPathsFor('REFRESH', true);
+
         self._actions['VALIDATE'] = {
+            entityType: self.entityType,
             shortDesc: 'VALIDATE',
             longDesc: 'VALIDATE ACTION...',
             enabledStates: ['EDIT'],
@@ -984,17 +1054,23 @@ const TgEntityMasterBehaviorImpl = {
             }
         };
         self._notifyActionPathsFor('VALIDATE', true);
+
         self._actions['SAVE'] = {
+            entityType: self.entityType,
             shortDesc: 'SAVE',
             longDesc: 'SAVE ACTION...',
             enabledStates: ['EDIT'],
-            action: function () {
-                return self.save();
+            action: function (continuation, continuationProperty) {
+                return self.save(continuation, continuationProperty);
+            },
+            newAction: function(parentDialog, wasPersistedBeforeAction) {
+                self._newAction(parentDialog, wasPersistedBeforeAction);
             }
         };
         self._notifyActionPathsFor('SAVE', true);
 
         self._actions['EDIT'] = {
+            entityType: self.entityType,
             shortDesc: 'EDIT',
             longDesc: 'EDIT ACTION...',
             enabledStates: ['VIEW'],
@@ -1018,6 +1094,7 @@ const TgEntityMasterBehaviorImpl = {
         }); */
 
         self._actions['VIEW'] = {
+            entityType: self.entityType,
             shortDesc: 'VIEW',
             longDesc: 'VIEW ACTION...',
             enabledStates: ['EDIT'],
@@ -1028,6 +1105,24 @@ const TgEntityMasterBehaviorImpl = {
             postAction: function (e) { }
         };
         self._notifyActionPathsFor('VIEW', false);
+    },
+
+    _createOpenMasterAction: function () {
+        const action = document.createElement('tg-ui-action');
+        action.uiRole = 'ICON'
+        action.showDialog = this._showDialog;
+        action.toaster = this.toaster;
+        action.createContextHolder = this._createContextHolder;
+        action.dynamicAction = true;
+        action.attrs = {
+            currentState: 'EDIT',
+            centreUuid: this.uuid
+        };
+        action.requireSelectionCriteria = 'false';
+        action.requireMasterEntity = 'true'
+        action.setAttribute("id", "tgOpenMasterAction");
+        action.setAttribute('hidden', '');
+        return action;
     },
 
     /**

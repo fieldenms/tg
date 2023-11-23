@@ -64,6 +64,18 @@ const entityCentreTemplate = html`
         
         <!--@custom-share-actions-->
         <tg-ui-action
+            id="tgOpenMasterAction"
+            ui-role='ICON'
+            show-dialog='[[_showDialog]]'
+            toaster='[[toaster]]'
+            create-context-holder='[[_createContextHolder]]'
+            dynamic-action
+            attrs='[[_tgOpenMasterActionAttrs]]'
+            require-selection-criteria='false'
+            require-master-entity='true'
+            hidden>
+        </tg-ui-action>
+        <tg-ui-action
             id="tgOpenHelpMasterAction"
             ui-role='ICON'
             component-uri = '/master_ui/ua.com.fielden.platform.entity.UserDefinableHelp'
@@ -76,6 +88,7 @@ const entityCentreTemplate = html`
             require-selected-entities='NONE'
             require-master-entity='false'
             pre-action = '[[_preOpenHelpMasterAction]]'
+            modify-functional-entity = '[[_modifyHelpEntity]]'
             post-action-success = '[[_postOpenHelpMasterAction]]'
             hidden>
         </tg-ui-action>
@@ -218,8 +231,8 @@ const egiMasterTemplate = html`
         _process-saver-error="[[_processSaverError]]"
         _saver-loading="{{_saverLoading}}">
             <!--@egi_editors-->
-            <tg-action slot="cancel-button" class="master-cancel-action" is-icon icon="clear" enabled-states='[[_actions.REFRESH.enabledStates]]' short-desc='Cancel' long-desc='Cancel changes' current-state='[[currentState]]' action='[[closeMaster]]' post-action='{{_postClose}}'></tg-action>
-            <tg-action slot="save-button" class="master-save-action" is-icon icon="check" enabled-states='[[_actions.SAVE.enabledStates]]' short-desc='Save' long-desc='Save changes' current-state='[[currentState]]' id='_saveAction' action='[[_actions.SAVE.action]]' post-action='{{_postSavedDefault}}' post-action-error='{{_postSavedDefaultError}}'></tg-action>
+            <tg-action role="refresh" slot="cancel-button" class="master-cancel-action" exclude-new exclude-close icon="clear" enabled-states='[[_actions.REFRESH.enabledStates]]' short-desc='Cancel' long-desc='Cancel changes' current-state='[[currentState]]' action='[[closeMaster]]' post-action='{{_postClose}}'></tg-action>
+            <tg-action role="save" slot="save-button" class="master-save-action" exclude-new exclude-close icon="check" enabled-states='[[_actions.SAVE.enabledStates]]' short-desc='Save' long-desc='Save changes' current-state='[[currentState]]' id='_saveAction' action='[[_actions.SAVE.action]]' post-action='{{_postSavedDefault}}' post-action-error='{{_postSavedDefaultError}}'></tg-action>
     </tg-entity-master>`;
 
 Polymer({

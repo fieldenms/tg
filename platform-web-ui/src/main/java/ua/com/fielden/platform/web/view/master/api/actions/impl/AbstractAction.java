@@ -34,6 +34,8 @@ public abstract class AbstractAction implements IImportable {
     private final String actionComponentName;
     private final String actionComponentPath;
     private final String indent = "                    ";
+    private boolean excludeNew = true;
+    private boolean excludeClose = true;
 
     /**
      * Creates {@link AbstractAction} from <code>functionalEntityType</code> type and other parameters.
@@ -120,6 +122,22 @@ public abstract class AbstractAction implements IImportable {
         this.closeAfterExecution = closeAfterExecution;
     }
 
+    public void setExcludeNew(final boolean excludeNew) {
+        this.excludeNew = excludeNew;
+    }
+
+    public boolean isExcludeNew() {
+        return excludeNew;
+    }
+
+    public void setExcludeClose(final boolean excludeClose) {
+        this.excludeClose = excludeClose;
+    }
+
+    public boolean isExcludeClose() {
+        return excludeClose;
+    }
+
     protected String enabledStatesString() {
         return EnabledState.ANY.equals(this.enabledState) ? "'EDIT', 'VIEW'" :
                 EnabledState.EDIT.equals(this.enabledState) ? "'EDIT'" :
@@ -145,12 +163,14 @@ public abstract class AbstractAction implements IImportable {
 
         final String actionSelector = "_actions." + this.name();
         attrs.put("entity-type", "[[" + actionSelector + ".entityType]]");
+        attrs.put("entity", "[[_currEntity]]");
         attrs.put("enabled-states", "[[" + actionSelector + ".enabledStates]]");
         attrs.put("short-desc", "[[" + actionSelector + ".shortDesc]]");
         attrs.put("long-desc", "[[" + actionSelector + ".longDesc]]");
         attrs.put("close-after-execution", closeAfterExecution);
         attrs.put("current-state", "[[currentState]]");
 
+        final String shortcut = shortcut();
         if (shortcut != null) {
             attrs.put("shortcut", shortcut);
         }

@@ -420,20 +420,22 @@ Polymer({
                     });
                 }
             }));
-            const embeddedMasterCancelChannel = self.uuid;
-            const compoundMasterCancelChannel = self.centreUuid;
-            const cancelTopic = 'refresh.post.success';
-            self._subscriptions.push(postal.subscribe({
-                channel: embeddedMasterCancelChannel,
-                topic: cancelTopic,
-                callback: function (data, envelope) {
-                    postal.publish({
-                        channel: compoundMasterCancelChannel,
-                        topic: cancelTopic,
-                        data: data
-                    });
-                }
-            }));
+            const embeddedMasterCloseChannel = self.uuid;
+            const compoundMasterCloseChannel = self.centreUuid;
+            const closeTopics = ['refresh.post.success', 'save.post.success'];
+            closeTopics.forEach(closeTopic => {
+                self._subscriptions.push(postal.subscribe({
+                    channel: embeddedMasterCloseChannel,
+                    topic: closeTopic,
+                    callback: function (data, envelope) {
+                        postal.publish({
+                            channel: compoundMasterCloseChannel,
+                            topic: closeTopic,
+                            data: data
+                        });
+                    }
+                }));
+            });
         }.bind(this), 0);
         //Needed to set the dynamic title
         this.fire('tg-dynamic-title-changed', this.sectionTitle);
@@ -659,14 +661,16 @@ Polymer({
     },
 
     _refreshCompoundMaster: function (data, envelope) {
-        this._isRefreshCycle = true;
+        if (!data.canClose) {
+            this._isRefreshCycle = true;
 
-        // promotes saved entity (main or detail) id into compound master "opener" in case of successful save
-        if (envelope.topic === 'save.post.success') {
-            this.augmentCompoundMasterOpenerWith(data.id);
+            // promotes saved entity (main or detail) id into compound master "opener" in case of successful save
+            if (envelope.topic === 'save.post.success') {
+                this.augmentCompoundMasterOpenerWith(data.id);
+            }
+
+            this.refreshCompoundMaster();
         }
-
-        this.refreshCompoundMaster();
     },
 
     _getMasterEntityChanged: function (newValue, oldValue) {

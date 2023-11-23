@@ -12,18 +12,6 @@ const template = html`<!-- TODO layout vertical -->
     <style include="tg-entity-master-styles"></style> <!-- imported as part of tg-entity-master-template-behavior to reduce the size of resultant generated file -->
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <tg-ui-action
-        id="tgOpenMasterAction"
-        ui-role='ICON'
-        show-dialog='[[_showDialog]]'
-        toaster='[[toaster]]'
-        create-context-holder='[[_createContextHolder]]'
-        dynamic-action
-        attrs='[[_tgOpenMasterActionAttrs]]'
-        require-selection-criteria='false'
-        require-master-entity='true'
-        hidden>
-    </tg-ui-action>
-    <tg-ui-action
         id="tgOpenHelpMasterAction"
         ui-role='ICON'
         component-uri = '/master_ui/ua.com.fielden.platform.entity.UserDefinableHelp'
@@ -37,6 +25,7 @@ const template = html`<!-- TODO layout vertical -->
         require-master-entity='false'
         current-entity = '[[_currentEntityForHelp()]]'
         pre-action = '[[_preOpenHelpMasterAction]]'
+        modify-functional-entity = '[[_modifyHelpEntity]]'
         post-action-success = '[[_postOpenHelpMasterAction]]'
         hidden>
     </tg-ui-action>

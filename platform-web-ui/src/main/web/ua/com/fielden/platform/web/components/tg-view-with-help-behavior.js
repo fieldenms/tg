@@ -1,5 +1,9 @@
 import {createDialog} from '/resources/egi/tg-dialog-util.js';
 
+const augmentCentreUuid = function (uuid) {
+    return `${uuid}_help`
+}
+
 export const TgViewWithHelpBehavior = {
 
     properties: {
@@ -10,21 +14,35 @@ export const TgViewWithHelpBehavior = {
             type: Object,
             value: null
         },
+
+        /**
+         * Attributes for the action that opens help entity master for the view that implements this behavior.
+         */
+        _tgOpenHelpMasterActionAttrs: Object,
     },
 
     ready: function () {
         this._helpMouseDownEventHandler = this._helpMouseDownEventHandler.bind(this);
         this._helpMouseUpEventHandler = this._helpMouseUpEventHandler.bind(this);
         this._postOpenHelpMasterAction = this._postOpenHelpMasterAction.bind(this);
+        this._modifyHelpEntity = this._modifyHelpEntity.bind(this);
         this._showHelpDialog = this._showHelpDialog.bind(this);
     },
 
+    attached: function () {
+        this._tgOpenHelpMasterActionAttrs = {
+            entityType: "ua.com.fielden.platform.entity.UserDefinableHelp",
+            currentState: 'EDIT',
+            centreUuid: augmentCentreUuid(this.uuid)
+        }
+    },
+
     _showHelpDialog: function (action) {
-        const closeEventChannel = this.uuid;
+        const closeEventChannel = augmentCentreUuid(this.uuid);
         const closeEventTopics = ['save.post.success', 'refresh.post.success'];
         this.async(function () {
             if (this._helpDialog === null) {
-                this._helpDialog = createDialog(this.uuid + "_help");
+                this._helpDialog = createDialog(augmentCentreUuid(this.uuid));
             }
             this._helpDialog.showDialog(action, closeEventChannel, closeEventTopics);
         }, 1);
@@ -68,6 +86,13 @@ export const TgViewWithHelpBehavior = {
             //Reset action type and timer;
             this._helpActionLongPress = false;
             this._helpActionTimer = null;
+        }
+    },
+
+    _modifyHelpEntity: function (bindingEntity, master, action) {
+        const saveButton = master.$._saveAction;
+        if (saveButton) {
+            saveButton.closeAfterExecution = bindingEntity.get("id") === null;
         }
     },
 
