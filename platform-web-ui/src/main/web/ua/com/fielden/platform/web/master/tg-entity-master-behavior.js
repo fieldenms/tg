@@ -4,6 +4,7 @@ import '/resources/components/postal-lib.js';
 import { tearDownEvent, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
 import {createDialog} from '/resources/egi/tg-dialog-util.js';
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
+import { createEntityActionThenCallback } from '/resources/master/actions/tg-entity-master-closing-utils.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { TgRequiredPropertiesFocusTraversalBehavior } from '/resources/components/tg-required-properties-focus-traversal-behavior.js';
 import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
@@ -603,6 +604,12 @@ const TgEntityMasterBehaviorImpl = {
                         const saveButton = self.$._saveAction;
                         if (saveButton) {
                             saveButton._asyncRunAfterContinuation(functionalEntity, continuationProperty);
+                        } else {
+                            self.save(functionalEntity, continuationProperty)
+                                .then(
+                                    createEntityActionThenCallback(self.centreUuid, 'save', '', postal, null, true),
+                                    function (value) { console.log('AJAX PROMISE CATCH', value); }
+                                );
                         }
                     };
                     actionModel.postActionError = function (functionalEntity) {
