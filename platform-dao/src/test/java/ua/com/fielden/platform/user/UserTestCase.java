@@ -57,6 +57,17 @@ public class UserTestCase extends AbstractDaoTestCase {
     }
 
     @Test
+    public void username_permits_spaces_dots_and_at_char() {
+        final User user = new_(User.class);
+        user.setKey("Name Surname");
+        assertEquals("Name Surname", user.getKey());
+        user.setKey("Name.Surname");
+        assertEquals("Name.Surname", user.getKey());
+        user.setKey("Name.Surname@fielden.com.au");
+        assertEquals("Name.Surname@fielden.com.au", user.getKey());
+    }
+
+    @Test
     public void propety_email_in_user_is_defined_with_almost_unique_validator() {
         final User user1 = coUser.findByKey("USER1");
         final MetaProperty<String> emailProp = user1.getProperty("email");
