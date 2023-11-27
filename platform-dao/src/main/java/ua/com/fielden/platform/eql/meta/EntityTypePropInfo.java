@@ -4,11 +4,12 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
 import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 
 /**
  * A structure that captures a query source yield-able entity-typed-property resolution related info within a query source of type <code>PARENT</code>.
- * 
+ *
  * @author TG Team
  *
  * @param <T>
@@ -24,10 +25,13 @@ public class EntityTypePropInfo<T extends AbstractEntity<?>> extends AbstractPro
 
     public EntityTypePropInfo(final String name, final EntityInfo<T> propEntityInfo, final Object hibType, final boolean required, final ExpressionModel expression, final boolean implicit) {
         super(name, hibType, expression, implicit);
+        if (propEntityInfo == null) {
+            throw new EqlMetadataGenerationException("Argument [propEntityInfo] should not be null for property [%s].".formatted(name));
+        }
         this.propEntityInfo = propEntityInfo;
         this.required = required;
     }
-    
+
     @Override
     public EntityTypePropInfo<T> cloneRenamed(final String newName) {
         return new EntityTypePropInfo<T>(newName, propEntityInfo, hibType, required);
@@ -36,8 +40,8 @@ public class EntityTypePropInfo<T extends AbstractEntity<?>> extends AbstractPro
     @Override
     public AbstractPropInfo<T> cloneWithoutExpression() {
         return new EntityTypePropInfo<T>(name, propEntityInfo, hibType, required);
-    }    
-    
+    }
+
     @Override
     public PropResolutionProgress resolve(final PropResolutionProgress context) {
         return propEntityInfo.resolve(context);
