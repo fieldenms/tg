@@ -18,10 +18,12 @@ public final class CompilationResult {
 
     private final boolean success;
     private final List<Diagnostic<? extends JavaFileObject>> diagnostics;
+    private final List<Throwable> processingErrors;
 
-    CompilationResult(final boolean success, final List<Diagnostic<? extends JavaFileObject>> diagnostics) {
+    CompilationResult(final boolean success, final List<Diagnostic<? extends JavaFileObject>> diagnostics, final List<Throwable> processingErrors) {
         this.success = success;
         this.diagnostics = new ArrayList<>(diagnostics);
+        this.processingErrors = new ArrayList<>(processingErrors);
     }
 
     public boolean success() {
@@ -30,6 +32,10 @@ public final class CompilationResult {
 
     public boolean failure() {
         return !success;
+    }
+
+    public List<Throwable> processingErrors() {
+        return Collections.unmodifiableList(processingErrors);
     }
 
     /**
