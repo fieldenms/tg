@@ -317,6 +317,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         // now let's process all properties
         for (final PropertyElement prop: properties) {
             final var propName = prop.getSimpleName().toString();
+            final var fieldNameForProp = fieldNameForProp(propName);
             final var propName_ = propName + "_";
             // ### static property holding the property's name ###
             // private static final String ${PROPERTY}_ = "${PROPERTY}";
@@ -332,11 +333,11 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
                 // property type is target for meta-model generation
                 // private Supplier<${METAMODEL}> ${PROPERTY};
                 final ParameterizedTypeName propTypeName = ParameterizedTypeName.get(ClassName.get(Supplier.class), propTypeMmcClassName);
-                fieldSpecBuilder = FieldSpec.builder(propTypeName, propName)
+                fieldSpecBuilder = FieldSpec.builder(propTypeName, fieldNameForProp)
                                             .addModifiers(Modifier.PRIVATE);
             } else {
                 // private final PropertyMetaModel ${PROPERTY};
-                fieldSpecBuilder = FieldSpec.builder(ClassName.get(PropertyMetaModel.class), propName)
+                fieldSpecBuilder = FieldSpec.builder(ClassName.get(PropertyMetaModel.class), fieldNameForProp)
                                             .addModifiers(Modifier.PRIVATE, Modifier.FINAL);
             }
             fieldSpecs.add(fieldSpecBuilder.build());
@@ -347,6 +348,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         final List<MethodSpec> methodSpecs = new ArrayList<>();
         for (final PropertyElement prop: properties) {
             final var propName = prop.getSimpleName().toString();
+            final var fieldNameForProp = fieldNameForProp(propName);
             final MethodSpec.Builder methodSpecBuilder = MethodSpec.methodBuilder(propName);
 
             final ClassName propTypeMmcClassName;
@@ -361,7 +363,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
                  */
                 methodSpecBuilder.addModifiers(Modifier.PUBLIC)
                                  .returns(propTypeMmcClassName)
-                                 .addStatement("return $L.get()", propName);
+                                 .addStatement("return $L.get()", fieldNameForProp);
             } else {
                 propTypeMmcClassName = null;
                 /*
@@ -371,7 +373,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
                  */
                 methodSpecBuilder.addModifiers(Modifier.PUBLIC)
                                  .returns(ClassName.get(PropertyMetaModel.class))
-                                 .addStatement("return $L", propName);
+                                 .addStatement("return $L", fieldNameForProp);
             }
 
             buildJavadoc(prop, methodSpecBuilder, propTypeMmcClassName);
@@ -413,6 +415,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         final CodeBlock.Builder constructorStatementsBuilder = CodeBlock.builder();
         for (final PropertyElement prop: properties) {
             final var propName = prop.getSimpleName().toString();
+            final var fieldNameForProp = fieldNameForProp(propName);
             final var propName_ = propName + "_";
             if (propertyTypeMetamodeledTest.test(prop)) {
                 final MetaModelConcept propTypeMmc = new MetaModelConcept(entityFinder.newEntityElement(prop.getTypeAsTypeElementOrThrow()));
@@ -434,19 +437,19 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
                                 propTypeMetaModelClassName, "value", propTypeMetaModelClassName, propName_)
                         .addStatement(
                                 "$L = () -> $L",
-                                propName, "value")
+                                fieldNameForProp, "value")
                         .addStatement("return $L", "value")
                         .unindent().add("}")
                         .build();
                 final CodeBlock code = CodeBlock.builder()
-                        .addStatement("this.$L = $L", propName, lambda.toString())
+                        .addStatement("this.$L = $L", fieldNameForProp, lambda.toString())
                         .build();
                 constructorStatementsBuilder.add(code);
             } else {
                 // this.${PROPERTY} = new PropertyMetaModel ( joinPath( ${PROPERTY}_ ) );
                 constructorStatementsBuilder.addStatement(
                         "this.$L = new $T(joinPath($L))",
-                        propName, ClassName.get(PropertyMetaModel.class), propName_);
+                        fieldNameForProp, ClassName.get(PropertyMetaModel.class), propName_);
             }
         }
 
@@ -905,5 +908,16 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
     private static String nameFieldForMetaModel(final String simpleName) {
         return simpleName + "_";
     }
+
+    /**
+     * Makes a field name to be used in a meta-model class to represent a entity property.
+     *
+     * @param propName
+     * @return
+     */
+    private String fieldNameForProp(String propName) {
+        return propName + "_pn";
+    }
+
 
 }
