@@ -1,19 +1,24 @@
 package ua.com.fielden.platform.processors.appdomain;
 
-import com.squareup.javapoet.*;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
-import ua.com.fielden.platform.domain.PlatformDomainTypes;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
-import ua.com.fielden.platform.processors.DateTimeUtils;
-import ua.com.fielden.platform.processors.appdomain.annotation.ExtendApplicationDomain;
-import ua.com.fielden.platform.processors.appdomain.annotation.RegisteredEntity;
-import ua.com.fielden.platform.processors.appdomain.annotation.SkipEntityRegistration;
-import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
-import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
-import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
-import ua.com.fielden.platform.utils.CollectionUtil;
+import static java.util.stream.Collectors.toSet;
+import static javax.lang.model.element.Modifier.FINAL;
+import static javax.lang.model.element.Modifier.PRIVATE;
+import static javax.lang.model.element.Modifier.PUBLIC;
+import static javax.lang.model.element.Modifier.STATIC;
+import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asTypeElementOfTypeMirror;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
@@ -22,16 +27,34 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ErrorType;
+import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic.Kind;
-import java.io.IOException;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import static java.util.stream.Collectors.toSet;
-import static javax.lang.model.element.Modifier.*;
-import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asTypeElementOfTypeMirror;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+
+import com.squareup.javapoet.AnnotationSpec;
+import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
+import com.squareup.javapoet.FieldSpec;
+import com.squareup.javapoet.JavaFile;
+import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.WildcardTypeName;
+
+import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.domain.PlatformDomainTypes;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
+import ua.com.fielden.platform.processors.DateTimeUtils;
+import ua.com.fielden.platform.processors.appdomain.annotation.ExtendApplicationDomain;
+import ua.com.fielden.platform.processors.appdomain.annotation.RegisterEntity;
+import ua.com.fielden.platform.processors.appdomain.annotation.RegisteredEntity;
+import ua.com.fielden.platform.processors.appdomain.annotation.SkipEntityRegistration;
+import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
+import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
+import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
+import ua.com.fielden.platform.utils.CollectionUtil;
 
 /**
  * An annotation processor that generates and maintains the {@code ApplicationDomain} class, which implements {@link IApplicationDomainProvider}.
@@ -108,7 +131,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         final Optional<ApplicationDomainElement> maybeAppDomainRootElt = findApplicationDomainInRound(roundEnv);
 
         // 3. input extension
-        final Optional<ExtendApplicationDomain.Mirror> inputExtension = findApplicationDomainExtensionInRound(roundEnv);
+        final Optional<ExtendApplicationDomainMirror> inputExtension = findApplicationDomainExtensionInRound(roundEnv);
 
         // this is an incremental build, but it doesn't affect us
         if (inputEntities.isEmpty() && maybeAppDomainRootElt.isEmpty() && inputExtension.isEmpty()) {
@@ -141,7 +164,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         return entity.getAnnotation(SkipEntityRegistration.class) != null;
     }
 
-    private void generate(final Collection<EntityElement> inputEntities, final Optional<ExtendApplicationDomain.Mirror> inputExtension) {
+    private void generate(final Collection<EntityElement> inputEntities, final Optional<ExtendApplicationDomainMirror> inputExtension) {
         printNote("Generating %s from scratch", APPLICATION_DOMAIN_SIMPLE_NAME);
 
         final List<EntityElement> toRegister = inputEntities.stream()
@@ -159,7 +182,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
 
     private void regenerate(
             final ApplicationDomainElement appDomainElt,
-            final Collection<EntityElement> inputEntities, final Optional<ExtendApplicationDomain.Mirror> inputExtension)
+            final Collection<EntityElement> inputEntities, final Optional<ExtendApplicationDomainMirror> inputExtension)
     {
         final Set<EntityElement> toUnregister = new HashSet<>();
         final Set<EntityElement> toRegister = new HashSet<>();
@@ -384,7 +407,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
      * @param roundEnv
      * @return
      */
-    protected Optional<ExtendApplicationDomain.Mirror> findApplicationDomainExtensionInRound(final RoundEnvironment roundEnv) {
+    protected Optional<ExtendApplicationDomainMirror> findApplicationDomainExtensionInRound(final RoundEnvironment roundEnv) {
         final List<? extends Element> extensions = roundEnv.getRootElements().stream()
                 .filter(elt -> elt.getAnnotation(ExtendApplicationDomain.class) != null)
                 .toList();
@@ -394,14 +417,57 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         }
 
         return extensions.stream()
-                .map(elt -> ExtendApplicationDomain.Mirror.from(elt.getAnnotation(ExtendApplicationDomain.class), entityFinder))
+                .map(elt -> ExtendApplicationDomainMirror.fromAnnotation(elt.getAnnotation(ExtendApplicationDomain.class), entityFinder))
                 .findFirst();
     }
 
-    protected Stream<EntityElement> streamEntitiesFromExtension(final ExtendApplicationDomain.Mirror mirror) {
+    protected Stream<EntityElement> streamEntitiesFromExtension(final ExtendApplicationDomainMirror mirror) {
         return mirror.entities().stream() // stream of Mirror instances of @RegisterEntity
                 // map to EntityElement
                 .map(atRegEntityMirror -> entityFinder.newEntityElement(asTypeElementOfTypeMirror(atRegEntityMirror.value())));
+    }
+
+    /**
+     * A helper class that represents instances of {@link ExtendApplicationDomain} on the level of {@link TypeMirror}.
+     */
+    static class ExtendApplicationDomainMirror {
+        private final List<RegisterEntityMirror> entities;
+
+        private ExtendApplicationDomainMirror(final Collection<RegisterEntityMirror> entities) {
+            this.entities = new ArrayList<>(entities);
+        }
+
+        public static ExtendApplicationDomainMirror fromAnnotation(final ExtendApplicationDomain annot, final ElementFinder finder) {
+            final List<RegisterEntityMirror> atRegisterEntityMirrors = Stream.of(annot.entities())
+                    .map(atRegisterEntity -> RegisterEntityMirror.fromAnnotation(atRegisterEntity, finder))
+                    .toList();
+
+            return new ExtendApplicationDomainMirror(atRegisterEntityMirrors);
+        }
+
+        public List<RegisterEntityMirror> entities() {
+            return Collections.unmodifiableList(entities);
+        }
+    }
+
+    /**
+     * A helper class that represents instances of {@link RegisterEntity} on the level of {@link TypeMirror}.
+     */
+    static class RegisterEntityMirror {
+        private final TypeMirror value;
+
+        private RegisterEntityMirror(final TypeMirror value) {
+            this.value = value;
+        }
+
+        public static RegisterEntityMirror fromAnnotation(final RegisterEntity annot, final ElementFinder finder) {
+            final TypeMirror entityType = finder.getAnnotationElementValueOfClassType(annot, RegisterEntity::value);
+            return new RegisterEntityMirror(entityType);
+        }
+
+        public TypeMirror value() {
+            return value;
+        }
     }
 
 }
