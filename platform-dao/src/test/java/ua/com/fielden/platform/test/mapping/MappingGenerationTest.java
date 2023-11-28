@@ -7,7 +7,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
+import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
 import ua.com.fielden.platform.dashboard.DashboardRefreshFrequency;
 import ua.com.fielden.platform.dashboard.DashboardRefreshFrequencyUnit;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -28,7 +28,8 @@ public class MappingGenerationTest {
         domainTypes.add(DashboardRefreshFrequencyUnit.class);
         domainTypes.add(EntityCentreConfig.class);
         final DomainMetadata mg = new DomainMetadata(null, null, domainTypes, DbVersion.H2);
-        final String tgModelMapping = new HibernateMappingsGenerator().generateMappings(mg);
+
+        final String tgModelMapping = HibernateMappingsGenerator.generateMappings(mg.eqlDomainMetadata);
         final String expectedMapping = String.format("""
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE hibernate-mapping PUBLIC
