@@ -73,7 +73,7 @@ public class ApplicationDomainProcessorTest {
         final JavaFile firstExtension = JavaFile.builder("test",
                 TypeSpec.classBuilder("FirstExtension")
                 .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
-                        .addMember("entities", "{ $L, $L }",
+                        .addMember("value", "{ $L, $L }",
                                 AnnotationSpec.get(RegisterEntityBuilder.builder(ExampleEntity.class).build()),
                                 AnnotationSpec.get(RegisterEntityBuilder.builder(PersistentEntity.class).build()))
                         .build())
@@ -380,7 +380,7 @@ public class ApplicationDomainProcessorTest {
             final JavaFile extensionV1 = JavaFile.builder("test.extension",
                     TypeSpec.classBuilder("FirstExtension")
                     .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
-                            .addMember("entities", "{ $L }",
+                            .addMember("value", "{ $L }",
                                     // initally, register 1 external entity
                                     AnnotationSpec.get(RegisterEntityBuilder.builder(ExampleEntity.class).build()))
                             .build())
@@ -398,7 +398,7 @@ public class ApplicationDomainProcessorTest {
             final JavaFile extensionV2 = JavaFile.builder("test.extension",
                     TypeSpec.classBuilder("FirstExtension")
                     .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
-                            .addMember("entities", "{ $L, $L }",
+                            .addMember("value", "{ $L, $L }",
                                     // the previous one
                                     AnnotationSpec.get(RegisterEntityBuilder.builder(ExampleEntity.class).build()),
                                     // include a new external entity
@@ -598,7 +598,7 @@ public class ApplicationDomainProcessorTest {
             final JavaFile extensionV1 = JavaFile.builder("test.extension",
                     TypeSpec.classBuilder("FirstExtension")
                     .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
-                            .addMember("entities", "{ $L, $L }",
+                            .addMember("value", "{ $L, $L }",
                                     AnnotationSpec.get(RegisterEntityBuilder.builder(ExampleEntity.class).build()),
                                     AnnotationSpec.get(RegisterEntityBuilder.builder(PersistentEntity.class).build()))
                             .build())
@@ -615,7 +615,7 @@ public class ApplicationDomainProcessorTest {
             final JavaFile extensionV2 = JavaFile.builder("test.extension",
                     TypeSpec.classBuilder("FirstExtension")
                     .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
-                            .addMember("entities", "{ $L }",
+                            .addMember("value", "{ $L }",
                                     // unregister PersistentEntity
                                     AnnotationSpec.get(RegisterEntityBuilder.builder(ExampleEntity.class).build()))
                             .build())
@@ -661,14 +661,14 @@ public class ApplicationDomainProcessorTest {
         final JavaFile extension1 = JavaFile.builder("test",
                 TypeSpec.classBuilder("FirstExtension")
                 .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
-                        .addMember("entities", "{ $L }", AnnotationSpec.get(RegisterEntityBuilder.builder(ExampleEntity.class).build()))
+                        .addMember("value", "{ $L }", AnnotationSpec.get(RegisterEntityBuilder.builder(ExampleEntity.class).build()))
                         .build())
                 .build())
             .build();
         final JavaFile extension2 = JavaFile.builder("test",
                 TypeSpec.classBuilder("SecondExtension")
                 .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
-                        .addMember("entities", "{ $L }", AnnotationSpec.get(RegisterEntityBuilder.builder(ExampleEntity.class).build()))
+                        .addMember("value", "{ $L }", AnnotationSpec.get(RegisterEntityBuilder.builder(ExampleEntity.class).build()))
                         .build())
                 .build())
             .build();
