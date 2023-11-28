@@ -71,19 +71,18 @@ import ua.com.fielden.platform.utils.CollectionUtil;
  * The maintenance of the generated {@code ApplicationDomain} is carried out according to the following rules:
  * <ul>
  *  <li>New domain entity types are incrementally registered.</li>
- *  <li>Registered entity types that cannot be located any more (e.g., due to removal of the java source) are deregistered.</li>
+ *  <li>Registered entity types that cannot be located any more (e.g., due to removal of the java source) are de-registered.</li>
  *  <li>Registered entity types that no longer wish to be registered or are structurally modified in such a way that they are no longer
- *      domain entity types are deregistered.</li>
+ *      domain entity types are de-registered.</li>
  * </ul>
  *
- * Renaming of java sources by means of the IDE refactoring capabilities should automatically lead to the respective renaming in the generated
- * {@code ApplicationDomain}.
+ * Renaming of java sources by means of IDE refactoring capabilities should automatically lead to the adjustment of {@code ApplicationDomain}.
  * <p>
  * To exclude application-level entity types from registration, annotation {@link SkipEntityRegistration} should be used.
  *
  * <h3>Registration of 3rd-party entities</h3>
- * 3rd-party entities are those that come from dependencies. Their registration requires a designated application-level class that
- * must be annotated with {@link ExtendApplicationDomain}, which shall be used to specify them.
+ * External, 3rd-party entities are those that come from dependencies. Their registration requires for one of the application-level classes to be annotated with {@link ExtendApplicationDomain}, listing external entity types.
+ * Most TG-based applications have class {@code ApplicationConfig} in the {@code pojo-bl} module. It represents a convenient place for specifying external entity types to be registered.
  *
  * @author TG Team
  */
@@ -110,9 +109,9 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
 
     @Override
     protected boolean processRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-        // if this is an incremental build, then any newly created entity types will be passed to the first round
-        // otherwise it's a full build and all sources will passed to the first round
-        // therefore, we do not care about further rounds
+        // if this is an incremental build, then any newly created entity types would be passed into the first round
+        // otherwise, it's a full build and all sources would also be passed into the first round
+        // therefore, there is no need for any processing in case of additional rounds beyond the first one
         if (getRoundNumber() > 1) {
             return false;
         }
@@ -141,9 +140,9 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         }
 
         // if ApplicationDomain is not among root elements, then search through the whole environment
-        final Optional<ApplicationDomainElement> maybeAppDomainElt = maybeAppDomainRootElt.isEmpty() ?
-                findApplicationDomain() : maybeAppDomainRootElt.map(elt -> new ApplicationDomainElement(elt, entityFinder));
-
+        final Optional<ApplicationDomainElement> maybeAppDomainElt = maybeAppDomainRootElt.isPresent()
+                                                                     ? maybeAppDomainRootElt.map(elt -> new ApplicationDomainElement(elt, entityFinder))
+                                                                     : findApplicationDomain();
         maybeAppDomainElt.ifPresentOrElse(elt -> {
             // incremental build <=> regenerate
             printNote("Found existing %s (%s registered entities)", elt.getSimpleName(), elt.entities().size() + elt.externalEntities().size());
