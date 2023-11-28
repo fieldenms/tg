@@ -16,6 +16,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -124,7 +125,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         final Set<EntityElement> inputEntities = roundEnv.getRootElements().stream()
             .filter(elt -> entityFinder.isEntityType(elt.asType()))
             .map(elt -> entityFinder.newEntityElement((TypeElement) elt))
-            .collect(Collectors.toSet());
+            .collect(Collectors.toCollection(TreeSet::new));
 
         // 2. previously generated ApplicationDomain
         // removal of a registered entity will cause recompilation of ApplicationDomain
@@ -246,11 +247,11 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
                 || !toRegister.isEmpty() || !externalToRegister.isEmpty()) {  // anything to include?
             printNote("Regenerating %s", appDomainElt.getSimpleName());
 
-            final Set<EntityElement> registeredEntities = new HashSet<>(appDomainElt.entities());
+            final Set<EntityElement> registeredEntities = new TreeSet<>(appDomainElt.entities());
             registeredEntities.removeAll(toUnregister);
             registeredEntities.addAll(toRegister);
 
-            final Set<EntityElement> externalRegisteredEntities = new HashSet<>(appDomainElt.externalEntities());
+            final Set<EntityElement> externalRegisteredEntities = new TreeSet<>(appDomainElt.externalEntities());
             externalRegisteredEntities.removeAll(externalToUnregister);
             externalRegisteredEntities.addAll(externalToRegister);
 
@@ -269,6 +270,11 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
             var bld = builder;
             for (final var entity: registeredEntities) {
                 bld = bld.addStatement("add($T.class)", ClassName.get(entity.element()));
+            }
+            if (!externalEntities.isEmpty()) {
+                bld.add("///////////////////////\n");
+                bld.add("// External Entities //\n");
+                bld.add("///////////////////////\n");
             }
             for (final var entity: externalEntities) {
                 bld = bld.addStatement("add($T.class)", ClassName.get(entity.element()));
