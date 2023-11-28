@@ -435,7 +435,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
     /**
      * A helper class that represents instances of {@link ExtendApplicationDomain} on the level of {@link TypeMirror}.
      */
-    static class ExtendApplicationDomainMirror {
+    private static class ExtendApplicationDomainMirror {
         private final List<RegisterEntityMirror> entities;
 
         private ExtendApplicationDomainMirror(final Collection<RegisterEntityMirror> entities) {
@@ -443,7 +443,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         }
 
         public static ExtendApplicationDomainMirror fromAnnotation(final ExtendApplicationDomain annot, final ElementFinder finder) {
-            final List<RegisterEntityMirror> atRegisterEntityMirrors = Stream.of(annot.entities())
+            final List<RegisterEntityMirror> atRegisterEntityMirrors = Stream.of(annot.value())
                     .map(atRegisterEntity -> RegisterEntityMirror.fromAnnotation(atRegisterEntity, finder))
                     .toList();
 
@@ -458,7 +458,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
     /**
      * A helper class that represents instances of {@link RegisterEntity} on the level of {@link TypeMirror}.
      */
-    static class RegisterEntityMirror {
+    private static class RegisterEntityMirror {
         private final TypeMirror value;
 
         private RegisterEntityMirror(final TypeMirror value) {

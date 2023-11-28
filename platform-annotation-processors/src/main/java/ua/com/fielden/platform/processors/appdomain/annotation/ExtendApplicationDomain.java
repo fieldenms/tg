@@ -25,6 +25,6 @@ public @interface ExtendApplicationDomain {
     /**
      * A list of additional entity types that should be registered.
      */
-    RegisterEntity[] entities() default {};
+    RegisterEntity[] value();
 
 }
