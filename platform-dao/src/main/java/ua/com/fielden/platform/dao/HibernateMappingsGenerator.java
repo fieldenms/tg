@@ -7,8 +7,9 @@ import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.query.metadata.DomainMetadata.specialProps;
 
 import java.lang.reflect.Field;
-import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.Logger;
@@ -33,9 +34,9 @@ public class HibernateMappingsGenerator {
     private static final Logger LOGGER = getLogger(HibernateMappingsGenerator.class);
 
     public static final String ID_SEQUENCE_NAME = "TG_ENTITY_ID_SEQ";
-    
+
     public String generateMappings(final DomainMetadata domainMetadata) {
-        final Collection<PersistedEntityMetadata<?>> entityMetadatas = domainMetadata.getPersistedEntityMetadatas();
+        final Set<PersistedEntityMetadata<?>> entityMetadatas = new TreeSet<>(domainMetadata.getPersistedEntityMetadatas());
         final StringBuffer sb = new StringBuffer();
         sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         sb.append("<!DOCTYPE hibernate-mapping PUBLIC\n");
@@ -181,11 +182,11 @@ public class HibernateMappingsGenerator {
             return generateOneToOneEntityIdMapping(propMetadata.getName(), propMetadata.getColumn(), propMetadata.getTypeString());
         default:
             if (propMetadata.getName().equals(ID)) {
-                return generateEntityIdMapping(propMetadata.getName(), propMetadata.getColumn(), propMetadata.getTypeString(), dbVersion);    
+                return generateEntityIdMapping(propMetadata.getName(), propMetadata.getColumn(), propMetadata.getTypeString(), dbVersion);
             } else if (propMetadata.getName().equals(VERSION)) {
-                return generateEntityVersionMapping(propMetadata.getName(), propMetadata.getColumn(), propMetadata.getTypeString());    
+                return generateEntityVersionMapping(propMetadata.getName(), propMetadata.getColumn(), propMetadata.getTypeString());
             } else {
-                return generatePlainPropertyMapping(propMetadata.getName(), propMetadata.getColumns(), propMetadata.getTypeString());    
+                return generatePlainPropertyMapping(propMetadata.getName(), propMetadata.getColumns(), propMetadata.getTypeString());
             }
         }
     }
