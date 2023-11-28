@@ -56,9 +56,9 @@ public class Prop1 implements ISingleOperand1<Prop2> {
 
     public static final List<AbstractQuerySourceItem<?>> enhancePath(final List<AbstractQuerySourceItem<?>> originalPath) {
         final AbstractQuerySourceItem<?> lastResolutionItem = originalPath.get(originalPath.size() - 1);
-        if (lastResolutionItem instanceof QuerySourceItemForComponentType && ((QuerySourceItemForComponentType<?>) lastResolutionItem).getSubitems().size() == 1) {
+        if (lastResolutionItem instanceof QuerySourceItemForComponentType<?> lastResolutionItemAsComponent && lastResolutionItemAsComponent.getSubitems().size() == 1) {
             final List<AbstractQuerySourceItem<?>> enhancedPath = new ArrayList<>(originalPath);
-            final AbstractQuerySourceItem<?> autoResolvedItem = ((QuerySourceItemForComponentType<?>) lastResolutionItem).getSubitems().values().iterator().next();
+            final AbstractQuerySourceItem<?> autoResolvedItem = lastResolutionItemAsComponent.getSubitems().values().iterator().next();
             enhancedPath.add(autoResolvedItem);
             return enhancedPath;
         }
