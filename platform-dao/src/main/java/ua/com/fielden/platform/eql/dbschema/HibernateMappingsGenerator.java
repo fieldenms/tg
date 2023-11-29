@@ -14,6 +14,8 @@ import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.logging.log4j.Logger;
 
@@ -34,7 +36,7 @@ public class HibernateMappingsGenerator {
     private static final Logger LOGGER = getLogger(HibernateMappingsGenerator.class);
 
     public static final String ID_SEQUENCE_NAME = "TG_ENTITY_ID_SEQ";
-    
+
     public static String generateMappings(final EqlDomainMetadata domainMetadata) {
         final StringBuffer sb = new StringBuffer();
         sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
@@ -43,7 +45,8 @@ public class HibernateMappingsGenerator {
         sb.append("\"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\">\n");
         sb.append("<hibernate-mapping default-access=\"field\">\n");
 
-        for (final EqlEntityMetadata entry : domainMetadata.entityPropsMetadata().values()) {
+        final Set<EqlEntityMetadata> entries = new TreeSet<>(domainMetadata.entityPropsMetadata().values());
+        for (final EqlEntityMetadata entry : entries) {
             if (entry.typeInfo.category == PERSISTENT) {
                 final String typeName = entry.typeInfo.entityType.getName();
                 try {
@@ -147,7 +150,7 @@ public class HibernateMappingsGenerator {
         if (isOneToOne(type)) {
             sb.append(generateOneToOneEntityIdMapping(id.name, id.column.name, id.hibType.getClass().getName()));
         } else {
-            sb.append(generateEntityIdMapping(id.name, id.column.name, id.hibType.getClass().getName(), dbVersion));    
+            sb.append(generateEntityIdMapping(id.name, id.column.name, id.hibType.getClass().getName(), dbVersion));
         }
         final EqlPropertyMetadata version = propsMetadata.stream().filter(e -> VERSION.equals(e.name)).findAny().get();
         sb.append(generateEntityVersionMapping(version.name, version.column.name, version.hibType.getClass().getName()));
@@ -178,9 +181,9 @@ public class HibernateMappingsGenerator {
             return generateUnionEntityPropertyMapping(propMetadata);
         } else if (isPersistedEntityType(propMetadata.javaType)) {
             if (KEY.equals(propMetadata.name)) {
-                return generateOneToOnePropertyMapping(propMetadata.name, propMetadata.javaType);    
+                return generateOneToOnePropertyMapping(propMetadata.name, propMetadata.javaType);
             } else {
-                return generateManyToOnePropertyMapping(propMetadata.name, propMetadata.column.name, propMetadata.javaType);    
+                return generateManyToOnePropertyMapping(propMetadata.name, propMetadata.column.name, propMetadata.javaType);
             }
         } else {
             final List<String> columns = new ArrayList<>();
@@ -189,7 +192,7 @@ public class HibernateMappingsGenerator {
                     columns.add(subitem.column.name);
                 }
             }
-            final PropColumn singleColumn = propMetadata.subitems().size() == 1 ? propMetadata.subitems().get(0).column : propMetadata.column;  
+            final PropColumn singleColumn = propMetadata.subitems().size() == 1 ? propMetadata.subitems().get(0).column : propMetadata.column;
             return generatePlainPropertyMapping(propMetadata.name, singleColumn, singleColumn == null ? columns : emptyList(), propMetadata.hibType.getClass().getName());
         }
     }

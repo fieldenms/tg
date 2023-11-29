@@ -6,11 +6,11 @@ import java.util.List;
 
 /**
  * A base type that implements {@link TypeElement}, which is a subtype of {@link Element}.
- * 
+ *
  * @author TG Team
  *
  */
-abstract class AbstractForwardingTypeElement extends AbstractForwardingElement<TypeElement> implements TypeElement {
+public abstract class AbstractForwardingTypeElement extends AbstractForwardingElement<TypeElement> implements TypeElement {
 
     protected AbstractForwardingTypeElement(final TypeElement element) {
         super(element);
