@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.processors.test_utils;
+package ua.com.fielden.platform.test_utils;
 
 import ua.com.fielden.platform.utils.CollectionUtil;
 
