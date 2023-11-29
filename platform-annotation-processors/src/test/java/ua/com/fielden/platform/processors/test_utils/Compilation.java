@@ -135,7 +135,7 @@ public final class Compilation {
     }
 
     private CompilationResult doCompile(final EvaluatingProcessor processor) {
-        final MyJavaFileManager fileManager = new MyJavaFileManager(this.fileManager);
+        final ForwardingJavaFileManagerWithCache fileManager = new ForwardingJavaFileManagerWithCache(this.fileManager);
         final CompilationTask task = compiler.getTask(
                 null, // Writer for additional output from the compiler (null => System.err)
                 fileManager,
@@ -219,11 +219,11 @@ public final class Compilation {
     /**
      * A forwarding java file manager that remembers generated sources so that they can be retrieved later.
      */
-    private static final class MyJavaFileManager extends ForwardingStandardJavaFileManager {
+    private static final class ForwardingJavaFileManagerWithCache extends ForwardingStandardJavaFileManager {
 
         private final List<JavaFileObject> generatedJavaSources = new ArrayList<>();
 
-        MyJavaFileManager(StandardJavaFileManager fileManager) {
+        ForwardingJavaFileManagerWithCache(StandardJavaFileManager fileManager) {
             super(fileManager);
         }
 
