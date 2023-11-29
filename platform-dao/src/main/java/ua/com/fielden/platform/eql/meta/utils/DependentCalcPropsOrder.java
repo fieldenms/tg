@@ -90,8 +90,8 @@ public class DependentCalcPropsOrder {
         for (final AbstractQuerySourceItem<?> prop : et.getProps().values()) {
             if (prop.expression != null && !prop.name.equals(KEY)) {
                 result.add(new PropChunk(prop.name, prop));
-            } else if (prop.hasExpression() && prop instanceof QuerySourceItemForComponentType) {
-                for (final AbstractQuerySourceItem<?> subprop : ((QuerySourceItemForComponentType<?>) prop).getSubitems().values()) {
+            } else if (prop.hasExpression() && prop instanceof QuerySourceItemForComponentType<?> propOfQuerySourceItemForComponentType) {
+                for (final AbstractQuerySourceItem<?> subprop : propOfQuerySourceItemForComponentType.getSubitems().values()) {
                     if (subprop.expression != null) {
                         result.add(new PropChunk(prop.name + "." + subprop.name, subprop));
                     }

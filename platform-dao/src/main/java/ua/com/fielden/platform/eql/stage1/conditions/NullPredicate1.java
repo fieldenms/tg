@@ -39,8 +39,7 @@ public class NullPredicate1 implements ICondition1<ICondition2<?>> {
     @Override
     public ICondition2<?> transform(final TransformationContextFromStage1To2 context) {
         final ISingleOperand2<?> transformedOperand = operand.transform(context);
-        if (transformedOperand instanceof Prop2 && isUnionEntityType(((Prop2) transformedOperand).type.javaType())) {
-            final Prop2 prop = (Prop2) transformedOperand;
+        if (transformedOperand instanceof Prop2 prop && isUnionEntityType(prop.type.javaType())) {
             final QuerySourceItemForUnionType<?> lastResolutionItem = (QuerySourceItemForUnionType<?>) prop.getPath().get(prop.getPath().size() - 1);
             final List<ICondition2<?>> nullPredicates = new ArrayList<>();
 

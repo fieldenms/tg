@@ -182,8 +182,8 @@ public abstract class AbstractQuery1 {
     private static List<OrderBy2> transformForYield(final OrderBy2 original, final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
         if (yields.getYieldsMap().containsKey(original.yieldName)) {
             final Yield2 yield = yields.getYieldsMap().get(original.yieldName);
-            if (yield.operand instanceof Prop2 && needsExtraction(((Prop2) yield.operand).lastPart())) {
-                return transformForOperand(yield.operand, original.isDesc);
+            if (yield.operand instanceof Prop2 yieldedProp && needsExtraction(yieldedProp.lastPart())) {
+                return transformForOperand(yieldedProp, original.isDesc);
             } else {
                 return asList(original);
             }
@@ -201,15 +201,15 @@ public abstract class AbstractQuery1 {
     }
 
     private static List<OrderBy2> transformForOperand(final ISingleOperand2<?> operand, final boolean isDesc) {
-        return operand instanceof Prop2 ? //
-                extract((Prop2) operand).stream().map(keySubprop -> new OrderBy2(keySubprop, isDesc)).collect(toList()) : //
-                asList(new OrderBy2(operand, isDesc));
+        return operand instanceof Prop2 operandAsProp
+                ? extract(operandAsProp).stream().map(keySubprop -> new OrderBy2(keySubprop, isDesc)).collect(toList())
+                : asList(new OrderBy2(operand, isDesc));
     }
 
     private static List<GroupBy2> enhance(final GroupBy2 original) {
-        return original.operand instanceof Prop2 ? //
-                extract((Prop2) original.operand).stream().map(keySubprop -> new GroupBy2(keySubprop)).collect(toList()) : //
-                asList(original);
+        return original.operand instanceof Prop2 originalOperandAsProp
+                ? extract(originalOperandAsProp).stream().map(keySubprop -> new GroupBy2(keySubprop)).collect(toList())
+                : asList(original);
     }
 
     @Override
