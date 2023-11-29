@@ -5,7 +5,7 @@ import java.util.SortedMap;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 public abstract class AbstractEntityMetadata<ET extends AbstractEntity<?>> {
-    private final Class<ET> type;
+    public final Class<ET> type;
     private final SortedMap<String, PropertyMetadata> props;
 
     protected AbstractEntityMetadata(final Class<ET> type, final SortedMap<String, PropertyMetadata> props) {

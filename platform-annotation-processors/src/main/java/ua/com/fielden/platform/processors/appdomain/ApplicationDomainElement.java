@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.processors.appdomain;
 
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Stream;
 
 import javax.lang.model.AnnotatedConstruct;
@@ -18,17 +20,17 @@ import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 
 /**
- * Represents an element modeling the generated {@code ApplicationDomain} class.
+ * Represents an element that models a generated {@code ApplicationDomain} class.
  *
  * @author TG Team
  */
 public class ApplicationDomainElement extends AbstractForwardingTypeElement {
 
     /** Currently registered entities */
-    private final List<EntityElement> entities = new LinkedList<>();
-    private final List<EntityElement> externalEntities = new LinkedList<>();
+    private final Set<EntityElement> entities = new TreeSet<>();
+    private final Set<EntityElement> externalEntities = new TreeSet<>();
     /** Entity types that cannot be located (e.g., due to removal/renaming) */
-    private final List<ErrorType> errorTypes = new LinkedList<>();
+    private final List<ErrorType> errorTypes = new ArrayList<>();
 
     private ApplicationDomainElement(final TypeElement element) {
         super(element);
@@ -57,12 +59,12 @@ public class ApplicationDomainElement extends AbstractForwardingTypeElement {
             });
     }
 
-    public List<EntityElement> entities() {
-        return Collections.unmodifiableList(entities);
+    public Set<EntityElement> entities() {
+        return Collections.unmodifiableSet(entities);
     }
 
-    public List<EntityElement> externalEntities() {
-        return Collections.unmodifiableList(externalEntities);
+    public Set<EntityElement> externalEntities() {
+        return Collections.unmodifiableSet(externalEntities);
     }
 
     public List<ErrorType> errorTypes() {

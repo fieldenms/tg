@@ -14,8 +14,10 @@ import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.apache.logging.log4j.Logger;
 
@@ -46,7 +48,8 @@ public class HibernateMappingsGenerator {
         sb.append("\"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\">\n");
         sb.append("<hibernate-mapping default-access=\"field\">\n");
 
-        for (final EqlEntityMetadata<?> entry : domainMetadata.entityPropsMetadata().values()) {
+        final Set<EqlEntityMetadata<?>> entries = new TreeSet<>(domainMetadata.entityPropsMetadata().values());
+        for (final EqlEntityMetadata<?> entry : entries) {
             if (entry.typeInfo.category == PERSISTENT) {
                 try {
                     sb.append(generateEntityClassMapping(entry.entityType, domainMetadata.entityMetadataHolder.getTableForEntityType(entry.entityType).name(), sortPropsMetadata(entry.props()), domainMetadata.dbVersion));

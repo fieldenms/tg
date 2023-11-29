@@ -4,7 +4,7 @@ import java.util.SortedMap;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 
-public class PersistedEntityMetadata<ET extends AbstractEntity<?>> extends AbstractEntityMetadata<ET>{
+public class PersistedEntityMetadata<ET extends AbstractEntity<?>> extends AbstractEntityMetadata<ET> implements Comparable<PersistedEntityMetadata<ET>> {
     private final String table;
 
     public PersistedEntityMetadata(final String table, final Class<ET> type, final SortedMap<String, PropertyMetadata> props) {
@@ -15,7 +15,7 @@ public class PersistedEntityMetadata<ET extends AbstractEntity<?>> extends Abstr
     public String getTable() {
         return table;
     }
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -39,5 +39,10 @@ public class PersistedEntityMetadata<ET extends AbstractEntity<?>> extends Abstr
         } else if (!table.equals(other.table))
             return false;
         return true;
+    }
+
+    @Override
+    public int compareTo(final PersistedEntityMetadata<ET> that) {
+        return this.type.getSimpleName().compareTo(that.type.getSimpleName());
     }
 }
