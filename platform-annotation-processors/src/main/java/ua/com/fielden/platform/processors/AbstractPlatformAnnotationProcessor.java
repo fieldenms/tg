@@ -9,7 +9,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -73,8 +72,6 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
     public Set<String> getSupportedOptions() {
         return Stream.of(CACHE_STATS_OPT_DESC).map(ProcessorOptionDescriptor::name).collect(Collectors.toSet());
     }
-
-    private static final Pattern REGEX_JAVA_PACKAGE_NAME = Pattern.compile("([a-zA-Z]\\w*\\.)*[a-zA-Z]\\w*");
 
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
