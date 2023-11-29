@@ -1,9 +1,7 @@
 package ua.com.fielden.platform.dao;
 
-import java.util.Set;
-import java.util.TreeSet;
 /**
- * Temporary left-over from old version migrated to EQL3 in order to avoid breaking changes in dependent applications. 
+ * Temporary left-over from old version migrated to EQL3 in order to avoid breaking changes in dependent applications.
  *
  * @author TG Team
  *
