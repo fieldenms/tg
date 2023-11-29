@@ -1,31 +1,38 @@
 package ua.com.fielden.platform.processors;
 
-import com.google.common.base.Stopwatch;
-import com.squareup.javapoet.AnnotationSpec;
-import ua.com.fielden.platform.processors.metamodel.elements.utils.TypeElementCache;
-import ua.com.fielden.platform.processors.utils.CodeGenerationUtils;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static javax.tools.Diagnostic.Kind.NOTE;
+import static ua.com.fielden.platform.processors.ProcessorOptionDescriptor.newBooleanOptionDescriptor;
+import static ua.com.fielden.platform.processors.ProcessorOptionDescriptor.parseOptionFrom;
 
-import javax.annotation.processing.*;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringJoiner;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.Filer;
+import javax.annotation.processing.Messager;
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringJoiner;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static javax.tools.Diagnostic.Kind.NOTE;
-import static ua.com.fielden.platform.processors.ProcessorOptionDescriptor.newBooleanOptionDescriptor;
-import static ua.com.fielden.platform.processors.ProcessorOptionDescriptor.parseOptionFrom;
+import com.google.common.base.Stopwatch;
+import com.squareup.javapoet.AnnotationSpec;
+
+import ua.com.fielden.platform.processors.metamodel.elements.utils.TypeElementCache;
+import ua.com.fielden.platform.processors.utils.CodeGenerationUtils;
 
 /**
- * An abstract platform-level annotation processor to be extended by specific implementations. 
+ * An abstract platform-level annotation processor to be extended by specific implementations.
  * It provides common processor behaviour mostly concerned with initialization and per-round logging.
  * <p>
  * Subclasses are responsible for implementing {@link #processRound(Set, RoundEnvironment)}, which is called by a known method
@@ -67,14 +74,16 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
         return Stream.of(CACHE_STATS_OPT_DESC).map(ProcessorOptionDescriptor::name).collect(Collectors.toSet());
     }
 
+    private static final Pattern REGEX_JAVA_PACKAGE_NAME = Pattern.compile("([a-zA-Z]\\w*\\.)*[a-zA-Z]\\w*");
+
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
-        super.init(processingEnv); 
+        super.init(processingEnv);
         this.messager = processingEnv.getMessager();
         this.filer = processingEnv.getFiler();
         this.elementUtils = processingEnv.getElementUtils();
         this.typeUtils = processingEnv.getTypeUtils();
-        this.roundNumber = this.batchRoundNumber = 0; 
+        this.roundNumber = this.batchRoundNumber = 0;
         this.pastLastRound = false;
 
         final Map<String, String> options = processingEnv.getOptions();
@@ -147,7 +156,7 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
      * performed by the abstraction.
      * <p>
      * For more details refer to the documentation of {@link #process(Set, RoundEnvironment)}.
-     * 
+     *
      * @param annotations
      * @param roundEnv
      * @return

@@ -97,8 +97,9 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
 
             @Override
             public Optional<ViolatingElement> verifyProperty(final EntityElement entity, final PropertyElement property) {
-                if (hasErrorType(property))
+                if (hasErrorType(property)) {
                     return Optional.empty();
+                }
 
                 // accessor must be declared
                 final Optional<ExecutableElement> maybeAccessor = entityFinder.findDeclaredPropertyAccessor(entity, getSimpleName(property.element()));
@@ -172,8 +173,9 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
 
             @Override
             public Optional<ViolatingElement> verifyProperty(final EntityElement entity, final PropertyElement property) {
-                if (hasErrorType(property))
+                if (hasErrorType(property)) {
                     return Optional.empty();
+                }
 
                 // setter should be declared
                 final Optional<ExecutableElement> maybeSetter = entityFinder.findDeclaredPropertySetter(entity, getSimpleName(property.element()));
@@ -181,8 +183,8 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
                     return Optional.of(new ViolatingElement(
                             property.element(), Kind.ERROR, errMissingSetter(getSimpleName(property.element()))));
                 }
-                final ExecutableElement setter = maybeSetter.get();
 
+                final ExecutableElement setter = maybeSetter.get();
                 // should be annotated with @Observable
                 if (setter.getAnnotation(AT_OBSERVABLE_CLASS) == null) {
                     return Optional.of(new ViolatingElement(setter, Kind.ERROR, errMissingObservable(getSimpleName(setter))));
@@ -345,8 +347,9 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
 
             @Override
             public Optional<ViolatingElement> verifyProperty(final EntityElement entity, final PropertyElement property) {
-                if (hasErrorType(property))
+                if (hasErrorType(property)) {
                     return Optional.empty();
+                }
 
                 final TypeMirror propType = property.getType();
 

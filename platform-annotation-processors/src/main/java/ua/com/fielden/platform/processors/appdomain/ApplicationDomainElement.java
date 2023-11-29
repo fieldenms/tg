@@ -1,49 +1,48 @@
 package ua.com.fielden.platform.processors.appdomain;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Stream;
+
+import javax.lang.model.AnnotatedConstruct;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.ErrorType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+
 import ua.com.fielden.platform.processors.appdomain.annotation.RegisteredEntity;
 import ua.com.fielden.platform.processors.metamodel.elements.AbstractForwardingTypeElement;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 
-import javax.lang.model.element.PackageElement;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.ErrorType;
-import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.stream.Stream;
-
 /**
- * Represents an element modeling the generated {@code ApplicationDomain} class.
+ * Represents an element that models a generated {@code ApplicationDomain} class.
  *
  * @author TG Team
  */
 public class ApplicationDomainElement extends AbstractForwardingTypeElement {
 
     /** Currently registered entities */
-    private final List<EntityElement> entities = new LinkedList<>();
-    private final List<EntityElement> externalEntities = new LinkedList<>();
+    private final Set<EntityElement> entities = new TreeSet<>();
+    private final Set<EntityElement> externalEntities = new TreeSet<>();
     /** Entity types that cannot be located (e.g., due to removal/renaming) */
-    private final List<ErrorType> errorTypes = new LinkedList<>();
-
-    private final PackageElement packageElement;
+    private final List<ErrorType> errorTypes = new ArrayList<>();
 
     private ApplicationDomainElement(final TypeElement element) {
         super(element);
-        this.packageElement = null;
     }
 
     public ApplicationDomainElement(final TypeElement element, final EntityFinder entityFinder) {
         super(element);
-        this.packageElement = entityFinder.getPackageOfTypeElement(element);
         init(element, entityFinder);
     }
 
     private void init(final TypeElement element, final EntityFinder entityFinder) {
-        RegisteredEntity.Mirror.fromAnnotated(element, entityFinder)
+        RegisteredEntityMirror.fromAnnotated(element, entityFinder)
             .stream()
             .forEach(mirr -> {
                 final TypeMirror entityType = mirr.value();
@@ -60,12 +59,12 @@ public class ApplicationDomainElement extends AbstractForwardingTypeElement {
             });
     }
 
-    public List<EntityElement> entities() {
-        return Collections.unmodifiableList(entities);
+    public Set<EntityElement> entities() {
+        return Collections.unmodifiableSet(entities);
     }
 
-    public List<EntityElement> externalEntities() {
-        return Collections.unmodifiableList(externalEntities);
+    public Set<EntityElement> externalEntities() {
+        return Collections.unmodifiableSet(externalEntities);
     }
 
     public Stream<EntityElement> streamAllEntities() {
@@ -74,6 +73,37 @@ public class ApplicationDomainElement extends AbstractForwardingTypeElement {
 
     public List<ErrorType> errorTypes() {
         return Collections.unmodifiableList(errorTypes);
+    }
+
+    /**
+     * A helper class that represents instances of {@link RegisteredEntity} on the level of {@link TypeMirror}.
+     */
+    private static class RegisteredEntityMirror {
+        private final TypeMirror value;
+        private final boolean external;
+
+        private RegisteredEntityMirror(final TypeMirror value, final boolean external) {
+            this.value = value;
+            this.external = external;
+        }
+
+        public static RegisteredEntityMirror fromAnnotation(final RegisteredEntity annot, final EntityFinder finder) {
+            final TypeMirror entityType = finder.getAnnotationElementValueOfClassType(annot, RegisteredEntity::value);
+            return new RegisteredEntityMirror(entityType, annot.external());
+        }
+
+        public static List<RegisteredEntityMirror> fromAnnotated(final AnnotatedConstruct annotated, final EntityFinder finder) {
+            final RegisteredEntity[] annots = annotated.getAnnotationsByType(RegisteredEntity.class);
+            return Stream.of(annots).map(at -> RegisteredEntityMirror.fromAnnotation(at, finder)).toList();
+        }
+
+        public TypeMirror value() {
+            return value;
+        }
+
+        public boolean external() {
+            return external;
+        }
     }
 
 }

@@ -1,10 +1,40 @@
 package ua.com.fielden.platform.processors.appdomain;
 
+import static javax.lang.model.element.Modifier.ABSTRACT;
+import static javax.lang.model.element.Modifier.PUBLIC;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor.APP_DOMAIN_PKG_OPT_DESC;
+import static ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor.ERR_AT_MOST_ONE_EXTENSION_POINT_IS_ALLOWED;
+import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
+import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertMessages;
+import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccessWithoutProcessingErrors;
+import static ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileObjects.createJavaSource;
+import static ua.com.fielden.platform.test_utils.CollectionTestUtils.assertEqualByContents;
+import static ua.com.fielden.platform.test_utils.TestUtils.assertPresent;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
+
+import javax.annotation.processing.Processor;
+import javax.annotation.processing.RoundEnvironment;
+import javax.lang.model.element.TypeElement;
+import javax.tools.Diagnostic.Kind;
+import javax.tools.JavaFileObject;
+
+import org.junit.Test;
+
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeSpec;
-import org.junit.Test;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.processors.appdomain.annotation.ExtendApplicationDomain;
@@ -18,32 +48,6 @@ import ua.com.fielden.platform.processors.test_utils.CompilationResult;
 import ua.com.fielden.platform.processors.test_utils.CompilationTestUtils;
 import ua.com.fielden.platform.processors.test_utils.ProcessorListener;
 import ua.com.fielden.platform.processors.test_utils.ProcessorListener.AbstractRoundListener;
-
-import javax.annotation.processing.Processor;
-import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.element.TypeElement;
-import javax.tools.Diagnostic.Kind;
-import javax.tools.JavaFileObject;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
-
-import static javax.lang.model.element.Modifier.ABSTRACT;
-import static javax.lang.model.element.Modifier.PUBLIC;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor.APP_DOMAIN_PKG_OPT_DESC;
-import static ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor.ERR_AT_MOST_ONE_EXTENSION_POINT_IS_ALLOWED;
-import static ua.com.fielden.platform.processors.test_utils.CollectionTestUtils.assertEqualByContents;
-import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
-import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertMessages;
-import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccessWithoutProcessingErrors;
-import static ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileObjects.createJavaSource;
-import static ua.com.fielden.platform.processors.test_utils.TestUtils.assertPresent;
 
 /**
  * A test suite related to {@link ApplicationDomainProcessor}.
@@ -59,9 +63,9 @@ public class ApplicationDomainProcessorTest {
         final JavaFile firstExtension = JavaFile.builder("test",
                 TypeSpec.classBuilder("FirstExtension")
                 .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
-                        .addMember("entities", "{ $L, $L }",
-                                AnnotationSpec.get(RegisterEntity.Builder.builder(ExampleEntity.class).build()),
-                                AnnotationSpec.get(RegisterEntity.Builder.builder(PersistentEntity.class).build()))
+                        .addMember("value", "{ $L, $L }",
+                                AnnotationSpec.get(RegisterEntityBuilder.builder(ExampleEntity.class).build()),
+                                AnnotationSpec.get(RegisterEntityBuilder.builder(PersistentEntity.class).build()))
                         .build())
                 .build())
             .build();
@@ -366,9 +370,9 @@ public class ApplicationDomainProcessorTest {
             final JavaFile extensionV1 = JavaFile.builder("test.extension",
                     TypeSpec.classBuilder("FirstExtension")
                     .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
-                            .addMember("entities", "{ $L }",
+                            .addMember("value", "{ $L }",
                                     // initally, register 1 external entity
-                                    AnnotationSpec.get(RegisterEntity.Builder.builder(ExampleEntity.class).build()))
+                                    AnnotationSpec.get(RegisterEntityBuilder.builder(ExampleEntity.class).build()))
                             .build())
                     .build())
                 .build();
@@ -384,11 +388,11 @@ public class ApplicationDomainProcessorTest {
             final JavaFile extensionV2 = JavaFile.builder("test.extension",
                     TypeSpec.classBuilder("FirstExtension")
                     .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
-                            .addMember("entities", "{ $L, $L }",
+                            .addMember("value", "{ $L, $L }",
                                     // the previous one
-                                    AnnotationSpec.get(RegisterEntity.Builder.builder(ExampleEntity.class).build()),
+                                    AnnotationSpec.get(RegisterEntityBuilder.builder(ExampleEntity.class).build()),
                                     // include a new external entity
-                                    AnnotationSpec.get(RegisterEntity.Builder.builder(PersistentEntity.class).build()))
+                                    AnnotationSpec.get(RegisterEntityBuilder.builder(PersistentEntity.class).build()))
                             .build())
                     .build())
                 .build();
@@ -588,9 +592,9 @@ public class ApplicationDomainProcessorTest {
             final JavaFile extensionV1 = JavaFile.builder("test.extension",
                     TypeSpec.classBuilder("FirstExtension")
                     .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
-                            .addMember("entities", "{ $L, $L }",
-                                    AnnotationSpec.get(RegisterEntity.Builder.builder(ExampleEntity.class).build()),
-                                    AnnotationSpec.get(RegisterEntity.Builder.builder(PersistentEntity.class).build()))
+                            .addMember("value", "{ $L, $L }",
+                                    AnnotationSpec.get(RegisterEntityBuilder.builder(ExampleEntity.class).build()),
+                                    AnnotationSpec.get(RegisterEntityBuilder.builder(PersistentEntity.class).build()))
                             .build())
                     .build())
                 .build();
@@ -605,9 +609,9 @@ public class ApplicationDomainProcessorTest {
             final JavaFile extensionV2 = JavaFile.builder("test.extension",
                     TypeSpec.classBuilder("FirstExtension")
                     .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
-                            .addMember("entities", "{ $L }",
+                            .addMember("value", "{ $L }",
                                     // unregister PersistentEntity
-                                    AnnotationSpec.get(RegisterEntity.Builder.builder(ExampleEntity.class).build()))
+                                    AnnotationSpec.get(RegisterEntityBuilder.builder(ExampleEntity.class).build()))
                             .build())
                     .build())
                 .build();
@@ -651,14 +655,14 @@ public class ApplicationDomainProcessorTest {
         final JavaFile extension1 = JavaFile.builder("test",
                 TypeSpec.classBuilder("FirstExtension")
                 .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
-                        .addMember("entities", "{ $L }", AnnotationSpec.get(RegisterEntity.Builder.builder(ExampleEntity.class).build()))
+                        .addMember("value", "{ $L }", AnnotationSpec.get(RegisterEntityBuilder.builder(ExampleEntity.class).build()))
                         .build())
                 .build())
             .build();
         final JavaFile extension2 = JavaFile.builder("test",
                 TypeSpec.classBuilder("SecondExtension")
                 .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
-                        .addMember("entities", "{ $L }", AnnotationSpec.get(RegisterEntity.Builder.builder(ExampleEntity.class).build()))
+                        .addMember("value", "{ $L }", AnnotationSpec.get(RegisterEntityBuilder.builder(ExampleEntity.class).build()))
                         .build())
                 .build())
             .build();
@@ -712,5 +716,39 @@ public class ApplicationDomainProcessorTest {
 
     /** A round listener tailored for {@link ApplicationDomainProcessor}. */
     public static abstract class RoundListener extends AbstractRoundListener<ApplicationDomainProcessor> { }
+
+    private static class RegisterEntityBuilder {
+
+        private Class<? extends AbstractEntity<?>> value;
+
+        private RegisterEntityBuilder(final Class<? extends AbstractEntity<?>> value) {
+            this.value = value;
+        }
+
+        public static RegisterEntityBuilder builder(final Class<? extends AbstractEntity<?>> value) {
+            return new RegisterEntityBuilder(value);
+        }
+
+        public RegisterEntityBuilder setValue(final Class<? extends AbstractEntity<?>> value) {
+            this.value = value;
+            return this;
+        }
+
+        public RegisterEntity build() {
+            return new RegisterEntity() {
+                @Override public Class<RegisterEntity> annotationType() { return RegisterEntity.class; }
+
+                @Override
+                public Class<? extends AbstractEntity<?>> value() { return value; }
+
+                @Override
+                public boolean equals(final Object other) {
+                    return this == other || (other instanceof final RegisterEntity atOther) &&
+                            Objects.equals(this.value(), atOther.value());
+                }
+            };
+        }
+
+    }
 
 }

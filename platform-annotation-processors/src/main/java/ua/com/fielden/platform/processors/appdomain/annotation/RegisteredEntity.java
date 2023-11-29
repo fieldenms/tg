@@ -1,20 +1,14 @@
 package ua.com.fielden.platform.processors.appdomain.annotation;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor;
-import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.CLASS;
 
-import javax.lang.model.AnnotatedConstruct;
-import javax.lang.model.type.TypeMirror;
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Stream;
 
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.CLASS;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor;
 
 /**
  * Annotation that is used by the {@link ApplicationDomainProcessor} to record registered entity types in a generated {@code ApplicationDomain}.
@@ -38,78 +32,6 @@ public @interface RegisteredEntity {
     Class<? extends AbstractEntity<?>> value();
 
     boolean external() default DEFAULT_EXTERNAL;
-
-    /**
-     * A helper class that represents instances of {@link RegisteredEntity} on the level of {@link TypeMirror}.
-     */
-    static class Mirror {
-        private final TypeMirror value;
-        private final boolean external;
-
-        private Mirror(final TypeMirror value, final boolean external) {
-            this.value = value;
-            this.external = external;
-        }
-
-        public static Mirror fromAnnotation(final RegisteredEntity annot, final EntityFinder finder) {
-            final TypeMirror entityType = finder.getAnnotationElementValueOfClassType(annot, RegisteredEntity::value);
-            return new Mirror(entityType, annot.external());
-        }
-
-        public static List<Mirror> fromAnnotated(final AnnotatedConstruct annotated, final EntityFinder finder) {
-            final RegisteredEntity[] annots = annotated.getAnnotationsByType(RegisteredEntity.class);
-            return Stream.of(annots).map(at -> Mirror.fromAnnotation(at, finder)).toList();
-        }
-
-        public TypeMirror value() {
-            return value;
-        }
-
-        public boolean external() {
-            return external;
-        }
-    }
-
-    static class Builder {
-
-        private Class<? extends AbstractEntity<?>> value;
-        private boolean external;
-
-        private Builder(final Class<? extends AbstractEntity<?>> value) {
-            this.value = value;
-        }
-
-        public static Builder builder(final Class<? extends AbstractEntity<?>> value) {
-            return new Builder(value);
-        }
-
-        public Builder setValue(final Class<? extends AbstractEntity<?>> value) {
-            this.value = value;
-            return this;
-        }
-
-        public Builder setExternal(final boolean external) {
-            this.external = external;
-            return this;
-        }
-
-        public RegisteredEntity build() {
-            return new RegisteredEntity() {
-                @Override public Class<RegisteredEntity> annotationType() { return RegisteredEntity.class; }
-
-                @Override public Class<? extends AbstractEntity<?>> value() { return value; }
-                @Override public boolean external() { return external; }
-
-                @Override
-                public boolean equals(final Object other) {
-                    return this == other || (other instanceof final RegisteredEntity atOther) &&
-                            Objects.equals(this.value(), atOther.value()) &&
-                            Objects.equals(this.external(), atOther.external());
-                }
-            };
-        }
-
-    }
 
     /** The containing annotation type to make {@link RegisteredEntity} repeatable. */
     @Retention(CLASS)

@@ -173,7 +173,7 @@ public class EqlDomainMetadata {
             }
         });
 
-        domainInfo = entityPropsMetadata.entrySet().stream().collect(Collectors.toConcurrentMap(k -> k.getKey(), k -> new EntityInfo<>(k.getKey(), k.getValue().typeInfo.category))); 
+        domainInfo = entityPropsMetadata.entrySet().stream().collect(Collectors.toConcurrentMap(k -> k.getKey(), k -> new EntityInfo<>(k.getKey(), k.getValue().typeInfo.category)));
         domainInfo.values().stream().forEach(ei -> addProps(ei, domainInfo, entityPropsMetadata.get(ei.javaType()).props()));
 
         for (final EqlEntityMetadata el : entityPropsMetadata.values()) {
@@ -193,7 +193,7 @@ public class EqlDomainMetadata {
 
     /**
      * Only properties that are present in SE yields are preserved.
-     * 
+     *
      * @param parentInfo
      * @return
      */
@@ -212,15 +212,15 @@ public class EqlDomainMetadata {
                 for (final AbstractPropInfo<?> prop : et.getProps().values()) {
                     if (prop.expression != null && !prop.name.equals(KEY)) {
                        try {
-                            p2tt.transform(setOf(new Prop2(source, asList(prop))));    
+                            p2tt.transform(setOf(new Prop2(source, asList(prop))));
                         } catch (final Exception e) {
-                            throw new EqlException("There is an error in expression of calculated property [" + et.javaType().getSimpleName() + ":" + prop.name + "]: " + e.getMessage());
+                            throw new EqlException("There is an error in expression of calculated property [" + et.javaType().getSimpleName() + ":" + prop.name + "]: " + e.getMessage(), e);
                         }
                     } else if (prop.hasExpression() && prop instanceof ComponentTypePropInfo) {
                         for (final AbstractPropInfo<?> subprop : ((ComponentTypePropInfo<?>) prop).getProps().values()) {
                             if (subprop.expression != null) {
                                 try {
-                                    p2tt.transform(setOf(new Prop2(source, asList(prop, subprop))));    
+                                    p2tt.transform(setOf(new Prop2(source, asList(prop, subprop))));
                                 } catch (final Exception e) {
                                     throw new EqlException("There is an error in expression of calculated property [" + et.javaType().getSimpleName() + ":" + prop.name  + "." + subprop.name + "]: " + e.getMessage());
                                 }
@@ -278,7 +278,7 @@ public class EqlDomainMetadata {
 
     /**
      * Determines hibernate type instance (Type/UserType/CustomUserType) for entity property based on provided property's meta information.
-     * 
+     *
      * @param propField
      * @return
      */
@@ -335,7 +335,7 @@ public class EqlDomainMetadata {
             } else if (isEntityType(getKeyType(parentInfo.entityType))) {
                 return of(new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).expression(expr().prop(KEY).model()).implicit().build());
             } else {
-            	// FIXME reconsider this implementation taking into account its role combined with actual yields information in the process of getting final EntityPropInfo for Synthetic Entity 
+            	// FIXME reconsider this implementation taking into account its role combined with actual yields information in the process of getting final EntityPropInfo for Synthetic Entity
                 return of(idProperty);
             }
         default:

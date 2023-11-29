@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.processors.appdomain;
 
 import com.squareup.javapoet.*;
+import java.util.Collections;
+import java.util.TreeSet;
+import javax.lang.model.type.TypeMirror;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
@@ -9,6 +12,7 @@ import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
 import ua.com.fielden.platform.processors.DateTimeUtils;
 import ua.com.fielden.platform.processors.ProcessorOptionDescriptor;
 import ua.com.fielden.platform.processors.appdomain.annotation.ExtendApplicationDomain;
+import ua.com.fielden.platform.processors.appdomain.annotation.RegisterEntity;
 import ua.com.fielden.platform.processors.appdomain.annotation.RegisteredEntity;
 import ua.com.fielden.platform.processors.appdomain.annotation.SkipEntityRegistration;
 import ua.com.fielden.platform.processors.exceptions.ProcessorInitializationException;
@@ -51,19 +55,18 @@ import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.a
  * The maintenance of the generated {@code ApplicationDomain} is carried out according to the following rules:
  * <ul>
  *  <li>New domain entity types are incrementally registered.</li>
- *  <li>Registered entity types that cannot be located any more (e.g., due to removal of the java source) are deregistered.</li>
+ *  <li>Registered entity types that cannot be located any more (e.g., due to removal of the java source) are de-registered.</li>
  *  <li>Registered entity types that no longer wish to be registered or are structurally modified in such a way that they are no longer
- *      domain entity types are deregistered.</li>
+ *      domain entity types are de-registered.</li>
  * </ul>
  *
- * Renaming of java sources by means of the IDE refactoring capabilites should automatically lead to the respective renaming in the generated
- * {@code ApplicationDomain}.
+ * Renaming of java sources by means of IDE refactoring capabilities should automatically lead to the adjustment of {@code ApplicationDomain}.
  * <p>
  * To exclude application-level entity types from registration, annotation {@link SkipEntityRegistration} should be used.
  *
  * <h3>Registration of 3rd-party entities</h3>
- * 3rd-party entities are those that come from dependencies. Their registration requires a designated application-level class that
- * must be annotated with {@link ExtendApplicationDomain}, which shall be used to specify them.
+ * External, 3rd-party entities are those that come from dependencies. Their registration requires for one of the application-level classes to be annotated with {@link ExtendApplicationDomain}, listing external entity types.
+ * Most TG-based applications have class {@code ApplicationConfig} in the {@code pojo-bl} module. It represents a convenient place for specifying external entity types to be registered.
  *
  * <h3>Supported options</h3>
  * <ul>
@@ -119,9 +122,9 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
 
     @Override
     protected boolean processRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-        // if this is an incremental build, then any newly created entity types will be passed to the first round
-        // otherwise it's a full build and all sources will passed to the first round
-        // therefore, we do not care about further rounds
+        // if this is an incremental build, then any newly created entity types would be passed into the first round
+        // otherwise, it's a full build and all sources would also be passed into the first round
+        // therefore, there is no need for any processing in case of additional rounds beyond the first one
         if (getRoundNumber() > 1) {
             return false;
         }
@@ -134,14 +137,14 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         final Set<EntityElement> inputEntities = roundEnv.getRootElements().stream()
             .filter(elt -> entityFinder.isEntityType(elt.asType()))
             .map(elt -> entityFinder.newEntityElement((TypeElement) elt))
-            .collect(Collectors.toSet());
+            .collect(Collectors.toCollection(TreeSet::new));
 
         // 2. previously generated ApplicationDomain
         // removal of a registered entity will cause recompilation of ApplicationDomain
         final Optional<ApplicationDomainElement> maybeAppDomainRootElt = findApplicationDomainInRound(roundEnv);
 
         // 3. input extension
-        final Optional<ExtendApplicationDomain.Mirror> inputExtension = findApplicationDomainExtensionInRound(roundEnv);
+        final Optional<ExtendApplicationDomainMirror> inputExtension = findApplicationDomainExtensionInRound(roundEnv);
 
         // this is an incremental build, but it doesn't affect us
         if (inputEntities.isEmpty() && maybeAppDomainRootElt.isEmpty() && inputExtension.isEmpty()) {
@@ -150,9 +153,9 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         }
 
         // if ApplicationDomain is not among root elements, then search through the whole environment
-        final Optional<ApplicationDomainElement> maybeAppDomainElt = maybeAppDomainRootElt.isEmpty() ?
-                findApplicationDomain() : maybeAppDomainRootElt.map(elt -> new ApplicationDomainElement(elt, entityFinder));
-
+        final Optional<ApplicationDomainElement> maybeAppDomainElt = maybeAppDomainRootElt.isPresent()
+                                                                     ? maybeAppDomainRootElt.map(elt -> new ApplicationDomainElement(elt, entityFinder))
+                                                                     : findApplicationDomain();
         maybeAppDomainElt.ifPresentOrElse(elt -> {
             // incremental build <=> regenerate
             printNote("Found existing %s (%s registered entities)", elt.getSimpleName(), elt.entities().size() + elt.externalEntities().size());
@@ -188,7 +191,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         return isDomainEntity(entity) && !shouldSkipRegistration(entity) && canBeRegistered(entity);
     }
 
-    private void generate(final Collection<EntityElement> inputEntities, final Optional<ExtendApplicationDomain.Mirror> inputExtension) {
+    private void generate(final Collection<EntityElement> inputEntities, final Optional<ExtendApplicationDomainMirror> inputExtension) {
         printNote("Generating %s from scratch", APPLICATION_DOMAIN_SIMPLE_NAME);
 
         final List<EntityElement> toRegister = inputEntities.stream()
@@ -206,7 +209,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
 
     private void regenerate(
             final ApplicationDomainElement appDomainElt,
-            final Collection<EntityElement> inputEntities, final Optional<ExtendApplicationDomain.Mirror> inputExtension)
+            final Collection<EntityElement> inputEntities, final Optional<ExtendApplicationDomainMirror> inputExtension)
     {
         final Set<EntityElement> toUnregister = new HashSet<>();
         final Set<EntityElement> toRegister = new HashSet<>();
@@ -273,11 +276,11 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
                 || !toRegister.isEmpty() || !externalToRegister.isEmpty()) {  // anything to include?
             printNote("Regenerating %s", appDomainElt.getSimpleName());
 
-            final Set<EntityElement> registeredEntities = new HashSet<>(appDomainElt.entities());
+            final Set<EntityElement> registeredEntities = new TreeSet<>(appDomainElt.entities());
             registeredEntities.removeAll(toUnregister);
             registeredEntities.addAll(toRegister);
 
-            final Set<EntityElement> externalRegisteredEntities = new HashSet<>(appDomainElt.externalEntities());
+            final Set<EntityElement> externalRegisteredEntities = new TreeSet<>(appDomainElt.externalEntities());
             externalRegisteredEntities.removeAll(externalToUnregister);
             externalRegisteredEntities.addAll(externalToRegister);
 
@@ -297,13 +300,18 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
             for (final var entity: registeredEntities) {
                 bld = bld.addStatement("add($T.class)", ClassName.get(entity.element()));
             }
+            if (!externalEntities.isEmpty()) {
+                bld.add("///////////////////////\n");
+                bld.add("// External Entities //\n");
+                bld.add("///////////////////////\n");
+            }
             for (final var entity: externalEntities) {
                 bld = bld.addStatement("add($T.class)", ClassName.get(entity.element()));
             }
             return bld;
         };
 
-        // class-level @Generated annotation
+        // @Generated annotation
         final String dateString = DateTimeUtils.toIsoFormat(DateTimeUtils.zonedNow());
         final AnnotationSpec atGenerated = buildAtGenerated(dateString);
 
@@ -439,7 +447,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
      * @param roundEnv
      * @return
      */
-    protected Optional<ExtendApplicationDomain.Mirror> findApplicationDomainExtensionInRound(final RoundEnvironment roundEnv) {
+    protected Optional<ExtendApplicationDomainMirror> findApplicationDomainExtensionInRound(final RoundEnvironment roundEnv) {
         final List<? extends Element> extensions = roundEnv.getRootElements().stream()
                 .filter(elt -> elt.getAnnotation(ExtendApplicationDomain.class) != null)
                 .toList();
@@ -449,14 +457,57 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         }
 
         return extensions.stream()
-                .map(elt -> ExtendApplicationDomain.Mirror.from(elt.getAnnotation(ExtendApplicationDomain.class), entityFinder))
+                .map(elt -> ExtendApplicationDomainMirror.fromAnnotation(elt.getAnnotation(ExtendApplicationDomain.class), entityFinder))
                 .findFirst();
     }
 
-    protected Stream<EntityElement> streamEntitiesFromExtension(final ExtendApplicationDomain.Mirror mirror) {
+    protected Stream<EntityElement> streamEntitiesFromExtension(final ExtendApplicationDomainMirror mirror) {
         return mirror.entities().stream() // stream of Mirror instances of @RegisterEntity
                 // map to EntityElement
                 .map(atRegEntityMirror -> entityFinder.newEntityElement(asTypeElementOfTypeMirror(atRegEntityMirror.value())));
+    }
+
+    /**
+     * A helper class that represents instances of {@link ExtendApplicationDomain} on the level of {@link TypeMirror}.
+     */
+    private static class ExtendApplicationDomainMirror {
+        private final List<RegisterEntityMirror> entities;
+
+        private ExtendApplicationDomainMirror(final Collection<RegisterEntityMirror> entities) {
+            this.entities = new ArrayList<>(entities);
+        }
+
+        public static ExtendApplicationDomainMirror fromAnnotation(final ExtendApplicationDomain annot, final ElementFinder finder) {
+            final List<RegisterEntityMirror> atRegisterEntityMirrors = Stream.of(annot.value())
+                    .map(atRegisterEntity -> RegisterEntityMirror.fromAnnotation(atRegisterEntity, finder))
+                    .toList();
+
+            return new ExtendApplicationDomainMirror(atRegisterEntityMirrors);
+        }
+
+        public List<RegisterEntityMirror> entities() {
+            return Collections.unmodifiableList(entities);
+        }
+    }
+
+    /**
+     * A helper class that represents instances of {@link RegisterEntity} on the level of {@link TypeMirror}.
+     */
+    private static class RegisterEntityMirror {
+        private final TypeMirror value;
+
+        private RegisterEntityMirror(final TypeMirror value) {
+            this.value = value;
+        }
+
+        public static RegisterEntityMirror fromAnnotation(final RegisterEntity annot, final ElementFinder finder) {
+            final TypeMirror entityType = finder.getAnnotationElementValueOfClassType(annot, RegisterEntity::value);
+            return new RegisterEntityMirror(entityType);
+        }
+
+        public TypeMirror value() {
+            return value;
+        }
     }
 
 }

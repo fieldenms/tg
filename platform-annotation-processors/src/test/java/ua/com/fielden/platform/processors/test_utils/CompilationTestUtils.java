@@ -3,7 +3,6 @@ package ua.com.fielden.platform.processors.test_utils;
 import com.squareup.javapoet.JavaFile;
 import org.apache.commons.io.FileUtils;
 import ua.com.fielden.platform.processors.test_utils.exceptions.TestCaseConfigException;
-
 import javax.tools.Diagnostic.Kind;
 import javax.tools.*;
 import java.io.IOException;
