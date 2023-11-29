@@ -6,7 +6,6 @@ import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.UnionEntityVerifier;
-import ua.com.fielden.platform.utils.CollectionUtil;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
@@ -122,10 +121,11 @@ public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
     }
 
     /**
-     * Constructs an error message about a verifier that was not passed by certain elements.
+     * Constructs an error message about a verifier that was not passed by certain elements. Element names are sorted beforehand.
      */
     public static String errVerifierNotPassedBy(final String verifierSimpleName, final Collection<String> elementSimpleNames) {
-        return "%s was not passed by: [%s]".formatted(verifierSimpleName, CollectionUtil.toString(elementSimpleNames, ", "));
+        return "%s was not passed by: [%s]".formatted(
+                verifierSimpleName, elementSimpleNames.stream().sorted().collect(joining(", ")));
     }
 
     /**

@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.processors.test_utils;
 
-import org.junit.runners.model.Statement;
 import ua.com.fielden.platform.processors.test_utils.exceptions.CompilationException;
 import ua.com.fielden.platform.types.try_wrapper.ThrowableConsumer;
 
@@ -12,10 +11,7 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import javax.tools.*;
 import javax.tools.JavaCompiler.CompilationTask;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 
 /**
@@ -33,11 +29,11 @@ public final class Compilation {
     /** Java compiler option to perform only annotation processing (without subsequent compilation) */
     public static final String OPTION_PROC_ONLY = "-proc:only";
 
-    private Collection<? extends JavaFileObject> javaSources;
+    private final Set<JavaFileObject> javaSources;
     private Processor processor;
     private JavaCompiler compiler;
-    private JavaFileManager fileManager;
-    private Iterable<String> options;
+    private StandardJavaFileManager fileManager;
+    private final List<String> options = new LinkedList<>();
     private DiagnosticCollector<JavaFileObject> diagnosticListener = new DiagnosticCollector<>();
 
     /**
@@ -63,13 +59,14 @@ public final class Compilation {
      * @param options
      */
     public Compilation(final Collection<? extends JavaFileObject> javaSources) {
-        this.javaSources = javaSources;
+        this.javaSources = new HashSet<>(javaSources);
         this.compiler = ToolProvider.getSystemJavaCompiler();
         this.fileManager = compiler.getStandardFileManager(null, null, null);
     }
 
     public Compilation setJavaSources(final Collection<? extends JavaFileObject> javaSources) {
-        this.javaSources = javaSources;
+        this.javaSources.clear();
+        this.javaSources.addAll(javaSources);
         return this;
     }
 
@@ -83,18 +80,23 @@ public final class Compilation {
         return this;
     }
 
-    public Compilation setFileManager(final JavaFileManager fileManager) {
+    public Compilation setFileManager(final StandardJavaFileManager fileManager) {
         this.fileManager = fileManager;
         return this;
     }
 
-    public Compilation setOptions(final Iterable<String> options) {
-        this.options = options;
+    public Compilation addOptions(final Iterable<String> options) {
+        options.forEach(opt -> this.options.add(opt));
         return this;
     }
 
-    public Compilation setOptions(final String... options) {
-        this.options = Arrays.asList(options);
+    public Compilation addOptions(final String... options) {
+        this.options.addAll(List.of(options));
+        return this;
+    }
+
+    public Compilation addProcessorOption(final String key, final String value) {
+        this.options.add("-A%s=%s".formatted(key, value));
         return this;
     }
 
@@ -110,12 +112,12 @@ public final class Compilation {
      *
      * @param evaluator
      * @return result of the compilation
-     * @throws Throwable
+     * @throws Throwable    an exception that might be thrown by {@code evaluator}
      */
     public CompilationResult compileAndEvaluatef(final ThrowableConsumer<ProcessingEnvironment> evaluator) {
         final EvaluatingProcessor evaluatingProcessor = new EvaluatingProcessor(evaluator);
         final CompilationResult result = doCompile(evaluatingProcessor);
-        evaluatingProcessor.throwIfStatementThrew();
+        evaluatingProcessor.throwIfEvaluatorThrew();
         return result;
     }
 
@@ -124,7 +126,7 @@ public final class Compilation {
      *
      * @param evaluator
      * @return result of the compilation
-     * @throws Throwable
+     * @throws Throwable    an exception that might be thrown by {@code evaluator}
      */
     public CompilationResult compileAndEvaluate(final Consumer<ProcessingEnvironment> evaluator) {
         return compileAndEvaluatef((procEnv) -> evaluator.accept(procEnv));
@@ -145,7 +147,7 @@ public final class Compilation {
         task.setProcessors(List.of(processor));
         final boolean success = task.call();
 
-        return new CompilationResult(success, diagnosticListener.getDiagnostics());
+        return new CompilationResult(success, diagnosticListener.getDiagnostics(), processor.processingErrors);
     }
 
     /**
@@ -155,7 +157,8 @@ public final class Compilation {
     private final class EvaluatingProcessor extends AbstractProcessor {
 
         private final ThrowableConsumer<ProcessingEnvironment> evaluator;
-        private CompilationException thrown;
+        private CompilationException evaluatorError;
+        private final List<Throwable> processingErrors = new LinkedList<>();
 
         public EvaluatingProcessor(final ThrowableConsumer<ProcessingEnvironment> evaluator) {
             this.evaluator = evaluator;
@@ -163,16 +166,21 @@ public final class Compilation {
 
         @Override
         public SourceVersion getSupportedSourceVersion() {
-            return SourceVersion.latest();
+            return processor != null ? processor.getSupportedSourceVersion() : SourceVersion.latestSupported();
         }
 
         @Override
         public Set<String> getSupportedAnnotationTypes() {
-            return Set.of("*");
+            return processor != null ? processor.getSupportedAnnotationTypes() : Set.of("*");
         }
 
         @Override
-        public synchronized void init(ProcessingEnvironment processingEnv) {
+        public Set<String> getSupportedOptions() {
+            return processor != null ? processor.getSupportedOptions() : super.getSupportedOptions();
+        }
+
+        @Override
+        public synchronized void init(final ProcessingEnvironment processingEnv) {
             super.init(processingEnv);
             if (processor != null) {
                 processor.init(processingEnv);
@@ -180,26 +188,30 @@ public final class Compilation {
         }
 
         @Override
-        public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+        public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
             if (processor != null) {
-                processor.process(annotations, roundEnv);
+                try {
+                    processor.process(annotations, roundEnv);
+                } catch (final Throwable ex) {
+                    processingErrors.add(ex);
+                }
             }
             if (roundEnv.processingOver()) {
                 try {
                     evaluator.accept(processingEnv);
                 } catch (final Throwable ex) {
-                    thrown = new CompilationException(ex);
+                    evaluatorError = new CompilationException(ex);
                 }
             }
             return false;
         }
 
         /**
-         * Throws what {@code base} {@link Statement} threw, if anything.
+         * Throws what {@link #evaluator} threw, if anything.
          */
-        void throwIfStatementThrew() {
-            if (thrown != null) {
-                throw thrown;
+        void throwIfEvaluatorThrew() {
+            if (evaluatorError != null) {
+                throw evaluatorError;
             }
         }
     }

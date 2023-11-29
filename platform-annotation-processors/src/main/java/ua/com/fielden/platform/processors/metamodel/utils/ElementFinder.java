@@ -19,6 +19,7 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
@@ -77,6 +78,16 @@ public class ElementFinder {
             throw new ElementFinderException("No type element was found for type [%s]".formatted(name));
         }
         return elt;
+    }
+
+    /**
+     * A safer version of {@link #getTypeElement(String)} that doesn't throw but returns an optional.
+     *
+     * @param name canonical name of the element to be found
+     * @return
+     */
+    public Optional<TypeElement> findTypeElement(final String name) {
+        return Optional.ofNullable(TypeElementCache.getTypeElement(elements, name));
     }
 
     /**
@@ -186,7 +197,7 @@ public class ElementFinder {
      * @param element
      * @return
      */
-    public Stream<VariableElement> streamDeclaredFields(final TypeElement element) {
+    public static Stream<VariableElement> streamDeclaredFields(final TypeElement element) {
         return element.getEnclosedElements().stream()
                 .filter(elt -> elt.getKind().isField())
                 .map(elt -> (VariableElement) elt);
@@ -195,7 +206,7 @@ public class ElementFinder {
     /**
      * Collects the elements of {@link #streamDeclaredFields(TypeElement)} into a list.
      */
-    public List<VariableElement> findDeclaredFields(final TypeElement element) {
+    public static List<VariableElement> findDeclaredFields(final TypeElement element) {
         return streamDeclaredFields(element).toList();
     }
 
@@ -270,7 +281,7 @@ public class ElementFinder {
      * @param predicate
      * @return
      */
-    public Optional<VariableElement> findDeclaredField(final TypeElement typeElement, final String fieldName, final Predicate<VariableElement> predicate) {
+    public static Optional<VariableElement> findDeclaredField(final TypeElement typeElement, final String fieldName, final Predicate<VariableElement> predicate) {
         return streamDeclaredFields(typeElement)
                .filter(varEl -> varEl.getSimpleName().contentEquals(fieldName) && predicate.test(varEl))
                .findFirst();
@@ -283,11 +294,11 @@ public class ElementFinder {
      * @param fieldName
      * @return
      */
-    public Optional<VariableElement> findDeclaredField(final TypeElement typeElement, final String fieldName) {
+    public static Optional<VariableElement> findDeclaredField(final TypeElement typeElement, final String fieldName) {
         return findDeclaredField(typeElement, fieldName, (varEl) -> true);
     }
-    
-    public List<VariableElement> findDeclaredFieldsAnnotatedWith(final TypeElement typeElement, final Class<? extends Annotation> annotationClass) {
+
+    public static List<VariableElement> findDeclaredFieldsAnnotatedWith(final TypeElement typeElement, final Class<? extends Annotation> annotationClass) {
         return streamDeclaredFields(typeElement)
                 .filter(el -> el.getAnnotation(annotationClass) != null)
                 .toList();
@@ -309,7 +320,7 @@ public class ElementFinder {
      * Returns a list of annotations that are directly present on a variable element if it represents a field.
      * Otherwise an empty list is returned.
      */
-    public List<? extends AnnotationMirror> getFieldAnnotations(final VariableElement element) {
+    public static List<? extends AnnotationMirror> getFieldAnnotations(final VariableElement element) {
         // return an empty list for non-field elements
         if (!element.getKind().isField()) {
             return List.of();
@@ -322,7 +333,7 @@ public class ElementFinder {
      * Streams declared methods of a type element.
      * @see ElementKind#METHOD
      */
-    public Stream<ExecutableElement> streamDeclaredMethods(final TypeElement typeElement) {
+    public static Stream<ExecutableElement> streamDeclaredMethods(final TypeElement typeElement) {
         return typeElement.getEnclosedElements().stream()
                 .filter(elt -> elt.getKind().equals(ElementKind.METHOD))
                 .map(elt -> (ExecutableElement) elt);
@@ -332,7 +343,7 @@ public class ElementFinder {
      * Collects the elements of {@link #streamDeclaredMethods(TypeElement)} into an unmodifiable list.
      * @see ElementKind#METHOD
      */
-    public List<ExecutableElement> findDeclaredMethods(final TypeElement typeElement) {
+    public static List<ExecutableElement> findDeclaredMethods(final TypeElement typeElement) {
         return streamDeclaredMethods(typeElement).toList();
     }
 
@@ -392,7 +403,7 @@ public class ElementFinder {
      * @param ignoredAnnotationsClasses
      * @return
      */
-    public List<? extends AnnotationMirror> getFieldAnnotationsExcept(final VariableElement field, final List<Class<? extends Annotation>> ignoredAnnotationsClasses) {
+    public static List<? extends AnnotationMirror> getFieldAnnotationsExcept(final VariableElement field, final List<Class<? extends Annotation>> ignoredAnnotationsClasses) {
         final List<? extends AnnotationMirror> annotations = getFieldAnnotations(field);
 
         final Set<String> ignoredAnnotationNames = ignoredAnnotationsClasses.stream()
@@ -471,6 +482,27 @@ public class ElementFinder {
         } catch (final MirroredTypeException ex) {
             // the exception provides the desired type mirror
             return ex.getTypeMirror();
+        }
+    }
+
+    /**
+     * Returns the type mirrors representing the {@link Class[]}-typed value of the annotation's element.
+     * <p>
+     * Special care is required for {@link Class} values, since information to locate and load a class is unavailable during annotation processing.
+     * For a more detailed explanation refer to {@link Element#getAnnotation(Class)}.
+     *
+     * @param valueSupplier  the supplier of a {@link Class[]}-typed value
+     * @return  a list of type mirrors
+     */
+    public List<? extends TypeMirror> getAnnotationElementValueOfClassArrayType(final Supplier<Class<?>[]> valueSupplier) {
+        try {
+            // should ALWAYS throw, since the information to locate and load a class is unavailable during annotation processing
+            final Class<?>[] classes = valueSupplier.get();
+            // if it somehow was available, then construct TypeMirrors
+            return Stream.of(classes).map(this::asType).toList();
+        } catch (final MirroredTypesException ex) {
+            // the exception provides the desired type mirrors
+            return ex.getTypeMirrors();
         }
     }
 

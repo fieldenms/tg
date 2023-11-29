@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class EqlPropertyMetadata {
+public class EqlPropertyMetadata implements Comparable<EqlPropertyMetadata> {
     public final String name;
     public final Class<?> javaType;
     public final Object hibType;
@@ -126,5 +126,10 @@ public class EqlPropertyMetadata {
             this.subitems.addAll(subitems);
             return this;
         }
+    }
+
+    @Override
+    public int compareTo(final EqlPropertyMetadata that) {
+        return this.name.compareTo(that.name);
     }
 }

@@ -236,7 +236,7 @@ public class MetaModelLifecycleTest {
                 .setProcessor(new MetaModelProcessor())
                 .setCompiler(compiler)
                 .setFileManager(fileManager)
-                .setOptions(Compilation.OPTION_PROC_ONLY);
+                .addOptions(Compilation.OPTION_PROC_ONLY);
         try {
             return compilation.compileAndEvaluate(consumer).success();
         } catch (final Throwable ex) {

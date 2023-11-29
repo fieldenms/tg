@@ -7,6 +7,7 @@
     </parent>
 
     <artifactId>platform-annotation-processors</artifactId>
+    <version>1.4.6.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Trident Genesis Platform Annotation Processors</name>
@@ -15,13 +16,13 @@
         <dependency>
             <groupId>fielden</groupId>
             <artifactId>platform-annotations</artifactId>
-            <version>${project.version}</version>
+            <version>${project.parent.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>fielden</groupId>
             <artifactId>platform-pojo-bl</artifactId>
-            <version>${project.version}</version>
+            <version>${project.parent.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.logging.log4j</groupId>
@@ -29,7 +30,19 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
+        <dependency>
+            <groupId>fielden</groupId>
+            <artifactId>platform-pojo-bl</artifactId>
+            <version>${project.parent.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-slf4j-impl</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
         <dependency>
             <groupId>com.squareup</groupId>
             <artifactId>javapoet</artifactId>

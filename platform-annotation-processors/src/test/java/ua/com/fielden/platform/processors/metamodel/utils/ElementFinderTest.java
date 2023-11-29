@@ -712,7 +712,7 @@ public class ElementFinderTest {
         final List<JavaFileObject> compilationTargets = typeSpecs.stream()
                 .map(ts -> JavaFile.builder(/*packageName*/ "", ts).build().toJavaFileObject())
                 .toList();
-        final Compilation comp = Compilation.newInMemory(compilationTargets).setOptions(OPTION_PROC_ONLY);
+        final Compilation comp = Compilation.newInMemory(compilationTargets).addOptions(OPTION_PROC_ONLY);
 
         try {
             final CompilationResult result = comp.compileAndEvaluate(procEnv ->
