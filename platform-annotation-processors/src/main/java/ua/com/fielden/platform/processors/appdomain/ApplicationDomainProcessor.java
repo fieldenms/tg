@@ -76,9 +76,9 @@ import ua.com.fielden.platform.utils.CollectionUtil;
  * The maintenance of the generated {@code ApplicationDomain} is carried out according to the following rules:
  * <ul>
  *  <li>New domain entity types are incrementally registered.</li>
- *  <li>Registered entity types that cannot be located any more (e.g., due to removal of the java source) are de-registered.</li>
+ *  <li>Registered entity types that cannot be located any more (e.g., due to removal of the java source) are unregistered.</li>
  *  <li>Registered entity types that no longer wish to be registered or are structurally modified in such a way that they are no longer
- *      domain entity types are de-registered.</li>
+ *      domain entity types are unregistered.</li>
  * </ul>
  *
  * Renaming of java sources by means of IDE refactoring capabilities should automatically lead to the adjustment of {@code ApplicationDomain}.
@@ -86,13 +86,13 @@ import ua.com.fielden.platform.utils.CollectionUtil;
  * To exclude application-level entity types from registration, annotation {@link SkipEntityRegistration} should be used.
  *
  * <h3>Registration of 3rd-party entities</h3>
- * External, 3rd-party entities are those that come from dependencies. Their registration requires for one of the application-level classes to be annotated with {@link ExtendApplicationDomain}, listing external entity types.
+ * External, 3rd-party entities are those that come from dependencies. Their registration requires one of the application-level classes to be annotated with {@link ExtendApplicationDomain}, listing external entity types.
  * Most TG-based applications have class {@code ApplicationConfig} in the {@code pojo-bl} module. It represents a convenient place for specifying external entity types to be registered.
  *
  * <h3>Supported options</h3>
  * <ul>
  *     <li>{@linkplain ApplicationDomainProcessor#APP_DOMAIN_PKG_OPT_DESC appDomainPkg} - destination package of a generated
- *     {@code AppplicationDomain}
+ *     {@code ApplicationDomain}
  * </ul>
  *
  * @author TG Team
