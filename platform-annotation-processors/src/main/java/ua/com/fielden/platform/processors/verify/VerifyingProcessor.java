@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.processors.verify;
 
 import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
-import ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor;
 import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier;
@@ -26,13 +25,6 @@ import static java.util.stream.Collectors.joining;
  * <p>
  * The processor itself does not define any specific verification logic. Instead it delegates to implementations of the
  * {@link IVerifier} interface, providing them its own inputs and respective processing/round environments.
- * <p>
- * The processor has a special property -- it delays the verification of its input until the 2nd round begins when it
- * will use the 1st instead of 2nd round's input (the latter can be safely ignored since generated sources are not
- * subject to verification). This is a hack that's necessary to be able to find the {@code ApplicationDomain} generated
- * in the 1st round by {@link ApplicationDomainProcessor}. Simply changing the order of processors (so that verification
- * is performed after {@code ApplicationDomain} generation) won't work as sources generated in any given round won't be
- * accessible to the processing environment until the next round.
  *
  * @author TG Team
  */
@@ -44,8 +36,6 @@ public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
 
     /** Round-cumulative indicator of whether all verifiers were passed. */
     private boolean passed;
-
-    private RoundEnvironment firstRoundEnvironment;
 
     public VerifyingProcessor() {
         // specify default verifiers here
@@ -82,19 +72,10 @@ public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
      */
     @Override
     public boolean processRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-        final int roundNumber = getRoundNumber();
-        if (roundNumber == 1) {
-            printNote("Delaying processing until the next round.");
-            firstRoundEnvironment = roundEnv;
-            return false;
-        }
-
-        final RoundEnvironment finalRoundEnv = roundNumber == 2 ? firstRoundEnvironment : roundEnv;
-
-        if (finalRoundEnv.getRootElements().isEmpty()) {
+        if (roundEnv.getRootElements().isEmpty()) {
             printNote("Nothing to verify.");
         } else {
-            final boolean roundPassed = verify(finalRoundEnv);
+            final boolean roundPassed = verify(roundEnv);
             if (roundPassed) {
                 printNote("All verifiers were passed.");
             }
@@ -102,7 +83,7 @@ public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
         }
 
         if (!passed) {
-            printMandatoryWarning("Claiming this round's (no. %s) annotations to disable other processors.", roundNumber);
+            printMandatoryWarning("Claiming this round's (no. %s) annotations to disable other processors.", getRoundNumber());
         }
 
         return !passed;

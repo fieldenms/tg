@@ -3,8 +3,9 @@ package ua.com.fielden.platform.processors.verify.verifiers.entity;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.processors.appdomain.ApplicationDomainElement;
-import ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor;
+import ua.com.fielden.platform.processors.appdomain.EntityRegistrationUtils;
+import ua.com.fielden.platform.processors.appdomain.ExtendApplicationDomainMirror;
+import ua.com.fielden.platform.processors.appdomain.annotation.ExtendApplicationDomain;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
@@ -15,6 +16,7 @@ import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
@@ -25,11 +27,12 @@ import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic.Kind;
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Optional.of;
+import static ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor.DEFAULT_APP_DOMAIN_EXTENSION_QUAL_NAME;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.*;
 
 /**
@@ -275,15 +278,8 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
         static final List<Class<?>> SPECIAL_ENTITY_TYPES = List.of(PropertyDescriptor.class);
         static final List<Class<?>> PLATFORM_ENTITY_TYPES = new ArrayList<>(PlatformDomainTypes.types);
 
-        private Supplier<Optional<ApplicationDomainElement>> lazyAppDomainElement;
-
         protected PropertyTypeVerifier(final ProcessingEnvironment processingEnv) {
             super(processingEnv);
-            lazyAppDomainElement = () -> {
-                Optional<ApplicationDomainElement> optElt = ApplicationDomainProcessor.findApplicationDomain(processingEnv, entityFinder);
-                lazyAppDomainElement = () -> optElt;
-                return optElt;
-            };
         }
 
         public static String errEntityTypeMustBeRegistered(final String property, final String type) {
@@ -302,6 +298,7 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
             return ("Unsupported type for property [%s].\nSupported types include: %s, collectional and domain entity types.")
                     .formatted(property, MSG_SUPPORTED_TYPES);
         }
+
         private static final String MSG_SUPPORTED_TYPES =
                 Stream.of(ORDINARY_TYPES, PLATFORM_TYPES, BINARY_TYPES, SPECIAL_COLLECTION_TYPES, SPECIAL_ENTITY_TYPES)
                         .flatMap(list -> list.stream().map(Class::getSimpleName))
@@ -315,34 +312,17 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
             return classes.stream().anyMatch(cls -> entityFinder.isSameType(t, cls));
         }
 
-        /**
-         * Determines whether an entity type is registered in the generated {@code ApplicationDomain} if one exists,
-         * otherwise an entity type is considered unregistered.
-         *
-         * @param entityType    type mirror representing an entity type (caller must guarantee this)
-         */
-        private boolean isEntityTypeRegistered(final TypeMirror entityType) {
-            final Optional<ApplicationDomainElement> appDomainElt = lazyAppDomainElement.get();
-            if (appDomainElt.isEmpty()) {
-                return false;
-            }
-
-            // we can safely cast because we know this type mirror represents an entity type
-            final TypeElement entityTypeElt = (TypeElement) ((DeclaredType) entityType).asElement();
-            final Name entityQualName = entityTypeElt.getQualifiedName();
-            return appDomainElt.get().streamAllEntities()
-                    .map(EntityElement::getQualifiedName)
-                    .anyMatch(name -> entityQualName.equals(name));
-        }
-
         @Override
         protected List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
-            return roundEnv.findViolatingDeclaredProperties(new PropertyVerifier(entityFinder));
+            return roundEnv.findViolatingDeclaredProperties(new PropertyVerifier(entityFinder, roundEnv.getRoundEnvironment()));
         }
 
         private class PropertyVerifier extends AbstractPropertyElementVerifier {
-            public PropertyVerifier(final EntityFinder entityFinder) {
+            private final RoundEnvironment roundEnv;
+
+            public PropertyVerifier(final EntityFinder entityFinder, final RoundEnvironment roundEnv) {
                 super(entityFinder);
+                this.roundEnv = roundEnv;
             }
 
             @Override
@@ -368,7 +348,7 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
 
                 if (entityFinder.isEntityType(propType)) {
                     // 3.1 all entity types, except some special ones, used as property types must be registered
-                    if (!isEntityTypeRegistered(propType)) {
+                    if (!isEntityTypeRegisterable(propType)) {
                         return Optional.of(new ViolatingElement(
                                 property.element(), Kind.ERROR,
                                 errEntityTypeMustBeRegistered(getSimpleName(property.element()), getSimpleName(propType))));
@@ -392,10 +372,10 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
                         }
 
                         if (entityFinder.isEntityType(typeArg)) {
-                            return isEntityTypeRegistered(typeArg) ? Optional.empty() :
-                                Optional.of(new ViolatingElement(
-                                        property.element(), Kind.ERROR,
-                                        errEntityTypeArgMustBeRegistered(getSimpleName(property.element()), getSimpleName(typeArg))));
+                            return isEntityTypeRegisterable(typeArg) ? Optional.empty() :
+                                    Optional.of(new ViolatingElement(
+                                            property.element(), Kind.ERROR,
+                                            errEntityTypeArgMustBeRegistered(getSimpleName(property.element()), getSimpleName(typeArg))));
                         }
                         // all valid type arguments were exhausted
                         return Optional.of(new ViolatingElement(
@@ -408,6 +388,51 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
                 return Optional.of(new ViolatingElement(property.element(), Kind.ERROR, errUnsupportedType(getSimpleName(property.element()))));
             }
 
+            /**
+             * Tests whether an entity type is elligible for registration in {@code ApplicationDomain}.
+             *
+             * @param entityType type mirror representing an entity type (caller must guarantee this)
+             */
+            private boolean isEntityTypeRegisterable(final TypeMirror entityType) {
+                // we can safely cast because we know this type mirror represents an entity type
+                final EntityElement entityElement = entityFinder.newEntityElement((TypeElement) ((DeclaredType) entityType).asElement());
+                return EntityRegistrationUtils.isRegisterable(entityElement) || isExternalRegisteredEntity(entityElement);
+            }
+
+            private boolean isExternalRegisteredEntity(EntityElement entity) {
+                return externalRegisteredEntities.apply(roundEnv).contains(entity);
+            }
+            // with memoized
+            private Function<RoundEnvironment, Set<EntityElement>> externalRegisteredEntities = roundEnv -> {
+                final Map<Name, ExtendApplicationDomainMirror> extensionPoints = new HashMap<>();
+                roundEnv.getElementsAnnotatedWith(ExtendApplicationDomain.class).stream()
+                        .<TypeElement>mapMulti((elt, sink) -> {
+                            if (elt instanceof TypeElement te)
+                                sink.accept(te);
+                        }).forEach(te -> {
+                            var mirror = ExtendApplicationDomainMirror.fromAnnotation(te.getAnnotation(ExtendApplicationDomain.class), elementFinder);
+                            extensionPoints.put(te.getQualifiedName(), mirror);
+                        });
+
+                // extension points in round inputs take priority
+                if (!extensionPoints.containsKey(elementFinder.elements.getName(DEFAULT_APP_DOMAIN_EXTENSION_QUAL_NAME))) {
+                    elementFinder.findTypeElement(DEFAULT_APP_DOMAIN_EXTENSION_QUAL_NAME)
+                            .ifPresent(te -> {
+                                ExtendApplicationDomain annot = te.getAnnotation(ExtendApplicationDomain.class);
+                                if (annot != null) {
+                                    var mirror = ExtendApplicationDomainMirror.fromAnnotation(annot, elementFinder);
+                                    extensionPoints.put(te.getQualifiedName(), mirror);
+                                }
+                            });
+                }
+
+                Set<EntityElement> result = extensionPoints.values().stream()
+                        .flatMap(m -> m.streamEntityElements(entityFinder))
+                        .collect(Collectors.toSet());
+
+                this.externalRegisteredEntities = $ -> result;
+                return result;
+            };
         }
     }
 
