@@ -489,47 +489,4 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
                 .map(atRegEntityMirror -> entityFinder.newEntityElement(asTypeElementOfTypeMirror(atRegEntityMirror.value())));
     }
 
-    /**
-     * A helper class that represents instances of {@link ExtendApplicationDomain} on the level of {@link TypeMirror}.
-     */
-    private static class ExtendApplicationDomainMirror {
-        private final List<RegisterEntityMirror> entities;
-
-        private ExtendApplicationDomainMirror(final Collection<RegisterEntityMirror> entities) {
-            this.entities = new ArrayList<>(entities);
-        }
-
-        public static ExtendApplicationDomainMirror fromAnnotation(final ExtendApplicationDomain annot, final ElementFinder finder) {
-            final List<RegisterEntityMirror> atRegisterEntityMirrors = Stream.of(annot.value())
-                    .map(atRegisterEntity -> RegisterEntityMirror.fromAnnotation(atRegisterEntity, finder))
-                    .toList();
-
-            return new ExtendApplicationDomainMirror(atRegisterEntityMirrors);
-        }
-
-        public List<RegisterEntityMirror> entities() {
-            return Collections.unmodifiableList(entities);
-        }
-    }
-
-    /**
-     * A helper class that represents instances of {@link RegisterEntity} on the level of {@link TypeMirror}.
-     */
-    private static class RegisterEntityMirror {
-        private final TypeMirror value;
-
-        private RegisterEntityMirror(final TypeMirror value) {
-            this.value = value;
-        }
-
-        public static RegisterEntityMirror fromAnnotation(final RegisterEntity annot, final ElementFinder finder) {
-            final TypeMirror entityType = finder.getAnnotationElementValueOfClassType(annot, RegisterEntity::value);
-            return new RegisterEntityMirror(entityType);
-        }
-
-        public TypeMirror value() {
-            return value;
-        }
-    }
-
 }
