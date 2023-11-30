@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor;
+import ua.com.fielden.platform.processors.appdomain.annotation.SkipEntityRegistration;
 import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
 import ua.com.fielden.platform.processors.verify.AbstractVerifierTest;
 import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
@@ -374,15 +375,20 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void unregistered_entity_type_is_disallowed() {
-            final TypeSpec entity = TypeSpec.classBuilder("Example")
+        public void unregisterable_entity_type_is_disallowed() {
+            final TypeSpec unregisterableEntity = TypeSpec.classBuilder("UnregisterableEntity")
+                    .addAnnotation(SkipEntityRegistration.class)
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
-                    .addField(propertyBuilder(ClassName.get(ExampleEntity.class), "prop").build())
                     .build();
 
-            compileAndAssertErrors(List.of(entity),
+            final TypeSpec entity = TypeSpec.classBuilder("Example")
+                    .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                    .addField(propertyBuilder(ClassName.get("", unregisterableEntity.name), "prop").build())
+                    .build();
+
+            compileAndAssertErrors(List.of(unregisterableEntity, entity),
                     errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "prop"),
-                    errEntityTypeMustBeRegistered("prop", "ExampleEntity"));
+                    errEntityTypeMustBeRegistered("prop", "UnregisterableEntity"));
         }
 
         @Test
