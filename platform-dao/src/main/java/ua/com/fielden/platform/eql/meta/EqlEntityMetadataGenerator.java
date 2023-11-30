@@ -49,6 +49,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -145,15 +146,15 @@ public class EqlEntityMetadataGenerator {
 
     public <T extends AbstractEntity<?>> EqlEntityMetadataPair<T> generate(final EntityTypeInfo<? super T> typeInfo, final Class<T> entityType) {
         try {
-            final List<EqlPropertyMetadata> propsMetadata = generatePropertyMetadatasForEntity(typeInfo, entityType);
+            final Set<EqlPropertyMetadata> propsMetadata = generatePropertyMetadatasForEntity(typeInfo, entityType);
             return new EqlEntityMetadataPair<>(entityType, new EqlEntityMetadata<T>(entityType, typeInfo, propsMetadata));
         } catch (final Exception ex) {
             throw new EqlMetadataGenerationException("Couldn't generate persistence metadata for entity [" + entityType + "].", ex);
         }
     }
 
-    private List<EqlPropertyMetadata> generatePropertyMetadatasForEntity(final EntityTypeInfo<? extends AbstractEntity<?>> typeInfo, final Class<? extends AbstractEntity<?>> entityType) {
-        final List<EqlPropertyMetadata> result = new ArrayList<>();
+    private Set<EqlPropertyMetadata> generatePropertyMetadatasForEntity(final EntityTypeInfo<? extends AbstractEntity<?>> typeInfo, final Class<? extends AbstractEntity<?>> entityType) {
+        final Set<EqlPropertyMetadata> result = new TreeSet<>();
         if (UNION == typeInfo.category) {
             result.addAll(generateUnionImplicitCalcSubprops((Class<? extends AbstractUnionEntity>) entityType, null));
             unionProperties((Class<? extends AbstractUnionEntity>) entityType).stream().forEach(field -> result.add(getCommonPropInfo(field, entityType, null)));
@@ -437,7 +438,7 @@ public class EqlEntityMetadataGenerator {
         return new EqlPropertyMetadata.Builder(propName, javaType, hibType).notRequired().expression(new CalcPropInfo(expressionModel, true, false)).build();
     }
 
-    public static EqlTable generateEqlTable(final String tableName, final List<EqlPropertyMetadata> propsMetadatas) {
+    public static EqlTable generateEqlTable(final String tableName, final Set<EqlPropertyMetadata> propsMetadatas) {
         final Map<String, String> columns = new HashMap<>();
         for (final EqlPropertyMetadata el : propsMetadatas) {
 
@@ -462,7 +463,7 @@ public class EqlEntityMetadataGenerator {
      * @param propsMetadata
      * @return
      */
-    public static TableStructForBatchInsertion generateTableWithPropColumnInfo(final String tableName, final List<EqlPropertyMetadata> propsMetadata) {
+    public static TableStructForBatchInsertion generateTableWithPropColumnInfo(final String tableName, final Set<EqlPropertyMetadata> propsMetadata) {
         final List<PropColumnInfo> columns = new ArrayList<>();
         for (final EqlPropertyMetadata el : propsMetadata) {
             if (!el.name.equals(ID) && !el.name.equals(VERSION)) {

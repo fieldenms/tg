@@ -15,8 +15,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.apache.logging.log4j.Logger;
@@ -52,7 +50,7 @@ public class HibernateMappingsGenerator {
         for (final EqlEntityMetadata<?> entry : entries) {
             if (entry.typeInfo.category == PERSISTENT) {
                 try {
-                    sb.append(generateEntityClassMapping(entry.entityType, domainMetadata.entityMetadataHolder.getTableForEntityType(entry.entityType).name(), sortPropsMetadata(entry.props()), domainMetadata.dbVersion));
+                    sb.append(generateEntityClassMapping(entry.entityType, domainMetadata.entityMetadataHolder.getTableForEntityType(entry.entityType).name(), entry.props(), domainMetadata.dbVersion));
                 } catch (final Exception e) {
                     e.printStackTrace();
                     throw new EqlMetadataGenerationException("Couldn't generate mapping for " + entry.entityType.getName() + " due to: " + e.getMessage());
@@ -65,14 +63,6 @@ public class HibernateMappingsGenerator {
         final String result = sb.toString();
         LOGGER.debug("\n\n" + result + "\n\n");
         return result;
-    }
-
-    private static final Collection<EqlPropertyMetadata> sortPropsMetadata(final List<EqlPropertyMetadata> propMds) {
-        final SortedMap<String, EqlPropertyMetadata> sorted = new TreeMap<>();
-        for (final EqlPropertyMetadata propMd : propMds) {
-            sorted.put(propMd.name, propMd);
-        }
-        return sorted.values();
     }
 
     private static String generateEntityIdMapping(final String name, final String columnName, final String hibTypeName, final DbVersion dbVersion) {

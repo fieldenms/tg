@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
@@ -38,7 +39,7 @@ public class IdOnlyProxiedEntityTypeCache implements IIdOnlyProxiedEntityTypeCac
         .collect(toMap(Entry::getKey, Entry::getValue));
     }
 
-    private <T extends AbstractEntity<?>> Class<? extends T> produceIdOnlyProxiedResultType(final Class<T> originalType, final List<EqlPropertyMetadata> propsMetadata) {
+    private <T extends AbstractEntity<?>> Class<? extends T> produceIdOnlyProxiedResultType(final Class<T> originalType, final Set<EqlPropertyMetadata> propsMetadata) {
         final List<String> proxiedProps = propsMetadata.stream().filter(ppi -> (!ID.equals(ppi.name) && !ppi.isVirtualKey() && !ppi.critOnly)).map(ppi -> ppi.name).toList();
         return EntityProxyContainer.proxy(originalType, proxiedProps.toArray(new String[] {}));
     }

@@ -168,12 +168,12 @@ public class QuerySourceInfoProvider {
     }
 
     private QuerySourceInfo<?> generateDeclaredQuerySourceInfo(final Class<? extends AbstractEntity<?>> type) {
-        final List<EqlPropertyMetadata> propsMetadatas = entityMetadataHolder.obtainEqlEntityMetadata(type).props();
+        final Set<EqlPropertyMetadata> propsMetadatas = entityMetadataHolder.obtainEqlEntityMetadata(type).props();
         return new QuerySourceInfo<>(type, true, generateQuerySourceItems(declaredQuerySourceInfoMap, propsMetadatas));
     }
 
     private QuerySourceInfo<?> generateModelledQuerySourceInfoForPersistentType(final Class<? extends AbstractEntity<?>> type) {
-        final List<EqlPropertyMetadata> propsMetadatas = entityMetadataHolder.obtainEqlEntityMetadata(type).props();
+        final Set<EqlPropertyMetadata> propsMetadatas = entityMetadataHolder.obtainEqlEntityMetadata(type).props();
         return new QuerySourceInfo<>(type, true, generateQuerySourceItems(modelledQuerySourceInfoMap, propsMetadatas));
     }
 
