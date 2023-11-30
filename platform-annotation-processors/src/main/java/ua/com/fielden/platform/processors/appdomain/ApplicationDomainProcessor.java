@@ -13,7 +13,6 @@ import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.i
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -32,9 +31,7 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.ErrorType;
-import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic.Kind;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -56,7 +53,6 @@ import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
 import ua.com.fielden.platform.processors.DateTimeUtils;
 import ua.com.fielden.platform.processors.ProcessorOptionDescriptor;
 import ua.com.fielden.platform.processors.appdomain.annotation.ExtendApplicationDomain;
-import ua.com.fielden.platform.processors.appdomain.annotation.RegisterEntity;
 import ua.com.fielden.platform.processors.appdomain.annotation.RegisteredEntity;
 import ua.com.fielden.platform.processors.appdomain.annotation.SkipEntityRegistration;
 import ua.com.fielden.platform.processors.exceptions.ProcessorInitializationException;
@@ -90,7 +86,8 @@ import ua.com.fielden.platform.utils.CollectionUtil;
  *
  * <h3>Registration of 3rd-party entities</h3>
  * External, 3rd-party entities are those that come from dependencies. Their registration requires one of the application-level classes to be annotated with {@link ExtendApplicationDomain}, listing external entity types.
- * Most TG-based applications have class {@code ApplicationConfig} in the {@code pojo-bl} module. It represents a convenient place for specifying external entity types to be registered.
+ * Most TG-based applications have class {@code fielden.config.ApplicationConfig} in the {@code pojo-bl} module.
+ * It should be used to specify external entity types to be registered.
  *
  * <h3>Supported options</h3>
  * <ul>
@@ -103,6 +100,7 @@ import ua.com.fielden.platform.utils.CollectionUtil;
 @SupportedAnnotationTypes("*")
 public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProcessor {
 
+    public static final String DEFAULT_APP_DOMAIN_EXTENSION_QUAL_NAME = "fielden.config.ApplicationConfig";
     public static final String APPLICATION_DOMAIN_SIMPLE_NAME = "ApplicationDomain";
     public static final String ERR_AT_MOST_ONE_EXTENSION_POINT_IS_ALLOWED = "At most one extension point is allowed.";
 
