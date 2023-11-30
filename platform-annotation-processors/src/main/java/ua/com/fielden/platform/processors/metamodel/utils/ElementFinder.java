@@ -721,7 +721,7 @@ public class ElementFinder {
     }
 
     public static boolean isGeneric(final TypeElement element) {
-        return element != null && !element.getTypeParameters().isEmpty();
+        return !element.getTypeParameters().isEmpty();
     }
 
     public static boolean isRawType(final TypeMirror type) {
