@@ -6,7 +6,9 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static ua.com.fielden.platform.processors.ProcessorOptionDescriptor.parseOptionFrom;
+import static ua.com.fielden.platform.processors.appdomain.EntityRegistrationUtils.isRegisterable;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asTypeElementOfTypeMirror;
+import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.isGeneric;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,6 +32,7 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.ErrorType;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic.Kind;
@@ -191,33 +194,18 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         return false;
     }
 
-    private boolean isDomainEntity(final EntityElement entity) {
-        return !ElementFinder.isAbstract(entity.element());
-    }
-
-    private boolean shouldSkipRegistration(final EntityElement entity) {
-        return entity.getAnnotation(SkipEntityRegistration.class) != null;
-    }
-
-    private boolean canBeRegistered(final EntityElement entity) {
-        if (ElementFinder.isGeneric(entity)) {
-            printWarning("Entity %s won't be registered because it is a generic type, which is incompatible with the type of @%s.value()",
-                    entity.getQualifiedName(), RegisteredEntity.class.getCanonicalName());
-            return false;
+    private void warnIfGeneric(EntityElement entity) {
+        if (isGeneric(entity)) {
+            printWarning("Entity %s won't be registered because it's a generic type.", entity.getQualifiedName());
         }
-        return true;
-    }
-
-    // combines all "can/should be registered" checks
-    private boolean isRegisterable(final EntityElement entity) {
-        return isDomainEntity(entity) && !shouldSkipRegistration(entity) && canBeRegistered(entity);
     }
 
     private void generate(final Collection<EntityElement> inputEntities, final Optional<ExtendApplicationDomainMirror> inputExtension) {
         printNote("Generating %s from scratch", APPLICATION_DOMAIN_SIMPLE_NAME);
 
         final List<EntityElement> toRegister = inputEntities.stream()
-                .filter(this::isRegisterable)
+                .filter(EntityRegistrationUtils::isRegisterable)
+                .peek(this::warnIfGeneric)
                 .toList();
 
         final List<EntityElement> externalEntities = inputExtension.map(mirr -> streamEntitiesFromExtension(mirr).toList())
@@ -243,6 +231,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         // * input entities -- are there any new ones we need to register?
         toRegister.addAll(inputEntities.stream()
                 .filter(ent -> isRegisterable(ent) && !currentRegisteredEntities.contains(ent))
+                .peek(this::warnIfGeneric)
                 .toList());
         // * unregisterable entities -- were any of them registered? (we need to unregister them)
         toUnregister.addAll(inputEntities.stream()
