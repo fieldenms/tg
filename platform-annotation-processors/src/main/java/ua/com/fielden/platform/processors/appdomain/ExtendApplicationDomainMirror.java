@@ -6,17 +6,15 @@ import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.ErrorType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
+
+import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asTypeElementOfTypeMirror;
 
 /**
  * A helper class that represents instances of {@link ExtendApplicationDomain} on the level of {@link TypeMirror}.
@@ -40,24 +38,15 @@ public final class ExtendApplicationDomainMirror {
         return Collections.unmodifiableList(entities);
     }
 
-    public void forEachEntityElement(EntityFinder entityFinder, Consumer<? super EntityElement> entityConsumer,
-                                     Consumer<? super TypeMirror> errorTypeConsumer) {
-        entities.forEach(rem -> {
-            TypeMirror tm = rem.value();
-            if (tm.getKind() == TypeKind.ERROR)
-                errorTypeConsumer.accept(tm);
-            else {
-                TypeElement te = (TypeElement) ((DeclaredType) tm).asElement();
-                entityConsumer.accept(entityFinder.newEntityElement(te));
-            }
-        });
-    }
-
+    /**
+     * Returns a stream of entity elements corresponding to {@link ExtendApplicationDomain#value()}.
+     * Unresolved types are excluded from the stream.
+     */
     public Stream<EntityElement> streamEntityElements(EntityFinder entityFinder) {
         return entities.stream()
                 .map(RegisterEntityMirror::value)
                 .filter(tm -> tm.getKind() != TypeKind.ERROR)
-                .map(tm -> entityFinder.newEntityElement((TypeElement) ((DeclaredType) tm).asElement()));
+                .map(tm -> entityFinder.newEntityElement(asTypeElementOfTypeMirror(tm)));
     }
 
     /**

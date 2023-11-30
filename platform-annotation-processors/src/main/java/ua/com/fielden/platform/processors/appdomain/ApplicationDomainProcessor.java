@@ -7,7 +7,6 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static ua.com.fielden.platform.processors.ProcessorOptionDescriptor.parseOptionFrom;
 import static ua.com.fielden.platform.processors.appdomain.EntityRegistrationUtils.isRegisterable;
-import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asTypeElementOfTypeMirror;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.isGeneric;
 
 import java.io.IOException;
@@ -206,8 +205,8 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
                 .peek(this::warnIfGeneric)
                 .toList();
 
-        final List<EntityElement> externalEntities = inputExtension.map(mirr -> streamEntitiesFromExtension(mirr).toList())
-                .orElseGet(() -> List.of());
+        final List<EntityElement> externalEntities = inputExtension.map(mirr -> mirr.streamEntityElements(entityFinder).toList())
+                .orElseGet(List::of);
 
         if (!externalEntities.isEmpty()) {
             printNote("Found %s entities from extensions.".formatted(externalEntities.size()));
@@ -239,8 +238,8 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         // analyse the input extension if it exists
         final Set<EntityElement> currentExternalRegisteredEntities = new HashSet<>(appDomainElt.externalEntities());
 
-        final Set<EntityElement> externalEntitiesFromExtension = inputExtension.map(mirr -> streamEntitiesFromExtension(mirr).collect(toSet()))
-                .orElseGet(() -> Set.of());
+        final Set<EntityElement> externalEntitiesFromExtension = inputExtension.map(mirr -> mirr.streamEntityElements(entityFinder).collect(toSet()))
+                .orElseGet(Set::of);
         // NOTE: we assume that external entities are always registerable entities, thus don't perform additional checks
         // * are there any new external entities we need to register?
         final List<EntityElement> externalToRegister = externalEntitiesFromExtension.stream()
@@ -468,12 +467,6 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         return extensions.stream()
                 .map(elt -> ExtendApplicationDomainMirror.fromAnnotation(elt.getAnnotation(ExtendApplicationDomain.class), entityFinder))
                 .findFirst();
-    }
-
-    protected Stream<EntityElement> streamEntitiesFromExtension(final ExtendApplicationDomainMirror mirror) {
-        return mirror.entities().stream() // stream of Mirror instances of @RegisterEntity
-                // map to EntityElement
-                .map(atRegEntityMirror -> entityFinder.newEntityElement(asTypeElementOfTypeMirror(atRegEntityMirror.value())));
     }
 
 }
