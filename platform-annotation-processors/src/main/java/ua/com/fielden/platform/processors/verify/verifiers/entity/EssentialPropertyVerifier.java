@@ -16,9 +16,7 @@ import ua.com.fielden.platform.types.Money;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ErrorType;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic.Kind;
@@ -343,13 +341,15 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
                 if (isAnyOf(propType, PLATFORM_ENTITY_TYPES)) return Optional.empty();
 
                 if (entityFinder.isEntityType(propType)) {
+                    final EntityElement propTypeEntityElt = entityFinder.newEntityElement(asTypeElementOfTypeMirror(propType));
                     // 3.1 all entity types, except some special ones, used as property types must be registered
-                    if (!isEntityTypeRegistered(propType)) {
+                    if (propTypeEntityElt.isAbstract() || isEntityTypeRegistered(propTypeEntityElt)) {
+                        return Optional.empty();
+                    } else {
                         return Optional.of(new ViolatingElement(
                                 property.element(), Kind.ERROR,
-                                errEntityTypeMustBeRegistered(getSimpleName(property.element()), getSimpleName(propType))));
+                                errEntityTypeMustBeRegistered(getSimpleName(property.element()), getSimpleName(propTypeEntityElt))));
                     }
-                    return Optional.empty();
                 }
 
                 // 4. collectional type
@@ -368,10 +368,14 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
                         }
 
                         if (entityFinder.isEntityType(typeArg)) {
-                            return isEntityTypeRegistered(typeArg) ? Optional.empty() :
-                                    Optional.of(new ViolatingElement(
-                                            property.element(), Kind.ERROR,
-                                            errEntityTypeArgMustBeRegistered(getSimpleName(property.element()), getSimpleName(typeArg))));
+                            final EntityElement entityTypeElt = entityFinder.newEntityElement(asTypeElementOfTypeMirror(typeArg));
+                            if (entityTypeElt.isAbstract() || isEntityTypeRegistered(entityTypeElt)) {
+                                return Optional.empty();
+                            } else {
+                                return Optional.of(new ViolatingElement(
+                                        property.element(), Kind.ERROR,
+                                        errEntityTypeArgMustBeRegistered(getSimpleName(property.element()), getSimpleName(typeArg))));
+                            }
                         }
                         // all valid type arguments were exhausted
                         return Optional.of(new ViolatingElement(
@@ -386,12 +390,8 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
 
             /**
              * Tests whether an entity type is registered in {@code ApplicationDomain}.
-             *
-             * @param entityType type mirror representing an entity type (caller must guarantee this)
              */
-            private boolean isEntityTypeRegistered(final TypeMirror entityType) {
-                // we can safely cast because we know this type mirror represents an entity type
-                final EntityElement entityElement = entityFinder.newEntityElement((TypeElement) ((DeclaredType) entityType).asElement());
+            private boolean isEntityTypeRegistered(final EntityElement entityElement) {
                 return registeredEntities.apply(roundEnv).contains(entityElement);
             }
             // with memoized
