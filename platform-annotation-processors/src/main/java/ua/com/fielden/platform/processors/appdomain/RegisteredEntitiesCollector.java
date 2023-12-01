@@ -11,7 +11,6 @@ import ua.com.fielden.platform.utils.Pair;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ErrorType;
@@ -24,9 +23,8 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toSet;
-import static javax.tools.Diagnostic.Kind.ERROR;
 import static javax.tools.Diagnostic.Kind.NOTE;
-import static ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor.ERR_AT_MOST_ONE_EXTENSION_POINT_IS_ALLOWED;
+import static ua.com.fielden.platform.processors.ProcessorOptionDescriptor.parseOptionFrom;
 import static ua.com.fielden.platform.processors.appdomain.EntityRegistrationUtils.isRegisterable;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.isGeneric;
 
@@ -210,22 +208,17 @@ public final class RegisteredEntitiesCollector {
     }
 
     /**
-     * Returns an {@link Optional} describing the first encountered {@link ExtendApplicationDomain} annotation in the given round.
+     * Finds an {@code ApplicationDomain} extension among round inputs.
+     * Missing annotation {@link ExtendApplicationDomain} is interpreted as if it's present but initialised with empty/default values.
      */
     public Optional<ExtendApplicationDomainMirror> findApplicationDomainExtensionInRound(final RoundEnvironment roundEnv) {
-        final List<? extends Element> extensions = roundEnv.getRootElements().stream()
-                .filter(elt -> elt.getAnnotation(ExtendApplicationDomain.class) != null)
-                .toList();
-
-        maybeMessager.ifPresent(m -> {
-            if (extensions.size() > 1) {
-                extensions.forEach(elt -> m.printMessage(ERROR, ERR_AT_MOST_ONE_EXTENSION_POINT_IS_ALLOWED, elt));
-            }
-        });
-
-        return extensions.stream()
-                .map(elt -> ExtendApplicationDomainMirror.fromAnnotation(elt.getAnnotation(ExtendApplicationDomain.class), entityFinder))
-                .findFirst();
+        final String fqn = parseOptionFrom(procEnv.getOptions(), ApplicationDomainProcessor.APP_DOMAIN_EXTENSION_OPT_DESC);
+        return roundEnv.getRootElements().stream()
+                .filter(elt -> elt instanceof TypeElement)
+                .map(elt -> (TypeElement) elt)
+                .filter(elt -> elt.getQualifiedName().contentEquals(fqn))
+                .findFirst()
+                .map(elt -> ExtendApplicationDomainMirror.fromAnnotatedOrEmpty(elt, elementFinder));
     }
 
     public Optional<ApplicationDomainElement> findApplicationDomain() {
@@ -233,10 +226,14 @@ public final class RegisteredEntitiesCollector {
         return entityFinder.findTypeElement(appDomainFqn).map(elt -> new ApplicationDomainElement(elt, entityFinder));
     }
 
+    /**
+     * Finds an {@code ApplicationDomain} extension in the global processing environment.
+     * Missing annotation {@link ExtendApplicationDomain} is interpreted as if it's present but initialised with empty/default values.
+     */
     public Optional<ExtendApplicationDomainMirror> findApplicationDomainExtension() {
-        return elementFinder.findTypeElement(ApplicationDomainProcessor.DEFAULT_APP_DOMAIN_EXTENSION_QUAL_NAME)
-                .map(elt -> elt.getAnnotation(ExtendApplicationDomain.class))
-                .map(annot -> ExtendApplicationDomainMirror.fromAnnotation(annot, elementFinder));
+        final String fqn = parseOptionFrom(procEnv.getOptions(), ApplicationDomainProcessor.APP_DOMAIN_EXTENSION_OPT_DESC);
+        return elementFinder.findTypeElement(fqn)
+                .map(elt -> ExtendApplicationDomainMirror.fromAnnotatedOrEmpty(elt, elementFinder));
     }
 
     private void warnIfGeneric(EntityElement entity) {

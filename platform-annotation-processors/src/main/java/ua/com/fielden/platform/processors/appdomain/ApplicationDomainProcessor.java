@@ -6,7 +6,6 @@ import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static ua.com.fielden.platform.processors.ProcessorOptionDescriptor.parseOptionFrom;
-import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.isGeneric;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -78,14 +77,17 @@ import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
  * To exclude application-level entity types from registration, annotation {@link SkipEntityRegistration} should be used.
  *
  * <h3>Registration of 3rd-party entities</h3>
- * External, 3rd-party entities are those that come from dependencies. Their registration requires one of the application-level classes to be annotated with {@link ExtendApplicationDomain}, listing external entity types.
- * Most TG-based applications have class {@code fielden.config.ApplicationConfig} in the {@code pojo-bl} module.
- * It should be used to specify external entity types to be registered.
+ * External, 3rd-party entities are those that come from dependencies. Their registration requires a specific application-level
+ * class to be annotated with {@link ExtendApplicationDomain}, listing external entity types.
+ * The established convention it to use class {@code fielden.config.ApplicationConfig} in the {@code pojo-bl} module,
+ * although this can be customised with option {@linkplain #APP_DOMAIN_EXTENSION_OPT_DESC appDomainExtension}.
+ * Any other annotated classes will be ignored.
  *
  * <h3>Supported options</h3>
  * <ul>
- *     <li>{@linkplain ApplicationDomainProcessor#APP_DOMAIN_PKG_OPT_DESC appDomainPkg} - destination package of a generated
- *     {@code ApplicationDomain}
+ *     <li>{@linkplain #APP_DOMAIN_PKG_OPT_DESC appDomainPkg} - destination package of a generated {@code ApplicationDomain}
+ *     <li>{@linkplain #APP_DOMAIN_EXTENSION_OPT_DESC appDomainExtension} - fully-qualified name of the {@code ApplicationDomain}
+ *     {@link ExtendApplicationDomain extension}.
  * </ul>
  *
  * @author TG Team
@@ -93,7 +95,6 @@ import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 @SupportedAnnotationTypes("*")
 public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProcessor {
 
-    public static final String DEFAULT_APP_DOMAIN_EXTENSION_QUAL_NAME = "fielden.config.ApplicationConfig";
     public static final String APPLICATION_DOMAIN_SIMPLE_NAME = "ApplicationDomain";
     public static final String ERR_AT_MOST_ONE_EXTENSION_POINT_IS_ALLOWED = "At most one extension point is allowed.";
 
@@ -106,6 +107,21 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         @Override public String parse(String value) {
             if (!REGEX_JAVA_PACKAGE_NAME.matcher(value).matches()) {
                 throw new ProcessorInitializationException("Option [%s] specifies an illegal package name [%s]."
+                        .formatted(name(), value));
+            }
+            return value;
+        }
+    };
+
+    public static final ProcessorOptionDescriptor<String> APP_DOMAIN_EXTENSION_OPT_DESC = new ProcessorOptionDescriptor<>() {
+        private static final Pattern REGEX_JAVA_CLASS_NAME = Pattern.compile("([a-zA-Z]\\w*\\.)*[a-zA-Z]\\w*");
+
+        @Override public String name() { return "appDomainExtension"; }
+        @Override public String defaultValue() { return "fielden.config.ApplicationConfig"; }
+
+        @Override public String parse(String value) {
+            if (!REGEX_JAVA_CLASS_NAME.matcher(value).matches()) {
+                throw new ProcessorInitializationException("Option [%s] specifies an illegal class name [%s]."
                         .formatted(name(), value));
             }
             return value;

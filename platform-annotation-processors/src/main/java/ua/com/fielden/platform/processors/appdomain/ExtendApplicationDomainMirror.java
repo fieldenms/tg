@@ -6,12 +6,14 @@ import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 
+import javax.lang.model.AnnotatedConstruct;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asTypeElementOfTypeMirror;
@@ -33,6 +35,21 @@ public final class ExtendApplicationDomainMirror {
 
         return new ExtendApplicationDomainMirror(atRegisterEntityMirrors);
     }
+
+    public static ExtendApplicationDomainMirror fromAnnotatedOrEmpty(final AnnotatedConstruct annotated, final ElementFinder finder) {
+        ExtendApplicationDomain annot = annotated.getAnnotation(ExtendApplicationDomain.class);
+        return annot == null ? empty() : fromAnnotation(annot, finder);
+    }
+
+    public static ExtendApplicationDomainMirror empty() {
+        return _empty.get();
+    }
+    // with lazily initialised
+    private static Supplier<ExtendApplicationDomainMirror> _empty = () -> {
+        var m = new ExtendApplicationDomainMirror(List.of());
+        _empty = () -> m;
+        return m;
+    };
 
     public List<RegisterEntityMirror> entities() {
         return Collections.unmodifiableList(entities);
