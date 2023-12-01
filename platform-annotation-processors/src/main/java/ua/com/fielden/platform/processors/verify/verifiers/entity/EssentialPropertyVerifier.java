@@ -3,9 +3,7 @@ package ua.com.fielden.platform.processors.verify.verifiers.entity;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.processors.appdomain.EntityRegistrationUtils;
-import ua.com.fielden.platform.processors.appdomain.ExtendApplicationDomainMirror;
-import ua.com.fielden.platform.processors.appdomain.annotation.ExtendApplicationDomain;
+import ua.com.fielden.platform.processors.appdomain.RegisteredEntitiesCollector;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
@@ -18,7 +16,6 @@ import ua.com.fielden.platform.types.Money;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
@@ -32,7 +29,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Optional.of;
-import static ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor.DEFAULT_APP_DOMAIN_EXTENSION_QUAL_NAME;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.*;
 
 /**
@@ -348,7 +344,7 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
 
                 if (entityFinder.isEntityType(propType)) {
                     // 3.1 all entity types, except some special ones, used as property types must be registered
-                    if (!isEntityTypeRegisterable(propType)) {
+                    if (!isEntityTypeRegistered(propType)) {
                         return Optional.of(new ViolatingElement(
                                 property.element(), Kind.ERROR,
                                 errEntityTypeMustBeRegistered(getSimpleName(property.element()), getSimpleName(propType))));
@@ -372,7 +368,7 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
                         }
 
                         if (entityFinder.isEntityType(typeArg)) {
-                            return isEntityTypeRegisterable(typeArg) ? Optional.empty() :
+                            return isEntityTypeRegistered(typeArg) ? Optional.empty() :
                                     Optional.of(new ViolatingElement(
                                             property.element(), Kind.ERROR,
                                             errEntityTypeArgMustBeRegistered(getSimpleName(property.element()), getSimpleName(typeArg))));
@@ -389,48 +385,21 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
             }
 
             /**
-             * Tests whether an entity type is elligible for registration in {@code ApplicationDomain}.
+             * Tests whether an entity type is registered in {@code ApplicationDomain}.
              *
              * @param entityType type mirror representing an entity type (caller must guarantee this)
              */
-            private boolean isEntityTypeRegisterable(final TypeMirror entityType) {
+            private boolean isEntityTypeRegistered(final TypeMirror entityType) {
                 // we can safely cast because we know this type mirror represents an entity type
                 final EntityElement entityElement = entityFinder.newEntityElement((TypeElement) ((DeclaredType) entityType).asElement());
-                return EntityRegistrationUtils.isRegisterable(entityElement) || isExternalRegisteredEntity(entityElement);
-            }
-
-            private boolean isExternalRegisteredEntity(EntityElement entity) {
-                return externalRegisteredEntities.apply(roundEnv).contains(entity);
+                return registeredEntities.apply(roundEnv).contains(entityElement);
             }
             // with memoized
-            private Function<RoundEnvironment, Set<EntityElement>> externalRegisteredEntities = roundEnv -> {
-                final Map<Name, ExtendApplicationDomainMirror> extensionPoints = new HashMap<>();
-                roundEnv.getElementsAnnotatedWith(ExtendApplicationDomain.class).stream()
-                        .<TypeElement>mapMulti((elt, sink) -> {
-                            if (elt instanceof TypeElement te)
-                                sink.accept(te);
-                        }).forEach(te -> {
-                            var mirror = ExtendApplicationDomainMirror.fromAnnotation(te.getAnnotation(ExtendApplicationDomain.class), elementFinder);
-                            extensionPoints.put(te.getQualifiedName(), mirror);
-                        });
-
-                // extension points in round inputs take priority
-                if (!extensionPoints.containsKey(elementFinder.elements.getName(DEFAULT_APP_DOMAIN_EXTENSION_QUAL_NAME))) {
-                    elementFinder.findTypeElement(DEFAULT_APP_DOMAIN_EXTENSION_QUAL_NAME)
-                            .ifPresent(te -> {
-                                ExtendApplicationDomain annot = te.getAnnotation(ExtendApplicationDomain.class);
-                                if (annot != null) {
-                                    var mirror = ExtendApplicationDomainMirror.fromAnnotation(annot, elementFinder);
-                                    extensionPoints.put(te.getQualifiedName(), mirror);
-                                }
-                            });
-                }
-
-                Set<EntityElement> result = extensionPoints.values().stream()
-                        .flatMap(m -> m.streamEntityElements(entityFinder))
-                        .collect(Collectors.toSet());
-
-                this.externalRegisteredEntities = $ -> result;
+            private Function<RoundEnvironment, Set<EntityElement>> registeredEntities = roundEnv -> {
+                final var result = new HashSet<EntityElement>();
+                RegisteredEntitiesCollector.getInstance(processingEnv)
+                        .withSuppressedMessages(it -> it.collectRegisteredEntities(roundEnv, result::add, result::add));
+                this.registeredEntities = $ -> result;
                 return result;
             };
         }
