@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.processors.appdomain;
 
+import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -138,7 +139,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
     private String appDomainPkg;
     private String appDomainFqn;
 
-    private RegisteredEntitiesCollector registeredEntitiesCollector;
+    RegisteredEntitiesCollector registeredEntitiesCollector;
     private ElementFinder elementFinder;
     private EntityFinder entityFinder;
 
@@ -192,7 +193,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
 
         // if ApplicationDomain is not among root elements, then search through the whole environment
         final Optional<ApplicationDomainElement> maybeAppDomainElt = maybeAppDomainRootElt.map(elt -> new ApplicationDomainElement(elt, entityFinder))
-                .or(this::findApplicationDomain);
+                .or(registeredEntitiesCollector::findApplicationDomain);
         maybeAppDomainElt.ifPresentOrElse(elt -> {
             // incremental build <=> regenerate
             printNote("Found existing %s (%s registered entities)", elt.getSimpleName(), elt.entities().size() + elt.externalEntities().size());
@@ -343,19 +344,6 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
 
         final int totalRegistered = registeredEntities.size() + externalEntities.size();
         printNote("Generated %s with %s registered entities.", appDomainFqn, totalRegistered);
-    }
-
-    protected Optional<ApplicationDomainElement> findApplicationDomain() {
-        return elementFinder.findTypeElement(appDomainFqn).map(elt -> new ApplicationDomainElement(elt, entityFinder));
-    }
-
-    protected Optional<ApplicationDomainElement> findApplicationDomainInRound(final RoundEnvironment roundEnv) {
-        return roundEnv.getRootElements().stream()
-                .filter(elt -> elt.getKind() == ElementKind.CLASS)
-                .map(elt -> (TypeElement) elt)
-                .filter(elt -> elt.getQualifiedName().contentEquals(appDomainFqn))
-                .findFirst()
-                .map(elt -> new ApplicationDomainElement(elt, entityFinder));
     }
 
 }
