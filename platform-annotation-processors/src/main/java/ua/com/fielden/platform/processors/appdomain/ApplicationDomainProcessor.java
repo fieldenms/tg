@@ -175,9 +175,8 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         }
 
         // if ApplicationDomain is not among root elements, then search through the whole environment
-        final Optional<ApplicationDomainElement> maybeAppDomainElt = maybeAppDomainRootElt.isPresent()
-                                                                     ? maybeAppDomainRootElt.map(elt -> new ApplicationDomainElement(elt, entityFinder))
-                                                                     : findApplicationDomain();
+        final Optional<ApplicationDomainElement> maybeAppDomainElt = maybeAppDomainRootElt.map(elt -> new ApplicationDomainElement(elt, entityFinder))
+                .or(this::findApplicationDomain);
         maybeAppDomainElt.ifPresentOrElse(elt -> {
             // incremental build <=> regenerate
             printNote("Found existing %s (%s registered entities)", elt.getSimpleName(), elt.entities().size() + elt.externalEntities().size());
@@ -187,21 +186,15 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
 
         final var registerableEntities = new TreeSet<EntityElement>();
         final var registerableExtEntities = new TreeSet<EntityElement>();
-        boolean t = registeredEntitiesCollector.mergeRegisteredEntities(
+        final boolean merged = registeredEntitiesCollector.mergeRegisteredEntities(
                 inputEntities, maybeInputExtension, maybeAppDomainElt, registerableEntities::add, registerableExtEntities::add);
-        if (t) {
+        if (merged) {
             writeApplicationDomain(registerableEntities, registerableExtEntities);
         } else {
             printNote("There is nothing to do.");
         }
 
         return false;
-    }
-
-    private void warnIfGeneric(EntityElement entity) {
-        if (isGeneric(entity)) {
-            printWarning("Entity %s won't be registered because it's a generic type.", entity.getQualifiedName());
-        }
     }
 
     private void writeApplicationDomain(final Collection<EntityElement> registeredEntities, final Collection<EntityElement> externalEntities) {
