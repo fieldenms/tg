@@ -144,7 +144,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
     @Override
     public Set<String> getSupportedOptions() {
         return Stream.concat(super.getSupportedOptions().stream(),
-                        Stream.of(APP_DOMAIN_PKG_OPT_DESC).map(ProcessorOptionDescriptor::name))
+                        Stream.of(APP_DOMAIN_PKG_OPT_DESC, APP_DOMAIN_EXTENSION_OPT_DESC).map(ProcessorOptionDescriptor::name))
                 .collect(toSet());
     }
 
