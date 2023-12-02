@@ -4,25 +4,14 @@ import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor.PACKAGE_OPTION;
-import static ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor.ERR_AT_MOST_ONE_EXTENSION_POINT_IS_ALLOWED;
+import static ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor.*;
 import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
-import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertMessages;
 import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccessWithoutProcessingErrors;
 import static ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileObjects.createJavaSource;
 import static ua.com.fielden.platform.test_utils.CollectionTestUtils.assertEqualByContents;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertPresent;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -30,14 +19,8 @@ import java.util.stream.Stream;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.TypeElement;
-import javax.tools.Diagnostic.Kind;
-import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.StandardLocation;
-import javax.tools.ToolProvider;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
 import com.squareup.javapoet.AnnotationSpec;
@@ -54,10 +37,9 @@ import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
 import ua.com.fielden.platform.processors.test_entities.PersistentEntity;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
-import ua.com.fielden.platform.processors.test_utils.CompilationResult;
+import ua.com.fielden.platform.processors.test_utils.CompilationTestUtils;
 import ua.com.fielden.platform.processors.test_utils.ProcessorListener;
 import ua.com.fielden.platform.processors.test_utils.ProcessorListener.AbstractRoundListener;
-import ua.com.fielden.platform.processors.test_utils.exceptions.TestCaseConfigException;
 
 /**
  * A test suite related to {@link ApplicationDomainProcessor}.
@@ -71,7 +53,7 @@ public class ApplicationDomainProcessorTest {
     @Test
     public void external_entities_can_be_registered() {
         final JavaFile firstExtension = JavaFile.builder("test",
-                TypeSpec.classBuilder("FirstExtension")
+                TypeSpec.classBuilder("ApplicationConfig")
                 .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
                         .addMember("value", "{ $L, $L }",
                                 AnnotationSpec.get(RegisterEntityBuilder.builder(ExampleEntity.class).build()),
@@ -82,12 +64,10 @@ public class ApplicationDomainProcessorTest {
 
         final Processor processor = ProcessorListener.of(new ApplicationDomainProcessor())
                 .setRoundListener(new RoundListener() {
-
                     @BeforeRound(2)
                     public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                         final ApplicationDomainElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
-                                processor.findApplicationDomainInRound(roundEnv));
-
+                                processor.registeredEntitiesCollector.findApplicationDomainInRound(roundEnv));
                         assertEqualByContents(
                                 getQualifiedNames(ExampleEntity.class, PersistentEntity.class),
                                 getQualifiedNames(allRegisteredEntities(appDomainElt)));
@@ -97,7 +77,8 @@ public class ApplicationDomainProcessorTest {
         assertSuccessWithoutProcessingErrors(Compilation.newInMemory(List.of(firstExtension.toJavaFileObject()))
                 .setProcessor(processor)
                 .addOptions(OPTION_PROC_ONLY)
-                .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
+                .addProcessorOption(APP_DOMAIN_PKG_OPT_DESC.name(), GENERATED_PKG)
+                .addProcessorOption(APP_DOMAIN_EXTENSION_OPT_DESC.name(), "test.ApplicationConfig")
                 .compile());
     }
 
@@ -109,14 +90,14 @@ public class ApplicationDomainProcessorTest {
                     @BeforeRound(2)
                     public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                         assertTrue("ApplicationDomain should not have been generated.",
-                                processor.findApplicationDomainInRound(roundEnv).isEmpty());
+                                processor.registeredEntitiesCollector.findApplicationDomainInRound(roundEnv).isEmpty());
                     }
                 });
 
         assertSuccessWithoutProcessingErrors(Compilation.newInMemory(List.of(PLACEHOLDER))
                 .setProcessor(processor)
                 .addOptions(OPTION_PROC_ONLY)
-                .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
+                .addProcessorOption(APP_DOMAIN_PKG_OPT_DESC.name(), GENERATED_PKG)
                 .compile());
     }
 
@@ -142,7 +123,7 @@ public class ApplicationDomainProcessorTest {
                     @BeforeRound(2)
                     public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                         final ApplicationDomainElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
-                                processor.findApplicationDomainInRound(roundEnv));
+                                processor.registeredEntitiesCollector.findApplicationDomainInRound(roundEnv));
 
                         assertEqualByContents(javaFiles.stream().map(jf -> getQualifiedName(jf)).toList(),
                                 getQualifiedNames(allRegisteredEntities(appDomainElt)));
@@ -153,7 +134,7 @@ public class ApplicationDomainProcessorTest {
         assertSuccessWithoutProcessingErrors(Compilation.newInMemory(javaFileObjects)
                 .setProcessor(processor)
                 .addOptions(OPTION_PROC_ONLY)
-                .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
+                .addProcessorOption(APP_DOMAIN_PKG_OPT_DESC.name(), GENERATED_PKG)
                 .compile());
     }
 
@@ -178,7 +159,7 @@ public class ApplicationDomainProcessorTest {
                     @BeforeRound(2)
                     public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                         final ApplicationDomainElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
-                                processor.findApplicationDomainInRound(roundEnv));
+                                processor.registeredEntitiesCollector.findApplicationDomainInRound(roundEnv));
 
                         assertEqualByContents(
                                 getQualifiedNames(firstEntity),
@@ -189,7 +170,7 @@ public class ApplicationDomainProcessorTest {
         assertSuccessWithoutProcessingErrors(Compilation.newInMemory(List.of(firstEntity.toJavaFileObject(), skippedEntity.toJavaFileObject()))
                 .setProcessor(processor)
                 .addOptions(OPTION_PROC_ONLY)
-                .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
+                .addProcessorOption(APP_DOMAIN_PKG_OPT_DESC.name(), GENERATED_PKG)
                 .compile());
     }
 
@@ -236,7 +217,7 @@ public class ApplicationDomainProcessorTest {
                         public void beforeFirstRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                             // assert that ApplicationDomain was generated during the previous compilation
                             final ApplicationDomainElement appDomainElt = assertPresent("ApplicationDomain is missing.",
-                                    processor.findApplicationDomain());
+                                    processor.registeredEntitiesCollector.findApplicationDomain());
 
                             assertEqualByContents(
                                     getQualifiedNames(entity1, entity2_v1),
@@ -247,7 +228,7 @@ public class ApplicationDomainProcessorTest {
                         public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                             // assert that ApplicationDomain was regenerated in the previous round
                             final ApplicationDomainElement appDomainElt = assertPresent("Regenerated ApplicationDomain is missing.",
-                                    processor.findApplicationDomainInRound(roundEnv));
+                                    processor.registeredEntitiesCollector.findApplicationDomainInRound(roundEnv));
 
                             // entity2 should have been excluded
                             assertEqualByContents(
@@ -282,7 +263,7 @@ public class ApplicationDomainProcessorTest {
                     @BeforeRound(2)
                     public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                         final ApplicationDomainElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
-                                processor.findApplicationDomainInRound(roundEnv));
+                                processor.registeredEntitiesCollector.findApplicationDomainInRound(roundEnv));
 
                         assertEqualByContents(
                                 getQualifiedNames(domainEntity),
@@ -294,7 +275,7 @@ public class ApplicationDomainProcessorTest {
                 Compilation.newInMemory(Stream.of(domainEntity, abstractEntity).map(JavaFile::toJavaFileObject).toList())
                 .setProcessor(processor)
                 .addOptions(OPTION_PROC_ONLY)
-                .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
+                .addProcessorOption(APP_DOMAIN_PKG_OPT_DESC.name(), GENERATED_PKG)
                 .compile());
     }
 
@@ -333,7 +314,7 @@ public class ApplicationDomainProcessorTest {
                         public void beforeFirstRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                             // assert that ApplicationDomain was generated during the previous compilation
                             final ApplicationDomainElement appDomainElt = assertPresent("ApplicationDomain is missing.",
-                                    processor.findApplicationDomain());
+                                    processor.registeredEntitiesCollector.findApplicationDomain());
 
                             // assert that exactly one entity is currently registered
                             assertEqualByContents(
@@ -345,7 +326,7 @@ public class ApplicationDomainProcessorTest {
                         public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                             // assert that ApplicationDomain was generated in the previous round
                             final ApplicationDomainElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
-                                    processor.findApplicationDomainInRound(roundEnv));
+                                    processor.registeredEntitiesCollector.findApplicationDomainInRound(roundEnv));
 
                             // assert that exactly two entities were registered
                             assertEqualByContents(
@@ -368,6 +349,8 @@ public class ApplicationDomainProcessorTest {
         // 2. ApplicationDomain is REgenerated to include new external entities
 
         compileWithTempStorage((compilation, javaFileWriter) -> {
+            compilation.addProcessorOption(APP_DOMAIN_EXTENSION_OPT_DESC.name(), "test.ApplicationConfig");
+
             // 1
             final JavaFile inputEntity = JavaFile.builder("test",
                     TypeSpec.classBuilder("First").addModifiers(PUBLIC)
@@ -377,8 +360,8 @@ public class ApplicationDomainProcessorTest {
             // write the first entity to file, so we can look it up during the 2nd compilation
             javaFileWriter.accept(inputEntity);
 
-            final JavaFile extensionV1 = JavaFile.builder("test.extension",
-                    TypeSpec.classBuilder("FirstExtension")
+            final JavaFile extensionV1 = JavaFile.builder("test",
+                    TypeSpec.classBuilder("ApplicationConfig")
                     .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
                             .addMember("value", "{ $L }",
                                     // initally, register 1 external entity
@@ -395,8 +378,8 @@ public class ApplicationDomainProcessorTest {
 
             // 2
             // simulate modification of the same source file test.extension.FirstExtension
-            final JavaFile extensionV2 = JavaFile.builder("test.extension",
-                    TypeSpec.classBuilder("FirstExtension")
+            final JavaFile extensionV2 = JavaFile.builder("test",
+                    TypeSpec.classBuilder("ApplicationConfig")
                     .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
                             .addMember("value", "{ $L, $L }",
                                     // the previous one
@@ -413,7 +396,7 @@ public class ApplicationDomainProcessorTest {
                         public void beforeFirstRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                             // assert that ApplicationDomain was generated during the previous compilation
                             final ApplicationDomainElement appDomainElt = assertPresent("ApplicationDomain is missing.",
-                                    processor.findApplicationDomain());
+                                    processor.registeredEntitiesCollector.findApplicationDomain());
 
                             assertEqualByContents(
                                     List.of(getQualifiedName(inputEntity), ExampleEntity.class.getCanonicalName()),
@@ -424,7 +407,7 @@ public class ApplicationDomainProcessorTest {
                         public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                             // assert that ApplicationDomain was generated in the previous round
                             final ApplicationDomainElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
-                                    processor.findApplicationDomainInRound(roundEnv));
+                                    processor.registeredEntitiesCollector.findApplicationDomainInRound(roundEnv));
 
                             assertEqualByContents(
                                     List.of(getQualifiedName(inputEntity), ExampleEntity.class.getCanonicalName(), PersistentEntity.class.getCanonicalName()),
@@ -470,6 +453,9 @@ public class ApplicationDomainProcessorTest {
                     compilation
                     .setJavaSources(List.of(entity1.toJavaFileObject(), entity2.toJavaFileObject()))
                     .setProcessor(new ApplicationDomainProcessor())
+                    // it's essential to avoid producing a .class file for Second because it would be used in place of
+                    // the deleted source file during the next compilation
+                    .addOptions(OPTION_PROC_ONLY)
                     .compile());
 
             // 2
@@ -480,7 +466,7 @@ public class ApplicationDomainProcessorTest {
                         public void beforeFirstRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                             // assert that ApplicationDomain was generated during the previous compilation
                             final ApplicationDomainElement appDomainElt = assertPresent("ApplicationDomain is missing.",
-                                    processor.findApplicationDomain());
+                                    processor.registeredEntitiesCollector.findApplicationDomain());
 
                             // entity First will be represented as usual
                             assertEqualByContents(getQualifiedNames(entity1),
@@ -493,7 +479,7 @@ public class ApplicationDomainProcessorTest {
                         public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                             // assert that ApplicationDomain was regenerated in the previous round
                             final ApplicationDomainElement appDomainElt = assertPresent("Regenerated ApplicationDomain is missing.",
-                                    processor.findApplicationDomainInRound(roundEnv));
+                                    processor.registeredEntitiesCollector.findApplicationDomainInRound(roundEnv));
 
                             // assert that only entity "First" was registered
                             assertEqualByContents(getQualifiedNames(entity1),
@@ -507,6 +493,7 @@ public class ApplicationDomainProcessorTest {
                     compilation
                     .setJavaSources(List.of(entity1.toJavaFileObject()))
                     .setProcessor(processor)
+                    .addOptions(OPTION_PROC_ONLY)
                     .compile());
         });
     }
@@ -558,7 +545,7 @@ public class ApplicationDomainProcessorTest {
                         public void beforeFirstRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                             // assert that ApplicationDomain was generated during the previous compilation
                             final ApplicationDomainElement appDomainElt = assertPresent("ApplicationDomain is missing.",
-                                    processor.findApplicationDomain());
+                                    processor.registeredEntitiesCollector.findApplicationDomain());
 
                             // assert that exactly 2 entities are currently registered
                             assertEqualByContents(
@@ -570,7 +557,7 @@ public class ApplicationDomainProcessorTest {
                         public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                             // assert that ApplicationDomain was regenerated in the previous round
                             final ApplicationDomainElement appDomainElt = assertPresent("Regenerated ApplicationDomain is missing.",
-                                    processor.findApplicationDomainInRound(roundEnv));
+                                    processor.registeredEntitiesCollector.findApplicationDomainInRound(roundEnv));
 
                             // assert that only entity "First" was registered
                             assertEqualByContents(
@@ -594,9 +581,11 @@ public class ApplicationDomainProcessorTest {
     @Test
     public void external_entities_can_be_incrementally_unregistered_from_ApplicationDomain() {
         compileWithTempStorage((compilation, srcPath) -> {
+            compilation.addProcessorOption(APP_DOMAIN_EXTENSION_OPT_DESC.name(), "test.ApplicationConfig");
+
             // 1
-            final JavaFile extensionV1 = JavaFile.builder("test.extension",
-                    TypeSpec.classBuilder("FirstExtension")
+            final JavaFile extensionV1 = JavaFile.builder("test",
+                    TypeSpec.classBuilder("ApplicationConfig")
                     .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
                             .addMember("value", "{ $L, $L }",
                                     AnnotationSpec.get(RegisterEntityBuilder.builder(ExampleEntity.class).build()),
@@ -612,8 +601,8 @@ public class ApplicationDomainProcessorTest {
                     .compile());
 
             // 2
-            final JavaFile extensionV2 = JavaFile.builder("test.extension",
-                    TypeSpec.classBuilder("FirstExtension")
+            final JavaFile extensionV2 = JavaFile.builder("test",
+                    TypeSpec.classBuilder("ApplicationConfig")
                     .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
                             .addMember("value", "{ $L }",
                                     // unregister PersistentEntity
@@ -629,7 +618,7 @@ public class ApplicationDomainProcessorTest {
                         public void beforeFirstRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                             // assert that ApplicationDomain was generated during the previous compilation
                             final ApplicationDomainElement appDomainElt = assertPresent("ApplicationDomain is missing.",
-                                    processor.findApplicationDomain());
+                                    processor.registeredEntitiesCollector.findApplicationDomain());
 
                             assertEqualByContents(
                                     getQualifiedNames(ExampleEntity.class, PersistentEntity.class),
@@ -640,7 +629,7 @@ public class ApplicationDomainProcessorTest {
                         public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                             // assert that ApplicationDomain was regenerated in the previous round
                             final ApplicationDomainElement appDomainElt = assertPresent("Regenerated ApplicationDomain is missing.",
-                                    processor.findApplicationDomainInRound(roundEnv));
+                                    processor.registeredEntitiesCollector.findApplicationDomainInRound(roundEnv));
 
                             assertEqualByContents(
                                     getQualifiedNames(ExampleEntity.class),
@@ -657,29 +646,42 @@ public class ApplicationDomainProcessorTest {
     }
 
     @Test
-    public void errors_are_reported_when_there_are_multiple_ApplicationDomain_extensions() {
+    public void additional_ApplicationDomain_extensions_are_ignored() {
         final JavaFile extension1 = JavaFile.builder("test",
-                TypeSpec.classBuilder("FirstExtension")
+                TypeSpec.classBuilder("ApplicationConfig")
                 .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
                         .addMember("value", "{ $L }", AnnotationSpec.get(RegisterEntityBuilder.builder(ExampleEntity.class).build()))
                         .build())
                 .build())
             .build();
         final JavaFile extension2 = JavaFile.builder("test",
-                TypeSpec.classBuilder("SecondExtension")
+                TypeSpec.classBuilder("AnotherApplicationConfig")
                 .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
-                        .addMember("value", "{ $L }", AnnotationSpec.get(RegisterEntityBuilder.builder(ExampleEntity.class).build()))
+                        .addMember("value", "{ $L }", AnnotationSpec.get(RegisterEntityBuilder.builder(PersistentEntity.class).build()))
                         .build())
                 .build())
             .build();
 
-        final CompilationResult result = Compilation.newInMemory(Stream.of(extension1, extension2).map(JavaFile::toJavaFileObject).toList())
-                .setProcessor(new ApplicationDomainProcessor())
-                .addOptions(OPTION_PROC_ONLY)
-                .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
-                .compile();
-        assertTrue(result.failure());
-        assertMessages(result, Kind.ERROR, ERR_AT_MOST_ONE_EXTENSION_POINT_IS_ALLOWED);
+        // we can access the generated ApplicationDomain in the 2nd round
+        final Processor processor = ProcessorListener.of(new ApplicationDomainProcessor())
+                .setRoundListener(new RoundListener() {
+                    @BeforeRound(2)
+                    public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+                        final ApplicationDomainElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
+                                processor.registeredEntitiesCollector.findApplicationDomainInRound(roundEnv));
+
+                        assertEqualByContents(List.of(ExampleEntity.class.getCanonicalName()),
+                                getQualifiedNames(allRegisteredEntities(appDomainElt)));
+                    }
+                });
+
+        assertSuccessWithoutProcessingErrors(
+                Compilation.newInMemory(Stream.of(extension1, extension2).map(JavaFile::toJavaFileObject).toList())
+                        .setProcessor(processor)
+                        .addOptions(OPTION_PROC_ONLY)
+                        .addProcessorOption(APP_DOMAIN_PKG_OPT_DESC.name(), GENERATED_PKG)
+                        .addProcessorOption(APP_DOMAIN_EXTENSION_OPT_DESC.name(), "test.ApplicationConfig")
+                        .compile());
     }
 
     // -------------------- UTILITIES --------------------
@@ -713,66 +715,15 @@ public class ApplicationDomainProcessorTest {
         return entities;
     }
 
-    /**
-     * Evaluates the given consumer with a configured {@link Compilation} instance and a {@link Consumer} to persist source files
-     * between compilations.
-     * <p>
-     * Temporary storage is set up in the form of a filesystem directory, which is deleted after {@code consumer} returns or throws an exception.
-     *
-     * @param consumer
-     */
     private static void compileWithTempStorage(final BiConsumer<Compilation, Consumer<JavaFile>> consumer) {
-        final Path rootTmpDir;
-        try {
-            // set up temporary storage
-            rootTmpDir = Files.createTempDirectory("java-test");
-        } catch (final IOException ex) {
-            throw new TestCaseConfigException("Failed to create a temporary directory", ex);
-        }
-
-        final Path srcTmpDir;
-        final JavaCompiler compiler;
-        final StandardJavaFileManager fileManager ;
-        try {
-            srcTmpDir = Files.createDirectories(Path.of(rootTmpDir.toString(), "src/main/java"));
-            final Path targetTmpDir = Files.createDirectories(Path.of(rootTmpDir.toString(), "target/classes"));
-            final Path generatedTmpDir = Files.createDirectories(Path.of(rootTmpDir.toString(), "target/generated-sources"));
-
-            // configure compilation settings
-            compiler = ToolProvider.getSystemJavaCompiler();
-            fileManager = compiler.getStandardFileManager(null, Locale.getDefault(), StandardCharsets.UTF_8);
-            fileManager.setLocationFromPaths(StandardLocation.SOURCE_OUTPUT, List.of(generatedTmpDir));
-            fileManager.setLocationFromPaths(StandardLocation.SOURCE_PATH, List.of(srcTmpDir, generatedTmpDir));
-            fileManager.setLocationFromPaths(StandardLocation.CLASS_OUTPUT, List.of(targetTmpDir));
-        } catch (final IOException ex) {
-            FileUtils.deleteQuietly(rootTmpDir.toFile());
-            throw new TestCaseConfigException("Failed to configure compilation with temporary storage.", ex);
-        }
-
-        // this instance can be reused by setting different java sources each time
-        final Compilation compilation = new Compilation(List.of(PLACEHOLDER))
-                .setCompiler(compiler)
-                .setFileManager(fileManager)
-                .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG);
-
-        final Consumer<JavaFile> javaFileWriter = javaFile -> {
-            try {
-                javaFile.writeTo(srcTmpDir);
-            } catch (final IOException ex) {
-                throw new TestCaseConfigException("Failed to write java file.", ex);
-            }
-        };
-
-        // wrap the consumer in a big try-catch block to clean up temporary storage afterwards
-        try {
+        CompilationTestUtils.compileWithTempStorage(((compilation, javaFileWriter) -> {
+            compilation.addProcessorOption(APP_DOMAIN_PKG_OPT_DESC.name(), GENERATED_PKG);
             consumer.accept(compilation, javaFileWriter);
-        } finally {
-            FileUtils.deleteQuietly(rootTmpDir.toFile());
-        }
+        }));
     }
 
     /** A round listener tailored for {@link ApplicationDomainProcessor}. */
-    private static abstract class RoundListener extends AbstractRoundListener<ApplicationDomainProcessor> { }
+    public static abstract class RoundListener extends AbstractRoundListener<ApplicationDomainProcessor> { }
 
     private static class RegisterEntityBuilder {
 

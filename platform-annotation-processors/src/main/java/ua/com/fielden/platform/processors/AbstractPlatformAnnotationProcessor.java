@@ -1,15 +1,16 @@
 package ua.com.fielden.platform.processors;
 
-import static java.lang.Boolean.parseBoolean;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static javax.tools.Diagnostic.Kind.NOTE;
+import static ua.com.fielden.platform.processors.ProcessorOptionDescriptor.newBooleanOptionDescriptor;
+import static ua.com.fielden.platform.processors.ProcessorOptionDescriptor.parseOptionFrom;
 
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
-import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
@@ -26,7 +27,6 @@ import javax.tools.Diagnostic;
 import com.google.common.base.Stopwatch;
 import com.squareup.javapoet.AnnotationSpec;
 
-import ua.com.fielden.platform.processors.exceptions.ProcessorInitializationException;
 import ua.com.fielden.platform.processors.metamodel.elements.utils.TypeElementCache;
 import ua.com.fielden.platform.processors.utils.CodeGenerationUtils;
 
@@ -40,7 +40,6 @@ import ua.com.fielden.platform.processors.utils.CodeGenerationUtils;
  * Supported options by this base type:
  * <ul>
  *   <li>{@code cacheStats} -- if set to {@code true} enables recording of type element cache statistics (see {@link TypeElementCache#getStats()}). </li>
- *   <li>{@code package} -- the name of the top project package; might be useful in determining the location of specific sources.</li>
  * </ul>
  *
  * @author TG Team
@@ -64,14 +63,15 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
     /** Indicates whether the last round of processing initial inputs has already been passed. Makes sense during incremental compilation. */
     private boolean pastLastRound;
 
-    // supported options
-    public static final String CACHE_STATS_OPTION = "cacheStats";
-    private boolean reportCacheStats = false;
+    // --- supported options ---
 
-    public static final String PACKAGE_OPTION = "package";
-    protected String packageName = "fielden";
+    public static final ProcessorOptionDescriptor<Boolean> CACHE_STATS_OPT_DESC = newBooleanOptionDescriptor("cacheStats", false);
+    private boolean reportCacheStats;
 
-    private static final Pattern REGEX_JAVA_PACKAGE_NAME = Pattern.compile("([a-zA-Z]\\w*\\.)*[a-zA-Z]\\w*");
+    @Override
+    public Set<String> getSupportedOptions() {
+        return Stream.of(CACHE_STATS_OPT_DESC).map(ProcessorOptionDescriptor::name).collect(Collectors.toSet());
+    }
 
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
@@ -86,8 +86,8 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
         final Map<String, String> options = processingEnv.getOptions();
         if (!options.isEmpty()) {
             printNote("Options: " + options);
-            parseOptions(options);
         }
+        parseOptions(options);
         printNote("%s initialized.", classSimpleName);
     }
 
@@ -96,28 +96,14 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
         return SourceVersion.latestSupported();
     }
 
-    @Override
-    public Set<String> getSupportedOptions() {
-        return Set.of(CACHE_STATS_OPTION, PACKAGE_OPTION);
-    }
-
     /**
      * Performs parsing of options that were passed to this processor.
-     * Subclasses might wish to call the super implementation when overriding this method.
-     *
-     * @param options
+     * Subclasses should call the super implementation when overriding this method.
      */
     protected void parseOptions(final Map<String, String> options) {
-        if (parseBoolean(options.get(CACHE_STATS_OPTION))) {
-            reportCacheStats = true;
+        reportCacheStats = parseOptionFrom(options, CACHE_STATS_OPT_DESC);
+        if (reportCacheStats)
             TypeElementCache.recordStats();
-        }
-        Optional.ofNullable(options.get(PACKAGE_OPTION)).ifPresent(pkg -> {
-            if (!REGEX_JAVA_PACKAGE_NAME.matcher(pkg).matches()) {
-                throw new ProcessorInitializationException("Option \"%s\" specifies an illegal package name \"%s\".".formatted(PACKAGE_OPTION, pkg));
-            }
-            this.packageName = pkg;
-        });
     }
 
     @Override
@@ -228,10 +214,6 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
         return roundNumber;
     }
 
-    public ProcessingEnvironment getProcessingEnvironment() {
-        return this.processingEnv;
-    }
-
     protected static String formatSequence(String name, final Iterator<?> iterator, final String separator) {
         final StringJoiner sj = new StringJoiner(",");
 
@@ -261,4 +243,3 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
     }
 
 }
-
