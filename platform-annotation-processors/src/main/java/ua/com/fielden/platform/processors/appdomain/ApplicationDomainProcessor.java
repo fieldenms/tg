@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.processors.appdomain;
 
-import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -25,7 +24,6 @@ import java.util.stream.Stream;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -99,14 +97,16 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
     public static final String APPLICATION_DOMAIN_SIMPLE_NAME = "ApplicationDomain";
     public static final String ERR_AT_MOST_ONE_EXTENSION_POINT_IS_ALLOWED = "At most one extension point is allowed.";
 
-    public static final ProcessorOptionDescriptor<String> APP_DOMAIN_PKG_OPT_DESC = new ProcessorOptionDescriptor<>() {
-        private static final Pattern REGEX_JAVA_PACKAGE_NAME = Pattern.compile("([a-zA-Z]\\w*\\.)*[a-zA-Z]\\w*");
+    private final static String ID_PATTERN = "\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*";
+    private final static Pattern FQCN_OR_PKG_NAME_PATTERN = Pattern.compile(ID_PATTERN + "(\\." + ID_PATTERN + ")*");
 
+
+    public static final ProcessorOptionDescriptor<String> APP_DOMAIN_PKG_OPT_DESC = new ProcessorOptionDescriptor<>() {
         @Override public String name() { return "appDomainPkg"; }
         @Override public String defaultValue() { return "fielden.config"; }
 
         @Override public String parse(String value) {
-            if (!REGEX_JAVA_PACKAGE_NAME.matcher(value).matches()) {
+            if (!FQCN_OR_PKG_NAME_PATTERN.matcher(value).matches()) {
                 throw new ProcessorInitializationException("Option [%s] specifies an illegal package name [%s]."
                         .formatted(name(), value));
             }
@@ -115,13 +115,11 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
     };
 
     public static final ProcessorOptionDescriptor<String> APP_DOMAIN_EXTENSION_OPT_DESC = new ProcessorOptionDescriptor<>() {
-        private static final Pattern REGEX_JAVA_CLASS_NAME = Pattern.compile("([a-zA-Z]\\w*\\.)*[a-zA-Z]\\w*");
-
         @Override public String name() { return "appDomainExtension"; }
         @Override public String defaultValue() { return "fielden.config.ApplicationConfig"; }
 
         @Override public String parse(String value) {
-            if (!REGEX_JAVA_CLASS_NAME.matcher(value).matches()) {
+            if (!FQCN_OR_PKG_NAME_PATTERN.matcher(value).matches()) {
                 throw new ProcessorInitializationException("Option [%s] specifies an illegal class name [%s]."
                         .formatted(name(), value));
             }
