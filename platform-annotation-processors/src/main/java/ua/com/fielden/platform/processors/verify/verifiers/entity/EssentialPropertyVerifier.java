@@ -1,5 +1,31 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
+import static java.util.Optional.of;
+import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asDeclaredType;
+import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asTypeElementOfTypeMirror;
+import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.getSimpleName;
+import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.isRawType;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.annotation.processing.RoundEnvironment;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.ErrorType;
+import javax.lang.model.type.TypeMirror;
+import javax.tools.Diagnostic.Kind;
+
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -12,22 +38,6 @@ import ua.com.fielden.platform.processors.verify.ViolatingElement;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
-
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.ErrorType;
-import javax.lang.model.type.TypeMirror;
-import javax.tools.Diagnostic.Kind;
-import java.math.BigDecimal;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static java.util.Optional.of;
-import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.*;
 
 /**
  * Composable verifier for entity properties, responsible for the most essential verification, which includes:
