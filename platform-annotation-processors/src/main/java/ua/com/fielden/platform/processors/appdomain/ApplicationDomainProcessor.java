@@ -172,13 +172,9 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
             return false;
         }
 
-        final List<EntityElement> inputEntities;
-        final Optional<ExtendApplicationDomainMirror> maybeInputExtension;
-        {
-            var pair = registeredEntitiesCollector.scanRoundInputs(roundEnv);
-            inputEntities = pair.getKey();
-            maybeInputExtension = pair.getValue();
-        }
+        final var pair = registeredEntitiesCollector.scanRoundInputs(roundEnv);
+        final List<EntityElement> inputEntities = pair.getKey();
+        final Optional<ExtendApplicationDomainMirror> maybeInputExtension = pair.getValue();
 
         // removal of a registered entity will cause recompilation of ApplicationDomain
         final Optional<ApplicationDomainElement> maybeAppDomainRootElt = registeredEntitiesCollector.findApplicationDomainInRound(roundEnv);
@@ -201,8 +197,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
 
         final var registerableEntities = new TreeSet<EntityElement>();
         final var registerableExtEntities = new TreeSet<EntityElement>();
-        final boolean merged = registeredEntitiesCollector.mergeRegisteredEntities(
-                inputEntities, maybeInputExtension, maybeAppDomainElt, registerableEntities::add, registerableExtEntities::add);
+        final boolean merged = registeredEntitiesCollector.mergeRegisteredEntities(inputEntities, maybeInputExtension, maybeAppDomainElt, registerableEntities::add, registerableExtEntities::add);
         if (merged) {
             writeApplicationDomain(registerableEntities, registerableExtEntities);
         } else {

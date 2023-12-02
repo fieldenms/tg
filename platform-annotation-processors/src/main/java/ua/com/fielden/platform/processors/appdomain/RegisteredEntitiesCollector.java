@@ -4,7 +4,6 @@ import ua.com.fielden.platform.processors.appdomain.annotation.ExtendApplication
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
-import ua.com.fielden.platform.processors.utils.OptionalUtils;
 import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -20,6 +19,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toSet;
@@ -66,8 +67,8 @@ public final class RegisteredEntitiesCollector {
                 .map(elt -> new ApplicationDomainElement(elt, entityFinder))
                 .or(this::findApplicationDomain);
         final Pair<List<EntityElement>, Optional<ExtendApplicationDomainMirror>> roundInputs = scanRoundInputs(roundEnv);
-        final boolean t = mergeRegisteredEntities(roundInputs.getKey(), roundInputs.getValue(), maybeAppDomainElt, externalEntityCollector, entityCollector);
-        if (!t) {
+        final boolean merged = mergeRegisteredEntities(roundInputs.getKey(), roundInputs.getValue(), maybeAppDomainElt, externalEntityCollector, entityCollector);
+        if (!merged) {
             final ApplicationDomainElement appDomainElt= maybeAppDomainElt.get();
             appDomainElt.entities().forEach(entityCollector);
             appDomainElt.externalEntities().forEach(externalEntityCollector);
@@ -93,7 +94,7 @@ public final class RegisteredEntitiesCollector {
                                            final Consumer<? super EntityElement> entityCollector,
                                            final Consumer<? super EntityElement> externalEntityCollector)
     {
-        return OptionalUtils.ifEmptyOrMap(maybeAppDomainElt, () -> {
+        return ifEmptyOrMap(maybeAppDomainElt, () -> {
             roundEntities.stream().filter(EntityRegistrationUtils::isRegisterable).forEach(entityCollector);
             maybeRoundExtension.or(this::findApplicationDomainExtension)
                     .map(mirr -> mirr.streamEntityElements(entityFinder)).orElseGet(Stream::empty)
@@ -163,7 +164,6 @@ public final class RegisteredEntitiesCollector {
                             missingRegisteredTypes.size(), CollectionUtil.toString(missingRegisteredTypes, ", ")));
                 }
             });
-
 
             // consider if we actually need to merge
             if (!missingRegisteredTypes.isEmpty() || !toUnregister.isEmpty() || !externalToUnregister.isEmpty() // anything to exclude?
@@ -243,6 +243,10 @@ public final class RegisteredEntitiesCollector {
                         "Entity %s won't be registered because it's a generic type.".formatted(entity.getQualifiedName()));
             }
         });
+    }
+
+    private static <T, R> R ifEmptyOrMap(Optional<T> optional, Supplier<? extends R> ifEmpty, Function<? super T, R> mapper) {
+        return optional.isEmpty() ? ifEmpty.get() : mapper.apply(optional.get());
     }
 
 }
