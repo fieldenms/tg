@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.processors.appdomain.annotation;
 
 import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.SOURCE;
+import static java.lang.annotation.RetentionPolicy.CLASS;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -16,7 +16,7 @@ import ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor;
  *
  * @author TG Team
  */
-@Retention(SOURCE)
+@Retention(CLASS)
 @Target(TYPE)
 public @interface RegisterEntity {
 

@@ -67,6 +67,10 @@ public class ApplicationDomainElement extends AbstractForwardingTypeElement {
         return Collections.unmodifiableSet(externalEntities);
     }
 
+    public Stream<EntityElement> streamAllEntities() {
+        return Stream.concat(entities.stream(), externalEntities.stream());
+    }
+
     public List<ErrorType> errorTypes() {
         return Collections.unmodifiableList(errorTypes);
     }

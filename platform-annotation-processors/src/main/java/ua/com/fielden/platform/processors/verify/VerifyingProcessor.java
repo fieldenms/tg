@@ -10,7 +10,6 @@ import ua.com.fielden.platform.processors.verify.verifiers.entity.UnionEntityVer
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.lang.model.element.Element;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import java.util.ArrayList;
@@ -24,8 +23,8 @@ import static java.util.stream.Collectors.joining;
 /**
  * Annotation processor responsible for verifying source definitions in a domain model.
  * <p>
- * The processor itself does not define any specific verification logic. Instead it delegates to implementations of the {@link IVerifier} interface,
- * providing them its own inputs and respective processing/round environments.
+ * The processor itself does not define any specific verification logic. Instead it delegates to implementations of the
+ * {@link IVerifier} interface, providing them its own inputs and respective processing/round environments.
  *
  * @author TG Team
  */
@@ -73,11 +72,9 @@ public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
      */
     @Override
     public boolean processRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-        final Set<? extends Element> rootElements = roundEnv.getRootElements();
-        if (rootElements.isEmpty()) {
+        if (roundEnv.getRootElements().isEmpty()) {
             printNote("Nothing to verify.");
-        }
-        else {
+        } else {
             final boolean roundPassed = verify(roundEnv);
             if (roundPassed) {
                 printNote("All verifiers were passed.");
@@ -86,7 +83,7 @@ public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
         }
 
         if (!passed) {
-            printMandatoryWarning("Claiming this round's annotations to disable other processors.");
+            printMandatoryWarning("Claiming this round's (no. %s) annotations to disable other processors.", getRoundNumber());
         }
 
         return !passed;

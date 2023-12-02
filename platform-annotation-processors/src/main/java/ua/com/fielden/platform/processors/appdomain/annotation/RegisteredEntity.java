@@ -28,6 +28,7 @@ public @interface RegisteredEntity {
 
     static boolean DEFAULT_EXTERNAL = false;
 
+    // NOTE generic entity types are incompatbile and can't be assigned to this member, but there is no such need
     Class<? extends AbstractEntity<?>> value();
 
     boolean external() default DEFAULT_EXTERNAL;

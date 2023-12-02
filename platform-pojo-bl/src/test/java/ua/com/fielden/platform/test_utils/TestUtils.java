@@ -1,5 +1,4 @@
 package ua.com.fielden.platform.test_utils;
-
 import java.util.Optional;
 
 import static org.junit.Assert.assertTrue;
