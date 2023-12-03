@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.processors.verify;
 
 import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
+import ua.com.fielden.platform.processors.ProcessorOptionDescriptor;
 import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier;
@@ -17,8 +18,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toSet;
+import static ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor.APP_DOMAIN_EXTENSION_OPT_DESC;
+import static ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor.APP_DOMAIN_PKG_OPT_DESC;
 
 /**
  * Annotation processor responsible for verifying source definitions in a domain model.
@@ -36,6 +41,13 @@ public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
 
     /** Round-cumulative indicator of whether all verifiers were passed. */
     private boolean passed;
+
+    @Override
+    public Set<String> getSupportedOptions() {
+        return Stream.concat(super.getSupportedOptions().stream(),
+                        Stream.of(APP_DOMAIN_PKG_OPT_DESC, APP_DOMAIN_EXTENSION_OPT_DESC).map(ProcessorOptionDescriptor::name))
+                .collect(toSet());
+    }
 
     public VerifyingProcessor() {
         // specify default verifiers here
