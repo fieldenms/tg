@@ -1,11 +1,17 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import static java.lang.String.format;
+
+import java.util.List;
+import java.util.Optional;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonOperand;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISingleConditionOperator;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ILogicalOperator;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISingleConditionOperator;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 
@@ -62,7 +68,18 @@ abstract class ConditionalOperand<T1 extends IComparisonOperator<T2, ET>, T2 ext
      */
     @Override
     public T2 critCondition(final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName) {
-        return nextForConditionalOperand(getTokens().critCondition(collectionQueryStart, propName, critPropName));
+        return nextForConditionalOperand(getTokens().critCondition(collectionQueryStart, propName, critPropName, Optional.empty()));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public T2 critCondition(final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName, final Object defaultValue) {
+        if (!(defaultValue instanceof List) && !(defaultValue instanceof String) && !(defaultValue instanceof ua.com.fielden.platform.types.tuples.T2)) {
+            throw new EqlException(format("Argument [defaultValue] for property [%s] in a [critCondition] call should either be a list of strings, a string, or a tuple (T2).", propName));
+        }
+        return nextForConditionalOperand(getTokens().critCondition(collectionQueryStart, propName, critPropName, Optional.of(defaultValue)));
     }
 
     @Override
