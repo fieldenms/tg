@@ -17,7 +17,6 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
-import static ua.com.fielden.platform.web.action.CentreConfigShareActionProducer.CONFIG_DOES_NOT_EXIST;
 import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.applyNewOrderVisibilityAndSorting;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefault;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLink;
@@ -46,6 +45,7 @@ import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.extractSaveAsName;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.wasLoadedPreviouslyAndConfigUuid;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.CENTRE_DIRTY;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.CONFIG_DOES_NOT_EXIST;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.META_VALUES;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.STALE_CRITERIA_MESSAGE;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.complementCriteriaEntityBeforeRunning;
@@ -494,7 +494,8 @@ public class CriteriaResource extends AbstractWebResource {
                 of(ofNullable(saveAsDesc)),
                 empty(),
                 of(updatedFreshCentre.getPreferredView()),
-                user
+                user,
+                of(appliedCriteriaEntity.shareError())
             )
         );
     }
@@ -528,7 +529,8 @@ public class CriteriaResource extends AbstractWebResource {
                         saveAsDesc,
                         of(ofNullable(staleCriteriaMessage)),
                         of(updatedFreshCentre.getPreferredView()),
-                        user
+                        user,
+                        empty() // no need to update shareError on discarding
                 )//
         );
     }
