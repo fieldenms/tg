@@ -353,6 +353,14 @@ Polymer({
             value: false,
         },
 
+        /**
+         * Property that indicates whether action represents Share action on Entity Centre.
+         */
+        shareAction : {
+            type: Boolean,
+            value: false
+        },
+
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
         //////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -532,7 +540,7 @@ Polymer({
                     this.restoreActionState();
                     console.log("The action was rejected with error: " + e);
                 }
-            } else if (isNotFocused && 'custom-share-action' !== self.slot) { // avoid async action execution for share actions (even custom ones) - see #2116 (navigator.clipboard.writeText needs to be synchronous in Safari-based browsers)
+            } else if (isNotFocused && !self.shareAction) { // avoid async action execution for share actions (even custom ones) - see #2116 (navigator.clipboard.writeText needs to be synchronous in Safari-based browsers)
                 self.async(() => postMasterInfoRetrieve(), 100); // delay action execution in case if forcefull focusing (and, possibly, focus lost on other editor) occurred
             } else {
                 postMasterInfoRetrieve();
