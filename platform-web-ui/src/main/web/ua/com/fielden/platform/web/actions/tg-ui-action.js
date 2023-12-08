@@ -481,12 +481,11 @@ Polymer({
         }.bind(this);
 
         self._run = (function (event) {
-            console.log(this.shortDesc + ": execute; activeElement =", deepestActiveElement());
+            console.log(this.shortDesc + ": execute");
             const button = this.$ && this.$[this.isIconButton ? 'iActionButton' : 'bActionButton'];
             const isNotFocused = button && button !== deepestActiveElement();
             if (isNotFocused) {
-                console.error('imperative focusing');
-                button.focus();
+                button.focus(); // force 'tg-ui-action' UI element focusing to ensure focus lost event happens in other editor
             }
 
             const postMasterInfoRetrieve = function () {
@@ -534,7 +533,7 @@ Polymer({
                     console.log("The action was rejected with error: " + e);
                 }
             } else if (isNotFocused) {
-                self.async(() => postMasterInfoRetrieve(), 100);
+                self.async(() => postMasterInfoRetrieve(), 100); // delay action execution in case if forcefull focusing (and, possibly, focus lost on other editor) occurred
             } else {
                 postMasterInfoRetrieve();
             }

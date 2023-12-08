@@ -517,13 +517,6 @@ Polymer({
                         // bind custom object (if it is not empty) after every retrieval
                         self._bindCentreInfo(master._currEntity.get('customObject'));
                     };
-//                    if (!action._isFocused()) {
-//                        return new Promise((resolve, reject) => {
-//                            setTimeout(() => {
-//                                resolve(createPreActionPromise ? createPreActionPromise() : Promise.resolve(true));
-//                            }, 1000);
-//                        });
-//                    }
                     // use createPreActionPromise function to create custom preAction; otherwise preAction will always be successful and will immediately return true.
                     return createPreActionPromise ? createPreActionPromise() : Promise.resolve(true);
                 },

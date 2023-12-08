@@ -952,7 +952,6 @@ const TgEntityCentreBehaviorImpl = {
          * A function to run the entity centre.
          */
         self.run = (function (isAutoRunning, isSortingAction, forceRegeneration, excludeInsertionPoints) {
-            console.error('run', deepestActiveElement());
             if (this._criteriaLoaded === false) {
                 throw new Error(`Cannot run ${this.is} centre (not initialised criteria).`);
             }
