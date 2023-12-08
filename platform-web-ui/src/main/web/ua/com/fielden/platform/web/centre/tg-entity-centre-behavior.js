@@ -579,6 +579,13 @@ const TgEntityCentreBehaviorImpl = {
         initiateAutoRun: Function,
 
         /**
+         * Indicates sharing validation error message for currently loaded configuration. 'null' in case where validation was successful.
+         */
+        shareError: {
+            type: String
+        },
+
+        /**
          * Resets the state of centre autocompleters, specifically 'active only' state.
          * This is necessary in actions like DISCARD / NEW / etc. because we prefer client-side state over persisted one and always overwrite persisted state.
          * If we go from one configuration to another or use DISCARD / NEW / etc. actions, we must clear current autocompleter state.

@@ -5,11 +5,11 @@ import static java.util.Arrays.asList;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.ResourceLoader.getStream;
-import static ua.com.fielden.platform.web.action.CentreConfigShareActionProducer.createPostAction;
-import static ua.com.fielden.platform.web.action.CentreConfigShareActionProducer.createPreAction;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.getDefaultCentre;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+import static ua.com.fielden.platform.web.minijs.JsCode.jsCode;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.SAVE_OWN_COPY_MSG;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
 
 import java.util.ArrayList;
@@ -58,12 +58,14 @@ import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.ioc.exceptions.MissingWebResourceException;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.menu.impl.MainMenuBuilder;
+import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.ref_hierarchy.ReferenceHierarchyWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.exceptions.InvalidUiConfigException;
 import ua.com.fielden.platform.web.sse.EventSourceDispatchingEmitter;
 import ua.com.fielden.platform.web.sse.IEventSource;
 import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
+import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 
 /**
  * The base implementation for Web UI configuration, which should be inherited from in concrete applications for defining the final application specific Web UI configuration.
@@ -325,13 +327,67 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         return independentTimeZone;
     }
 
+    /**
+     * Returns {@link JsCode} suitable for {@link IPreAction} for centre configuration sharing actions.
+     * <p>
+     * It makes entity centre's {@code _actionInProgress} property true if the action has started and false if it has completed.
+     * This is suitable for asynchronous share actions (e.g. with UI, where Entity Master opens, or without UI but with some custom server-side producer/companion logic).
+     * Default Share action is synchronous, client-side-only, action (see {@link #centreConfigShareActions()}).
+     */
+    protected static JsCode promoteShareActionProgressToCentreActions() {
+        return jsCode(
+              "if (!action.oldIsActionInProgressChanged) { // 'action' is current tg-ui-action \n"
+            + "    action.oldIsActionInProgressChanged = action.isActionInProgressChanged.bind(action);\n"
+            + "    action.isActionInProgressChanged = (newValue, oldValue) => {\n"
+            + "        action.oldIsActionInProgressChanged(newValue, oldValue);\n"
+            + "        self._actionInProgress = newValue; // 'self' is enclosing centre; enhance action's observer for isActionInProgress to set _actionInProgress to whole centre which controls disablement of all other buttons \n"
+            + "    };\n"
+            + "}\n"
+        );
+    }
+
+    /**
+     * Returns {@link JsCode} suitable for {@link IPreAction} for centre configuration sharing actions.
+     * <p>
+     * It shows informational toast about inability to share currently loaded configuration (if sharing validation was indeed erroneous).
+     */
+    protected static JsCode showToastForShareError() {
+        return jsCode(
+              "if (self.shareError) { // 'self' is enclosing centre \n"
+            + "    if (self.shareError === '" + SAVE_OWN_COPY_MSG + "') {\n"
+            + "        action.toaster.openToastWithoutEntity(self.shareError, true, self.shareError, false);\n"
+            + "    } else {\n"
+            + "        action.toaster.openToastWithoutEntity(self.shareError, false, '', false);\n"
+            + "    }\n"
+            + "}\n"
+        );
+    }
+
+    /**
+     * Returns {@link JsCode} suitable for {@link IPreAction} for centre configuration sharing actions.
+     * <p>
+     * It copies currently loaded configuration URL (window.location.href) to the clipboard and shows informational message about it (if sharing validation was successful).
+     */
+    protected static JsCode copyToClipboardForSuccessfulShare() {
+        return jsCode(
+              "if (!self.shareError) { // 'self' is enclosing centre \n"
+            + "    const link = window.location.href;\n"
+            + "    navigator && navigator.clipboard && navigator.clipboard.writeText(link).then(() => { // Writing into clipboard is always permitted for currently open tab (https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/writeText) -- that's why promise error should never occur; \n"
+            + "        action.toaster.openToastWithoutEntity('Copied to clipboard.', true, link, false); // if for some reason the promise will be rejected then 'Unexpected error occurred.' will be shown to the user and global handler will report that to the server. \n"
+            + "    });\n"
+            + "}\n"
+        );
+    }
+
     @Override
     public List<EntityActionConfig> centreConfigShareActions() {
+        // default Share action is implemented specially through cached 'shareError' property in its 'preAction';
+        // if Share is not possible it shows toast for an error, otherwise it immediately copies a link to the clipboard and shows toast for a success;
+        // it is very important to copy link inside preAction as a part of UI callback, otherwise we get permission error in Safari browsers (see #2116)
         return asList(
             action(CentreConfigShareAction.class)
             .withContext(context().withSelectionCrit().build())
-            .preAction(createPreAction())
-            .postActionSuccess(createPostAction("errorMessage"))
+            .preAction(() -> jsCode(showToastForShareError().toString() + copyToClipboardForSuccessfulShare().toString() + "return Promise.reject('Share action completed.');\n"))
             .icon("tg-icons:share")
             .shortDesc("Share")
             .longDesc("Share centre configuration")

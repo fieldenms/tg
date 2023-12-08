@@ -75,7 +75,7 @@ public class CentreConfigurationWebUiConfig {
                 "['padding:20px', 'height: 100%', 'box-sizing: border-box', ['flex', ['flex']], [], [], []]");
         centreColumnWidthConfigUpdaterMaster = noUiFunctionalMaster(CentreColumnWidthConfigUpdater.class, CentreColumnWidthConfigUpdaterProducer.class, injector);
         centrePreferredViewUpdaterMaster = noUiFunctionalMaster(CentrePreferredViewUpdater.class, CentrePreferredViewUpdaterProducer.class, injector);
-        centreConfigShareActionMaster = noUiFunctionalMaster(CentreConfigShareAction.class, CentreConfigShareActionProducer.class, injector);
+        centreConfigShareActionMaster = noUiFunctionalMaster(CentreConfigShareAction.class, injector);
         centreConfigNewActionMaster = noUiFunctionalMaster(CentreConfigNewAction.class, CentreConfigNewActionProducer.class, injector);
         centreConfigDuplicateActionMaster = noUiFunctionalMaster(CentreConfigDuplicateAction.class, CentreConfigDuplicateActionProducer.class, injector);
         centreConfigLoadActionMaster = createCentreConfigLoadActionMaster(injector, "['padding:20px', 'height: 100%', 'box-sizing: border-box', ['flex', ['flex']]]");

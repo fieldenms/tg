@@ -196,6 +196,14 @@ const TgSelectionCriteriaBehaviorImpl = {
         },
 
         /**
+         * Indicates sharing validation error message for currently loaded configuration. 'null' in case where validation was successful.
+         */
+        shareError: {
+            type: String,
+            notify: true
+        },
+
+        /**
          * Indicates whether all data should be retrieved at once or only separate page of data.
          */
         retrieveAll: {
@@ -457,6 +465,9 @@ const TgSelectionCriteriaBehaviorImpl = {
             this.preferredView = customObject.preferredView;
         }
         this.userName = customObject.userName;
+        if (typeof customObject.shareError !== 'undefined') {
+            this.shareError = customObject.shareError;
+        }
     },
 
     /**

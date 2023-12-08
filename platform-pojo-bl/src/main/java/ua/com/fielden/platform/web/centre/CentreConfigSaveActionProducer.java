@@ -41,11 +41,11 @@ public class CentreConfigSaveActionProducer extends AbstractCentreConfigCommitAc
             } else {
                 setTitleAndDesc(entity, saveAsName.get(), selectionCrit, COPY_ACTION_SUFFIX);
             }
-            return getCustomObject(selectionCrit, appliedCriteriaEntity, empty()); // not yet transitioned to another config -- do not update configUuid / saveAsName on client-side
+            return getCustomObject(selectionCrit, appliedCriteriaEntity, empty(), empty()); // not yet transitioned to another config -- do not update configUuid / saveAsName / shareError on client-side
         } else { // owned configuration should be saved without opening 'Save As...' dialog
             entity.setSkipUi(true);
             selectionCrit.saveFreshCentre();
-            return getCustomObject(selectionCrit, appliedCriteriaEntity, empty()); // config left the same (no transition occurred) -- do not update configUuid / saveAsName on client-side
+            return getCustomObject(selectionCrit, appliedCriteriaEntity, empty(), empty()); // config left the same (no transition occurred) -- do not update configUuid / saveAsName / shareError on client-side
         }
     }
     

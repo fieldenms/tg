@@ -118,6 +118,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         } else if (FunctionalActionKind.FRONT == functionalActionKind) {
             attrs.put("slot", "custom-front-action");
         } else if (FunctionalActionKind.SHARE == functionalActionKind) {
+            attrs.put("share-action", "true");
             attrs.put("slot", "custom-share-action");
             attrs.put("hidden", "[[embedded]]"); // let's completely hide the share action for embedded centres
             attrs.put("disabled", "[[_shareButtonDisabled]]");
