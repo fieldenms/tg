@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.eql.stage2.operands.functions;
 
-import org.hibernate.type.IntegerType;
+import static ua.com.fielden.platform.eql.meta.PropType.INTEGER_PROP_TYPE;
 
-import ua.com.fielden.platform.eql.stage2.TransformationContext2;
-import ua.com.fielden.platform.eql.stage2.TransformationResult2;
+import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
+import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.functions.DayOfWeekOf3;
@@ -11,13 +11,13 @@ import ua.com.fielden.platform.eql.stage3.operands.functions.DayOfWeekOf3;
 public class DayOfWeekOf2 extends SingleOperandFunction2<DayOfWeekOf3> {
 
     public DayOfWeekOf2(final ISingleOperand2<? extends ISingleOperand3> operand) {
-        super(operand, Integer.class, IntegerType.INSTANCE);
+        super(operand, INTEGER_PROP_TYPE);
     }
 
     @Override
-    public TransformationResult2<DayOfWeekOf3> transform(final TransformationContext2 context) {
-        final TransformationResult2<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
-        return new TransformationResult2<>(new DayOfWeekOf3(operandTransformationResult.item, type, hibType), operandTransformationResult.updatedContext);
+    public TransformationResultFromStage2To3<DayOfWeekOf3> transform(final TransformationContextFromStage2To3 context) {
+        final TransformationResultFromStage2To3<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
+        return new TransformationResultFromStage2To3<>(new DayOfWeekOf3(operandTransformationResult.item, type), operandTransformationResult.updatedContext);
     }
     
     @Override

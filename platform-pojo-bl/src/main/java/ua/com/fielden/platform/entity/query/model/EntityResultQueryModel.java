@@ -20,4 +20,9 @@ public class EntityResultQueryModel<T extends AbstractEntity<?>> extends SingleR
         super.setFilterable(filterable);
         return this;
     }
+
+    public EntityResultQueryModel<T> setShouldMaterialiseCalcPropsAsColumnsInSqlQuery(final boolean value) {
+        this.shouldMaterialiseCalcPropsAsColumnsInSqlQuery = value;
+        return this;
+    }
 }

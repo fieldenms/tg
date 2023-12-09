@@ -56,19 +56,10 @@ public class EntityFetcher {
     }
     
     private <E extends AbstractEntity<?>> List<EntityContainer<E>> getContainers(final QueryExecutionModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
-        if (executionContext.getDomainMetadata().eql2 && !queryModel.getParamValues().containsKey("EQL3") || queryModel.getParamValues().containsKey("EQL2")) {
-            final EntityContainerFetcher entityContainerFetcher = new EntityContainerFetcher(executionContext);
-            final DomainMetadataAnalyser domainMetadataAnalyser = new DomainMetadataAnalyser(executionContext.getDomainMetadata());
-            final IRetrievalModel<E> fm = produceRetrievalModel(queryModel.getFetchModel(), queryModel.getQueryModel().getResultType(), domainMetadataAnalyser);
-            final QueryProcessingModel<E, ?> qpm = new QueryProcessingModel<>(queryModel.getQueryModel(), queryModel.getOrderModel(), fm, queryModel.getParamValues(), queryModel.isLightweight());
-            return entityContainerFetcher.listAndEnhanceContainers(qpm, pageNumber, pageCapacity);
-        } else {
-            final ua.com.fielden.platform.eql.retrieval.EntityContainerFetcher entityContainerFetcher = new ua.com.fielden.platform.eql.retrieval.EntityContainerFetcher(executionContext);
-            final DomainMetadataAnalyser domainMetadataAnalyser = new DomainMetadataAnalyser(executionContext.getDomainMetadata());
-            final IRetrievalModel<E> fm = produceRetrievalModel(queryModel.getFetchModel(), queryModel.getQueryModel().getResultType(), domainMetadataAnalyser);
-            final QueryProcessingModel<E, ?> qpm = new QueryProcessingModel<>(queryModel.getQueryModel(), queryModel.getOrderModel(), fm, queryModel.getParamValues(), queryModel.isLightweight());
-            return entityContainerFetcher.listAndEnhanceContainers(qpm, pageNumber, pageCapacity);
-        }
+        final ua.com.fielden.platform.eql.retrieval.EntityContainerFetcher entityContainerFetcher = new ua.com.fielden.platform.eql.retrieval.EntityContainerFetcher(executionContext);
+        final IRetrievalModel<E> fm = produceRetrievalModel(queryModel.getFetchModel(), queryModel.getQueryModel().getResultType(), executionContext.produceDomainMetadataAnalyser());
+        final QueryProcessingModel<E, ?> qpm = new QueryProcessingModel<>(queryModel.getQueryModel(), queryModel.getOrderModel(), fm, queryModel.getParamValues(), queryModel.isLightweight());
+        return entityContainerFetcher.listAndEnhanceContainers(qpm, pageNumber, pageCapacity);
     }
     
     private <E extends AbstractEntity<?>> IRetrievalModel<E> produceRetrievalModel(final fetch<E> fetchModel, final Class<E> resultType, final DomainMetadataAnalyser domainMetadataAnalyser) {
@@ -82,28 +73,18 @@ public class EntityFetcher {
     
     public <E extends AbstractEntity<?>> Stream<E> streamEntities(final QueryExecutionModel<E, ?> queryModel, final Optional<Integer> fetchSize) {
         try {
-            final DomainMetadataAnalyser domainMetadataAnalyser = new DomainMetadataAnalyser(executionContext.getDomainMetadata());
-            final IRetrievalModel<E> fm = produceRetrievalModel(queryModel.getFetchModel(), queryModel.getQueryModel().getResultType(), domainMetadataAnalyser);
+            final IRetrievalModel<E> fm = produceRetrievalModel(queryModel.getFetchModel(), queryModel.getQueryModel().getResultType(), executionContext.produceDomainMetadataAnalyser());
             final QueryProcessingModel<E, ?> qpm = new QueryProcessingModel<>(queryModel.getQueryModel(), queryModel.getOrderModel(), fm, queryModel.getParamValues(), queryModel.isLightweight());
-            if (executionContext.getDomainMetadata().eql2 && !queryModel.getParamValues().containsKey("EQL3") || queryModel.getParamValues().containsKey("EQL2")) {
-                return new EntityContainerFetcher(executionContext)
-                    .streamAndEnhanceContainers(qpm, fetchSize)
-                    .map(c -> !queryModel.isLightweight() ? setContainersToBeInstrumented(c) : c)
-                    .map(this::instantiateFromContainers)
-                    .flatMap(List::stream);
-            } else {
-                return new ua.com.fielden.platform.eql.retrieval.EntityContainerFetcher(executionContext)
+            return new ua.com.fielden.platform.eql.retrieval.EntityContainerFetcher(executionContext)
                         .streamAndEnhanceContainers(qpm, fetchSize)
                         .map(c -> !queryModel.isLightweight() ? setContainersToBeInstrumented(c) : c)
                         .map(this::instantiateFromContainers)
                         .flatMap(List::stream);
-            }
         } catch (final Exception e) {
             logger.error(e);
             throw new EntityFetcherException("Could not stream entities.", e);
         }
     }
-
 
     private <E extends AbstractEntity<?>> List<EntityContainer<E>> setContainersToBeInstrumented(final List<EntityContainer<E>> containers) {
         for (final EntityContainer<E> entityContainer : containers) {

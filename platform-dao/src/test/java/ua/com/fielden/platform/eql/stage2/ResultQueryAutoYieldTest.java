@@ -6,9 +6,9 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import org.junit.Test;
 
 import ua.com.fielden.platform.eql.meta.EqlStage2TestCase;
-import ua.com.fielden.platform.eql.stage2.etc.Yields2;
-import ua.com.fielden.platform.eql.stage2.operands.ResultQuery2;
+import ua.com.fielden.platform.eql.stage2.queries.ResultQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
+import ua.com.fielden.platform.eql.stage2.sundries.Yields2;
 
 public class ResultQueryAutoYieldTest extends EqlStage2TestCase {
 
@@ -21,7 +21,6 @@ public class ResultQueryAutoYieldTest extends EqlStage2TestCase {
                 mkYield(prop(bogie, pi(BOGIE, "desc")), "desc"),
                 mkYield(prop(bogie, pi(BOGIE, "id")), "id"),
                 mkYield(prop(bogie, pi(BOGIE, "version")), "version"),
-                mkYield(prop(bogie, pi(BOGIE, "location")), "location"),
                 mkYield(prop(bogie, pi(BOGIE, "location"), pi(BOGIE, "location", "wagonSlot")), "location.wagonSlot"),
                 mkYield(prop(bogie, pi(BOGIE, "location"), pi(BOGIE, "location", "workshop")), "location.workshop"),
                 mkYield(prop(bogie, pi(BOGIE, "bogieClass")), "bogieClass"),

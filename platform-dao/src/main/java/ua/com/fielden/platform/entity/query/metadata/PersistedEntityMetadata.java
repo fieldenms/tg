@@ -43,6 +43,6 @@ public class PersistedEntityMetadata<ET extends AbstractEntity<?>> extends Abstr
 
     @Override
     public int compareTo(final PersistedEntityMetadata<ET> that) {
-        return this.getType().getSimpleName().compareTo(that.getType().getSimpleName());
+        return this.type.getSimpleName().compareTo(that.type.getSimpleName());
     }
 }

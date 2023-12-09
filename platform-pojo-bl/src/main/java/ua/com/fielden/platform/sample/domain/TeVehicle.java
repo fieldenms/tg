@@ -130,27 +130,33 @@ public class TeVehicle extends AbstractEntity<String> {
     @Calculated
     private TeVehicle replacedByTwice;
     protected static final ExpressionModel replacedByTwice_ = expr().prop("replacedBy.replacedBy").model();
-    
+
     @IsProperty
 	@Calculated
 	private TeVehicleModel replacedByTwiceModel;
 	protected static final ExpressionModel replacedByTwiceModel_ = expr().prop("replacedByTwice.model").model();
 
-	@Observable
-	protected TeVehicle setReplacedByTwiceModel(final TeVehicleModel replacedByTwiceModel) {
-		this.replacedByTwiceModel = replacedByTwiceModel;
-		return this;
-	}
+	@IsProperty
+    @Calculated
+    private TeVehicleMake replacedByTwiceModelMake;
+    protected static final ExpressionModel replacedByTwiceModelMake_ = expr().prop("replacedByTwiceModel.make").model();
 
-	public TeVehicleModel getReplacedByTwiceModel() {
-		return replacedByTwiceModel;
-	}
+    @IsProperty
+    @Calculated
+    private Money replacedByTwicePrice;
+    protected static final ExpressionModel replacedByTwicePrice_ = expr().prop("replacedByTwice.price").model();
 
-	
+    @IsProperty
+    @Calculated
+    private Money priceDiffBetweenCurrentAndReplacedByTwice;
+    protected static final ExpressionModel priceDiffBetweenCurrentAndReplacedByTwice_ = expr().prop("price").sub().prop("replacedByTwicePrice").model();
 
-	
+    @IsProperty
+    @Calculated
+    private TeVehicle theSameVehicle; //contains transitive dependency on another ET-calc-prop's subprops (i.e. "replacedByTwice.price")
+    protected static final ExpressionModel theSameVehicle_ = expr().model(select(TeVehicle.class).where().prop("id").eq().extProp("id").
+            and().prop("priceDiffBetweenCurrentAndReplacedByTwice").eq().extProp("priceDiffBetweenCurrentAndReplacedByTwice").model()).model();
 
-    
     @IsProperty
     @MapTo
     private TeVehicleMake make;
@@ -276,12 +282,12 @@ public class TeVehicle extends AbstractEntity<String> {
     @IsProperty
     @Title(value = "Financial details", desc = "Fin Details")
     private TeVehicleFinDetails finDetails;
-    
+
     @IsProperty
     @CritOnly
     @Title("Date period")
     private Date datePeriod;
-    
+
     @IsProperty
     @Calculated
     private Money repPrice;
@@ -298,6 +304,57 @@ public class TeVehicle extends AbstractEntity<String> {
     @Title(value = "Title", desc = "Desc")
     private Money avgRepPrice;
     protected static final ExpressionModel avgRepPrice_ = expr().expr(expr().prop("repPrice").add().prop("repPurchasePrice").model()).div().val(2).model();
+
+
+    @Observable
+    protected TeVehicle setTheSameVehicle(final TeVehicle theSameVehicle) {
+        this.theSameVehicle = theSameVehicle;
+        return this;
+    }
+
+    public TeVehicle getTheSameVehicle() {
+        return theSameVehicle;
+    }
+
+    @Observable
+    protected TeVehicle setPriceDiffBetweenCurrentAndReplacedByTwice(final Money priceDiffBetweenCurrentAndReplacedByTwice) {
+        this.priceDiffBetweenCurrentAndReplacedByTwice = priceDiffBetweenCurrentAndReplacedByTwice;
+        return this;
+    }
+
+    public Money getPriceDiffBetweenCurrentAndReplacedByTwice() {
+        return priceDiffBetweenCurrentAndReplacedByTwice;
+    }
+
+    @Observable
+    protected TeVehicle setReplacedByTwicePrice(final Money replacedByTwicePrice) {
+        this.replacedByTwicePrice = replacedByTwicePrice;
+        return this;
+    }
+
+    public Money getReplacedByTwicePrice() {
+        return replacedByTwicePrice;
+    }
+
+    @Observable
+    protected TeVehicle setReplacedByTwiceModelMake(final TeVehicleMake replacedByTwiceModelMake) {
+        this.replacedByTwiceModelMake = replacedByTwiceModelMake;
+        return this;
+    }
+
+    public TeVehicleMake getReplacedByTwiceModelMake() {
+        return replacedByTwiceModelMake;
+    }
+
+    @Observable
+    protected TeVehicle setReplacedByTwiceModel(final TeVehicleModel replacedByTwiceModel) {
+        this.replacedByTwiceModel = replacedByTwiceModel;
+        return this;
+    }
+
+    public TeVehicleModel getReplacedByTwiceModel() {
+        return replacedByTwiceModel;
+    }
 
     @Observable
     protected TeVehicle setReplacedByTwice(final TeVehicle replacedByTwice) {
@@ -364,7 +421,7 @@ public class TeVehicle extends AbstractEntity<String> {
         this.calcModel = calcModel;
         return this;
     }
-    
+
     @Observable
     public TeVehicle setFinDetails(final TeVehicleFinDetails finDetails) {
         this.finDetails = finDetails;
@@ -424,7 +481,7 @@ public class TeVehicle extends AbstractEntity<String> {
     public BigDecimal getCalc6() {
         return calc6;
     }
-    
+
     @Observable
     public TeVehicle setLastMeterReading(final BigDecimal lastMeterReading) {
         this.lastMeterReading = lastMeterReading;
@@ -577,7 +634,7 @@ public class TeVehicle extends AbstractEntity<String> {
         this.calc6 = calc6;
         return this;
     }
-    
+
     @Observable
     protected TeVehicle setMmake(final TeVehicleMake mmake) {
         this.mmake = mmake;
@@ -687,7 +744,7 @@ public class TeVehicle extends AbstractEntity<String> {
     public String getModelMakeDesc() {
         return modelMakeDesc;
     }
-    
+
     @Observable
     protected TeVehicle setModelMakeKey2(final String modelMakeKey2) {
         this.modelMakeKey2 = modelMakeKey2;
@@ -707,7 +764,7 @@ public class TeVehicle extends AbstractEntity<String> {
     public String getModelMakeKey3() {
         return modelMakeKey3;
     }
-    
+
     @Observable
     protected TeVehicle setModelMakeKey4(final String modelMakeKey4) {
         this.modelMakeKey4 = modelMakeKey4;
@@ -747,7 +804,7 @@ public class TeVehicle extends AbstractEntity<String> {
     public String getModelMakeKey7() {
         return modelMakeKey7;
     }
-    
+
     @Observable
     protected TeVehicle setModelMakeKey8(final String modelMakeKey8) {
         this.modelMakeKey8 = modelMakeKey8;

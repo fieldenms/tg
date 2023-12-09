@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.conditions;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -8,14 +9,15 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import ua.com.fielden.platform.eql.stage2.TransformationContext2;
-import ua.com.fielden.platform.eql.stage2.TransformationResult2;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
+import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
 
-public class Conditions2 extends AbstractCondition2<Conditions3> {
-    public static final Conditions2 emptyConditions = new Conditions2(false, emptyList());
+public class Conditions2 implements ICondition2<Conditions3> {
+    public static final Conditions2 EMPTY_CONDITIONS = new Conditions2(false, emptyList());
 
     private final List<List<? extends ICondition2<?>>> allConditionsAsDnf = new ArrayList<>();
     private final boolean negated;
@@ -31,34 +33,25 @@ public class Conditions2 extends AbstractCondition2<Conditions3> {
     }
 
     @Override
-    public TransformationResult2<Conditions3> transform(final TransformationContext2 context) {
+    public TransformationResultFromStage2To3<Conditions3> transform(final TransformationContextFromStage2To3 context) {
         if (ignore()) {
-            return new TransformationResult2<>(null, context);
+            return new TransformationResultFromStage2To3<>(null, context);
         }
-        
+
         final List<List<? extends ICondition3>> result = new ArrayList<>();
-        TransformationContext2 currentContext = context;
-        
+        TransformationContextFromStage2To3 currentContext = context;
+
         for (final List<? extends ICondition2<?>> andGroup : allConditionsAsDnf) {
-            final List<ICondition3> transformedAndGroup = new ArrayList<>(); 
+            final List<ICondition3> transformedAndGroup = new ArrayList<>();
             for (final ICondition2<? extends ICondition3> andGroupCondition : andGroup) {
-                final TransformationResult2<? extends ICondition3> andGroupConditionTr = andGroupCondition.transform(currentContext);
+                final TransformationResultFromStage2To3<? extends ICondition3> andGroupConditionTr = andGroupCondition.transform(currentContext);
                 transformedAndGroup.add(andGroupConditionTr.item);
                 currentContext = andGroupConditionTr.updatedContext;
             }
             result.add(transformedAndGroup);
         }
-        
-//        final List<List<? extends ICondition2>> transformed = formDnf().stream()
-//                .map(andGroup -> 
-//                                  andGroup.stream().map(cond -> cond.transform(currentContext))
-//                                                   .filter(cond -> !cond.ignore())
-//                                                   .collect(toList())
-//                    )
-//                .filter(andGroup -> !andGroup.isEmpty())
-//                .collect(toList());
-        
-        return new TransformationResult2<>(new Conditions3(negated, result), currentContext);
+
+        return new TransformationResultFromStage2To3<>(new Conditions3(negated, result), currentContext);
     }
 
     @Override
@@ -70,6 +63,40 @@ public class Conditions2 extends AbstractCondition2<Conditions3> {
             }
         }
         return result;
+    }
+
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        if (ignore()) {
+            return emptySet();
+        } else {
+            final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>();
+            for (final List<? extends ICondition2<?>> conditions : allConditionsAsDnf) {
+                for (final ICondition2<?> condition : conditions) {
+                    result.addAll(condition.collectEntityTypes());
+                }
+            }
+            return result;
+        }
+    }
+
+    public boolean conditionIsSatisfied(final ICondition2<?> condition) {
+        for (final List<? extends ICondition2<?>> conditions : allConditionsAsDnf) {
+            if (!conditionMatchesAnyOf(conditions, condition)) {
+                return false;
+            }
+        }
+
+        return allConditionsAsDnf.isEmpty() || negated ? false : true;
+    }
+
+    private boolean conditionMatchesAnyOf(final List<? extends ICondition2<?>> conditions, final ICondition2<?> conditionToMatch) {
+        for (final ICondition2<?> condition : conditions) {
+            if (condition.equals(conditionToMatch) || (condition instanceof Conditions2 && ((Conditions2) condition).conditionIsSatisfied(conditionToMatch))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -90,9 +117,9 @@ public class Conditions2 extends AbstractCondition2<Conditions3> {
         if (!(obj instanceof Conditions2)) {
             return false;
         }
-        
+
         final Conditions2 other = (Conditions2) obj;
-        
+
         return Objects.equals(allConditionsAsDnf, other.allConditionsAsDnf) && (negated == other.negated);
     }
 }

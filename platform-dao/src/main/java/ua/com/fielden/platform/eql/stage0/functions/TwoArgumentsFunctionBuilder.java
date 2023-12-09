@@ -4,12 +4,12 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.FU
 
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.eql.stage0.AbstractTokensBuilder;
-import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
+import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.utils.Pair;
 
 abstract class TwoArgumentsFunctionBuilder extends AbstractTokensBuilder {
 
-    protected TwoArgumentsFunctionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder) {
+    protected TwoArgumentsFunctionBuilder(final AbstractTokensBuilder parent, final QueryModelToStage1Transformer queryBuilder) {
         super(parent, queryBuilder);
     }
 

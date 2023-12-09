@@ -17,6 +17,9 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.annotation.Annotation;
@@ -1092,9 +1095,9 @@ public class Finder {
     }
 
     /**
-     * Determines whether specified property is one2one association.
+     * Determines whether specified property is one-2-one association.
      * <p>
-     * The rule is following : if the type of property contains the "key" of the type of property parent then return <code>true</code>, otherwise <code>false</code>.
+     * The rule is following : if the type of property contains the "key" of the type of property parent or the "key" that is assignable from property parent and property parent has "id" property then return <code>true</code>, otherwise <code>false</code>.
      *
      * @param type
      * @param dotNotationExp
@@ -1102,9 +1105,18 @@ public class Finder {
      */
     public static boolean isOne2One_association(final Class<?> type, final String dotNotationExp) {
         final Class<?> propertyType = PropertyTypeDeterminator.determinePropertyType(type, dotNotationExp);
-        final Class<?> masterType = DynamicEntityClassLoader.getOriginalType(PropertyTypeDeterminator.transform(type, dotNotationExp).getKey());
-        return EntityUtils.isEntityType(propertyType)
-                && DynamicEntityClassLoader.getOriginalType(PropertyTypeDeterminator.determinePropertyType(propertyType, KEY)).equals(masterType);
+        if (isEntityType(propertyType)) {
+            final Class<?> masterType = DynamicEntityClassLoader.getOriginalType(PropertyTypeDeterminator.transform(type, dotNotationExp).getKey());
+            final Class<?> propertyTypeKeyType = DynamicEntityClassLoader.getOriginalType(PropertyTypeDeterminator.determinePropertyType(propertyType, KEY));
+
+            return // either property type's key is the same as the master entity type
+                   propertyTypeKeyType == masterType ||
+                   // or the property type's key is compatible with the master entity type, which covers 2 possible cases:
+                   // 1. a persistent entity that extends another persistent entity,
+                   // 2. a synthetic entity, derived from a persistent entity (synthetic with ID).
+                   propertyTypeKeyType.isAssignableFrom(masterType) && (isPersistedEntityType(propertyTypeKeyType) || isSyntheticBasedOnPersistentEntityType((Class<? extends AbstractEntity<?>>) propertyTypeKeyType));
+        }
+        return false;
     }
 
 }

@@ -146,7 +146,7 @@ public class DynamicQueryBuilder {
         public static String queryPropertyParamName(final String propertyName) {
             return QP_PREFIX + propertyName;
         }
-        
+
         /**
          * Creates parameter name for {@link QueryProperty} instance (should be used to expand mnemonics value into conditions from EQL critCondition operator).
          *
@@ -1176,7 +1176,8 @@ public class DynamicQueryBuilder {
      * @return
      */
     private static <E extends AbstractEntity<?>> IJoin<E> createJoinCondition(final Class<E> managedType) {
-        return select(select(managedType).model()).as(ALIAS);
+        // Wrapping into additional query with all calculated properties materialised into columns is needed to handle SQL Server limitation of aggregation on sub-queries.
+        return select(select(managedType).model().setShouldMaterialiseCalcPropsAsColumnsInSqlQuery(true)).as(ALIAS);
     }
 
     private static final String ALIAS = "alias_for_main_criteria_type";

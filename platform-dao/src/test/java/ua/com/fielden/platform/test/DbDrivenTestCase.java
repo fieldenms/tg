@@ -22,7 +22,7 @@ import org.hibernate.Transaction;
 import com.google.inject.Injector;
 
 import junit.framework.TestCase;
-import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
+import static ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.persistence.HibernateUtil;
@@ -84,7 +84,7 @@ public abstract class DbDrivenTestCase extends TestCase {
              final Statement createIdSequence = connection.getConnection().createStatement();) {
             
             dropObjects.execute("DROP ALL OBJECTS");
-            createIdSequence.execute(String.format("CREATE SEQUENCE %s START WITH 10000 INCREMENT BY 1 MINVALUE 1 CACHE  3;", HibernateMappingsGenerator.ID_SEQUENCE_NAME));
+            createIdSequence.execute(String.format("CREATE SEQUENCE %s START WITH 10000 INCREMENT BY 1 MINVALUE 1 CACHE  3;", ID_SEQUENCE_NAME));
             
             final List<String> ddls = config.getDdl();
             if (ddls == null || ddls.isEmpty()) {

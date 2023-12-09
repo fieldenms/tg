@@ -6,7 +6,6 @@ import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -17,7 +16,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
  * @author TG Team
  *
  */
-@CompanionObject(ITgVehicleModel.class)
+@CompanionObject(ITgReVehicleModel.class)
 public class TgReVehicleModel extends TgVehicleModel {
     protected static final EntityResultQueryModel<TgReVehicleModel> model_ = select(TgVehicleModel.class)
             .yieldAll()
@@ -32,7 +31,7 @@ public class TgReVehicleModel extends TgVehicleModel {
     @IsProperty
     @Title("Extra prop")
     private Integer intProp;
-
+    
     @IsProperty
     @Title("Not yielded prop")
     private Integer noYieldIntProp;

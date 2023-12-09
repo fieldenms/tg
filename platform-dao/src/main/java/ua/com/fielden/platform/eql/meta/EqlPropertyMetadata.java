@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-
 public class EqlPropertyMetadata implements Comparable<EqlPropertyMetadata> {
     public final String name;
     public final Class<?> javaType;
@@ -17,9 +15,8 @@ public class EqlPropertyMetadata implements Comparable<EqlPropertyMetadata> {
     public final boolean critOnly;
 
     public final PropColumn column;
-    private final List<EqlPropertyMetadata> subitems;
-    public final ExpressionModel expressionModel;
-    public final boolean implicit;
+    public final List<EqlPropertyMetadata> subitems;
+    public final CalcPropInfo expressionModel;
 
     private EqlPropertyMetadata(final Builder builder) {
         name = Objects.requireNonNull(builder.name);
@@ -28,13 +25,8 @@ public class EqlPropertyMetadata implements Comparable<EqlPropertyMetadata> {
         required = builder.required;
         critOnly = builder.critOnly;
         column = builder.column;
-        subitems = builder.subitems;
+        subitems = unmodifiableList(builder.subitems);
         expressionModel = builder.expressionModel;
-        implicit = builder.implicit;
-    }
-
-    public List<EqlPropertyMetadata> subitems() {
-        return unmodifiableList(subitems);
     }
 
     public boolean isVirtualKey() {
@@ -52,7 +44,6 @@ public class EqlPropertyMetadata implements Comparable<EqlPropertyMetadata> {
         result = prime * result + (critOnly ? 0 : (critOnly ? 1231 : 1237));
         result = prime * result + ((column == null) ? 0 : column.hashCode());
         result = prime * result + ((expressionModel == null) ? 0 : expressionModel.hashCode());
-        result = prime * result + (implicit ? 0 : (implicit ? 1231 : 1237));
         result = prime * result + subitems.hashCode();
         return result;
     }
@@ -75,7 +66,6 @@ public class EqlPropertyMetadata implements Comparable<EqlPropertyMetadata> {
                 Objects.equals(required, other.required) &&
                 Objects.equals(critOnly, other.critOnly) &&
                 Objects.equals(expressionModel, other.expressionModel) &&
-                Objects.equals(implicit, other.implicit) &&
                 Objects.equals(subitems, other.subitems) &&
                 Objects.equals(column, other.column);
     }
@@ -90,8 +80,7 @@ public class EqlPropertyMetadata implements Comparable<EqlPropertyMetadata> {
 
         private PropColumn column;
         private final List<EqlPropertyMetadata> subitems = new ArrayList<>();
-        private ExpressionModel expressionModel;
-        private boolean implicit = false;
+        private CalcPropInfo expressionModel;
 
         public EqlPropertyMetadata build() {
             return new EqlPropertyMetadata(this);
@@ -123,13 +112,8 @@ public class EqlPropertyMetadata implements Comparable<EqlPropertyMetadata> {
             return this;
         }
 
-        public Builder expression(final ExpressionModel val) {
+        public Builder expression(final CalcPropInfo val) {
             expressionModel = val;
-            return this;
-        }
-
-        public Builder implicit() {
-            implicit = true;
             return this;
         }
 

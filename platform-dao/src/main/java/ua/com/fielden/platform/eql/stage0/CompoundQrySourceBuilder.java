@@ -4,17 +4,17 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QR
 
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
-import ua.com.fielden.platform.eql.stage1.sources.ISources1;
-import ua.com.fielden.platform.eql.stage1.sources.MultipleNodesSources1;
-import ua.com.fielden.platform.eql.stage2.sources.ISources2;
+import ua.com.fielden.platform.eql.stage1.sources.IJoinNode1;
+import ua.com.fielden.platform.eql.stage1.sources.JoinInnerNode1;
+import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.utils.Pair;
 
 public class CompoundQrySourceBuilder extends AbstractTokensBuilder {
-    private final ISources1<? extends ISources2<?>> leftSource;
+    private final IJoinNode1<? extends IJoinNode2<?>> leftNode;
     private final JoinType joinType;
-    protected CompoundQrySourceBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final ISources1<? extends ISources2<?>> leftSource, final JoinType joinType) {
+    protected CompoundQrySourceBuilder(final AbstractTokensBuilder parent, final QueryModelToStage1Transformer queryBuilder, final IJoinNode1<? extends IJoinNode2<?>> leftNode, final JoinType joinType) {
         super(parent, queryBuilder);
-        this.leftSource = leftSource;
+        this.leftNode = leftNode;
         this.joinType = joinType;
         setChild(new QrySourceBuilder(this, queryBuilder));
     }
@@ -43,6 +43,6 @@ public class CompoundQrySourceBuilder extends AbstractTokensBuilder {
     public Pair<TokenCategory, Object> getResult() {
         final ITokensBuilder last = getChild();
         setChild(null);
-        return new Pair<TokenCategory, Object>(QRY_COMPOUND_SOURCE, new MultipleNodesSources1(leftSource, (ISources1<? extends ISources2<?>>) firstValue(), joinType, ((ConditionsBuilder) last).getModel()));
+        return new Pair<TokenCategory, Object>(QRY_COMPOUND_SOURCE, new JoinInnerNode1(leftNode, (IJoinNode1<? extends IJoinNode2<?>>) firstValue(), joinType, ((ConditionsBuilder) last).getModel()));
     }
 }

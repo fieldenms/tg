@@ -3,16 +3,21 @@ package ua.com.fielden.platform.eql.stage3.operands;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.meta.PropType;
 
 public class Value3 implements ISingleOperand3 {
     public final Object value; // can be 'null' in case of yield stmt
     public final String paramName;
-    public final Object hibType;
+    public final PropType type;
 
-    public Value3(final Object value, final String paramName, final Object hibType) {
+    public Value3(final Object value, final String paramName, final PropType type) {
         this.value = value;
         this.paramName = paramName;
-        this.hibType = hibType;
+        this.type = type;
+    }
+
+    public Value3(final Object value, final PropType type) {
+        this(value, null, type);
     }
 
     @Override
@@ -20,7 +25,7 @@ public class Value3 implements ISingleOperand3 {
         if (value == null) {
             return " NULL ";
         } else {
-            return paramName == null ? (value instanceof String ? "'" + value + "'" : value.toString()) : ":" + paramName;    
+            return paramName == null ? (value instanceof String ? "'" + value + "'" : value.toString()) : ":" + paramName;
         }
     }
 
@@ -41,19 +46,14 @@ public class Value3 implements ISingleOperand3 {
         if (!(obj instanceof Value3)) {
             return false;
         }
-        
+
         final Value3 other = (Value3) obj;
-        
+
         return Objects.equals(value, other.value) && paramName == other.paramName;
     }
 
     @Override
-    public Class<?> type() {
-        return value != null ? value.getClass() : null;
-    }
-
-    @Override
-    public Object hibType() {
-        return hibType;
+    public PropType type() {
+        return type;
     }
 }

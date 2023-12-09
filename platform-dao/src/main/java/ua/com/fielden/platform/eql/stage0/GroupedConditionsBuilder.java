@@ -18,7 +18,7 @@ public class GroupedConditionsBuilder extends AbstractTokensBuilder {
 
     private final boolean negated;
 
-    protected GroupedConditionsBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final boolean negated) {
+    protected GroupedConditionsBuilder(final AbstractTokensBuilder parent, final QueryModelToStage1Transformer queryBuilder, final boolean negated) {
         super(parent, queryBuilder);
         this.negated = negated;
         setChild(new ConditionBuilder(this, queryBuilder));

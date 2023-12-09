@@ -1,17 +1,19 @@
 package ua.com.fielden.platform.eql.stage2.operands.functions;
 
+import static java.util.stream.Collectors.toSet;
+import static ua.com.fielden.platform.eql.meta.PropType.STRING_PROP_TYPE;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import org.hibernate.type.StringType;
-
-import ua.com.fielden.platform.eql.stage2.TransformationContext2;
-import ua.com.fielden.platform.eql.stage2.TransformationResult2;
-import ua.com.fielden.platform.eql.stage2.operands.Prop2;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
+import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.functions.Concat3;
 
@@ -20,20 +22,20 @@ public class Concat2 extends AbstractFunction2<Concat3> {
     private final List<ISingleOperand2<? extends ISingleOperand3>> operands;
 
     public Concat2(final List<ISingleOperand2<? extends ISingleOperand3>> operands) {
-        super(String.class, StringType.INSTANCE);
+        super(STRING_PROP_TYPE);
         this.operands = operands;
     }
 
     @Override
-    public TransformationResult2<Concat3> transform(final TransformationContext2 context) {
+    public TransformationResultFromStage2To3<Concat3> transform(final TransformationContextFromStage2To3 context) {
         final List<ISingleOperand3> transformed = new ArrayList<>();
-        TransformationContext2 currentContext = context;
+        TransformationContextFromStage2To3 currentContext = context;
         for (final ISingleOperand2<? extends ISingleOperand3> operand : operands) {
-            final TransformationResult2<? extends ISingleOperand3> operandTr = operand.transform(currentContext);
+            final TransformationResultFromStage2To3<? extends ISingleOperand3> operandTr = operand.transform(currentContext);
             transformed.add(operandTr.item);
             currentContext = operandTr.updatedContext;
         }
-        return new TransformationResult2<>(new Concat3(transformed, type, hibType), currentContext);
+        return new TransformationResultFromStage2To3<>(new Concat3(transformed, type), currentContext);
     }
 
     @Override
@@ -43,6 +45,11 @@ public class Concat2 extends AbstractFunction2<Concat3> {
             result.addAll(operand.collectProps());
         }
         return result;
+    }
+    
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        return operands.stream().map(el -> el.collectEntityTypes()).flatMap(Set::stream).collect(toSet());
     }
 
     @Override

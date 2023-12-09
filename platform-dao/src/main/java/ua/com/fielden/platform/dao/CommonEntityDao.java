@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.dao;
 
 import static java.lang.String.format;
-import static org.apache.logging.log4j.LogManager.getLogger;
 import static java.util.Optional.empty;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 import static ua.com.fielden.platform.types.either.Either.left;
 import static ua.com.fielden.platform.types.either.Either.right;
@@ -48,10 +48,10 @@ import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.QueryExecutionContext;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
-import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.either.Either;
@@ -134,7 +134,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 this::getSession,
                 entityType,
                 this::newQueryExecutionContext,
-                () -> new EntityBatchDeleteByIdsOperation<>(getSession(), (PersistedEntityMetadata<T>) getDomainMetadata().getPersistedEntityMetadataMap().get(entityType)));
+                () -> new EntityBatchDeleteByIdsOperation<>(getSession(), getDomainMetadata().eqlDomainMetadata.entityMetadataHolder.getTableForEntityType(entityType)));
         
         entitySaver = new PersistentEntitySaver<>(
                 this::getSession,
@@ -165,6 +165,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 getEntityFactory(), 
                 getCoFinder(), 
                 getDomainMetadata(), 
+                getDomainMetadata().eqlDomainMetadata,
                 getFilter(), 
                 getUsername(), 
                 dates, 

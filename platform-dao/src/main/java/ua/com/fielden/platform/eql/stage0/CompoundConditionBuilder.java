@@ -10,7 +10,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class CompoundConditionBuilder extends AbstractTokensBuilder {
 
-    protected CompoundConditionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final TokenCategory cat, final Object value) {
+    protected CompoundConditionBuilder(final AbstractTokensBuilder parent, final QueryModelToStage1Transformer queryBuilder, final TokenCategory cat, final Object value) {
         super(parent, queryBuilder);
         getTokens().add(new Pair<TokenCategory, Object>(cat, value));
         setChild(new ConditionBuilder(this, queryBuilder));

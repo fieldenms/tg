@@ -1,18 +1,19 @@
 package ua.com.fielden.platform.eql.stage0;
 
-import static ua.com.fielden.platform.eql.stage1.etc.OrderBys1.emptyOrderBys;
+import static ua.com.fielden.platform.eql.stage1.sundries.OrderBys1.EMPTY_ORDER_BYS;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
-import ua.com.fielden.platform.eql.stage1.etc.OrderBy1;
-import ua.com.fielden.platform.eql.stage1.etc.OrderBys1;
+import ua.com.fielden.platform.eql.exceptions.EqlStage0ProcessingException;
+import ua.com.fielden.platform.eql.stage1.sundries.OrderBy1;
+import ua.com.fielden.platform.eql.stage1.sundries.OrderBys1;
 import ua.com.fielden.platform.utils.Pair;
 
 public class QryOrderingsBuilder extends AbstractTokensBuilder {
 
-    protected QryOrderingsBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder) {
+    protected QryOrderingsBuilder(final AbstractTokensBuilder parent, final QueryModelToStage1Transformer queryBuilder) {
         super(parent, queryBuilder);
     }
 
@@ -40,13 +41,13 @@ public class QryOrderingsBuilder extends AbstractTokensBuilder {
     public OrderBys1 getModel() {
         if (getChild() != null && getTokens().isEmpty()) {
             finaliseChild();
-            //throw new RuntimeException("Unable to produce result - unfinished model state!");
+            //throw new EqlStage0ProcessingException("Unable to produce result - unfinished model state!");
         }
-        
+
         if (getTokens().isEmpty()) {
-            return emptyOrderBys;
+            return EMPTY_ORDER_BYS;
         }
-        
+
         final List<OrderBy1> models = new ArrayList<>();
         for (final Pair<TokenCategory, Object> pair : getTokens()) {
             models.add((OrderBy1) pair.getValue());
@@ -57,6 +58,6 @@ public class QryOrderingsBuilder extends AbstractTokensBuilder {
 
     @Override
     public Pair<TokenCategory, Object> getResult() {
-        throw new RuntimeException("Not applicable!");
+        throw new EqlStage0ProcessingException("Not applicable!");
     }
 }

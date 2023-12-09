@@ -5,8 +5,8 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
-import static ua.com.fielden.platform.entity.query.metadata.DomainMetadata.specialProps;
-import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PERSISTENT;
+import static ua.com.fielden.platform.eql.meta.EntityCategory.PERSISTENT;
+import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.SPECIAL_PROPS;
 import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
@@ -21,6 +21,7 @@ import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.EqlEntityMetadata;
 import ua.com.fielden.platform.eql.meta.EqlPropertyMetadata;
@@ -45,15 +46,14 @@ public class HibernateMappingsGenerator {
         sb.append("\"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\">\n");
         sb.append("<hibernate-mapping default-access=\"field\">\n");
 
-        final Set<EqlEntityMetadata> entries = new TreeSet<>(domainMetadata.entityPropsMetadata().values());
-        for (final EqlEntityMetadata entry : entries) {
+        final Set<EqlEntityMetadata<?>> entries = new TreeSet<>(domainMetadata.entityPropsMetadata().values());
+        for (final EqlEntityMetadata<?> entry : entries) {
             if (entry.typeInfo.category == PERSISTENT) {
-                final String typeName = entry.typeInfo.entityType.getName();
                 try {
-                    sb.append(generateEntityClassMapping(entry.typeInfo.entityType, domainMetadata.getTables().get(typeName).name, entry.props(), domainMetadata.dbVersion));
+                    sb.append(generateEntityClassMapping(entry.entityType, domainMetadata.entityMetadataHolder.getTableForEntityType(entry.entityType).name(), entry.props(), domainMetadata.dbVersion));
                 } catch (final Exception e) {
                     e.printStackTrace();
-                    throw new RuntimeException("Couldn't generate mapping for " + typeName + " due to: " + e.getMessage());
+                    throw new EqlMetadataGenerationException("Couldn't generate mapping for " + entry.entityType.getName() + " due to: " + e.getMessage());
                 }
                 sb.append("\n");
             }
@@ -105,7 +105,7 @@ public class HibernateMappingsGenerator {
     private static String generateUnionEntityPropertyMapping(final EqlPropertyMetadata info) {
         final StringBuffer sb = new StringBuffer();
         sb.append("\t<component name=\"" + info.name + "\" class=\"" + info.javaType.getName() + "\">\n");
-        for (final EqlPropertyMetadata subpropField : info.subitems()) {
+        for (final EqlPropertyMetadata subpropField : info.subitems) {
             if (subpropField.column != null) {
                 sb.append("\t\t<many-to-one name=\"" + subpropField.name + "\" class=\"" + subpropField.javaType.getName() + "\" column = \"" + subpropField.column.name.toUpperCase() + "\"/>\n");
             }
@@ -161,7 +161,7 @@ public class HibernateMappingsGenerator {
         }
 
         for (final EqlPropertyMetadata ppi : propsMetadata) {
-            if (ppi.expressionModel == null && !specialProps.contains(ppi.name) && (ppi.column != null || ppi.subitems().stream().anyMatch(e -> e.column != null))) {
+            if (ppi.expressionModel == null && !SPECIAL_PROPS.contains(ppi.name) && (ppi.column != null || ppi.subitems.stream().anyMatch(e -> e.column != null))) {
                 sb.append(generatePropertyMappingFromPropertyMetadata(ppi));
             }
         }
@@ -187,12 +187,12 @@ public class HibernateMappingsGenerator {
             }
         } else {
             final List<String> columns = new ArrayList<>();
-            for (final EqlPropertyMetadata subitem : propMetadata.subitems()) {
+            for (final EqlPropertyMetadata subitem : propMetadata.subitems) {
                 if (subitem.expressionModel == null) {
                     columns.add(subitem.column.name);
                 }
             }
-            final PropColumn singleColumn = propMetadata.subitems().size() == 1 ? propMetadata.subitems().get(0).column : propMetadata.column;
+            final PropColumn singleColumn = propMetadata.subitems.size() == 1 ? propMetadata.subitems.get(0).column : propMetadata.column;
             return generatePlainPropertyMapping(propMetadata.name, singleColumn, singleColumn == null ? columns : emptyList(), propMetadata.hibType.getClass().getName());
         }
     }
