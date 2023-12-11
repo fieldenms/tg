@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.ResourceLoader.getStream;
@@ -11,6 +12,7 @@ import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreCo
 import static ua.com.fielden.platform.web.minijs.JsCode.jsCode;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.SAVE_OWN_COPY_MSG;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
+import static ua.com.fielden.platform.web.view.master.api.actions.impl.ActionOptionAvailability.ALLOFF;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -65,6 +67,7 @@ import ua.com.fielden.platform.web.sse.EventSourceDispatchingEmitter;
 import ua.com.fielden.platform.web.sse.IEventSource;
 import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
+import ua.com.fielden.platform.web.view.master.api.actions.impl.ActionOptionAvailability;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 
 /**
@@ -97,6 +100,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     private final Workflows workflow;
     private final Map<String, String> checksums;
     private final boolean independentTimeZone;
+    private final ActionOptionAvailability optionsAvailability;
     /**
      * Holds the map between embedded entity centre's menu item type and [entity centre; entity master] pair.
      */
@@ -110,10 +114,12 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      * @param externalResourcePaths
      * - additional root paths for file resources. (see {@link #resourcePaths} for more information).
      * @param independentTimeZone -- if {@code true} is passed then user requests are treated as if they are made from the same timezone as defined for the application server.
+     * @param optionsAvailability -- determines what options are available for master's save and cancel actions.
      */
-    public AbstractWebUiConfig(final String title, final Workflows workflow, final String[] externalResourcePaths, final boolean independentTimeZone) {
+    public AbstractWebUiConfig(final String title, final Workflows workflow, final String[] externalResourcePaths, final boolean independentTimeZone, final Optional<ActionOptionAvailability> optionsAvailability) {
         this.title = title;
         this.independentTimeZone = independentTimeZone;
+        this.optionsAvailability = optionsAvailability.orElse(ALLOFF);
         this.webUiBuilder = new WebUiBuilder(this);
         this.dispatchingEmitter = new EventSourceDispatchingEmitter();
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -144,6 +150,32 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         } catch (final Exception ex) {
             throw new MissingWebResourceException("Could not read checksums from file.", ex);
         }
+    }
+
+    /**
+     * Creates abstract {@link IWebUiConfig}.
+     *
+     * @param title -- application title displayed by the web client
+     * @param workflow -- indicates development or deployment workflow, which affects how web resources get loaded.
+     * @param externalResourcePaths
+     * - additional root paths for file resources. (see {@link #resourcePaths} for more information).
+     * @param optionsAvailability -- determines what options are available for master's save and cancel actions.
+     */
+    public AbstractWebUiConfig(final String title, final Workflows workflow, final String[] externalResourcePaths, final Optional<ActionOptionAvailability> optionsAvailability) {
+        this(title, workflow, externalResourcePaths, false, optionsAvailability);
+    }
+
+    /**
+     * Creates abstract {@link IWebUiConfig}.
+     *
+     * @param title -- application title displayed by the web client
+     * @param workflow -- indicates development or deployment workflow, which affects how web resources get loaded.
+     * @param externalResourcePaths
+     * - additional root paths for file resources. (see {@link #resourcePaths} for more information).
+     * @param independentTimeZone -- if {@code true} is passed then user requests are treated as if they are made from the same timezone as defined for the application server.
+     */
+    public AbstractWebUiConfig(final String title, final Workflows workflow, final String[] externalResourcePaths, final boolean independentTimeZone) {
+        this(title, workflow, externalResourcePaths, independentTimeZone, of(ALLOFF));
     }
 
     /**
@@ -325,6 +357,11 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     @Override
     public boolean independentTimeZone() {
         return independentTimeZone;
+    }
+
+    @Override
+    public ActionOptionAvailability masterActionAvailableOptions() {
+        return optionsAvailability;
     }
 
     /**

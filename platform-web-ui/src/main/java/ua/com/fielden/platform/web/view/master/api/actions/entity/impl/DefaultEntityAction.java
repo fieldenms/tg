@@ -117,14 +117,7 @@ public class DefaultEntityAction<T extends AbstractEntity<?>> extends AbstractAc
 
     @Override
     public DomElement render() {
-        return new DomElement(this.actionComponentName()).attrs(createAttributes()).attrs(createCustomAttributes()).style(createStyle());
-    }
-
-    private String[] createStyle() {
-        if (!this.isExcludeClose() || !this.isExcludeNew()) {
-            return new String[] {"min-width: 160px;"};
-        }
-        return new String[] {};
+        return new DomElement(this.actionComponentName()).attrs(createAttributes()).attrs(createCustomAttributes());
     }
 
     @Override

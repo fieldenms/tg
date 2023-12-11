@@ -124,6 +124,11 @@ const closeEventSource = function (sourceObj) {
 //Holds all registered event sources in application.
 export const eventSource = registerEventSource();
 
+export const OptionAvailability = {
+    ALLON: "ALLON",
+    ALLOFF: "ALLOFF"
+};
+
 export const TgAppConfig = Polymer({
     
     is: "tg-app-config",
@@ -153,6 +158,12 @@ export const TgAppConfig = Polymer({
             type: String,
             readOnly: true,
             value: @timeFormat
+        },
+        masterActionOptionAvailability: {
+            type: String,
+            readOnly: true,
+            notify: true,
+            value: @masterActionAvailableOptions
         },
         firstDayOfWeek: {
             type: Number,

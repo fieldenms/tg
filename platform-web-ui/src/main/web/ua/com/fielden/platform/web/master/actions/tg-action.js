@@ -11,6 +11,8 @@ import '/resources/polymer/@polymer/paper-styles/color.js';
 import '/resources/components/postal-lib.js';
 import '/resources/components/tg-dropdown-switch.js';
 
+import {OptionAvailability} from '/app/tg-app-config.js';
+
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { createEntityActionThenCallback } from '/resources/master/actions/tg-entity-master-closing-utils.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
@@ -39,6 +41,10 @@ const createDescWithShortcut = function(desc, shortcuts) {
 
     return desc + ", " + shortcutMaps.map(obj => Object.keys(obj).join("/")).join(" + ");
 }
+
+const hasNoOptions = function (availableOptions, excludeNew, excludeClose) {
+    return (excludeNew && excludeClose) || availableOptions ===  OptionAvailability.ALLOFF;
+};
 
 const template = html`
     <style>
@@ -82,11 +88,12 @@ const template = html`
             display: none !important;
         }
     </style>
-    <paper-button id="actionButton" class="action-item" hidden$="[[!_isButton(excludeNew, excludeClose, icon)]]" raised roll="button" on-tap="_asyncRun" style="width:100%" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]">
+    <tg-app-config master-action-option-availability="{{availableOptions}}"></tg-app-config>
+    <paper-button id="actionButton" class="action-item" hidden$="[[!_isButton(availableOptions, excludeNew, excludeClose, icon)]]" raised roll="button" on-tap="_asyncRun" style="width:100%" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]">
         <span>[[shortDesc]]</span>
     </paper-button>
-    <paper-fab id="fabButton" class="action-item" mini icon="[[icon]]" on-tap="_asyncRun" hidden$="[[!_isIcon(excludeNew, excludeClose, icon)]]" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]"></paper-fab>
-    <tg-dropdown-switch id="dropdownButton" class="action-item" raised fragmented vertical-align="bottom" main-button-tooltip-text="[[_generateMainShortcutTooltip(shortcut)]]" dropdown-button-tooltip-text="Select an action" disabled="[[_optionButtonDisabled]]" activated="[[_optionButtonActive]]" hidden$="[[!_isOptionButton(excludeNew, excludeClose, icon)]]" views="[[_options]]" do-not-highlight-when-drop-down-opened make-drop-down-width-the-same-as-button change-current-view-on-select on-tg-centre-view-change="_runOptionAction"></tg-dropdown-switch>
+    <paper-fab id="fabButton" class="action-item" mini icon="[[icon]]" on-tap="_asyncRun" hidden$="[[!_isIcon(availableOptions, excludeNew, excludeClose, icon)]]" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]"></paper-fab>
+    <tg-dropdown-switch id="dropdownButton" class="action-item" raised fragmented vertical-align="bottom" main-button-tooltip-text="[[_generateMainShortcutTooltip(shortcut)]]" dropdown-button-tooltip-text="Select an action" disabled="[[_optionButtonDisabled]]" activated="[[_optionButtonActive]]" hidden$="[[!_isOptionButton(availableOptions, excludeNew, excludeClose, icon)]]" views="[[_options]]" do-not-highlight-when-drop-down-opened make-drop-down-width-the-same-as-button change-current-view-on-select on-tg-centre-view-change="_runOptionAction"></tg-dropdown-switch>
     <paper-spinner id="spinner" active="[[_working]]" class="blue" style="display: none;" alt="in progress"></paper-spinner>
 `;
 
@@ -149,6 +156,11 @@ Polymer({
         icon: {
             type: String,
             value: ''
+        },
+
+        availableOptions : {
+            type: String,
+            value: OptionAvailability.ALLOFF
         },
 
         excludeNew: {
@@ -319,7 +331,7 @@ Polymer({
         this._updateActionIndex(this.entityType, this.role);
     },
 
-    observers: ["_updateOptions(shortDesc, longDesc, role, excludeNew, excludeClose, icon, shortcut)", "_updateActionIndex(entityType, role)", "_buttonStateChanged(enabledStates, currentState, _innerEnabled, outerEnabled, excludeNew, excludeClose, icon)"],
+    observers: ["_defineActionStyle(availableOptions, excludeNew, excludeClose)", "_updateOptions(shortDesc, longDesc, role, availableOptions, excludeNew, excludeClose, icon, shortcut)", "_updateActionIndex(entityType, role)", "_buttonStateChanged(enabledStates, currentState, _innerEnabled, outerEnabled, availableOptions, excludeNew, excludeClose, icon)"],
 
     created: function () {
         this.run = this._createRun();
@@ -420,20 +432,20 @@ Polymer({
         }
     },
 
-    _isButton: function (excludeNew, excludeClose, icon) {
-        return excludeNew && excludeClose && !icon;
+    _isButton: function (availableOptions, excludeNew, excludeClose, icon) {
+        return hasNoOptions(availableOptions, excludeNew, excludeClose) && !icon;
     },
 
-    _isIcon: function (excludeNew, excludeClose, icon) {
-        return excludeNew && excludeClose && icon;
+    _isIcon: function (availableOptions, excludeNew, excludeClose, icon) {
+        return hasNoOptions(availableOptions, excludeNew, excludeClose) && icon;
     },
 
-    _isOptionButton: function (excludeNew, excludeClose, icon) {
-        return (!excludeNew || !excludeClose) && !icon;
+    _isOptionButton: function (availableOptions, excludeNew, excludeClose, icon) {
+        return !hasNoOptions(availableOptions, excludeNew, excludeClose) && !icon;
     },
 
-    _updateOptions: function (shortDesc, longDesc, role, excludeNew, excludeClose, icon, shortcut) {
-        if (allDefined(arguments) && this._isOptionButton(excludeNew, excludeClose, icon)) {
+    _updateOptions: function (shortDesc, longDesc, role, availableOptions, excludeNew, excludeClose, icon, shortcut) {
+        if (allDefined(arguments) && this._isOptionButton(availableOptions, excludeNew, excludeClose, icon)) {
             const separateShortcuts = shortcut.split(" ");
             const options = [
                 {
@@ -472,7 +484,7 @@ Polymer({
         return createDescWithShortcut('', shortcut.split(" ").filter(i => !i.includes("shift") && !i.includes("alt")));
     },
 
-    _buttonStateChanged: function (enabledStates, currentState, _innerEnabled, outerEnabled, excludeNew, excludeClose, icon) {
+    _buttonStateChanged: function (enabledStates, currentState, _innerEnabled, outerEnabled, availableOptions, excludeNew, excludeClose, icon) {
         if (!allDefined(arguments)) {
             return true;
         }
@@ -480,10 +492,18 @@ Polymer({
         this._set_optionButtonDisabled(!innerEnableState);
         this._set_optionButtonActive(outerEnabled);
         this._set_disabled(outerEnabled === false ? true : !innerEnableState);
-        if (this._isOptionButton(excludeNew, excludeClose, icon) ? this._optionButtonDisabled : this._disabled) {
+        if (this._isOptionButton(availableOptions, excludeNew, excludeClose, icon) ? this._optionButtonDisabled : this._disabled) {
             this.setAttribute("action-disabled", "");
         } else {
             this.removeAttribute("action-disabled");
+        }
+    },
+
+    _defineActionStyle: function (availableOptions, excludeNew, excludeClose) {
+        if (!hasNoOptions(availableOptions, excludeNew, excludeClose)) {
+            this.style.minWidth = "160px";
+        } else {
+            this.style.minWidth = "";
         }
     },
 
