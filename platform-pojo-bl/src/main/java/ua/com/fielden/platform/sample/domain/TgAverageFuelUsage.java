@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.sample.domain;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -11,7 +13,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import ua.com.fielden.platform.types.Money;
 
 @KeyType(TgVehicle.class)
 @CompanionObject(ITgAverageFuelUsage.class)
@@ -25,12 +27,17 @@ public class TgAverageFuelUsage extends AbstractEntity<TgVehicle> {
                     groupBy().prop("vehicle"). //
                     yield().prop("vehicle").as("key"). //
                     yield().sumOf().prop("qty").as("qty"). //
+                    yield().sumOf().beginExpr().prop("qty").mult().prop("pricePerLitre").endExpr().as("cost"). //
                     modelAsEntity(TgAverageFuelUsage.class);
 
     @IsProperty
     @Title("Total qty over the period")
     private BigDecimal qty;
 
+    @IsProperty
+    @Title("Total cost over the period")
+    private Money cost;
+    
     @IsProperty
     @CritOnly
     @Title("Date period")
@@ -51,8 +58,18 @@ public class TgAverageFuelUsage extends AbstractEntity<TgVehicle> {
         this.qty = qty;
         return this;
     }
-
+    
     public BigDecimal getQty() {
         return qty;
+    }
+
+    @Observable
+    public TgAverageFuelUsage setCost(final Money cost) {
+        this.cost = cost;
+        return this;
+    }
+
+    public Money getCost() {
+        return cost;
     }
 }

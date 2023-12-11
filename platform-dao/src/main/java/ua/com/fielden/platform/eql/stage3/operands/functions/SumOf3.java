@@ -2,18 +2,15 @@ package ua.com.fielden.platform.eql.stage3.operands.functions;
 
 import static java.lang.String.format;
 
-import java.math.BigDecimal;
-
-import org.hibernate.type.BigDecimalType;
-
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
 public class SumOf3 extends SingleOperandFunction3 {
     private final boolean distinct;
     
-    public SumOf3(final ISingleOperand3 operand, final boolean distinct, final Class<?> type, final Object hibType) {
-        super(operand, type, hibType);
+    public SumOf3(final ISingleOperand3 operand, final boolean distinct, final PropType type) {
+        super(operand, type);
         this.distinct = distinct;
     }
     

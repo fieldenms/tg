@@ -4,8 +4,12 @@ import com.squareup.javapoet.*;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
+import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor;
+import ua.com.fielden.platform.processors.appdomain.annotation.SkipEntityRegistration;
 import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
 import ua.com.fielden.platform.processors.verify.AbstractVerifierTest;
 import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
@@ -16,12 +20,16 @@ import javax.lang.model.element.Modifier;
 import java.util.*;
 import java.util.function.Function;
 
+import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
+import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccessWithoutProcessingErrors;
+import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.compileWithTempStorage;
 import static ua.com.fielden.platform.processors.verify.VerifyingProcessor.errVerifierNotPassedBy;
 import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.propertyBuilder;
 import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.setterBuilder;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.CollectionalPropertyVerifier.errMustBeFinal;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyAccessorVerifier.*;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertySetterVerifier.*;
+import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier.errEntityTypeMustBeRegistered;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier.errInvalidCollectionTypeArg;
 
 /**
@@ -366,12 +374,68 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
             compileAndAssertSuccess(List.of(entity));
         }
 
-        // TODO Once verification of this constraint is supported, devise a way to provide a mock ApplicationDomain to the processor.
-        // Also remove the "NOT".
         @Test
-        public void error_is_NOT_reported_when_unregistered_entity_type_is_used() {
-            assertTypeAllowed(ClassName.get(ExampleEntity.class));
-            assertTypeAllowed(ClassName.get(AbstractEntity.class));
+        public void unregisterable_entity_type_is_disallowed() {
+            final TypeSpec unregisterableEntity = TypeSpec.classBuilder("UnregisterableEntity")
+                    .addAnnotation(SkipEntityRegistration.class)
+                    .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                    .build();
+
+            final TypeSpec entity = TypeSpec.classBuilder("Example")
+                    .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                    .addField(propertyBuilder(ClassName.get("", unregisterableEntity.name), "prop").build())
+                    .build();
+
+            compileAndAssertErrors(List.of(unregisterableEntity, entity),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "prop"),
+                    errEntityTypeMustBeRegistered("prop", "UnregisterableEntity"));
+        }
+
+        @Test
+        public void registered_entity_type_is_allowed() {
+            // 1. compile with ApplicationDomainProcessor to register entity Person
+            // 2. run the verifier which should be aware of the generated ApplicationDomain at that point
+
+            compileWithTempStorage((compilation, javaFileWriter) -> {
+                final String packageName = "test.entities";
+
+                // 1.
+                JavaFile javaFileEntityPerson = JavaFile.builder(packageName,
+                                TypeSpec.classBuilder("Person")
+                                        .addModifiers(Modifier.PUBLIC)
+                                        .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                                        .build())
+                        .build();
+                javaFileWriter.accept(javaFileEntityPerson);
+
+                assertSuccessWithoutProcessingErrors(
+                        compilation.setProcessor(new ApplicationDomainProcessor())
+                                .setJavaSources(List.of(javaFileEntityPerson.toJavaFileObject()))
+                                .addOptions(OPTION_PROC_ONLY)
+                                .compile());
+
+                // 2.
+                JavaFile javaFileEntityContract = JavaFile.builder(packageName,
+                                TypeSpec.classBuilder("Contract")
+                                        .addModifiers(Modifier.PUBLIC)
+                                        .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                                        .addField(propertyBuilder(ClassName.get(packageName, "Person"), "person").build())
+                                        .build())
+                        .build();
+
+                assertSuccessWithoutProcessingErrors(
+                        compilation.setProcessor(createProcessor())
+                                .setJavaSources(List.of(javaFileEntityContract.toJavaFileObject()))
+                                .addOptions(OPTION_PROC_ONLY)
+                                .compile());
+            });
+        }
+
+        @Test
+        public void platform_entity_types_are_allowed() {
+            PlatformDomainTypes.types.forEach(type -> {
+                assertTypeAllowed(ClassName.get(type));
+            });
         }
 
         @Test
@@ -413,6 +477,13 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
             assertTypeAllowed(ParameterizedTypeName.get(Set.class, Boolean.class));
         }
 
+        @Test
+        public void collection_type_parameterised_with_platform_entity_type_is_allowed() {
+            PlatformDomainTypes.types.forEach(type -> {
+                assertTypeAllowed(ParameterizedTypeName.get(List.class, type));
+            });
+        }
+
         // TODO this might change in the future with more thorough verification of collectional properties
         @Test
         public void raw_collection_types_are_allowed() {
@@ -436,6 +507,22 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         public void binary_array_type_is_allowed() {
             assertTypeAllowed(ArrayTypeName.of(byte.class));
         }
+
+        @Test
+        public void PropertyDescriptor_type_is_allowed() {
+            assertTypeAllowed(ParameterizedTypeName.get(PropertyDescriptor.class, ExampleEntity.class));
+        }
+
+        @Test
+        public void raw_PropertyDescriptor_type_is_allowed() {
+            assertTypeAllowed(ClassName.get(PropertyDescriptor.class));
+        }
+
+        @Test
+        public void collection_type_parameterised_with_PropertyDescriptor_is_allowed() {
+            assertTypeAllowed(ParameterizedTypeName.get(List.class, PropertyDescriptor.class));
+        }
+
     }
 
 }

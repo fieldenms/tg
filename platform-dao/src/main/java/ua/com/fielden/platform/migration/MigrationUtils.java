@@ -5,7 +5,7 @@ import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
-import static ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo.getEntityTypeInfo;
+import static ua.com.fielden.platform.eql.meta.EntityTypeInfo.getEntityTypeInfo;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.unmodifiableListOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
@@ -41,11 +41,11 @@ public class MigrationUtils {
                         isPersistedEntityType(el.javaType)
                                 ? keyPaths(el.name, (Class<? extends AbstractEntity<?>>) el.javaType)
                                 : unmodifiableListOf(el.name)));
-            } else if (!el.subitems().isEmpty()) {
-                for (final EqlPropertyMetadata subitem : el.subitems()) {
+            } else if (!el.subitems.isEmpty()) {
+                for (final EqlPropertyMetadata subitem : el.subitems) {
                     if (subitem.expressionModel == null) {
-                        props.add(new PropMd(el.name + "." + subitem.name, subitem.javaType, subitem.column.name, isUnionEntityType(el.javaType) ? false : el.required, 
-                                subitem.hibType instanceof IUtcDateTimeType, 
+                        props.add(new PropMd(el.name + "." + subitem.name, subitem.javaType, subitem.column.name, isUnionEntityType(el.javaType) ? false : el.required,
+                                subitem.hibType instanceof IUtcDateTimeType,
                                 isPersistedEntityType(subitem.javaType)
                                         ? keyPaths(el.name + "." + subitem.name, (Class<? extends AbstractEntity<?>>) subitem.javaType)
                                         : unmodifiableListOf(el.name + "." + subitem.name)));

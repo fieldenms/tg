@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.test;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.dao.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
+import static ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
 
 import java.lang.reflect.Field;
 import java.text.DateFormat;

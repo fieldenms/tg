@@ -1,28 +1,37 @@
 package ua.com.fielden.platform.processors;
 
-import com.google.common.base.Stopwatch;
-import com.squareup.javapoet.AnnotationSpec;
-import ua.com.fielden.platform.processors.metamodel.elements.utils.TypeElementCache;
-import ua.com.fielden.platform.processors.utils.CodeGenerationUtils;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static javax.tools.Diagnostic.Kind.NOTE;
+import static ua.com.fielden.platform.processors.ProcessorOptionDescriptor.newBooleanOptionDescriptor;
+import static ua.com.fielden.platform.processors.ProcessorOptionDescriptor.parseOptionFrom;
 
-import javax.annotation.processing.*;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringJoiner;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.Filer;
+import javax.annotation.processing.Messager;
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringJoiner;
 
-import static java.lang.Boolean.parseBoolean;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static javax.tools.Diagnostic.Kind.NOTE;
+import com.google.common.base.Stopwatch;
+import com.squareup.javapoet.AnnotationSpec;
+
+import ua.com.fielden.platform.processors.metamodel.elements.utils.TypeElementCache;
+import ua.com.fielden.platform.processors.utils.CodeGenerationUtils;
 
 /**
- * An abstract platform-level annotation processor to be extended by specific implementations. 
+ * An abstract platform-level annotation processor to be extended by specific implementations.
  * It provides common processor behaviour mostly concerned with initialization and per-round logging.
  * <p>
  * Subclasses are responsible for implementing {@link #processRound(Set, RoundEnvironment)}, which is called by a known method
@@ -30,7 +39,7 @@ import static javax.tools.Diagnostic.Kind.NOTE;
  * <p>
  * Supported options by this base type:
  * <ul>
- *   <li>cacheStats -- if set to {@code true} enables recording of type element cache statistics (see {@link TypeElementCache#getStats()}). </li>
+ *   <li>{@code cacheStats} -- if set to {@code true} enables recording of type element cache statistics (see {@link TypeElementCache#getStats()}). </li>
  * </ul>
  *
  * @author TG Team
@@ -54,24 +63,31 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
     /** Indicates whether the last round of processing initial inputs has already been passed. Makes sense during incremental compilation. */
     private boolean pastLastRound;
 
-    private static final String CACHE_STATS_OPTION = "cacheStats";
-    private boolean reportCacheStats = false;
+    // --- supported options ---
+
+    public static final ProcessorOptionDescriptor<Boolean> CACHE_STATS_OPT_DESC = newBooleanOptionDescriptor("cacheStats", false);
+    private boolean reportCacheStats;
+
+    @Override
+    public Set<String> getSupportedOptions() {
+        return Stream.of(CACHE_STATS_OPT_DESC).map(ProcessorOptionDescriptor::name).collect(Collectors.toSet());
+    }
 
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
-        super.init(processingEnv); 
+        super.init(processingEnv);
         this.messager = processingEnv.getMessager();
         this.filer = processingEnv.getFiler();
         this.elementUtils = processingEnv.getElementUtils();
         this.typeUtils = processingEnv.getTypeUtils();
-        this.roundNumber = this.batchRoundNumber = 0; 
+        this.roundNumber = this.batchRoundNumber = 0;
         this.pastLastRound = false;
 
         final Map<String, String> options = processingEnv.getOptions();
         if (!options.isEmpty()) {
             printNote("Options: " + options);
-            parseOptions(options);
         }
+        parseOptions(options);
         printNote("%s initialized.", classSimpleName);
     }
 
@@ -80,22 +96,14 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
         return SourceVersion.latestSupported();
     }
 
-    @Override
-    public Set<String> getSupportedOptions() {
-        return Set.of(CACHE_STATS_OPTION);
-    }
-
     /**
      * Performs parsing of options that were passed to this processor.
-     * Subclasses might wish to call the super implementation when overriding this method.
-     *
-     * @param options
+     * Subclasses should call the super implementation when overriding this method.
      */
-    protected void parseOptions(final Map<String, String> options) { 
-        if (parseBoolean(options.get(CACHE_STATS_OPTION))) {
-            reportCacheStats = true;
+    protected void parseOptions(final Map<String, String> options) {
+        reportCacheStats = parseOptionFrom(options, CACHE_STATS_OPT_DESC);
+        if (reportCacheStats)
             TypeElementCache.recordStats();
-        }
     }
 
     @Override
@@ -145,7 +153,7 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
      * performed by the abstraction.
      * <p>
      * For more details refer to the documentation of {@link #process(Set, RoundEnvironment)}.
-     * 
+     *
      * @param annotations
      * @param roundEnv
      * @return
@@ -198,6 +206,10 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
         messager.printMessage(Diagnostic.Kind.MANDATORY_WARNING, msg.formatted(args));
     }
 
+    /**
+     * Returns the current processing round number. Numbering starts at 1.
+     * @return
+     */
     protected int getRoundNumber() {
         return roundNumber;
     }

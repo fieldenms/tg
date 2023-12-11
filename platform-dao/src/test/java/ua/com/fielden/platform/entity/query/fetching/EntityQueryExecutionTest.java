@@ -79,7 +79,6 @@ import ua.com.fielden.platform.sample.domain.ITgWorkshop;
 import ua.com.fielden.platform.sample.domain.TeAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TeFuelUsageByType;
 import ua.com.fielden.platform.sample.domain.TeFuelUsageByTypeCo;
-import ua.com.fielden.platform.sample.domain.TeVehicle;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgAuthorship;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
@@ -225,7 +224,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         assertEquals("Y", result.get("exists"));
         assertEquals("aaa", result.get("prop2"));
     }
-    
+
     @Test
     public void exists_can_be_used_to_determine_that_query_result_exists() {
         final EntityResultQueryModel<TgVehicle> a = select(TgVehicle.class).where().prop("key").eq().val("CAR1").model();
@@ -243,13 +242,13 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         final EntityResultQueryModel<TgVehicle> a = select(TgVehicle.class).where().prop("key").eq().param("car_name").model();
         assertTrue(coVehicle.exists(a, mapOf(t2("car_name", "CAR1"))));
     }
-    
+
     @Test
     public void exists_can_be_used_to_determine_that_parameterised_query_result_does_not_exist() {
         final EntityResultQueryModel<TgVehicle> a = select(TgVehicle.class).where().prop("key").eq().param("car_name").model();
         assertFalse(coVehicle.exists(a, mapOf(t2("car_name", "CIR1"))));
     }
-    
+
     /////////////////////////////////////// TEST SQL FUNCTIONS ///////////////////////////////////////////////////////////////////
 
     @Test
@@ -293,7 +292,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         final AggregatedResultQueryModel qry = singleResultQueryStub.yield().addTimeIntervalOf().val(10).minutes().to().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
         assertEquals(date("2007-01-01 00:10:00"), aggregateDao.getEntity(from(qry).model()).get("result"));
     }
-    
+
     @Test
     public void add_hours_function_works_against_h2_database() {
         final AggregatedResultQueryModel qry = singleResultQueryStub.yield().addTimeIntervalOf().val(10).hours().to().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
@@ -305,19 +304,19 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         final AggregatedResultQueryModel qry = singleResultQueryStub.yield().addTimeIntervalOf().val(10).days().to().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
         assertEquals(date("2007-01-11 00:00:00"), aggregateDao.getEntity(from(qry).model()).get("result"));
     }
-    
+
     @Test
     public void add_months_function_works_against_h2_database() {
         final AggregatedResultQueryModel qry = singleResultQueryStub.yield().addTimeIntervalOf().val(10).months().to().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
         assertEquals(date("2007-11-01 00:00:00"), aggregateDao.getEntity(from(qry).model()).get("result"));
     }
-    
+
     @Test
     public void add_years_function_works_against_h2_database() {
         final AggregatedResultQueryModel qry = singleResultQueryStub.yield().addTimeIntervalOf().val(10).years().to().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
         assertEquals(date("2017-01-01 00:00:00"), aggregateDao.getEntity(from(qry).model()).get("result"));
     }
-    
+
     @Test
     public void can_query_date_prop_using_add_time_interval_operations_against_h2_database() {
         final EntityResultQueryModel<TgVehicle> query = select(TgVehicle.class)
@@ -339,7 +338,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         final EntityAggregates result = aggregateDao.getEntity(from(qry).model());
         assertEquals("Incorrect duration in seconds", "60", result.get("result").toString());
     }
-    
+
     @Test
     public void count_minutes_function_works_correctly_against_h2_database() {
         final AggregatedResultQueryModel qry = singleResultQueryStub.yield().count().minutes().between().val(date("2007-01-01 01:00:00")).and().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
@@ -360,21 +359,21 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         final EntityAggregates result = aggregateDao.getEntity(from(qry).model());
         assertEquals("Incorrect duration in days", "9", result.get("result").toString());
     }
-    
+
     @Test
     public void count_months_function_works_correctly_against_h2_database() {
         final AggregatedResultQueryModel qry = singleResultQueryStub.yield().count().months().between().val(date("2007-10-01 00:00:00")).and().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
         final EntityAggregates result = aggregateDao.getEntity(from(qry).model());
         assertEquals("Incorrect duration in months", "9", result.get("result").toString());
     }
-    
+
     @Test
     public void count_years_function_works_correctly_against_h2_database() {
         final AggregatedResultQueryModel qry = singleResultQueryStub.yield().count().years().between().val(date("2008-01-01 00:00:00")).and().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
         final EntityAggregates result = aggregateDao.getEntity(from(qry).model());
         assertEquals("Incorrect duration in years", "1", result.get("result").toString());
     }
-    
+
     /////////////////////////////////////// QUERING KEYS OF ENTITIES WITH COMPOSITE KEYS /////////////////////////////////////////
 
     @Test
@@ -499,7 +498,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         assertTrue(bogies.get(0).getLocation().activeEntity() instanceof TgWorkshop);
         assertTrue(bogies.get(1).getLocation().activeEntity() instanceof TgWagonSlot);
     }
-    
+
     @Test
     @Ignore
     public void test_query_with_union_property_subproperties_via_query_based_source() {
@@ -530,7 +529,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         final EntityResultQueryModel<TgBogie> expQry = select(TgBogie.class).where().prop("location.workshop.desc").eq().val(workshopDesc).model();
         assertEquals(bogieDao.getEntity(from(expQry).model()), bogieDao.getEntity(from(qry).model()));
     }
-    
+
     @Test
     public void can_query_union_entity_common_subprop_fuel_type() {
         final TgFuelType fuelType = coFuelType.findByKey("P");
@@ -548,7 +547,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
             fail("Should have failed while trying to query union prop common prop subprop.");
             //TODO remove such limitation in EQL3.
         } catch (final Exception e) {
-        }   
+        }
     }
 
     @Test
@@ -637,7 +636,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         assertNull(summaryEntity.getAuthor());
         assertEquals("Incorrect key", 4l, summaryEntity.getQty().longValue());
     }
-    
+
     @Test
     public void test_retrieval_of_synthetic_entity6() {
         final EntityResultQueryModel<TgAverageFuelUsage> qry = select(TgAverageFuelUsage.class).where().prop("key.key").eq().val("CAR2").model();
@@ -1241,7 +1240,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         assertEquals("Incorrect count", 1, values.size());
         assertEquals("Incorrect value", "3", values.get(0).get("aa").toString());
     }
-    
+
     @Test
     public void test12() {
         final AggregatedResultQueryModel model = select(TgVehicleModel.class). //
@@ -1459,7 +1458,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         assertEquals("Incorrect key", "MERC", vehicle.getModel().getMake().getKey());
         assertEquals("Incorrect number of fuel-usages", 2, vehicle.getFuelUsages().size());
     }
-    
+
     @Test
     @Ignore // H2 fails to execute legitimate SQL
     public void vehicle_is_fetched_with_persisted_collectional_association() {
@@ -1804,7 +1803,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         final EntityAggregates item = models.get(0);
         assertEquals("Incorrect key", new BigDecimal("120.00"), item.get("lq"));
     }
- 
+
     ///////////////////////////////////////////////////// BATCH DELETION  ////////////////////////////////////////////////
 
     @Test
@@ -1812,14 +1811,14 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("surname").eq().val("Date").model();
         assertEquals(1, authorDao.batchDelete(qry));
     }
-    
+
     @Test
     public void test_batch_deletion_of_whole_table() {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).model();
         final int count = authorDao.count(qry);
         assertEquals(count, authorDao.batchDelete(qry));
     }
-    
+
     @Test
     public void test_batch_deletion_by_entities() {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).model();
@@ -1827,7 +1826,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         final List<TgAuthor> authors = authorDao.getAllEntities(from(qry).model());
         assertEquals(count, authorDao.batchDelete(authors));
     }
-    
+
     @Test
     public void test_batch_deletion_by_entities_ids() {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).model();
@@ -1839,7 +1838,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         }
         assertEquals(count, authorDao.batchDelete(ids));
     }
-    
+
     ///////////////////////////////////////////////////// CASE EXPRESSION IN SUMMARY PROPS  ////////////////////////////////////////////////
     @Test
     public void test_case_when_expression_in_summary_property_when_condition_is_satisfied() {
@@ -1848,7 +1847,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
                 from(qry).with(fetchNone(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class).with("costPerKm")).model());
         assertEquals(new BigDecimal("1"), summaryEntity.getCostPerKm());
     }
-    
+
     @Test
     public void test_case_when_expression_in_summary_property_when_condition_is_not_satisfied() {
         final EntityResultQueryModel<TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries> qry = select(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class).where().prop("kms").eq().val(0).model();
@@ -1858,27 +1857,29 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     }
 
     ///////////////////////////////////////////////////// AGGREGATES ON SUBQUERIES IN ENTITY CENTRE TOTALS QUERY  ////////////////////////////////////////////////
-    
+
     @Test
     public void calculated_props_are_actually_yielded_in_the_source_query_if_the_top_query_yields_are_all_recognised_as_totals_in_case_of_persistent_entity() {
-        // SELECT from SELECT here is emulating the approach utilised by DynamicQueryBuilder.createJoinCondition() method in order to overcome MSSQL inability to aggregate scalar sub-queries. 
-        final EntityResultQueryModel<TgOrgUnit5WithSummaries> qry = select(select(TgOrgUnit5WithSummaries.class).model()).model();
-        final TgOrgUnit5WithSummaries summaryEntity = getInstance(TgOrgUnit5WithSummariesCo.class).getEntity(from(qry).with(fetchNone(TgOrgUnit5WithSummaries.class).with("minVehiclesCount")).model());
+        // SELECT from SELECT here is emulating the approach utilised by DynamicQueryBuilder.createJoinCondition() method in order to overcome MSSQL inability to aggregate scalar sub-queries.
+        final EntityResultQueryModel<TgOrgUnit5WithSummaries> qry = select(select(TgOrgUnit5WithSummaries.class).model().setShouldMaterialiseCalcPropsAsColumnsInSqlQuery(true)).model();
+        final TgOrgUnit5WithSummaries summaryEntity = getInstance(TgOrgUnit5WithSummariesCo.class).
+                getEntity(from(qry).with(fetchNone(TgOrgUnit5WithSummaries.class).with("minVehiclesCount").with("maxAverageVehiclePrice")).model());
         assertEquals(Integer.valueOf(1), summaryEntity.getMinVehiclesCount());
+        assertEquals(new Money(new BigDecimal(200)), summaryEntity.getMaxAverageVehiclePrice());
     }
-    
+
     @Test
     public void calculated_props_are_actually_yielded_in_the_source_query_if_the_top_query_yields_are_all_recognised_as_totals_in_case_of_synthetic_based_on_persistent_entity() {
-        // SELECT from SELECT here is emulating the approach utilised by DynamicQueryBuilder.createJoinCondition() method in order to overcome MSSQL inability to aggregate scalar sub-queries. 
-        final EntityResultQueryModel<TeAverageFuelUsage> qry = select(select(TeAverageFuelUsage.class).model()).model();
+        // SELECT from SELECT here is emulating the approach utilised by DynamicQueryBuilder.createJoinCondition() method in order to overcome MSSQL inability to aggregate scalar sub-queries.
+        final EntityResultQueryModel<TeAverageFuelUsage> qry = select(select(TeAverageFuelUsage.class).model().setShouldMaterialiseCalcPropsAsColumnsInSqlQuery(true)).model();
         final TeAverageFuelUsage summaryEntity = getInstance(ITeAverageFuelUsage.class).getEntity(from(qry).with(fetchNone(TeAverageFuelUsage.class).with("countAll")).model());
         assertEquals(Integer.valueOf(0), summaryEntity.getCountAll());
     }
 
     @Test
     public void calculated_props_are_actually_yielded_in_the_source_query_if_the_top_query_yields_are_all_recognised_as_totals_in_case_of_synthetic_entity() {
-        // SELECT from SELECT here is emulating the approach utilised by DynamicQueryBuilder.createJoinCondition() method in order to overcome MSSQL inability to aggregate scalar sub-queries. 
-        final EntityResultQueryModel<TeFuelUsageByType> qry = select(select(TeFuelUsageByType.class).model()).model();
+        // SELECT from SELECT here is emulating the approach utilised by DynamicQueryBuilder.createJoinCondition() method in order to overcome MSSQL inability to aggregate scalar sub-queries.
+        final EntityResultQueryModel<TeFuelUsageByType> qry = select(select(TeFuelUsageByType.class).model().setShouldMaterialiseCalcPropsAsColumnsInSqlQuery(true)).model();
         final TeFuelUsageByType summaryEntity = getInstance(TeFuelUsageByTypeCo.class).getEntity(from(qry).with(fetchNone(TeFuelUsageByType.class).with("countAll")).model());
         assertEquals(Integer.valueOf(0), summaryEntity.getCountAll());
     }
@@ -1890,7 +1891,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         final TgVehicle vehicle = coVehicle.getEntity(from(qry).model());
         assertTrue(isEntityInstrumented(vehicle));
     }
-    
+
     @Test
     public void vehicle_retrieved_with_lightweight_query_is_not_instrumented() {
         final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR1").model();
@@ -1930,6 +1931,14 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         assertTrue(isEntityInstrumented(fuelUsage.getVehicle()));
     }
 
+    @Test
+    public void fetching_entity_with_only_id_property_works() {
+        final EntityResultQueryModel<TgVehicleMake> qry = select(TgVehicleMake.class).where().prop("key").eq().val("AUDI").model();
+        final fetch<TgVehicleMake> fetch = fetchNone(TgVehicleMake.class).with("id");
+        final TgVehicleMake vehicleMake = vehicleMakeDao.getEntity(from(qry).with(fetch).model());
+        assertNotNull(vehicleMake.getId());
+    }
+
     public static boolean isPropertyInstrumented(final AbstractEntity<?> entity, final String propName) {
         final Object value = entity.get(propName);
         return isEntityInstrumented(value);
@@ -1942,7 +1951,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     @Override
     protected void populateDomain() {
         super.populateDomain();
-        
+
         final TgFuelType unleadedFuelType = save(new_(TgFuelType.class, "U", "Unleaded"));
         final TgFuelType petrolFuelType = save(new_(TgFuelType.class, "P", "Petrol"));
 
@@ -1958,7 +1967,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         final TgBogie bogie5 = save(new_(TgBogie.class, "BOGIE5", "Bogie 5"));
         final TgBogie bogie6 = save(new_(TgBogie.class, "BOGIE6", "Bogie 6"));
         final TgBogie bogie7 = save(new_(TgBogie.class, "BOGIE7", "Bogie 7"));
-        
+
         final TgWagon wagon1 = save(new_(TgWagon.class, "WAGON1", "Wagon 1"));
         final TgWagon wagon2 = save(new_(TgWagon.class, "WAGON2", "Wagon 2"));
 
@@ -1973,12 +1982,12 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
 
         save(new_composite(TgWagonSlot.class, wagon2, 1).setBogie(bogie5));
         save(new_composite(TgWagonSlot.class, wagon2, 2).setBogie(bogie6));
-        
+
         final TgWagonSlot wagonSlot = save(new_composite(TgWagonSlot.class, wagon2, 3).setBogie(bogie7).setFuelType(petrolFuelType));
         final TgBogieLocation slotLocation = co$(TgBogieLocation.class).new_();
         slotLocation.setWagonSlot(wagonSlot);
         save(bogie7.setLocation(slotLocation));
-        
+
         final TgOrgUnit1 orgUnit1 = save(new_(TgOrgUnit1.class, "orgunit1", "desc orgunit1"));
         final TgOrgUnit2 orgUnit2 = save(new_composite(TgOrgUnit2.class, orgUnit1, "orgunit2"));
         final TgOrgUnit3 orgUnit3 = save(new_composite(TgOrgUnit3.class, orgUnit2, "orgunit3"));

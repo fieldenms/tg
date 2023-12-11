@@ -20,18 +20,26 @@ import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
 public class EntityQueryUtils {
-	public static <T extends AbstractEntity<?>> IFromAlias<T> select(final Class<T> entityType) {
-		return new FromAlias<>(new Tokens().from(entityType));
-	}
+    public static <T extends AbstractEntity<?>> IFromAlias<T> select(final Class<T> entityType) {
+        return new FromAlias<>(new Tokens().from(entityType));
+    }
 
-	@SafeVarargs
+    @SafeVarargs
     public static <T extends AbstractEntity<?>> IFromAlias<T> select(final EntityResultQueryModel<T>... sourceQueryModels) {
-		return new FromAlias<>(new Tokens().from(sourceQueryModels));
-	}
+        return new FromAlias<>(new Tokens().from(sourceQueryModels));
+    }
 
-	public static IFromAlias<EntityAggregates> select(final AggregatedResultQueryModel... sourceQueryModels) {
-		return new FromAlias<>(new Tokens().from(sourceQueryModels));
-	}
+    public static <T extends AbstractEntity<?>> IFromAlias<T> select(final EntityResultQueryModel<T> sourceQueryModel) {
+        return new FromAlias<>(new Tokens().from(sourceQueryModel));
+    }
+
+    public static IFromAlias<EntityAggregates> select(final AggregatedResultQueryModel... sourceQueryModels) {
+        return new FromAlias<>(new Tokens().from(sourceQueryModels));
+    }
+
+    public static IFromAlias<EntityAggregates> select(final AggregatedResultQueryModel sourceQueryModel) {
+        return new FromAlias<>(new Tokens().from(new AggregatedResultQueryModel[] { sourceQueryModel }));
+    }
 
     public static <T extends AbstractEntity<?>> IFromNone<T> select() {
         return new FromNone<>(new Tokens().from());

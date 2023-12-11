@@ -12,13 +12,13 @@ import java.util.Objects;
  * @author TG Team
  *
  */
-public final class EntityElement extends AbstractForwardingTypeElement {
+public final class EntityElement extends AbstractForwardingTypeElement implements Comparable<EntityElement> {
     private final String packageName;
     private final ClassName entityClassName;
 
     /**
      * Creates an {@link EntityElement} without a package name. Use at your own risk.
-     * 
+     *
      * @param typeElement
      * @return {@link EntityElement}
      */
@@ -64,5 +64,10 @@ public final class EntityElement extends AbstractForwardingTypeElement {
     @Override
     public String toString() {
         return entityClassName.toString();
+    }
+
+    @Override
+    public int compareTo(final EntityElement that) {
+        return entityClassName.simpleName().compareTo(that.entityClassName.simpleName());
     }
 }

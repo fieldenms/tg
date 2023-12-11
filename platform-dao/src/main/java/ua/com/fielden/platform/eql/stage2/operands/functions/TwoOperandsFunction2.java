@@ -4,16 +4,18 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
-abstract class TwoOperandsFunction2<S3 extends ISingleOperand3> extends AbstractFunction2<S3> {
+abstract class TwoOperandsFunction2<T extends ISingleOperand3> extends AbstractFunction2<T> {
     public final ISingleOperand2<? extends ISingleOperand3> operand1;
     public final ISingleOperand2<? extends ISingleOperand3> operand2;
 
-    public TwoOperandsFunction2(final ISingleOperand2<? extends ISingleOperand3> operand1, final ISingleOperand2<? extends ISingleOperand3> operand2, final Class<?> type, final Object hibType) {
-        super(type, hibType);
+    public TwoOperandsFunction2(final ISingleOperand2<? extends ISingleOperand3> operand1, final ISingleOperand2<? extends ISingleOperand3> operand2, final PropType type) {
+        super(type);
         this.operand1 = operand1;
         this.operand2 = operand2;
     }
@@ -23,6 +25,14 @@ abstract class TwoOperandsFunction2<S3 extends ISingleOperand3> extends Abstract
         final Set<Prop2> result = new HashSet<>();
         result.addAll(operand1.collectProps());
         result.addAll(operand2.collectProps());
+        return result;
+    }
+    
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>();
+        result.addAll(operand1.collectEntityTypes());
+        result.addAll(operand2.collectEntityTypes());
         return result;
     }
     

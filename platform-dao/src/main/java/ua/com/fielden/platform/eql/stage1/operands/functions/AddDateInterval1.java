@@ -3,7 +3,7 @@ package ua.com.fielden.platform.eql.stage1.operands.functions;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit;
-import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.functions.AddDateInterval2;
@@ -19,7 +19,7 @@ public class AddDateInterval1 extends TwoOperandsFunction1<AddDateInterval2> {
     }
 
     @Override
-    public AddDateInterval2 transform(final TransformationContext1 context) {
+    public AddDateInterval2 transform(final TransformationContextFromStage1To2 context) {
         return new AddDateInterval2(operand1.transform(context), intervalUnit, operand2.transform(context));
     }
     

@@ -104,6 +104,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(UnionEntityWithSkipExistsValidationCo.class).to(UnionEntityWithSkipExistsValidationDao.class);
         bind(EntityWithUnionEntityWithSkipExistsValidationCo.class).to(EntityWithUnionEntityWithSkipExistsValidationDao.class);
         bind(ITgBogie.class).to(TgBogieDao.class);
+        bind(TgReBogieWithHighLoadCo.class).to(TgReBogieWithHighLoadDao.class);
         bind(TgSynBogieCo.class).to(TgSynBogieDao.class);
         bind(ITgBogieClass.class).to(TgBogieClassDao.class);
         bind(ITgWagon.class).to(TgWagonDao.class);
@@ -117,6 +118,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(ITgCategory.class).to(TgCategoryDao.class);
         bind(ITgCategoryAttachment.class).to(TgCategoryAttachmentDao.class);
         bind(ITgVehicle.class).to(TgVehicleDao.class);
+        bind(TgReVehicleWithHighPriceCo.class).to(TgReVehicleWithHighPriceDao.class);
         bind(ITeVehicle.class).to(TeVehicleDao.class);
         bind(ITgWebApiEntity.class).to(TgWebApiEntityDao.class);
         bind(ITgWebApiEntitySyntheticSingle.class).to(TgWebApiEntitySyntheticSingleDao.class);
@@ -125,6 +127,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(ITgCompoundEntityDetail.class).to(TgCompoundEntityDetailDao.class);
         bind(ITgCompoundEntityChild.class).to(TgCompoundEntityChildDao.class);
         bind(ITgVehicleFinDetails.class).to(TgVehicleFinDetailsDao.class);
+        bind(TgVehicleTechDetailsCo.class).to(TgVehicleTechDetailsDao.class);
         bind(ITeVehicleFinDetails.class).to(TeVehicleFinDetailsDao.class);
         bind(ITgPersonName.class).to(TgPersonNameDao.class);
         bind(ITgAuthor.class).to(TgAuthorDao.class);
@@ -154,6 +157,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
 
         bind(ITgMakeCount.class).to(TgMakeCountDao.class);
         bind(ITgAverageFuelUsage.class).to(TgAverageFuelUsageDao.class);
+        bind(TgReMaxVehicleReadingCo.class).to(TgReMaxVehicleReadingDao.class);
         bind(ITeAverageFuelUsage.class).to(TeAverageFuelUsageDao.class);
         bind(ITgVehicleFuelUsage.class).to(TgVehicleFuelUsageDao.class);
         bind(ITgEntityWithComplexSummaries.class).to(TgEntityWithComplexSummariesDao.class);
@@ -183,6 +187,8 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(TgUnionType1Co.class).to(TgUnionType1Dao.class);
         bind(TgUnionType2Co.class).to(TgUnionType2Dao.class);
         bind(TgUnionCommonTypeCo.class).to(TgUnionCommonTypeDao.class);
+        bind(ITgPersistentEntityWithProperties.class).to(TgPersistentEntityWithPropertiesDao.class);
+        bind(ITgReVehicleModel.class).to(TgReVehicleModelDao.class);
 
         // FIXME the following approach should have been the correct one for binding companion objects,
         //       however, not all test domain entities actually have companions, hence manual binding...

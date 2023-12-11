@@ -1,46 +1,23 @@
 package ua.com.fielden.platform.eql.retrieval;
 
-import static org.apache.logging.log4j.LogManager.getLogger;
-
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import org.apache.logging.log4j.Logger;
 import org.hibernate.CacheMode;
 import org.hibernate.Session;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
-import org.hibernate.type.Type;
 
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
+import ua.com.fielden.platform.eql.retrieval.records.HibernateScalar;
 
 public class EntityHibernateRetrievalQueryProducer {
-    private static final Logger LOGGER = getLogger(EntityHibernateRetrievalQueryProducer.class);
+    //private static final Logger LOGGER = getLogger(EntityHibernateRetrievalQueryProducer.class);
 
-    public final String sql;
-    private final Collection<YieldDetails> retrievedColumns;
-    private final Map<String, Object> queryParams;
-    private final Integer pageNumber;
-    private final Integer pageCapacity;
+    private EntityHibernateRetrievalQueryProducer() {}
 
-    private EntityHibernateRetrievalQueryProducer(final String sql, final Collection<YieldDetails> retrievedColumns, final Map<String, Object> queryParams, final Integer pageNumber, final Integer pageCapacity) {
-        this.sql = sql;
-        this.retrievedColumns = retrievedColumns;
-        this.queryParams = new HashMap<>(queryParams);
-        this.pageNumber = pageNumber;
-        this.pageCapacity = pageCapacity;
-    }
-
-    public static EntityHibernateRetrievalQueryProducer mkQueryProducerWithPagination(final String sql, final Collection<YieldDetails> retrievedColumns, final Map<String, Object> queryParams, final Integer pageNumber, final Integer pageCapacity) {
-        return new EntityHibernateRetrievalQueryProducer(sql, retrievedColumns, queryParams, pageNumber, pageCapacity);
-    }
-
-    public static EntityHibernateRetrievalQueryProducer mkQueryProducerWithoutPagination(final String sql, final Collection<YieldDetails> retrievedColumns, final Map<String, Object> queryParams) {
-        return new EntityHibernateRetrievalQueryProducer(sql, retrievedColumns, queryParams, null, null);
-    }
-
-    public Query<?> produceHibernateQuery(final Session session) {
+    public static Query<?> produceQueryWithPagination(final Session session, final String sql, final List<HibernateScalar> retrievedColumns, final Map<String, Object> queryParams, final Integer pageNumber, final Integer pageCapacity) {
         // LOGGER.debug("\nSQL:\n   " + sql + "\n");
         final NativeQuery<?> sqlQuery = session.createNativeQuery(sql);
         specifyResultingFieldsToHibernateQuery(sqlQuery, retrievedColumns);
@@ -50,20 +27,18 @@ public class EntityHibernateRetrievalQueryProducer {
         return sqlQuery.setReadOnly(true).setCacheable(false).setCacheMode(CacheMode.IGNORE);
     }
 
-    private void specifyResultingFieldsToHibernateQuery(final NativeQuery<?> query, final Collection<YieldDetails> retrievedColumns) {
-        for (final YieldDetails aliasEntry : retrievedColumns) {
-            final Type hibType = aliasEntry.getHibTypeAsType();
-            if (hibType != null) {
-                // LOGGER.debug("adding scalar: alias = [" + aliasEntry.getColumnName() + "] type = [" + aliasEntry.getHibType() + "]");
-                query.addScalar(aliasEntry.column, hibType);
-            } else {
-                // LOGGER.debug("adding scalar: alias = [" + aliasEntry.getColumnName() + "]");
-                query.addScalar(aliasEntry.column);
-            }
+    public static Query<?> produceQueryWithoutPagination(final Session session, final String sql, final List<HibernateScalar> retrievedColumns, final Map<String, Object> queryParams) {
+        return produceQueryWithPagination(session, sql, retrievedColumns, queryParams, null, null);
+    }
+
+    private static void specifyResultingFieldsToHibernateQuery(final NativeQuery<?> query, final List<HibernateScalar> retrievedColumns) {
+        for (final HibernateScalar hibScalar : retrievedColumns) {
+            query.addScalar(hibScalar.column(), hibScalar.hibType());
+            // LOGGER.debug("adding scalar: alias = [" + hibScalar.column() + "] type = [" + hibScalar.hibType() + "]");
         }
     }
 
-    private void specifyParamValuesToHibernateQuery(final NativeQuery<?> query, final Map<String, Object> queryParams) {
+    private static void specifyParamValuesToHibernateQuery(final NativeQuery<?> query, final Map<String, Object> queryParams) {
         // LOGGER.debug("\nPARAMS:\n   " + queryParams + "\n");
         for (final Map.Entry<String, Object> paramEntry : queryParams.entrySet()) {
             if (paramEntry.getValue() instanceof Collection) {
@@ -75,7 +50,7 @@ public class EntityHibernateRetrievalQueryProducer {
         }
     }
 
-    private void specifyPaginationToHibernateQuery(final NativeQuery<?> query, final Integer pageNumber, final Integer pageCapacity) {
+    private static void specifyPaginationToHibernateQuery(final NativeQuery<?> query, final Integer pageNumber, final Integer pageCapacity) {
         if (pageNumber != null && pageCapacity != null) {
             query.setFirstResult(pageNumber * pageCapacity)
                  .setFetchSize(pageCapacity)

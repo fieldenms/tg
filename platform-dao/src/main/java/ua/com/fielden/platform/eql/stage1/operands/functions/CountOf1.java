@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.operands.functions;
 
-import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.functions.CountOf2;
@@ -14,7 +14,7 @@ public class CountOf1 extends SingleOperandFunction1<CountOf2> {
     }
 
     @Override
-    public CountOf2 transform(final TransformationContext1 context) {
+    public CountOf2 transform(final TransformationContextFromStage1To2 context) {
         return new CountOf2(operand.transform(context), distinct);
     }
     

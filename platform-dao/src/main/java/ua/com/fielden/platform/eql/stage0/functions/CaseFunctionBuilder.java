@@ -12,7 +12,7 @@ import ua.com.fielden.platform.entity.query.fluent.ITypeCast;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.eql.stage0.AbstractTokensBuilder;
 import ua.com.fielden.platform.eql.stage0.ConditionBuilder;
-import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
+import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.conditions.ICondition1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage1.operands.functions.CaseWhen1;
@@ -23,7 +23,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class CaseFunctionBuilder extends AbstractTokensBuilder {
 
-    public CaseFunctionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder) {
+    public CaseFunctionBuilder(final AbstractTokensBuilder parent, final QueryModelToStage1Transformer queryBuilder) {
         super(parent, queryBuilder);
         setChild(new ConditionBuilder(this, queryBuilder));
     }

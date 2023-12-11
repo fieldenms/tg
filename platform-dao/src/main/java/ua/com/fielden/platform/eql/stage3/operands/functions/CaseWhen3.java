@@ -8,6 +8,7 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.ITypeCast;
+import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -18,8 +19,8 @@ public class CaseWhen3 extends AbstractFunction3 {
     private final ISingleOperand3 elseOperand;
     private final ITypeCast typeCast;
 
-    public CaseWhen3(final List<T2<ICondition3, ISingleOperand3>> whenThenPairs, final ISingleOperand3 elseOperand, final ITypeCast typeCast, final Class<?> type, final Object hibType) {
-        super(type, hibType);
+    public CaseWhen3(final List<T2<ICondition3, ISingleOperand3>> whenThenPairs, final ISingleOperand3 elseOperand, final ITypeCast typeCast, final PropType type) {
+        super(type);
         this.whenThenPairs.addAll(whenThenPairs);
         this.elseOperand = elseOperand;
         this.typeCast = typeCast;

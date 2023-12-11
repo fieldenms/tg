@@ -201,4 +201,29 @@ public class CompositeKeyEqlExpressionGeneratorTest {
 
         assertEquals(exp, act);
     }
+    
+    @Test
+    public void key_with_three_entity_optional_members_works() {
+        final ExpressionModel act = generateCompositeKeyEqlExpression(separator, listOf(
+                kmi(prop1, ENTITY, true), 
+                kmi(prop2, ENTITY, true),
+                kmi(prop3, ENTITY, true)));
+        final ExpressionModel prop1AndProp2 = expr().caseWhen().condition(cond().expr(expr().prop(prop1 + ".key").model()).isNotNull().and().expr(expr().prop(prop2 +".key").model()).isNotNull().model()).
+        then().expr(expr().concat().expr(expr().prop(prop1 +".key").model()).with().expr(expr().val(separator).model()).with().expr(expr().prop(prop2 +".key").model()).end().model()).
+        when().condition(cond().expr(expr().prop(prop1 + ".key").model()).isNotNull().and().expr(expr().prop(prop2 + ".key").model()).isNull().model()).
+        then().expr(expr().prop(prop1 + ".key").model()).
+        when().expr(expr().prop(prop2 + ".key").model()).isNotNull().
+        then().expr(expr().prop(prop2 + ".key").model()).
+        otherwise().val(null).end().model();
+        
+        final ExpressionModel exp = expr().caseWhen().condition(cond().expr(prop1AndProp2).isNotNull().and().expr(expr().prop(prop3 +".key").model()).isNotNull().model()).
+        then().expr(expr().concat().expr(prop1AndProp2).with().expr(expr().val(separator).model()).with().expr(expr().prop(prop3 +".key").model()).end().model()).
+        when().condition(cond().expr(prop1AndProp2).isNotNull().and().expr(expr().prop(prop3 + ".key").model()).isNull().model()).
+        then().expr(prop1AndProp2).
+        when().expr(expr().prop(prop3 + ".key").model()).isNotNull().
+        then().expr(expr().prop(prop3 + ".key").model()).
+        otherwise().val(null).end().model();
+
+        assertEquals(exp, act);
+    }
 }

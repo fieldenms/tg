@@ -309,17 +309,17 @@ public interface EntityQueryProgressiveInterfaces {
 	}
 
 	interface ISingleConditionOperator<T extends ILogicalOperator<?>> {
-		T exists(final QueryModel subQuery);
+		T exists(final QueryModel<?> subQuery);
 
-		T notExists(final QueryModel subQuery);
+		T notExists(final QueryModel<?> subQuery);
 
-		T existsAnyOf(final QueryModel... subQueries);
+		T existsAnyOf(final QueryModel<?>... subQueries);
 
-		T notExistsAnyOf(final QueryModel... subQueries);
+		T notExistsAnyOf(final QueryModel<?>... subQueries);
 
-		T existsAllOf(final QueryModel... subQueries);
+		T existsAllOf(final QueryModel<?>... subQueries);
 
-		T notExistsAllOf(final QueryModel... subQueries);
+		T notExistsAllOf(final QueryModel<?>... subQueries);
 
         /**
          * Applies value of crit-only property {@code critPropName} (including mnemonics) to persistent property {@code propName} and generates appropriate condition model (as per
@@ -392,9 +392,9 @@ public interface EntityQueryProgressiveInterfaces {
 
 	interface IQuantifiedOperand<T, ET extends AbstractEntity<?>> //
 			extends IMultipleOperand<T, ET> {
-		T all(final SingleResultQueryModel subQuery);
+		T all(final SingleResultQueryModel<?> subQuery);
 
-		T any(final SingleResultQueryModel subQuery);
+		T any(final SingleResultQueryModel<?> subQuery);
 	}
 
 	interface IComparisonQuantifiedOperand<T, ET extends AbstractEntity<?>> //
@@ -416,7 +416,7 @@ public interface EntityQueryProgressiveInterfaces {
 
 		T iParams(final String... paramNames);
 
-		T model(final SingleResultQueryModel model);
+		T model(final SingleResultQueryModel<?> model);
 		// beginSet();
 	}
 

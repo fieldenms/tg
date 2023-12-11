@@ -15,8 +15,8 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.PR
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VAL;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.buildCondition;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.queryPropertyParamName;
-import static ua.com.fielden.platform.eql.meta.EqlDomainMetadata.N;
-import static ua.com.fielden.platform.eql.meta.EqlDomainMetadata.Y;
+import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.N;
+import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.Y;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.util.ArrayList;
@@ -34,7 +34,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
-import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
+import ua.com.fielden.platform.eql.exceptions.EqlStage0ProcessingException;
 import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage0.functions.AbsOfBuilder;
 import ua.com.fielden.platform.eql.stage0.functions.AddDateIntervalBuilder;
@@ -80,9 +80,9 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     private final ITokensBuilder parent;
     private ITokensBuilder child;
     private final List<Pair<TokenCategory, Object>> tokens = new ArrayList<>();
-    private final EntQueryGenerator queryBuilder;
+    private final QueryModelToStage1Transformer queryBuilder;
 
-    protected AbstractTokensBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder) {
+    protected AbstractTokensBuilder(final AbstractTokensBuilder parent, final QueryModelToStage1Transformer queryBuilder) {
         this.parent = parent;
         this.queryBuilder = queryBuilder;
     }
@@ -165,7 +165,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
             setChild(new ConcatFunctionBuilder(this, queryBuilder));
             break;
         default:
-            throw new RuntimeException("Unrecognised function token: " + function);
+            throw new EqlStage0ProcessingException("Unrecognised function token: " + function);
         }
     }
 
@@ -348,7 +348,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
             final QueryNowValue qnv = queryBuilder.nowValue;
             return new Value1(qnv != null ? qnv.get() : null);
         default:
-            throw new RuntimeException("Unrecognised zero agrument function: " + function);
+            throw new EqlStage0ProcessingException("Unrecognised zero agrument function: " + function);
         }
     }
 
@@ -374,9 +374,9 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         case EXPR_TOKENS:
             return (ISingleOperand1<? extends ISingleOperand2<?>>) new StandAloneExpressionBuilder(queryBuilder, (ExpressionModel) value).getResult().getValue();
         case EQUERY_TOKENS:
-            return queryBuilder.generateAsSubquery((QueryModel<?>) value);
+            return queryBuilder.generateAsSubQuery((QueryModel<?>) value);
         default:
-            throw new RuntimeException("Unrecognised token category for SingleOperand: " + cat);
+            throw new EqlStage0ProcessingException("Unrecognised token category for SingleOperand: " + cat);
         }
     }
 
@@ -399,8 +399,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         if (paramValue != null) {
             return preprocessValue(paramValue);
         } else {
-            return null; //TODO think through
-            //throw new RuntimeException("No value has been provided for parameter with name [" + paramName + "]");
+            return null; //TODO Once context of operand is available (future feature) -- throw exception for all contexts except YIELD (as NULL operands can't be used in SQL conditions, groupings, etc).
         }
     }
 
@@ -450,9 +449,9 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
             singleCat = EXPR_TOKENS;
             break;
         case EQUERY_TOKENS:
-            return new QueryBasedSet1(queryBuilder.generateAsSubquery((QueryModel) value));
+            return new QueryBasedSet1(queryBuilder.generateAsSubQuery((QueryModel) value));
         default:
-            throw new RuntimeException("Unrecognised token category for SingleOperand: " + cat);
+            throw new EqlStage0ProcessingException("Unrecognised token category for SingleOperand: " + cat);
         }
 
         final List<ISingleOperand1<? extends ISingleOperand2<?>>> result = new ArrayList<>();
@@ -499,7 +498,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
             singleCat = EQUERY_TOKENS;
             break;
         default:
-            throw new EqlStage1ProcessingException(format("Unrecognised token category [%s] for MultipleOperand.", cat));
+            throw new EqlStage0ProcessingException(format("Unrecognised token category [%s] for MultipleOperand.", cat));
         }
 
         for (final Object singleValue : (List<Object>) value) {
@@ -513,7 +512,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         return result;
     }
 
-    protected EntQueryGenerator getQueryBuilder() {
+    protected QueryModelToStage1Transformer getQueryBuilder() {
         return queryBuilder;
     }
 }

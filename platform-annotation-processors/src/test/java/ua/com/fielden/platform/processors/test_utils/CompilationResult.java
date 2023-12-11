@@ -4,6 +4,7 @@ import javax.tools.Diagnostic;
 import javax.tools.Diagnostic.Kind;
 import javax.tools.JavaFileObject;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -18,10 +19,15 @@ public final class CompilationResult {
 
     private final boolean success;
     private final List<Diagnostic<? extends JavaFileObject>> diagnostics;
+    private final List<Throwable> processingErrors;
+    private final List<? extends JavaFileObject> generatedSources;
 
-    CompilationResult(final boolean success, final List<Diagnostic<? extends JavaFileObject>> diagnostics) {
+    CompilationResult(final boolean success, final List<Diagnostic<? extends JavaFileObject>> diagnostics,
+                      final List<Throwable> processingErrors, final Collection<? extends JavaFileObject> generatedSources) {
         this.success = success;
         this.diagnostics = new ArrayList<>(diagnostics);
+        this.processingErrors = new ArrayList<>(processingErrors);
+        this.generatedSources = List.copyOf(generatedSources);
     }
 
     public boolean success() {
@@ -30,6 +36,14 @@ public final class CompilationResult {
 
     public boolean failure() {
         return !success;
+    }
+
+    public List<Throwable> processingErrors() {
+        return Collections.unmodifiableList(processingErrors);
+    }
+
+    public List<? extends JavaFileObject> generatedSources() {
+        return generatedSources;
     }
 
     /**

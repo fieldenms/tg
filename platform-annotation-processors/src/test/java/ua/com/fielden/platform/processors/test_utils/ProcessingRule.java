@@ -41,7 +41,7 @@ public class ProcessingRule implements TestRule {
      * @param processor annotation processor instance to use
      */
     public ProcessingRule(final Collection<? extends JavaFileObject> javaSources, final Processor processor) {
-        this.javaSources = javaSources.isEmpty() || javaSources == null ? List.of(PLACEHOLDER) : javaSources;
+        this.javaSources = javaSources == null || javaSources.isEmpty() ? List.of(PLACEHOLDER) : javaSources;
         this.processor = processor;
     }
 
@@ -69,7 +69,7 @@ public class ProcessingRule implements TestRule {
                 final Compilation compilation = Compilation.newInMemory(javaSources)
                         .setProcessor(processor)
                         // perform only annotation processing without subsequent compilation
-                        .setOptions(OPTION_PROC_ONLY);
+                        .addOptions(OPTION_PROC_ONLY);
 
                 compilation.compileAndEvaluatef((procEnv) -> {
                     processingEnvironment = procEnv;
