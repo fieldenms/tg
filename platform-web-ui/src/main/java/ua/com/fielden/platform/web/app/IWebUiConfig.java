@@ -17,6 +17,7 @@ import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.sse.IEventSource;
 import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
+import ua.com.fielden.platform.web.view.master.api.actions.impl.ActionOptionAvailability;
 
 /**
  * Represent a contract for Web UI configuring.
@@ -188,6 +189,14 @@ public interface IWebUiConfig extends IMenuRetriever {
      * @return
      */
     boolean independentTimeZone();
+
+
+    /**
+     * Returns {@link ActionOptionAvailability} instance that indicates what options should be available in master actions.
+     *
+     * @return
+     */
+    ActionOptionAvailability masterActionAvailableOptions();
 
     /**
      * A set of domain-specific actions for centre configurations sharing.

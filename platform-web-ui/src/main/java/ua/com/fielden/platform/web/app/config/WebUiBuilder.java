@@ -221,7 +221,8 @@ public class WebUiBuilder implements IWebUiBuilder {
                 replace("@independentTimeZoneSetting", webUiConfig.independentTimeZone() ? format("moment.tz.setDefault('%s');", TimeZone.getDefault().getID()) : "").
                 replace("@dateFormat", "\"" + this.dateFormat + "\"").
                 replace("@timeFormat", "\"" + this.timeFormat + "\"").
-                replace("@timeWithMillisFormat", "\"" + this.timeWithMillisFormat + "\"");
+                replace("@timeWithMillisFormat", "\"" + this.timeWithMillisFormat + "\"").
+                replace("@masterActionAvailableOptions", "\"" + webUiConfig.masterActionAvailableOptions() + "\"");
     }
 
     public String getAppIndex(final IDates dates) {
