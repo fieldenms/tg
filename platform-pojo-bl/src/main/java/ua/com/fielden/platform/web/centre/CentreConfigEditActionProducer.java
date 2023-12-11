@@ -38,7 +38,7 @@ public class CentreConfigEditActionProducer extends AbstractCentreConfigCommitAc
             setTitleAndDesc(entity, saveAsName, selectionCrit);
             entity.setDashboardable(selectionCrit.centreDashboardable(of(saveAsName)));
             entity.setDashboardRefreshFrequency(selectionCrit.centreDashboardRefreshFrequency(of(saveAsName)));
-            return getCustomObject(selectionCrit, appliedCriteriaEntity, empty()); // not yet transitioned to another config -- do not update configUuid / saveAsName on client-side
+            return getCustomObject(selectionCrit, appliedCriteriaEntity, empty(), empty()); // not yet transitioned to another config -- do not update configUuid / saveAsName / shareError on client-side
         }
     }
     
