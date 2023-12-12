@@ -38,7 +38,7 @@ public class SequentialEditPreAction implements IPreAction {
                 + "        action.restoreActionState = action._oldRestoreActionState;\n"
                 + "    }).bind(self);\n"
                 + "    const updateCacheAndContinueSeqSaving = (function (shouldUnselect) {\n"
-                + "        const nextEntity = this.seqEditEntities.shift();\n"
+                + "        const nextEntity = this.seqEditEntities && this.seqEditEntities.shift();\n"
                 + "        if (shouldUnselect !== false) {\n"
                 + "            self.$.egi.selectEntity(action.currentEntity(), false);\n"
                 + "        }\n"

@@ -13,26 +13,6 @@ import { TgViewWithHelpBehavior } from '/resources/components/tg-view-with-help-
 
 const TgEntityMasterTemplateBehaviorImpl = {
 
-    properties: {
-        /**
-         * Represents the action that allows to open entity master for specified entity-typed property.
-         */
-        tgOpenMasterAction: {
-            type: Object,
-            value: null
-        },
-
-        /**
-         * Attributes for the action that allows to open entity master for specified entity-typed property.
-         */
-        _tgOpenMasterActionAttrs: Object,
-
-        /**
-         * Attributes for the action that opens help entity master for this entity master.
-         */
-        _tgOpenHelpMasterActionAttrs: Object
-    },
-
     ready: function () {
         const self = this;
         self.isMasterTemplate = true;
@@ -42,19 +22,6 @@ const TgEntityMasterTemplateBehaviorImpl = {
         // the value for property uuid needs to be assign only if this has not been done yet
         if (self.uuid === undefined) {
             self.uuid = self.is + '/' + generateUUID();
-        }
-
-        // initialise tgOpenMasterAction properties
-        self._tgOpenMasterActionAttrs = {
-            currentState: 'EDIT',
-            centreUuid: self.uuid
-        };
-        self.tgOpenMasterAction = self.$.tgOpenMasterAction;
-
-        self._tgOpenHelpMasterActionAttrs = {
-            entityType: "ua.com.fielden.platform.entity.UserDefinableHelp",
-            currentState: 'EDIT',
-            centreUuid: self.uuid
         }
 
         self._currentEntityForHelp = function() {

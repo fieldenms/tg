@@ -995,7 +995,11 @@ const TgEntityCentreBehaviorImpl = {
         }).bind(self);
 
         self._showDialog = (function (action) {
-            const closeEventChannel = self.uuid;
+            //Calculate close event channel for dialog. It should be the same as action's centreUuid.
+            //This is done because action's centreUuid is set into centreUuid of the master opened by specified action and inserted into 
+            //opening dialog. Then the master's centreUuid is used as closeEventChannel for tg-action.
+            //|| this.uuid is used as fallback in case if action's centreUuid wasn't defined
+            const closeEventChannel = action.attrs.centreUuid || this.uuid;
             const closeEventTopics = ['save.post.success', 'refresh.post.success'];
             if (!self.$.egi.isEditing()) {
                 this.async(function () {

@@ -1398,11 +1398,11 @@ export class TgEntityEditor extends TgEditor {
      * Computes whether title action is available for tapping and visible.
      */
     _computeActionAvailability (entityMaster, newEntityMaster, entity, propertyName, _disabled, currentState) {
-        if ((!entityMaster && !newEntityMaster) || !entity || !propertyName || !currentState || typeof _disabled === 'undefined') {
+        if (!(entityMaster || newEntityMaster) || !entity || !propertyName || !currentState || typeof _disabled === 'undefined') {
             return false;
         }
         return currentState === 'EDIT' // currentState is not 'EDIT' e.g. where refresh / saving process is in progress
-            && (!_disabled || (!!this._valueToEdit(entity, propertyName) && entityMaster));
+            && (this._valueToEdit(entity, propertyName) ? !!entityMaster : (!_disabled && !!newEntityMaster));
     }
 
     _actionIcon (actionAvailable, entity, propertyName) {

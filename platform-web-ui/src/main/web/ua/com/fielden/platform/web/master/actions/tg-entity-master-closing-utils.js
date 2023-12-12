@@ -1,7 +1,7 @@
 /**
  * Creates successful 'then' handler for master 'entity action' promise.
  */
-export const createEntityActionThenCallback = function (eventChannel, role, postalLib, _afterExecution, closeAfterExecution) {
+export const createEntityActionThenCallback = function (eventChannel, role, subRole, postalLib, _afterExecution, closeAfterExecution) {
     return function (ironRequest) {
         if (eventChannel && role) {
             console.log('AJAX PROMISE THEN', ironRequest.successful);
@@ -19,7 +19,7 @@ export const createEntityActionThenCallback = function (eventChannel, role, post
                 // this case pertains to entit editing
                 // such approach enables continuous creation of entities as per issue #285
                 // (https://github.com/fieldenms/tg/issues/285)
-                if (role === 'save' &&
+                if (role === 'save' && !subRole && 
                     ironRequest.entityPersistent === true &&
                     !ironRequest.entityId &&
                     ironRequest.entityContinuation === false) {
@@ -29,7 +29,7 @@ export const createEntityActionThenCallback = function (eventChannel, role, post
                 // action with role 'refresh' should only encourage closing in cases
                 // where the returned after refresh entity is new (aka not persisted) as per issue #916
                 // (https://github.com/fieldenms/tg/issues/916)
-                if (role === 'refresh' && ironRequest.entityId) {
+                if (role === 'refresh' && !subRole && ironRequest.entityId) {
                     dataValue.canClose = false;
                 }
 
@@ -52,5 +52,6 @@ export const createEntityActionThenCallback = function (eventChannel, role, post
                 }
             }
         }
+        return ironRequest;
     };
 };

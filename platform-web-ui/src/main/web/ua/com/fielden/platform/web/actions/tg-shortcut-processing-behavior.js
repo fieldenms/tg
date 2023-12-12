@@ -1,6 +1,10 @@
 import { tearDownEvent, deepestActiveElement } from '/resources/reflection/tg-polymer-utils.js';
 import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
 
+const isInput = function (element) {
+    return element.tagName === 'INPUT' || element.nodeName === 'INPUT' || element.tagName === 'TEXTAREA' || element.nodeName === 'TEXTAREA';
+}
+
 export const TgShortcutProcessingBehavior = {
 
     /**
@@ -33,6 +37,12 @@ export const TgShortcutProcessingBehavior = {
      * Finds 'shortcut' action and runs it.
      */
     _findAndRun: function (shortcut, elementTags, customKeyEventTarget) {
+        const activeElement = deepestActiveElement();
+        if (activeElement && (shortcut === 'ctrl+x' || shortcut === 'meta+x') 
+            && isInput(activeElement) && !activeElement.disabled 
+            && document.getSelection().toString()) {
+                return null;
+        }
         for (let elementTag of elementTags) {
             const actionElement = this._findVisibleEnabledActionElement(elementTag, shortcut, customKeyEventTarget);
             if (actionElement) {
@@ -42,7 +52,7 @@ export const TgShortcutProcessingBehavior = {
                     console.debug('Shortcut', shortcut, 'processing... Action is found: commit focused editor before running.');
                     this._commitFocusedElement();
                     console.debug('Shortcut', shortcut, 'processing... Action is found: running started.');
-                    this._run(actionElement, elementTag);
+                    this._run(actionElement, elementTag, shortcut);
                     console.debug('Shortcut', shortcut, 'processing... Action is found: running completed.');
                 }
                 return actionElement;
@@ -73,10 +83,8 @@ export const TgShortcutProcessingBehavior = {
      * Returns 'true' if action is enabled for actioning, 'false' otherwise.
      */
     _isEnabled: function (actionElement, elementTag) {
-        if (elementTag === 'paper-button' || elementTag === 'paper-icon-button') {
+        if (elementTag === 'paper-button' || elementTag === 'paper-icon-button' || elementTag === 'tg-action') {
             return window.getComputedStyle(actionElement)['pointer-events'] !== 'none';
-        } else if (elementTag === 'tg-action') {
-            return window.getComputedStyle(actionElement.$.actionButton)['pointer-events'] !== 'none';
         } else if (elementTag === 'tg-ui-action') {
             return !actionElement.isActionInProgress;
         } else {
@@ -87,11 +95,11 @@ export const TgShortcutProcessingBehavior = {
     /**
      * Runs action based on its kind. Invokes its bounded 'on-tap' function.
      */
-    _run: function (actionElement, elementTag) {
+    _run: function (actionElement, elementTag, shortcut) {
         if (elementTag === 'paper-button' || elementTag === 'paper-icon-button') {
             return actionElement.dispatchEvent(new Event('tap')); // the most simplistic tap event without coordinates in which tapping is supposed to occur -- no focusing / ripple effect is observed after such event dispatching
         } else if (elementTag === 'tg-action') {
-            return actionElement._asyncRun();
+            return actionElement._asyncRun(null, null, shortcut);
         } else if (elementTag === 'tg-ui-action') {
             return actionElement._run();
         } else {

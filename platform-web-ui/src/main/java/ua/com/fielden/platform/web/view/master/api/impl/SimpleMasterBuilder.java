@@ -43,6 +43,7 @@ import ua.com.fielden.platform.web.view.master.api.ISimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig0;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig5;
+import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfigWithoutNew;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.DefaultEntityAction;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig;
 import ua.com.fielden.platform.web.view.master.api.helpers.IActionBarLayoutConfig1;
@@ -98,7 +99,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
     @Override
     public IEntityActionConfig0<T> addAction(final MasterActions masterAction) {
-        final DefaultEntityAction defaultEntityAction = new DefaultEntityAction(masterAction.name(), getPostAction(masterAction), getPostActionError(masterAction));
+        final DefaultEntityAction<T> defaultEntityAction = new DefaultEntityAction<T>(masterAction.name(), this.entityType, getPostAction(masterAction), getPostActionError(masterAction));
         final Optional<String> shortcut = getShortcut(masterAction);
         if (shortcut.isPresent()) {
             defaultEntityAction.setShortcut(shortcut.get()); // default value of shortcut if present
@@ -107,9 +108,19 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         if (focusingCallback.isPresent()) {
             defaultEntityAction.setFocusingCallback(focusingCallback.get()); // default value of focusingCallback if present
         }
-        final EntityActionConfig<T> entityAction = new EntityActionConfig<>(defaultEntityAction, this);
+        final EntityActionConfig<T> entityAction = new EntityActionConfig<T>(defaultEntityAction, this);
         entityActions.add(entityAction);
         return entityAction;
+    }
+
+    @Override
+    public IEntityActionConfigWithoutNew<T> addSaveAction() {
+        return (IEntityActionConfigWithoutNew<T>) addAction(MasterActions.SAVE);
+    }
+
+    @Override
+    public IEntityActionConfigWithoutNew<T> addCancelAction() {
+        return (IEntityActionConfigWithoutNew<T>) addAction(MasterActions.REFRESH);
     }
 
     @Override
@@ -128,7 +139,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
     public static Optional<String> getShortcut(final MasterActions masterAction) {
         if (MasterActions.REFRESH == masterAction) {
-            return Optional.of("ctrl+r meta+r");
+            return Optional.of("ctrl+x meta+x");
         } else if (MasterActions.SAVE == masterAction) {
             return Optional.of("ctrl+s meta+s");
         } else if (MasterActions.VALIDATE == masterAction || MasterActions.EDIT == masterAction || MasterActions.VIEW == masterAction) {

@@ -94,18 +94,6 @@ const template = html`
             require-selected-entities='NONE'
             require-master-entity='false'>
         </tg-ui-action>
-        <tg-ui-action
-            id="tgOpenMasterAction"
-            ui-role='ICON'
-            show-dialog='[[_showDialog]]'
-            toaster='[[toaster]]'
-            create-context-holder='[[_createContextHolder]]'
-            dynamic-action
-            attrs='[[_openMasterAttrs]]'
-            require-selection-criteria='false'
-            require-selected-entities='ONE'
-            require-master-entity='false'>
-        </tg-ui-action>
     </tg-entity-master>`;
 
 template.setAttribute('strip-whitespace', '');
@@ -251,7 +239,7 @@ Polymer({
     },
 
     _tgOpenMasterAction: function () {
-        if (this.$.tgOpenMasterAction.isActionInProgress || this.disableNextHistoryChange) {
+        if (this.tgOpenMasterAction.isActionInProgress || this.disableNextHistoryChange) {
             return;
         }
         const entityInfo = this._selectedSubmodule.substring(1).split('/');
@@ -269,12 +257,12 @@ Polymer({
             const entity = this._reflector().newEntity(mainTypeName);
             entity['id'] = parseInt(idStr);
             if (menuItemTypeName) {
-                this.$.tgOpenMasterAction.modifyFunctionalEntity = (bindingEntity) => {
+                this.tgOpenMasterAction.modifyFunctionalEntity = (bindingEntity) => {
                     bindingEntity.setAndRegisterPropertyTouch('menuToOpen', menuItemTypeName);
-                    delete this.$.tgOpenMasterAction.modifyFunctionalEntity;
+                    delete this.tgOpenMasterAction.modifyFunctionalEntity;
                 };
             }
-            this.$.tgOpenMasterAction._runDynamicAction(() => entity, null);
+            this.tgOpenMasterAction._runDynamicAction(() => entity, null);
         }
     },
     
@@ -548,8 +536,8 @@ Polymer({
         //setting the uuid for this master.
         this.uuid = this.is + '/' + generateUUID();
         this._attrs = {entityType: "ua.com.fielden.platform.menu.MenuSaveAction", currentState: "EDIT", centreUuid: this.uuid};
-        this._openMasterAttrs = {currentState: "EDIT", centreUuid: this.uuid};
         this._openUserMenuVisibilityAssociatorAttrs = {entityType: "ua.com.fielden.platform.menu.UserMenuVisibilityAssociator", currentState: "EDIT", centreUuid: this.uuid};
+        this.tgOpenMasterAction.requireMasterEntity = 'false';
         //Binding to 'this' functions those are used outside the scope of this component.
         this._checkWhetherCanLeave = this._checkWhetherCanLeave.bind(this);
         
