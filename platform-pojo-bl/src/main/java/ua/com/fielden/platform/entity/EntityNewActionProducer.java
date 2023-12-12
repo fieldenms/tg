@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.annotation.RestrictCreationByUsers;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_master.exceptions.SimpleMasterException;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 
@@ -29,7 +30,7 @@ public class EntityNewActionProducer extends EntityManipulationActionProducer<En
         final EntityNewAction updatedEntity = super.provideDefaultValues(entity);
         final RestrictCreationByUsers restrictUserCreation = getAnnotationForClass(RestrictCreationByUsers.class, updatedEntity.getEntityTypeAsClass());
         if (restrictUserCreation != null) {
-            throw new SimpleMasterException(restrictUserCreation.value());
+            throw new SimpleMasterException(restrictUserCreation.value().replace("{{entity-title}}", TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey()));
         }
         return updatedEntity;
     }

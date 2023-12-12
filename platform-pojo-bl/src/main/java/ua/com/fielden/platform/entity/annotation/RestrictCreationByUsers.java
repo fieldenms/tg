@@ -7,7 +7,13 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * Annotation that should be used to restrict entity creation with entity master. Entities annotated with this annotation can be created only programmatically.
+ * Annotation that should be used to restrict instantiation of entities via their Entity Masters.
+ * Entity types annotated with this annotation can be created only programmatically.
+ * <p>
+ * Please note that this annotation get inherited. And so, if it is present on a base entity type, it would also apply to entities extending it.
+ * <p>
+ * A custom error message can be provided by specifying value for parameter <code>value()</code>.
+ * The message may contain template value {@code {{entity-title}}} that would be dynamically replaced with a corresponding entity title at runtime.
  *
  * @author TG Team
  */
@@ -16,5 +22,6 @@ import java.lang.annotation.Target;
 @Target(TYPE)
 public @interface RestrictCreationByUsers {
 
-    String value() default "The entity can not be created due to presence of RestrictCreationByUsers annotation";
+    String value() default "New instances of entity [{{entity-title}}] can not be created via UI as this entity is annotated with @RestrictCreationByUsers.";
+
 }
