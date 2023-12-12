@@ -10,6 +10,7 @@ import ua.com.fielden.platform.entity.annotation.RestrictCreationByUsers;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_master.exceptions.CompoundMasterException;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 
 /**
  * A base class that should be applicable in most cases for implementing open entity master action producers.
@@ -39,7 +40,7 @@ public abstract class AbstractProducerForOpenEntityMasterAction<T extends Abstra
         } else if (selectedEntitiesEmpty()) {
             final RestrictCreationByUsers restrictUserCreation = getAnnotationForClass(RestrictCreationByUsers.class, entityType);
             if (restrictUserCreation != null) {
-                throw new CompoundMasterException(restrictUserCreation.value());
+                throw new CompoundMasterException(restrictUserCreation.value().replace("{{entity-title}}", TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey()));
             }
             // '+' action on entity T centre or '+' action on master autocompleter title
             openAction.setKey(co(entityType).new_());
