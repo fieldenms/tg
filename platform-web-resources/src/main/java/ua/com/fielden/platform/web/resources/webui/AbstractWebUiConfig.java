@@ -12,7 +12,7 @@ import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreCo
 import static ua.com.fielden.platform.web.minijs.JsCode.jsCode;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.SAVE_OWN_COPY_MSG;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
-import static ua.com.fielden.platform.web.view.master.api.actions.impl.ActionOptionAvailability.ALLOFF;
+import static ua.com.fielden.platform.web.view.master.api.actions.impl.MasterActionOptions.ALL_OFF;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -68,7 +68,7 @@ import ua.com.fielden.platform.web.sse.EventSourceDispatchingEmitter;
 import ua.com.fielden.platform.web.sse.IEventSource;
 import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
-import ua.com.fielden.platform.web.view.master.api.actions.impl.ActionOptionAvailability;
+import ua.com.fielden.platform.web.view.master.api.actions.impl.MasterActionOptions;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 
 /**
@@ -100,7 +100,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     private final Workflows workflow;
     private final Map<String, String> checksums;
     private final boolean independentTimeZone;
-    private final ActionOptionAvailability optionsAvailability;
+    private final MasterActionOptions masterActionOptions;
     /**
      * Holds the map between embedded entity centre's menu item type and [entity centre; entity master] pair.
      */
@@ -114,12 +114,12 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      * @param externalResourcePaths
      * - additional root paths for file resources. (see {@link #resourcePaths} for more information).
      * @param independentTimeZone -- if {@code true} is passed then user requests are treated as if they are made from the same timezone as defined for the application server.
-     * @param optionsAvailability -- determines what options are available for master's save and cancel actions.
+     * @param masterActionOptions -- determines what options are available for master's save and cancel actions.
      */
-    public AbstractWebUiConfig(final String title, final Workflows workflow, final String[] externalResourcePaths, final boolean independentTimeZone, final Optional<ActionOptionAvailability> optionsAvailability) {
+    public AbstractWebUiConfig(final String title, final Workflows workflow, final String[] externalResourcePaths, final boolean independentTimeZone, final Optional<MasterActionOptions> masterActionOptions) {
         this.title = title;
         this.independentTimeZone = independentTimeZone;
-        this.optionsAvailability = optionsAvailability.orElse(ALLOFF);
+        this.masterActionOptions = masterActionOptions.orElse(ALL_OFF);
         this.webUiBuilder = new WebUiBuilder(this);
         this.dispatchingEmitter = new EventSourceDispatchingEmitter();
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -159,10 +159,10 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      * @param workflow -- indicates development or deployment workflow, which affects how web resources get loaded.
      * @param externalResourcePaths
      * - additional root paths for file resources. (see {@link #resourcePaths} for more information).
-     * @param optionsAvailability -- determines what options are available for master's save and cancel actions.
+     * @param masterActionOptions -- determines what options are available for master's save and cancel actions.
      */
-    public AbstractWebUiConfig(final String title, final Workflows workflow, final String[] externalResourcePaths, final Optional<ActionOptionAvailability> optionsAvailability) {
-        this(title, workflow, externalResourcePaths, false, optionsAvailability);
+    public AbstractWebUiConfig(final String title, final Workflows workflow, final String[] externalResourcePaths, final Optional<MasterActionOptions> masterActionOptions) {
+        this(title, workflow, externalResourcePaths, false, masterActionOptions);
     }
 
     /**
@@ -175,7 +175,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      * @param independentTimeZone -- if {@code true} is passed then user requests are treated as if they are made from the same timezone as defined for the application server.
      */
     public AbstractWebUiConfig(final String title, final Workflows workflow, final String[] externalResourcePaths, final boolean independentTimeZone) {
-        this(title, workflow, externalResourcePaths, independentTimeZone, of(ALLOFF));
+        this(title, workflow, externalResourcePaths, independentTimeZone, of(ALL_OFF));
     }
 
     /**
@@ -360,8 +360,8 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     }
 
     @Override
-    public ActionOptionAvailability masterActionAvailableOptions() {
-        return optionsAvailability;
+    public MasterActionOptions masterActionOptions() {
+        return masterActionOptions;
     }
 
     /**

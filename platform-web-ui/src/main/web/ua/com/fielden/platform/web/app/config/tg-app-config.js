@@ -124,9 +124,9 @@ const closeEventSource = function (sourceObj) {
 //Holds all registered event sources in application.
 export const eventSource = registerEventSource();
 
-export const OptionAvailability = {
-    ALLON: "ALLON",
-    ALLOFF: "ALLOFF"
+export const MasterActionOptions = {
+    ALL_ON: "ALL_ON",
+    ALL_OFF: "ALL_OFF"
 };
 
 export const TgAppConfig = Polymer({
@@ -159,11 +159,11 @@ export const TgAppConfig = Polymer({
             readOnly: true,
             value: @timeFormat
         },
-        masterActionOptionAvailability: {
+        masterActionOptions: {
             type: String,
             readOnly: true,
             notify: true,
-            value: @masterActionAvailableOptions
+            value: @masterActionOptions
         },
         firstDayOfWeek: {
             type: Number,

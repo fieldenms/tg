@@ -42,14 +42,33 @@ const template = html`
         }
         .main, .view-item {
             cursor: pointer;
-            padding: 8px 12px;
             @apply --layout-horizontal;
             @apply --layout-flex;
             @apply --layout-center;
             
         }
         .main {
-            @apply --tg-switch-button-style;
+            padding: 0;
+        }
+        .view-item {
+            padding: 8px 12px;
+        }
+        .main-title {
+            padding-left: var(--dropdown-switch-button-side-padding, 12px);
+            padding-right: 0px;
+            padding-top: var(--dropdown-switch-button-top-bottom-padding, 8px);
+            padding-bottom: var(--dropdown-switch-button-top-bottom-padding, 8px);
+            @apply --layout-horizontal;
+            @apply --layout-flex;
+            @apply --layout-center;
+        }
+        .main-icon {
+            padding-left: 0px;
+            padding-right: var(--dropdown-switch-button-side-padding, 12px);
+            padding-top: var(--dropdown-switch-button-top-bottom-padding, 8px);
+            padding-bottom: var(--dropdown-switch-button-top-bottom-padding, 8px);
+            @apply --layout-horizontal;
+            @apply --layout-center;
         }
         .view-item:focus, .main[dropdown-opened][highlight-when-opened] {
             background-color: rgba(33, 33, 33, .15);
@@ -86,9 +105,11 @@ const template = html`
         }
     </style>
     <paper-button id="trigger" raised="[[raised]]" activated$="[[activated]]" disabled$="[[disabled]]" class="main" dropdown-opened$="[[dropDownOpened]]" highlight-when-opened$="[[!doNotHighlightWhenDropDownOpened]]" on-tap="_runActionOrShowView" tooltip-text$="[[_getMainButtonTooltip(fragmented, dropdownButtonTooltipText, _currentView.desc, mainButtonTooltipText)]]">
-        <iron-icon hidden$="[[!_currentView.icon]]" icon="[[_currentView.icon]]" style$="[[_currentView.iconStyle]]"></iron-icon>
-        <span class="truncate item-title" style$="[[_calcButtonStyle(buttonWidth)]]">[[_currentView.title]]</span>
-        <iron-icon icon="icons:arrow-drop-down" on-tap="_showViews" dropdown-opened$="[[dropDownOpened]]" tooltip-text$="[[dropdownButtonTooltipText]]"></iron-icon>
+        <div class="main-title">
+            <iron-icon hidden$="[[!_currentView.icon]]" icon="[[_currentView.icon]]" style$="[[_currentView.iconStyle]]"></iron-icon>
+            <span class="truncate item-title" style$="[[_calcButtonStyle(buttonWidth)]]">[[_currentView.title]]</span>
+        </div>
+        <iron-icon class="main-icon" icon="icons:arrow-drop-down" on-tap="_showViews" dropdown-opened$="[[dropDownOpened]]" tooltip-text$="[[dropdownButtonTooltipText]]"></iron-icon>
     </paper-button>
     <iron-dropdown id="dropdown" horizontal-align="left" vertical-align="[[verticalAlign]]" restore-focus-on-close always-on-top on-iron-overlay-opened="_dropdownOpened" on-iron-overlay-closed="_dropdownClosed">
         <paper-listbox id="availableViews" class="dropdown-content" slot="dropdown-content" attr-for-selected="view-index" on-iron-select="_changeView">
