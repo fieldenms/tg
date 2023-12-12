@@ -15,6 +15,7 @@ import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.SecurityMatrixInsertionPoint;
+import ua.com.fielden.platform.entity.SecurityMatrixSaveAction;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
@@ -32,7 +33,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.DefaultEn
 public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatrixInsertionPoint> {
 
     private final IRenderable renderable;
-    private final DefaultEntityAction realodActionConfig;
+    private final DefaultEntityAction<SecurityMatrixSaveAction> realodActionConfig;
 
     public SecurityMatrixInsertionPointMaster() {
         final DomElement tokenFilter = new DomElement("tg-singleline-text-editor")
@@ -63,7 +64,7 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
                 .attr("current-state", "[[currentState]]")
                 .attr("toaster", "[[toaster]]");
 
-        realodActionConfig = new DefaultEntityAction(SAVE.name(), getPostAction(SAVE), getPostActionError(SAVE));
+        realodActionConfig = new DefaultEntityAction<>(SAVE.name(), SecurityMatrixSaveAction.class, getPostAction(SAVE), getPostActionError(SAVE));
         realodActionConfig.setShortDesc("Reload");
         realodActionConfig.setLongDesc("Cancels changes and reloads security matrix");
         final DomElement reloadAction = realodActionConfig.render().attr("slot", "reload-action");

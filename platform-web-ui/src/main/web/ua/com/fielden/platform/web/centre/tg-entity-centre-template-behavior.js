@@ -31,9 +31,17 @@ const TgEntityCentreTemplateBehaviorImpl = {
             value : false
         },
         /**
-         * Attributes for the action that opens help entity master for this entity centre.
+         * Represents the action that allows to open entity master for specified entity type.
          */
-        _tgOpenHelpMasterActionAttrs: Object,
+        tgOpenMasterAction: {
+            type: Object,
+            value: null
+        },
+
+        /**
+         * Attributes for the action that allows to open entity master for specified entity type.
+         */
+        _tgOpenMasterActionAttrs: Object
     },
 
     created: function () {
@@ -140,13 +148,18 @@ const TgEntityCentreTemplateBehaviorImpl = {
         });
         /////////////////////////////////////////////////////////////////////////////////
 
-        //////////////////Initialise tgOpenHelpMasterAction properties///////////////////
-
-        this._tgOpenHelpMasterActionAttrs = {
-            entityType: "ua.com.fielden.platform.entity.UserDefinableHelp",
+        ///////////////// initialise tgOpenMasterAction properties //////////////////////
+        this._tgOpenMasterActionAttrs = {
             currentState: 'EDIT',
             centreUuid: this.uuid
+        };
+        this.tgOpenMasterAction = this.$.tgOpenMasterAction;
+        if (!this.embedded) {
+            this.tgOpenMasterAction.requireMasterEntity = 'false';
         }
+        /////////////////////////////////////////////////////////////////////////////////
+
+        //////////////////Initialise tgOpenHelpMasterAction properties///////////////////
 
         this._preOpenHelpMasterAction = function (action) {
             action.shortDesc = this._reflector.getType(this.entityType).entityTitle() + " Centre Help";

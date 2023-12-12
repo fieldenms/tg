@@ -2,12 +2,15 @@ package ua.com.fielden.platform.entity;
 
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntityEditActionProducer.NOTHING_TO_OPEN_MSG;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotationForClass;
 
 import java.util.function.Supplier;
 
+import ua.com.fielden.platform.entity.annotation.RestrictCreationByUsers;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_master.exceptions.CompoundMasterException;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 
 /**
  * A base class that should be applicable in most cases for implementing open entity master action producers.
@@ -35,6 +38,10 @@ public abstract class AbstractProducerForOpenEntityMasterAction<T extends Abstra
         if (currentEntityNotEmpty()) {
             openAction.setKey(refetch(chosenEntityId(entityType).orElseThrow(NOTHING_TO_OPEN_EXCEPTION_SUPPLIER), entityType, KEY));
         } else if (selectedEntitiesEmpty()) {
+            final RestrictCreationByUsers restrictUserCreation = getAnnotationForClass(RestrictCreationByUsers.class, entityType);
+            if (restrictUserCreation != null) {
+                throw new CompoundMasterException(restrictUserCreation.value().replace("{{entity-title}}", TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey()));
+            }
             // '+' action on entity T centre or '+' action on master autocompleter title
             openAction.setKey(co(entityType).new_());
         } else {

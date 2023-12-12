@@ -6,6 +6,7 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresentForClass;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
@@ -22,6 +23,7 @@ import ua.com.fielden.platform.entity.AbstractFunctionalEntityToOpenCompoundMast
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
+import ua.com.fielden.platform.entity.annotation.RestrictCreationByUsers;
 import ua.com.fielden.platform.master.MasterInfo;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -38,7 +40,7 @@ import ua.com.fielden.platform.web.view.master.exceptions.MissingEntityTypeExcep
  * <p>
  * The type of master can be different from the type of entity.<br>
  * E.g. <i>Technician</i> entity can be opened in more generic <i>Person</i> master. Also, <i>ReWorkActivity</i> synthetic entity can be opened in more generic <i>WorkActivity</i> master.
- * 
+ *
  * @author TG Team
  *
  */
@@ -55,7 +57,7 @@ public class MasterInfoProvider {
     /**
      * Returns {@link MasterInfo} object (for <b>EDIT</b>ing) that contains all the necessary information to open entity master.<br>
      * Returns {@code null} in case if there are no suitable entity master.
-     * 
+     *
      * @param typeName -- entity type's full name
      */
     public MasterInfo getMasterInfo(final String typeName) {
@@ -65,7 +67,7 @@ public class MasterInfoProvider {
     /**
      * Returns {@link MasterInfo} object (for <b>EDIT</b>ing) that contains all the necessary information to open entity master.<br>
      * Returns {@code null} in case if there are no suitable entity master.
-     * 
+     *
      * @param type -- entity type
      */
     public MasterInfo getMasterInfo(final Class<? extends AbstractEntity<?>> type) {
@@ -75,7 +77,7 @@ public class MasterInfoProvider {
     /**
      * Returns {@link MasterInfo} object (for creating <b>NEW</b>) that contains all the necessary information to open entity master.<br>
      * Returns {@code null} in case if there are no suitable entity master.
-     * 
+     *
      * @param typeName -- entity type's full name
      */
     public MasterInfo getNewEntityMasterInfo(final String typeName) {
@@ -85,7 +87,7 @@ public class MasterInfoProvider {
     /**
      * Returns {@link MasterInfo} object (for creating <b>NEW</b>) that contains all the necessary information to open entity master.<br>
      * Returns {@code null} in case if there are no suitable entity master.
-     * 
+     *
      * @param type -- entity type
      */
     public MasterInfo getNewEntityMasterInfo(final Class<? extends AbstractEntity<?>> type) {
@@ -106,7 +108,7 @@ public class MasterInfoProvider {
 
     /**
      * Builds {@link MasterInfo} entity for {@code type} entity type.
-     * 
+     *
      * @param type -- entity type
      * @param openerType -- the type of wrapper functional entity to open master inside, e.g. <i>OpenWorkActivityMaster</i> for compound case or <i>EntityEdit/NewAction</i> otherwise
      * @param relativePropertyNameOpt -- optional relative property name (only for <b>EDIT</b>) i.e. the path in the entity type for which the master will be opened (e.g., <i>Technician.person</i> is of <i>Person</i> type and a single composite key member and no master is present for <i>Technician</i> then <i>Person</i> master will be used and <i>'person'</i> will be a relative property path)
@@ -142,7 +144,7 @@ public class MasterInfoProvider {
      * If there is no such action, finds registered master and uses it with <i>EntityEditAction</i> wrapper.<br>
      * If there is no such master, analyses the type for inheritance and keys and uses masters for such base types.<br>
      * Returns {@code null} in case if there are no suitable entity master.
-     * 
+     *
      * @param webUiBuilder -- contains all registered masters and actions
      * @param type -- entity type
      * @param relativePropertyName -- relative property name i.e. the path in the entity type for which the master will be opened (e.g., <i>Technician.person</i> is of <i>Person</i> type and a single composite key member and no master is present for <i>Technician</i> then <i>Person</i> master will be used and <i>'person'</i> will be a relative property path)
@@ -174,11 +176,14 @@ public class MasterInfoProvider {
      * If there is no such action, finds registered master and uses it with <i>EntityNewAction</i> wrapper.<br>
      * If there is no such master, analyses the type for inheritance and keys and uses masters for such base types.<br>
      * Returns {@code null} in case if there are no suitable entity master.
-     * 
+     *
      * @param webUiBuilder -- contains all registered masters and actions
      * @param type -- entity type
      */
     private static MasterInfo buildConfiguredNewEntityMasterActionInfo(final IWebUiBuilder webUiBuilder, final Class<? extends AbstractEntity<?>> type) {
+        if (isAnnotationPresentForClass(RestrictCreationByUsers.class, type)) {
+            return null;
+        }
         try {
             final EntityActionConfig config = webUiBuilder.getOpenMasterAction(type).get().get();
             return buildMasterInfo(type, AbstractFunctionalEntityToOpenCompoundMaster.class.isAssignableFrom(config.functionalEntity.get()) ? config.functionalEntity.get() : EntityNewAction.class, empty(), config.prefDimForView);
