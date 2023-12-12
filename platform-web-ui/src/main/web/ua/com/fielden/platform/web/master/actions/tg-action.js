@@ -80,9 +80,8 @@ const template = html`
             --paper-spinner-layer-4-color: var(--paper-blue-500);
         }
         tg-dropdown-switch {
-            --tg-switch-button-style: {
-                padding: 0.4em 0.57em;
-           };
+            --dropdown-switch-button-side-padding: 0.57em;
+            --dropdown-switch-button-top-bottom-padding: 0.4em;
         }
         [hidden] {
             display: none !important;
