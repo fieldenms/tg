@@ -11,7 +11,7 @@ import '/resources/polymer/@polymer/paper-styles/color.js';
 import '/resources/components/postal-lib.js';
 import '/resources/components/tg-dropdown-switch.js';
 
-import {OptionAvailability} from '/app/tg-app-config.js';
+import {MasterActionOptions} from '/app/tg-app-config.js';
 
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { createEntityActionThenCallback } from '/resources/master/actions/tg-entity-master-closing-utils.js';
@@ -43,7 +43,7 @@ const createDescWithShortcut = function(desc, shortcuts) {
 }
 
 const hasNoOptions = function (availableOptions, excludeNew, excludeClose) {
-    return (excludeNew && excludeClose) || availableOptions ===  OptionAvailability.ALLOFF;
+    return (excludeNew && excludeClose) || availableOptions ===  MasterActionOptions.ALL_OFF;
 };
 
 const template = html`
@@ -88,7 +88,7 @@ const template = html`
             display: none !important;
         }
     </style>
-    <tg-app-config master-action-option-availability="{{availableOptions}}"></tg-app-config>
+    <tg-app-config master-action-options="{{availableOptions}}"></tg-app-config>
     <paper-button id="actionButton" class="action-item" hidden$="[[!_isButton(availableOptions, excludeNew, excludeClose, icon)]]" raised roll="button" on-tap="_asyncRun" style="width:100%" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]">
         <span>[[shortDesc]]</span>
     </paper-button>
@@ -160,7 +160,7 @@ Polymer({
 
         availableOptions : {
             type: String,
-            value: OptionAvailability.ALLOFF
+            value: MasterActionOptions.ALL_OFF
         },
 
         excludeNew: {

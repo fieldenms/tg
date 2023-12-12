@@ -221,7 +221,7 @@ public class WebUiBuilder implements IWebUiBuilder {
                 replace("@dateFormat", "\"" + this.dateFormat + "\"").
                 replace("@timeFormat", "\"" + this.timeFormat + "\"").
                 replace("@timeWithMillisFormat", "\"" + this.timeWithMillisFormat + "\"").
-                replace("@masterActionAvailableOptions", "\"" + webUiConfig.masterActionAvailableOptions() + "\"");
+                replace("@masterActionOptions", "\"" + webUiConfig.masterActionOptions() + "\"");
     }
 
     public String getAppIndex(final IDates dates) {
