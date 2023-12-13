@@ -20,7 +20,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -162,13 +162,13 @@ public class AbstractEntityTest {
         assertTrue(entity.getProperty("finalProperty").isValid());
         assertEquals(Double.valueOf(60.0), entity.getFinalProperty());
         assertFalse(entity.getProperty("finalProperty").isEditable());
-        
+
         entity.setFinalProperty(31.0);
         assertFalse(entity.getProperty("finalProperty").isValid());
         assertEquals(Double.valueOf(60.0), entity.getFinalProperty());
         assertFalse(entity.getProperty("finalProperty").isEditable());
     }
-    
+
     @Test
     public void persistentOnly_final_property_for_non_persistent_entity_yields_invalid_definition() {
         final Either<Exception, EntityInvalidDefinition> result = Try(() -> factory.newEntity(EntityInvalidDefinition.class, "key", "desc"));
@@ -178,7 +178,7 @@ public class AbstractEntityTest {
         assertEquals(format("Non-persistent entity [%s] has property [%s], which is incorrectly annotated with @Final(persistentOnly = true).", EntityInvalidDefinition.class.getSimpleName(), "firstProperty"),
                 rootCause.getMessage());
     }
-    
+
 
     @Test
     public void testNewEntityWithDynamicKey() {
@@ -276,7 +276,7 @@ public class AbstractEntityTest {
         assertTrue("Incorrect isChangedFrom previous.", doublesProperty.isChangedFromPrevious());
         assertTrue("Incorrect isDirty.", doublesProperty.isDirty());
         assertTrue("Incorrect isDirty for whole entity.", entity.isDirty());
-        
+
         assertNotNull("There should be domain validation result at this stage.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN));
         assertTrue("Domain validation result should be successful.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN).isSuccessful());
         assertNotNull("There should be a requiredness validation result at this stage.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED));
@@ -310,7 +310,7 @@ public class AbstractEntityTest {
         assertTrue("Incorrect isChangedFrom previous.", doublesProperty.isChangedFromPrevious());
         assertTrue("Incorrect isDirty.", doublesProperty.isDirty());
         assertTrue("Incorrect isDirty for whole entity.", entity.isDirty());
-        
+
         assertNotNull("There should be a domain validation result.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN));
         assertNotNull("There should be requiredness validation result at this stage.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED));
         assertTrue("Requiredness validation result should be successful.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED).isSuccessful());
@@ -337,14 +337,14 @@ public class AbstractEntityTest {
         entity.removeFromDoubles(-2.0);
 
         assertEquals("Incorrect size for doubles", 1, entity.getDoubles().size());
-        
+
         assertNull("Incorrect original value", doublesProperty.getOriginalValue());
         assertTrue("Incorrect isChangedFrom original.", doublesProperty.isChangedFromOriginal());
         assertEquals("Incorrect previous value", Arrays.asList(new Double[] { -2.0, -3.0 }), doublesProperty.getPrevValue());
         assertTrue("Incorrect isChangedFrom previous.", doublesProperty.isChangedFromPrevious());
         assertTrue("Incorrect isDirty.", doublesProperty.isDirty());
         assertTrue("Incorrect isDirty for whole entity.", entity.isDirty());
-        
+
         assertNotNull("There should be domain validation result at this stage.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN));
         assertTrue("Domain validation result should be successful.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN).isSuccessful());
         assertNotNull("There should be requiredness validation result.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED));
@@ -482,7 +482,7 @@ public class AbstractEntityTest {
         final MetaProperty<Integer> firstPropertyMetaProp = entity.getProperty("firstProperty");
         assertTrue("Should be required", firstPropertyMetaProp.isRequired());
         assertTrue("REQUIREDValidator should be present for 'required' property.", firstPropertyMetaProp.getValidators().containsKey(ValidationAnnotation.REQUIRED));
-        
+
         entity.setFirstProperty(null);
         assertFalse("Required property is not yet populated and thus entity should be invalid.", entity.isValid().isSuccessful());
 
@@ -490,7 +490,7 @@ public class AbstractEntityTest {
         assertTrue("Required property with not null value have to be valid.", firstPropertyMetaProp.isValid());
         assertTrue("Should remain required", firstPropertyMetaProp.isRequired());
     }
-    
+
     @Test
     public void not_required_by_declaration_property_may_have_its_requiredness_changed_at_runtime() {
         final MetaProperty<Money> secondMetaProperty = entity.getProperty("money");
@@ -520,7 +520,7 @@ public class AbstractEntityTest {
         final MetaProperty<Integer> firstPropertyMetaProp = entity.getProperty("firstProperty");
         firstPropertyMetaProp.setRequired(false);
     }
-    
+
     @Test
     public void testSetterExceptionsAndResultsHandling() {
         final MetaProperty<Integer> property = entity.getProperty("number");
@@ -794,7 +794,7 @@ public class AbstractEntityTest {
         assertEquals("Property desc does not match", entity.getDesc(), copy.getDesc());
         assertEquals("Property money does not match", entity.getMoney(), copy.getMoney());
     }
-    
+
     @Test
     public void copy_from_instrumented_instance_is_also_instrumented() {
         final Entity entity = factory.newEntity(Entity.class);
@@ -841,7 +841,7 @@ public class AbstractEntityTest {
     @Test
     public void copy_from_uninstrumented_proxied_instance_is_also_uninstrumented_and_proxied() {
         final Class<? extends Entity> type = EntityProxyContainer.proxy(Entity.class, "firstProperty", "monitoring", "observableProperty");
-        
+
         final Entity entity = EntityFactory.newPlainEntity(type, 12L);
         entity.setVersion(42L);
         entity.setKey("key");
@@ -859,7 +859,7 @@ public class AbstractEntityTest {
     @Test
     public void copy_from_instrumented_proxied_instance_is_also_instrumented_and_proxied() {
         final Class<? extends Entity> type = EntityProxyContainer.proxy(Entity.class, "firstProperty", "monitoring", "observableProperty");
-        
+
         final Entity entity = factory.newEntity(type, 12L);
         entity.setVersion(42L);
         entity.setKey("key");
@@ -1074,43 +1074,43 @@ public class AbstractEntityTest {
                         TitlesDescsGetter.getEntityTitleAndDesc(Entity.class).getKey()),
                 descProperty.getFirstFailure().getMessage());
     }
-    
+
     @Test
     public void warnings_are_empty_for_entity_without_any_properties_with_warnings() {
         final EntityWithWarnings entity = factory.newByKey(EntityWithWarnings.class, "some key");
         entity.setDesc("some desc");
         entity.setIntProp(20);
-        
+
         assertFalse(entity.hasWarnings());
         assertTrue(entity.warnings().isEmpty());
         assertTrue(entity.isValid().isSuccessful());
         assertTrue(entity.isValid().isSuccessfulWithoutWarning());
     }
-    
+
     @Test
     public void number_of_warnings_is_equal_to_number_of_entity_properties_with_warnings() {
         final EntityWithWarnings entity = factory.newByKey(EntityWithWarnings.class, "some key");
         entity.setDesc("some desc");
         entity.setSelfRefProp(entity);
         entity.setIntProp(120);
-        
+
         assertTrue(entity.hasWarnings());
         assertEquals(2, entity.warnings().size());
         assertTrue(entity.isValid().isSuccessful());
         assertFalse(entity.isValid().isSuccessfulWithoutWarning());
     }
-    
+
     @Test
     public void one_warning_is_identified_for_entity_with_one_property_in_error_and_one_property_with_warning() {
         final EntityWithWarnings entity = factory.newByKey(EntityWithWarnings.class, "some key");
         entity.setSelfRefProp(null);
         entity.setIntProp(120);
-        
+
         assertFalse(entity.isValid().isSuccessful());
         assertTrue(entity.hasWarnings());
         assertEquals(1, entity.warnings().size());
     }
-    
+
     @Test
     public void warnings_are_identified_correctly_after_reassigning_the_property_value_to_valid_one() {
         final EntityWithWarnings entity = factory.newByKey(EntityWithWarnings.class, "some key");
@@ -1185,7 +1185,7 @@ public class AbstractEntityTest {
         assertTrue(ex instanceof EntityDefinitionException);
         assertEquals(format(INVALID_VALUES_FOR_PRECITION_AND_SCALE_MSG, "numericInteger", EntityWithInvalidIntegerProp.class.getName()), ex.getMessage());
     }
-    
+
     @Test
     public void non_numeric_props_with_traliningZeros_but_without_precision_and_scale_are_invalid() {
         final Either<Exception, EntityWithInvalidStringPropWithTrailingZeros> result = Try(() -> factory.newByKey(EntityWithInvalidStringPropWithTrailingZeros.class, "some key"));
@@ -1215,7 +1215,7 @@ public class AbstractEntityTest {
         assertTrue(ex instanceof EntityDefinitionException);
         assertEquals(format(INVALID_USE_OF_NUMERIC_PARAMS_MSG, "stringProp", EntityWithInvalidStringPropWithScale.class.getName()), ex.getMessage());
     }
-    
+
     @Test
     public void default_implementation_for_isEditable_returns_failure_for_non_instrumented_entities() {
         final Entity plainEntityViaFactory = factory.newPlainEntity(Entity.class, null);
@@ -1246,7 +1246,7 @@ public class AbstractEntityTest {
         } catch (final EntityException ex) {
             assertEquals(format(AbstractEntity.ERR_ENSURE_INSTRUMENTED, Entity.class.getName()), ex.getMessage());
         }
-        
+
         final Entity newEntityViaNew = new Entity();
         try {
             newEntityViaNew.isDirty();
