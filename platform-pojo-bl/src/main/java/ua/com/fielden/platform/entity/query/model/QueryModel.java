@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.entity.query.model;
 
 import static java.lang.String.format;
-import static org.apache.commons.lang.StringUtils.rightPad;
+import static org.apache.commons.lang3.StringUtils.rightPad;
 
 import java.util.List;
 import java.util.Objects;

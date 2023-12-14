@@ -3,7 +3,7 @@ package ua.com.fielden.platform.dom;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Represents a HTML style attribute.

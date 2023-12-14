@@ -3,7 +3,7 @@ package ua.com.fielden.platform.eql.meta;
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.query.metadata.DomainMetadataUtils.produceUnionEntityModels;
 import static ua.com.fielden.platform.eql.meta.EntityCategory.PERSISTENT;
 import static ua.com.fielden.platform.eql.meta.EntityCategory.PURE;

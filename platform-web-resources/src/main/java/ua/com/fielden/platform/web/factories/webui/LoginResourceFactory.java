@@ -2,7 +2,7 @@ package ua.com.fielden.platform.web.factories.webui;
 
 import static org.apache.commons.lang3.StringUtils.replace;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.Restlet;

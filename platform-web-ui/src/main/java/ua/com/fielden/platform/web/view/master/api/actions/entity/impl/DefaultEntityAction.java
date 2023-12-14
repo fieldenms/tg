@@ -2,7 +2,7 @@ package ua.com.fielden.platform.web.view.master.api.actions.entity.impl;
 
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang.StringUtils.join;
+import static org.apache.commons.lang3.StringUtils.join;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresentForClass;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;

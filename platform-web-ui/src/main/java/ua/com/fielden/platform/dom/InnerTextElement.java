@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.dom;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * A DOM element that represent innerHTML text of any other DOM elements.

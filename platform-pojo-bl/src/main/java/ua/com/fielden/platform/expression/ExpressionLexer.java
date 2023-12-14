@@ -3,7 +3,7 @@ package ua.com.fielden.platform.expression;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ua.com.fielden.platform.expression.automata.SequenceRecognitionFailed;
 import ua.com.fielden.platform.expression.lexer.BaseNonDeterministicAutomata;

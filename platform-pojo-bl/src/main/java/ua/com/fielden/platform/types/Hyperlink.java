@@ -12,7 +12,7 @@ import static ua.com.fielden.platform.types.Hyperlink.SupportedProtocols.MAILTO;
 
 import java.util.Optional;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.UrlValidator;
 
 import ua.com.fielden.platform.error.Result;

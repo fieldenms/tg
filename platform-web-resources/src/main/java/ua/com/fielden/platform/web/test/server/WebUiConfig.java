@@ -43,7 +43,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Function;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;

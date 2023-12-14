@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.security.user;
 
 import static java.lang.String.format;
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import com.google.inject.Inject;
 

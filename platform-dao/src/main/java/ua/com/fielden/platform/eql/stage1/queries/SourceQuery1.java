@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.queries;
 
 import static java.util.Objects.requireNonNull;
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;

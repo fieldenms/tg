@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.entity.query.metadata;
 
 import static java.lang.String.format;
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.COLLECTIONAL;

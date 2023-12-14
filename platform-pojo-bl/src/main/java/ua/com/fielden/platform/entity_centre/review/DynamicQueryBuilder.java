@@ -39,7 +39,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;

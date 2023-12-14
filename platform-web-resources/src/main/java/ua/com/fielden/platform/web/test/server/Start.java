@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.web.test.server;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
 
 import java.io.FileInputStream;

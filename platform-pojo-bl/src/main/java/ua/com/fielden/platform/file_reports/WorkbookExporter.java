@@ -2,7 +2,7 @@ package ua.com.fielden.platform.file_reports;
 
 import static java.lang.Math.min;
 import static java.lang.Math.round;
-import static org.apache.commons.lang.StringUtils.join;
+import static org.apache.commons.lang3.StringUtils.join;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.io.ByteArrayOutputStream;
@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.Deflater;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;

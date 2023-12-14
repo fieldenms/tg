@@ -6,7 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ua.com.fielden.platform.web.interfaces.IImportable;
 import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;

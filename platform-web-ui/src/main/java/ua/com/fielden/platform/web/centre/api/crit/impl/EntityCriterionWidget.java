@@ -2,7 +2,7 @@ package ua.com.fielden.platform.web.centre.api.crit.impl;
 
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;

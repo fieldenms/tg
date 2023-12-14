@@ -15,7 +15,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 
 import jakarta.activation.DataHandler;

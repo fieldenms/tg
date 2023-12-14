@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.entity;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY_NOT_ASSIGNED;
 
 import java.lang.reflect.Field;

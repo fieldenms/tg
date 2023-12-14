@@ -2,14 +2,14 @@ package ua.com.fielden.platform.eql.dbschema;
 
 import java.util.Optional;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.dialect.Dialect;
 
 import ua.com.fielden.platform.eql.dbschema.exceptions.DbSchemaException;
 
 /**
- * A data structure to capture the information required to generate column DDL statement. 
- * 
+ * A data structure to capture the information required to generate column DDL statement.
+ *
  * @author TG Team
  *
  */
@@ -24,7 +24,7 @@ public class ColumnDefinition {
     public final String defaultValue;
     public final boolean unique;
     public final Optional<Integer> compositeKeyMemberOrder;
-    
+
     public static final int DEFAULT_STRING_LENGTH = 255;
     public static final int DEFAULT_NUMERIC_PRECISION = 18;
     public static final int DEFAULT_NUMERIC_SCALE = 2;
@@ -32,13 +32,13 @@ public class ColumnDefinition {
     public ColumnDefinition(
             final boolean unique,
             final Optional<Integer> compositeKeyMemberOrder,
-            final boolean nullable, 
-            final String name, 
-            final Class<?> javaType, 
-            final int sqlType, 
-            final int length, 
-            final int scale, 
-            final int precision, 
+            final boolean nullable,
+            final String name,
+            final Class<?> javaType,
+            final int sqlType,
+            final int length,
+            final int scale,
+            final int precision,
             final String defaultValue) {
         if (StringUtils.isEmpty(name)) {
             throw new DbSchemaException("Column name can not be empty!");
@@ -57,7 +57,7 @@ public class ColumnDefinition {
 
     /**
      * Generates DDL statement for a column based on provided RDBMS dialect.
-     * 
+     *
      * @param dialect
      * @return
      */
@@ -67,12 +67,12 @@ public class ColumnDefinition {
         sb.append(" ");
         if (length == Integer.MAX_VALUE && String.class.equals(javaType) && dialect.getClass().getSimpleName().startsWith("Postgre")) {
             sb.append("text");
-        } else if (length == Integer.MAX_VALUE && String.class.equals(javaType) && dialect.getClass().getSimpleName().startsWith("SQLServer")) { 
+        } else if (length == Integer.MAX_VALUE && String.class.equals(javaType) && dialect.getClass().getSimpleName().startsWith("SQLServer")) {
             sb.append("varchar(max)");
         } else {
             sb.append(dialect.getTypeName(sqlType, length, precision, scale));
         }
-        
+
         if (!nullable) {
             sb.append(" NOT NULL");
         }
@@ -81,7 +81,7 @@ public class ColumnDefinition {
             sb.append(" DEFAULT ");
             sb.append(defaultValue);
         }
-        
+
         return sb.toString();
     }
 

@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage3.sundries;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.util.Objects;
 

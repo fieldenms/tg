@@ -8,7 +8,7 @@ import static java.util.Optional.ofNullable;
 import static java.util.regex.Pattern.quote;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toSet;
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.ASCENDING;
 import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.DESCENDING;

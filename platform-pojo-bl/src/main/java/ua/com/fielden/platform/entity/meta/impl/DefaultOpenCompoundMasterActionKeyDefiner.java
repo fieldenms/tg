@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.entity.meta.impl;
 
 import static java.lang.String.format;
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 
 import ua.com.fielden.platform.entity.AbstractEntity;

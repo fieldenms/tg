@@ -12,7 +12,7 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang.StringUtils.uncapitalize;
+import static org.apache.commons.lang3.StringUtils.uncapitalize;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.reflectionProperty;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.constructKeysAndProperties;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isExcluded;

@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage3.sources;
 
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 import java.util.Objects;
 
