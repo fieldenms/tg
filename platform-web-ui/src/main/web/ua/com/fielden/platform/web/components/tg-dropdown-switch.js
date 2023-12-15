@@ -30,9 +30,6 @@ const template = html`
             --paper-button-flat-keyboard-focus: {
                 font-weight: normal;
             }
-            --tg-switch-button-style: {
-                padding: 8px 12px;
-            }
         }
         :host([disabled]) {
             pointer-events: none;
@@ -52,6 +49,7 @@ const template = html`
         }
         .view-item {
             padding: 8px 12px;
+            @apply --tg-dropdown-options-style;
         }
         .main-title {
             padding-left: var(--dropdown-switch-button-side-padding, 12px);

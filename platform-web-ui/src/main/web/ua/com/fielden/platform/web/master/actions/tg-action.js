@@ -82,6 +82,9 @@ const template = html`
         tg-dropdown-switch {
             --dropdown-switch-button-side-padding: 0.57em;
             --dropdown-switch-button-top-bottom-padding: 0.4em;
+            --tg-dropdown-options-style: {
+                padding: 8px 0.57em;
+            };
         }
         [hidden] {
             display: none !important;
