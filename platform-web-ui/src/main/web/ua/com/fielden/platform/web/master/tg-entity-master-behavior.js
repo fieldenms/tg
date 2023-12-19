@@ -810,7 +810,7 @@ const TgEntityMasterBehaviorImpl = {
 
         // focus invalid / preferred / first enabled editor (if present) when binding entity appears (refresh / cancel / save + continuous creation)
         self.addEventListener('binding-entity-appeared', function (event) {
-            const target = event.target || event.srcElement;
+            const target = event.composedPath()[0];
             if (target === this) {
                 this.focusView();
                 if (!this._hasEmbededView()) {
@@ -823,7 +823,7 @@ const TgEntityMasterBehaviorImpl = {
         
         // focus preferred property editor (if present) and select its contents (validate)
         self.addEventListener('binding-entity-validated', (event) => {
-            const target = event.target || event.srcElement;
+            const target = event.composedPath()[0];
             if (target === this) {
                 this.focusPreferredView();
             }
