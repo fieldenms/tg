@@ -4,6 +4,7 @@ import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
+import static java.util.Optional.empty;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Stream.concat;
 import static org.apache.logging.log4j.LogManager.getLogger;
@@ -14,6 +15,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.entity_centre.mnemonics.DateMnemonicUtils.dateOfRangeThatIncludes;
 import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.paramValue;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
+import static ua.com.fielden.platform.reflection.Finder.getFields;
 import static ua.com.fielden.platform.reflection.Finder.getPropertyDescriptors;
 import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
@@ -100,7 +102,7 @@ public class DynamicQueryBuilder {
      */
     public static class QueryProperty {
 
-        private static final String ERR_MISSING_CRITONLY_SUBMODEL = "@CritOnly property [%s] in [%s] has no submodel with name [%s_] defined.";
+        private static final String ERR_CRITONLY_SUBMODEL_INACCESSIBLE = "@CritOnly property [%s] in [%s] has inaccessible submodel with name [%s_].";
         private static final String ERR_INCOMPATIBLE_CRITONLY_SUBMODEL_TYPE = "Submodel [%s_] for @CritOnly property [%s] in [%s] should have type ICompoundCondition0.";
         private static final String QP_PREFIX = "QP_";
 
@@ -203,10 +205,11 @@ public class DynamicQueryBuilder {
 
             final CritOnly critAnnotation = analyser.getPropertyFieldAnnotation(CritOnly.class);
             this.critOnly = critAnnotation != null;
-            this.critOnlyWithModel = critOnly && isCritOnlyWithSubmodel(critAnnotation, analyser.propertyTypes[analyser.propertyTypes.length - 2], analyser.propertyNames[analyser.propertyNames.length - 1]);
+            final Optional<Field> critOnlySubmodelFieldOpt = critOnly ? findCritOnlySubmodelField(critAnnotation, analyser.propertyTypes[analyser.propertyTypes.length - 2], analyser.propertyNames[analyser.propertyNames.length - 1]) : empty();
+            this.critOnlyWithModel = critOnlySubmodelFieldOpt.isPresent();
             if (this.critOnlyWithModel) {
                 this.propertyUnderCondition = critAnnotation.propUnderCondition();
-                this.critOnlyModel = getCritOnlySubmodel(analyser.propertyTypes[analyser.propertyTypes.length - 2], analyser.propertyNames[analyser.propertyNames.length - 1]);
+                this.critOnlyModel = getCritOnlySubmodel(critOnlySubmodelFieldOpt.get(), analyser.propertyTypes[analyser.propertyTypes.length - 2], analyser.propertyNames[analyser.propertyNames.length - 1]);
             } else {
                 this.propertyUnderCondition = "";
                 this.critOnlyModel = null;
@@ -346,27 +349,25 @@ public class DynamicQueryBuilder {
         }
 
         /**
-         * Determines if the crit-only property is defined with a sub-model, which needs to be taken into account when building the final query.
+         * Finds crit-only property's sub-model, if any.
+         * It is important to look deep into type hierarchy, which is especially important for Entity Centre generated types that extend original ones.
          *
          * @param critAnnotation
          * @param entityType
          * @param propertyName
          * @return
          */
-        private static boolean isCritOnlyWithSubmodel(final CritOnly critAnnotation, final Class<?> entityType, final String propertyName) {
-            try {
-                return !StringUtils.isEmpty(critAnnotation.propUnderCondition()) /* a property name is specified */ &&
-                       !AbstractEntity.class.equals(critAnnotation.entityUnderCondition()) /* a domain entity is specified */ &&
-                        isPropertyPresent(critAnnotation.entityUnderCondition(), critAnnotation.propUnderCondition()) /* a specified property belongs to a domain entity */ &&
-                        entityType.getDeclaredField(propertyName + "_") != null /* there is a sub-model*/;
-            } catch (NoSuchFieldException | SecurityException e) {
-                return false;
+        private static Optional<Field> findCritOnlySubmodelField(final CritOnly critAnnotation, final Class<?> entityType, final String propertyName) {
+            if (!StringUtils.isEmpty(critAnnotation.propUnderCondition()) /* a property name is specified */ &&
+               !AbstractEntity.class.equals(critAnnotation.entityUnderCondition()) /* a domain entity is specified */ &&
+                isPropertyPresent(critAnnotation.entityUnderCondition(), critAnnotation.propUnderCondition())) { /* a specified property belongs to a domain entity */
+                return getFields(entityType, false).stream().filter(field -> (propertyName + "_").equals(field.getName())).findFirst(); /* there may be a sub-model in type hierarchy */
             }
+            return empty();
         }
 
-        private static ICompoundCondition0<?> getCritOnlySubmodel(final Class<?> type, final String propertyName) {
+        private static ICompoundCondition0<?> getCritOnlySubmodel(final Field exprField, final Class<?> type, final String propertyName) {
             try {
-                final Field exprField = type.getDeclaredField(propertyName + "_");
                 exprField.setAccessible(true);
                 final Object value = exprField.get(null);
                 if (value instanceof ICompoundCondition0) {
@@ -374,8 +375,8 @@ public class DynamicQueryBuilder {
                 } else {
                     throw new EntityCentreExecutionException(format(ERR_INCOMPATIBLE_CRITONLY_SUBMODEL_TYPE, propertyName, propertyName, type.getSimpleName()));
                 }
-            } catch (final NoSuchFieldException | IllegalAccessException ex) {
-                throw new EntityCentreExecutionException(format(ERR_MISSING_CRITONLY_SUBMODEL, propertyName, type.getSimpleName(), propertyName));
+            } catch (final IllegalAccessException ex) {
+                throw new EntityCentreExecutionException(format(ERR_CRITONLY_SUBMODEL_INACCESSIBLE, propertyName, type.getSimpleName(), propertyName));
             }
         }
 
