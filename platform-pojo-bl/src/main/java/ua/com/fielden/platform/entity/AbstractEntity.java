@@ -92,6 +92,7 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.ICustomValidator;
+import ua.com.fielden.platform.entity.validation.KeyMemberChangeValidator;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
@@ -824,24 +825,33 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             final Set<Annotation> propValidationAnnots = extractValidationAnnotationForProperty(field, propertyType, isCollectional);
 
             // let's add implicit default validation as early as possible to @BeforeChange
-            // special validation of String-typed key or String-typed key-members
-            // applied on top of existing @BeforeChange validators, if any, but placed before the explicitly defined handlers
-            if (AbstractEntity.KEY.equals(field.getName()) && String.class == this.getKeyType() || // the type of property "key" cannot be determined from field, hence a separate check
-                field.isAnnotationPresent(CompositeKeyMember.class) && String.class == field.getType()) {
-                final SkipDefaultStringKeyMemberValidation skipAnnot = field.getAnnotation(SkipDefaultStringKeyMemberValidation.class);
-                final Set<Class<? extends IBeforeChangeEventHandler<String>>> allDefaultStringValidators = linkedSetOf(SkipDefaultStringKeyMemberValidation.ALL_DEFAULT_STRING_KEY_VALIDATORS);
-                allDefaultStringValidators.removeAll(skipAnnot == null ? emptySet() : setOf(skipAnnot.value()));
-                if (!allDefaultStringValidators.isEmpty()) {
-                    final Handler[] handlers = allDefaultStringValidators.stream()
-                            .map(bce -> new HandlerAnnotation(bce).newInstance())
-                            .toArray(Handler[]::new);
-                    final BeforeChange implicitBch = BeforeChangeAnnotation.newInstance(handlers);
-    
-                    // merge with declared @BeforeChange, if exists
-                    final Optional<Annotation> maybeDeclaredBch = removeFirst(propValidationAnnots, at -> at.annotationType() == BeforeChange.class);
-                    final BeforeChange bch = maybeDeclaredBch.map(annotation -> BeforeChangeAnnotation.merge(implicitBch, (BeforeChange) annotation)).orElse(implicitBch);
-                    propValidationAnnots.add(bch);
+            // consider "key" and key-members
+            if (AbstractEntity.KEY.equals(field.getName()) || field.isAnnotationPresent(CompositeKeyMember.class)) {
+                final List<BeforeChange> keyBchs = new ArrayList<>();
+
+                // special validation of String-typed key or String-typed key-members
+                // applied on top of existing @BeforeChange validators, if any, but placed before the explicitly defined handlers
+                if (AbstractEntity.KEY.equals(field.getName()) && String.class == this.getKeyType() ||
+                        field.isAnnotationPresent(CompositeKeyMember.class) && String.class == field.getType()) {
+                    final SkipDefaultStringKeyMemberValidation skipAnnot = field.getAnnotation(SkipDefaultStringKeyMemberValidation.class);
+                    final Set<Class<? extends IBeforeChangeEventHandler<String>>> allDefaultStringValidators = linkedSetOf(SkipDefaultStringKeyMemberValidation.ALL_DEFAULT_STRING_KEY_VALIDATORS);
+                    allDefaultStringValidators.removeAll(skipAnnot == null ? emptySet() : setOf(skipAnnot.value()));
+
+                    if (!allDefaultStringValidators.isEmpty()) {
+                        final Handler[] handlers = allDefaultStringValidators.stream()
+                                .map(bce -> new HandlerAnnotation(bce).newInstance())
+                                .toArray(Handler[]::new);
+                        keyBchs.add(BeforeChangeAnnotation.newInstance(handlers));
+                    }
                 }
+
+                // declared @BeforeChange, if exists
+                removeFirst(propValidationAnnots, at -> at.annotationType() == BeforeChange.class)
+                        .ifPresent(bch -> keyBchs.add((BeforeChange) bch));
+
+                keyBchs.add(BeforeChangeAnnotation.newInstance(new HandlerAnnotation(KeyMemberChangeValidator.class).newInstance()));
+
+                propValidationAnnots.add(BeforeChangeAnnotation.merge(keyBchs.toArray(BeforeChange[]::new)));
             }
 
             for (final Annotation annotation : propValidationAnnots) {
