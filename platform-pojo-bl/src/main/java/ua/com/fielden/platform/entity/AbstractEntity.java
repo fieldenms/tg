@@ -849,7 +849,9 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
                 removeFirst(propValidationAnnots, at -> at.annotationType() == BeforeChange.class)
                         .ifPresent(bch -> keyBchs.add((BeforeChange) bch));
 
-                keyBchs.add(BeforeChangeAnnotation.newInstance(new HandlerAnnotation(KeyMemberChangeValidator.class).newInstance()));
+                if (isPersistent()) {
+                    keyBchs.add(BeforeChangeAnnotation.newInstance(new HandlerAnnotation(KeyMemberChangeValidator.class).newInstance()));
+                }
 
                 propValidationAnnots.add(BeforeChangeAnnotation.merge(keyBchs.toArray(BeforeChange[]::new)));
             }
