@@ -853,7 +853,9 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
                     keyBchs.add(BeforeChangeAnnotation.newInstance(new HandlerAnnotation(KeyMemberChangeValidator.class).newInstance()));
                 }
 
-                propValidationAnnots.add(BeforeChangeAnnotation.merge(keyBchs.toArray(BeforeChange[]::new)));
+                if (!keyBchs.isEmpty()) {
+                    propValidationAnnots.add(BeforeChangeAnnotation.merge(keyBchs.toArray(BeforeChange[]::new)));
+                }
             }
 
             for (final Annotation annotation : propValidationAnnots) {
