@@ -358,12 +358,12 @@ public class DynamicQueryBuilder {
          * @return
          */
         private static Optional<Field> findCritOnlySubmodelField(final CritOnly critAnnotation, final Class<?> entityType, final String propertyName) {
-            if (!StringUtils.isEmpty(critAnnotation.propUnderCondition()) /* a property name is specified */ &&
-               !AbstractEntity.class.equals(critAnnotation.entityUnderCondition()) /* a domain entity is specified */ &&
-                isPropertyPresent(critAnnotation.entityUnderCondition(), critAnnotation.propUnderCondition())) { /* a specified property belongs to a domain entity */
-                return getFields(entityType, false).stream().filter(field -> (propertyName + "_").equals(field.getName())).findFirst(); /* there may be a sub-model in type hierarchy */
-            }
-            return empty();
+            final var canGetFieldInfo = !StringUtils.isEmpty(critAnnotation.propUnderCondition()) && /* a property name is specified */
+                                        !AbstractEntity.class.equals(critAnnotation.entityUnderCondition()) && /* a domain entity is specified */
+                                        isPropertyPresent(critAnnotation.entityUnderCondition(), critAnnotation.propUnderCondition()); /* a specified property belongs to a domain entity */
+            return canGetFieldInfo
+                   ? getFields(entityType, false).stream().filter(field -> (propertyName + "_").equals(field.getName())).findFirst() /* there may be a sub-model in type hierarchy */
+                   : empty();
         }
 
         private static ICompoundCondition0<?> getCritOnlySubmodel(final Field exprField, final Class<?> type, final String propertyName) {
