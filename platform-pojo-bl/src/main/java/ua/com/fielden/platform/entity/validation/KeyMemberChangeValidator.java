@@ -3,7 +3,6 @@ package ua.com.fielden.platform.entity.validation;
 import com.google.inject.Inject;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.impl.AbstractBeforeChangeEventHandler;
@@ -49,8 +48,6 @@ public class KeyMemberChangeValidator extends AbstractBeforeChangeEventHandler<O
     @Override
     public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
         final AbstractEntity<?> entity = property.getEntity();
-        if (!(entity instanceof ActivatableAbstractEntity<?> activEntity))
-            return successful(newValue);
         if (!entity.isPersistent() || !entity.isPersisted())
             return successful(newValue);
 
