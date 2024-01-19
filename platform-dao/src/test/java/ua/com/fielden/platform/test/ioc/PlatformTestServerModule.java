@@ -22,6 +22,8 @@ import ua.com.fielden.platform.entity.functional.centre.ICentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.ISavingInfoHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolderDao;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.validation.CanBuildReferenceHierarchyForEveryEntityValidator;
+import ua.com.fielden.platform.entity.validation.ICanBuildReferenceHierarchyForEntityValidator;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamicRequirednessCo;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamicRequirednessDao;
 import ua.com.fielden.platform.ioc.BasicWebServerModule;
@@ -149,6 +151,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(ITgPerson.class).to(TgPersonDao.class);
         bind(ITgAuthoriser.class).to(TgAuthoriserDao.class);
         bind(ITgOriginator.class).to(TgOriginatorDao.class);
+        bind(ITgOriginatorDetails.class).to(TgOriginatorDetailsDao.class);
         bind(ITgDateTestEntity.class).to(TgDateTestEntityDao.class);
         bind(TgEntityWithManyPropTypesCo.class).to(TgEntityWithManyPropTypesDao.class);
         bind(IEntityOne.class).to(EntityOneDao.class);
@@ -198,6 +201,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         //     CompanionObjectAutobinder.bindCo(entityType, binder());
         // }
 
+        bind(ICanBuildReferenceHierarchyForEntityValidator.class).to(CanBuildReferenceHierarchyForEveryEntityValidator.class);
     }
 
     public static class TestSessionCacheBuilder implements Provider<Cache<String, UserSession>> {
