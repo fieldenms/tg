@@ -81,7 +81,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 
 /**
- * An utility class that is responsible for building query implementation of {@link DynamicEntityQueryCriteria}.
+ * A utility class that is responsible for building query implementation of {@link DynamicEntityQueryCriteria}.
  *
  * @author TG Team
  *
@@ -92,7 +92,7 @@ public class DynamicQueryBuilder {
     private DynamicQueryBuilder() {}
 
     /**
-     * This is a class which represents high-level abstraction for criterion in dynamic criteria. <br>
+     * This is a class that represents high-level abstraction for a crit-only property in a dynamic criteria entity. <br>
      * <br>
      * Consists of one or possibly two (for "from"/"to" or "is"/"is not") values / exclusiveness-flags, <br>
      * and strictly single datePrefix/Mnemonic/AndBefore triplet, "orNull" and "not" flags, and other stuff, which are necessary for query composition.
@@ -349,8 +349,8 @@ public class DynamicQueryBuilder {
         }
 
         /**
-         * Finds crit-only property's sub-model, if any.
-         * It is important to look deep into type hierarchy, which is especially important for Entity Centre generated types that extend original ones.
+         * Finds a submodel for a crit-only property, if present.
+         * It is important to traverse the type hierarchy. This is important for the Entity Centre generated types, because they extend the original entity type, where crit-only properties are defined.
          *
          * @param critAnnotation
          * @param entityType
