@@ -418,6 +418,11 @@ public class ElementFinder {
                 .collect(toList());
     }
 
+    public boolean hasAnyPresentAnnotation(final Element element, final Collection<? extends Class<? extends Annotation>> annotTypes) {
+        return elements.getAllAnnotationMirrors(element).stream()
+                .anyMatch(am -> annotTypes.stream().anyMatch(at -> isSameType(am.getAnnotationType(), at)));
+    }
+
     /**
      * Finds an annotation of the specified type that is directly present on the element.
      */
