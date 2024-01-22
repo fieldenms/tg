@@ -1635,7 +1635,9 @@ Polymer({
         }
     },
     
-    //Resets the dialogs state when it gets closed.
+    /**
+     * Resets the dialogs state when it gets closed.
+     */ 
     _resetState: function () {
         this._dataLoaded = false;
         this._hasNext = false;
@@ -1648,8 +1650,10 @@ Polymer({
         this.$.dialogLoader.classList.remove("hidden");
     },
 
-    //Resets the state of spinner on navigation action, blocking pane counter and removes potentialy setted animation properties.
-    //This method is invoked when error happened during navigation action execution or after dialog closed (Dialog closed might happen during animation process!).
+    /**
+     * Resets the state of a spinner for navigation action, blocking pane counter and removes any animation properties.
+     * This method is invoked when an error happens during the navigation action execution or after a dialog was closed (the dialog closure might happen during animation process!).
+     */ 
     _resetAnimationBlockingSpinnerState: function () {
         this._blockingPaneCounter = 0;
         this._masterLayoutChanges = undefined;
@@ -1660,7 +1664,9 @@ Polymer({
     },
 
     _onIronResize: function() {
-        if (!this._wasMoved() && !this._customDim() && !this._minimised) {
+        // Check this._isAnimatingDimensions() in order to prevent refitting dialog if animation is in progress.
+        // This should be done because loaded element in dialog might contain component that might trigger iron-resize event when attached.
+        if (!this._wasMoved() && !this._customDim() && !this._minimised && !this._isAnimatingDimensions()) {
             IronOverlayBehaviorImpl._onIronResize.call(this);
         }
     },

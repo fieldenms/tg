@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.entity_centre.review;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createConditionProperty;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -7,7 +10,6 @@ import java.util.List;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
-import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.entity.annotation.DescRequired;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -16,6 +18,8 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
+import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.types.Money;
 
 /**
@@ -74,10 +78,40 @@ public class EntityForQueryPropertyTesting extends AbstractEntity<String> {
     private String strProp;
 
     @IsProperty(EntityForQueryPropertyTesting.class)
-    private List<EntityForQueryPropertyTesting> entities = new ArrayList<EntityForQueryPropertyTesting>();
+    private final List<EntityForQueryPropertyTesting> entities = new ArrayList<EntityForQueryPropertyTesting>();
 
     @IsProperty(CollectionParentEntity.class)
-    private List<CollectionParentEntity> coll = new ArrayList<CollectionParentEntity>();
+    private final List<CollectionParentEntity> coll = new ArrayList<CollectionParentEntity>();
+
+    @IsProperty
+    private EntityForQueryPropertyTesting alternativeEntity;
+
+    @Observable
+    public EntityForQueryPropertyTesting setAlternativeEntity(final EntityForQueryPropertyTesting value) {
+        this.alternativeEntity = value;
+        return this;
+    }
+
+    public EntityForQueryPropertyTesting getAlternativeEntity() {
+        return alternativeEntity;
+    }
+
+    @IsProperty
+    @CritOnly(value = Type.MULTI, entityUnderCondition = EntityForQueryPropertyTesting.class, propUnderCondition = "alternativeEntity.key")
+    @Title(value = "Alternatives", desc = "These are the Alternatives related to an EntityForQueryPropertyTesting. Mnemonic \"missing\" returns true only for those EntityForQueryPropertyTesting items that have no related Alternatives.")
+    private EntityForQueryPropertyTesting alternativeEntityCrit;
+    protected static final ICompoundCondition0<EntityForQueryPropertyTesting> alternativeEntityCrit_ = select(EntityForQueryPropertyTesting.class).where()
+            .prop("alternativeEntity").eq().prop(createConditionProperty("id"));
+
+    @Observable
+    public EntityForQueryPropertyTesting setAlternativeEntityCrit(final EntityForQueryPropertyTesting value) {
+        this.alternativeEntityCrit = value;
+        return this;
+    }
+
+    public EntityForQueryPropertyTesting getAlternativeEntityCrit() {
+        return alternativeEntityCrit;
+    }
 
     protected EntityForQueryPropertyTesting() {
     }
