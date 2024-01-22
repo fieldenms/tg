@@ -7,8 +7,10 @@ import ua.com.fielden.platform.annotations.metamodel.DomainEntity;
 import ua.com.fielden.platform.annotations.metamodel.WithMetaModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
@@ -285,6 +287,17 @@ public class EntityFinderTest {
     }
 
     @Test
+    public void union_entities_are_meta_modeled() {
+        assertTrue(entityFinder.isEntityThatNeedsMetaModel(entityFinder.findEntity(SimpleUnionEntity.class)));
+    }
+
+    @Test
+    public void synthetic_entities_are_meta_modeled() {
+        assertTrue(entityFinder.isEntityThatNeedsMetaModel(entityFinder.findEntity(SyntheticEntityWithModel.class)));
+        assertTrue(entityFinder.isEntityThatNeedsMetaModel(entityFinder.findEntity(SyntheticEntityWithModels.class)));
+    }
+
+    @Test
     public void getEntityTitleAndDesc_is_equivalent_to_TitlesDescsGetter() {
         final var userTitleAndDesc = Pair.pair("User", "User entity");
         assertEquals(userTitleAndDesc, TitlesDescsGetter.getEntityTitleAndDesc(User.class));
@@ -453,6 +466,31 @@ public class EntityFinderTest {
      */
     @DomainEntity
     public static class NonEntity {
+    }
+
+    public static class SimpleUnionEntity extends AbstractUnionEntity {
+        @IsProperty
+        @MapTo
+        @Title(value = "User")
+        private User user;
+
+        public User getUser() {
+            return user;
+        }
+
+        @Observable
+        public SimpleUnionEntity setUser(final User user) {
+            this.user = user;
+            return this;
+        }
+    }
+
+    public static class SyntheticEntityWithModel extends AbstractEntity<String> {
+        static final EntityResultQueryModel<SyntheticEntityWithModel> model_ = null;
+    }
+
+    public static class SyntheticEntityWithModels extends AbstractEntity<String> {
+        static final List<EntityResultQueryModel<SyntheticEntityWithModels>> models_ = null;
     }
 
 }
