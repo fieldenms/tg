@@ -7,6 +7,12 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.sample.domain.TeNamedValuesVector;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
+/**
+ * Should be used as a convenient base class for EQL database interaction test cases.
+ *
+ * @author TG Team
+ *
+ */
 public abstract class AbstractEqlExecutionTestCase extends AbstractDaoTestCase {
 
     protected final static String RESULT = "result";
@@ -20,6 +26,13 @@ public abstract class AbstractEqlExecutionTestCase extends AbstractDaoTestCase {
     @Override
     protected void populateDomain() {
         super.populateDomain();
-        save(new_(TeNamedValuesVector.class, "SINGLETON").setDateOf20010911(date("2001-09-11 00:00:00")));
+        save(new_(TeNamedValuesVector.class, "SINGLETON").
+                setDateOf20010911(date("2001-09-11 00:00:00")).
+                setDateAndTimeOf20010911084640(date("2001-09-11 08:46:40")).
+                setStringOfSadEvent("sad event").
+                setUppercasedStringOfAbc("ABC").
+                setLowercasedStringOfAbc("abc").
+                setIntegerOfZero(0)
+                );
     }
 }
