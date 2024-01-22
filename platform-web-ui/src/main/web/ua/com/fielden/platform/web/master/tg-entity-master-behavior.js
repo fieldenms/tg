@@ -810,7 +810,7 @@ const TgEntityMasterBehaviorImpl = {
 
         // focus invalid / preferred / first enabled editor (if present) when binding entity appears (refresh / cancel / save + continuous creation)
         self.addEventListener('binding-entity-appeared', function (event) {
-            const target = event.target || event.srcElement;
+            const target = event.composedPath()[0];
             if (target === this) {
                 this.focusView();
                 if (!this._hasEmbededView()) {
@@ -823,7 +823,7 @@ const TgEntityMasterBehaviorImpl = {
         
         // focus preferred property editor (if present) and select its contents (validate)
         self.addEventListener('binding-entity-validated', (event) => {
-            const target = event.target || event.srcElement;
+            const target = event.composedPath()[0];
             if (target === this) {
                 this.focusPreferredView();
             }
@@ -996,16 +996,19 @@ const TgEntityMasterBehaviorImpl = {
      */
     focusView: function () {
         this.async(() => {
-            if (this._hasEmbededView()) {
-                this._focusEmbededView()
-            } else {
-                // Desktop app specific: focus first input when opening dialog.
-                // This is also used when closing dialog: if child dialog was not closed, then its first input should be focused (this however can not be reproduced on mobile due to maximised nature of all dialogs).
-                // So, in mobile app the input will not be focused on dialog opening (and the keyboard will not appear suddenly until the user explicitly clicks on some editor).
-                if (!isMobileApp()) {
-                    this._focusFirstInput();
+            const insertionPoint = getParentAnd(this, parent => parent.matches('tg-entity-centre-insertion-point'));
+            if (!insertionPoint || (insertionPoint.offsetParent !== null && insertionPoint.alternativeView)) { 
+                if (this._hasEmbededView()) {
+                    this._focusEmbededView()
                 } else {
-                    this._focusPreferredInput();
+                    // Desktop app specific: focus first input when opening dialog.
+                    // This is also used when closing dialog: if child dialog was not closed, then its first input should be focused (this however can not be reproduced on mobile due to maximised nature of all dialogs).
+                    // So, in mobile app the input will not be focused on dialog opening (and the keyboard will not appear suddenly until the user explicitly clicks on some editor).
+                    if (!isMobileApp()) {
+                        this._focusFirstInput();
+                    } else {
+                        this._focusPreferredInput();
+                    }
                 }
             }
         }, 100);
