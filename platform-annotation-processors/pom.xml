@@ -90,6 +90,8 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <shadedClassifierName>standalone</shadedClassifierName>
                             <transformers>
                                 <!-- This transformer is needed to collect all annotation processors, including those that are defined in dependencies,
                                      and not end-up with the last processed file overriding our own. -->
