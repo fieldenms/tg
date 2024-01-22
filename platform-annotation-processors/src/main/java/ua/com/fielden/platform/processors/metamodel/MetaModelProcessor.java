@@ -914,9 +914,8 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
      * @param propName
      * @return
      */
-    private String fieldNameForProp(String propName) {
+    private static String fieldNameForProp(String propName) {
         return propName + "_pn";
     }
-
 
 }
