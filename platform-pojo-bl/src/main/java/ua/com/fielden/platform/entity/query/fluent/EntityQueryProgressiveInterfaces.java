@@ -252,6 +252,15 @@ public interface EntityQueryProgressiveInterfaces {
 
 		IRoundFunctionArgument<T, ET> round();
 
+		/**
+		 * Start of an expression for concatenation of one, two or more operands.
+		 *
+		 * If one of the operands has NULL value, the result of concat() is also null.
+		 *
+		 * If operands of non-string values are involved, their values are implicitly converted to string.
+		 *
+		 * @return
+		 */
 		IConcatFunctionArgument<T, ET> concat();
 
 		IFunctionLastArgument<T, ET> absOf();
