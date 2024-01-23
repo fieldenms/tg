@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.validation;
 
 import org.junit.Test;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.sample.domain.TgAuthoriser;
 import ua.com.fielden.platform.sample.domain.TgOriginator;
 import ua.com.fielden.platform.sample.domain.TgOriginatorDetails;
@@ -10,6 +11,8 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.validation.KeyMemberChangeValidator.KEY_MEMBER_CHANGE_MESSAGE;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 
 public class KeyMemberChangeValidationTest extends AbstractDaoTestCase {
 
@@ -18,9 +21,11 @@ public class KeyMemberChangeValidationTest extends AbstractDaoTestCase {
         final TgPerson person1 = co$(TgPerson.class).findByKey("Joe");
 
         person1.setKey("Donald");
-        MetaProperty<String> keyMp = person1.getProperty("key");
-        assertTrue(keyMp.isValid());
-        assertNotNull(keyMp.getFirstWarning());
+        final MetaProperty<String> mpKey = person1.getProperty("key");
+        assertTrue(mpKey.isValid());
+        final Warning warning = mpKey.getFirstWarning();
+        assertNotNull(warning);
+        assertTrue(warning.getMessage().startsWith(KEY_MEMBER_CHANGE_MESSAGE.formatted(getEntityTitleAndDesc(TgPerson.class).getKey())));
         assertEquals("Donald", person1.getKey());
     }
 
@@ -33,9 +38,11 @@ public class KeyMemberChangeValidationTest extends AbstractDaoTestCase {
 
         final TgPerson person2 = save(new_(TgPerson.class, "Richard").setActive(true));
         originator1.setPerson(person2);
-        MetaProperty<TgPerson> personMp = originator1.getProperty("person");
-        assertTrue(personMp.isValid());
-        assertNotNull(personMp.getFirstWarning());
+        MetaProperty<TgPerson> mpPerson = originator1.getProperty("person");
+        assertTrue(mpPerson.isValid());
+        final Warning warning = mpPerson.getFirstWarning();
+        assertNotNull(warning);
+        assertTrue(warning.getMessage().startsWith(KEY_MEMBER_CHANGE_MESSAGE.formatted(getEntityTitleAndDesc(TgOriginator.class).getKey())));
         assertTrue(EntityUtils.areEqual(person2, originator1.getPerson()));
     }
 
