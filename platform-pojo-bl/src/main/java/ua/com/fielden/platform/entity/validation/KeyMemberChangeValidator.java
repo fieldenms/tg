@@ -10,7 +10,6 @@ import ua.com.fielden.platform.types.tuples.T2;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 import static java.lang.Math.max;
@@ -21,7 +20,7 @@ import static ua.com.fielden.platform.error.Result.*;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.MessageUtils.singleOrPlural;
-
+import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
 
 /**
  * A validator for key properties that produces a warning upon modification of the key's value.
@@ -50,16 +49,12 @@ public class KeyMemberChangeValidator extends AbstractBeforeChangeEventHandler<O
                 .setRefEntityId(entity.getId())
                 .setRefEntityType(entity.getType().getName()));
 
-        final List<TypeLevelHierarchyEntry> typeEntries = refChy.getGeneratedHierarchy().stream()
-                .map(x -> {
-                    if (x instanceof ReferenceHierarchyEntry entry && ReferenceHierarchyLevel.REFERENCED_BY == entry.getHierarchyLevel())
-                        return entry;
-                    return null;
-                })
-                .filter(Objects::nonNull)
+        final List<TypeLevelHierarchyEntry> typeEntries =
+                refChy.getGeneratedHierarchy().stream()
+                .mapMulti(typeFilter(ReferenceHierarchyEntry.class))
+                .filter(entry -> ReferenceHierarchyLevel.REFERENCED_BY == entry.getHierarchyLevel())
                 .flatMap(entry -> entry.getChildren().stream())
-                .map(entry -> entry instanceof TypeLevelHierarchyEntry typeEntry ? typeEntry : null)
-                .filter(Objects::nonNull)
+                .mapMulti(typeFilter(TypeLevelHierarchyEntry.class))
                 .toList();
 
         if (typeEntries.isEmpty()) {
