@@ -111,6 +111,11 @@
                     <configuration>
                         <release>21</release>
                         <encoding>UTF-8</encoding>
+                        <compilerArgs>
+                            <arg>-J-Xss10M</arg>
+                            <arg>-J-Xms128m</arg>
+                            <arg>-J-Xmx2048m</arg>
+                        </compilerArgs>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -165,6 +170,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
+                <version>3.3.0</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
@@ -217,10 +223,12 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
+                    <!--suppress UnresolvedMavenProperty -->
                     <forkCount>${fork.count}</forkCount>
                     <reuseForks>true</reuseForks>
                     <argLine>-server -Xms256m -Xmx1024m</argLine>
                     <systemPropertyVariables>
+                        <!--suppress UnresolvedMavenProperty -->
                         <databaseUri>${databaseUri.prefix}${surefire.forkNumber}</databaseUri>
                         <loadDdlScriptFromFile>false</loadDdlScriptFromFile>
                         <saveDdlScriptToFile>false</saveDdlScriptToFile>
@@ -231,7 +239,9 @@
 
             <plugin>
                 <!-- explicitly define maven-deploy-plugin after other to force exec order -->
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-deploy-plugin</artifactId>
+                <version>3.1.1</version>
                 <executions>
                     <execution>
                         <id>deploy</id>
