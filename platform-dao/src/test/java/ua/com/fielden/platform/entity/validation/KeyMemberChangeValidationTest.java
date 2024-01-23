@@ -25,7 +25,7 @@ public class KeyMemberChangeValidationTest extends AbstractDaoTestCase {
         assertTrue(mpKey.isValid());
         final Warning warning = mpKey.getFirstWarning();
         assertNotNull(warning);
-        assertTrue(warning.getMessage().startsWith(KEY_MEMBER_CHANGE_MESSAGE.formatted(getEntityTitleAndDesc(TgPerson.class).getKey())));
+        assertTrue(warning.getMessage().startsWith(KEY_MEMBER_CHANGE_MESSAGE.formatted(getEntityTitleAndDesc(person1).getKey())));
         assertEquals("Donald", person1.getKey());
     }
 
@@ -42,7 +42,7 @@ public class KeyMemberChangeValidationTest extends AbstractDaoTestCase {
         assertTrue(mpPerson.isValid());
         final Warning warning = mpPerson.getFirstWarning();
         assertNotNull(warning);
-        assertTrue(warning.getMessage().startsWith(KEY_MEMBER_CHANGE_MESSAGE.formatted(getEntityTitleAndDesc(TgOriginator.class).getKey())));
+        assertTrue(warning.getMessage().startsWith(KEY_MEMBER_CHANGE_MESSAGE.formatted(getEntityTitleAndDesc(originator1).getKey())));
         assertTrue(EntityUtils.areEqual(person2, originator1.getPerson()));
     }
 
