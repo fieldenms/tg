@@ -219,6 +219,17 @@ public interface EntityQueryProgressiveInterfaces {
 		// built-in SQL functions
 		T now();
 
+		/**
+		 * Start of an expression for counting of the specified datepart boundaries crossed between the specified enddate and startdate.
+		 *
+		 * If enddate precedes startdate, the result will be negative.
+		 *
+		 * If some/all of the dates are NULL, the function result will also be NULL.
+		 *
+		 * The following dateparts are supported: seconds, minutes, hours, days, months, years.
+		 *
+		 * @return
+		 */
 		IDateDiffIntervalFunction<T, ET> count();
 
 		IFunctionLastArgument<T, ET> upperCase();
