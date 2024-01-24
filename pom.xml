@@ -118,6 +118,27 @@
                         </compilerArgs>
                     </configuration>
                 </plugin>
+                <!-- The problem described below seems to have been resolved. Keeping this description for posterity in case similar occurs again.
+
+                 The maven-source-plugin has been commented as it appears to get executed twice during
+                 `mvn deploy`, which causes uploads to GitHub to undergo upgrade as a resource cannot
+                 be overwritten, and uploading the same file with the same name and the same build
+                 timestamp causes this.  This behaviour might be fixed in maven 3.7 - see:
+                 https://issues.apache.org/jira/browse/MNG-5868 -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>3.3.0</version>
+                    <executions>
+                        <execution>
+                            <id>attach-sources</id>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
@@ -159,26 +180,6 @@
                 <configuration>
                     <encoding>UTF-8</encoding>
                 </configuration>
-            </plugin>
-            <!-- The problem described below seems to have been resolved. Keeping this description for posterity in case similar occurs again.
-
-                 The maven-source-plugin has been commented as it appears to get executed twice during
-                 `mvn deploy`, which causes uploads to GitHub to undergo upgrade as a resource cannot
-                 be overwritten, and uploading the same file with the same name and the same build
-                 timestamp causes this.  This behaviour might be fixed in maven 3.7 - see:
-                 https://issues.apache.org/jira/browse/MNG-5868 -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>3.3.0</version>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
