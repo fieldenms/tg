@@ -801,8 +801,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * Analyses the property definition to collect and instantiate all property validators.
      *
      * @param metaPropertyFactory
-     * @param field
-     * @param propertyType
+     * @param propField
+     * @param propType
      * @param isCollectional
      * @param validationAnnotations
      * @return map of validators
@@ -810,8 +810,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      */
     private Map<ValidationAnnotation, Map<IBeforeChangeEventHandler<?>, Result>> collectValidators(
             final IMetaPropertyFactory metaPropertyFactory,
-            final Field field,
-            final Class<?> propertyType,
+            final Field propField,
+            final Class<?> propType,
             final boolean isCollectional,
             final Set<Annotation> validationAnnotations)
             throws Exception
@@ -821,19 +821,19 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             // Get corresponding mutators to pick all specified validators in case of a collectional property there can be up to three mutators --
             // removeFrom[property name], addTo[property name] and set[property name]
             // The returned Set is mutable
-            final Set<Annotation> propValidationAnnots = extractValidationAnnotationForProperty(field, propertyType, isCollectional);
+            final Set<Annotation> propValidationAnnots = extractValidationAnnotationForProperty(propField, propType, isCollectional);
 
             // let's add implicit default validation as early as possible to @BeforeChange
             // consider "key" and key-members
-            if (AbstractEntity.KEY.equals(field.getName()) || field.isAnnotationPresent(CompositeKeyMember.class)) {
+            if (AbstractEntity.KEY.equals(propField.getName()) || propField.isAnnotationPresent(CompositeKeyMember.class)) {
                 final List<BeforeChange> keyBchs = new ArrayList<>();
 
                 // special validation of String-typed key or String-typed key-members
                 // applied on top of existing @BeforeChange validators, if any, but placed before the explicitly defined handlers
-                final var isStringTypedKey = AbstractEntity.KEY.equals(field.getName()) && String.class == this.getKeyType() ||
-                                             field.isAnnotationPresent(CompositeKeyMember.class) && String.class == field.getType();
+                final var isStringTypedKey = AbstractEntity.KEY.equals(propField.getName()) && String.class == this.getKeyType() ||
+                                             propField.isAnnotationPresent(CompositeKeyMember.class) && String.class == propField.getType();
                 if (isStringTypedKey) {
-                    final SkipDefaultStringKeyMemberValidation skipAnnot = field.getAnnotation(SkipDefaultStringKeyMemberValidation.class);
+                    final SkipDefaultStringKeyMemberValidation skipAnnot = propField.getAnnotation(SkipDefaultStringKeyMemberValidation.class);
                     final Set<Class<? extends IBeforeChangeEventHandler<String>>> allDefaultStringValidators = linkedSetOf(SkipDefaultStringKeyMemberValidation.ALL_DEFAULT_STRING_KEY_VALIDATORS);
                     allDefaultStringValidators.removeAll(skipAnnot == null ? emptySet() : setOf(skipAnnot.value()));
 
@@ -860,7 +860,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
 
             for (final Annotation annotation : propValidationAnnots) {
                 // if property factory cannot instantiate a validator for the specified annotation then null is returned
-                final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(annotation, this, field.getName(), propertyType);
+                final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(annotation, this, propField.getName(), propType);
                 if (annotationValidators.length > 0) {
                     final Map<IBeforeChangeEventHandler<?>, Result> handlersAndResults = new LinkedHashMap<>();
                     for (final IBeforeChangeEventHandler<?> handler : annotationValidators) {
@@ -872,12 +872,12 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             }
 
             // now let's see if we need to add EntityExists validation
-            if (!validators.containsKey(ValidationAnnotation.ENTITY_EXISTS) && (isEntityExistsValidationApplicable(getType(), field))) {
-                final EntityExists eeAnnotation = entityExistsAnnotation(getType(), field.getName(),  (Class<? extends AbstractEntity<?>>) propertyType);
-                final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(eeAnnotation, this, field.getName(), propertyType);
+            if (!validators.containsKey(ValidationAnnotation.ENTITY_EXISTS) && (isEntityExistsValidationApplicable(getType(), propField))) {
+                final EntityExists eeAnnotation = entityExistsAnnotation(getType(), propField.getName(),  (Class<? extends AbstractEntity<?>>) propType);
+                final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(eeAnnotation, this, propField.getName(), propType);
 
                 if (annotationValidators.length != 1) {
-                    throw new EntityDefinitionException(format("Unexpexted number of @EntityExists annotations (expected 1, but actual %s) for property [%s] in entity [%s].", annotationValidators.length, field.getType(), getType().getName()));
+                    throw new EntityDefinitionException(format("Unexpexted number of @EntityExists annotations (expected 1, but actual %s) for property [%s] in entity [%s].", annotationValidators.length, propField.getType(), getType().getName()));
                 }
 
                 propValidationAnnots.add(eeAnnotation);
@@ -892,7 +892,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
 
             return validators;
         } catch (final Exception ex) {
-            logger.error(format("Exception during collection of validators for property [%s] in entity type [%s].", field.getName(), getType().getSimpleName()), ex);
+            logger.error(format("Exception during collection of validators for property [%s] in entity type [%s].", propField.getName(), getType().getSimpleName()), ex);
             throw ex;
         }
     }
