@@ -830,8 +830,9 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
 
                 // special validation of String-typed key or String-typed key-members
                 // applied on top of existing @BeforeChange validators, if any, but placed before the explicitly defined handlers
-                if (AbstractEntity.KEY.equals(field.getName()) && String.class == this.getKeyType() ||
-                        field.isAnnotationPresent(CompositeKeyMember.class) && String.class == field.getType()) {
+                final var isStringTypedKey = AbstractEntity.KEY.equals(field.getName()) && String.class == this.getKeyType() ||
+                                             field.isAnnotationPresent(CompositeKeyMember.class) && String.class == field.getType();
+                if (isStringTypedKey) {
                     final SkipDefaultStringKeyMemberValidation skipAnnot = field.getAnnotation(SkipDefaultStringKeyMemberValidation.class);
                     final Set<Class<? extends IBeforeChangeEventHandler<String>>> allDefaultStringValidators = linkedSetOf(SkipDefaultStringKeyMemberValidation.ALL_DEFAULT_STRING_KEY_VALIDATORS);
                     allDefaultStringValidators.removeAll(skipAnnot == null ? emptySet() : setOf(skipAnnot.value()));
