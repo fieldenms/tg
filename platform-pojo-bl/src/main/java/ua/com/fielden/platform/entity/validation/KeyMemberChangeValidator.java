@@ -17,6 +17,7 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.rightPad;
 import static ua.com.fielden.platform.error.Result.*;
+import static ua.com.fielden.platform.ref_hierarchy.IReferenceHierarchy.ERR_ENTITY_HAS_NO_REFERENCES;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.MessageUtils.singleOrPlural;
@@ -44,13 +45,21 @@ public class KeyMemberChangeValidator extends AbstractBeforeChangeEventHandler<O
         }
 
         final IReferenceHierarchy coReferenceHierarchy = co(ReferenceHierarchy.class);
-        final var refChy = coReferenceHierarchy.save(coReferenceHierarchy.new_()
+        final ReferenceHierarchy refChy = coReferenceHierarchy.new_()
                 .setLoadedHierarchyLevel(ReferenceHierarchyLevel.REFERENCE_BY_INSTANCE)
                 .setRefEntityId(entity.getId())
-                .setRefEntityType(entity.getType().getName()));
+                .setRefEntityType(entity.getType().getName());
+        final ReferenceHierarchy savedRefChy;
+        try {
+            savedRefChy = coReferenceHierarchy.save(refChy);
+        } catch (final Result result) {
+            if (!result.isSuccessful() && ERR_ENTITY_HAS_NO_REFERENCES.equals(result.getMessage())) {
+                return successful(newValue);
+            }
+            throw result;
+        }
 
-        final List<TypeLevelHierarchyEntry> typeEntries =
-                refChy.getGeneratedHierarchy().stream()
+        final List<TypeLevelHierarchyEntry> typeEntries = savedRefChy.getGeneratedHierarchy().stream()
                 .mapMulti(typeFilter(ReferenceHierarchyEntry.class))
                 .filter(entry -> ReferenceHierarchyLevel.REFERENCED_BY == entry.getHierarchyLevel())
                 .flatMap(entry -> entry.getChildren().stream())

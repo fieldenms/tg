@@ -101,7 +101,7 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
         final List<ReferenceLevelHierarchyEntry> references = generateReferences(entity);
         final List<TypeLevelHierarchyEntry> types = generateTypeLevelHierarchy(entity);
         if (references.isEmpty() && types.isEmpty()) {
-            throw failure("This entity has no references.");
+            throw failure(ERR_ENTITY_HAS_NO_REFERENCES);
         }
         final List<ReferenceHierarchyEntry> res = new ArrayList<>();
         if (!references.isEmpty()) {
