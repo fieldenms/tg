@@ -220,7 +220,7 @@ public interface EntityQueryProgressiveInterfaces {
 		T now();
 
 		/**
-		 * Start of an expression for counting of the specified datepart boundaries crossed between the specified enddate and startdate.
+		 * Start of an expression for counting of the specified datepart boundaries crossed between the specified enddate and startdate (e.g., there is 1 year crossed between 2024/01/01 00:00:00 and 2023/12/31 59:59:59).
 		 *
 		 * If enddate precedes startdate, the result will be negative.
 		 *
