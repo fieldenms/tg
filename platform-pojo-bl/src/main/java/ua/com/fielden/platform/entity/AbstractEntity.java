@@ -826,7 +826,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             // let's add implicit default validation as early as possible to @BeforeChange
             // consider "key" and key-members
             if (AbstractEntity.KEY.equals(propField.getName()) || propField.isAnnotationPresent(CompositeKeyMember.class)) {
-                final List<BeforeChange> keyBchs = new ArrayList<>();
+                final List<BeforeChange> bcForKeyProp = new ArrayList<>();
 
                 // special validation of String-typed key or String-typed key-members
                 // applied on top of existing @BeforeChange validators, if any, but placed before the explicitly defined handlers
@@ -841,20 +841,20 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
                         final Handler[] handlers = allDefaultStringValidators.stream()
                                 .map(bce -> new HandlerAnnotation(bce).newInstance())
                                 .toArray(Handler[]::new);
-                        keyBchs.add(BeforeChangeAnnotation.newInstance(handlers));
+                        bcForKeyProp.add(BeforeChangeAnnotation.newInstance(handlers));
                     }
                 }
 
                 // declared @BeforeChange, if exists
                 removeFirst(propValidationAnnots, at -> at.annotationType() == BeforeChange.class)
-                        .ifPresent(bch -> keyBchs.add((BeforeChange) bch));
+                        .ifPresent(bch -> bcForKeyProp.add((BeforeChange) bch));
 
                 if (isPersistent()) {
-                    keyBchs.add(BeforeChangeAnnotation.newInstance(new HandlerAnnotation(KeyMemberChangeValidator.class).newInstance()));
+                    bcForKeyProp.add(BeforeChangeAnnotation.newInstance(new HandlerAnnotation(KeyMemberChangeValidator.class).newInstance()));
                 }
 
-                if (!keyBchs.isEmpty()) {
-                    propValidationAnnots.add(BeforeChangeAnnotation.merge(keyBchs.toArray(BeforeChange[]::new)));
+                if (!bcForKeyProp.isEmpty()) {
+                    propValidationAnnots.add(BeforeChangeAnnotation.merge(bcForKeyProp.toArray(BeforeChange[]::new)));
                 }
             }
 
