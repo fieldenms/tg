@@ -68,13 +68,8 @@ import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesir
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreModifiedPropertiesHolderFrom;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -731,6 +726,8 @@ public class CriteriaResource extends AbstractWebResource {
 
             //Enhance entities with values defined with consumer in each dynamic property.
             processedEntities = enhanceResultEntitiesWithDynamicPropertyValues(processedEntities, resPropsWithContext);
+            //Enhance rendering hints with styles for each dynamic column.
+            processedEntities = enhanceResultEntitiesWithDynamicPropertyRenderingHints(processedEntities, resPropsWithContext, (List) pair.getKey().get("renderingHints"));
 
             final ArrayList<Object> list = new ArrayList<>();
             list.add(isRunning ? previouslyRunCriteriaEntity : null);
@@ -773,6 +770,29 @@ public class CriteriaResource extends AbstractWebResource {
                 final Collection<? extends AbstractEntity<?>> collection = ((AbstractEntity<?>) entity).get(resPropWithContext.getKey().propName.get());
                 collection.forEach(e -> resPropWithContext.getKey().entityPreProcessor.get().accept(e, resPropWithContext.getValue()));
             });
+            return entity;
+        });
+    }
+
+    private Stream<AbstractEntity<?>> enhanceResultEntitiesWithDynamicPropertyRenderingHints(Stream<AbstractEntity<?>> stream, List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext, List<Object> renderingHints) {
+        final AtomicInteger entityCount = new AtomicInteger(0);
+        return stream.map(entity -> {
+            final int idx = entityCount.getAndIncrement();
+            final Object entityRendHints;
+            if (renderingHints.size() <= idx) {
+                entityRendHints = new HashMap<String, Object>();
+                renderingHints.add(entityRendHints);
+            } else {
+                entityRendHints = renderingHints.get(idx);
+            }
+            if (entityRendHints instanceof Map) {
+                resPropsWithContext.forEach(resPropWithContext -> {
+                    final Collection<? extends AbstractEntity<?>> collection = ((AbstractEntity<?>) entity).get(resPropWithContext.getKey().propName.get());
+                    resPropWithContext.getKey().renderingHintsProvider.ifPresent(hintProvider -> {
+                        ((Map)entityRendHints).putAll((Map)hintProvider.apply(collection, resPropWithContext.getValue()));
+                    });
+                });
+            }
             return entity;
         });
     }
