@@ -153,20 +153,20 @@ import ua.com.fielden.platform.utils.EntityUtils;
  * class PoItemKey implements Comparable[PoItemKey] {
  * 	 &#064;Override public int hashCode() {
  * 		return getPurchaseOrder().hashCode() * 23 + getNumber().hashCode() * 13;
- * 	}
+ *    }
  * 	 &#064;Override public boolean equals(final Object obj) {
  * 		...
  * 		final PoItemKey cmpTo = (PoItemKey) obj;
  * 		return getPurchaseOrder().equals(cmpTo.getPurchaseOrder()) &amp;&amp;
  *                     getNumber().equals(cmpTo.getNumber());
- * 	}
+ *    }
  * 	 &#064;Override public int compareTo(final PoItemKey cmpTo) {
  *              if (getPurchaseOrder().equals(cmpTo.getPurchaseOrder())) {
  *                 return getNumber().compareTo(cmpTo.getNumber());
  *              }  else {
  *                 return getPurchaseOrder().compareTo(cmpTo.getPurchaseOrder());
  *              }
- * 	}
+ *    }
  *      ...
  * }
  * </pre>
@@ -189,7 +189,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
  * An instance of {@link IMetaPropertyFactory} is responsible for instantiation of validators, which implement {@link IBeforeChangeEventHandler} interface.
  * <p>
  * In order for validators to perform validation upon an attempt to set a property value, setters should be intercepted.
- * Intercepter {@link ValidationMutatorInterceptor} was implemented specifically to handle validation of values being passed into setters.
+ * Intercepter {@link ObservableMutatorInterceptor} was implemented specifically to handle validation of values being passed into setters.
  * Its implementation uses validators associated with property during meta-property instantiation.
  *
  * However, entity instance should be created with Guice intercepter provided with a module configured to bind this intercepter.
@@ -201,7 +201,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
  *
  * <h3>Property mutators</h3>
  * The <i>property</i> specification as defined in JavaBeans does not cover fully the needs identified by our team for working with business entities where properties have loosely coupled validation logic and change observation.
- * Also, the approach taken in JavaBeans does not provide the possibility to follow [http://en.wikipedia.org/wiki/Fluent_interface fluent interface] programming approach.
+ * Also, the approach taken in JavaBeans does not provide the possibility to follow <a href="http://en.wikipedia.org/wiki/Fluent_interface">fluent interface</a> programming approach.
  * Thus, Trident Genesis introduces its own notion of property, property mutators and accessors.
  * <p>
  * <p>
@@ -221,7 +221,6 @@ import ua.com.fielden.platform.utils.EntityUtils;
  *   <li>Mutator for a simple property -- a method with name '''set[property]''' and one parameter matching the type of the field representing the property.
  *
  *       It may and usually should be annotated with {@link Observable} to ensure observation of the property change. And may have a number of validation annotations.
- *       Please note that mutator with at least one validation annotation should also be annotated with {@link ValidationRequired} -- this is enforced by the platform and failure to comply results in early runtime exception.
  *   </li>
  *   <li>Mutators for a collectional property -- there are three possible mutators recognised by TG:
  *       <ul>
@@ -1022,7 +1021,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * Processed BCE and ACE declarations in order to instantiate event handlers.
      *
      * @param field
-     * @param entityType
      * @return
      */
     private static List<Annotation> extractFieldBeforeChangeAnnotations(final Field field) {
@@ -1038,7 +1036,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * Looks for {@link Unique} annotation.
      *
      * @param field
-     * @param entityType
      * @return
      */
     private static List<Annotation> extractFieldUniqueAnnotation(final Field field) {
