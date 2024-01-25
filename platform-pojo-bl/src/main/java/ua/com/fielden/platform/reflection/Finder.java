@@ -687,6 +687,11 @@ public class Finder {
         return field.getName().equals(AbstractEntity.KEY) || field.isAnnotationPresent(CompositeKeyMember.class);
     }
 
+    public static boolean isKeyOfType(final AbstractEntity<?> entity, final Field field, final Class<?> type) {
+        return AbstractEntity.KEY.equals(field.getName()) && type.equals(entity.getKeyType()) ||
+                field.isAnnotationPresent(CompositeKeyMember.class) && type.equals(field.getType());
+    }
+
     /**
      * Returns a stream of fields (including private, protected and public) annotated with the specified annotation. This method processes the whole class hierarchy.
      *

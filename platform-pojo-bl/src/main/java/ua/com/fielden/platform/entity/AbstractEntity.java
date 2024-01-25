@@ -23,6 +23,8 @@ import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.EntityMetadata.entityExistsAnnotation;
 import static ua.com.fielden.platform.reflection.EntityMetadata.isEntityExistsValidationApplicable;
+import static ua.com.fielden.platform.reflection.Finder.isKey;
+import static ua.com.fielden.platform.reflection.Finder.isKeyOfType;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isNumeric;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.utils.EntityUtils.isHyperlink;
@@ -825,14 +827,12 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
 
             // let's add implicit default validation as early as possible to @BeforeChange
             // consider "key" and key-members
-            if (AbstractEntity.KEY.equals(propField.getName()) || propField.isAnnotationPresent(CompositeKeyMember.class)) {
+            if (isKey(propField)) {
                 final List<BeforeChange> bcForKeyProp = new ArrayList<>();
 
                 // special validation of String-typed key or String-typed key-members
                 // applied on top of existing @BeforeChange validators, if any, but placed before the explicitly defined handlers
-                final var isStringTypedKey = AbstractEntity.KEY.equals(propField.getName()) && String.class == this.getKeyType() ||
-                                             propField.isAnnotationPresent(CompositeKeyMember.class) && String.class == propField.getType();
-                if (isStringTypedKey) {
+                if (isKeyOfType(this, propField, String.class)) {
                     final SkipDefaultStringKeyMemberValidation skipAnnot = propField.getAnnotation(SkipDefaultStringKeyMemberValidation.class);
                     final Set<Class<? extends IBeforeChangeEventHandler<String>>> allDefaultStringValidators = linkedSetOf(SkipDefaultStringKeyMemberValidation.ALL_DEFAULT_STRING_KEY_VALIDATORS);
                     allDefaultStringValidators.removeAll(skipAnnot == null ? emptySet() : setOf(skipAnnot.value()));
