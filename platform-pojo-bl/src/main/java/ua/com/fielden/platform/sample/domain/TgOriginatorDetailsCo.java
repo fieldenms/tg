@@ -10,7 +10,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
  * @author Developers
  *
  */
-public interface ITgOriginatorDetails extends IEntityDao<TgOriginatorDetails> {
+public interface TgOriginatorDetailsCo extends IEntityDao<TgOriginatorDetails> {
 
     IFetchProvider<TgOriginatorDetails> FETCH_PROVIDER = EntityUtils.fetch(TgOriginatorDetails.class)
             .with("originator", "comment");

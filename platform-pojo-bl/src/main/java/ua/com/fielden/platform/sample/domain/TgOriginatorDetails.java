@@ -6,7 +6,7 @@ import ua.com.fielden.platform.entity.annotation.*;
 
 @KeyType(DynamicEntityKey.class)
 @KeyTitle("Originator Details")
-@CompanionObject(ITgOriginatorDetails.class)
+@CompanionObject(TgOriginatorDetailsCo.class)
 @MapEntityTo
 public class TgOriginatorDetails extends ActivatableAbstractEntity<DynamicEntityKey> {
 
