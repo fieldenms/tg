@@ -667,7 +667,7 @@ public class Finder {
         for (final Field field : wholeHierarchyProperties) {
             if (!fieldNames.contains(field.getName())) {
                 fieldNames.add(field.getName());
-                if (isKey(field)) {
+                if (isKeyOrKeyMember(field)) {
                     keyProps.add(field);
                 } else {
                     properties.add(field);
@@ -683,13 +683,8 @@ public class Finder {
         return propertiesWithKeys;
     }
 
-    public static boolean isKey(final Field field) {
-        return field.getName().equals(AbstractEntity.KEY) || field.isAnnotationPresent(CompositeKeyMember.class);
-    }
-
-    public static boolean isKeyOfType(final AbstractEntity<?> entity, final Field field, final Class<?> type) {
-        return AbstractEntity.KEY.equals(field.getName()) && type.equals(entity.getKeyType()) ||
-                field.isAnnotationPresent(CompositeKeyMember.class) && type.equals(field.getType());
+    public static boolean isKeyOrKeyMember(final Field field) {
+        return AbstractEntity.KEY.equals(field.getName()) || field.isAnnotationPresent(CompositeKeyMember.class);
     }
 
     /**

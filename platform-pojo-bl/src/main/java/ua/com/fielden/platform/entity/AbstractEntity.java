@@ -13,7 +13,6 @@ import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_SCALE
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_TRAILING_ZEROS;
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.COLLECTIONAL_PROP_MISSING_LINK_MSG;
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.COLLECTIONAL_PROP_MISSING_TYPE_MSG;
-import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_ONE2ONE_ASSOCIATION_MSG;
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_FOR_PRECITION_AND_SCALE_MSG;
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_OF_NUMERIC_PARAMS_MSG;
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_OF_PARAM_LENGTH_MSG;
@@ -23,15 +22,13 @@ import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.EntityMetadata.entityExistsAnnotation;
 import static ua.com.fielden.platform.reflection.EntityMetadata.isEntityExistsValidationApplicable;
-import static ua.com.fielden.platform.reflection.Finder.isKey;
-import static ua.com.fielden.platform.reflection.Finder.isKeyOfType;
+import static ua.com.fielden.platform.reflection.Finder.isKeyOrKeyMember;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isNumeric;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.utils.EntityUtils.isHyperlink;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.removeFirst;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
-import static ua.com.fielden.platform.utils.EntityUtils.isHyperlink;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 
 import java.lang.annotation.Annotation;
@@ -47,7 +44,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -827,12 +823,12 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
 
             // let's add implicit default validation as early as possible to @BeforeChange
             // consider "key" and key-members
-            if (isKey(propField)) {
+            if (isKeyOrKeyMember(propField)) {
                 final List<BeforeChange> bcForKeyProp = new ArrayList<>();
 
                 // special validation of String-typed key or String-typed key-members
                 // applied on top of existing @BeforeChange validators, if any, but placed before the explicitly defined handlers
-                if (isKeyOfType(this, propField, String.class)) {
+                if (String.class.equals(propField.getType()) || String.class.equals(this.getKeyType())) {
                     final SkipDefaultStringKeyMemberValidation skipAnnot = propField.getAnnotation(SkipDefaultStringKeyMemberValidation.class);
                     final Set<Class<? extends IBeforeChangeEventHandler<String>>> allDefaultStringValidators = linkedSetOf(SkipDefaultStringKeyMemberValidation.ALL_DEFAULT_STRING_KEY_VALIDATORS);
                     allDefaultStringValidators.removeAll(skipAnnot == null ? emptySet() : setOf(skipAnnot.value()));
