@@ -17,6 +17,7 @@ import static ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchyLevel.REFE
 import static ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchyLevel.TYPE;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 
 import java.lang.reflect.Field;
@@ -50,6 +51,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 /**
@@ -98,19 +100,7 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
     }
 
     private List<ReferenceHierarchyEntry> generateReferenceGroup(final ReferenceHierarchy entity) {
-        final List<ReferenceLevelHierarchyEntry> references = generateReferences(entity);
-        final List<TypeLevelHierarchyEntry> types = generateTypeLevelHierarchy(entity);
-        if (references.isEmpty() && types.isEmpty()) {
-            throw failure(ERR_ENTITY_HAS_NO_REFERENCES);
-        }
-        final List<ReferenceHierarchyEntry> res = new ArrayList<>();
-        if (!references.isEmpty()) {
-            res.add(createReferenceGroup(references));
-        }
-        if (!types.isEmpty()) {
-            res.add(createReferencedByGroup(types));
-        }
-        return res;
+        return listOf(createReferenceGroup(generateReferences(entity)), createReferencedByGroup(generateTypeLevelHierarchy(entity)));
     }
 
     private ReferenceHierarchyEntry createReferencedByGroup(final List<TypeLevelHierarchyEntry> types) {
