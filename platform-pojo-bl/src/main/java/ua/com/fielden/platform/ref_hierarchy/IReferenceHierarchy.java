@@ -10,6 +10,4 @@ import ua.com.fielden.platform.dao.IEntityDao;
  */
 public interface IReferenceHierarchy extends IEntityDao<ReferenceHierarchy> {
 
-    String ERR_ENTITY_HAS_NO_REFERENCES = "This entity has no references.";
-
 }

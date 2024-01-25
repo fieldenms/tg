@@ -17,7 +17,6 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.rightPad;
 import static ua.com.fielden.platform.error.Result.*;
-import static ua.com.fielden.platform.ref_hierarchy.IReferenceHierarchy.ERR_ENTITY_HAS_NO_REFERENCES;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.MessageUtils.singleOrPlural;
@@ -26,7 +25,8 @@ import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
 /**
  * A validator for key properties that produces a warning upon modification of the key's value.
  * Applicable only to persisted entities (i.e., saved instances of persistent entity types).
- * Intended to be used on reference (aka master) data. The rationale is to make the originator of the change aware
+ * <p>
+ * It is intended to be used in application to the reference (aka master) data. The rationale is to make the originator of the change aware
  * of the consequences -- namely, that their change will affect all the data referencing the entity being changed.
  * <p>
  * This validator is applied by default. Therefore, it is not required to specify it in property definitions explicitly.
@@ -45,21 +45,12 @@ public class KeyMemberChangeValidator extends AbstractBeforeChangeEventHandler<O
         }
 
         final IReferenceHierarchy coReferenceHierarchy = co(ReferenceHierarchy.class);
-        final ReferenceHierarchy refChy = coReferenceHierarchy.new_()
+        final var refChy = coReferenceHierarchy.save(coReferenceHierarchy.new_()
                 .setLoadedHierarchyLevel(ReferenceHierarchyLevel.REFERENCE_BY_INSTANCE)
                 .setRefEntityId(entity.getId())
-                .setRefEntityType(entity.getType().getName());
-        final ReferenceHierarchy savedRefChy;
-        try {
-            savedRefChy = coReferenceHierarchy.save(refChy);
-        } catch (final Result result) {
-            if (!result.isSuccessful() && ERR_ENTITY_HAS_NO_REFERENCES.equals(result.getMessage())) {
-                return successful(newValue);
-            }
-            throw result;
-        }
+                .setRefEntityType(entity.getType().getName()));
 
-        final List<TypeLevelHierarchyEntry> typeEntries = savedRefChy.getGeneratedHierarchy().stream()
+        final List<TypeLevelHierarchyEntry> typeEntries = refChy.getGeneratedHierarchy().stream()
                 .mapMulti(typeFilter(ReferenceHierarchyEntry.class))
                 .filter(entry -> ReferenceHierarchyLevel.REFERENCED_BY == entry.getHierarchyLevel())
                 .flatMap(entry -> entry.getChildren().stream())
@@ -83,7 +74,7 @@ public class KeyMemberChangeValidator extends AbstractBeforeChangeEventHandler<O
                     final Class<? extends AbstractEntity<?>> entityType;
                     try {
                         entityType = (Class<? extends AbstractEntity<?>>) Class.forName(entry.getEntityType());
-                    } catch (ClassNotFoundException|ClassCastException e) {
+                    } catch (final ClassNotFoundException|ClassCastException e) {
                         throw failure(new EntityException("Entity type [%s] could not be found.".formatted(entry.getEntityType())));
                     }
                     return makeEntryMsg(getEntityTitleAndDesc(entityType).getKey(), entry.getNumberOfEntities().toString(), lengths);
