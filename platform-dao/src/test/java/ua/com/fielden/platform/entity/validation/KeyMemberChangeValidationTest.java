@@ -17,6 +17,30 @@ import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitl
 public class KeyMemberChangeValidationTest extends AbstractDaoTestCase {
 
     @Test
+    public void no_warning_is_issued_upon_changing_property_key_for_persisted_entity_without_references() {
+        final TgPerson richard = save(new_(TgPerson.class, "Richard").setActive(true));
+        richard.setKey("Roberto");
+        final MetaProperty<String> mpKey = richard.getProperty("key");
+        assertTrue(mpKey.isValid());
+        assertFalse(mpKey.hasWarnings());
+        assertEquals("Roberto", richard.getKey());
+    }
+
+    @Test
+    public void no_warning_is_issued_upon_changing_key_member_for_persisted_entity_without_references() {
+        final TgPerson richard = save(new_(TgPerson.class, "Richard").setActive(true));
+        final TgOriginator richardAsOriginator = save(new_(TgOriginator.class).setActive(true).setPerson(richard));
+
+        final TgPerson joe = co$(TgPerson.class).findByKey("Joe");
+        richardAsOriginator.setPerson(joe);
+
+        final MetaProperty<String> mpPerson = richardAsOriginator.getProperty("person");
+        assertTrue(mpPerson.isValid());
+        assertFalse(mpPerson.hasWarnings());
+        assertEquals(joe, richardAsOriginator.getPerson());
+    }
+
+    @Test
     public void warning_is_issued_upon_changing_property_key_in_persisted_entity_that_is_referenced() {
         final TgPerson person1 = co$(TgPerson.class).findByKey("Joe");
 
@@ -38,7 +62,7 @@ public class KeyMemberChangeValidationTest extends AbstractDaoTestCase {
 
         final TgPerson person2 = save(new_(TgPerson.class, "Richard").setActive(true));
         originator1.setPerson(person2);
-        MetaProperty<TgPerson> mpPerson = originator1.getProperty("person");
+        final MetaProperty<TgPerson> mpPerson = originator1.getProperty("person");
         assertTrue(mpPerson.isValid());
         final Warning warning = mpPerson.getFirstWarning();
         assertNotNull(warning);
@@ -50,10 +74,10 @@ public class KeyMemberChangeValidationTest extends AbstractDaoTestCase {
     protected void populateDomain() {
         super.populateDomain();
 
-        final TgPerson person1 = save(new_(TgPerson.class, "Joe").setActive(true));
-        save(new_(TgAuthoriser.class).setActive(false).setPerson(person1));
-        final TgOriginator originator1 = save(new_(TgOriginator.class).setActive(true).setPerson(person1));
-        save(new_(TgOriginatorDetails.class).setOriginator(originator1).setActive(true));
+        final TgPerson joe = save(new_(TgPerson.class, "Joe").setActive(true));
+        save(new_(TgAuthoriser.class).setActive(false).setPerson(joe));
+        final TgOriginator originator1 = save(new_(TgOriginator.class).setActive(true).setPerson(joe));
+        save(new_(TgOriginatorDetails.class).setOriginator(originator1).setActive(true)); // a reference to originator
     }
 
 }

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.sample.domain;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
@@ -56,4 +57,10 @@ public class TgPerson extends ActivatableAbstractEntity<String> {
         return this;
     }
 
+    @Override
+    @Observable
+    public TgPerson setKey(final String key) {
+        super.setKey(key);
+        return this;
+    }
 }
