@@ -5,10 +5,11 @@ import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
 import ua.com.fielden.platform.entity.meta.AbstractMetaPropertyFactory;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
-import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
-import ua.com.fielden.platform.entity.validation.HappyValidator;
-import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
+import ua.com.fielden.platform.entity.validation.*;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
+import ua.com.fielden.platform.ref_hierarchy.IReferenceHierarchy;
+import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchy;
+import ua.com.fielden.platform.sample.domain.ReferenceHierarchyDaoStub;
 import ua.com.fielden.platform.test.ioc.DatesForTesting;
 
 import com.google.inject.Injector;
@@ -52,6 +53,9 @@ public class EntityModuleWithPropertyFactory extends EntityModule {
             }
 
         });
+
+        bind(IReferenceHierarchy.class).to(ReferenceHierarchyDaoStub.class);
+        bind(ICanBuildReferenceHierarchyForEntityValidator.class).to(CanBuildReferenceHierarchyForEveryEntityValidator.class);
     }
 
     public DomainValidationConfig getDomainValidationConfig() {

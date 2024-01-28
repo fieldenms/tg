@@ -61,6 +61,7 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5WithSummaries;
 import ua.com.fielden.platform.sample.domain.TgOriginator;
+import ua.com.fielden.platform.sample.domain.TgOriginatorDetails;
 import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.sample.domain.TgPersonName;
 import ua.com.fielden.platform.sample.domain.TgPublishedYearly;
@@ -192,6 +193,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgCategory.class);
         add(TgAuthoriser.class);
         add(TgOriginator.class);
+        add(TgOriginatorDetails.class);
         add(TgEntityWithComplexSummaries.class);
         add(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class);
         add(TgCollectionalSerialisationParent.class);

@@ -227,6 +227,14 @@ public class TitlesDescsGetter {
     }
 
     /**
+     * Returns {@link Pair} with key set to entity title and value set to entity description. Traverses <code>entityType</code> hierarchy bottom-up in search of the specified
+     * entity title and description.
+     */
+    public static Pair<String, String> getEntityTitleAndDesc(final AbstractEntity<?> entity) {
+        return getEntityTitleAndDesc(entity.getType());
+    }
+
+    /**
      * Provides default values of title and description for entity. (e.g. "VehicleFinDetails.class" => "Vehicle Fin Details" and "Vehicle Fin Details entity")
      */
     public static Pair<String, String> getDefaultEntityTitleAndDesc(final Class<? extends AbstractEntity<?>> klass) {
