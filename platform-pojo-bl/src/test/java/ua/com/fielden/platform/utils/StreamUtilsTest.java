@@ -8,11 +8,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.Pair.pair;
-import static ua.com.fielden.platform.utils.StreamUtils.ERR_FIRST_STREAM_ELEM_CANNOT_BE_NULL;
-import static ua.com.fielden.platform.utils.StreamUtils.head_and_tail;
-import static ua.com.fielden.platform.utils.StreamUtils.stopAfter;
-import static ua.com.fielden.platform.utils.StreamUtils.takeWhile;
-import static ua.com.fielden.platform.utils.StreamUtils.zip;
+import static ua.com.fielden.platform.utils.StreamUtils.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -252,5 +248,12 @@ public class StreamUtilsTest {
         assertEquals(0, windowedAsList.size());
     }
 
+    @Test
+    public void typeFilter_preserves_only_instances_of_the_given_type_in_a_stream() {
+        assertEquals(List.of(1), Stream.of("one", 1).mapMulti(typeFilter(Integer.class)).toList());
+        assertEquals(List.of(1), Stream.of("one", 1).mapMulti(typeFilter(Number.class)).toList());
+        assertEquals(List.of("one", 1), Stream.of("one", 1).mapMulti(typeFilter(Object.class)).toList());
+        assertEquals(List.of(), Stream.of("one", 1).mapMulti(typeFilter(List.class)).toList());
+    }
 
 }
