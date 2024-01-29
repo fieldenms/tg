@@ -711,14 +711,14 @@ public class EntityUtils {
      *
      * @param <T>
      * @param entityType to be analysed.
-     * @return either a field corresponding to {@code model_} or {@code models_}, or {@code null}. 
+     * @return either a field corresponding to {@code model_} or {@code models_}, or {@code null}.
      */
     public static <T extends AbstractEntity<?>> Field findSyntheticModelFieldFor(final Class<T> entityType) {
         Class<?> klass = entityType;
         while (klass != AbstractEntity.class) { // iterated thought hierarchy
             for (final Field field : klass.getDeclaredFields()) {
                 if (isStatic(field.getModifiers())) {
-                    if ("model_".equals(field.getName()) && EntityResultQueryModel.class.equals(field.getType()) || 
+                    if ("model_".equals(field.getName()) && EntityResultQueryModel.class.equals(field.getType()) ||
                         "models_".equals(field.getName()) && List.class.equals(field.getType())) {
                         return field;
                     }
@@ -1365,7 +1365,10 @@ public class EntityUtils {
             final String pathToSubprop = parentContextPath.map(path -> path + PROPERTY_SPLITTER + keyMember.getName()).orElse(keyMember.getName());
             final Class<?> propType = PropertyTypeDeterminator.determinePropertyType(entityType, keyMember.getName());
             if (!isPersistedEntityType(propType)) {
-                result.add(pathToSubprop);
+                // Let's explicitly expand money types property path with its single subproperty "amount".
+                // This will facilitate the usage of the keyPaths(..) method within KeyPropertyExtractor logic, which in its turn requires explicit "amount" to be specified.
+                final var enhancedPathToSubprop = propType.equals(Money.class) ? pathToSubprop + ".amount" : pathToSubprop;
+                result.add(enhancedPathToSubprop);
             } else {
                 result.addAll(keyPaths((Class<? extends AbstractEntity<?>>) propType, pathToSubprop));
             }
