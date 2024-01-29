@@ -44,7 +44,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Optional.empty;
 import static java.util.stream.Collectors.*;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.*;
-import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.isAbstract;
+import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.TYPE_ELEMENT_FILTER;
 
 /**
  * Annotation processor that generates meta-models for domain entities.
@@ -125,10 +125,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
      */
     private Stream<MetaModelConcept> collectEntitiesForMetaModelGeneration(final RoundEnvironment roundEnv, final Optional<MetaModelsElement> maybeMetaModelsElement) {
         final Set<TypeElement> metaModeledElements = roundEnv.getRootElements().stream()
-                .<TypeElement>mapMulti((elt, sink) -> {
-                    if (elt instanceof TypeElement te)
-                        sink.accept(te);
-                })
+                .mapMulti(TYPE_ELEMENT_FILTER)
                 .filter(entityFinder::isEntityThatNeedsMetaModel)
                 .collect(toSet());
 

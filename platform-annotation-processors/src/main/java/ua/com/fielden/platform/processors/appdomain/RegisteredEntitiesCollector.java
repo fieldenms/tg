@@ -10,7 +10,6 @@ import ua.com.fielden.platform.utils.Pair;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ErrorType;
 import javax.tools.Diagnostic;
@@ -27,6 +26,7 @@ import static java.util.stream.Collectors.toSet;
 import static javax.tools.Diagnostic.Kind.NOTE;
 import static ua.com.fielden.platform.processors.ProcessorOptionDescriptor.parseOptionFrom;
 import static ua.com.fielden.platform.processors.appdomain.EntityRegistrationUtils.isRegisterable;
+import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.TYPE_ELEMENT_FILTER;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.isGeneric;
 
 public final class RegisteredEntitiesCollector {
@@ -200,8 +200,7 @@ public final class RegisteredEntitiesCollector {
     public Optional<ApplicationDomainElement> findApplicationDomainInRound(final RoundEnvironment roundEnv) {
         final String appDomainFqn = ApplicationDomainProcessor.getApplicationDomainFqn(procEnv.getOptions());
         return roundEnv.getRootElements().stream()
-                .filter(elt -> elt.getKind() == ElementKind.CLASS)
-                .map(elt -> (TypeElement) elt)
+                .mapMulti(TYPE_ELEMENT_FILTER)
                 .filter(elt -> elt.getQualifiedName().contentEquals(appDomainFqn))
                 .findFirst()
                 .map(elt -> new ApplicationDomainElement(elt, entityFinder));
@@ -214,8 +213,7 @@ public final class RegisteredEntitiesCollector {
     public Optional<ExtendApplicationDomainMirror> findApplicationDomainExtensionInRound(final RoundEnvironment roundEnv) {
         final String fqn = parseOptionFrom(procEnv.getOptions(), ApplicationDomainProcessor.APP_DOMAIN_EXTENSION_OPT_DESC);
         return roundEnv.getRootElements().stream()
-                .filter(elt -> elt instanceof TypeElement)
-                .map(elt -> (TypeElement) elt)
+                .mapMulti(TYPE_ELEMENT_FILTER)
                 .filter(elt -> elt.getQualifiedName().contentEquals(fqn))
                 .findFirst()
                 .map(elt -> ExtendApplicationDomainMirror.fromAnnotatedOrEmpty(elt, elementFinder));
