@@ -13,7 +13,6 @@ import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_SCALE
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_TRAILING_ZEROS;
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.COLLECTIONAL_PROP_MISSING_LINK_MSG;
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.COLLECTIONAL_PROP_MISSING_TYPE_MSG;
-import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_ONE2ONE_ASSOCIATION_MSG;
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_FOR_PRECITION_AND_SCALE_MSG;
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_OF_NUMERIC_PARAMS_MSG;
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_OF_PARAM_LENGTH_MSG;
@@ -23,13 +22,13 @@ import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.EntityMetadata.entityExistsAnnotation;
 import static ua.com.fielden.platform.reflection.EntityMetadata.isEntityExistsValidationApplicable;
+import static ua.com.fielden.platform.reflection.Finder.isKeyOrKeyMember;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isNumeric;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.utils.EntityUtils.isHyperlink;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.removeFirst;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
-import static ua.com.fielden.platform.utils.EntityUtils.isHyperlink;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 
 import java.lang.annotation.Annotation;
@@ -45,7 +44,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -92,6 +90,7 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.ICustomValidator;
+import ua.com.fielden.platform.entity.validation.KeyMemberChangeValidator;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
@@ -152,20 +151,20 @@ import ua.com.fielden.platform.utils.EntityUtils;
  * class PoItemKey implements Comparable[PoItemKey] {
  * 	 &#064;Override public int hashCode() {
  * 		return getPurchaseOrder().hashCode() * 23 + getNumber().hashCode() * 13;
- * 	}
+ *    }
  * 	 &#064;Override public boolean equals(final Object obj) {
  * 		...
  * 		final PoItemKey cmpTo = (PoItemKey) obj;
  * 		return getPurchaseOrder().equals(cmpTo.getPurchaseOrder()) &amp;&amp;
  *                     getNumber().equals(cmpTo.getNumber());
- * 	}
+ *    }
  * 	 &#064;Override public int compareTo(final PoItemKey cmpTo) {
  *              if (getPurchaseOrder().equals(cmpTo.getPurchaseOrder())) {
  *                 return getNumber().compareTo(cmpTo.getNumber());
  *              }  else {
  *                 return getPurchaseOrder().compareTo(cmpTo.getPurchaseOrder());
  *              }
- * 	}
+ *    }
  *      ...
  * }
  * </pre>
@@ -188,7 +187,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
  * An instance of {@link IMetaPropertyFactory} is responsible for instantiation of validators, which implement {@link IBeforeChangeEventHandler} interface.
  * <p>
  * In order for validators to perform validation upon an attempt to set a property value, setters should be intercepted.
- * Intercepter {@link ValidationMutatorInterceptor} was implemented specifically to handle validation of values being passed into setters.
+ * Intercepter {@link ObservableMutatorInterceptor} was implemented specifically to handle validation of values being passed into setters.
  * Its implementation uses validators associated with property during meta-property instantiation.
  *
  * However, entity instance should be created with Guice intercepter provided with a module configured to bind this intercepter.
@@ -200,7 +199,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
  *
  * <h3>Property mutators</h3>
  * The <i>property</i> specification as defined in JavaBeans does not cover fully the needs identified by our team for working with business entities where properties have loosely coupled validation logic and change observation.
- * Also, the approach taken in JavaBeans does not provide the possibility to follow [http://en.wikipedia.org/wiki/Fluent_interface fluent interface] programming approach.
+ * Also, the approach taken in JavaBeans does not provide the possibility to follow <a href="http://en.wikipedia.org/wiki/Fluent_interface">fluent interface</a> programming approach.
  * Thus, Trident Genesis introduces its own notion of property, property mutators and accessors.
  * <p>
  * <p>
@@ -220,7 +219,6 @@ import ua.com.fielden.platform.utils.EntityUtils;
  *   <li>Mutator for a simple property -- a method with name '''set[property]''' and one parameter matching the type of the field representing the property.
  *
  *       It may and usually should be annotated with {@link Observable} to ensure observation of the property change. And may have a number of validation annotations.
- *       Please note that mutator with at least one validation annotation should also be annotated with {@link ValidationRequired} -- this is enforced by the platform and failure to comply results in early runtime exception.
  *   </li>
  *   <li>Mutators for a collectional property -- there are three possible mutators recognised by TG:
  *       <ul>
@@ -801,8 +799,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * Analyses the property definition to collect and instantiate all property validators.
      *
      * @param metaPropertyFactory
-     * @param field
-     * @param propertyType
+     * @param propField
+     * @param propType
      * @param isCollectional
      * @param validationAnnotations
      * @return map of validators
@@ -810,8 +808,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      */
     private Map<ValidationAnnotation, Map<IBeforeChangeEventHandler<?>, Result>> collectValidators(
             final IMetaPropertyFactory metaPropertyFactory,
-            final Field field,
-            final Class<?> propertyType,
+            final Field propField,
+            final Class<?> propType,
             final boolean isCollectional,
             final Set<Annotation> validationAnnotations)
             throws Exception
@@ -821,32 +819,44 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             // Get corresponding mutators to pick all specified validators in case of a collectional property there can be up to three mutators --
             // removeFrom[property name], addTo[property name] and set[property name]
             // The returned Set is mutable
-            final Set<Annotation> propValidationAnnots = extractValidationAnnotationForProperty(field, propertyType, isCollectional);
+            final Set<Annotation> propValidationAnnots = extractValidationAnnotationForProperty(propField, propType, isCollectional);
 
             // let's add implicit default validation as early as possible to @BeforeChange
-            // special validation of String-typed key or String-typed key-members
-            // applied on top of existing @BeforeChange validators, if any, but placed before the explicitly defined handlers
-            if (AbstractEntity.KEY.equals(field.getName()) && String.class == this.getKeyType() || // the type of property "key" cannot be determined from field, hence a separate check
-                field.isAnnotationPresent(CompositeKeyMember.class) && String.class == field.getType()) {
-                final SkipDefaultStringKeyMemberValidation skipAnnot = field.getAnnotation(SkipDefaultStringKeyMemberValidation.class);
-                final Set<Class<? extends IBeforeChangeEventHandler<String>>> allDefaultStringValidators = linkedSetOf(SkipDefaultStringKeyMemberValidation.ALL_DEFAULT_STRING_KEY_VALIDATORS);
-                allDefaultStringValidators.removeAll(skipAnnot == null ? emptySet() : setOf(skipAnnot.value()));
-                if (!allDefaultStringValidators.isEmpty()) {
-                    final Handler[] handlers = allDefaultStringValidators.stream()
-                            .map(bce -> new HandlerAnnotation(bce).newInstance())
-                            .toArray(Handler[]::new);
-                    final BeforeChange implicitBch = BeforeChangeAnnotation.newInstance(handlers);
-    
-                    // merge with declared @BeforeChange, if exists
-                    final Optional<Annotation> maybeDeclaredBch = removeFirst(propValidationAnnots, at -> at.annotationType() == BeforeChange.class);
-                    final BeforeChange bch = maybeDeclaredBch.map(annotation -> BeforeChangeAnnotation.merge(implicitBch, (BeforeChange) annotation)).orElse(implicitBch);
-                    propValidationAnnots.add(bch);
+            // consider "key" and key-members
+            if (isKeyOrKeyMember(propField)) {
+                final List<BeforeChange> bcForKeyProp = new ArrayList<>();
+
+                // special validation of String-typed key or String-typed key-members
+                // applied on top of existing @BeforeChange validators, if any, but placed before the explicitly defined handlers
+                if (String.class.equals(propField.getType()) || String.class.equals(this.getKeyType())) {
+                    final SkipDefaultStringKeyMemberValidation skipAnnot = propField.getAnnotation(SkipDefaultStringKeyMemberValidation.class);
+                    final Set<Class<? extends IBeforeChangeEventHandler<String>>> allDefaultStringValidators = linkedSetOf(SkipDefaultStringKeyMemberValidation.ALL_DEFAULT_STRING_KEY_VALIDATORS);
+                    allDefaultStringValidators.removeAll(skipAnnot == null ? emptySet() : setOf(skipAnnot.value()));
+
+                    if (!allDefaultStringValidators.isEmpty()) {
+                        final Handler[] handlers = allDefaultStringValidators.stream()
+                                .map(bce -> new HandlerAnnotation(bce).newInstance())
+                                .toArray(Handler[]::new);
+                        bcForKeyProp.add(BeforeChangeAnnotation.newInstance(handlers));
+                    }
+                }
+
+                // declared @BeforeChange, if exists
+                removeFirst(propValidationAnnots, at -> at.annotationType() == BeforeChange.class)
+                        .ifPresent(bch -> bcForKeyProp.add((BeforeChange) bch));
+
+                if (isPersistent()) {
+                    bcForKeyProp.add(BeforeChangeAnnotation.newInstance(new HandlerAnnotation(KeyMemberChangeValidator.class).newInstance()));
+                }
+
+                if (!bcForKeyProp.isEmpty()) {
+                    propValidationAnnots.add(BeforeChangeAnnotation.merge(bcForKeyProp.toArray(BeforeChange[]::new)));
                 }
             }
 
             for (final Annotation annotation : propValidationAnnots) {
                 // if property factory cannot instantiate a validator for the specified annotation then null is returned
-                final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(annotation, this, field.getName(), propertyType);
+                final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(annotation, this, propField.getName(), propType);
                 if (annotationValidators.length > 0) {
                     final Map<IBeforeChangeEventHandler<?>, Result> handlersAndResults = new LinkedHashMap<>();
                     for (final IBeforeChangeEventHandler<?> handler : annotationValidators) {
@@ -858,12 +868,12 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             }
 
             // now let's see if we need to add EntityExists validation
-            if (!validators.containsKey(ValidationAnnotation.ENTITY_EXISTS) && (isEntityExistsValidationApplicable(getType(), field))) {
-                final EntityExists eeAnnotation = entityExistsAnnotation(getType(), field.getName(),  (Class<? extends AbstractEntity<?>>) propertyType);
-                final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(eeAnnotation, this, field.getName(), propertyType);
+            if (!validators.containsKey(ValidationAnnotation.ENTITY_EXISTS) && (isEntityExistsValidationApplicable(getType(), propField))) {
+                final EntityExists eeAnnotation = entityExistsAnnotation(getType(), propField.getName(),  (Class<? extends AbstractEntity<?>>) propType);
+                final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(eeAnnotation, this, propField.getName(), propType);
 
                 if (annotationValidators.length != 1) {
-                    throw new EntityDefinitionException(format("Unexpexted number of @EntityExists annotations (expected 1, but actual %s) for property [%s] in entity [%s].", annotationValidators.length, field.getType(), getType().getName()));
+                    throw new EntityDefinitionException(format("Unexpexted number of @EntityExists annotations (expected 1, but actual %s) for property [%s] in entity [%s].", annotationValidators.length, propField.getType(), getType().getName()));
                 }
 
                 propValidationAnnots.add(eeAnnotation);
@@ -878,7 +888,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
 
             return validators;
         } catch (final Exception ex) {
-            logger.error(format("Exception during collection of validators for property [%s] in entity type [%s].", field.getName(), getType().getSimpleName()), ex);
+            logger.error(format("Exception during collection of validators for property [%s] in entity type [%s].", propField.getName(), getType().getSimpleName()), ex);
             throw ex;
         }
     }
@@ -1008,7 +1018,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * Processed BCE and ACE declarations in order to instantiate event handlers.
      *
      * @param field
-     * @param entityType
      * @return
      */
     private static List<Annotation> extractFieldBeforeChangeAnnotations(final Field field) {
@@ -1024,7 +1033,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * Looks for {@link Unique} annotation.
      *
      * @param field
-     * @param entityType
      * @return
      */
     private static List<Annotation> extractFieldUniqueAnnotation(final Field field) {

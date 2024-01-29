@@ -235,17 +235,6 @@
         </resources>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <fork>true</fork>
-                    <compilerArguments>
-                        <!-- J>-Xss10M</J -->
-                        <!-- processor>br.com.sonner.infra.seguranca.SegurancaAnnotationProcessor</processor -->
-                    </compilerArguments>
-                </configuration>
-            </plugin>
-            <plugin>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>3.2.0</version>
                 <executions>
