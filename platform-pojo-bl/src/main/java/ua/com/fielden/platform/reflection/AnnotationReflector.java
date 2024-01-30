@@ -84,7 +84,7 @@ public final class AnnotationReflector {
     }
 
     /**
-     * Similar to {@link #getAnnotation(Class, Class)}, but instead of an actual annotation returns <code>true</code> if annotation is present, <code>false</code> otherwise.
+     * Similar to {@link #getAnnotationForClass(Class, Class)}, but instead of an actual annotation returns {@code true} if annotation is present, {@code false} otherwise.
      *
      * @param annotationType
      * @param forType

@@ -4,6 +4,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
@@ -22,7 +23,7 @@ import ua.com.fielden.platform.types.Money;
 @KeyType(DynamicEntityKey.class)
 @MapEntityTo
 @CompanionObject(ITgOrgUnit5.class)
-public class TgOrgUnit5 extends AbstractEntity<DynamicEntityKey> {
+public class TgOrgUnit5 extends AbstractPersistentEntity<DynamicEntityKey> {
 
     @IsProperty
     @Required
