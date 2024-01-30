@@ -3,10 +3,7 @@ package ua.com.fielden.platform.entity.validation;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Warning;
-import ua.com.fielden.platform.sample.domain.TgAuthoriser;
-import ua.com.fielden.platform.sample.domain.TgOriginator;
-import ua.com.fielden.platform.sample.domain.TgOriginatorDetails;
-import ua.com.fielden.platform.sample.domain.TgPerson;
+import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -15,6 +12,18 @@ import static ua.com.fielden.platform.entity.validation.KeyMemberChangeValidator
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 
 public class KeyMemberChangeValidationTest extends AbstractDaoTestCase {
+
+    @Test
+    public void key_change_validation_is_skipped_for_entities_annotated_with_SkipKeyChangeValidation() {
+        final TgOrgUnit1 orgUnit1 = save(new_(TgOrgUnit1.class, "ORG1"));
+        final TgOrgUnit2 orgUnit2 = save(new_(TgOrgUnit2.class).setParent(orgUnit1).setName("ORG2"));
+
+        orgUnit1.setKey(orgUnit1.getKey() + " change");
+
+        final MetaProperty<String> mpKey = orgUnit1.getProperty("key");
+        assertTrue(mpKey.isValid());
+        assertFalse(mpKey.hasWarnings());
+    }
 
     @Test
     public void no_warning_is_issued_upon_changing_property_key_for_persisted_entity_without_references() {

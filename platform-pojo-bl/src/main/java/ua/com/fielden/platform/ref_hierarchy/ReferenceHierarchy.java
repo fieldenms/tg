@@ -246,5 +246,5 @@ public class ReferenceHierarchy extends AbstractFunctionalEntityWithCentreContex
 
     public String getEntityType() {
         return entityType;
-    }
+}
 }

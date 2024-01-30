@@ -330,7 +330,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * Checks whether annotation identified by parameter <code>key</code> is amongst applicable validation annotations.
      *
      * @param applicableValidationAnnotations
-     * @param validationAnnotationEnumValue
+     * @param validationAnnotationType
      * @return
      */
     private boolean isValidatorApplicable(final Set<Annotation> applicableValidationAnnotations, final Class<? extends Annotation> validationAnnotationType) {
