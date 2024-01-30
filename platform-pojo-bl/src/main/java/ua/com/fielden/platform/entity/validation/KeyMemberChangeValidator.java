@@ -45,12 +45,16 @@ public class KeyMemberChangeValidator extends AbstractBeforeChangeEventHandler<O
         }
 
         final IReferenceHierarchy coReferenceHierarchy = co(ReferenceHierarchy.class);
-        final var refChy = coReferenceHierarchy.save(coReferenceHierarchy.new_()
-                .setLoadedHierarchyLevel(ReferenceHierarchyLevel.REFERENCE_BY_INSTANCE)
-                .setRefEntityId(entity.getId())
-                .setRefEntityType(entity.getType().getName()));
+        final var refChy = coReferenceHierarchy.new_();
+        refChy.beginInitialising();
+        refChy.setLoadedHierarchyLevel(ReferenceHierarchyLevel.REFERENCE_BY_INSTANCE);
+        refChy.setRefEntityId(entity.getId());
+        refChy.setRefEntityType(entity.getType().getName());
+        refChy.endInitialising();
 
-        final List<TypeLevelHierarchyEntry> typeEntries = refChy.getGeneratedHierarchy().stream()
+        final var savedRefChy = coReferenceHierarchy.save(refChy);
+
+        final List<TypeLevelHierarchyEntry> typeEntries = savedRefChy.getGeneratedHierarchy().stream()
                 .mapMulti(typeFilter(ReferenceHierarchyEntry.class))
                 .filter(entry -> ReferenceHierarchyLevel.REFERENCED_BY == entry.getHierarchyLevel())
                 .flatMap(entry -> entry.getChildren().stream())
