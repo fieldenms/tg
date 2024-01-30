@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.sample.domain;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
@@ -15,7 +16,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyType(DynamicEntityKey.class)
 @MapEntityTo
 @CompanionObject(ITgOrgUnit4.class)
-public class TgOrgUnit4 extends AbstractEntity<DynamicEntityKey> {
+public class TgOrgUnit4 extends AbstractPersistentEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
 
     @IsProperty

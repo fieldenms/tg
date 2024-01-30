@@ -20,6 +20,7 @@ import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionExceptio
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithCritOnly;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresentForClass;
 import static ua.com.fielden.platform.reflection.EntityMetadata.entityExistsAnnotation;
 import static ua.com.fielden.platform.reflection.EntityMetadata.isEntityExistsValidationApplicable;
 import static ua.com.fielden.platform.reflection.Finder.isKeyOrKeyMember;
@@ -52,27 +53,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
 
-import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
-import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
-import ua.com.fielden.platform.entity.annotation.Dependent;
-import ua.com.fielden.platform.entity.annotation.DescReadonly;
-import ua.com.fielden.platform.entity.annotation.DescRequired;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.Invisible;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyReadonly;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Readonly;
-import ua.com.fielden.platform.entity.annotation.Required;
-import ua.com.fielden.platform.entity.annotation.SkipDefaultStringKeyMemberValidation;
-import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.annotation.Unique;
-import ua.com.fielden.platform.entity.annotation.UpperCase;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.factory.BeforeChangeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
@@ -636,6 +617,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
 
         final List<Field> keyMembers = Finder.getKeyMembers(getType());
         final Set<Field> fieldsForProperties = fieldsForProperties();
+        final boolean isEntityPersistent = isPersistent();
+        final boolean shouldNotSkipKeyChangeValidation = !isAnnotationPresentForClass(SkipKeyChangeValidation.class, this.getClass());
         for (final Field field : fieldsForProperties) { // for each field that represents a property
             final String propName = field.getName();
 
@@ -665,8 +648,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
                     }
 
                     // if setter is annotated then try to instantiate specified validator
-                    final Set<Annotation> declatedValidationAnnotations = new HashSet<>();
-                    final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler<?>, Result>> validators = collectValidators(metaPropertyFactory, field, type, isCollectional, declatedValidationAnnotations);
+                    final var declatedValidationAnnotations = new HashSet<Annotation>();
+                    final var validators = collectValidators(metaPropertyFactory, field, type, isCollectional, isEntityPersistent, shouldNotSkipKeyChangeValidation, declatedValidationAnnotations);
                     // create ACE handler
                     final IAfterChangeEventHandler<?> definer = metaPropertyFactory.create(this, field);
                     // create meta-property
@@ -802,6 +785,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * @param propField
      * @param propType
      * @param isCollectional
+     * @param isEntityPersistent
+     * @param shouldNotSkipKeyChangeValidation
      * @param validationAnnotations
      * @return map of validators
      * @throws Exception
@@ -811,6 +796,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             final Field propField,
             final Class<?> propType,
             final boolean isCollectional,
+            final boolean isEntityPersistent,
+            final boolean shouldNotSkipKeyChangeValidation,
             final Set<Annotation> validationAnnotations)
             throws Exception
     {
@@ -845,7 +832,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
                 removeFirst(propValidationAnnots, at -> at.annotationType() == BeforeChange.class)
                         .ifPresent(bch -> bcForKeyProp.add((BeforeChange) bch));
 
-                if (isPersistent()) {
+                if (isEntityPersistent && shouldNotSkipKeyChangeValidation) {
                     bcForKeyProp.add(BeforeChangeAnnotation.newInstance(new HandlerAnnotation(KeyMemberChangeValidator.class).newInstance()));
                 }
 
@@ -903,17 +890,17 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     private void initProperty(final List<Field> keyMembers, final Field field, final MetaProperty<?> metaProperty) {
         if (KEY.equals(field.getName())) {
             metaProperty.setVisible(!(KEY.equals(field.getName()) && keyMembers.size() > 1)); // if entity is composite then "key" should be inactive
-            metaProperty.setEditable(!AnnotationReflector.isAnnotationPresentForClass(KeyReadonly.class, getType()));
+            metaProperty.setEditable(!isAnnotationPresentForClass(KeyReadonly.class, getType()));
             metaProperty.setRequired(true);
-            if (AnnotationReflector.isAnnotationPresentForClass(KeyTitle.class, getType())) {
+            if (isAnnotationPresentForClass(KeyTitle.class, getType())) {
                 final KeyTitle title = AnnotationReflector.getAnnotation(getType(), KeyTitle.class);
                 metaProperty.setTitle(title.value());
                 metaProperty.setDesc(StringUtils.isEmpty(title.desc()) ? title.value() : title.desc());
             }
         } else if (DESC.equals(field.getName())) {
-            metaProperty.setEditable(!AnnotationReflector.isAnnotationPresentForClass(DescReadonly.class, getType()));
-            metaProperty.setRequired(AnnotationReflector.isAnnotationPresentForClass(DescRequired.class, getType()));
-            if (AnnotationReflector.isAnnotationPresentForClass(DescTitle.class, getType())) {
+            metaProperty.setEditable(!isAnnotationPresentForClass(DescReadonly.class, getType()));
+            metaProperty.setRequired(isAnnotationPresentForClass(DescRequired.class, getType()));
+            if (isAnnotationPresentForClass(DescTitle.class, getType())) {
                 final DescTitle title = AnnotationReflector.getAnnotation(getType(), DescTitle.class);
                 metaProperty.setTitle(title.value());
                 metaProperty.setDesc(StringUtils.isEmpty(title.desc()) ? title.value() : title.desc());
