@@ -41,7 +41,7 @@ public class KeyMemberChangeValidator extends AbstractBeforeChangeEventHandler<O
     public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
         final AbstractEntity<?> entity = property.getEntity();
         if (!entity.isPersistent() || !entity.isPersisted()) {
-            return successful(newValue);
+            return successful();
         }
 
         final IReferenceHierarchy coReferenceHierarchy = co(ReferenceHierarchy.class);
@@ -62,7 +62,7 @@ public class KeyMemberChangeValidator extends AbstractBeforeChangeEventHandler<O
                 .toList();
 
         if (typeEntries.isEmpty()) {
-            return successful(newValue);
+            return successful();
         }
 
         final String entityTitle = getEntityTitleAndDesc(entity.getType()).getKey();
