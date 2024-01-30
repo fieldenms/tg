@@ -38,45 +38,81 @@ public class KeyMemberChangeValidationTest extends AbstractDaoTestCase {
     @Test
     public void no_warning_is_issued_upon_changing_key_member_for_persisted_entity_without_references() {
         final TgPerson richard = save(new_(TgPerson.class, "Richard").setActive(true));
-        final TgOriginator richardAsOriginator = save(new_(TgOriginator.class).setActive(true).setPerson(richard));
+        final TgOriginator originator = save(new_(TgOriginator.class).setActive(true).setPerson(richard));
 
         final TgPerson joe = co$(TgPerson.class).findByKey("Joe");
-        richardAsOriginator.setPerson(joe);
+        originator.setPerson(joe);
 
-        final MetaProperty<String> mpPerson = richardAsOriginator.getProperty("person");
+        final MetaProperty<String> mpPerson = originator.getProperty("person");
         assertTrue(mpPerson.isValid());
         assertFalse(mpPerson.hasWarnings());
-        assertEquals(joe, richardAsOriginator.getPerson());
+        assertEquals(joe, originator.getPerson());
     }
 
     @Test
     public void warning_is_issued_upon_changing_property_key_in_persisted_entity_that_is_referenced() {
-        final TgPerson person1 = co$(TgPerson.class).findByKey("Joe");
+        final TgPerson joe = co$(TgPerson.class).findByKey("Joe");
 
-        person1.setKey("Donald");
-        final MetaProperty<String> mpKey = person1.getProperty("key");
+        joe.setKey("Donald");
+        final MetaProperty<String> mpKey = joe.getProperty("key");
         assertTrue(mpKey.isValid());
         final Warning warning = mpKey.getFirstWarning();
         assertNotNull(warning);
-        assertTrue(warning.getMessage().startsWith(KEY_MEMBER_CHANGE_MESSAGE.formatted(getEntityTitleAndDesc(person1).getKey())));
-        assertEquals("Donald", person1.getKey());
+        assertTrue(warning.getMessage().startsWith(KEY_MEMBER_CHANGE_MESSAGE.formatted(getEntityTitleAndDesc(joe).getKey())));
+        assertEquals("Donald", joe.getKey());
+    }
+
+    @Test
+    public void warning_is_cleared_after_changing_key_back_to_original_value() {
+        final TgPerson joe = co$(TgPerson.class).findByKey("Joe");
+
+        final MetaProperty<String> mpKey = joe.getProperty("key");
+
+        joe.setKey("Donald"); // assign a different key
+        assertEquals("Donald", joe.getKey());
+        assertTrue(mpKey.isValid());
+        assertTrue(mpKey.hasWarnings());
+
+        joe.setKey("Joe"); // back to the original key value
+        assertEquals("Joe", joe.getKey());
+        assertTrue(mpKey.isValid());
+        assertFalse(mpKey.hasWarnings());
     }
 
     @Test
     public void warning_is_issued_upon_changing_key_member_in_persisted_entity_that_is_referenced() {
-        final TgPerson person1 = co$(TgPerson.class).findByKey("Joe");
-        assertNotNull(person1);
-        final TgOriginator originator1 = co$(TgOriginator.class).findByKey(person1);
-        assertNotNull(originator1);
+        final TgPerson joe = co$(TgPerson.class).findByKey("Joe");
+        assertNotNull(joe);
+        final TgOriginator originator = co$(TgOriginator.class).findByKey(joe);
+        assertNotNull(originator);
 
-        final TgPerson person2 = save(new_(TgPerson.class, "Richard").setActive(true));
-        originator1.setPerson(person2);
-        final MetaProperty<TgPerson> mpPerson = originator1.getProperty("person");
+        final TgPerson richard = save(new_(TgPerson.class, "Richard").setActive(true));
+        originator.setPerson(richard);
+        final MetaProperty<TgPerson> mpPerson = originator.getProperty("person");
         assertTrue(mpPerson.isValid());
         final Warning warning = mpPerson.getFirstWarning();
         assertNotNull(warning);
-        assertTrue(warning.getMessage().startsWith(KEY_MEMBER_CHANGE_MESSAGE.formatted(getEntityTitleAndDesc(originator1).getKey())));
-        assertTrue(EntityUtils.areEqual(person2, originator1.getPerson()));
+        assertTrue(warning.getMessage().startsWith(KEY_MEMBER_CHANGE_MESSAGE.formatted(getEntityTitleAndDesc(originator).getKey())));
+        assertTrue(EntityUtils.areEqual(richard, originator.getPerson()));
+    }
+
+    @Test
+    public void warning_is_cleared_after_changing_key_member_back_to_original_value() {
+        final TgPerson richard = save(new_(TgPerson.class, "Richard").setActive(true));
+        final TgPerson joe = co$(TgPerson.class).findByKey("Joe");
+        final TgOriginator originator = co$(TgOriginator.class).findByKey(joe);
+
+        final MetaProperty<TgPerson> mpPerson = originator.getProperty("person");
+
+        originator.setPerson(richard); // assign a different person
+        assertEquals(richard, originator.getPerson());
+        assertTrue(mpPerson.isValid());
+        assertTrue(mpPerson.hasWarnings());
+
+        originator.setPerson(joe); // back to the original value, which should remove the warning
+        assertEquals(joe, originator.getPerson());
+        assertTrue(mpPerson.isValid());
+        assertFalse(mpPerson.hasWarnings());
     }
 
     @Override
