@@ -7,6 +7,7 @@ import ua.com.fielden.platform.entity.meta.impl.AbstractBeforeChangeEventHandler
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ref_hierarchy.*;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
@@ -40,7 +41,7 @@ public class KeyMemberChangeValidator extends AbstractBeforeChangeEventHandler<O
     @Override
     public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
         final AbstractEntity<?> entity = property.getEntity();
-        if (!entity.isPersistent() || !entity.isPersisted()) {
+        if (!entity.isPersistent() || !entity.isPersisted() || EntityUtils.equalsEx(newValue, property.getOriginalValue())) {
             return successful();
         }
 
