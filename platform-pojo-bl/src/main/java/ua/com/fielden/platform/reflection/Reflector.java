@@ -83,7 +83,7 @@ public final class Reflector {
      * This is a helper method used to walk along class hierarchy in search of the specified method.
      *
      * @param startWithClass
-     * @param method
+     * @param methodName
      * @param arguments
      * @return
      * @throws NoSuchMethodException
@@ -161,7 +161,6 @@ public final class Reflector {
      * Returns constructor specified from {@code startWithClass} class.
      *
      * @param startWithClass
-     * @param methodName
      * @param arguments
      * @return
      * @throws NoSuchMethodException
@@ -235,7 +234,7 @@ public final class Reflector {
      * Depending on the type of the field, the getter may start not with ''get'' but with ''is''. This method tries to determine a correct getter.
      *
      * @param propertyName
-     * @param entity
+     * @param entityClass
      * @return
      * @throws Exception
      */
@@ -252,8 +251,7 @@ public final class Reflector {
     }
 
     /**
-     * Tries to obtain property setter for property, specified using dot-notation. Heavily uses
-     * {@link PropertyTypeDeterminator#determinePropertyTypeWithoutKeyTypeDetermination(Class, String)} to obtain penult property in dot-notation
+     * Tries to obtain property setter for property, specified using dot-notation.
      *
      * @param entityClass
      * @param dotNotationExp
@@ -530,7 +528,7 @@ public final class Reflector {
      * The notion of <code>retrievable</code> is different to <code>persistent</code> as it also includes calculated properties, which do get retrieved from a database. 
      * 
      * @param entity
-     * @param propName
+     * @param field
      * @return
      */
     public static boolean isPropertyRetrievable(final AbstractEntity<?> entity, final Field field) {

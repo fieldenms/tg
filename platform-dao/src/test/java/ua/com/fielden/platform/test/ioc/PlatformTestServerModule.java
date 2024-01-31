@@ -1,10 +1,5 @@
 package ua.com.fielden.platform.test.ioc;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.TimeUnit;
-
 import com.google.common.base.Ticker;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -12,7 +7,6 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
-
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -27,12 +21,7 @@ import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamic
 import ua.com.fielden.platform.ioc.BasicWebServerModule;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.sample.domain.*;
-import ua.com.fielden.platform.sample.domain.compound.ITgCompoundEntity;
-import ua.com.fielden.platform.sample.domain.compound.ITgCompoundEntityChild;
-import ua.com.fielden.platform.sample.domain.compound.ITgCompoundEntityDetail;
-import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityChildDao;
-import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityDao;
-import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityDetailDao;
+import ua.com.fielden.platform.sample.domain.compound.*;
 import ua.com.fielden.platform.security.annotations.SessionCache;
 import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
@@ -41,16 +30,14 @@ import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
-import ua.com.fielden.platform.test.entities.ComplexKeyEntityDao;
-import ua.com.fielden.platform.test.entities.CompositeEntityDao;
-import ua.com.fielden.platform.test.entities.CompositeEntityKeyDao;
-import ua.com.fielden.platform.test.entities.IComplexKeyEntity;
-import ua.com.fielden.platform.test.entities.ICompositeEntity;
-import ua.com.fielden.platform.test.entities.ICompositeEntityKey;
-import ua.com.fielden.platform.test.entities.TgEntityWithManyPropTypesCo;
-import ua.com.fielden.platform.test.entities.TgEntityWithManyPropTypesDao;
+import ua.com.fielden.platform.test.entities.*;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Serve IoC module for platform related testing.
@@ -120,6 +107,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(ITgVehicle.class).to(TgVehicleDao.class);
         bind(TgReVehicleWithHighPriceCo.class).to(TgReVehicleWithHighPriceDao.class);
         bind(TeNamedValuesVectorCo.class).to(TeNamedValuesVectorDao.class);
+        bind(TeProductPriceCo.class).to(TeProductPriceDao.class);
         bind(ITeVehicle.class).to(TeVehicleDao.class);
         bind(ITgWebApiEntity.class).to(TgWebApiEntityDao.class);
         bind(ITgWebApiEntitySyntheticSingle.class).to(TgWebApiEntitySyntheticSingleDao.class);
@@ -150,6 +138,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(ITgPerson.class).to(TgPersonDao.class);
         bind(ITgAuthoriser.class).to(TgAuthoriserDao.class);
         bind(ITgOriginator.class).to(TgOriginatorDao.class);
+        bind(TgOriginatorDetailsCo.class).to(TgOriginatorDetailsDao.class);
         bind(ITgDateTestEntity.class).to(TgDateTestEntityDao.class);
         bind(TgEntityWithManyPropTypesCo.class).to(TgEntityWithManyPropTypesDao.class);
         bind(IEntityOne.class).to(EntityOneDao.class);
@@ -198,7 +187,6 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         // for (final Class<? extends AbstractEntity<?>> entityType : domainTypes) {
         //     CompanionObjectAutobinder.bindCo(entityType, binder());
         // }
-
     }
 
     public static class TestSessionCacheBuilder implements Provider<Cache<String, UserSession>> {

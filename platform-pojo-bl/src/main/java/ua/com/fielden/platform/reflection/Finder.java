@@ -347,13 +347,13 @@ public class Finder {
      * Determines properties within the provided class to be used for a key. There are two cases: either entity uses a composite key or a single property <code>key</code> represent
      * a key.
      * <p>
-     * The implementation of this method is based on {@link #getFieldsAnnotatedWith(Class, Class)}, which traverses the whole class hierarchy. Thus, it supports correct
+     * The implementation of this method traverses the whole class hierarchy. Thus, it supports correct
      * determination of properties declared at different hierarchical levels constituting a part of the composite key.
      *
      * IMPORTANT: all key members for types are cached during application lifecycle. It greatly reduces computational complexity as there is no need to retrieve key members for
      * immutable {@link AbstractEntity}'s descendants.
      *
-     * @param klass
+     * @param type
      * @return
      */
     public static final List<Field> getKeyMembers(final Class<? extends AbstractEntity<?>> type) {
@@ -384,10 +384,10 @@ public class Finder {
      * Determines properties within the provided class to be used for a key. There are two cases: either entity uses a composite key or a single property <code>key</code> represent
      * a key.
      * <p>
-     * The implementation of this method is based on {@link #getFieldsAnnotatedWith(Class, Class)}, which traverses the whole class hierarchy. Thus, it supports correct
+     * The implementation of this method traverses the whole class hierarchy. Thus, it supports correct
      * determination of properties declared at different hierarchical levels constituting a part of the composite key.
      *
-     * @param klass
+     * @param type
      * @return
      */
     private static final List<Field> loadKeyMembers(final Class<? extends AbstractEntity<?>> type) {
@@ -560,7 +560,7 @@ public class Finder {
      * Searches through the owner type hierarchy for all fields of the type assignable to the provided field type.
      *
      * @param ownerType
-     * @param fieldType
+     * @param fieldTypes
      * @return list of found fields, which can be empty
      */
     public static List<Field> getFieldsOfSpecifiedTypes(final Class<?> ownerType, final List<Class<?>> fieldTypes) {
@@ -667,7 +667,7 @@ public class Finder {
         for (final Field field : wholeHierarchyProperties) {
             if (!fieldNames.contains(field.getName())) {
                 fieldNames.add(field.getName());
-                if (isKey(field)) {
+                if (isKeyOrKeyMember(field)) {
                     keyProps.add(field);
                 } else {
                     properties.add(field);
@@ -683,17 +683,17 @@ public class Finder {
         return propertiesWithKeys;
     }
 
-    public static boolean isKey(final Field field) {
-        return field.getName().equals(AbstractEntity.KEY) || field.isAnnotationPresent(CompositeKeyMember.class);
+    public static boolean isKeyOrKeyMember(final Field field) {
+        return AbstractEntity.KEY.equals(field.getName()) || field.isAnnotationPresent(CompositeKeyMember.class);
     }
 
     /**
      * Returns a stream of fields (including private, protected and public) annotated with the specified annotation. This method processes the whole class hierarchy.
      *
      * @param type
-     * @param annotation
-     * @param withUnion
-     *            - determines whether include union entitie's properties (i.e. common properties, union properties) or just simple union entity fields.
+     * @param withUnion - determines whether include union entitie's properties (i.e. common properties, union properties) or just simple union entity fields.
+     * @param annot
+     * @param annotations
      *
      * @return
      */
@@ -806,30 +806,31 @@ public class Finder {
     }
 
     /**
-     * Returns value of the field specified with property parameter.
+     * Returns a value of property identified by {@code propOrGetterName} for {@code entity}.
+     * As parameter {@code propOrGetterName} suggests, this method accepts either a property field name or the name of its getter method.
      *
-     * @param value
-     * @param property
+     * @param entity
+     * @param propOrGetterName
      * @return
      * @throws IllegalAccessException
      */
-    public static Object getPropertyValue(final AbstractEntity<?> entity, final String property) {
+    public static Object getPropertyValue(final AbstractEntity<?> entity, final String propOrGetterName) {
         final Object value;
-        if (!property.contains("()")) {
+        if (!propOrGetterName.contains("()")) {
             if (entity instanceof AbstractUnionEntity) {
-                value = getAbstractUnionEntityFieldValue((AbstractUnionEntity) entity, property);
+                value = getAbstractUnionEntityFieldValue((AbstractUnionEntity) entity, propOrGetterName);
             } else {
-                value = getFieldValue(getFieldByName(entity.getClass(), property), entity);
+                value = getFieldValue(getFieldByName(entity.getClass(), propOrGetterName), entity);
             }
         } else {
             try {
                 if (entity instanceof AbstractUnionEntity) {
-                    value = getAbstractUnionEntityMethodValue((AbstractUnionEntity) entity, property.substring(0, property.length() - 2));
+                    value = getAbstractUnionEntityMethodValue((AbstractUnionEntity) entity, propOrGetterName.substring(0, propOrGetterName.length() - 2));
                 } else {
-                    value = getMethodValue(Reflector.getMethod(entity.getClass(), property.substring(0, property.length() - 2)), entity);
+                    value = getMethodValue(Reflector.getMethod(entity.getClass(), propOrGetterName.substring(0, propOrGetterName.length() - 2)), entity);
                 }
             } catch (final NoSuchMethodException e) {
-                throw new IllegalArgumentException("Failed to locate parameterless method " + property + " in " + entity.getClass(), e);
+                throw new IllegalArgumentException("Failed to locate parameterless method " + propOrGetterName + " in " + entity.getClass(), e);
             }
         }
         return value;

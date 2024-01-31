@@ -23,6 +23,7 @@ import ua.com.fielden.platform.sample.domain.EntityWithUnionEntityWithSkipExists
 import ua.com.fielden.platform.sample.domain.TeAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TeFuelUsageByType;
 import ua.com.fielden.platform.sample.domain.TeNamedValuesVector;
+import ua.com.fielden.platform.sample.domain.TeProductPrice;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
 import ua.com.fielden.platform.sample.domain.TeVehicleFinDetails;
 import ua.com.fielden.platform.sample.domain.TeVehicleFuelUsage;
@@ -61,6 +62,7 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5WithSummaries;
 import ua.com.fielden.platform.sample.domain.TgOriginator;
+import ua.com.fielden.platform.sample.domain.TgOriginatorDetails;
 import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.sample.domain.TgPersonName;
 import ua.com.fielden.platform.sample.domain.TgPublishedYearly;
@@ -138,6 +140,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgVehicle.class);
         add(TgReVehicleWithHighPrice.class);
         add(TeNamedValuesVector.class);
+        add(TeProductPrice.class);
         add(TeVehicle.class);
         add(TgVehicleFinDetails.class);
         add(TgVehicleTechDetails.class);
@@ -192,6 +195,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgCategory.class);
         add(TgAuthoriser.class);
         add(TgOriginator.class);
+        add(TgOriginatorDetails.class);
         add(TgEntityWithComplexSummaries.class);
         add(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class);
         add(TgCollectionalSerialisationParent.class);
