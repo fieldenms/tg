@@ -149,7 +149,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  *
  */
 public class CriteriaResource extends AbstractWebResource {
-    private final static Logger logger = LogManager.getLogger(CriteriaResource.class);
+    private final static Logger LOGGER = LogManager.getLogger(CriteriaResource.class);
     private static final String CONFIG_COULD_NOT_BE_SHARED_WITH_BASE_USER = "No configuration can be shared with base users (%s).";
     private static final String LINK_CONFIG_COULD_NOT_BE_SHARED = "Link configurations cannot be shared.";
     private static final String CONFLICTING_TITLE_SUFFIX = " (shared%s)";
@@ -160,13 +160,15 @@ public class CriteriaResource extends AbstractWebResource {
                                                      + "Please tap <b>RUN</b> to apply the updated selection criteria.";
 
     /**
-     * Map for user+miType based locks for centre running. This is used to employ queue-based execution of run requests for the same user and centre (regardless of saveAsName).
+     * Map for user+miType based locks for centre running. It is used to emulate a queue for execution of run requests for the same user and centre (regardless of the {@code saveAsName} value).
      */
     private static final ConcurrentHashMap<T2<User, Class<? extends MiWithConfigurationSupport<?>>>, Lock> locks = new ConcurrentHashMap<>();
+
     /**
-     * Timeout in seconds to wait for running lock.
-     * It is envisaged to handle not less than ~10 concurrent waiting run requests with estimated running time as ~1 second.
-     * If timeout was not enough, running request will just be executed simultaneously, as it was originally before locking was employed.
+     * Timeout in seconds to wait for an active lock.
+     * It is expected that in practice there should less than 10 self-concurrent requests running for ~1 second each.
+     * If this timeout is in insufficient then instead of throwing an exception, a running request gets executed anyway (concurrently), as it was originally before the locking mechanism was introduced.
+     * Hypothetically specking such approach should be more appropriate from the user experience point of view.
      */
     private static final long RUNNING_LOCK_TIMEOUT = 10;
 
@@ -588,7 +590,7 @@ public class CriteriaResource extends AbstractWebResource {
     @Override
     public Representation put(final Representation envelope) {
         return handleUndesiredExceptions(getResponse(), () -> {
-            logger.debug("CRITERIA_RESOURCE: run started.");
+            LOGGER.debug("CRITERIA_RESOURCE: run started.");
             final Optional<String> saveAsName = extractSaveAsName(getRequest());
             user = userProvider.getUser();
             eccCompanion = companionFinder.find(EntityCentreConfig.class);
@@ -597,21 +599,10 @@ public class CriteriaResource extends AbstractWebResource {
             miType = centre.getMenuItemType();
 
             // obtain lock for current user and miType of the centre (disregard saveAsName as it is unlikely that self-concurrent running will occur for different configurations of the same centre)
-            final Lock lock = locks.computeIfAbsent(t2(user, miType), t2 -> new ReentrantLock()); // do it atomically; create Lock if not yet present
-            boolean lockAcquiredSucessfully;
-            try {
-                // try acquire exclusive Lock for running miType centre for concrete user;
-                // wait for the Lock until RUNNING_LOCK_TIMEOUT expires
-                lockAcquiredSucessfully = lock.tryLock(RUNNING_LOCK_TIMEOUT, SECONDS);
-            } catch (final InterruptedException interEx) {
-                // if for some reason thread was interrupted during Lock acquiring, just ignore that and continue simultaneous running (as it was before locking mechanism was employed);
-                // in future we may handle interruption differently, e.g. by stopping run execution
-                // in that case we should listen to interruption not only in 'tryLock' call, but also during run execution
-                lockAcquiredSucessfully = false;
-                logger.warn("Thread was interrupted during Lock acquirement. Continue simultaneous running for %s centre and user %s.".formatted(miType.getSimpleName(), user), interEx);
-            }
-            if (!lockAcquiredSucessfully) {
-                logger.info("Lock could not be acquired for %s seconds. Continue simultaneous running for %s centre and user %s.".formatted(RUNNING_LOCK_TIMEOUT, miType.getSimpleName(), user));
+            final Lock lock = locks.computeIfAbsent(t2(user, miType), t2 -> new ReentrantLock()); // create Lock if not yet present; atomic action
+            final boolean lockAcquired = tryLocking(lock);
+            if (!lockAcquired) {
+                LOGGER.info("The lock could not be acquired for [%s] seconds. Let's continue concurrent running of the [%s] centre and user [%s].".formatted(RUNNING_LOCK_TIMEOUT, miType.getSimpleName(), user));
             }
 
             try {
@@ -639,7 +630,7 @@ public class CriteriaResource extends AbstractWebResource {
 
                         // clear all surrogate centres except 'fresh', which requires special treatment
                         removeCentres(user, miType, device(), saveAsName, eccCompanion, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
-                        // it is necessary to make change to 'fresh' centre as atomic as possible (i.e. not captureDiffs + remove + createNew + applyDiffs + commit, but instead captureDiffsObject + commit)
+                        // it is necessary to make change to the 'fresh' centre as atomic as possible (i.e. not captureDiffs + remove + createNew + applyDiffs + commit, but instead captureDiffsObject + commit)
                         // this is necessary because self-concurrent running for the same user is possible
                         // commit newly constructed diff object into 'fresh' configuration and apply it against 'defaultCentre'
                         updatedFreshCentre = commitCentreDiffWithoutConflicts(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), defaultCentre, diff, null /* newDesc */, eccCompanion, mmiCompanion, companionFinder, ecc -> ecc.setRunAutomatically(true)); // auto-running of default configuration is in progress -- restore runAutomatically as true
@@ -653,7 +644,7 @@ public class CriteriaResource extends AbstractWebResource {
                     // There is a need to validate criteria entity with the check for 'required' properties. If it is not successful -- immediately return result without query running, fresh centre persistence, data generation etc.
                     final Result validationResult = freshCentreAppliedCriteriaEntity.isValid();
                     if (!validationResult.isSuccessful()) {
-                        logger.debug("CRITERIA_RESOURCE: run finished (validation failed).");
+                        LOGGER.debug("CRITERIA_RESOURCE: run finished (validation failed).");
                         final String staleCriteriaMessage = createStaleCriteriaMessage((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, critGenerator, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
                         return restUtil.rawListJsonRepresentation(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, user, updatedFreshCentre, new LinkedHashMap<>(), staleCriteriaMessage, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder));
                     }
@@ -684,7 +675,7 @@ public class CriteriaResource extends AbstractWebResource {
                     // otherwise, proceed with the request handling further to actually query the data
                     // in most cases, the generated and queried data would be represented by the same entity and, thus, the final query needs to be enhanced with user related filtering by property 'createdBy'
                     if (!generationResult.isSuccessful()) {
-                        logger.debug("CRITERIA_RESOURCE: run finished (generation failed).");
+                        LOGGER.debug("CRITERIA_RESOURCE: run finished (generation failed).");
                         final String staleCriteriaMessage = createStaleCriteriaMessage((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, critGenerator, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
                         final Result result = generationResult.copyWith(new ArrayList<>(Arrays.asList(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, user, updatedFreshCentre, new LinkedHashMap<>(), staleCriteriaMessage, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder))));
                         return restUtil.resultJSONRepresentation(result);
@@ -764,15 +755,35 @@ public class CriteriaResource extends AbstractWebResource {
 
                 // NOTE: the following line can be the example how 'criteria running' server errors manifest to the client application
                 // throw new IllegalStateException("Illegal state during criteria running.");
-                logger.debug("CRITERIA_RESOURCE: run finished.");
+                LOGGER.debug("CRITERIA_RESOURCE: run finished.");
                 return restUtil.rawListJsonRepresentation(list.toArray());
             } finally {
-                if (lockAcquiredSucessfully) {
+                if (lockAcquired) {
                     // it is necessary to unlock Lock in finally block (exceptions will be handled properly then)
                     lock.unlock();
                 }
             }
         }, restUtil);
+    }
+
+    /**
+     * A method to try acquiring a lock for running a centre.
+     * It should not throw any exceptions, but simply return {@code true} if the lock was acquired or {@code false} otherwise.
+     *
+     * @param lock
+     * @return
+     */
+    private boolean tryLocking(final Lock lock) {
+        try {
+            // try acquiring an exclusive lock for running a miType centre for the current user
+            // wait for the lock at most RUNNING_LOCK_TIMEOUT seconds
+            return lock.tryLock(RUNNING_LOCK_TIMEOUT, SECONDS);
+        } catch (final Exception ex) {
+            // any potential exception that could occur during the lock acquisition should be ignored to continue concurrent running (as it was before locking mechanism was introduced);
+            // in the future we may handle exceptions differently, e.g. by aborting the whole request
+            LOGGER.warn("Thread was an exception during the lock acquisition. But let's continue concurrent running of the [%s] centre and user [%s].".formatted(miType.getSimpleName(), user), ex);
+        }
+        return false;
     }
 
     /**
