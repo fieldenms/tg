@@ -1495,7 +1495,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     }
 
     /**
-     * The main intent of this method is to support entity modification in rare situation while it it being marked as read-only.
+     * The main intent of this method is to support entity modification in rare situation while it is being marked as read-only.
      * Should be used with great care as it may alter the intended domain behaviour if used carelessly.
      * At this stage there is no reason for this setter to be used as part of the domain logic. */
     public void setIgnoreEditableState(final boolean ignoreEditableStateDuringSave) {
