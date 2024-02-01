@@ -393,7 +393,14 @@ Polymer({
                         });
                     }
                     if (ironRequest && ironRequest.successful && subRole === 'new' && typeof this.newAction === 'function') {
-                        this.newAction(parentDialog, wasPersistedBeforeAction);
+                        if (parentDialog && parentDialog.$.elementLoader.loadedElement && parentDialog.$.elementLoader.loadedElement._savingPromise) {
+                            //Run new action after successful action execution and after save action on parent dialog finished in order not to interfere with refresh of compound master.
+                            parentDialog.$.elementLoader.loadedElement._savingPromise.then(res => {
+                                this.newAction(parentDialog, wasPersistedBeforeAction);
+                            });
+                        } else {
+                            this.newAction(parentDialog, wasPersistedBeforeAction);
+                        }
                     }
                     return ironRequest;
                 });    

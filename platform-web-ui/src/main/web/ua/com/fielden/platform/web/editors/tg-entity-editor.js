@@ -679,6 +679,8 @@ export class TgEntityEditor extends TgEditor {
                     if (!this._disabled && value !== null && value.get("id") !== null) {
                         this.assignConcreteValue(value, this.reflector().tg_convert.bind(this.reflector()));
                         this.commit();
+                        //Delete this post action success in order to prevent continuous snatch back on SAVE&NEW action.
+                        delete this.tgOpenMasterAction.postActionSuccess;
                     }
                 }
                 this.tgOpenMasterAction._runDynamicActionForNew(this.newEntityMaster.rootEntityType);

@@ -661,16 +661,19 @@ Polymer({
     },
 
     _refreshCompoundMaster: function (data, envelope) {
-        if (!data.canClose) {
-            this._isRefreshCycle = true;
+        //Compound master should be refreshed even if it get closed in order to snatch back value into autocompleter
+        //SAVE&NEW and SAVE&CLOSE actions do close compound entity master and as simple SAVE action they should refresh compound entity master
+        //to update dialog title, post action.success event and snatch back value into autocompleter if it is needed.
+        //But SAVE&NEW action opens new master the same that was used before. This causes exceptional situation because previous master didn't finished refreshing.
+        //In that case make sure to open new master after previous one get refreshed.
+        this._isRefreshCycle = true;
 
-            // promotes saved entity (main or detail) id into compound master "opener" in case of successful save
-            if (envelope.topic === 'save.post.success') {
-                this.augmentCompoundMasterOpenerWith(data.id);
-            }
-
-            this.refreshCompoundMaster();
+        // promotes saved entity (main or detail) id into compound master "opener" in case of successful save
+        if (envelope.topic === 'save.post.success') {
+            this.augmentCompoundMasterOpenerWith(data.id);
         }
+
+        this.refreshCompoundMaster();
     },
 
     _getMasterEntityChanged: function (newValue, oldValue) {
