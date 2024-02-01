@@ -767,8 +767,7 @@ public class CriteriaResource extends AbstractWebResource {
     public static Stream<AbstractEntity<?>> enhanceResultEntitiesWithDynamicPropertyValues(final Stream<AbstractEntity<?>> stream, final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext) {
         return stream.map(entity -> {
             resPropsWithContext.forEach(resPropWithContext -> {
-                final Collection<? extends AbstractEntity<?>> collection = ((AbstractEntity<?>) entity).get(resPropWithContext.getKey().propName.get());
-                collection.forEach(e -> resPropWithContext.getKey().entityPreProcessor.get().accept(e, resPropWithContext.getValue()));
+                resPropWithContext.getKey().entityPreProcessor.get().accept(entity, resPropWithContext.getValue());
             });
             return entity;
         });
@@ -787,9 +786,8 @@ public class CriteriaResource extends AbstractWebResource {
             }
             if (entityRendHints instanceof Map) {
                 resPropsWithContext.forEach(resPropWithContext -> {
-                    final Collection<? extends AbstractEntity<?>> collection = ((AbstractEntity<?>) entity).get(resPropWithContext.getKey().propName.get());
                     resPropWithContext.getKey().renderingHintsProvider.ifPresent(hintProvider -> {
-                        ((Map)entityRendHints).putAll((Map)hintProvider.apply(collection, resPropWithContext.getValue()));
+                        ((Map)entityRendHints).putAll(hintProvider.apply(entity, resPropWithContext.getValue()));
                     });
                 });
             }

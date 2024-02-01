@@ -191,12 +191,12 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     }
 
     @Override
-    public <M extends AbstractEntity<?>> IResultSetBuilderDynamicPropsAction<T> addProps(final String propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<M, Optional<CentreContext<T,?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
+    public IResultSetBuilderDynamicPropsAction<T> addProps(final String propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<T, Optional<CentreContext<T,?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
         return new ResultSetBuilder<>(builder).addProps(propName, dynColBuilderType, entityPreProcessor, contextConfig);
     }
 
     @Override
-    public <M extends AbstractEntity<?>> IResultSetBuilderDynamicPropsAction<T> addProps(String propName, Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, BiConsumer<M, Optional<CentreContext<T, ?>>> entityPreProcessor, BiFunction<Collection<M>, Optional<CentreContext<T, ?>>, Map> renderingHintsProvider, CentreContextConfig contextConfig) {
+    public IResultSetBuilderDynamicPropsAction<T> addProps(String propName, Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, BiConsumer<T, Optional<CentreContext<T, ?>>> entityPreProcessor, BiFunction<T, Optional<CentreContext<T, ?>>, Map> renderingHintsProvider, CentreContextConfig contextConfig) {
         return new ResultSetBuilder<>(builder).addProps(propName, dynColBuilderType, entityPreProcessor, renderingHintsProvider, contextConfig);
     }
 
