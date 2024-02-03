@@ -444,8 +444,9 @@ public class EntityFinder extends ElementFinder {
                 .filter(ElementFinder::isStatic)
                 .anyMatch(varElt -> {
                     // static EntityResulQueryModel model_
-                    if (varElt.getSimpleName().contentEquals("model_") && isSubtype(varElt.asType(), EntityResultQueryModel.class))
+                    if (varElt.getSimpleName().contentEquals("model_") && isSubtype(varElt.asType(), EntityResultQueryModel.class)) {
                         return true;
+                    }
                     // static List<EntityResulQueryModel> models_
                     else if (varElt.getSimpleName().contentEquals("models_") && isSubtype(varElt.asType(), List.class)) {
                         final List<? extends TypeMirror> typeArgs = asDeclaredType(varElt.asType()).getTypeArguments();
@@ -527,9 +528,8 @@ public class EntityFinder extends ElementFinder {
      */
     public boolean isEntityThatNeedsMetaModel(final TypeElement element) {
         return isEntityType(element.asType()) &&
-                hasAnyPresentAnnotation(element, ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION) ||
-                (!isAbstract(element) &&
-                        (isUnionEntityType(element.asType()) || isSyntheticEntityType(newEntityElement(element))));
+               hasAnyPresentAnnotation(element, ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION) ||
+               (!isAbstract(element) && (isUnionEntityType(element.asType()) || isSyntheticEntityType(newEntityElement(element))));
     }
 
     public boolean isEntityThatNeedsMetaModel(final EntityElement element) {
