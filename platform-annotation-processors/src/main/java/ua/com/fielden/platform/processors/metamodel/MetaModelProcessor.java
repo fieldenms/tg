@@ -44,6 +44,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Optional.empty;
 import static java.util.stream.Collectors.*;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.*;
+import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.TYPE_ELEMENT_FILTER;
 
 /**
  * Annotation processor that generates meta-models for domain entities.
@@ -117,32 +118,28 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
     }
 
     /**
-     * Processes {@code roundEnv} to collect entity classes for processing.
-     * Returns a set with instances of {@link MetaModelConcept}, representing each entity that require a meta-model to be generated.
+     * Processes a round to collect entity classes for meta-model generation.
+     * Returns {@link MetaModelConcept}s representing entities that require a meta-model to be generated.
      *
-     * @param roundEnv
-     * @param maybeMetaModelsElement – qualified names for meta-models from the meta-models entry point class
-     * @return
+     * @param maybeMetaModelsElement – the meta-models entry point class
      */
     private Stream<MetaModelConcept> collectEntitiesForMetaModelGeneration(final RoundEnvironment roundEnv, final Optional<MetaModelsElement> maybeMetaModelsElement) {
-        // find classes annotated with any of DOMAIN_TYPE_ANNOTATIONS
-        final Set<TypeElement> annotatedElements = roundEnv.getElementsAnnotatedWithAny(ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION).stream()
-                // just in case make sure identified elements are top-level classes
-                // TODO support visible nested classes, in case if we start supporting "components" in a form of nested classes
-                .filter(element -> ElementFinder.isTopLevelClass(element))
-                .map(el -> (TypeElement) el).collect(toSet());
+        final Set<TypeElement> metaModeledElements = roundEnv.getRootElements().stream()
+                .mapMulti(TYPE_ELEMENT_FILTER)
+                .filter(entityFinder::isEntityThatNeedsMetaModel)
+                .collect(toSet());
 
-        if (annotatedElements.isEmpty()) {
+        if (metaModeledElements.isEmpty()) {
             printNote("There are no subjects for meta-modeling.");
             return Stream.empty();
         }
-        printNote(formatSequence("annotatedElements", annotatedElements.stream().map(Element::getSimpleName).iterator()));
+        printNote(formatSequence("metaModeledElements", metaModeledElements.stream().map(Element::getSimpleName).iterator()));
 
         // let's process each type element representing a domain entity
         // all relevant types will have a meta-model concept created for them and their properties explored for the purpose of meta-modelling
         final Set<MetaModelConcept> metaModelConcepts = new HashSet<>();
         final var existingMetaModels = maybeMetaModelsElement.map(mme -> mme.getMetaModels().stream().map(m -> m.getQualifiedName().toString()).collect(toSet())).orElse(Collections.emptySet());
-        for (final TypeElement typeElement: annotatedElements) {
+        for (final TypeElement typeElement: metaModeledElements) {
             final EntityElement entityElement = entityFinder.newEntityElement(typeElement);
             final MetaModelConcept mmc = new MetaModelConcept(entityElement);
             if (!allGeneratedMetaModels.contains(mmc)) {
@@ -152,7 +149,6 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
                 // traverse all properties for the current entity element to ensure that any entity-typed properties get their type considered for meta-model generation
                 // this is mainly important to pick up entity types that come from other project dependencies, such as the TG platform itself
                 explorePropsOf(entityElement, existingMetaModels, metaModelConcepts);
-
             }
         }
 
@@ -915,9 +911,8 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
      * @param propName
      * @return
      */
-    private String fieldNameForProp(String propName) {
+    private static String fieldNameForProp(String propName) {
         return propName + "_pn";
     }
-
 
 }

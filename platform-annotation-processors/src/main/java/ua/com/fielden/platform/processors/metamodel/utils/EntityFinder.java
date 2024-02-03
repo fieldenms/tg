@@ -6,6 +6,7 @@ import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.Accessor;
 import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
@@ -438,6 +439,26 @@ public class EntityFinder extends ElementFinder {
         return isSubtype(type, UNION_ENTITY_CLASS);
     }
 
+    public boolean isSyntheticEntityType(final EntityElement entity) {
+        return streamDeclaredFields(entity.element())
+                .filter(ElementFinder::isStatic)
+                .anyMatch(varElt -> {
+                    // static EntityResulQueryModel model_
+                    if (varElt.getSimpleName().contentEquals("model_") && isSubtype(varElt.asType(), EntityResultQueryModel.class)) {
+                        return true;
+                    }
+                    // static List<EntityResulQueryModel> models_
+                    else if (varElt.getSimpleName().contentEquals("models_") && isSubtype(varElt.asType(), List.class)) {
+                        final List<? extends TypeMirror> typeArgs = asDeclaredType(varElt.asType()).getTypeArguments();
+                        if (!typeArgs.isEmpty()) {
+                            final TypeMirror typeArg = typeArgs.get(0);
+                            return isSubtype(typeArg, EntityResultQueryModel.class);
+                        }
+                    }
+                    return false;
+                });
+    }
+
     /**
      * Any entity annotated with {@code @MapEntityTo} is considered to be a persistent entity.
      *
@@ -506,11 +527,13 @@ public class EntityFinder extends ElementFinder {
      * @return
      */
     public boolean isEntityThatNeedsMetaModel(final TypeElement element) {
-        if (!isEntityType(element.asType())) {
-            return false;
-        }
-        return ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION.stream()
-                .anyMatch(annotClass -> element.getAnnotation(annotClass) != null);
+        return isEntityType(element.asType()) &&
+               hasAnyPresentAnnotation(element, ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION) ||
+               (!isAbstract(element) && (isUnionEntityType(element.asType()) || isSyntheticEntityType(newEntityElement(element))));
+    }
+
+    public boolean isEntityThatNeedsMetaModel(final EntityElement element) {
+        return isEntityThatNeedsMetaModel(element.element());
     }
 
     /**
