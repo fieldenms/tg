@@ -10,9 +10,10 @@ import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
-import ua.com.fielden.platform.web.centre.api.IEcbCompletion;
 import ua.com.fielden.platform.web.centre.api.IWithRightSplitterPosition;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.alternative_view.IAlternativeView;
+import ua.com.fielden.platform.web.centre.api.alternative_view.IAlternativeViewPreferred;
 import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointConfig0;
 import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointWithToolbar;
 import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPoints;
@@ -90,7 +91,7 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
     }
 
     @Override
-    public IEcbCompletion<T> withRightSplitterPosition(final int percentage) {
+    public IAlternativeView<T> withRightSplitterPosition(final int percentage) {
         resultSetBuilder.addInsertionPoint(configInsertionPoint(mkInsertionPoint(this.insertionPointAction, this.whereToInsertView))
                 .setPreferred(preferred)
                 .setNoResizing(noResizing)
@@ -107,5 +108,14 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
         }
         this.noResizing = true;
         return this;
+    }
+
+    @Override
+    public IAlternativeViewPreferred<T> addAlternativeView(final EntityActionConfig actionConfig) {
+        resultSetBuilder.addInsertionPoint(configInsertionPoint(mkInsertionPoint(this.insertionPointAction, this.whereToInsertView))
+                .setPreferred(preferred)
+                .setNoResizing(noResizing)
+                .setToolbar(toolbarConfig));
+        return new AlternativeViewConfigBuilder<>(resultSetBuilder, actionConfig);
     }
 }

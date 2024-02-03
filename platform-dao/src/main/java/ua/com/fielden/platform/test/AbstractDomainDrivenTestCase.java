@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.test;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.dao.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
+import static ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
 
 import java.lang.reflect.Field;
 import java.text.DateFormat;
@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Session;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -24,7 +24,6 @@ import org.junit.Before;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.data.IDomainDrivenData;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -32,6 +31,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.DbUtils;
 
@@ -48,11 +48,11 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     private static ICompanionObjectFinder coFinder;
     private static EntityFactory factory;
     private static Function<Class<?>, Object> instantiator;
-    
+
     private static final DateTimeFormatter jodaFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
     private static final DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-    
+
     private Session session;
     private String transactionGuid;
 
@@ -72,41 +72,47 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     public final void beforeTest() throws Exception {
         dbCreator.populateOrRestoreData(this);
     }
-    
+
     @SessionRequired
     protected void resetIdGenerator() {
         DbUtils.resetSequenceGenerator(ID_SEQUENCE_NAME, 1000000, this.getSession());
     }
-   
+
     @After
     public final void afterTest() {
         dbCreator.clearData();
     }
-   
+
     public AbstractDomainDrivenTestCase setDbCreator(final DbCreator dbCreator) {
         this.dbCreator = dbCreator;
         return this;
     }
-    
-    public DbCreator getDbCreator() {
+
+    public final DbCreator getDbCreator() {
         return dbCreator;
     }
-    
+
     @Override
     public final <T> T getInstance(final Class<T> type) {
         return (T) instantiator.apply(type);
     }
-    
+
     @Override
     public <T extends AbstractEntity<?>> T save(final T instance) {
+        if (instance == null) {
+            throw new DomainDriventTestException("Null instances cannot be saved.");
+        }
         @SuppressWarnings("unchecked")
         final IEntityDao<T> pp = coFinder.find((Class<T>) instance.getType());
+        if (pp == null) {
+            throw new DomainDriventTestException(format("Could not find companion implementation for [%s].", instance.getType().getSimpleName()));
+        }
         return pp.save(instance);
     }
 
-    
+
     private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> co$Cache = new HashMap<>();
-    private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> coCache = new HashMap<>();    
+    private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> coCache = new HashMap<>();
 
     @Override
     @SuppressWarnings("unchecked")
@@ -131,7 +137,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
         try {
             return formatter.parse(dateTime);
         } catch (ParseException e) {
-            throw new IllegalArgumentException(format("Could not parse value [%s].", dateTime));
+            throw new DomainDriventTestException(format("Could not parse value [%s].", dateTime));
         }
     }
 
@@ -185,7 +191,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
             // setting composite key fields
             final List<Field> fieldList = Finder.getKeyMembers(entityClass);
             if (fieldList.size() != keys.length) {
-                throw new IllegalArgumentException(format("Number of key values is %s but should be %s", keys.length, fieldList.size()));
+                throw new DomainDriventTestException(format("Number of key values is %s but should be %s", keys.length, fieldList.size()));
             }
             for (int index = 0; index < fieldList.size(); index++) {
                 final Field keyField = fieldList.get(index);
@@ -207,12 +213,12 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
         final IEntityDao<T> co = co$(entityClass);
         return co != null ? co.new_() : factory.newEntity(entityClass);
     }
-    
+
     /////////////// @SessionRequired support ///////////////
     @Override
     public Session getSession() {
         if (session == null) {
-            throw new EntityCompanionException("Session is missing, most likely, due to missing @SessionRequired annotation.");
+            throw new DomainDriventTestException("Session is missing, most likely, due to missing @SessionRequired annotation.");
         }
         return session;
     }
@@ -221,15 +227,15 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     public void setSession(final Session session) {
         this.session = session;
     }
-    
+
     @Override
     public String getTransactionGuid() {
         if (StringUtils.isEmpty(transactionGuid)) {
-            throw new EntityCompanionException("Transaction GUID is missing.");
+            throw new DomainDriventTestException("Transaction GUID is missing.");
         }
         return transactionGuid;
     }
-    
+
     @Override
     public void setTransactionGuid(final String guid) {
         this.transactionGuid = guid;

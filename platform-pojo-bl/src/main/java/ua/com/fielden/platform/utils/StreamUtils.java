@@ -1,19 +1,12 @@
 package ua.com.fielden.platform.utils;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Spliterator;
-import java.util.Spliterators;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
-
 import ua.com.fielden.platform.streaming.SequentialGroupingStream;
 import ua.com.fielden.platform.types.tuples.T2;
+
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * A set of convenient APIs for working with {@link Stream}.
@@ -108,6 +101,71 @@ public class StreamUtils {
     }
 
     /**
+     * Returns a stream of distinct elements from {@code stream}, where unique identity of an element is determined by {@code uidMapper}.
+     * <p>
+     * It is required that the return type of {@code uidMapper} has proper implementation of {@code hashCode()} and {@code equals()}.
+     * <p>
+     * The order of the original stream's elements is preserved.
+     *
+     * @param stream
+     * @param uidMapper a function that maps the original element to its unique identity.
+     * @return
+     */
+    public static <T, R> Stream<T> distinct(final Stream<T> stream, final Function<T, R> uidMapper) {
+        return StreamSupport.stream(distinct(stream.spliterator(), uidMapper), false);
+    }
+
+    private static <T, R> Spliterator<T> distinct(final Spliterator<T> splitr, final Function<T, R> uidMapper) {
+        return new Spliterators.AbstractSpliterator<T>(splitr.estimateSize(), 0) {
+            final LinkedHashSet<R> uniqs = new LinkedHashSet<>();
+
+            @Override
+            public boolean tryAdvance(final Consumer<? super T> consumer) {
+                return splitr.tryAdvance(elem -> {
+                    final R uid = uidMapper.apply(elem);
+                    if (!uniqs.contains(uid)) {
+                        consumer.accept(elem);
+                        uniqs.add(uid);
+                    }
+                });
+            }
+        };
+    }
+
+    /**
+     * Returns the longest prefix of the {@code stream} until (inclusive) an element that satisfies {@code predicate} is encountered.
+     * <p>
+     * If no such element was encountered then the whole stream is returned.
+     *
+     * @param stream
+     * @param predicate
+     * @return
+     */
+    public static <T> Stream<T> stopAfter(final Stream<T> stream, final Predicate<? super T> predicate) {
+        return StreamSupport.stream(stopAfter(stream.spliterator(), predicate), false);
+    }
+
+    private static <T> Spliterator<T> stopAfter(final Spliterator<T> splitr, final Predicate<? super T> predicate) {
+        return new Spliterators.AbstractSpliterator<T>(splitr.estimateSize(), 0) {
+            boolean stillGoing = true;
+
+            @Override
+            public boolean tryAdvance(final Consumer<? super T> consumer) {
+                if (stillGoing) {
+                    final boolean hadNext = splitr.tryAdvance(elem -> {
+                        consumer.accept(elem);
+                        if (predicate.test(elem)) {
+                            stillGoing = false;
+                        }
+                    });
+                    return hadNext && stillGoing;
+                }
+                return false;
+            }
+        };
+    }
+
+    /**
      * Constructs a zipped stream.
      * 
      * @param xs
@@ -161,6 +219,33 @@ public class StreamUtils {
      */
     public static <T> Stream<List<T>> windowed(final Stream<T> source, final int windowSize){
         return SequentialGroupingStream.stream(source, (el, group) -> group.size() < windowSize);
+    }
+
+    /**
+     * Creates a filtering function that accepts only instances of the given type. Intended to be passed to {@link Stream#mapMulti(BiConsumer)}.
+     * It replaces the following pattern:
+     * <pre>{@code
+     *     stream.map(x -> x instanceof Y y ? y : null)
+     *           .filter(y -> y != null)
+     * }</pre>
+     * with:
+     * <pre>{@code
+     *     stream.mapMulti(typeFilter(Y.class))
+     * }</pre>
+     *
+     * <b>NOTE</b>: this method, unlike {@code instanceof}, can be used to test incompatible types. As such, it sacrifices
+     * the benefit of compile-time detection of "meaningless" filtering for succinctness.
+     * For example, {@code "a" instanceof List} is an illegal statement, while
+     * {@code Stream.of("a").mapMulti(typeFilter(List.class))} is allowed.
+     *
+     * @param type  the type of elements that will be preserved in the resulting stream
+     */
+    public static <T, R extends T> BiConsumer<T, Consumer<R>> typeFilter(Class<R> type) {
+        return (item, sink) -> {
+            if (type.isInstance(item)) {
+                sink.accept(type.cast(item));
+            }
+        };
     }
 
 }

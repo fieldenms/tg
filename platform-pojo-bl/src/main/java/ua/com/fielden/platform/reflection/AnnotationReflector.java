@@ -3,6 +3,7 @@ package ua.com.fielden.platform.reflection;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByNameOptionally;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penultAndLast;
@@ -25,7 +26,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -50,7 +51,7 @@ import ua.com.fielden.platform.types.tuples.T2;
  *
  */
 public final class AnnotationReflector {
-    private static final Logger LOGGER = Logger.getLogger(AnnotationReflector.class);
+    private static final Logger LOGGER = getLogger(AnnotationReflector.class);
 
     /** A global lazy static cache of annotations, which is used for annotation information retrieval. */
     private static final Cache<Class<?>, Map<String, Map<Class<? extends Annotation>, Annotation>>> METHOD_ANNOTATIONS = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
@@ -83,7 +84,7 @@ public final class AnnotationReflector {
     }
 
     /**
-     * Similar to {@link #getAnnotation(Class, Class)}, but instead of an actual annotation returns <code>true</code> if annotation is present, <code>false</code> otherwise.
+     * Similar to {@link #getAnnotationForClass(Class, Class)}, but instead of an actual annotation returns {@code true} if annotation is present, {@code false} otherwise.
      *
      * @param annotationType
      * @param forType

@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.ioc;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
@@ -14,11 +14,11 @@ import org.hibernate.cfg.Configuration;
 
 import com.google.inject.Guice;
 
-import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
+import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
 
 /**
  * Hibernate configuration factory. All Hibernate specific properties should be passed as {@link Properties} values. The following list of properties is supported:
@@ -89,12 +89,13 @@ public class HibernateConfigurationFactory {
                 defaultHibernateTypes,//
                 Guice.createInjector(new HibernateUserTypesModule()), //
                 applicationEntityTypes, //
-                determineDbVersion(props));
-        
-        idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata);
+                determineDbVersion(props),
+                determineEql2(props));
 
-        final String generatedMappings = new HibernateMappingsGenerator().generateMappings(domainMetadata);
-        
+        idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata.eqlDomainMetadata);
+
+        final String generatedMappings = HibernateMappingsGenerator.generateMappings(domainMetadata.eqlDomainMetadata);
+
         try {
             cfg.addInputStream(new ByteArrayInputStream(generatedMappings.getBytes("UTF8")));
             cfgManaged.addInputStream(new ByteArrayInputStream(generatedMappings.getBytes("UTF8")));
@@ -106,6 +107,11 @@ public class HibernateConfigurationFactory {
 
     public static DbVersion determineDbVersion(final Properties props) {
         return determineDbVersion(props.getProperty(DIALECT));
+    }
+
+    private static boolean determineEql2(final Properties props) {
+        final String prop = props.getProperty("eql2");
+        return (prop != null && prop.toLowerCase().equals("true"));
     }
 
     public static DbVersion determineDbVersion(final String dialect) {

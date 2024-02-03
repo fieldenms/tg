@@ -1,12 +1,12 @@
 package ua.com.fielden.platform.web.sse;
 
-import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import rx.Observable;
 import rx.Observer;
@@ -52,7 +52,8 @@ public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> impl
      */
     private final ISerialiser serialiser;
 
-    private final Logger logger = Logger.getLogger(this.getClass());
+    private final Logger logger = getLogger(this.getClass());
+
 
     protected AbstractEventSource(final OK observableKind, final ISerialiser serialiser) {
         this.stream = observableKind.asObservable();
@@ -122,7 +123,7 @@ public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> impl
 
         @Override
         public void onCompleted() {
-            logger.debug(format("Event source [%s] completed.", AbstractEventSource.this.getClass().getName()));
+            logger.debug("Event source [%s] completed.".formatted(AbstractEventSource.this.getClass().getName()));
         }
 
         @Override

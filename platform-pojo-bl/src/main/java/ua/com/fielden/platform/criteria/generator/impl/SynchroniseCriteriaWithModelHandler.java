@@ -31,7 +31,7 @@ import ua.com.fielden.platform.error.Result;
  */
 public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTreeManagerAndEnhancer, T extends AbstractEntity<?>> implements IAfterChangeEventHandler<Object> {
     public static final Long CRITERIA_ENTITY_ID = 333L;
-    // private static final Logger LOGGER = Logger.getLogger(SynchroniseCriteriaWithModelHandler.class);
+    // private static final Logger LOGGER = getLogger(SynchroniseCriteriaWithModelHandler.class);
 
     @Override
     public void handle(final MetaProperty<Object> property, final Object newValue) {

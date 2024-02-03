@@ -13,9 +13,13 @@ import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.pd;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.Reflector.MAXIMUM_CACHE_SIZE;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.annotation.Annotation;
@@ -28,6 +32,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -38,7 +43,7 @@ import java.util.TreeSet;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -55,6 +60,7 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.either.Right;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -341,13 +347,13 @@ public class Finder {
      * Determines properties within the provided class to be used for a key. There are two cases: either entity uses a composite key or a single property <code>key</code> represent
      * a key.
      * <p>
-     * The implementation of this method is based on {@link #getFieldsAnnotatedWith(Class, Class)}, which traverses the whole class hierarchy. Thus, it supports correct
+     * The implementation of this method traverses the whole class hierarchy. Thus, it supports correct
      * determination of properties declared at different hierarchical levels constituting a part of the composite key.
      *
      * IMPORTANT: all key members for types are cached during application lifecycle. It greatly reduces computational complexity as there is no need to retrieve key members for
      * immutable {@link AbstractEntity}'s descendants.
      *
-     * @param klass
+     * @param type
      * @return
      */
     public static final List<Field> getKeyMembers(final Class<? extends AbstractEntity<?>> type) {
@@ -378,10 +384,10 @@ public class Finder {
      * Determines properties within the provided class to be used for a key. There are two cases: either entity uses a composite key or a single property <code>key</code> represent
      * a key.
      * <p>
-     * The implementation of this method is based on {@link #getFieldsAnnotatedWith(Class, Class)}, which traverses the whole class hierarchy. Thus, it supports correct
+     * The implementation of this method traverses the whole class hierarchy. Thus, it supports correct
      * determination of properties declared at different hierarchical levels constituting a part of the composite key.
      *
-     * @param klass
+     * @param type
      * @return
      */
     private static final List<Field> loadKeyMembers(final Class<? extends AbstractEntity<?>> type) {
@@ -424,7 +430,7 @@ public class Finder {
     public static Field getFieldByName(final Class<?> type, final String name) {
         Class<?> klass = type;
         if (AbstractUnionEntity.class.isAssignableFrom(klass)) {
-            final List<String> commonPropertiesList = AbstractUnionEntity.commonProperties((Class<AbstractUnionEntity>) type);
+            final Set<String> commonPropertiesList = AbstractUnionEntity.commonProperties((Class<AbstractUnionEntity>) type);
             if (commonPropertiesList.contains(name)) {
                 return getFieldByName(AbstractUnionEntity.unionProperties(((Class<AbstractUnionEntity>) type)).get(0).getType(), name);
             }
@@ -478,13 +484,25 @@ public class Finder {
      * @return
      */
     public static Field findFieldByName(final Class<?> type, final String dotNotationExp) {
-        // check if passed "dotNotationExp" is correct:
-        PropertyTypeDeterminator.determinePropertyType(type, dotNotationExp);
-        if (dotNotationExp.endsWith("()")) {
-            throw new MethodFoundException("Illegal situation : a method was found from the dot-notation expression == [" + dotNotationExp + "]");
+        return findFieldByNameWithOwningType(type, dotNotationExp)._2;
+    }
+
+    /**
+     * The same as {@link #findFieldByName(Class, String)}, but the returned tuple includes the type, where the last property or method in the {@code dotNotationExp} belongs.
+     * This could a declaring type, but also the last type reached during the path traversal.
+     *
+     * @param type
+     * @param dotNotationExpr
+     * @return
+     */
+    public static T2<Class<?>, Field> findFieldByNameWithOwningType(final Class<?> type, final String dotNotationExpr) {
+        // check if passed "dotNotationExpr" is correct:
+        PropertyTypeDeterminator.determinePropertyType(type, dotNotationExpr);
+        if (dotNotationExpr.endsWith("()")) {
+            throw new MethodFoundException("Illegal situation : a method was found from the dot-notation expression == [" + dotNotationExpr + "]");
         }
-        final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(type, dotNotationExp);
-        return getFieldByName(transformed.getKey(), transformed.getValue());
+        final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(type, dotNotationExpr);
+        return t2(transformed.getKey(), getFieldByName(transformed.getKey(), transformed.getValue()));
     }
 
     /**
@@ -542,7 +560,7 @@ public class Finder {
      * Searches through the owner type hierarchy for all fields of the type assignable to the provided field type.
      *
      * @param ownerType
-     * @param fieldType
+     * @param fieldTypes
      * @return list of found fields, which can be empty
      */
     public static List<Field> getFieldsOfSpecifiedTypes(final Class<?> ownerType, final List<Class<?>> fieldTypes) {
@@ -584,7 +602,7 @@ public class Finder {
     private static List<Field> getUnionEntityFields(final Class<? extends AbstractUnionEntity> type) {
         final List<Field> fields = new ArrayList<>();
         final List<Field> unionProperties = AbstractUnionEntity.unionProperties(type);
-        final List<String> commonProperties = AbstractUnionEntity.commonProperties(type);
+        final Set<String> commonProperties = AbstractUnionEntity.commonProperties(type);
         for (final String propertyName : commonProperties) {
             fields.add(getFieldByName(unionProperties.get(0).getType(), propertyName));
         }
@@ -649,7 +667,7 @@ public class Finder {
         for (final Field field : wholeHierarchyProperties) {
             if (!fieldNames.contains(field.getName())) {
                 fieldNames.add(field.getName());
-                if (isKey(field)) {
+                if (isKeyOrKeyMember(field)) {
                     keyProps.add(field);
                 } else {
                     properties.add(field);
@@ -665,17 +683,17 @@ public class Finder {
         return propertiesWithKeys;
     }
 
-    public static boolean isKey(final Field field) {
-        return field.getName().equals(AbstractEntity.KEY) || field.isAnnotationPresent(CompositeKeyMember.class);
+    public static boolean isKeyOrKeyMember(final Field field) {
+        return AbstractEntity.KEY.equals(field.getName()) || field.isAnnotationPresent(CompositeKeyMember.class);
     }
 
     /**
      * Returns a stream of fields (including private, protected and public) annotated with the specified annotation. This method processes the whole class hierarchy.
      *
      * @param type
-     * @param annotation
-     * @param withUnion
-     *            - determines whether include union entitie's properties (i.e. common properties, union properties) or just simple union entity fields.
+     * @param withUnion - determines whether include union entitie's properties (i.e. common properties, union properties) or just simple union entity fields.
+     * @param annot
+     * @param annotations
      *
      * @return
      */
@@ -699,7 +717,7 @@ public class Finder {
         final Optional<Field> field;
         final Object valueToRetrieveFrom;
         final List<String> unionProperties = getFieldNames(unionProperties(value.getClass()));
-        final List<String> commonProperties = commonProperties(value.getClass());
+        final Set<String> commonProperties = commonProperties(value.getClass());
 
         try {
             if (unionProperties.contains(property)) { // union properties:
@@ -788,30 +806,31 @@ public class Finder {
     }
 
     /**
-     * Returns value of the field specified with property parameter.
+     * Returns a value of property identified by {@code propOrGetterName} for {@code entity}.
+     * As parameter {@code propOrGetterName} suggests, this method accepts either a property field name or the name of its getter method.
      *
-     * @param value
-     * @param property
+     * @param entity
+     * @param propOrGetterName
      * @return
      * @throws IllegalAccessException
      */
-    public static Object getPropertyValue(final AbstractEntity<?> entity, final String property) {
+    public static Object getPropertyValue(final AbstractEntity<?> entity, final String propOrGetterName) {
         final Object value;
-        if (!property.contains("()")) {
+        if (!propOrGetterName.contains("()")) {
             if (entity instanceof AbstractUnionEntity) {
-                value = getAbstractUnionEntityFieldValue((AbstractUnionEntity) entity, property);
+                value = getAbstractUnionEntityFieldValue((AbstractUnionEntity) entity, propOrGetterName);
             } else {
-                value = getFieldValue(getFieldByName(entity.getClass(), property), entity);
+                value = getFieldValue(getFieldByName(entity.getClass(), propOrGetterName), entity);
             }
         } else {
             try {
                 if (entity instanceof AbstractUnionEntity) {
-                    value = getAbstractUnionEntityMethodValue((AbstractUnionEntity) entity, property.substring(0, property.length() - 2));
+                    value = getAbstractUnionEntityMethodValue((AbstractUnionEntity) entity, propOrGetterName.substring(0, propOrGetterName.length() - 2));
                 } else {
-                    value = getMethodValue(Reflector.getMethod(entity.getClass(), property.substring(0, property.length() - 2)), entity);
+                    value = getMethodValue(Reflector.getMethod(entity.getClass(), propOrGetterName.substring(0, propOrGetterName.length() - 2)), entity);
                 }
             } catch (final NoSuchMethodException e) {
-                throw new IllegalArgumentException("Failed to locate parameterless method " + property + " in " + entity.getClass(), e);
+                throw new IllegalArgumentException("Failed to locate parameterless method " + propOrGetterName + " in " + entity.getClass(), e);
             }
         }
         return value;
@@ -821,12 +840,12 @@ public class Finder {
     /////////////////////////////// Miscellaneous utilities ///////////////////////////////////////////////////
 
     /**
-     * Returns a list of properties that are present in all of the types passed into the method.
+     * Returns a set of properties that are present in all of the types passed into the method.
      *
      * @param entityTypes
      * @return
      */
-    public static List<String> findCommonProperties(final List<Class<? extends AbstractEntity<?>>> entityTypes) {
+    public static Set<String> findCommonProperties(final List<Class<? extends AbstractEntity<?>>> entityTypes) {
         final List<List<Field>> propertiesSet = new ArrayList<>();
         for (int classIndex = 0; classIndex < entityTypes.size(); classIndex++) {
             final List<Field> fields = new ArrayList<>();
@@ -835,7 +854,7 @@ public class Finder {
             }
             propertiesSet.add(fields);
         }
-        final List<String> commonProperties = new ArrayList<>();
+        final Set<String> commonProperties = new LinkedHashSet<>();
         if (propertiesSet.size() > 0) {
             for (final Field property : propertiesSet.get(0)) {
                 boolean common = true;
@@ -1077,9 +1096,9 @@ public class Finder {
     }
 
     /**
-     * Determines whether specified property is one2one association.
+     * Determines whether specified property is one-2-one association.
      * <p>
-     * The rule is following : if the type of property contains the "key" of the type of property parent then return <code>true</code>, otherwise <code>false</code>.
+     * The rule is following : if the type of property contains the "key" of the type of property parent or the "key" that is assignable from property parent and property parent has "id" property then return <code>true</code>, otherwise <code>false</code>.
      *
      * @param type
      * @param dotNotationExp
@@ -1087,9 +1106,18 @@ public class Finder {
      */
     public static boolean isOne2One_association(final Class<?> type, final String dotNotationExp) {
         final Class<?> propertyType = PropertyTypeDeterminator.determinePropertyType(type, dotNotationExp);
-        final Class<?> masterType = DynamicEntityClassLoader.getOriginalType(PropertyTypeDeterminator.transform(type, dotNotationExp).getKey());
-        return EntityUtils.isEntityType(propertyType)
-                && DynamicEntityClassLoader.getOriginalType(PropertyTypeDeterminator.determinePropertyType(propertyType, KEY)).equals(masterType);
+        if (isEntityType(propertyType)) {
+            final Class<?> masterType = DynamicEntityClassLoader.getOriginalType(PropertyTypeDeterminator.transform(type, dotNotationExp).getKey());
+            final Class<?> propertyTypeKeyType = DynamicEntityClassLoader.getOriginalType(PropertyTypeDeterminator.determinePropertyType(propertyType, KEY));
+
+            return // either property type's key is the same as the master entity type
+                   propertyTypeKeyType == masterType ||
+                   // or the property type's key is compatible with the master entity type, which covers 2 possible cases:
+                   // 1. a persistent entity that extends another persistent entity,
+                   // 2. a synthetic entity, derived from a persistent entity (synthetic with ID).
+                   propertyTypeKeyType.isAssignableFrom(masterType) && (isPersistedEntityType(propertyTypeKeyType) || isSyntheticBasedOnPersistentEntityType((Class<? extends AbstractEntity<?>>) propertyTypeKeyType));
+        }
+        return false;
     }
 
 }

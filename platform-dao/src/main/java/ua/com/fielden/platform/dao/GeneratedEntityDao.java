@@ -60,45 +60,45 @@ public class GeneratedEntityDao<T extends AbstractEntity<?>> implements IGenerat
     }
 
     @Override
-    public T findById(final Long id, final fetch<T> fetchModel, final List<byte[]> binaryTypes) {
+    public T findById(final Long id, final fetch<T> fetchModel) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public T findById(final Long id, final List<byte[]> binaryTypes) {
+    public T findById(final Long id) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public T getEntity(final QueryExecutionModel<T, ?> model, final List<byte[]> binaryTypes) {
+    public T getEntity(final QueryExecutionModel<T, ?> model) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public IPage<T> firstPage(final QueryExecutionModel<T, ?> qem, final int pageCapacity, final List<byte[]> binaryTypes) {
+    public IPage<T> firstPage(final QueryExecutionModel<T, ?> qem, final int pageCapacity) {
         return companion.firstPage(qem, pageCapacity);
     }
 
     @Override
-    public IPage<T> firstPage(final QueryExecutionModel<T, ?> qem, final QueryExecutionModel<T, ?> summaryModel, final int pageCapacity, final List<byte[]> binaryTypes) {
+    public IPage<T> firstPage(final QueryExecutionModel<T, ?> qem, final QueryExecutionModel<T, ?> summaryModel, final int pageCapacity) {
         return companion.firstPage(qem, summaryModel, pageCapacity);
     }
 
     @Override
-    public IPage<T> getPage(final QueryExecutionModel<T, ?> qem, final int pageNo, final int pageCapacity, final List<byte[]> binaryTypes) {
+    public IPage<T> getPage(final QueryExecutionModel<T, ?> qem, final int pageNo, final int pageCapacity) {
         return companion.getPage(qem, pageNo, pageCapacity);
     }
 
     @Override
-    public IPage<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCount, final int pageCapacity, final List<byte[]> binaryTypes) {
+    public IPage<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCount, final int pageCapacity) {
         return companion.getPage(model, pageNo, pageCount, pageCapacity);
     }
 
     @Override
-    public List<T> getAllEntities(final QueryExecutionModel<T, ?> qem, final List<byte[]> binaryTypes) {
+    public List<T> getAllEntities(final QueryExecutionModel<T, ?> qem) {
         return companion.getAllEntities(qem);
     }
     
@@ -108,13 +108,13 @@ public class GeneratedEntityDao<T extends AbstractEntity<?>> implements IGenerat
     }
 
     @Override
-    public List<T> getFirstEntities(final QueryExecutionModel<T, ?> qem, final int numberOfEntities, final List<byte[]> binaryTypes) {
+    public List<T> getFirstEntities(final QueryExecutionModel<T, ?> qem, final int numberOfEntities) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public byte[] export(final QueryExecutionModel<T, ?> query, final String[] propertyNames, final String[] propertyTitles, final List<byte[]> binaryTypes) throws IOException {
+    public byte[] export(final QueryExecutionModel<T, ?> query, final String[] propertyNames, final String[] propertyTitles) throws IOException {
         // TODO Auto-generated method stub
         return null;
     }

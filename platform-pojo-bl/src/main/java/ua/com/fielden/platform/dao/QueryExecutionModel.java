@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.dao;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -22,7 +24,7 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
     private final Map<String, Object> paramValues;
     private final boolean lightweight;
     private final ValuePreprocessor valuePreprocessor = new ValuePreprocessor();
-    private static final Logger logger = Logger.getLogger(QueryExecutionModel.class);
+    private static final Logger logger = getLogger(QueryExecutionModel.class);
 
     protected QueryExecutionModel() {
         queryModel = null;

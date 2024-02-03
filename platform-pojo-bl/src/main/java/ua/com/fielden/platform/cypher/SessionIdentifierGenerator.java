@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.cypher;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
+
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -15,7 +17,7 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.joda.time.format.PeriodFormatter;
@@ -34,7 +36,7 @@ import org.joda.time.format.PeriodFormatterBuilder;
  */
 public final class SessionIdentifierGenerator {
     private static final String HMAC_SHA256_ALGORITHM = "HmacSHA256";
-    private static final Logger LOGGER = Logger.getLogger(SessionIdentifierGenerator.class);
+    private static final Logger LOGGER = getLogger(SessionIdentifierGenerator.class);
     private final ThreadLocal<SecureRandom> random = ThreadLocal.withInitial(() -> new SecureRandom());
 
     /**

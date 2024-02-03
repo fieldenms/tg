@@ -27,8 +27,9 @@ public class UnionEntity extends AbstractUnionEntity {
     }
 
     @Observable
-    public void setPropertyOne(final EntityOne propertyOne) {
+    public UnionEntity setPropertyOne(final EntityOne propertyOne) {
         this.propertyOne = propertyOne;
+        return this;
     }
 
     public EntityTwo getPropertyTwo() {
@@ -36,7 +37,8 @@ public class UnionEntity extends AbstractUnionEntity {
     }
 
     @Observable
-    public void setPropertyTwo(final EntityTwo propertyTwo) {
+    public UnionEntity setPropertyTwo(final EntityTwo propertyTwo) {
         this.propertyTwo = propertyTwo;
+        return this;
     }
 }

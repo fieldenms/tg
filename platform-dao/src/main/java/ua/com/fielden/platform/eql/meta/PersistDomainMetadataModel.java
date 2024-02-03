@@ -5,11 +5,9 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isExcluded;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
-import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
+import static ua.com.fielden.platform.eql.meta.EntityCategory.QUERY_BASED;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
@@ -26,7 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.Iterators;
 
@@ -41,21 +40,21 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Performs instant (re-)persistence of the Domain Metadata Model entities, generated for an application domain.
- * 
- * @author TG Team 
+ *
+ * @author TG Team
  *
  */
 public class PersistDomainMetadataModel {
     final static String CRITERION = "[selection criterion]";
-    final static String DOMAINTYPE_INSERT_STMT = "INSERT INTO DOMAINTYPE_ VALUES(?,?,?,?,?,?,?,?);";
-    final static String DOMAINPROPERTY_INSERT_STMT = "INSERT INTO DOMAINPROPERTY_ VALUES(?,?,?,?,?,?,?,?,?,?,?,?);";
+    final static String DOMAINTYPE_INSERT_STMT = "INSERT INTO DOMAINTYPE_(_ID, KEY_, DESC_, DBTABLE_, ENTITYTYPEDESC_, ENTITY_, PROPSCOUNT_, _VERSION) VALUES(?, ?, ?, ?, ?, ?, ?, ?);";
+    final static String DOMAINPROPERTY_INSERT_STMT = "INSERT INTO DOMAINPROPERTY_(_ID, NAME_, TITLE_, DESC_, HOLDER__DOMAINTYPE, HOLDER__DOMAINPROPERTY, DOMAINTYPE_, KEYINDEX_, REQUIRED_, DBCOLUMN_, POSITION_, _VERSION) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
     final static String EXISTING_DATA_DELETE_STMT = "DELETE FROM DOMAINPROPERTY_; DELETE FROM DOMAINTYPE_;";
 
-    private static final Logger LOGGER = Logger.getLogger(PersistDomainMetadataModel.class);
-    
+    private static final Logger LOGGER = LogManager.getLogger(PersistDomainMetadataModel.class);
+
     /**
-     * Synchronises persistent model of Domain Explorer entities with an actual application domain. 
-     * 
+     * Synchronises persistent model of Domain Explorer entities with an actual application domain.
+     *
      * @param entityTypes - domain entities to be included into metadata model entities data.
      * @param domainMetadata
      * @param trEx
@@ -68,16 +67,16 @@ public class PersistDomainMetadataModel {
         try {
             LOGGER.info("Removing old domain metadata records...");
             emptyExistingMetadata(trEx);
-            
+
             final Set<Class<? extends AbstractEntity<?>>> domainTypesForIntrospection = entityTypes.stream().filter(EntityUtils::isIntrospectionAllowed).collect(toSet());
             final Map<Class<?>, DomainTypeData> typesMap = generateDomainTypeData(domainTypesForIntrospection, domainMetadata);
 
             LOGGER.info("Inserting metadata about domain entity types...");
             persistDomainTypesData(typesMap.values(), trEx, 1000);
-            
+
             LOGGER.info("Inserting metadata about domain entity properties...");
             persistDomainPropsData(generateDomainPropsData(typesMap), trEx, 1000);
-            
+
             LOGGER.info("Completed saving of the domain metadata.");
         } catch (final Exception ex) {
             LOGGER.fatal("Presisting of the domain metadata did not succeed.", ex);
@@ -98,9 +97,9 @@ public class PersistDomainMetadataModel {
     private static Map<Class<?>, DomainTypeData> generateDomainTypeData(final Set<Class<? extends AbstractEntity<?>>> entityTypes, final EqlDomainMetadata domainMetadata) {
         final Map<Class<?>, DomainTypeData> result = new HashMap<>();
         long id = 0;
-        final Map<Class<? extends AbstractEntity<?>>, EqlEntityMetadata> entitiesMetadataMap = domainMetadata.entityPropsMetadata();
+        final Map<Class<? extends AbstractEntity<?>>, EqlEntityMetadata<?>> entitiesMetadataMap = domainMetadata.entityPropsMetadata();
         for (final Class<? extends AbstractEntity<?>> entityType : entityTypes) {
-            final EqlEntityMetadata entityMd = entitiesMetadataMap.get(entityType);
+            final EqlEntityMetadata<?> entityMd = entitiesMetadataMap.get(entityType);
             if (entityMd != null) {
                 id = id + 1;
                 final Pair<String, String> typeTitleAndDesc = getEntityTitleAndDesc(entityType);
@@ -108,12 +107,12 @@ public class PersistDomainMetadataModel {
                 final Class<?> superType = entityMd.typeInfo.category == QUERY_BASED && isPersistedEntityType(entityType.getSuperclass()) ? entityType.getSuperclass() : null;
                 final String tableName = superType == null ? entityMd.typeInfo.tableName : entitiesMetadataMap.get(superType).typeInfo.tableName;
                 result.put(entityType, new DomainTypeData(entityType, superType, id, entityType.getName(), typeTitleAndDesc.getKey(), true, tableName, typeTitleAndDesc.getValue(), propsMd.size(), entityMd.typeInfo.compositeKeyMembers, propsMd));
-                
+
                 // collecting primitive, union,custom user types and pure types (like XXXGroupingProperty) from props
                 for (final EqlPropertyMetadata pmd : propsMd) {
                     if ((!entitiesMetadataMap.containsKey(pmd.javaType) || !entityTypes.contains(pmd.javaType)) && !result.containsKey(pmd.javaType)) {
                         id = id + 1;
-                        final List<EqlPropertyMetadata> subItems = pmd.subitems().stream().filter(si -> si.column != null).collect(toList());
+                        final List<EqlPropertyMetadata> subItems = pmd.subitems.stream().filter(si -> si.column != null).collect(toList());
                         final int propsCount = !subItems.isEmpty() && !(Money.class.equals(pmd.javaType) && subItems.size() == 1) ? subItems.size() : 0;
                         final Pair<String, String> subTypeTitleAndDesc = isUnionEntityType(pmd.javaType) ? getEntityTitleAndDesc((Class<? extends AbstractUnionEntity>) pmd.javaType) : null;
                         final String title = subTypeTitleAndDesc != null ? subTypeTitleAndDesc.getKey() : pmd.javaType.getSimpleName();
@@ -126,7 +125,7 @@ public class PersistDomainMetadataModel {
 
         return result;
     }
-    
+
     private static List<DomainPropertyData> generateDomainPropsData(final Map<Class<?>, DomainTypeData> typesMap) {
         final List<DomainPropertyData> result = new ArrayList<>();
 
@@ -160,11 +159,11 @@ public class PersistDomainMetadataModel {
                                 : superTypeDtd.getProps().get(propMd.name) != null ? superTypeDtd.getProps().get(propMd.name) : propMd), //
                         position));
 
-                // adding subproperties of union type properties 
-                if (propMd.subitems().size() > 1) { //skipping cases of SimpleMoney with single subproperty
+                // adding subproperties of union type properties
+                if (propMd.subitems.size() > 1) { //skipping cases of SimpleMoney with single subproperty
                     final long holderId = id;
                     int subItemPosition = 0;
-                    for (final EqlPropertyMetadata subProp : propMd.subitems().stream().filter(el -> el.column != null).collect(toList())) {
+                    for (final EqlPropertyMetadata subProp : propMd.subitems.stream().filter(el -> el.column != null).collect(toList())) {
                         id = id + 1;
                         subItemPosition = subItemPosition + 1;
                         final Pair<String, String> titleAndDesc = getTitleAndDesc(subProp.name, propMd.javaType);
@@ -186,15 +185,16 @@ public class PersistDomainMetadataModel {
 
         return result;
     }
-    
+
     private static String determinePropColumn(final EqlPropertyMetadata propMd) {
         if (propMd.critOnly) {
             return CRITERION;
         }
-        return (propMd.column != null ? propMd.column.name
-                : (propMd.subitems().size() == 1 ? (propMd.subitems().get(0).column != null ? propMd.subitems().get(0).column.name : null) : null));
+        return propMd.column != null
+               ? propMd.column.name
+               : (propMd.subitems.size() == 1 ? (propMd.subitems.get(0).column != null ? propMd.subitems.get(0).column.name : null) : null);
     }
-    
+
     private static void persistDomainTypesData(final Collection<DomainTypeData> dtd, final TransactionalExecution trEx, final int batchSize) {
         LOGGER.info(format("Inserting domain types -- %s records in total...", dtd.size()));
         Iterators.partition(dtd.iterator(), batchSize > 0 ? batchSize : 1)
@@ -227,7 +227,7 @@ public class PersistDomainMetadataModel {
         });
         LOGGER.info("Completed inserting domain types.");
     }
-    
+
     private static void persistDomainPropsData(final List<DomainPropertyData> dpd, final TransactionalExecution trEx, final int batchSize) {
         LOGGER.info(format("Inserting domain properties -- %s records in total...", dpd.size()));
         // batch insert statements
@@ -311,7 +311,7 @@ public class PersistDomainMetadataModel {
             for (final EqlPropertyMetadata prop : props) {
                 this.props.put(prop.name, prop);
             }
-            
+
             int i = 0;
             for (final T2<String, Class<?>> element : keyMembers) {
                 i = i + 1;
@@ -322,16 +322,16 @@ public class PersistDomainMetadataModel {
                 keyMembersIndices.put("key", 0);
             }
         }
-        
+
         public Integer getKeyMemberIndex(final String keyMember) {
             return keyMembersIndices.get(keyMember);
         }
-        
+
         public Map<String, EqlPropertyMetadata> getProps() {
             return unmodifiableMap(props);
         }
     }
-    
+
     private static class DomainPropertyData {
         private final long id;
         private final String name;

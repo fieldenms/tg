@@ -5,7 +5,7 @@ import static java.lang.String.format;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.EntityUtils;

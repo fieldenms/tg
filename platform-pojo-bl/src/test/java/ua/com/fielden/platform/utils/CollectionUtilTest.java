@@ -17,6 +17,7 @@ import static ua.com.fielden.platform.utils.CollectionUtil.tail;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.Test;
 
@@ -84,6 +85,63 @@ public class CollectionUtilTest {
         assertArrayEquals(new Integer[] {}, tail(new Integer[] {1}).get());
         assertArrayEquals(new Integer[] {2}, tail(new Integer[] {1, 2}).get());
         assertArrayEquals(new Integer[] {2, 3}, tail(new Integer[] {1, 2, 3}).get());
+    }
+
+     @Test
+    public void collections_of_different_types_but_the_same_elements_are_equal_by_contents() {
+        final List<Integer> list = List.of(1, 4, 2, 5);
+        final Set<Integer> set = Set.of(4, 1, 5, 2);
+        assertTrue(CollectionUtil.areEqualByContents(list, set));
+    }
+
+    @Test
+    public void null_collections_are_not_equal_by_contents() {
+        assertFalse(CollectionUtil.areEqualByContents(null, null));
+    }
+
+    @Test
+    public void null_and_non_null_collections_are_not_equal_by_contents() {
+        assertFalse(CollectionUtil.areEqualByContents(null, List.of(1, 4, 2, 5)));
+        assertFalse(CollectionUtil.areEqualByContents(List.of(1, 4, 2, 5), null));
+    }
+
+    @Test
+    public void collections_with_null_elements_cannot_be_checked_for_equality_by_contents() {
+        final List<Integer> xs = CollectionUtil.listOf(1, 4, null, 5);
+        final List<Integer> ys = CollectionUtil.listOf(4, 5, 1, null);
+        assertThrows(NullPointerException.class, () -> CollectionUtil.areEqualByContents(xs, ys));
+    }
+
+    @Test
+    public void lists_with_different_elements_are_not_equal_by_contents() {
+        final List<Integer> xs = List.of(1, 4, 2, 5);
+        final List<Integer> ys = List.of(1, 4, 2, 1);
+        assertFalse(CollectionUtil.areEqualByContents(xs, ys));
+    }
+
+    @Test
+    public void areEqualByContents_is_reflexive() {
+        final List<Integer> xs = List.of(1, 4, 2, 5);
+        assertTrue(CollectionUtil.areEqualByContents(xs, xs));
+        assertTrue(CollectionUtil.areEqualByContents(List.of(1, 4, 2, 5), List.of(1, 4, 2, 5)));
+    }
+
+    @Test
+    public void areEqualByContents_is_symmetric() {
+        final List<Integer> xs = List.of(1, 4, 2, 5);
+        final Set<Integer> ys = Set.of(2, 4, 5, 1);
+        assertTrue(CollectionUtil.areEqualByContents(xs, ys));
+        assertTrue(CollectionUtil.areEqualByContents(ys, xs));
+    }
+
+    @Test
+    public void areEqualByContents_is_transitive() {
+        final List<Integer> xs = List.of(1, 4, 2, 5);
+        final Set<Integer> ys = Set.of(2, 4, 5, 1);
+        final List<Integer> zs = List.of(4, 2, 5, 1);
+        assertTrue(CollectionUtil.areEqualByContents(xs, ys));
+        assertTrue(CollectionUtil.areEqualByContents(ys, zs));
+        assertTrue(CollectionUtil.areEqualByContents(xs, zs));
     }
 
     @Test

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.equery.lifecycle;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
+
 import java.awt.Color;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -13,8 +15,8 @@ import java.util.Random;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.joda.time.Interval;
@@ -80,7 +82,7 @@ public abstract class LifecycleModel<T extends AbstractEntity<?>> {
 
     private transient LinkedHashMap<IProperty, Object> groupingValues;
 
-    private transient final Logger logger = Logger.getLogger(getClass());
+    private transient final Logger logger = getLogger(getClass());
 
     /**
      * Mainly used for serialisation.

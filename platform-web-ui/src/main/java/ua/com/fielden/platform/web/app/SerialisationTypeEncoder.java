@@ -3,9 +3,11 @@ package ua.com.fielden.platform.web.app;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.ClassesRetriever.findClass;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
@@ -14,7 +16,7 @@ import java.lang.annotation.Annotation;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
 
@@ -24,7 +26,6 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.security.user.IUser;
@@ -44,7 +45,7 @@ import ua.com.fielden.platform.ui.menu.SaveAsNameAnnotation;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
 public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
-    private final Logger logger = Logger.getLogger(getClass());
+    private final Logger logger = getLogger(getClass());
     private TgJackson tgJackson;
     private EntityTypeInfoGetter entityTypeInfoGetter;
     private final IDeviceProvider deviceProvider;
@@ -128,11 +129,10 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
                     final MiType miTypeAnnotation = new MiTypeAnnotation().newInstance(miType);
                     final Annotation [] annotations = saveAsName.isPresent() ? new Annotation[] {miTypeAnnotation, new SaveAsNameAnnotation().newInstance(saveAsName.get())} : new Annotation[] {miTypeAnnotation};
                     final Class<?> managedType = stripIfNeeded(criteriaGenerator.generateCentreQueryCriteria(getEntityType(miType), previouslyRunCentre, miType, annotations).getClass());
-                    final DynamicEntityClassLoader classLoader = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
                     try {
                         // The type name from client-side needs to be promoted to this server node very similarly as it is done below for centre managed types ('adjustManagedTypeName' call).
                         final String predefinedTypeName = root.getName() + DynamicTypeNamingService.APPENDIX + "_" + originalAndSuffix[1];
-                        decodedEntityType = (Class<T>) classLoader.startModification(managedType).modifyTypeName(predefinedTypeName).endModification();
+                        decodedEntityType = (Class<T>) startModification(managedType).modifyTypeName(predefinedTypeName).endModification();
                     } catch (final ClassNotFoundException e) {
                         throw new SerialisationTypeEncoderException(e.getMessage());
                     }

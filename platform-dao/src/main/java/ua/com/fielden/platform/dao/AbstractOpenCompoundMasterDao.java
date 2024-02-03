@@ -22,6 +22,8 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
+import ua.com.fielden.platform.entity_master.exceptions.CompoundMasterException;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
@@ -134,30 +136,48 @@ public abstract class AbstractOpenCompoundMasterDao<T extends AbstractFunctional
     }
 
     @SafeVarargs
+    public final void addViewBinding(final String binding, final Class<? extends AbstractEntity<?>> type, final IConvertableToPath propertyPath, final T2<String, IConvertableToPath>... paramConfig) {
+        addViewBinding(binding, type, (where, value) -> enhanceEmbededCentreQuery(where, propertyPath, value), paramConfig);
+    }
+
+    @SafeVarargs
     public final void addViewBinding(final String binding, final Class<? extends AbstractEntity<?>> type, final String propertyName, final String relativeValueProperty, final T2<String, String>... paramConfig) {
         addViewBinding(binding, type, (where, value) -> enhanceEmbededCentreQuery(where, propertyName, value, relativeValueProperty), paramConfig);
     }
 
     @SafeVarargs
-    public final void addViewBinding(
+    public final void addViewBinding(final String binding, final Class<? extends AbstractEntity<?>> type, final IConvertableToPath propertyPath, final IConvertableToPath relativeValueProperty, final T2<String, IConvertableToPath>... paramConfig) {
+        addViewBinding(binding, type, (where, value) -> enhanceEmbededCentreQuery(where, propertyPath, value, relativeValueProperty), paramConfig);
+    }
+
+    @SafeVarargs
+    public final <P> void addViewBinding(
             final String binding,
             final Class<? extends AbstractEntity<?>> type,
             final BiFunction<IWhere0<? extends AbstractEntity<?>>, Object, ICompleted<? extends AbstractEntity<?>>> queryEnhnacer,
-            final T2<String, String>... paramConfig) {
+            final T2<String, P>... paramConfig) {
         compoundMasterConfig.add(t3(binding, type, queryEnhnacer));
         additionalParameters.putAll(Arrays.stream(paramConfig).collect(toMap(entry -> entry._1, entry -> value -> getValue(value, entry._2))));
     }
 
     @SafeVarargs
-    public final void addViewBinding(final String binding, final Class<? extends AbstractEntity<?>> type, final T2<String, String>... parameters) {
+    public final <P> void addViewBinding(final String binding, final Class<? extends AbstractEntity<?>> type, final T2<String, P>... parameters) {
         this.parameters.add(t3(binding, type, Arrays.stream(parameters).collect(toMap(parameter -> parameter._1, parameter -> value -> getValue(value, parameter._2)))));
     }
 
     public static <K extends AbstractEntity<?>> ICompleted<K> enhanceEmbededCentreQuery(final IWhere0<K> where, final String prop, final Object value, final String relativeValuePropertyName) {
-        return where.prop(prop).eq().val(((AbstractEntity<?>)value).get(relativeValuePropertyName));
+        return where.prop(prop).eq().val(((AbstractEntity<?>) value).get(relativeValuePropertyName));
+    }
+
+    public static <K extends AbstractEntity<?>> ICompleted<K> enhanceEmbededCentreQuery(final IWhere0<K> where, final IConvertableToPath prop, final Object value, final IConvertableToPath relativeValuePropertyName) {
+        return where.prop(prop).eq().val(((AbstractEntity<?>) value).get(relativeValuePropertyName));
     }
 
     public static <K extends AbstractEntity<?>> ICompleted<K> enhanceEmbededCentreQuery(final IWhere0<K> where, final String prop, final Object value) {
+        return where.prop(prop).eq().val(value);
+    }
+
+    public static <K extends AbstractEntity<?>> ICompleted<K> enhanceEmbededCentreQuery(final IWhere0<K> where, final IConvertableToPath prop, final Object value) {
         return where.prop(prop).eq().val(value);
     }
 
@@ -174,7 +194,15 @@ public abstract class AbstractOpenCompoundMasterDao<T extends AbstractFunctional
         return queryParams;
     }
 
-    private static Object getValue(final Object value, final String propertyName) {
-        return THIS.equals(propertyName) ? value : ((AbstractEntity<?>)value).get(propertyName);
+    private static <P> Object getValue(final Object value, final P propName) {
+        if (propName instanceof final String strProp) {
+            return THIS.equals(strProp) ? value : ((AbstractEntity<?>) value).get(strProp);
+        }
+
+        if (propName instanceof final IConvertableToPath pathProp) {
+            return THIS.equals(pathProp.toPath()) ? value : ((AbstractEntity<?>) value).get(pathProp);
+        }
+
+        throw new CompoundMasterException("Unexpected value [%s] of type [%s].".formatted(propName, propName.getClass().getSimpleName()));
     }
 }

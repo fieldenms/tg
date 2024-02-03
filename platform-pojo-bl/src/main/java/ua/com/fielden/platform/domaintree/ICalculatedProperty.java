@@ -403,6 +403,11 @@ public interface ICalculatedProperty extends IProperty {
      */
     public enum CalculatedPropertyCategory {
         /**
+         * Implicit calculated properties represent either one-2-one or one-2-many relationships.
+         * Properties with this category should only be defined for "master" entities, representing the left side of a relationship.
+         */
+        IMPLICIT,
+        /**
          * The category of <b>calculated properties</b> only with simple hierarchy members -- no members of collectional hierarchy. There are no restrictions for hierarchy levels
          * to be used in this expression (higher or lower in the actual calculated property place).<br>
          * <br>

@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.web.sse.resources;
 
+import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.security.session.Authenticator.fromString;
 import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME;
 
@@ -10,6 +12,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.SignatureException;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Stream;
@@ -20,10 +23,13 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
@@ -53,7 +59,7 @@ public final class SseServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private static final String NO_SSE_UID = "no SSE UID";
-    private static final Logger LOGGER = Logger.getLogger(SseServlet.class);
+    private static final Logger LOGGER = getLogger(SseServlet.class);
 
     private static final ScheduledExecutorService HEARTBEAT_SCHEDULER = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("SSE-heartbeat-%d").build());
     private static final int HEARTBEAT_FREQUENCY_IN_SECONDS = 10;
@@ -64,6 +70,72 @@ public final class SseServlet extends HttpServlet {
     private final SessionIdentifierGenerator crypto;
 
     /**
+     * A convenient factory method to create an SSE service.
+     * <p>
+     * The method inspects application property {@code sse.enabled}. If true, creates, but does not start, a separate Jetty server instances with {@code SseServlet} added.
+     * <p>
+     * The following properties can be provided:
+     * <ul>
+     * <li>{@code sse.enabled}, default value "true".
+     * <li>{@code sse.jetty.port}, default value "8092".
+     * <li>{@code sse.jetty.threadPool.maxThreads}, default value "10".
+     * <li>{@code sse.jetty.threadPool.minThreads}, default value "1".
+     * <li>{@code sse.jetty.threadPool.idleTimeout}, default value "60000".
+     * <li>{@code sse.jetty.connector.acceptors}, default value "1".
+     * </ul>
+     * 
+     * @param props
+     * @param eseRegister
+     * @param coFinder
+     * @param hashingKey
+     * @param crypto
+     * @param logger
+     * @return
+     */
+     public static Optional<Server> createSseService(
+            final Properties props,
+            final IEventSourceEmitterRegister eseRegister,
+            final ICompanionObjectFinder coFinder,
+            final @SessionHashingKey String hashingKey,
+            final SessionIdentifierGenerator crypto,
+            final Logger logger
+            ) {
+        if (!Boolean.valueOf(props.getProperty("sse.enabled", "true"))) {
+            logger.warn("SSE service is disabled. Attachments and auto-refresh capabilities won't work.");
+            return empty();
+        }
+        final int port = parseInt(props.getProperty("sse.jetty.port", "8092"));
+        final int maxThreads = parseInt(props.getProperty("sse.jetty.threadPool.maxThreads", "10"));
+        final int minThreads = parseInt(props.getProperty("sse.jetty.threadPool.minThreads", "1"));
+        final int idleTimeout = parseInt(props.getProperty("sse.jetty.threadPool.idleTimeout", "60000"));
+        final int acceptors = parseInt(props.getProperty("sse.jetty.connector.acceptors", "1"));
+        
+        logger.info(
+                """
+                Creating SSE service:
+                    sse.jetty.port..............................%s
+                    sse.jetty.threadPool.maxThreads.............%s
+                    sse.jetty.threadPool.minThreads.............%s
+                    sse.jetty.threadPool.idleTimeout............%s
+                    sse.jetty.connector.acceptors...............%s
+                """.formatted(port, maxThreads, minThreads, idleTimeout, acceptors));
+
+        final QueuedThreadPool threadPool = new QueuedThreadPool(maxThreads, minThreads, idleTimeout);
+        final Server server = new Server(threadPool);
+
+        final ServerConnector http = new ServerConnector(server, acceptors /* acceptors */, -1 /* selectors */);
+        http.setPort(port);
+        server.addConnector(http);
+
+        // so we need to add a handler
+        final ServletHandler handler = new ServletHandler();
+        server.setHandler(handler);
+        // SSE servlet instantiation, which still needs to be associated with a Jetty instance
+        SseServlet.addSseServlet(handler, eseRegister, coFinder, hashingKey, crypto);
+        return of(server);
+    }
+
+    /**
      * A factory method for instantiating and adding SSE servlet to {@code handler}.
      *
      * @param handler
@@ -72,7 +144,7 @@ public final class SseServlet extends HttpServlet {
      * @param hashingKey
      * @param crypto
      */
-    public static void addSseServlet(
+    private static void addSseServlet(
             final ServletHandler handler,
             final IEventSourceEmitterRegister eseRegister,
             final ICompanionObjectFinder coFinder,
@@ -86,7 +158,7 @@ public final class SseServlet extends HttpServlet {
         // let's now bind the servlet to the default SSE path
         handler.addServletWithMapping(servletHolder, "/sse/*");
     }
-    
+
     private SseServlet(
             final IEventSourceEmitterRegister eseRegister,
             final ICompanionObjectFinder coFinder,

@@ -9,7 +9,7 @@ import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreCo
 import java.util.Optional;
 import java.util.function.BiFunction;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.google.inject.Injector;
 

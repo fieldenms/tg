@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.security.session;
 
 import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
@@ -19,8 +20,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
+import org.apache.logging.log4j.Logger;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -51,7 +52,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
  */
 @EntityType(UserSession.class)
 public class UserSessionDao extends CommonEntityDao<UserSession> implements IUserSession {
-    private final Logger logger = Logger.getLogger(UserSessionDao.class);
+    private final Logger logger = getLogger(UserSessionDao.class);
     private static final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
     /** A key to be used for hashing authenticators and series ID before storing them. */

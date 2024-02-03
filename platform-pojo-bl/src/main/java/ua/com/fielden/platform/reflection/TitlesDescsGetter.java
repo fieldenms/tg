@@ -2,6 +2,7 @@ package ua.com.fielden.platform.reflection;
 
 import static java.util.Arrays.asList;
 import static java.util.Optional.of;
+import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.capitalize;
 import static org.apache.commons.lang3.StringUtils.join;
 import static org.apache.commons.lang3.StringUtils.splitByCharacterTypeCamelCase;
@@ -33,6 +34,7 @@ import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.titles.Subtitles;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -123,6 +125,16 @@ public class TitlesDescsGetter {
             return processSubtitles(propPath, entityType).orElseGet(() -> processTitles(propPath, entityType));
     }
 
+    /**
+     * The same as {@link #getTitleAndDesc(String, Class)}, but with {@link IConvertableToPath} {@code prop} argument.
+     *
+     * @param prop
+     * @param entityType
+     * @return
+     */
+    public static Pair<String, String> getTitleAndDesc(final IConvertableToPath prop, final Class<?> entityType) {
+        return getTitleAndDesc(prop.toPath(), entityType);
+    }
     /**
      * Determines property titles and desc without analysing {@link Subtitles}. Effectively this represents the logic before subtitles were introduced.
      * This method should not be used directly and therefore it is private.
@@ -215,32 +227,33 @@ public class TitlesDescsGetter {
     }
 
     /**
+     * Returns {@link Pair} with key set to entity title and value set to entity description. Traverses <code>entityType</code> hierarchy bottom-up in search of the specified
+     * entity title and description.
+     */
+    public static Pair<String, String> getEntityTitleAndDesc(final AbstractEntity<?> entity) {
+        return getEntityTitleAndDesc(entity.getType());
+    }
+
+    /**
      * Provides default values of title and description for entity. (e.g. "VehicleFinDetails.class" => "Vehicle Fin Details" and "Vehicle Fin Details entity")
      */
     public static Pair<String, String> getDefaultEntityTitleAndDesc(final Class<? extends AbstractEntity<?>> klass) {
         final String s = breakClassName(klass.getSimpleName());
-        return new Pair<>(s, s + " entity");
+        return pair(s, s + " entity");
     }
 
-    private static String breakClassName(final String str) {
-        String temp = str;
-        int i = 0;
-        while (firstUpperCaseLetterIndex(temp) == 0) { // iterate to find first lowerCase letter
-            temp = str.substring(++i);
+    /**
+     * Breaks a simple class name, returning a string with spaces between camel case words.
+     * For example, {@code "MyClassName"} becomes {@code "My Class Name"}.
+     * 
+     * @param classSimpleName
+     * @return
+     */
+    public static String breakClassName(final String classSimpleName) {
+        if (StringUtils.isEmpty(classSimpleName)) {
+            return "";
         }
-        final String upperCasePart = str.substring(0, i);
-        final int firstUpperCaseLetterIndex = firstUpperCaseLetterIndex(temp);
-        return upperCasePart
-                + (firstUpperCaseLetterIndex < 0 ? temp : temp.substring(0, firstUpperCaseLetterIndex) + " " + breakClassName(temp.substring(firstUpperCaseLetterIndex)));
-    }
-
-    private static int firstUpperCaseLetterIndex(final String str) {
-        for (int i = 0; i < str.length(); i++) {
-            if (str.charAt(i) >= 'A' && str.charAt(i) <= 'Z') {
-                return i;
-            }
-        }
-        return -1;
+        return Stream.of(classSimpleName.split("(?=\\p{Upper})")).map(String::trim).collect(joining(" "));
     }
 
     public static String processReqErrorMsg(final String propName, final Class<? extends AbstractEntity<?>> entityType) {

@@ -15,7 +15,7 @@ import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
  * Business logic and UI should strictly depend only on DAO interfaces -- not the concrete implementations. This will ensure implementation flexibility of the concrete way to
  * access data.
  * 
- * @author Jhou
+ * @author TG Team
  * 
  */
 public interface ILifecycleDao<T extends AbstractEntity<?>> {
@@ -26,7 +26,6 @@ public interface ILifecycleDao<T extends AbstractEntity<?>> {
      * 
      * @param model
      *            - to restrict entities for analysis.
-     * @param binaryTypes
      * @param propertyName
      *            - a property for which lifecycle information should be retrieved.
      * @param from
@@ -35,7 +34,7 @@ public interface ILifecycleDao<T extends AbstractEntity<?>> {
      *            - right period boundary.
      * @return
      */
-    LifecycleModel<T> getLifecycleInformation(final EntityResultQueryModel<? extends AbstractEntity<?>> model, final List<byte[]> binaryTypes, final List<String> distributionProperties, final String propertyName, final DateTime from, final DateTime to);
+    LifecycleModel<T> getLifecycleInformation(final EntityResultQueryModel<? extends AbstractEntity<?>> model, final List<String> distributionProperties, final String propertyName, final DateTime from, final DateTime to);
 
     /**
      * Username should be provided for every DAO instance in order to support data filtering and auditing.

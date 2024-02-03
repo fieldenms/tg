@@ -23,6 +23,7 @@ import ua.com.fielden.platform.web.minijs.JsCode;
  */
 public class CentreToolbar implements IToolbarConfig {
 
+    private static final int DEFAULT_WIDTH_FOR_VIEW_SWITCH = 60;
     private final int switchViewButtonWidth;
 
     /**
@@ -31,7 +32,7 @@ public class CentreToolbar implements IToolbarConfig {
      * @param switchViewButtonWidth
      */
     public CentreToolbar() {
-        this(60); //Default width of switch view button
+        this(DEFAULT_WIDTH_FOR_VIEW_SWITCH); //Default width of switch view button
     }
 
     /**
@@ -111,7 +112,7 @@ public class CentreToolbar implements IToolbarConfig {
                 .attr("slot", "standart-action")
                 .attr("view-index", viewIndex)
                 .attr("button-width", width)
-                .attr("main-button-tooltip-text", "Choose an alternative view.")
+                .attr("main-button-tooltip-text", "Choose alternative view")
                 .attr("views", "[[resultViews]]");
     }
 
@@ -183,4 +184,71 @@ public class CentreToolbar implements IToolbarConfig {
     public int getSwitchViewButtonWidth() {
         return switchViewButtonWidth;
     }
+    
+    /**
+     * A convenient factory method to create a toolbar that would include top actions, a view switch button, and a refresh action.
+     *
+     * @return
+     */
+    public static IToolbarConfig withTopActionsViewSwitchAndRefresh() {
+        return withTopActionsViewSwitchAndRefresh(DEFAULT_WIDTH_FOR_VIEW_SWITCH);
+    }
+
+    /**
+     * The same as {link {@link #withTopActionsViewSwitchAndRefresh()}, but accepts a desired width for the alternative view switching button.
+     *
+     * @param switchViewButtonWidth
+     * @return
+     */
+    public static IToolbarConfig withTopActionsViewSwitchAndRefresh(final int switchViewButtonWidth) {
+        return new CentreToolbar(switchViewButtonWidth) {
+            @Override
+            protected DomElement createToolbarElement() {
+                return new DomContainer().add(topLevelPlacement, switchViewPlacement, refreshButton());
+            }
+        };
+    }
+
+    /**
+     * A convenient factory method to create a toolbar that would include top actions, a view switch button, a pagination panel, and a refresh action.
+     *
+     * @return
+     */
+    public static IToolbarConfig withTopActionsViewSwitchPeginationAndRefresh() {
+        return withTopActionsViewSwitchPeginationAndRefresh(DEFAULT_WIDTH_FOR_VIEW_SWITCH);
+    }
+
+    /**
+     * The same as {link {@link #withTopActionsViewSwitchPeginationAndRefreshAction()}, but accepts a desired width for the alternative view switching button.
+     *
+     * @param switchViewButtonWidth
+     * @return
+     */
+    public static IToolbarConfig withTopActionsViewSwitchPeginationAndRefresh(final int switchViewButtonWidth) {
+        return new CentreToolbar(switchViewButtonWidth) {
+            @Override
+            protected DomElement createToolbarElement() {
+                return new DomContainer().add(topLevelPlacement, switchViewPlacement, pagination("standart-action"), refreshButton());
+            }
+        };
+    }
+
+    /**
+     * A convenient factory method to create a toolbar that would include top actions, a view switch button, a filter button, a pagination panel, and a refresh action.
+     *
+     * @return
+     */
+    public static IToolbarConfig withTopActionsViewSwitchFilterPeginationAndRefresh() {
+        return withTopActionsViewSwitchFilterPeginationAndRefresh(DEFAULT_WIDTH_FOR_VIEW_SWITCH);
+    }
+
+    public static IToolbarConfig withTopActionsViewSwitchFilterPeginationAndRefresh(final int switchViewButtonWidth) {
+        return new CentreToolbar(switchViewButtonWidth) {
+            @Override
+            protected DomElement createToolbarElement() {
+                return new DomContainer().add(topLevelPlacement, switchViewPlacement, configButton(), pagination("standart-action"), refreshButton());
+            }
+        };
+    }
+
 }

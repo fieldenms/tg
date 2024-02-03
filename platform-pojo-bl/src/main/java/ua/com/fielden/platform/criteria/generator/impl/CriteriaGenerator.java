@@ -1,11 +1,11 @@
 package ua.com.fielden.platform.criteria.generator.impl;
 
-import static java.lang.ClassLoader.getSystemClassLoader;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.from;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.getCriteriaTitleAndDesc;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.is;
@@ -22,8 +22,8 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotati
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotationOptionally;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getInstance;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 
 import java.lang.annotation.Annotation;
@@ -34,7 +34,7 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.stream.Stream;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
 
@@ -79,7 +79,7 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class CriteriaGenerator implements ICriteriaGenerator {
 
-    private static final Logger LOGGER = Logger.getLogger(CriteriaGenerator.class);
+    private static final Logger LOGGER = getLogger(CriteriaGenerator.class);
 
     private final EntityFactory entityFactory;
 
@@ -169,9 +169,12 @@ public class CriteriaGenerator implements ICriteriaGenerator {
                 newProperties.addAll(generateCriteriaProperties(root, managedType, propertyName));
             }
         }
-        final DynamicEntityClassLoader cl = getInstance(getSystemClassLoader());
         try {
-            return (Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>>) cl.startModification(CentreEntityQueryCriteriaToEnhance.class).addClassAnnotations(customAnnotations).addProperties(newProperties.toArray(new NewProperty[0])).endModification();
+            return (Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>>)
+                    DynamicEntityClassLoader.startModification(CentreEntityQueryCriteriaToEnhance.class)
+                    .addClassAnnotations(customAnnotations)
+                    .addProperties(newProperties.toArray(new NewProperty[0]))
+                    .endModification();
         } catch (final ClassNotFoundException ex) {
             throw new CriteriaGeneratorException(format("Criteria type for [%s] could not be generated.", root.getSimpleName()), ex);
         }
@@ -267,7 +270,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         annotations.add(new CriteriaPropertyAnnotation(managedType, propertyName).newInstance());
         annotations.add(new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
         annotations.addAll(additionalAnnotations);
-        return new NewProperty(CriteriaReflector.critName(root, propertyName), newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), annotations.toArray(new Annotation[0]));
+        return new NewProperty(CriteriaReflector.critName(root, propertyName), newPropertyType, titleAndDesc.getKey(), titleAndDesc.getValue(), annotations.toArray(new Annotation[0]));
     }
 
     /**
@@ -281,21 +284,15 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * @param additionalAnnotations -- additional annotations to be generated in criteria properties
      * @return
      */
-    @SuppressWarnings("serial")
     private static List<NewProperty> generateRangeCriteriaProperties(final Class<?> root, final Class<?> managedType, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc, final CritOnly critOnlyAnnotation, final IsProperty isPropertyAnnotation, final List<Annotation> additionalAnnotations) {
         final String firstPropertyName = CriteriaReflector.critName(root, EntityUtils.isBoolean(propertyType) ? is(propertyName) : from(propertyName));
         final String secondPropertyName = CriteriaReflector.critName(root, EntityUtils.isBoolean(propertyType) ? not(propertyName) : to(propertyName));
         final Class<?> newPropertyType = EntityUtils.isBoolean(propertyType) ? boolean.class : propertyType;
         
-        final NewProperty firstProperty = new NewProperty(firstPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), createAnnotations(true, managedType, secondPropertyName, propertyName, isPropertyAnnotation, additionalAnnotations));
-        final NewProperty secondProperty = new NewProperty(secondPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), createAnnotations(false, managedType, firstPropertyName, propertyName, isPropertyAnnotation, additionalAnnotations));
+        final NewProperty firstProperty = new NewProperty(firstPropertyName, newPropertyType, titleAndDesc.getKey(), titleAndDesc.getValue(), createAnnotations(true, managedType, secondPropertyName, propertyName, isPropertyAnnotation, additionalAnnotations));
+        final NewProperty secondProperty = new NewProperty(secondPropertyName, newPropertyType, titleAndDesc.getKey(), titleAndDesc.getValue(), createAnnotations(false, managedType, firstPropertyName, propertyName, isPropertyAnnotation, additionalAnnotations));
         
-        return new ArrayList<NewProperty>() {
-            {
-                add(firstProperty);
-                add(secondProperty);
-            }
-        };
+        return listOf(firstProperty, secondProperty);
     }
     
     private static Annotation[] createAnnotations(final boolean first, final Class<?> managedType, final String otherPropertyName, final String originalPropertyName, final IsProperty isProperty, final List<Annotation> additionalAnnotations) {

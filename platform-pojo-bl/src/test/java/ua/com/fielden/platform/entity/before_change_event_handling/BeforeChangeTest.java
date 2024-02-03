@@ -12,7 +12,7 @@ import static ua.com.fielden.platform.entity.meta.AbstractMetaPropertyFactory.ER
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.junit.Test;
 
 import com.google.inject.Injector;

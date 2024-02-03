@@ -191,7 +191,7 @@ public final class Validators {
             final AggregatedResultQueryModel query = select(entityType).where().prop("id").eq().val(entity).yield().expr(expressionModelInProgress.model()).as("kount").modelAsAggregate();
             final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> qem = from(query).model();
 
-            final BigInteger kount = (BigInteger) coAggregate.getEntity(qem).get("kount");
+            final Number kount = (Number) coAggregate.getEntity(qem).get("kount");
             return kount.longValue();
         }
     }

@@ -57,7 +57,7 @@ public class GridAnalysisQueryGenerator<T extends AbstractEntity<?>, CDTME exten
         if (totalFetchModel != null) {
             queryModels.add(createQueryComposer(query, totalFetchModel, null, propValues));
         }
-        return new AnalysisResultClassBundle<>(cdtme, null, null, queryModels);
+        return new AnalysisResultClassBundle<>(cdtme, null, queryModels);
     }
 
     /**

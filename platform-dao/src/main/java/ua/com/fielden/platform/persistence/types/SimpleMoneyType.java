@@ -22,6 +22,8 @@ import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
  */
 public class SimpleMoneyType extends AbstractCompositeUserType implements ISimpleMoneyType {
 
+    public static final SimpleMoneyType INSTANCE = new SimpleMoneyType();
+    
     @Override
     public Class<Money> returnedClass() {
         return Money.class;

@@ -6,10 +6,12 @@ import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalAc
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 import ua.com.fielden.platform.dom.DomElement;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
@@ -97,6 +99,10 @@ public class InsertionPointBuilder implements IRenderable, IExecutable {
 
     public boolean isPreferred() {
         return insertionPointConfig.isPreferred();
+    }
+
+    public List<EntityActionConfig> getActions() {
+        return insertionPointConfig.getActions();
     }
 
     /**

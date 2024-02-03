@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.pdTypeFor;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -42,8 +43,8 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Function;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
 
@@ -122,16 +123,12 @@ import ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithTimeZoneDates;
 import ua.com.fielden.platform.ui.menu.sample.MiTgFetchProviderTestEntity;
 import ua.com.fielden.platform.ui.menu.sample.MiTgGeneratedEntity;
 import ua.com.fielden.platform.ui.menu.sample.MiTgGeneratedEntityForTrippleDecAnalysis;
-import ua.com.fielden.platform.ui.menu.sample.MiTgMachineRealtimeMonitor;
-import ua.com.fielden.platform.ui.menu.sample.MiTgMessage;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties1;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties2;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties3;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties4;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties5;
-import ua.com.fielden.platform.ui.menu.sample.MiTgPolygon;
-import ua.com.fielden.platform.ui.menu.sample.MiTgStop;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.PrefDim.Unit;
@@ -264,12 +261,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
         builder.setTimeFormat("HH:mm")
                .setTimeWithMillisFormat("HH:mm:ss.SSS")
                .withTopPanelStyle(ofNullable(envTopPanelColour), ofNullable(envWatermarkText), ofNullable(envWatermarkCss));
-        // Add entity centres.
 
-        TgMessageWebUiConfig.register(injector(), configApp());
-        TgStopWebUiConfig.register(injector(), configApp());
-        TgMachineRealtimeMonitorWebUiConfig.register(injector(), configApp());
-        TgPolygonWebUiConfig.register(injector(), configApp());
+        // Add entity centres
         MoreDataForDeleteEntityWebUiConfig.register(injector(), configApp());
         final TgCompoundEntityWebUiConfig tgCompoundEntityWebUiConfig = TgCompoundEntityWebUiConfig.register(injector(), configApp());
         final EntityActionConfig mkTgCompoundEntityLocator = mkLocator(configApp(), injector(), TgCompoundEntityLocator.class, "tgCompoundEntity", "color: #0d4b8a");
@@ -1035,22 +1028,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*    */.addMenuItem("Generation Example").description("Centre entities generation example").centre(configApp().getCentre(MiTgGeneratedEntity.class).get()).done()
                 /*    */.addMenuItem("Fetch Provider Example").description("Fetch Provider example").centre(configApp().getCentre(MiTgFetchProviderTestEntity.class).get()).done()
                 /*  */.done()
-                .addMenuItem("GPS-треки").description(
-                        "Перегляд, моніторинг та аналіз GPS повідомлень (у вигляді треків), отриманих від GPS-модулів, які встановлені на машини компанії." + //
-                        "Є можливість переглядати обчислений кілометраж у вигляді графіка і / або таблиці."
-                ).icon("icons:cloud-queue").centre(configApp().getCentre(MiTgMessage.class).get()).done()
-                .addMenuItem("Зупинки").description(
-                        "Перегляд, моніторинг та аналіз зупинок, які були здійснені машинами компанії." + "<br><br>"
-                      + "Зупинка означає, що машина деякий час простоювала або повільно їхала в межах певної невеликої території. Порогові значення "
-                      + "для радіусу території чи швидкості переміщення задає користувач. Також можна задавати "
-                      + "пошук по машинах, організаційних підрозділах та часу здійснення зупинки."
-                ).icon("icons:card-giftcard").centre(configApp().getCentre(MiTgStop.class).get()).done()
-                .addMenuItem("Моніторинг в реальному часі").description(
-                        "Центр для перегляду машин у реальному часі на карті."
-                ).icon("icons:open-with").centre(configApp().getCentre(MiTgMachineRealtimeMonitor.class).get()).done()
-                .addMenuItem("Гео-зони").description(
-                        "Перегляд, моніторинг та аналіз гео-зон."
-                ).icon("icons:flag").centre(configApp().getCentre(MiTgPolygon.class).get()).done()
                 .done().done()
                 .addModule("Accidents")
                 .description("Accidents")
@@ -1329,7 +1306,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
     }
 
     private static class DetailsCentreQueryEnhancer implements IQueryEnhancer<TgPersistentEntityWithProperties> {
-        private static final Logger logger = Logger.getLogger(DetailsCentreQueryEnhancer.class);
+        private static final Logger logger = getLogger(DetailsCentreQueryEnhancer.class);
 
         @Override
         public ICompleted<TgPersistentEntityWithProperties> enhanceQuery(final IWhere0<TgPersistentEntityWithProperties> where, final Optional<CentreContext<TgPersistentEntityWithProperties, ?>> context) {

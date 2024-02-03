@@ -3,12 +3,13 @@ package ua.com.fielden.platform.entity;
 import static java.lang.Class.forName;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseOpening;
 
 import java.util.function.Supplier;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
 
@@ -22,7 +23,7 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 public class EntityManipulationActionProducer<T extends AbstractEntityManipulationAction> extends DefaultEntityProducerWithContext<T> {
-    private final Logger logger = Logger.getLogger(this.getClass());
+    private final Logger logger = getLogger(getClass());
 
     private final IAuthorisationModel authorisation;
     private final ISecurityTokenProvider securityTokenProvider;

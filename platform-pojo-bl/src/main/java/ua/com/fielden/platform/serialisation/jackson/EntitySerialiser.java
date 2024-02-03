@@ -8,6 +8,7 @@ import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresen
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.shortCollectionKey;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.commonProperties;
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
@@ -142,7 +143,8 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             }
         }
         if (AbstractUnionEntity.class.isAssignableFrom(type)) {
-            entityTypeInfo.set_unionCommonProps(commonProperties((Class<AbstractUnionEntity>) type));
+            entityTypeInfo.set_unionCommonProps(new ArrayList<>(commonProperties((Class<AbstractUnionEntity>) type)));
+            entityTypeInfo.set_unionProps(unionProperties((Class<AbstractUnionEntity>) type).stream().map(filed -> filed.getName()).collect(toList()));
         }
         if (AbstractFunctionalEntityToOpenCompoundMaster.class.isAssignableFrom(type)) {
             entityTypeInfo.set_compoundOpenerType(getKeyType(type).getName());
@@ -232,7 +234,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                     entityTypeProp.set_timeZone(timeZone);
                 }
                 entityTypeProp.set_typeName(typeNameOf(prop));
-                
+
                 if (isShortCollection(type, name)) {
                     entityTypeProp.set_shortCollectionKey(shortCollectionKey(type, name));
                 }
@@ -244,11 +246,11 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         registered.set_identifier(serialisationTypeEncoder.encode(type));
         return registered;
     }
-    
+
     /**
      * Returns {@link String} representation of the type of the specified <code>prop</code> in case if it is supported by means of {@link #isFieldTypeSupported(Class)}.
      * For entity-typed properties (non-collectional) it returns full class name prepended with ":", for other types it returns simple class name.
-     * 
+     *
      * @param prop
      * @return
      */
@@ -275,7 +277,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
      * Returns <code>true</code> if the specified <code>fieldType</code> is supported for {@link CachedProperty}, otherwise <code>false</code>.
      * <p>
      * Only non-abstract and non-interface types are supported. The only exception is boolean.class which is supported but has 'abstract' modifier.
-     * 
+     *
      * @param fieldType
      * @return
      */
@@ -286,7 +288,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
 
     /**
      * Creates list of {@link CachedProperty} instances for the specified <code>type</code> based on its property definitions.
-     * 
+     *
      * @param type
      * @return
      */

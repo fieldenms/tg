@@ -13,6 +13,9 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
+import ua.com.fielden.platform.entity.annotation.mutator.Handler;
+import ua.com.fielden.platform.entity.validation.ActivePropertyValidator;
 
 /**
  * First type from {@link TgUnion} types.
@@ -37,6 +40,24 @@ public class TgUnionType1 extends ActivatableAbstractEntity<String> {
     @MapTo
     @Title(value = "Uncommon Property", desc = "Property with the same name but different types and thus should not be common.")
     private BigDecimal uncommon;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Active?", desc = "Designates whether an entity instance is active or not.")
+    @BeforeChange(@Handler(ActivePropertyValidator.class))
+    private boolean active;
+
+    @Override
+    @Observable
+    public TgUnionType1 setActive(final boolean active) {
+        this.active = active;
+        return this;
+    }
+
+    @Override
+    public boolean isActive() {
+        return active;
+    }
 
     @Observable
     public TgUnionType1 setUncommon(final BigDecimal uncommon) {

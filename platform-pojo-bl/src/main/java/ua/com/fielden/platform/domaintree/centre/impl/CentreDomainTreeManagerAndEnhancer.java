@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.domaintree.centre.impl;
 
 import static java.util.Optional.of;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.validateRootTypes;
 import static ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.createFrom;
 
@@ -12,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
@@ -68,7 +69,7 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManagerAndEnhancer implements ICentreDomainTreeManagerAndEnhancer {
     private final transient EntityFactory entityFactory;
-    private final transient Logger logger = Logger.getLogger(getClass());
+    private final transient Logger logger = getLogger(getClass());
     private final LinkedHashMap<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses;
     private final transient LinkedHashMap<String, IAbstractAnalysisDomainTreeManager> currentAnalyses;
     private final transient LinkedHashMap<String, IAbstractAnalysisDomainTreeManager> freezedAnalyses;

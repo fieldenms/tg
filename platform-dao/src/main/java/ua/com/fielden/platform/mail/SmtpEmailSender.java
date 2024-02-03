@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.mail;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
@@ -14,8 +15,8 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 
 import jakarta.activation.DataHandler;
 import jakarta.activation.DataSource;
@@ -120,7 +121,7 @@ public class SmtpEmailSender {
         public abstract String alterBody(final String body, final Stream<T2<Optional<File>, String>> optionalT2Stream1);
     }
 
-    private final Logger logger = Logger.getLogger(SmtpEmailSender.class);
+    private final Logger logger = getLogger(SmtpEmailSender.class);
     private final String host;
     private final Optional<String> maybePort;
 
@@ -333,13 +334,6 @@ public class SmtpEmailSender {
             final String body,
             final Path[] imagePaths,
             final Path... filePaths) {
-        if (imagePaths.length == 0) {
-            throw new EmailException("At least one image is expected.");
-        }
-        if (filePaths.length == 0) {
-            throw new EmailException("At least one attachment is expected.");
-        }
-
         final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.HTML, body, filePaths);
         sendHtmlMessageWithImagesAndAttachments(fromAddress, csvToAddresses, subject, t2._1, imagePaths, t2._2);
     }

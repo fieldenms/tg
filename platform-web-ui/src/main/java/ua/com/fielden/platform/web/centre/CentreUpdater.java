@@ -5,10 +5,12 @@ import static java.util.Arrays.stream;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
+import static java.util.function.Function.identity;
 import static java.util.regex.Pattern.quote;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toSet;
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.ASCENDING;
 import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.DESCENDING;
 import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.valueOf;
@@ -38,6 +40,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.findLoadableConfig;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isLink;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.AND_BEFORE;
@@ -89,11 +92,12 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dashboard.DashboardRefreshFrequency;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -129,7 +133,7 @@ import ua.com.fielden.platform.web.interfaces.DeviceProfile;
  *
  */
 public class CentreUpdater {
-    private static final Logger logger = Logger.getLogger(CentreUpdater.class);
+    private static final Logger logger = getLogger(CentreUpdater.class);
     
     /**
      * Message that marks own save-as configuration when it was inherited from base / shared but was disconnected; this occurs if upstream config is deleted, base upstream config is renamed or shared upstream config is made unshared.
@@ -204,7 +208,7 @@ public class CentreUpdater {
             ? new Money(STRING_TO_BIG_DECIMAL.apply((String) map.get("amount")), STRING_TO_INTEGER.apply((String) map.get("taxPercent")), STRING_TO_CURRENCY.apply((String) map.get("currency")))
             : new Money(STRING_TO_BIG_DECIMAL.apply((String) map.get("amount")), STRING_TO_CURRENCY.apply((String) map.get("currency")));
     private static final Function<AbstractEntity<?>, String> ENTITY_TO_STRING = entity -> entityWithMocksToString((ent) -> {
-        if (isPersistedEntityType(ent.getType()) || isSyntheticBasedOnPersistentEntityType(ent.getType())) {
+        if (isPersistedEntityType(ent.getType()) || isSyntheticBasedOnPersistentEntityType(ent.getType()) || isUnionEntityType(ent.getType())) {
             if (ent.getId() == null) {
                 // Usually persistent (or synthetic based on persistent) entities should have IDs when conversion to diff object is performed.
                 // However we have two edge-cases here.
@@ -530,8 +534,42 @@ public class CentreUpdater {
         final String deviceSpecificName = deviceSpecific(saveAsSpecific(name, saveAsName), device);
         final ICentreDomainTreeManagerAndEnhancer defaultCentre = getDefaultCentre(miType, webUiConfig);
         // override old 'diff' with recently created one and save it
-        saveEntityCentreManager(createDifferences(centre, defaultCentre, getEntityType(miType)), miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, newDesc, eccCompanion, mmiCompanion);
+        saveEntityCentreManager(createDifferences(centre, defaultCentre, getEntityType(miType)), miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, newDesc, eccCompanion, mmiCompanion, identity());
         return centre;
+    }
+    
+    /**
+     * Commits centre from the passed {@code diff} object for surrogate centre with concrete {@code name}. Constructs {@link ICentreDomainTreeManagerAndEnhancer} from that {@code diff}.
+     * <p>
+     * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
+     * 
+     * @param user
+     * @param miType
+     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
+     * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
+     * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
+     * @param defaultCentre -- centre instance to be used for constructing desired centre manager from {@code diff} object
+     * @param diff -- differences object being committed (diffs comparing to default centre)
+     * @param newDesc -- new description to be saved into persistent storage
+     * @param adjustConfig - function to adjust centre configuration ({@link EntityCentreConfig}) before save
+     */
+    public static ICentreDomainTreeManagerAndEnhancer commitCentreDiffWithoutConflicts(
+            final User user,
+            final Class<? extends MiWithConfigurationSupport<?>> miType,
+            final String name,
+            final Optional<String> saveAsName,
+            final DeviceProfile device,
+            final ICentreDomainTreeManagerAndEnhancer defaultCentre,
+            final Map<String, Object> diff,
+            final String newDesc,
+            final EntityCentreConfigCo eccCompanion,
+            final MainMenuItemCo mmiCompanion,
+            final ICompanionObjectFinder companionFinder,
+            final Function<EntityCentreConfig, EntityCentreConfig> adjustConfig) {
+        final String deviceSpecificName = deviceSpecific(saveAsSpecific(name, saveAsName), device);
+        // override old 'diff' with recently created one and save it
+        saveEntityCentreManager(diff, miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, newDesc, eccCompanion, mmiCompanion, adjustConfig);
+        return applyDifferences(defaultCentre, diff, getEntityType(miType), companionFinder);
     }
     
     /**
@@ -955,7 +993,7 @@ public class CentreUpdater {
             // Default centre is now needed for both cases: base or non-base user.
             if (user.isBase() || of(LINK_CONFIG_TITLE).equals(saveAsName) || empty().equals(saveAsName)) { // for non-base user 'link' and 'default' configurations need to be derived from default user-specific configuration instead of base configuration
                 // diff centre does not exist in persistent storage yet -- initialise EMPTY diff
-                resultantDiff = saveNewEntityCentreManager(createEmptyDifferences(), miType, user, deviceSpecificDiffName, null, eccCompanion, mmiCompanion);
+                resultantDiff = saveNewEntityCentreManager(createEmptyDifferences(), miType, user, deviceSpecificDiffName, null, eccCompanion, mmiCompanion, identity());
                 if (FRESH_CENTRE_NAME.equals(name)) { // configs have runAutomatically only in FRESH centre
                     findConfigOpt(miType, user, deviceSpecificDiffName, eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("runAutomatically"))
                         .ifPresent(freshConfig -> {
@@ -975,7 +1013,7 @@ public class CentreUpdater {
                 // creates differences centre from the differences between base user's 'default centre' (which can be user specific, see IValueAssigner for properties dependent on User) and 'baseCentre'
                 final Map<String, Object> differences = baseCentreDiffOpt.orElseGet(CentreUpdater::createEmptyDifferences);
                 // promotes diff to persistent storage
-                resultantDiff = saveNewEntityCentreManager(differences, miType, user, deviceSpecificDiffName, upstreamDesc, eccCompanion, mmiCompanion);
+                resultantDiff = saveNewEntityCentreManager(differences, miType, user, deviceSpecificDiffName, upstreamDesc, eccCompanion, mmiCompanion, identity());
                 if (FRESH_CENTRE_NAME.equals(name)) { // inherited configs have uuid only in FRESH centre
                     if (upstreamConfigUuid.isPresent()) {
                         findConfigOpt(miType, user, deviceSpecificDiffName, eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid").with("runAutomatically"))
@@ -1159,47 +1197,7 @@ public class CentreUpdater {
             }
         }
         
-        // extract widths that are changed and add them to the diff
-        for (final String property : centre.getSecondTick().checkedProperties(root)) {
-            final int widthVal = centre.getSecondTick().getWidth(root, property);
-            if (!equalsEx(widthVal, defaultCentre.getSecondTick().getWidth(root, property))) {
-                diff(property, propertiesDiff).put(WIDTH.name(), widthVal);
-            }
-            final int growFactorVal = centre.getSecondTick().getGrowFactor(root, property);
-            if (!equalsEx(growFactorVal, defaultCentre.getSecondTick().getGrowFactor(root, property))) {
-                diff(property, propertiesDiff).put(GROW_FACTOR.name(), growFactorVal);
-            }
-        }
-        
-        // determine whether usedProperties have been changed (as a whole) and add them to the diff if true
-        final List<String> visibilityAndOrderPropertiesVal = centre.getSecondTick().usedProperties(root);
-        if (!equalsEx(visibilityAndOrderPropertiesVal, defaultCentre.getSecondTick().usedProperties(root))) {
-            diff.put(VISIBILITY_AND_ORDER, visibilityAndOrderPropertiesVal);
-        }
-        
-        // determine whether orderedProperties have been changed (as a whole) and add them to the diff if true
-        final List<Pair<String, Ordering>> sortingPropertiesVal = centre.getSecondTick().orderedProperties(root);
-        if (!equalsEx(sortingPropertiesVal, defaultCentre.getSecondTick().orderedProperties(root))) {
-            diff.put(SORTING, createSerialisableSortingProperties(sortingPropertiesVal));
-        }
-        
-        // determine whether pageCapacity has been changed and add it to the diff if true
-        final int pageCapacityVal = centre.getSecondTick().getPageCapacity();
-        if (!equalsEx(pageCapacityVal, defaultCentre.getSecondTick().getPageCapacity())) {
-            diff.put(PAGE_CAPACITY, pageCapacityVal);
-        }
-        
-        // determine whether visibleRowsCount has been changed and add it to the diff if true
-        final int visibleRowsCountVal = centre.getSecondTick().getVisibleRowsCount();
-        if (!equalsEx(visibleRowsCountVal, defaultCentre.getSecondTick().getVisibleRowsCount())) {
-            diff.put(VISIBLE_ROWS_COUNT, visibleRowsCountVal);
-        }
-        
-        // determine whether numberOfHeaderLines has been changed and add it to the diff if true
-        final int numberOfHeaderLinesVal = centre.getSecondTick().getNumberOfHeaderLines();
-        if (!equalsEx(numberOfHeaderLinesVal, defaultCentre.getSecondTick().getNumberOfHeaderLines())) {
-            diff.put(NUMBER_OF_HEADER_LINES, numberOfHeaderLinesVal);
-        }
+        extendDiffsWithNonIntrusiveDifferences(diff, centre.getSecondTick(), defaultCentre.getSecondTick(), root);
         
         // determine whether preferred view has been changed and add it to the diff if true
         final Integer preferredView = centre.getPreferredView();
@@ -1207,6 +1205,64 @@ public class CentreUpdater {
             diff.put(PREFERRED_VIEW, preferredView);
         }
         
+        return diff;
+    }
+    
+    /**
+     * Extends existing {@code diff} object with non-intrusive changes, taken from {@code secondTick}.
+     * Non-intrusive changes remain existent for auto-runnable centres during auto-run -- unlike criteria and other changes, which are being cleared.
+     * They contain sorting, visibility and order of columns, page capacity etc.
+     * 
+     * @param diff
+     * @param secondTick - target result-set config
+     * @param defaultSecondTick - base (default) result-set config, with which target config will be compared
+     * @param root
+     * @return
+     */
+    public static Map<String, Object> extendDiffsWithNonIntrusiveDifferences(final Map<String, Object> diff, final IAddToResultTickManager secondTick, final IAddToResultTickManager defaultSecondTick, final Class<AbstractEntity<?>> root) {
+        final Map<String, Map<String, Object>> propertiesDiff = (Map<String, Map<String, Object>>) diff.get(PROPERTIES);
+        
+        // extract widths that are changed and add them to the diff
+        for (final String property : secondTick.checkedProperties(root)) {
+            final int widthVal = secondTick.getWidth(root, property);
+            if (!equalsEx(widthVal, defaultSecondTick.getWidth(root, property))) {
+                diff(property, propertiesDiff).put(WIDTH.name(), widthVal);
+            }
+            final int growFactorVal = secondTick.getGrowFactor(root, property);
+            if (!equalsEx(growFactorVal, defaultSecondTick.getGrowFactor(root, property))) {
+                diff(property, propertiesDiff).put(GROW_FACTOR.name(), growFactorVal);
+            }
+        }
+        
+        // determine whether usedProperties have been changed (as a whole) and add them to the diff if true
+        final List<String> visibilityAndOrderPropertiesVal = secondTick.usedProperties(root);
+        if (!equalsEx(visibilityAndOrderPropertiesVal, defaultSecondTick.usedProperties(root))) {
+            diff.put(VISIBILITY_AND_ORDER, visibilityAndOrderPropertiesVal);
+        }
+        
+        // determine whether orderedProperties have been changed (as a whole) and add them to the diff if true
+        final List<Pair<String, Ordering>> sortingPropertiesVal = secondTick.orderedProperties(root);
+        if (!equalsEx(sortingPropertiesVal, defaultSecondTick.orderedProperties(root))) {
+            diff.put(SORTING, createSerialisableSortingProperties(sortingPropertiesVal));
+        }
+        
+        // determine whether pageCapacity has been changed and add it to the diff if true
+        final int pageCapacityVal = secondTick.getPageCapacity();
+        if (!equalsEx(pageCapacityVal, defaultSecondTick.getPageCapacity())) {
+            diff.put(PAGE_CAPACITY, pageCapacityVal);
+        }
+        
+        // determine whether visibleRowsCount has been changed and add it to the diff if true
+        final int visibleRowsCountVal = secondTick.getVisibleRowsCount();
+        if (!equalsEx(visibleRowsCountVal, defaultSecondTick.getVisibleRowsCount())) {
+            diff.put(VISIBLE_ROWS_COUNT, visibleRowsCountVal);
+        }
+        
+        // determine whether numberOfHeaderLines has been changed and add it to the diff if true
+        final int numberOfHeaderLinesVal = secondTick.getNumberOfHeaderLines();
+        if (!equalsEx(numberOfHeaderLinesVal, defaultSecondTick.getNumberOfHeaderLines())) {
+            diff.put(NUMBER_OF_HEADER_LINES, numberOfHeaderLinesVal);
+        }
         return diff;
     }
     

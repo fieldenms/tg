@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.ui.menu.sample;
 
-import org.apache.log4j.Logger;
+import static org.apache.logging.log4j.LogManager.getLogger;
+
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.CentreManagerConfigurator;
@@ -10,8 +12,7 @@ import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 
 @EntityType(TgPersistentEntityWithProperties.class)
 public class MiTgPersistentEntityWithProperties extends MiWithConfigurationSupport<TgPersistentEntityWithProperties> {
-    private static final long serialVersionUID = 1L;
-    private static final Logger logger = Logger.getLogger(MiTgPersistentEntityWithProperties.class);
+    private static final Logger logger = getLogger(MiTgPersistentEntityWithProperties.class);
 
     private static final String caption = "Tg Persistent Entity With Properties";
     private static final String description = "<html>" + "<h3>Tg Persistent Entity With Properties Centre</h3>"

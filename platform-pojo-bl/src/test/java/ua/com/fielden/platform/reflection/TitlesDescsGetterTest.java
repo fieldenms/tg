@@ -86,6 +86,13 @@ public class TitlesDescsGetterTest {
     }
 
     @Test
+    public void getTitleAndDesc_can_determine_prop_title_and_desc_from_IConvertableToPath() {
+        final Pair<String, String> baseCaseTitleAndDesc = TitlesDescsGetter.getTitleAndDesc(() -> "prop2.propertyTwo", FirstLevelEntityPathDependentTitles.class);
+        assertEquals("Two", baseCaseTitleAndDesc.getKey());
+        assertEquals("Two", baseCaseTitleAndDesc.getValue());
+    }
+
+    @Test
     public void getTitleAndDescOfPropertyType_can_determine_title_and_desc_of_entity_type_by_property_path() {
         final Optional<Pair<String, String>> titleAndDesc = TitlesDescsGetter.getTitleAndDescOfPropertyType("critOnlyAEProperty", FirstLevelEntity.class);
 
@@ -145,6 +152,23 @@ public class TitlesDescsGetterTest {
         final Pair<String, String> baseCaseTitleAndDesc = TitlesDescsGetter.getTitleAndDesc("prop2.propertyTwo", FirstLevelEntityPathDependentTitles.class);
         assertEquals("Two", baseCaseTitleAndDesc.getKey());
         assertEquals("Two", baseCaseTitleAndDesc.getValue());
+    }
+
+    @Test
+    public void breakClassName_handles_empty_strings_as_empty() {
+        assertEquals("", TitlesDescsGetter.breakClassName(""));
+        assertEquals("", TitlesDescsGetter.breakClassName(null));
+        assertEquals("", TitlesDescsGetter.breakClassName(" "));
+    }
+
+    @Test
+    public void breakClassName_breaks_strings_by_upper_cased_words() {
+        assertEquals("nouppercase", TitlesDescsGetter.breakClassName("nouppercase"));
+        assertEquals("one Uppercase", TitlesDescsGetter.breakClassName("oneUppercase"));
+        assertEquals("two Upper Cases", TitlesDescsGetter.breakClassName("twoUpperCases"));
+        assertEquals("Tree Upper Cases", TitlesDescsGetter.breakClassName("TreeUpperCases"));
+        assertEquals("Tree Upper Cases", TitlesDescsGetter.breakClassName("Tree UpperCases"));
+        assertEquals("Tree Upper Cases", TitlesDescsGetter.breakClassName("Tree Upper Cases "));
     }
 
 }

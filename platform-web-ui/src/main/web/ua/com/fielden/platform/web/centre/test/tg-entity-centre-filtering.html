@@ -49,9 +49,10 @@
                 centre.postRetrieved = function (entity, bindingEntity, customObject) {
                     const editor = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_;
                     editor._editingValue = 'FILTERED';
+                    // At times committing a value was happening after the "centre.run()"" call.
+                    // Placing "centre.run()" on async with 100 millis delay seems to have resolved this problem.
                     editor.commit();
-
-                    centre.run();
+                    this.async(() => centre.run(), 100);
                 };
 
                 centre.retrieve();

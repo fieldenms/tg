@@ -13,8 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.xml.DOMConfigurator;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
@@ -24,7 +23,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
 
-import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -32,6 +30,7 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
+import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
@@ -120,16 +119,15 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
      */
     public PlatformDbDrivenTestCaseConfiguration() {
         // instantiate all the factories and Hibernate utility
-        DOMConfigurator.configure("src/test/resources/log4j.xml");
 
         final ProxyInterceptor interceptor = new ProxyInterceptor();
         try {
             final DomainMetadata domainMetadata = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), testDomain, DbVersion.H2);
-            final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata);
+            final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata.eqlDomainMetadata);
             final Configuration cfg = new Configuration();
-            
+
             try {
-                cfg.addInputStream(new ByteArrayInputStream(new HibernateMappingsGenerator().generateMappings(domainMetadata).getBytes("UTF8")));
+                cfg.addInputStream(new ByteArrayInputStream(HibernateMappingsGenerator.generateMappings(domainMetadata.eqlDomainMetadata).getBytes("UTF8")));
             } catch (final MappingException | UnsupportedEncodingException e) {
                 throw new HibernateException("Could not add mappings.", e);
             }
@@ -143,7 +141,7 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
                 dbProps.setProperty("hibernate.connection.url", format("jdbc:h2:%s;INIT=SET REFERENTIAL_INTEGRITY FALSE", databaseUri));
                 cfg.addProperties(dbProps);
             }
-            
+
             hibernateUtil = new HibernateUtil(interceptor, cfg);
             hibernateModule = new DaoTestHibernateModule(hibernateUtil.getSessionFactory(), domainMetadata, idOnlyProxiedEntityTypeCache);
             injector = new ApplicationInjectorFactory().add(hibernateModule).add(new NewUserNotifierMockBindingModule()).add(new LegacyConnectionModule(new Provider() {

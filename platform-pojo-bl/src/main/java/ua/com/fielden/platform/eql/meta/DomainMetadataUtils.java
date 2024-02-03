@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.meta;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
@@ -28,6 +28,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
 import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 
 public class DomainMetadataUtils {
 
@@ -85,7 +86,7 @@ public class DomainMetadataUtils {
     }
 
     private static Class<? extends AbstractEntity<?>> getRootType(final Calculated calcAnnotation) throws ClassNotFoundException {
-        return (Class<? extends AbstractEntity<?>>) ClassLoader.getSystemClassLoader().loadClass(calcAnnotation.rootTypeName());
+        return (Class<? extends AbstractEntity<?>>) DynamicEntityClassLoader.loadType(calcAnnotation.rootTypeName());
     }
     
     public static <ET extends AbstractEntity<?>> List<EntityResultQueryModel<ET>> produceUnionEntityModels(final Class<ET> entityType) {
@@ -106,10 +107,5 @@ public class DomainMetadataUtils {
         final Field firstUnionProp = unionProps.get(0);
         final ISubsequentCompletedAndYielded<PT> initialModel = firstUnionProp.equals(currProp) ? startWith.yield().prop(ID).as(firstUnionProp.getName()) : startWith.yield().val(null).as(firstUnionProp.getName()); 
         return unionProps.stream().skip(1).reduce(initialModel, (m, f) -> f.equals(currProp) ? m.yield().prop(ID).as(f.getName()) : m.yield().val(null).as(f.getName()), (m1, m2) -> {throw new UnsupportedOperationException("Combining is not applicable here.");});
-    }
-    
-    public static String getOriginalEntityTypeFullName(final String entityTypeFullClassName) {
-        final int nameEnhancementStartIndex = entityTypeFullClassName.indexOf("$$");
-        return  nameEnhancementStartIndex == -1 ? entityTypeFullClassName : entityTypeFullClassName.substring(0, nameEnhancementStartIndex);
     }
 }

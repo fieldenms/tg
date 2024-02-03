@@ -9,7 +9,8 @@ import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.mkAu
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -36,7 +37,7 @@ public class LogoutResource extends AbstractWebResource {
 
     public static final String BINDING_PATH = "/logout";
 
-    private final Logger logger = Logger.getLogger(LogoutResource.class);
+    private final Logger logger = LogManager.getLogger(LogoutResource.class);
 
     private final IWebResourceLoader webResourceLoader;
     private final IUserProvider userProvider;

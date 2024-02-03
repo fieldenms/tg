@@ -4,8 +4,9 @@ import static java.lang.Math.max;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toCollection;
-import static org.apache.commons.lang.StringUtils.leftPad;
-import static org.apache.commons.lang.StringUtils.rightPad;
+import static org.apache.commons.lang3.StringUtils.leftPad;
+import static org.apache.commons.lang3.StringUtils.rightPad;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
@@ -31,7 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
 
@@ -60,7 +61,7 @@ import ua.com.fielden.platform.types.tuples.T3;
  */
 
 public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Boolean> {
-    private static final Logger LOGGER = Logger.getLogger(ActivePropertyValidator.class);
+    private static final Logger LOGGER = getLogger(ActivePropertyValidator.class);
 
     private final ICompanionObjectFinder coFinder;   
     private final IApplicationDomainProvider applicationDomainProvider;

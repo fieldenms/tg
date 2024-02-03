@@ -3,7 +3,7 @@ package ua.com.fielden.platform.error;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.regex.Pattern.quote;
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
 import java.util.ArrayList;
@@ -263,7 +263,11 @@ public class Result extends RuntimeException {
 
     @Override
     public String getMessage() {
-        return message != null ? message : ex != null ? ex.getMessage() : "no message";
+        // There are exceptions that have no message, returning null.
+        // This is not very useful and in fact was confusing in practice.
+        // Let's return a full name of the exception in such cases.
+        //return message != null ? message : ex != null ? ex.getMessage() : "no message";
+        return message != null ? message : ex != null ? !isEmpty(ex.getMessage()) ? ex.getMessage() : ex instanceof NullPointerException ? NULL_POINTER_EXCEPTION : ex.getClass().getName() : "no message";
     }
 
     public Exception getEx() {

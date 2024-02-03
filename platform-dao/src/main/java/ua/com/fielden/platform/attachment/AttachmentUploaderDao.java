@@ -2,6 +2,7 @@ package ua.com.fielden.platform.attachment;
 
 import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 
@@ -17,7 +18,7 @@ import java.security.MessageDigest;
 import java.util.Random;
 import java.util.stream.Stream;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.apache.tika.detect.Detector;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
@@ -54,7 +55,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
     private static final int DEBUG_DELAY_PROCESSING_TIME_MILLIS = 0;
     private static final Random RND = new Random(100);
 
-    private static final Logger LOGGER = Logger.getLogger(AttachmentUploaderDao.class);
+    private static final Logger LOGGER = getLogger(AttachmentUploaderDao.class);
 
     public final String attachmentsLocation;
 

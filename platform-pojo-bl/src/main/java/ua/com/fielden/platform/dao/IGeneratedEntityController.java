@@ -48,7 +48,7 @@ public interface IGeneratedEntityController<T extends AbstractEntity<?>> extends
      *            -- one or more fetching models specifying the initialisation strategy (i.e. what properties should be retrieved).
      * @return
      */
-    T findById(final Long id, fetch<T> fetchModel, final List<byte[]> binaryTypes);
+    T findById(final Long id, fetch<T> fetchModel);
 
     /**
      * Finds entity by its surrogate id.
@@ -59,7 +59,7 @@ public interface IGeneratedEntityController<T extends AbstractEntity<?>> extends
      *            -- one or more fetching models specifying the initialisation strategy (i.e. what properties should be retrieved).
      * @return
      */
-    T findById(final Long id, final List<byte[]> binaryTypes);
+    T findById(final Long id);
 
     /**
      * A convenient method for retrieving exactly one entity instance determined by the model. If more than one instance was found an exception is thrown. If there is no entity
@@ -68,7 +68,7 @@ public interface IGeneratedEntityController<T extends AbstractEntity<?>> extends
      * @param model
      * @return
      */
-    T getEntity(final QueryExecutionModel<T, ?> model, final List<byte[]> binaryTypes);
+    T getEntity(final QueryExecutionModel<T, ?> model);
 
     /**
      * Should return a reference to the first page of the specified size containing entity instances retrieved using the provided query execution model.
@@ -81,8 +81,7 @@ public interface IGeneratedEntityController<T extends AbstractEntity<?>> extends
      */
     IPage<T> firstPage(//
     final QueryExecutionModel<T, ?> qem,//
-            final int pageCapacity, //
-            final List<byte[]> binaryTypes);
+            final int pageCapacity);
 
     /**
      * Should return a reference to the first page of the specified size containing entity instances retrieved using the provided query execution model and the summary information
@@ -98,8 +97,7 @@ public interface IGeneratedEntityController<T extends AbstractEntity<?>> extends
     IPage<T> firstPage(//
     final QueryExecutionModel<T, ?> qem,//
             final QueryExecutionModel<T, ?> summaryModel,//
-            final int pageCapacity, //
-            final List<byte[]> binaryTypes);
+            final int pageCapacity);
 
     /**
      * Returns a reference to a page with requested number and capacity holding entity instances matching the provided query execution model.
@@ -114,8 +112,7 @@ public interface IGeneratedEntityController<T extends AbstractEntity<?>> extends
     IPage<T> getPage(//
     final QueryExecutionModel<T, ?> qem,//
             final int pageNo, //
-            final int pageCapacity,//
-            final List<byte[]> binaryTypes);
+            final int pageCapacity);
 
     /**
      * Returns a reference to a page with requested number and capacity holding entity instances matching the provided query execution model.
@@ -131,8 +128,7 @@ public interface IGeneratedEntityController<T extends AbstractEntity<?>> extends
     final QueryExecutionModel<T, ?> model, //
             final int pageNo, //
             final int pageCount, //
-            final int pageCapacity,//
-            final List<byte[]> binaryTypes);
+            final int pageCapacity);
 
     /**
      * Returns all entities produced by the provided query.
@@ -143,8 +139,7 @@ public interface IGeneratedEntityController<T extends AbstractEntity<?>> extends
      * @return
      */
     List<T> getAllEntities(//
-    final QueryExecutionModel<T, ?> qem,//
-            final List<byte[]> binaryTypes);
+    final QueryExecutionModel<T, ?> qem);
 
     /**
      * Returns a stream of entities that match the provided query.
@@ -162,8 +157,7 @@ public interface IGeneratedEntityController<T extends AbstractEntity<?>> extends
      */
     List<T> getFirstEntities(//
     final QueryExecutionModel<T, ?> qem,//
-            int numberOfEntities, //
-            final List<byte[]> binaryTypes);
+            int numberOfEntities);
 
     /**
      * Should return a byte array representation the exported data in a format envisaged by the specific implementation.
@@ -183,7 +177,6 @@ public interface IGeneratedEntityController<T extends AbstractEntity<?>> extends
     byte[] export(//
     final QueryExecutionModel<T, ?> query, //
             final String[] propertyNames, //
-            final String[] propertyTitles, //
-            final List<byte[]> binaryTypes) throws IOException;
+            final String[] propertyTitles) throws IOException;
 
 }

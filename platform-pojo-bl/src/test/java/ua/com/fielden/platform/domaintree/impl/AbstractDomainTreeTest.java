@@ -32,7 +32,6 @@ import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickReprese
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.ListenedArrayList;
-import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
 import ua.com.fielden.platform.domaintree.testing.EntityWithNormalNature;
 import ua.com.fielden.platform.domaintree.testing.EntityWithStringKeyType;
 import ua.com.fielden.platform.domaintree.testing.EvenSlaverEntity;
@@ -47,6 +46,7 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
@@ -64,28 +64,24 @@ public abstract class AbstractDomainTreeTest {
     private static final String ASSERT_INNER_CROSS_REFERENCES_FOR = "assertInnerCrossReferences_for_";
 
     /** A base types to be checked for its non-emptiness and non-emptiness of their children. */
-    private static final List<Class<?>> DOMAIN_TREE_TYPES = new ArrayList<Class<?>>() {
-        {
-            add(AbstractEntity.class); //
-            add(ListenedArrayList.class);
-            add(LinkedHashMap.class); //
-            add(EnhancementSet.class); //
-            add(EnhancementLinkedRootsSet.class); //
-            add(EnhancementRootsMap.class); //
-            add(EnhancementPropertiesMap.class); //
-            add(ByteArray.class); //
-            add(Ordering.class); //
-            add(Function.class); //
-            add(CalculatedPropertyCategory.class); //
-            add(CalculatedPropertyAttribute.class); //
-            add(ICalculatedProperty.class); //
-            add(IDomainTreeEnhancer.class); //
-            add(IDomainTreeRepresentation.class); //
-            add(IDomainTreeManager.class); //
-            add(ITickRepresentation.class); //
-            add(ITickManager.class); //
-        }
-    };
+    private static final List<Class<?>> DOMAIN_TREE_TYPES = CollectionUtil.listOf(
+            AbstractEntity.class,
+            ListenedArrayList.class,
+            LinkedHashMap.class,
+            EnhancementSet.class,
+            EnhancementLinkedRootsSet.class,
+            EnhancementRootsMap.class,
+            EnhancementPropertiesMap.class,
+            Ordering.class,
+            Function.class,
+            CalculatedPropertyCategory.class,
+            CalculatedPropertyAttribute.class,
+            ICalculatedProperty.class,
+            IDomainTreeEnhancer.class,
+            IDomainTreeRepresentation.class,
+            IDomainTreeManager.class,
+            ITickRepresentation.class,
+            ITickManager.class);
     private static Object irrelevantDtm;
     private Object dtm = null;
     private static Class<? extends AbstractDomainTreeTest> testCaseClass1;

@@ -23,6 +23,8 @@ import ua.com.fielden.platform.types.markers.ISecurityTokenType;
  */
 public class SecurityTokenType implements UserType, ISecurityTokenType {
 
+    public static final SecurityTokenType INSTANCE = new SecurityTokenType();
+    
     private static final int[] SQL_TYPES = { Types.VARCHAR };
 
     @Override

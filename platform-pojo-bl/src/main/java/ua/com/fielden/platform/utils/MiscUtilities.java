@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.utils;
 
-import static java.util.stream.Collectors.toMap;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -13,14 +11,13 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.Properties;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 import javax.swing.filechooser.FileFilter;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public class MiscUtilities {
 
@@ -165,6 +162,18 @@ public class MiscUtilities {
 
             return props;
         }
+    }
+    
+    /**
+     * Returns a function accepting a format string and returning that string formatted with {@code args}.
+     * <p>
+     * Useful when the same value is used repeatedly to create a formatted string.
+     * 
+     * @param args
+     * @return
+     */
+    public static Function<String, String> stringFormatter(final Object... args) {
+        return (format -> format.formatted(args)); 
     }
 
 }

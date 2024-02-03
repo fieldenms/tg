@@ -4,7 +4,8 @@ import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.joda.time.DateTimeZone.forID;
 import static org.joda.time.DateTimeZone.getDefault;
 import static org.joda.time.format.DateTimeFormat.forPattern;
@@ -15,7 +16,7 @@ import java.time.YearMonth;
 import java.util.Date;
 import java.util.Optional;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -35,7 +36,7 @@ import ua.com.fielden.platform.basic.config.exceptions.ApplicationConfigurationE
 @Singleton
 public class DefaultDates implements IDates {
     private static final String SERVER_TIME_ZONE_APPLIED = "Server time-zone will be used.";
-    private final Logger logger = Logger.getLogger(getClass());
+    private final Logger logger = getLogger(getClass());
     private final boolean independentTimeZone;
     private final Integer weekStart;
     private final Integer finYearStartDay;

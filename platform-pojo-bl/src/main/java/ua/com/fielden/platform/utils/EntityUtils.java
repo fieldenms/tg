@@ -7,9 +7,10 @@ import static java.util.Optional.ofNullable;
 import static java.util.stream.Stream.concat;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.apache.commons.lang.StringUtils.lastIndexOf;
-import static org.apache.commons.lang.StringUtils.length;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.lastIndexOf;
+import static org.apache.commons.lang3.StringUtils.length;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
@@ -23,7 +24,6 @@ import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.PROPERTY_SPLITTER;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.StreamUtils.takeWhile;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 
@@ -54,7 +54,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 
 import com.google.common.cache.Cache;
@@ -79,6 +79,7 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -92,7 +93,7 @@ import ua.com.fielden.platform.types.try_wrapper.TryWrapper;
 import ua.com.fielden.platform.types.tuples.T2;
 
 public class EntityUtils {
-    private static final Logger logger = Logger.getLogger(EntityUtils.class);
+    private static final Logger logger = getLogger(EntityUtils.class);
 
     private static final Cache<Class<?>, Boolean> persistentTypes = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).initialCapacity(512).build();
     private static final Cache<Class<?>, Boolean> syntheticTypes = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).initialCapacity(512).build();
@@ -156,8 +157,7 @@ public class EntityUtils {
      * @return
      */
     public static BigDecimal toDecimal(final Number number, final int scale) {
-        if (number instanceof BigDecimal) {
-            final BigDecimal decimal = (BigDecimal) number;
+        if (number instanceof final BigDecimal decimal) {
             return decimal.scale() == scale ? decimal : decimal.setScale(scale, RoundingMode.HALF_UP);
         }
         return new BigDecimal(number.toString(), new MathContext(scale, RoundingMode.HALF_UP));
@@ -691,20 +691,42 @@ public class EntityUtils {
      * @return
      */
     public static boolean isSyntheticEntityType(final Class<?> type) {
-        if (!isEntityType(type)) {
+        if (!isEntityType(type) || isUnionEntityType(type)) {
             return false;
         } else {
             try {
-                return syntheticTypes.get(type, () -> {
-                        final boolean foundModelField = listOf(type.getDeclaredFields()).stream().anyMatch(field -> isStatic(field.getModifiers()) && //
-                                ("model_".equals(field.getName()) && EntityResultQueryModel.class.equals(field.getType()) || "models_".equals(field.getName()) && List.class.equals(field.getType())));
-                        return foundModelField && !isUnionEntityType(type);});
+                return syntheticTypes.get(type, () -> findSyntheticModelFieldFor(type.asSubclass(AbstractEntity.class)) != null);
             } catch (final Exception ex) {
                 final String msg = format("Could not determine synthetic nature of entity type [%s].", type.getSimpleName());
                 logger.error(msg, ex);
                 throw new ReflectionException(msg, ex);
             }
         }
+    }
+
+    /**
+     * A helper method to determine if {@code entityType} contains either static field "mode_" or "models_" of the appropriate types, which indicates that {@code entityType} is a synthetic entity.
+     * <p>
+     * It became required to traverse the type hierarchy instead of relying on declared fields with the implementation of issue <a href="https://github.com/fieldenms/tg/issues/1692">#1692</a>, which started generating types as subclasses of the original ones.
+     *
+     * @param <T>
+     * @param entityType to be analysed.
+     * @return either a field corresponding to {@code model_} or {@code models_}, or {@code null}.
+     */
+    public static <T extends AbstractEntity<?>> Field findSyntheticModelFieldFor(final Class<T> entityType) {
+        Class<?> klass = entityType;
+        while (klass != AbstractEntity.class) { // iterated thought hierarchy
+            for (final Field field : klass.getDeclaredFields()) {
+                if (isStatic(field.getModifiers())) {
+                    if ("model_".equals(field.getName()) && EntityResultQueryModel.class.equals(field.getType()) ||
+                        "models_".equals(field.getName()) && List.class.equals(field.getType())) {
+                        return field;
+                    }
+                }
+            }
+            klass = klass.getSuperclass(); // move to the next super class in the hierarchy in search for more declared fields
+        }
+        return null;
     }
 
     /**
@@ -715,9 +737,22 @@ public class EntityUtils {
      * @return
      */
     public static boolean isSyntheticBasedOnPersistentEntityType(final Class<? extends AbstractEntity<?>> type) {
-        return isSyntheticEntityType(type) && isPersistedEntityType(type.getSuperclass());
+        if (!isSyntheticEntityType(type)) {
+            return false;
+        }
+        // Let's traverse the type hierarchy to identify if there is a persistent super type...
+        // Such traversal is now required because generation of new types extends the original type.
+        // And so, there can be situations where a generated type has a synthetic-based-on-persistent type as its super type, and also needs to be recognised as being synthetic-based-on-persistent.
+        // Due to the fact that a generated type can be based on a generated that is based on... etc., type hierarchy traversal is required.
+        Class<?> superType = type.getSuperclass();
+        while (superType != AbstractEntity.class) {
+            if (isPersistedEntityType(superType)) {
+                return true;
+            }
+            superType = superType.getSuperclass();
+        }
+        return false;
     }
-
 
     /**
      * Determines whether the provided entity type models a union-type.
@@ -767,46 +802,6 @@ public class EntityUtils {
      */
     public static boolean isIntrospectionAllowed(final Class<? extends AbstractEntity<?>> type) {
         return !isIntrospectionDenied(type) && (isSyntheticEntityType(type) || isPersistedEntityType(type));
-    }
-
-    /**
-     * Returns list of query models, which given entity type is based on (assuming it is after all).
-     *
-     * @param entityType
-     * @return
-     */
-    public static <T extends AbstractEntity<?>> List<EntityResultQueryModel<T>> getEntityModelsOfQueryBasedEntityType(final Class<T> entityType) {
-        final List<EntityResultQueryModel<T>> result = new ArrayList<>();
-        try {
-            final Field exprField = entityType.getDeclaredField("model_");
-            exprField.setAccessible(true);
-            final Object value = exprField.get(null);
-            if (value instanceof EntityResultQueryModel) {
-                result.add((EntityResultQueryModel<T>) value);
-                return result;
-            } else {
-                throw new ReflectionException(format("The expected type of field 'model_' in [%s] is [EntityResultQueryModel], but actual [%s].",
-                                                     entityType.getSimpleName(), exprField.getType().getSimpleName()));
-            }
-        } catch (final NoSuchFieldException | IllegalAccessException ex) {
-            logger.debug(ex);
-        }
-
-        try {
-            final Field exprField = entityType.getDeclaredField("models_");
-            exprField.setAccessible(true);
-            final Object value = exprField.get(null);
-            if (value instanceof List<?>) { // this is a bit weak type checking due to the absence of generics reification
-                result.addAll((List<EntityResultQueryModel<T>>) exprField.get(null));
-                return result;
-            } else {
-                throw new ReflectionException(format("The expected type of field 'models_' in [%s] is [List<EntityResultQueryModel>], actual [%s].", entityType.getSimpleName(), exprField.getType().getSimpleName()));
-            }
-        } catch (final NoSuchFieldException | IllegalAccessException ex) {
-            logger.debug(ex);
-        }
-
-        return result;
     }
 
     /**
@@ -1211,6 +1206,19 @@ public class EntityUtils {
     }
 
     /**
+     * The same as {@link #fetchEntityForPropOf(String, IEntityReader, Object...)}, but accepting {@link IConvertableToPath} to represent a property a property.
+     *
+     * @param <T>
+     * @param propName
+     * @param coOther
+     * @param keyValues
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final IConvertableToPath propName, final IEntityReader<?> coOther, final Object... keyValues) {
+        return fetchEntityForPropOf(propName.toPath(), coOther, keyValues);
+    }
+
+    /**
      * A convenient method to fetch using id an optional instance of entity,
      * which is intended to be used to populate a value of the specified
      * property of some other entity, using the fetch model as defined by the
@@ -1252,6 +1260,19 @@ public class EntityUtils {
      */
     public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final T instance, final String propName, final IEntityReader<?> coOther) {
         return fetchEntityForPropOf(instance.getId(), propName, coOther);
+    }
+
+    /**
+     * The same as {@link #fetchEntityForPropOf(AbstractEntity, String, IEntityReader)}, but accepting an argument of type {@link IConvertableToPath} to represent a property.
+     *
+     * @param <T>
+     * @param instance
+     * @param propPath
+     * @param coOther
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final T instance, final IConvertableToPath propPath, final IEntityReader<?> coOther) {
+        return fetchEntityForPropOf(instance, propPath.toPath(), coOther);
     }
 
     /**
@@ -1342,10 +1363,14 @@ public class EntityUtils {
 
         for (final Field keyMember : getKeyMembers(entityType)) {
             final String pathToSubprop = parentContextPath.map(path -> path + PROPERTY_SPLITTER + keyMember.getName()).orElse(keyMember.getName());
-            if (!isPersistedEntityType(keyMember.getType())) {
-                result.add(pathToSubprop);
+            final Class<?> propType = PropertyTypeDeterminator.determinePropertyType(entityType, keyMember.getName());
+            if (!isPersistedEntityType(propType)) {
+                // Let's explicitly expand money types property path with its single subproperty "amount".
+                // This will facilitate the usage of the keyPaths(..) method within KeyPropertyExtractor logic, which in its turn requires explicit "amount" to be specified.
+                final var enhancedPathToSubprop = propType.equals(Money.class) ? pathToSubprop + ".amount" : pathToSubprop;
+                result.add(enhancedPathToSubprop);
             } else {
-                result.addAll(keyPaths((Class<? extends AbstractEntity<?>>) keyMember.getType(), pathToSubprop));
+                result.addAll(keyPaths((Class<? extends AbstractEntity<?>>) propType, pathToSubprop));
             }
         }
 

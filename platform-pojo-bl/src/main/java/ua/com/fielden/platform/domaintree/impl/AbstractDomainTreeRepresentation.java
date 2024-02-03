@@ -1,11 +1,12 @@
 package ua.com.fielden.platform.domaintree.impl;
 
 import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.AbstractEntity.STRICT_MODEL_VERIFICATION;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.entity.AbstractEntity.isStrictModelVerification;
 import static ua.com.fielden.platform.reflection.Finder.findProperties;
 import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
@@ -28,8 +29,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.Function;
 import ua.com.fielden.platform.domaintree.FunctionUtils;
@@ -50,6 +51,7 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeUtils;
 import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -63,8 +65,8 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTree implements IDomainTreeRepresentationWithMutability {
-    private final Logger logger = Logger.getLogger(this.getClass());
-    
+    private final Logger logger = getLogger(this.getClass());
+
     /**
      * 0 -- to load only first level properties, Integer.MAX_VALUE -- to load all properties (obviously without cross-references ones);
      */
@@ -125,22 +127,28 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
             if (!isExcludedImmutably(managedType, reflectionProperty)) {
                 newIncludedProps.add(property);
 
-                // determine the type of property, which can be a) "union entity" property b) property under "union entity" c) collection property d) entity property e) simple property
+                // determine the type of property, which can be:
+                // a) "union entity" property 
+                // b) property under "union entity" 
+                // c) collection property 
+                // d) entity property 
+                // e) simple property
                 final Pair<Class<?>, String> penultAndLast = PropertyTypeDeterminator.transform(managedType, reflectionProperty);
                 final Class<?> parentType = penultAndLast.getKey();
                 final Class<?> propertyType = PropertyTypeDeterminator.determineClass(parentType, penultAndLast.getValue(), true, true);
 
                 // add the children for "property" based on its nature
                 if (EntityUtils.isEntityType(propertyType)) {
-                    final boolean propertyTypeWasInHierarchyBefore = typesInHierarchy(managedType, reflectionProperty, true).contains(DynamicEntityClassLoader.getOriginalType(propertyType));
-                    
+                    final boolean propertyTypeWasInHierarchyBefore = typesInHierarchy(managedType, reflectionProperty, true)
+                            .contains(DynamicEntityClassLoader.getOriginalType(propertyType));
+
                     // The logic below (determining whether property represents link property) is important to maintain the integrity of domain trees.
                     // However, it also causes performance bottlenecks when invoking multiple times.
                     // In current Web UI logic, that uses centre domain trees, the following logic does not add any significant value.
                     // Reintroducing may be significant when management of domain trees from UI will be implemented.
                     // Please note number 1. indicates "old" simplified version and number 2. indicates newer version with link property handling.
                     // Perhaps some "hybrid" of both can be used to achieve acceptable performance.
-                    
+
                     // 1. final boolean isKeyPart = Finder.getKeyMembers(parentType).contains(field); // indicates if field is the part of the key.
                     // 2. final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
                     // 2. final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(managedType, property);
@@ -149,7 +157,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
                     // 2. final boolean isLinkProperty = !isEntityItself && PropertyTypeDeterminator.isDotNotation(property)
                     // 2.         && Finder.isOne2Many_or_One2One_association(managedType, penultPropertyName)
                     // 2.         && lastPropertyName.equals(Finder.findLinkProperty((Class<? extends AbstractEntity<?>>) managedType, penultPropertyName)); // exclude link properties in one2many and one2one associations
-                    
+
                     if (level(property) >= LOADING_LEVEL && !EntityUtils.isUnionEntityType(propertyType) //
                             || propertyTypeWasInHierarchyBefore /* && 2. !isLinkProperty */ /* && 1. !isKeyPart */) {
                         newIncludedProps.add(createDummyMarker(property));
@@ -193,7 +201,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     private static Pair<List<Field>, List<Field>> commonAndUnion(final Class<? extends AbstractUnionEntity> unionClass) {
         final List<Field> unionProperties = AbstractUnionEntity.unionProperties(unionClass);
         final Class<? extends AbstractEntity> concreteUnionClass = (Class<? extends AbstractEntity>) unionProperties.get(0).getType();
-        final List<String> commonNames = AbstractUnionEntity.commonProperties(unionClass);
+        final Set<String> commonNames = AbstractUnionEntity.commonProperties(unionClass);
         final List<Field> commonProperties = constructKeysAndProperties(concreteUnionClass, commonNames);
         return new Pair<>(commonProperties, unionProperties);
     }
@@ -236,7 +244,9 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
             fieldsAndKeys.add(getFieldByName(type, VERSION));
         }
         fieldsAndKeys.add(getFieldByName(type, DESC));
-        fieldsAndKeys.addAll(properties);
+
+        // add the rest (take care of ordering if the type is a generated one)
+        fieldsAndKeys.addAll(DynamicEntityClassLoader.isGenerated(type) ? DynamicTypeUtils.orderedProperties(properties) : properties);
         // logger().info("Ended constructProperties for [" + type.getSimpleName() + "].");
         return fieldsAndKeys;
     }
@@ -249,7 +259,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @param names
      * @return
      */
-    private static List<Field> constructKeysAndProperties(final Class<?> type, final List<String> names) {
+    private static List<Field> constructKeysAndProperties(final Class<?> type, final Set<String> names) {
         final List<Field> allProperties = constructKeysAndProperties(type);
         final List<Field> properties = new ArrayList<>();
         for (final Field f : allProperties) {
@@ -707,7 +717,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         // However, it also causes performance bottlenecks when invoking multiple times.
         // In current Web UI logic, that uses centre domain trees, this check does not add any significant value due to other checks implemented as part of Centre DSL.
         // This check is currently performed only in STRICT_MODEL_VERIFICATION mode (and thus skipped in deployment mode).
-        if (STRICT_MODEL_VERIFICATION && dtr.isExcludedImmutably(root, property)) {
+        if (isStrictModelVerification() && dtr.isExcludedImmutably(root, property)) {
             throw new DomainTreeException(message);
         }
     }

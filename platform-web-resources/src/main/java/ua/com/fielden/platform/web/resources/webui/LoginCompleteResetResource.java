@@ -5,8 +5,9 @@ import static java.lang.String.format;
 import java.io.ByteArrayInputStream;
 import java.util.Optional;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -45,7 +46,7 @@ public class LoginCompleteResetResource extends AbstractWebResource {
     private static final String DEMO_SECRET_ERROR = "Demo password should not be used.";
     private final String demoSecret;
 
-    private static final Logger LOGGER = Logger.getLogger(LoginCompleteResetResource.class);
+    private static final Logger LOGGER = LogManager.getLogger(LoginCompleteResetResource.class);
 
     private final ICompanionObjectFinder coFinder;
     private final IUserProvider up;

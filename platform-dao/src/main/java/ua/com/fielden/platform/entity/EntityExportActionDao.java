@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.entity;
 
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.poi.ss.util.WorkbookUtil.validateSheetName;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.failuref;

@@ -2,14 +2,15 @@ package ua.com.fielden.platform.ioc.session;
 
 import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.dao.annotations.SessionRequired.ERR_NESTED_SCOPE_INVOCATION_IS_DISALLOWED;
 
 import java.util.stream.Stream;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -46,7 +47,7 @@ public class SessionInterceptor implements MethodInterceptor {
     private final SessionFactory sessionFactory;
 
     public static final String WARN_TRANSACTION_ROLLBACK = "[%s] Transaction completed (rolled back) with error.";
-    private static final Logger LOGGER = Logger.getLogger(SessionInterceptor.class);
+    private static final Logger LOGGER = getLogger(SessionInterceptor.class);
     
     private final ThreadLocal<String> transactionGuid = new ThreadLocal<>();
 

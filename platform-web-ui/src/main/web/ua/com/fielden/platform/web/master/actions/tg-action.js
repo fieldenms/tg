@@ -82,6 +82,9 @@ const template = html`
         tg-dropdown-switch {
             --dropdown-switch-button-side-padding: 0.57em;
             --dropdown-switch-button-top-bottom-padding: 0.4em;
+            --tg-dropdown-options-style: {
+                padding: 8px 0.57em;
+            };
         }
         [hidden] {
             display: none !important;
@@ -390,7 +393,15 @@ Polymer({
                         });
                     }
                     if (ironRequest && ironRequest.successful && subRole === 'new' && typeof this.newAction === 'function') {
-                        this.newAction(parentDialog, wasPersistedBeforeAction);
+                        if (parentDialog && parentDialog.$.elementLoader.loadedElement && parentDialog.$.elementLoader.loadedElement._savingPromise) {
+                            // Run the new action after a successful action execution and after the save action from the parent dialog finished.
+                            // This is necessary not to interfere with the refresh of the compound master.
+                            parentDialog.$.elementLoader.loadedElement._savingPromise.then(res => {
+                                this.newAction(parentDialog, wasPersistedBeforeAction);
+                            });
+                        } else {
+                            this.newAction(parentDialog, wasPersistedBeforeAction);
+                        }
                     }
                     return ironRequest;
                 });    

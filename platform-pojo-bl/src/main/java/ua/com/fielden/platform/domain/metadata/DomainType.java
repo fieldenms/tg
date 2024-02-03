@@ -14,8 +14,8 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
 @KeyType(String.class)
-@KeyTitle("Type full name")
-@DescTitle("Type title")
+@KeyTitle("Domain Type")
+@DescTitle("Description")
 @DescRequired
 @CompanionObject(DomainTypeCo.class)
 @MapEntityTo
@@ -26,12 +26,12 @@ public class DomainType extends AbstractEntity<String> {
     @MapTo
     @Title("Table name")
     private String dbTable;
-    
+
     @IsProperty
     @MapTo
     @Title("Entity Type Description")
     private String entityTypeDesc;
-    
+
     @IsProperty
     @MapTo
     @Title(value = "Is Entity?", desc = "True for persistent and synthetic entities; false for union entities and other types.")
@@ -61,7 +61,7 @@ public class DomainType extends AbstractEntity<String> {
     public boolean getEntity() {
         return entity;
     }
-    
+
     @Observable
     public DomainType setEntityTypeDesc(final String entityTypeDesc) {
         this.entityTypeDesc = entityTypeDesc;

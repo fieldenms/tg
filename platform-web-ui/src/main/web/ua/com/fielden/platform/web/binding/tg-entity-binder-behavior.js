@@ -908,19 +908,25 @@ export const TgEntityBinderBehavior = {
                 const originalValue = convert(_originalBindingEntity.get(propertyName));
                 const valId = bindingEntity['@' + propertyName + '_id'];
                 const origValId = _originalBindingEntity['@' + propertyName + '_id'];
-                
+                const activeProp = bindingEntity['@' + propertyName + '_activeProperty'];
+                const origActiveProp = _originalBindingEntity['@' + propertyName + '_activeProperty'];
+
                 // VERY IMPORTANT: the property is considered to be 'modified'
-                //                 in the case where its value does not equal to original value.
+                //                 in the case where its value does not equal to original value
+                //                 OR if active property was changed. The active property might be changed if entity is union 
                 //
                 //                 The 'modified' property is marked by existence of 'val' sub-property.
                 //
                 //                 All modified properties will be applied on the server upon the validation prototype.
-                if (!self._reflector().equalsEx(value, originalValue)) {
+                if (!self._reflector().equalsEx(value, originalValue) || !self._reflector().equalsEx(activeProp, origActiveProp)) {
                     // the property is 'modified'
                     modPropHolder[propertyName] = {
                         'val': value,
                         'origVal': originalValue
                     };
+                    if (typeof activeProp !== 'undefined') {
+                        modPropHolder[propertyName]['activeProperty'] = activeProp;
+                    }
                     modPropHolder['@modified'] = true;
                     if (typeof valId !== 'undefined') {
                         modPropHolder[propertyName]['valId'] = valId;
@@ -930,6 +936,9 @@ export const TgEntityBinderBehavior = {
                     modPropHolder[propertyName] = {
                         'origVal': originalValue
                     };
+                    if (typeof origActiveProp !== 'undefined') {
+                        modPropHolder[propertyName]['activeProperty'] = origActiveProp;
+                    }
                 }
                 if (typeof origValId !== 'undefined') {
                     modPropHolder[propertyName]['origValId'] = origValId;

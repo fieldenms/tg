@@ -2,13 +2,13 @@ package ua.com.fielden.platform.reflection;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -17,8 +17,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -68,7 +68,7 @@ public final class Reflector {
      */
     public static final String UP_LEVEL = "←";
 
-    private static final Logger LOGGER = Logger.getLogger(Reflector.class);
+    private static final Logger LOGGER = getLogger(Reflector.class);
     
     /**
      * Let's hide default constructor, which is not needed for a static class.
@@ -83,7 +83,7 @@ public final class Reflector {
      * This is a helper method used to walk along class hierarchy in search of the specified method.
      *
      * @param startWithClass
-     * @param method
+     * @param methodName
      * @param arguments
      * @return
      * @throws NoSuchMethodException
@@ -161,7 +161,6 @@ public final class Reflector {
      * Returns constructor specified from {@code startWithClass} class.
      *
      * @param startWithClass
-     * @param methodName
      * @param arguments
      * @return
      * @throws NoSuchMethodException
@@ -235,7 +234,7 @@ public final class Reflector {
      * Depending on the type of the field, the getter may start not with ''get'' but with ''is''. This method tries to determine a correct getter.
      *
      * @param propertyName
-     * @param entity
+     * @param entityClass
      * @return
      * @throws Exception
      */
@@ -252,8 +251,7 @@ public final class Reflector {
     }
 
     /**
-     * Tries to obtain property setter for property, specified using dot-notation. Heavily uses
-     * {@link PropertyTypeDeterminator#determinePropertyTypeWithoutKeyTypeDetermination(Class, String)} to obtain penult property in dot-notation
+     * Tries to obtain property setter for property, specified using dot-notation.
      *
      * @param entityClass
      * @param dotNotationExp
@@ -269,16 +267,10 @@ public final class Reflector {
         try {
             final String methodName = "set" + transformed.getValue().substring(0, 1).toUpperCase() + transformed.getValue().substring(1);
             final Class<?> argumentType = PropertyTypeDeterminator.determineClass(transformed.getKey(), transformed.getValue(), AbstractEntity.KEY.equalsIgnoreCase(transformed.getValue()), false);
-            
-            if (DynamicEntityClassLoader.isGenerated(entityClass) && DynamicEntityClassLoader.getOriginalType(entityClass) == argumentType) {
-                return Reflector.getMethod(transformed.getKey(), 
-                        methodName, 
-                        entityClass);
-            } else {
-                return Reflector.getMethod(transformed.getKey(), 
-                        methodName, 
-                        argumentType);
-            }
+
+            return Reflector.getMethod(transformed.getKey(), 
+                    methodName, 
+                    argumentType);
         } catch (final Exception ex) {
             throw new ReflectionException(format("Could not obtain setter for property [%s] in type [%s].", dotNotationExp, entityClass.getName()), ex);
         }
@@ -536,7 +528,7 @@ public final class Reflector {
      * The notion of <code>retrievable</code> is different to <code>persistent</code> as it also includes calculated properties, which do get retrieved from a database. 
      * 
      * @param entity
-     * @param propName
+     * @param field
      * @return
      */
     public static boolean isPropertyRetrievable(final AbstractEntity<?> entity, final Field field) {
@@ -563,7 +555,7 @@ public final class Reflector {
     }
     
     /**
-     * A helper function to assign value to a static final field.
+     * A helper function to assign value to a private static field.
      *  
      * @param field
      * @param value
@@ -571,9 +563,10 @@ public final class Reflector {
     public static void assignStatic(final Field field, final Object value) {
         try {
             field.setAccessible(true);
-            final Field modifiersField = Field.class.getDeclaredField("modifiers");
-            modifiersField.setAccessible(true);
-            modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+            // The following manipulation what worked before JDK12 are no longer possible
+            //final Field modifiersField = Field.class.getDeclaredField("modifiers");
+            //modifiersField.setAccessible(true);
+            //modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
 
             field.set(null, value);
         } catch (final Exception ex) {

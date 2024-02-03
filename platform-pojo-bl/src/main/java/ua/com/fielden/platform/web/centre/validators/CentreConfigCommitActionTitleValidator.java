@@ -4,7 +4,7 @@ import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.regex.Pattern.quote;
 import static java.util.stream.Collectors.partitioningBy;
-import static org.apache.commons.lang.StringUtils.uncapitalize;
+import static org.apache.commons.lang3.StringUtils.uncapitalize;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.error.Result.successful;

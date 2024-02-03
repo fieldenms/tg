@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.rx;
 
-import org.apache.log4j.Logger;
+import static org.apache.logging.log4j.LogManager.getLogger;
+
+import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Singleton;
 
@@ -27,7 +29,7 @@ import rx.subjects.Subject;
  * @param <T>
  */
 public abstract class AbstractSubjectKind<T> implements IObservableKind<T> {
-    private final Logger logger = Logger.getLogger(this.getClass());
+    private final Logger logger = getLogger(this.getClass());
     private final Subject<T, T> observable = new SerializedSubject<>(PublishSubject.create());
 
     @Override

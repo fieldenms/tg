@@ -7,7 +7,8 @@ import static ua.com.fielden.platform.web.resources.RestServerUtil.encodedRepres
 import java.io.ByteArrayInputStream;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -33,7 +34,7 @@ import ua.com.fielden.platform.web_api.IWebApi;
  *
  */
 public class GraphiQLResource extends AbstractWebResource {
-    private final Logger logger = Logger.getLogger(GraphiQLResource.class);
+    private final Logger logger = LogManager.getLogger(GraphiQLResource.class);
     private final IAuthorisationModel authModel;
     private final IWebApi webApi;
     private final RestServerUtil restUtil;

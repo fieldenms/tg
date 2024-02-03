@@ -18,7 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -47,7 +48,7 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  *
  */
 public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T extends AbstractEntity<?>> extends AbstractWebResource {
-    private static final Logger logger = Logger.getLogger(EntityAutocompletionResource.class);
+    private static final Logger logger = LogManager.getLogger(EntityAutocompletionResource.class);
     private final Class<CONTEXT> entityType;
     private final String propertyName;
     private final RestServerUtil restUtil;

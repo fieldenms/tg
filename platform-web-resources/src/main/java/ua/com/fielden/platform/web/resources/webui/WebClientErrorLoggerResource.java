@@ -2,7 +2,8 @@ package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -23,7 +24,7 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
  *
  */
 public class WebClientErrorLoggerResource extends AbstractWebResource {
-    private final static Logger LOGGER = Logger.getLogger(WebClientErrorLoggerResource.class);
+    private final static Logger LOGGER = LogManager.getLogger(WebClientErrorLoggerResource.class);
     private final IUserProvider userProvider;
 
     public WebClientErrorLoggerResource(

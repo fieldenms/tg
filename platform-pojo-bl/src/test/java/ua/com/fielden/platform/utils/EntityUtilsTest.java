@@ -10,6 +10,7 @@ import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.coalesce;
@@ -36,6 +37,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Stream;
 
 import org.joda.time.DateTime;
@@ -54,12 +56,15 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ChildEntity;
 import ua.com.fielden.platform.entity.Entity;
 import ua.com.fielden.platform.entity.EntityExt;
+import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.UserDefinableHelp;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.keygen.KeyNumber;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgMeterReading;
@@ -69,6 +74,7 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.TgReVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
+import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
 import ua.com.fielden.platform.sample.domain.UnionEntity;
 import ua.com.fielden.platform.security.user.ReUser;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
@@ -247,6 +253,26 @@ public class EntityUtilsTest {
     }
 
     @Test
+    public void generated_entity_based_on_persistent_entity_is_recognised_as_persistent() throws ClassNotFoundException {
+        final Class<? extends AbstractEntity<?>> newType = genNewTypeWithAggregateCalcPropBasedOn(TgAuthor.class);
+        
+        assertTrue(isPersistedEntityType(newType));
+        assertFalse(isSyntheticEntityType(newType));
+        assertFalse(isSyntheticBasedOnPersistentEntityType(newType));
+        assertFalse(isUnionEntityType(newType));
+    }
+
+    @Test
+    public void generated_entity_with_nested_regeneration_based_on_persistent_entity_is_recognised_as_persistent() throws ClassNotFoundException {
+        final Class<? extends AbstractEntity<?>> newType = genNewTypeWithAggregateCalcPropBasedOn(TgAuthor.class, ThreadLocalRandom.current().nextInt(2, 7));
+        
+        assertTrue(isPersistedEntityType(newType));
+        assertFalse(isSyntheticEntityType(newType));
+        assertFalse(isSyntheticBasedOnPersistentEntityType(newType));
+        assertFalse(isUnionEntityType(newType));
+    }
+
+    @Test
     public void synthetic_entity_is_recognised_as_such() {
         assertFalse(isPersistedEntityType(TgAverageFuelUsage.class));
         assertTrue(isSyntheticEntityType(TgAverageFuelUsage.class));
@@ -255,11 +281,51 @@ public class EntityUtilsTest {
     }
 
     @Test
+    public void generated_entity_based_on_synthetic_entity_is_recognised_as_synthetic() throws ClassNotFoundException {
+        final Class<? extends AbstractEntity<?>> newType = genNewTypeWithAggregateCalcPropBasedOn(TgAverageFuelUsage.class);
+        
+        assertFalse(isPersistedEntityType(newType));
+        assertTrue(isSyntheticEntityType(newType));
+        assertFalse(isSyntheticBasedOnPersistentEntityType(newType));
+        assertFalse(isUnionEntityType(newType));
+    }
+
+    @Test
+    public void generated_entity_with_nested_regeneration_based_on_synthetic_entity_is_recognised_as_synthetic() throws ClassNotFoundException {
+        final Class<? extends AbstractEntity<?>> newType = genNewTypeWithAggregateCalcPropBasedOn(TgAverageFuelUsage.class, ThreadLocalRandom.current().nextInt(2, 7));
+        
+        assertFalse(isPersistedEntityType(newType));
+        assertTrue(isSyntheticEntityType(newType));
+        assertFalse(isSyntheticBasedOnPersistentEntityType(newType));
+        assertFalse(isUnionEntityType(newType));
+    }
+
+    @Test
     public void synthetic_entity_derived_from_persisten_entity_is_recognised_as_synthetic_and_as_synthetic_based_on_persistent_entity_type() {
         assertFalse(isPersistedEntityType(TgReVehicleModel.class));
         assertTrue(isSyntheticEntityType(TgReVehicleModel.class));
         assertTrue(isSyntheticBasedOnPersistentEntityType(TgReVehicleModel.class));
         assertFalse(isUnionEntityType(TgReVehicleModel.class));
+    }
+
+    @Test
+    public void generated_entity_based_on_synthetic_entity_derived_from_persisten_entity_is_recognised_as_synthetic_and_as_synthetic_based_on_persistent_entity_type() throws ClassNotFoundException {
+        final Class<? extends AbstractEntity<?>> newType = genNewTypeWithAggregateCalcPropBasedOn(TgReVehicleModel.class);
+       
+        assertFalse(isPersistedEntityType(newType));
+        assertTrue(isSyntheticEntityType(newType));
+        assertTrue(isSyntheticBasedOnPersistentEntityType(newType));
+        assertFalse(isUnionEntityType(newType));
+    }
+
+    @Test
+    public void generated_entity_with_nested_regeneration_based_on_synthetic_entity_derived_from_persisten_entity_is_recognised_as_synthetic_and_as_synthetic_based_on_persistent_entity_type() throws ClassNotFoundException {
+        final Class<? extends AbstractEntity<?>> newType = genNewTypeWithAggregateCalcPropBasedOn(TgReVehicleModel.class, ThreadLocalRandom.current().nextInt(2, 7));
+       
+        assertFalse(isPersistedEntityType(newType));
+        assertTrue(isSyntheticEntityType(newType));
+        assertTrue(isSyntheticBasedOnPersistentEntityType(newType));
+        assertFalse(isUnionEntityType(newType));
     }
 
     @Test
@@ -527,6 +593,12 @@ public class EntityUtilsTest {
     }
 
     @Test
+    public void key_paths_works_for_entity_type_key() {
+        assertEquals(listOf("key.key"), 
+                keyPaths(TgVehicleFinDetails.class));
+    }
+    
+    @Test
     public void key_paths_works_for_composite_key_without_further_nesting() {
         assertEquals(listOf("vehicle.key", "readingDate"),
                 keyPaths(TgMeterReading.class));
@@ -608,6 +680,39 @@ public class EntityUtilsTest {
         final LinkedHashSet<Class<? extends AbstractEntity<?>>> expected = linkedSetOf(Attachment.class, DomainExplorer.class, DashboardRefreshFrequency.class, DashboardRefreshFrequencyUnit.class, KeyNumber.class, User.class, ReUser.class, UserRole.class, UserAndRoleAssociation.class, SecurityRoleAssociation.class, UserDefinableHelp.class);
         final LinkedHashSet<Class<? extends AbstractEntity<?>>> filtered = PlatformDomainTypes.types.stream().filter(EntityUtils::isIntrospectionAllowed).collect(toCollection(LinkedHashSet::new));
         assertEquals(expected, filtered);
+    }
+
+    /**
+     * A helper factory method for generating a new type based on {@code baseType} with the {@code maxNestedLevels} of nesting (i.e., a new type gets generated based on the previously generated type sequentially).  
+     *
+     * @param <T>
+     * @param baseType
+     * @return
+     * @throws ClassNotFoundException
+     */
+    private static <T extends AbstractEntity<?>> Class<? extends T> genNewTypeWithAggregateCalcPropBasedOn(final Class<T> baseType, final int maxNestedLevels) throws ClassNotFoundException {
+        final Calculated totalCountCalculation = new CalculatedAnnotation().contextualExpression("COUNT(SELF)").newInstance();
+        final NewProperty<Integer> total_count_prop = new NewProperty<>("total_count_", Integer.class, "Count", "The number of matching values.", totalCountCalculation);
+
+        var count = 1;
+        var newType = startModification(baseType).addProperties(total_count_prop).endModification();
+        while (count < maxNestedLevels) {
+            newType = startModification(newType).addProperties(total_count_prop).endModification();
+            count++;
+        }
+        return newType;
+    }
+    
+    /**
+     * Executes {@link #genNewTypeWithAggregateCalcPropBasedOn(Class, int)} with nesting of 1 (i.e., the generated type has {@code baseType} as its immediate super type).
+     *
+     * @param <T>
+     * @param baseType
+     * @return
+     * @throws ClassNotFoundException
+     */
+    private static <T extends AbstractEntity<?>> Class<? extends T> genNewTypeWithAggregateCalcPropBasedOn(final Class<T> baseType) throws ClassNotFoundException {
+        return genNewTypeWithAggregateCalcPropBasedOn(baseType, 1);
     }
 
 }

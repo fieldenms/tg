@@ -312,17 +312,26 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             } else {
                 metaProperty.setEditable(getEditableDefault());
             }
+            // before we deal with setting requiredness, it is necessary to identify if there is a custom error message for requiredness
+            final JsonNode customErrorMsgForRequirednessNode = metaPropNode.get("_" + MetaProperty.CUSTOM_ERR_MSG_FOR_REQUREDNESS_PROPERTY_NAME);
+            final String customErrorMsgForRequiredness;
+            if (customErrorMsgForRequirednessNode != null) {
+                assertNonEmptyNode(customErrorMsgForRequirednessNode);
+                customErrorMsgForRequiredness = customErrorMsgForRequirednessNode.asText();
+            } else {
+                customErrorMsgForRequiredness = null;
+            }
             final JsonNode requiredNode = metaPropNode.get("_" + MetaProperty.REQUIRED_PROPERTY_NAME);
             if (requiredNode != null) {
                 assertNonEmptyNode(requiredNode);
                 // Important: generally there is no need to hold 'entity' in isInitialising state during deserialisation.
                 // However in specific case of requiredness setting the setter can be invoked, that's why validation should be avoided -- isInitialising == true helps with that.
                 metaProperty.getEntity().beginInitialising();
-                metaProperty.setRequired(requiredNode.asBoolean());
+                metaProperty.setRequired(requiredNode.asBoolean(), customErrorMsgForRequiredness);
                 metaProperty.getEntity().endInitialising();
             } else {
                 metaProperty.getEntity().beginInitialising();
-                metaProperty.setRequired(getRequiredDefault());
+                metaProperty.setRequired(getRequiredDefault(), customErrorMsgForRequiredness);
                 metaProperty.getEntity().endInitialising();
             }
             final JsonNode visibleNode = metaPropNode.get("_visible");

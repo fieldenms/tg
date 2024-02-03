@@ -7,9 +7,10 @@ import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.creat
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreSavingInfoHolder;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -55,7 +56,7 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Abstr
     private final IWebUiConfig webUiConfig;
     private final IUserProvider userProvider;
     private final ICentreConfigSharingModel sharingModel;
-    private final Logger logger = Logger.getLogger(getClass());
+    private final Logger logger = LogManager.getLogger(getClass());
 
     public EntityValidationResource(
             final Class<T> entityType,

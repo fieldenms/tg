@@ -69,6 +69,10 @@ public class EntityType extends AbstractEntity<String> {
     private List<String> _unionCommonProps; // intentionally null (i.e. not serialised) to differentiate between [empty set of common properties for union entity type] and [non-union entity type]
 
     @IsProperty
+    @Title(value = "Union Properties", desc = "The list of union properties in case if asscoiated entity type represents union entity type; null otherwise")
+    private List<String> _unionProps;
+
+    @IsProperty
     @Title(value = "Compound Opener Type", desc = "Represents main persistent type for this compound master opener (if it is of such kind, empty otherwise).")
     private String _compoundOpenerType;
 
@@ -132,6 +136,16 @@ public class EntityType extends AbstractEntity<String> {
 
     public List<String> get_unionCommonProps() {
         return _unionCommonProps;
+    }
+
+    @Observable
+    public EntityType set_unionProps(final List<String> _unionProps) {
+        this._unionProps = _unionProps;
+        return this;
+    }
+
+    public List<String> get_unionProps() {
+        return _unionProps;
     }
 
     @Observable

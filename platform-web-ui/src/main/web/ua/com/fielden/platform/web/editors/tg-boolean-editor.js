@@ -23,9 +23,10 @@ const additionalTemplate = html`
             --paper-checkbox-unchecked-color: var(--paper-grey-900);
             --paper-checkbox-checked-color: var(--paper-light-blue-700);
             --paper-checkbox-checked-ink-color: var(--paper-light-blue-700);
+            --paper-checkbox-label-color: #757575;
             height: 24px;
             --paper-checkbox-label: {
-                display:grid !important;
+                display:grid;
             };
         }
 
@@ -36,13 +37,33 @@ const additionalTemplate = html`
             font-weight: 400;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
-            color: #757575 !important;
         }
         
         .truncate {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+
+        #decorator.required paper-checkbox {
+            --paper-checkbox-unchecked-color: #03A9F4;
+            --paper-checkbox-checked-color: #03A9F4;
+            --paper-checkbox-checked-ink-color: #03A9F4;
+            --paper-checkbox-label-color: #03A9F4;
+        }
+
+        #decorator[is-invalid].warning paper-checkbox {
+            --paper-checkbox-unchecked-color: #FFA000;
+            --paper-checkbox-checked-color: #FFA000;
+            --paper-checkbox-checked-ink-color: #FFA000;
+            --paper-checkbox-label-color: #FFA000;
+        }
+
+        #decorator[is-invalid]:not(.warning) paper-checkbox {
+            --paper-checkbox-unchecked-color: var(--google-red-500);
+            --paper-checkbox-checked-color: var(--google-red-500);
+            --paper-checkbox-checked-ink-color: var(--google-red-500);
+            --paper-checkbox-label-color:var(--google-red-500);
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>`;

@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.utils;
 
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.tabs;
@@ -9,7 +10,7 @@ import static ua.com.fielden.platform.web.utils.EntityResourceUtils.tabs;
 import java.util.Map;
 import java.util.function.Function;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -38,7 +39,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  */
 public class EntityRestorationUtils {
     private static final String ENTITY_NOT_FOUND = "Entity [%s] could not be found.";
-    private static final Logger logger = Logger.getLogger(EntityRestorationUtils.class);
+    private static final Logger logger = getLogger(EntityRestorationUtils.class);
     
     ////////////////////////////////////// VALIDATION PROTOTYPE CREATION //////////////////////////////////////
     /**

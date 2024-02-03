@@ -1,13 +1,14 @@
 package ua.com.fielden.platform.entity.meta;
 
 import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 
 import java.lang.reflect.Field;
 import java.util.Optional;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
@@ -47,7 +48,7 @@ import ua.com.fielden.platform.utils.Pair;
 @KeyTitle(value = "Property", desc = "Property title")
 @DescTitle(value = "Description", desc = "Property description")
 public class PropertyDescriptor<T extends AbstractEntity<?>> extends AbstractEntity<String> {
-    private static final Logger LOGGER = Logger.getLogger(PropertyDescriptor.class);
+    private static final Logger LOGGER = getLogger(PropertyDescriptor.class);
 
     private Class<T> entityType;
     private String propertyName;

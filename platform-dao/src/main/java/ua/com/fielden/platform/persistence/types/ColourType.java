@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.persistence.types;
 
 import static java.lang.String.format;
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.io.Serializable;
 import java.sql.PreparedStatement;
@@ -25,6 +25,8 @@ import ua.com.fielden.platform.types.markers.IColourType;
  */
 public class ColourType implements UserType, IColourType {
 
+    public static final ColourType INSTANCE = new ColourType();
+    
 	private static final int[] SQL_TYPES = { Types.VARCHAR };
 
 	@Override

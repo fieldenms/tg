@@ -1,17 +1,19 @@
 package ua.com.fielden.platform.reflection;
 
 import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -33,13 +35,13 @@ import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
  *
  */
 public class EntityMetadata {
-    private static final Logger LOGGER = Logger.getLogger(EntityMetadata.class);
+    private static final Logger LOGGER = getLogger(EntityMetadata.class);
     private static final Cache<Class<? extends AbstractEntity<?>>, Cache<String, Boolean>> CACHE_IS_ENTITY_EXISTS_APPLICABLE = CacheBuilder.newBuilder().initialCapacity(1000).concurrencyLevel(50).build();
     private static final Cache<Class<? extends AbstractEntity<?>>, Class<? extends Comparable>> CACHE_KEY_TYPE = CacheBuilder.newBuilder().initialCapacity(1000).concurrencyLevel(50).build();
     private static final Cache<Class<? extends AbstractEntity<?>>, Cache<String, Class<?>>> CACHE_PROP_TYPE = CacheBuilder.newBuilder().initialCapacity(1000).concurrencyLevel(50).build();
     private static final Cache<Class<? extends AbstractEntity<?>>, Cache<String, EntityExists>> CACHE_ENTITY_EXISTS_ANNOTATION = CacheBuilder.newBuilder().initialCapacity(1000).concurrencyLevel(50).build();
     private EntityMetadata() {}
-    
+
     /**
      * Builds metadata for domain entities.
      * Doing this at the application startup time should result in improved performance related to accessing entity metadata.
@@ -75,7 +77,7 @@ public class EntityMetadata {
     public static Class<? extends Comparable> keyTypeInfo(final Class<? extends AbstractEntity<?>> entityType) {
         try {
             return CACHE_KEY_TYPE.get(entityType, () -> {
-                final Class<? extends Comparable> keyType = (Class<? extends Comparable>) AnnotationReflector.getKeyType(entityType);
+                final Class<? extends Comparable> keyType = AnnotationReflector.getKeyType(entityType);
                 if (keyType == null) {
                     throw new EntityDefinitionException(format("Entity [%s] is not fully defined -- key type is missing.", entityType.getName()));
                 }
@@ -99,12 +101,12 @@ public class EntityMetadata {
                    .get(field.getName(), () -> KEY.equals(field.getName()) ? keyTypeInfo(entityType) : stripIfNeeded(field.getType()));
         } catch (final ExecutionException ex) {
             throw new ReflectionException(format("Could not determine type for property [%s] of entity [%s].", field.getName(), entityType.getName()), ex);
-        } 
+        }
     }
 
     /**
      * Determines whether entity exists validation is applicable for the provided type and property.
-     * 
+     *
      * @param entityType
      * @param field -- represents property
      * @return
@@ -117,20 +119,20 @@ public class EntityMetadata {
                         final Class<?> propType = determinePropType(entityType, field);
                         final SkipEntityExistsValidation seevAnnotation = getAnnotation(field, SkipEntityExistsValidation.class);
                         final boolean doNotSkipEntityExistsValidation = seevAnnotation == null || seevAnnotation.skipActiveOnly() || seevAnnotation.skipNew();
-                        return doNotSkipEntityExistsValidation && (isPersistedEntityType(propType) || isPropertyDescriptor(propType) || isSupportsEntityExistsValidation(propType));                        
+                        return doNotSkipEntityExistsValidation && (isPersistedEntityType(propType) || isPropertyDescriptor(propType) || isSupportsEntityExistsValidation(propType) || isUnionEntityType(propType));
                     });
          } catch (final ExecutionException ex) {
              throw new ReflectionException(format("Could not determine applicability of EntityExists validation for property [%s] of entity [%s].", field.getName(), entityType.getName()), ex);
-         } 
+         }
     }
 
-    private static boolean isSupportsEntityExistsValidation(Class<?> propType) {
+    private static boolean isSupportsEntityExistsValidation(final Class<?> propType) {
         return getAnnotation(propType, SupportsEntityExistsValidation.class) != null;
     }
 
     /**
      * Creates annotation instance of type {@link EntityExists}.
-     * 
+     *
      * @param entityType
      * @param propName
      * @param propType
@@ -140,9 +142,9 @@ public class EntityMetadata {
         try {
             return CACHE_ENTITY_EXISTS_ANNOTATION
                     .get(entityType, () -> CacheBuilder.newBuilder().initialCapacity(10).concurrencyLevel(50).build())
-                    .get(propName, () -> EntityExistsAnnotation.newInstance((Class<? extends AbstractEntity<?>>) propType));
+                    .get(propName, () -> EntityExistsAnnotation.newInstance(propType));
          } catch (final ExecutionException ex) {
              throw new ReflectionException(format("Could not create EntityExists annotation for property [%s] of entity [%s].", propName, entityType.getName()), ex);
-         } 
+         }
      }
 }

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.sse;
 
 import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
@@ -14,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap.KeySetView;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.User;
@@ -39,7 +40,7 @@ import ua.com.fielden.platform.web.sse.exceptions.SseException;
  */
 public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEventSourceEmitterRegister {
 
-    private static final Logger LOGGER = Logger.getLogger(EventSourceDispatchingEmitter.class);
+    private static final Logger LOGGER = getLogger(EventSourceDispatchingEmitter.class);
 
     /**
      * A register of emitters. The key is a pair of user id and a client SSE id.

@@ -62,7 +62,8 @@
                             criterion._acceptMetaValues(true);
                         }
                     }
-                    centre.run();
+                    // Async call is required to make sure that calls to "editor.commit()" complete before "centre.run()".
+                    centre.async(() => centre.run(), 200);
                 };
                 centre.retrieve();
             };

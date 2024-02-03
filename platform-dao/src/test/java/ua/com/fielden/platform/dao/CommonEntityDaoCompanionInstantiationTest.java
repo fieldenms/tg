@@ -1,14 +1,15 @@
 package ua.com.fielden.platform.dao;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.junit.Test;
 
@@ -24,13 +25,12 @@ import ua.com.fielden.platform.ref_hierarchy.ReferencedByLevelHierarchyEntry;
 import ua.com.fielden.platform.ref_hierarchy.TypeLevelHierarchyEntry;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
-import ua.com.fielden.platform.utils.CollectionUtil;
 
 public class CommonEntityDaoCompanionInstantiationTest extends AbstractDaoTestCase {
 
-    private static final Set<Class<? extends AbstractEntity<?>>> types = CollectionUtil.setOf(ReferenceHierarchy.class, ReferenceHierarchyEntry.class, TypeLevelHierarchyEntry.class, ReferencedByLevelHierarchyEntry.class, ReferenceLevelHierarchyEntry.class,
-                                                                                              DomainTreeEntity.class, DomainPropertyTreeEntity.class, Action.class);
-    private static final List<Class<? extends AbstractEntity<?>>> entityTypes = PlatformTestDomainTypes.entityTypes.stream().filter(type -> !types.contains(type)).collect(Collectors.toList());
+    private static final Set<Class<? extends AbstractEntity<?>>> types = setOf(ReferenceHierarchy.class, ReferenceHierarchyEntry.class, TypeLevelHierarchyEntry.class, ReferencedByLevelHierarchyEntry.class, ReferenceLevelHierarchyEntry.class,
+                                                                               DomainTreeEntity.class, DomainPropertyTreeEntity.class, Action.class);
+    private static final List<Class<? extends AbstractEntity<?>>> entityTypes = PlatformTestDomainTypes.entityTypes.stream().filter(type -> !types.contains(type)).collect(toList());
 
     @Test
     public void companion_objects_for_any_registered_domain_entity_can_be_instantiated_through_co_API_of_random_companion() {

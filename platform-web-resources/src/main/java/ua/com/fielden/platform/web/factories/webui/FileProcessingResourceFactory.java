@@ -35,13 +35,13 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
     protected final Class<T> entityType;
     protected final Function<EntityFactory, T> entityCreator;
     protected final ICompanionObjectFinder companionFinder;
-    private final IEventSourceEmitterRegister eseRegister;
+    protected final IEventSourceEmitterRegister eseRegister;
 
     protected final long fileSizeLimitBytes;
     protected final Set<MediaType> types = new HashSet<>();
     protected final IDeviceProvider deviceProvider;
     protected final IDates dates;
-    private final IUserProvider userProvider;
+    protected final IUserProvider userProvider;
 
     public FileProcessingResourceFactory(
             final IEventSourceEmitterRegister eseRegister,

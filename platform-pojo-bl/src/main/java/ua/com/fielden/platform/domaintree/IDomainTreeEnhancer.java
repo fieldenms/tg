@@ -7,12 +7,10 @@ import java.util.Map;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.domaintree.impl.CustomProperty;
-import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.asm.impl.TypeMaker;
-import ua.com.fielden.platform.utils.Pair;
 
 /**
  * This interface defines how domain can be enhanced via <b>calculated properties</b> management. <br>
@@ -59,16 +57,6 @@ public interface IDomainTreeEnhancer extends IRootTyped {
      */
     Class<?> getManagedType(final Class<?> type);
 
-    /**
-     * Returns a byte arrays that define an "actual" type hierarchy (possibly mutated with additional calculated properties) for passed <code>type</code>. Returns empty list if no
-     * calculated properties exist.
-     *
-     * @param type
-     *            -- an entity type, which "actual" type's byte arrays are asked
-     * @return
-     */
-    List<ByteArray> getManagedTypeArrays(final Class<?> type);
-    
     /**
      * Adjusts managed type name for <code>root</code> with a new name. This method is strictly applicable only to the roots which {@link #getManagedType(Class)} is generated and 
      * is used to provide correspondence between server-side and client side generated types naming in case where server-side type didn't exist and was generated from [user; miType; saveAsName] 
@@ -223,7 +211,12 @@ public interface IDomainTreeEnhancer extends IRootTyped {
 
     Map<Class<?>, List<CustomProperty>> customProperties();
 
-    Map<Class<?>, Pair<Class<?>, Map<String, ByteArray>>> originalAndEnhancedRootTypesAndArrays();
+    /**
+     * Returns a map between the original and enhanced types.
+     *  
+     * @return
+     */
+    Map<Class<?>, Class<?>> originalAndEnhancedRootTypes();
 
     EntityFactory getFactory();
 

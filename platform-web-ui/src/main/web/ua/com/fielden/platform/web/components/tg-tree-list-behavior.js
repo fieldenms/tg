@@ -74,6 +74,7 @@ const generateChildrenModel = function (children, parentEntity, additionalInfoCb
         parent.additionalInfoNodes = (additionalInfoCb ? additionalInfoCb(parent) : []).map(entity => {
             entity.relatedTo = parent;
             entity.over = false;
+            entity.selected = false;
             return entity;
         });
         return parent;
@@ -151,13 +152,15 @@ const generateLoadingIndicator = function (parent) {
     return loaderIndicator;
 };
 
-const refreshTree = function () {
-    const props = ["opened", "highlight"];
-    this._entities.forEach((entity, idx) => {
+const refreshTree = function (from, to) {
+    const props = ["opened", "highlight", "selected"];
+    const actFrom = from || 0;
+    const actTo = to || this._entities.length;
+    for (let idx = actFrom; idx < actTo; idx++) {
         if (this.isEntityRendered(idx)) {
             props.forEach(prop => this.notifyPath("_entities." + idx + "." + prop)); 
         }
-    });
+    }
 };
 
 export const TgTreeListBehavior = {
@@ -197,6 +200,11 @@ export const TgTreeListBehavior = {
             value: null,
             notify: true,
             observer: "_curentMatchedItemChanged"
+        },
+
+        leftOffset: {
+            type: Number,
+            value: 0
         },
         
         /**
@@ -294,16 +302,27 @@ export const TgTreeListBehavior = {
         });
     },
 
-    expandSubTree: function(parentItem, refreshLoaded) {
-        parentItem.opened = true;
-        if (parentItem.entity.hasChildren && refreshLoaded && parentItem.entity.subtreeRefreshable) {
-            parentItem.children = [generateLoadingIndicator(parentItem)];
-        }
-        parentItem.children.forEach(treeEntity => {
-            if (treeEntity.entity.hasChildren && (refreshLoaded || wasLoaded(treeEntity))) {
-                this.expandSubTree(treeEntity, refreshLoaded);
-            }
+    expandAll: function () {
+        const entities = this._entities.filter(entity => entity.parent === null && entity.entity.hasChildren);
+        entities.forEach(entity => {
+            this.expandSubTree(entity);
         });
+        this.splice("_entities", 0, this._entities.length, ...composeChildren.bind(this)(this._treeModel, true, false));
+        this.async(refreshTree.bind(this), 1);
+    },
+
+    expandSubTree: function(parentItem, refreshLoaded) {
+        if (parentItem.entity.hasChildren) {
+            parentItem.opened = true;
+            if (refreshLoaded && parentItem.entity.subtreeRefreshable) {
+                parentItem.children = [generateLoadingIndicator(parentItem)];
+            }
+            parentItem.children.forEach(treeEntity => {
+                if (treeEntity.entity.hasChildren && (refreshLoaded || wasLoaded(treeEntity))) {
+                    this.expandSubTree(treeEntity, refreshLoaded);
+                }
+            });
+        }
     },
 
     expandSubTreeView: function (parentItem, refreshLoaded) {
@@ -333,7 +352,8 @@ export const TgTreeListBehavior = {
         entities.forEach(entity => {
             this.collapseSubTree(entity);
         });
-        this._entities = this._treeModel.slice();
+        this._entities = composeChildren.bind(this)(this._treeModel, true, false);
+        this.async(refreshTree.bind(this), 1);
     },
 
     collapseSubTreeView: function(parentItem) {
@@ -390,6 +410,18 @@ export const TgTreeListBehavior = {
                 this.set("_entities." + idx + ".opened", true);
                 this.splice("_entities", idx + 1 + entity.additionalInfoNodes.length, 0, ...getChildrenToAdd.bind(this)(entity, true, false));
             }
+            refreshTree.bind(this)(idx);
+        }
+    },
+
+    setSelected: function (idx, selected) {
+        const entity = this._entities[idx];
+        if (entity && entity.selected !== selected) {
+            this.set("_entities." + idx + ".selected", selected);
+            entity.additionalInfoNodes && entity.additionalInfoNodes.forEach((item, additionalInfoIdx) => {
+                this.set("_entities." + (additionalInfoIdx + idx + 1) + ".selected", selected);
+            });
+            this.fire("tg-tree-item-selected", {entity: entity, select: selected});
         }
     },
 
@@ -404,7 +436,7 @@ export const TgTreeListBehavior = {
     },
 
     itemStyle: function (entity) {
-        let paddingLeft = 0;
+        let paddingLeft = this.leftOffset || 0;
         let parent = entity.entity ? entity.parent : entity.relatedTo.parent;
         while (parent) {
             paddingLeft += 32;
@@ -462,7 +494,7 @@ export const TgTreeListBehavior = {
 
     _regenerateModel: function () {
         this._treeModel = generateChildrenModel(this.model, null, this.additionalInfoCb); 
-        this._entities = this._treeModel.slice();
+        this._entities = composeChildren.bind(this)(this._treeModel, true, false);
     },
 
     /**

@@ -20,4 +20,9 @@ public class TgUnionType2Dao extends CommonEntityDao<TgUnionType2> implements Tg
         super(filter);
     }
 
+    @Override
+    public TgUnionType2 new_() {
+        return super.new_().setActive(true);
+    }
+
 }

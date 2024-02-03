@@ -1,7 +1,8 @@
 package ua.com.fielden.platform.test.runners;
 
 import static java.lang.String.format;
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.Reflector.assignStatic;
 import static ua.com.fielden.platform.test.DbCreator.ddlScriptFileName;
 
@@ -12,7 +13,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Function;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.Statement;
@@ -32,7 +33,7 @@ import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
  */
 public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4ClassRunner  {
 
-    public final Logger logger = Logger.getLogger(getClass());
+    public final Logger logger = getLogger(getClass());
     
     // the following two properties must be static to perform their allocation only once due to its memory and CPU intencity
     private static Properties dbProps; // mainly used for db creation and population at the time of loading the test case classes
@@ -62,7 +63,11 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         super(klass);
         // assert if the provided test case is supported
         if (!AbstractDomainDrivenTestCase.class.isAssignableFrom(klass)) {
-            throw new IllegalArgumentException(format("Test case [%s] should extend [%s].", klass.getName(), AbstractDomainDrivenTestCase.class.getName()));
+            throw new DomainDriventTestException(format("Test case [%s] should extend [%s].", klass.getName(), AbstractDomainDrivenTestCase.class.getName()));
+        }
+       
+        if (dbCreatorType == null) {
+            throw new DomainDriventTestException("DbCreator type was not provided, but is required.");
         }
         
         // databaseUri value should be specified in POM or come from the command line

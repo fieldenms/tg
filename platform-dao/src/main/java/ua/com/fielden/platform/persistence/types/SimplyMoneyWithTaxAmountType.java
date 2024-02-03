@@ -23,7 +23,9 @@ import ua.com.fielden.platform.types.markers.ISimplyMoneyWithTaxAmountType;
  * @author 01es
  */
 public class SimplyMoneyWithTaxAmountType extends AbstractCompositeUserType implements ISimplyMoneyWithTaxAmountType {
-
+    
+    public static final SimplyMoneyWithTaxAmountType INSTANCE = new SimplyMoneyWithTaxAmountType();
+    
     @Override
     public Class<Money> returnedClass() {
         return Money.class;

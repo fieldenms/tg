@@ -56,14 +56,15 @@ public class WorkbookExporterTest {
     @Test
     public void money_property_can_be_exported() {
         final MasterEntity entityToExport = new MasterEntity();
-        entityToExport.setMoneyProp(new Money("1.00"));
+        final var amount = new Money("1.00");
+        entityToExport.setMoneyProp(amount);
         final String[] propertyNames = { "moneyProp" };
         final String[] propertyTitles = { "Money property" };
         final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         final DataFormatter formatter = new DataFormatter();
         final String formattedCellValue = formatter.formatCellValue(exportedRow.getCell(0));
-        assertEquals("Money property of the exported row is formatted incorrectly.", "$1.00", formattedCellValue);
+        assertEquals("Money property of the exported row is formatted incorrectly.", amount.toString(), formattedCellValue);
         assertEquals("Money property of the exported row is incorrect.", 1.0d, exportedRow.getCell(0).getNumericCellValue(), 0.0);
     }
 
@@ -219,14 +220,15 @@ public class WorkbookExporterTest {
     @Test
     public void entity_aggregats_with_money_property_can_be_exported() {
         final EntityAggregates entityToExport = new EntityAggregates();
-        entityToExport.set("moneyProp", new Money("1.00"));
+        final var amount = new Money("1.00");
+        entityToExport.set("moneyProp", amount);
         final String[] propertyNames = { "moneyProp" };
         final String[] propertyTitles = { "Money property" };
         final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         final DataFormatter formatter = new DataFormatter();
         final String formattedCellValue = formatter.formatCellValue(exportedRow.getCell(0));
-        assertEquals("Money property of the exported row is formatted incorrectly.", "$1.00", formattedCellValue);
+        assertEquals("Money property of the exported row is formatted incorrectly.", amount.toString(), formattedCellValue);
         assertEquals("Money property of the exported row is incorrect.", 1.0d, exportedRow.getCell(0).getNumericCellValue(), 0.0);
     }
 

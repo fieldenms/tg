@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator.ADD;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator.DIV;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator.MOD;
@@ -116,7 +117,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -131,14 +132,14 @@ import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
-import ua.com.fielden.platform.types.tuples.T3;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Contains internal structure (incrementally collected building blocks) of the entity query request.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 final class Tokens {
     private final List<Pair<TokenCategory, Object>> values = new ArrayList<>();
@@ -166,7 +167,7 @@ final class Tokens {
         result.values.addAll(values);
         return result;
     }
-    
+
     private Tokens add(final TokenCategory cat, final Object value) {
         final Tokens result = cloneTokens();
         result.values.add(new Pair<TokenCategory, Object>(cat, value));
@@ -182,6 +183,10 @@ final class Tokens {
 
     private <E extends Object> List<E> getListFromArray(final E... items) {
         return listOf(items);
+    }
+
+    private static List<String> convertToString(final List<IConvertableToPath> paths) {
+        return paths.stream().map(e -> e.toPath()).collect(toList());
     }
 
     public Tokens and() {
@@ -336,6 +341,10 @@ final class Tokens {
         return add(ANY_OF_PROPS, getListFromArray(props));
     }
 
+    public Tokens anyOfProps(final IConvertableToPath... props) {
+        return add(ANY_OF_PROPS, convertToString(getListFromArray(props)));
+    }
+
     public Tokens anyOfParams(final String... params) {
         return add(ANY_OF_PARAMS, getListFromArray(params));
     }
@@ -358,6 +367,10 @@ final class Tokens {
 
     public Tokens allOfProps(final String... props) {
         return add(ALL_OF_PROPS, getListFromArray(props));
+    }
+
+    public Tokens allOfProps(final IConvertableToPath... props) {
+        return add(ALL_OF_PROPS, convertToString(getListFromArray(props)));
     }
 
     public Tokens allOfParams(final String... params) {
@@ -390,6 +403,10 @@ final class Tokens {
 
     public Tokens setOfProps(final String... props) {
         return add(SET_OF_PROPS, getListFromArray(props));
+    }
+
+    public Tokens setOfProps(final IConvertableToPath... props) {
+        return add(SET_OF_PROPS, convertToString(getListFromArray(props)));
     }
 
     public Tokens setOfParams(final String... params) {
@@ -567,7 +584,7 @@ final class Tokens {
     public Tokens order(OrderingModel order) {
         return add(ORDER_TOKENS, order);
     }
-    
+
     public Tokens asc() {
         return add(SORT_ORDER, ASC);
     }
@@ -599,7 +616,7 @@ final class Tokens {
     public Tokens yield() {
         return add(QUERY_TOKEN, YIELD);
     }
-    
+
     public Tokens yieldAll() {
         final Tokens result = cloneTokens();
         result.yieldAll = true;
@@ -622,7 +639,7 @@ final class Tokens {
         this.mainSourceType = EntityAggregates.class;
         return add(QUERY_TOKEN, FROM, VALUES_AS_QRY_SOURCE, EntityAggregates.class);
     }
-    
+
     public <E extends AbstractEntity<?>> Tokens from(final Class<E> entityType) {
         if (entityType == null) {
             throw new IllegalArgumentException("Missing entity type in query: " + this.values);
@@ -716,13 +733,13 @@ final class Tokens {
 		if (this == obj) {
 			return true;
 		}
-		
+
 		if (!(obj instanceof Tokens)) {
 		    return false;
 		}
-		
+
 		final Tokens that = (Tokens) obj;
-		
+
 		return equalsEx(this.mainSourceType, that.mainSourceType) &&
 		       equalsEx(this.yieldAll, that.yieldAll) &&
 		       equalsEx(this.values, that.values);

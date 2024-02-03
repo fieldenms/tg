@@ -243,21 +243,24 @@ public class WebApiOrderingTest extends AbstractDaoTestCase {
     public void ascending_order_with_all_9_numbers_works() {
         createEntities();
         
+        //TODO Should be thought through how to better handle such cases of duplication
         final Map<String, Object> result = webApi.execute(input("{"
                 + "tgWebApiEntity(order: ASC_1){"
-                + "  key(order: ASC_2)"
+                + "  key"
+                + "  bigDecimalProp(order: ASC_2) @skip(if:true)"
                 + "  desc(order: ASC_3) @skip(if:true)"
                 + "  model(order: ASC_4){"
-                + "    key(order: ASC_5)"
+                + "    key"
+                + "    desc(order: ASC_5) @skip(if:true)"
                 + "    make(order: ASC_6){"
-                + "      key(order: ASC_7)"
+                + "      key"
+                + "      desc(order: ASC_7) @skip(if:true)"
                 + "    }"
                 + "  }"
                 + "  intProp(order: ASC_8) @skip(if:true)"
                 + "  longProp(order: ASC_9) @skip(if:true)"
-                + "}"
-                + "}"));
-        
+                + "}}"));
+
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
             t2("tgWebApiEntity", listOf(
@@ -273,6 +276,7 @@ public class WebApiOrderingTest extends AbstractDaoTestCase {
     public void descending_order_with_all_9_numbers_works() {
         createEntities();
         
+        //TODO Should be thought through how to better handle such cases of duplication
         final Map<String, Object> result = webApi.execute(input("{"
                 + "tgWebApiEntity(order: DESC_1){"
                 + "  bigDecimalProp(order: DESC_2) @skip(if:true)"
@@ -280,18 +284,17 @@ public class WebApiOrderingTest extends AbstractDaoTestCase {
                 + "  dateProp(order: DESC_4) @skip(if:true)"
                 + "  hyperlinkProp(order: DESC_5) @skip(if:true)"
                 + "  colourProp(order: DESC_6) @skip(if:true)"
-                + "  key(order: DESC_7)"
+                + "  key"
                 + "  desc(order: DESC_8) @skip(if:true)"
                 + "  active(order: DESC_9) @skip(if:true)"
-                + "  model{"
+                + "  model(order: DESC_7){"
                 + "    key"
                 + "    make{"
                 + "      key"
                 + "    }"
                 + "  }"
-                + "}"
-                + "}"));
-        
+                + "}}"));
+
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
             t2("tgWebApiEntity", listOf(

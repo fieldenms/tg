@@ -58,8 +58,9 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
@@ -126,7 +127,7 @@ import ua.com.fielden.platform.web.utils.EntityResourceUtils;
  *
  */
 public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtils<T> {
-    private static final Logger logger = Logger.getLogger(CentreResourceUtils.class);
+    private static final Logger logger = LogManager.getLogger(CentreResourceUtils.class);
     public static final String CONFIG_DOES_NOT_EXIST = "Configuration does not exist.";
     private static final String SAVE_MSG = "Please save and try again.";
     public static final String SAVE_OWN_COPY_MSG = "Only sharing of your own configurations is supported. Please save as your copy and try again.";

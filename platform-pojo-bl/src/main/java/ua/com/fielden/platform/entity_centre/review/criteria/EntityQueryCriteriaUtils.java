@@ -28,6 +28,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddTo
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
@@ -86,10 +87,10 @@ public class EntityQueryCriteriaUtils {
                         totalList.add(property);
                     }
                 } else {
-                    columns.add(pair(property, Integer.valueOf(tickManager.getWidth(root, property))));
+                    columns.add(pair(property, tickManager.getWidth(root, property)));
                 }
             } catch (final IncorrectCalcPropertyException ex) {
-                columns.add(pair(property, Integer.valueOf(tickManager.getWidth(root, property))));
+                columns.add(pair(property, tickManager.getWidth(root, property)));
             }
         }
         return pair(columns, totals);
@@ -137,7 +138,7 @@ public class EntityQueryCriteriaUtils {
      * Converts {@code value} to a form suitable for EQL parameters.
      * <p>
      * The only specifics here is UTC date handling. Date value is converted to the form in which UTC dates are persisted in database.
-     * 
+     *
      * @param value
      * @param isDate -- {@code true} if property is of {@link Date} type
      * @param queryProperty
@@ -151,7 +152,7 @@ public class EntityQueryCriteriaUtils {
      * Converts {@code value} to a form suitable for EQL parameters.
      * <p>
      * The only specifics here is UTC date handling. Date value is converted to the form in which UTC dates are persisted in database.
-     * 
+     *
      * @param value
      * @param isDate -- {@code true} if property is of {@link Date} type
      * @param managedType
@@ -159,12 +160,12 @@ public class EntityQueryCriteriaUtils {
      * @return
      */
     public static Object paramValue(final Object value, final boolean isDate, final Class<?> managedType, final String propertyName) {
-        return value != null && isDate && isUtc(managedType, propertyName) ? utcDateParamValue((Date) value) : value; 
+        return value != null && isDate && isUtc(managedType, propertyName) ? utcDateParamValue((Date) value) : value;
     }
 
     /**
      * Converts {@code value} for UTC property to the form in which UTC dates are persisted in database.
-     * 
+     *
      * @param date
      * @return
      */
@@ -180,6 +181,16 @@ public class EntityQueryCriteriaUtils {
      */
     public static QueryProperty createNotInitialisedQueryProperty(final Class<?> root, final String propertyName) {
         return new QueryProperty(root, propertyName);
+    }
+
+    /**
+     * Returns the not configured query property instance for the specified property.
+     *
+     * @param propertyPath
+     * @return
+     */
+    public static QueryProperty createNotInitialisedQueryProperty(final Class<?> root, final IConvertableToPath propertyPath) {
+        return new QueryProperty(root, propertyPath.toPath());
     }
 
     /**

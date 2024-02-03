@@ -51,15 +51,15 @@ public class MoneyTestCase {
         final Currency defaultCurrency = Currency.getInstance(Locale.getDefault());
         assertEquals("￥", defaultCurrency.getSymbol());
         assertEquals("￥1.53", new Money(new BigDecimal("1.53"), Currency.getInstance(Locale.JAPAN)).toString());
-        assertEquals("GBP1.53", new Money(new BigDecimal("1.53"), Currency.getInstance("GBP")).toString());
-        assertEquals("AUD1,401.53", new Money(new BigDecimal("1401.53"), Currency.getInstance("AUD")).toString());
-        assertEquals("AUD1,401.5345", new Money(new BigDecimal("1401.5345"), Currency.getInstance("AUD")).toString());
-        assertEquals("AUD1,401.5345", new Money(new BigDecimal("1401.53451"), Currency.getInstance("AUD")).toString());
-        assertEquals("AUD1,401.5346", new Money(new BigDecimal("1401.53455"), Currency.getInstance("AUD")).toString());
-        assertEquals("AUD1,401.5346", new Money(new BigDecimal("1401.53459"), Currency.getInstance("AUD")).toString());
-        assertEquals("USD1.001", new Money(new BigDecimal("1.001"), Currency.getInstance("USD")).toString());
-        assertEquals("NZD42.00", new Money(new BigDecimal("42.00"), Currency.getInstance("NZD")).toString());
-        assertEquals("NZD42.00", new Money(new BigDecimal("42"), Currency.getInstance("NZD")).toString());
+        assertEquals("£1.53", new Money(new BigDecimal("1.53"), Currency.getInstance("GBP")).toString());
+        assertEquals("A$1,401.53", new Money(new BigDecimal("1401.53"), Currency.getInstance("AUD")).toString());
+        assertEquals("A$1,401.5345", new Money(new BigDecimal("1401.5345"), Currency.getInstance("AUD")).toString());
+        assertEquals("A$1,401.5345", new Money(new BigDecimal("1401.53451"), Currency.getInstance("AUD")).toString());
+        assertEquals("A$1,401.5346", new Money(new BigDecimal("1401.53455"), Currency.getInstance("AUD")).toString());
+        assertEquals("A$1,401.5346", new Money(new BigDecimal("1401.53459"), Currency.getInstance("AUD")).toString());
+        assertEquals("$1.001", new Money(new BigDecimal("1.001"), Currency.getInstance("USD")).toString());
+        assertEquals("NZ$42.00", new Money(new BigDecimal("42.00"), Currency.getInstance("NZD")).toString());
+        assertEquals("NZ$42.00", new Money(new BigDecimal("42"), Currency.getInstance("NZD")).toString());
     }
 
     @Test

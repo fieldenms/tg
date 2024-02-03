@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.attachment.Attachment.HYPERLINK;
 import static ua.com.fielden.platform.attachment.Attachment.pn_IS_LATEST_REV;
 import static ua.com.fielden.platform.attachment.Attachment.pn_LAST_MODIFIED;
@@ -37,7 +38,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -60,7 +61,7 @@ import ua.com.fielden.platform.types.Hyperlink;
 
 @EntityType(Attachment.class)
 public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttachment {
-    private static final Logger LOGGER = Logger.getLogger(AttachmentDao.class);
+    private static final Logger LOGGER = getLogger(AttachmentDao.class);
     private static final String KEY_MEMBER_SEPARATOR_FOR_SPLITTING = Pattern.quote(Reflector.getKeyMemberSeparator(Attachment.class));
 
     private final String attachmentsLocation;

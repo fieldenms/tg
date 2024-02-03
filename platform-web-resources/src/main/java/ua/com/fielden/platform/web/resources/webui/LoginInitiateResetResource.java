@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.restlet.data.MediaType.TEXT_HTML;
 import static ua.com.fielden.platform.security.user.UserSecret.RESER_UUID_EXPIRATION_IN_MUNUTES;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.createRepresentation;
@@ -10,7 +10,8 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -45,7 +46,7 @@ public class LoginInitiateResetResource extends AbstractWebResource {
     
     public static final String BINDING_PATH = "/forgotten";
 
-    private final Logger logger = Logger.getLogger(LoginInitiateResetResource.class);
+    private final Logger logger = LogManager.getLogger(LoginInitiateResetResource.class);
 
     private final IWebResourceLoader webResourceLoader;
     private final String appUri;

@@ -3,20 +3,20 @@ package ua.com.fielden.platform.entity.query;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Query;
 import org.hibernate.Session;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
+import ua.com.fielden.platform.eql.meta.EqlTable;
 
 public class EntityBatchDeleteByIdsOperation<T extends AbstractEntity<?>> {
     private final Session session;
-    private final PersistedEntityMetadata<T> entityMetadata;
+    private final EqlTable entityTable;
 
-    public EntityBatchDeleteByIdsOperation(final Session session, final PersistedEntityMetadata<T> entityMetadata) {
+    public EntityBatchDeleteByIdsOperation(final Session session, final EqlTable entityTable) {
         this.session = session;
-        this.entityMetadata = entityMetadata;
+        this.entityTable = entityTable;
     }
 
     public int deleteEntities(final String propName, final Collection<Long> ids) {
@@ -27,9 +27,8 @@ public class EntityBatchDeleteByIdsOperation<T extends AbstractEntity<?>> {
     }
 
     private String composeDeletionSql(final Collection<Long> ids, final String propName) {
-        final String tableName = entityMetadata.getTable();
-        final String propColumn = entityMetadata.getProps().get(propName).getColumn().getName();
+        final String propColumn = entityTable.columns().get(propName);
         final String idsCommaSeparated = StringUtils.join(ids, ",");
-        return "DELETE FROM " + tableName + " WHERE " + propColumn + " IN (" + idsCommaSeparated + ")";
+        return "DELETE FROM " + entityTable.name() + " WHERE " + propColumn + " IN (" + idsCommaSeparated + ")";
     }
 }

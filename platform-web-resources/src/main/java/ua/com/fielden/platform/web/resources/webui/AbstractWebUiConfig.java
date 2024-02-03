@@ -25,7 +25,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Injector;
@@ -80,10 +81,9 @@ import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
  *
  */
 public abstract class AbstractWebUiConfig implements IWebUiConfig {
-
+    private final Logger logger = LogManager.getLogger(getClass());
     private static final String ERR_IN_COMPOUND_EMITTER = "Event source compound emitter should have cought this error. Something went wrong in WebUiConfig.";
 
-    private final Logger logger = Logger.getLogger(getClass());
     private final String title;
     private WebUiBuilder webUiBuilder;
     private Injector injector;

@@ -25,7 +25,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
 
@@ -55,7 +56,7 @@ import ua.com.fielden.platform.web.view.master.MasterInfoProvider;
 public class WebResourceLoader implements IWebResourceLoader {
     private final IWebUiConfig webUiConfig;
     private final ISerialiser serialiser;
-    private static final Logger logger = Logger.getLogger(WebResourceLoader.class);
+    private static final Logger logger = LogManager.getLogger(WebResourceLoader.class);
     private final boolean deploymentMode;
     private final boolean vulcanizingMode;
 

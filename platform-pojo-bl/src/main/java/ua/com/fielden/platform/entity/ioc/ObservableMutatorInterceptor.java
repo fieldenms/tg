@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.ioc;
 
 import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -8,7 +9,7 @@ import java.util.Optional;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -33,7 +34,7 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class ObservableMutatorInterceptor implements MethodInterceptor {
-    private final Logger logger = Logger.getLogger(this.getClass());
+    private final Logger logger = getLogger(this.getClass());
 
     /**
      * Strictly this method should be used for proceeding with the original mutator call!

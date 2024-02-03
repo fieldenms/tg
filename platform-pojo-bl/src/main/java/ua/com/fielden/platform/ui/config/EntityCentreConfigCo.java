@@ -21,7 +21,7 @@ public interface EntityCentreConfigCo extends IEntityDao<EntityCentreConfig> {
      * <p>
      * The retry mechanism is invoked only if the method call is not within a scope of another active session.
      * 
-     * @param entity
+     * @param config
      * @return
      */
     Long saveWithRetry(final EntityCentreConfig config);

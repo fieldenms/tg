@@ -22,12 +22,6 @@ import ua.com.fielden.platform.keygen.IKeyNumber;
 import ua.com.fielden.platform.keygen.KeyNumberDao;
 import ua.com.fielden.platform.menu.WebMenuItemInvisibilityCo;
 import ua.com.fielden.platform.menu.WebMenuItemInvisibilityDao;
-import ua.com.fielden.platform.migration.MigrationErrorCo;
-import ua.com.fielden.platform.migration.MigrationHistoryCo;
-import ua.com.fielden.platform.migration.MigrationRunCo;
-import ua.com.fielden.platform.migration.MigrationErrorDao;
-import ua.com.fielden.platform.migration.MigrationHistoryDao;
-import ua.com.fielden.platform.migration.MigrationRunDao;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.sample.domain.ITgCollectionalSerialisationChild;
 import ua.com.fielden.platform.sample.domain.ITgCollectionalSerialisationParent;
@@ -56,21 +50,21 @@ import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDurati
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.session.UserSessionDao;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
 import ua.com.fielden.platform.security.user.IUser;
-import ua.com.fielden.platform.security.user.UserAndRoleAssociationCo;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.security.user.UserRoleCo;
-import ua.com.fielden.platform.security.user.UserSecretCo;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociationDao;
+import ua.com.fielden.platform.security.user.UserAndRoleAssociationCo;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociationDao;
 import ua.com.fielden.platform.security.user.UserDao;
+import ua.com.fielden.platform.security.user.UserRoleCo;
 import ua.com.fielden.platform.security.user.UserRoleDao;
+import ua.com.fielden.platform.security.user.UserSecretCo;
 import ua.com.fielden.platform.security.user.UserSecretDao;
+import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
-import ua.com.fielden.platform.test.UserProviderForTesting;
 import ua.com.fielden.platform.test.domain.entities.daos.BogieDao;
 import ua.com.fielden.platform.test.domain.entities.daos.IBogieDao;
 import ua.com.fielden.platform.test.domain.entities.daos.IWagonDao;
@@ -80,14 +74,14 @@ import ua.com.fielden.platform.test.domain.entities.daos.WagonDao;
 import ua.com.fielden.platform.test.domain.entities.daos.WagonSlotDao;
 import ua.com.fielden.platform.test.domain.entities.daos.WorkshopDao;
 import ua.com.fielden.platform.test.ioc.PlatformTestServerModule.TestSessionCacheBuilder;
+import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfigCo;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfigDao;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigDao;
-import ua.com.fielden.platform.ui.config.EntityLocatorConfigDao;
-import ua.com.fielden.platform.ui.config.EntityMasterConfigDao;
-import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfigCo;
 import ua.com.fielden.platform.ui.config.EntityLocatorConfigCo;
+import ua.com.fielden.platform.ui.config.EntityLocatorConfigDao;
 import ua.com.fielden.platform.ui.config.EntityMasterConfigCo;
+import ua.com.fielden.platform.ui.config.EntityMasterConfigDao;
 import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.config.MainMenuItemDao;
 import ua.com.fielden.platform.utils.IDates;
@@ -131,7 +125,7 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
         bind(IUser.class).to(UserDao.class);
         bind(UserSecretCo.class).to(UserSecretDao.class);
         // bind IUserProvider
-        bind(IUserProvider.class).to(UserProviderForTesting.class).in(Scopes.SINGLETON);
+        bind(IUserProvider.class).to(ThreadLocalUserProvider.class).in(Scopes.SINGLETON);
 
         bind(EntityCentreConfigCo.class).to(EntityCentreConfigDao.class);
         bind(EntityCentreAnalysisConfigCo.class).to(EntityCentreAnalysisConfigDao.class);
@@ -148,9 +142,6 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
         bind(ITgVehicleMake.class).to(TgVehicleMakeDao.class);
         bind(ITgVehicle.class).to(TgVehicleDao.class);
         bind(ITgMeterReading.class).to(TgMeterReadingDao.class);
-        bind(MigrationErrorCo.class).to(MigrationErrorDao.class);
-        bind(MigrationRunCo.class).to(MigrationRunDao.class);
-        bind(MigrationHistoryCo.class).to(MigrationHistoryDao.class);
 
         bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
 

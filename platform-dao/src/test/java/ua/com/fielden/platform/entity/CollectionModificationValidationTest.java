@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -11,7 +12,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.function.Function;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -41,7 +42,6 @@ import ua.com.fielden.platform.security.tokens.open_simple_master.TgEntityWithPr
 import ua.com.fielden.platform.security.tokens.open_simple_master.TgEntityWithTimeZoneDatesMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.TgGeneratedEntityForTrippleDecAnalysisMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.TgGeneratedEntityMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.TgMessageMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.TgPersistentCompositeEntityMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.TgPersistentEntityWithPropertiesMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.UserMaster_CanOpen_Token;
@@ -107,7 +107,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  *
  */
 public class CollectionModificationValidationTest extends AbstractDaoTestCase {
-    private final Logger logger = Logger.getLogger(getClass());
+    private final Logger logger = getLogger(getClass());
     private final String newUsername = "NEW_USER";
 
     private UserRolesUpdater createUpdaterWithoutMasterEntity() {
@@ -154,7 +154,6 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
             createUpdaterWithoutMasterEntity();
             fail("Collection modification should fail.");
         } catch (final Exception ex) {
-            logger.error(ex.getMessage(), ex);
             assertTrue(ex instanceof Result);
             assertTrue(ex instanceof Result && ((Result) ex).getMessage().equals("The master entity for collection modification is not provided in the context."));
         }
@@ -404,7 +403,6 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
             createTokenInfo.apply(TgEntityWithTimeZoneDatesMaster_CanOpen_Token.class),
             createTokenInfo.apply(TgGeneratedEntityForTrippleDecAnalysisMaster_CanOpen_Token.class),
             createTokenInfo.apply(TgGeneratedEntityMaster_CanOpen_Token.class),
-            createTokenInfo.apply(TgMessageMaster_CanOpen_Token.class),
             createTokenInfo.apply(TgPersistentCompositeEntityMaster_CanOpen_Token.class),
             createTokenInfo.apply(TgPersistentEntityWithPropertiesMaster_CanOpen_Token.class),
 

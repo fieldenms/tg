@@ -16,7 +16,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.attachment.Attachment;
-import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
@@ -24,6 +23,7 @@ import ua.com.fielden.platform.entity.functional.master.PropertyWarning;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
+import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.persistence.HibernateUtil;
@@ -92,10 +92,10 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
             domainTypes.add(PropertyWarning.class);
             domainTypes.add(Attachment.class);
             final DomainMetadata domainMetadata = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), domainTypes, DbVersion.H2);
-            final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata);
+            final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata.eqlDomainMetadata);
 
             try {
-                cfg.addInputStream(new ByteArrayInputStream(new HibernateMappingsGenerator().generateMappings(domainMetadata).getBytes("UTF8")));
+                cfg.addInputStream(new ByteArrayInputStream(HibernateMappingsGenerator.generateMappings(domainMetadata.eqlDomainMetadata).getBytes("UTF8")));
             } catch (final MappingException | UnsupportedEncodingException e) {
                 throw new HibernateException("Could not add mappings.", e);
             }

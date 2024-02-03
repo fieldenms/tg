@@ -20,6 +20,7 @@ import java.util.function.BiFunction;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
@@ -216,7 +217,17 @@ public interface IContextDecomposer {
         }
         return value.equals(chosenProperty());
     }
-    
+
+    /**
+     * The same as {@link #chosenPropertyEqualsTo(String)}, but accepting an argument of type {@link IConvertableToPath}.
+     *
+     * @param path
+     * @return
+     */
+    default boolean chosenPropertyEqualsTo(final IConvertableToPath path) {
+        return chosenPropertyEqualsTo(path.toPath());
+    }
+
     /**
      * Returns <code>true</code> if the chosen property represents <code>this</code>, which is usually applicable for actions that are defined for EGI's column associated with an entity itself (i.e. "this").
      * Otherwise, <code>false</code> is returned.

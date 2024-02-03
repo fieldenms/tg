@@ -9,7 +9,8 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -33,7 +34,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * 
  */
 public class AttachmentDownloadResource extends AbstractWebResource {
-    private static final Logger LOGGER = Logger.getLogger(AttachmentDownloadResource.class);
+    private static final Logger LOGGER = LogManager.getLogger(AttachmentDownloadResource.class);
 
     private final RestServerUtil restUtil;
     private final IAttachment coAttachment;

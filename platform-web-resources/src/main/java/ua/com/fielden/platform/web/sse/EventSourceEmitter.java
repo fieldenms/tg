@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.sse;
 
 import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -16,7 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.AsyncContext;
 import javax.servlet.ServletOutputStream;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Event source emitter represents a connection to a web client for pushing SSE events to that client. It other words, this is just a pipe through which all SSE messages get sent
@@ -41,7 +42,7 @@ public final class EventSourceEmitter implements IEventSourceEmitter {
     private static final byte[] DATA_FIELD = "data: ".getBytes(StandardCharsets.UTF_8);
     private static final byte[] COMMENT_FIELD = "comment: ".getBytes(StandardCharsets.UTF_8);
 
-    private final Logger logger = Logger.getLogger(getClass());
+    private final Logger logger = getLogger(getClass());
 
     private final AsyncContext async;
     private final ServletOutputStream output;

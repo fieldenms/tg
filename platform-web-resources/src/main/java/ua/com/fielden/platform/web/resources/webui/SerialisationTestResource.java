@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValidationResult;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
@@ -29,7 +30,6 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
@@ -453,15 +453,13 @@ public class SerialisationTestResource extends AbstractWebResource {
     }
     
     private static AbstractEntity<String> createGeneratedEntity(final ISerialiser serialiser, final boolean instrumented) {
-        final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
-        
         final Class<AbstractEntity<?>> emptyEntityTypeEnhanced;
         try {
-            emptyEntityTypeEnhanced = (Class<AbstractEntity<?>>) 
-                    cl.startModification(EmptyEntity.class)
-                        .modifyTypeName(nextTypeName(EmptyEntity.class.getName()))
-                        .addClassAnnotations(new MiTypeAnnotation().newInstance(MiEmptyEntity.class))
+            final Class<? extends AbstractEntity<?>> tmp = startModification(EmptyEntity.class)
+                    .modifyTypeName(nextTypeName(EmptyEntity.class.getName()))
+                    .addClassAnnotations(new MiTypeAnnotation().newInstance(MiEmptyEntity.class))
                     .endModification();
+            emptyEntityTypeEnhanced = (Class<AbstractEntity<?>>) tmp;
         } catch (final ClassNotFoundException e) {
             throw Result.failure(e);
         }

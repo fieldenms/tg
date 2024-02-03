@@ -16,13 +16,13 @@ import ua.com.fielden.platform.basic.config.IApplicationSettings.AuthMode;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserSecret;
-import ua.com.fielden.platform.test.runners.H2TgDomainDrivenTestCaseInSsoAuthModeRunner;
+import ua.com.fielden.platform.test.runners.H2DomainDrivenTestCaseInSsoAuthModeRunner;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 /**
  * A test case to cover user instantiation in the SSO authentication mode.
  * <p>
- * The use of {@link RunWith} with an alternative runner {@link H2TgDomainDrivenTestCaseInSsoAuthModeRunner} is required for this test case.
+ * The use of {@link RunWith} with an alternative runner {@link H2DomainDrivenTestCaseInSsoAuthModeRunner} is required for this test case.
  * This runner overrides configuration properties to set the SSO authentication mode.
  * However, it is only possible to run this test case individually due to caching of configurations statically in the base runner class.
  * This is the reason why the runner annotation is commented out and tests are annotated with {@link Ignore}.

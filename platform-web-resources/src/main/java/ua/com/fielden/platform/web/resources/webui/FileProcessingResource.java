@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 
@@ -46,7 +46,7 @@ import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
  */
 public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> extends AbstractWebResource {
 
-    private static final String ERR_CLIENT_NOT_REGISTERED = "The client should have been registered.";
+    private static final String ERR_CLIENT_NOT_REGISTERED = "The client should have been registered for SSE communication.";
 
     protected final IEntityDao<T> companion;
     private final EntityFactory factory;

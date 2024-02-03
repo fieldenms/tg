@@ -14,6 +14,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISingleConditionOperator;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 abstract class ConditionalOperand<T1 extends IComparisonOperator<T2, ET>, T2 extends ILogicalOperator<?>, ET extends AbstractEntity<?>> //
         extends ExpConditionalOperand<T1, ET> //
@@ -61,6 +62,14 @@ abstract class ConditionalOperand<T1 extends IComparisonOperator<T2, ET>, T2 ext
     @Override
     public T2 critCondition(final String propName, final String critPropName) {
         return nextForConditionalOperand(getTokens().critCondition(propName, critPropName));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public T2 critCondition(final IConvertableToPath prop, final IConvertableToPath critProp) {
+        return critCondition(prop.toPath(), critProp.toPath());
     }
 
     /**

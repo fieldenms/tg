@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.app.config;
 
 import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -9,7 +10,7 @@ import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
@@ -29,7 +30,7 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  *
  */
 public class WebUiBuilder implements IWebUiBuilder {
-    private final Logger logger = Logger.getLogger(getClass());
+    private final Logger logger = getLogger(getClass());
     /**
      * The {@link IWebUiConfig} instance for which this configuration object was created.
      */

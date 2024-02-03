@@ -6,10 +6,38 @@ import static ua.com.fielden.platform.error.Result.asRuntime;
 import ua.com.fielden.platform.reflection.Reflector;
 
 public enum DbVersion {
-    MSSQL(CaseSensitivity.INSENSITIVE, " AS "), 
-    ORACLE(CaseSensitivity.SENSITIVE, " "), 
-    MYSQL(CaseSensitivity.INSENSITIVE, " AS "), 
-    H2(CaseSensitivity.SENSITIVE, " AS "),
+    MSSQL(CaseSensitivity.INSENSITIVE, " AS ") {
+        @Override
+        public String nextSequenceValSql() {
+            return "NEXT VALUE FOR %s".formatted(idSequenceName());
+        }
+    }, 
+    ORACLE(CaseSensitivity.SENSITIVE, " ") {
+        public String idColumnName() {
+            return "TG_ID";
+        }
+
+        public String versionColumnName() {
+            return "TG_VERSION";
+        }
+
+        @Override
+        public String nextSequenceValSql() {
+            return "%s.NEXTVAL".formatted(idSequenceName());
+        }
+    }, 
+    MYSQL(CaseSensitivity.INSENSITIVE, " AS ") {
+        @Override
+        public String nextSequenceValSql() {
+            throw new UnsupportedOperationException("Sequences are not supported for MySQL.");
+        }
+    }, 
+    H2(CaseSensitivity.SENSITIVE, " AS ") {
+        @Override
+        public String nextSequenceValSql() {
+            return "NEXT VALUE FOR %s".formatted(idSequenceName());
+        }
+    },
     POSTGRESQL(CaseSensitivity.SENSITIVE, " AS ") {
         private static final String ILIKE = "ILIKE";
 
@@ -22,6 +50,12 @@ public enum DbVersion {
         protected String likeOperator(boolean caseInsensitive) {
             return caseInsensitive ? ILIKE : super.likeOperator(caseInsensitive);
         }
+
+        @Override
+        public String nextSequenceValSql() {
+            return "NEXTVAL('%s')".formatted(idSequenceName());
+        }
+
     };
 
     public final CaseSensitivity caseSensitivity;
@@ -33,10 +67,7 @@ public enum DbVersion {
      * A flag that provides a way to support generation of aliases as part of SQL statements, which may lead for performance degradation due to slow parsing.
      * Refer to issue https://github.com/fieldenms/tg/issues/1215 for more details.
      */
-    public static final boolean GEN_ALIAS_COMMENTS;
-    static { // static initialisation block is required instead of direct value assignment to enable reassignment of the value at runtime
-        GEN_ALIAS_COMMENTS = false;
-    }
+    private static boolean GEN_ALIAS_COMMENTS = false;
 
     public static String aliasComment(final String alias) {
         return GEN_ALIAS_COMMENTS ? "/*" + alias + "*/" : " ";
@@ -100,4 +131,20 @@ public enum DbVersion {
     public enum CaseSensitivity {
         INSENSITIVE, SENSITIVE;
     }
+    
+    public String idColumnName() {
+        return "_ID";
+    }
+
+    public String versionColumnName() {
+        return "_VERSION";
+    }
+    
+    private static String ID_SEQUENCE_NAME = "TG_ENTITY_ID_SEQ";
+    public String idSequenceName() {
+        return ID_SEQUENCE_NAME;
+    }
+    
+    public abstract String nextSequenceValSql();
+
 }

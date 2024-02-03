@@ -7,10 +7,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
-import static ua.com.fielden.platform.utils.StreamUtils.ERR_FIRST_STREAM_ELEM_CANNOT_BE_NULL;
-import static ua.com.fielden.platform.utils.StreamUtils.head_and_tail;
-import static ua.com.fielden.platform.utils.StreamUtils.takeWhile;
-import static ua.com.fielden.platform.utils.StreamUtils.zip;
+import static ua.com.fielden.platform.utils.Pair.pair;
+import static ua.com.fielden.platform.utils.StreamUtils.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -133,16 +131,58 @@ public class StreamUtilsTest {
     }
 
     @Test
-    public void takeWhile_returns_the_longest_predicate_of_the_stream_whose_elements_satisfy_predicare() {
+    public void takeWhile_returns_the_longest_prefix_of_the_stream_whose_elements_satisfy_predicate() {
         final Stream<Integer> prefix = takeWhile(Stream.of(0, 1, 2, 3, 4, 5, 6, 1, 2, 3), e -> e < 5);
 
         final AtomicInteger expectedCurrValue = new AtomicInteger(-1);
         assertTrue(prefix.allMatch(v -> v == expectedCurrValue.incrementAndGet()));
         assertEquals(4, expectedCurrValue.get());
     }
+
+    @Test
+    public void stopAfter_for_empty_stream_returns_empty_stream() {
+        assertEquals(0L, stopAfter(Stream.empty(), e -> true).count());
+    }
+
+    @Test
+    public void stopAfter_returns_the_longest_prefix_of_the_stream_stopping_after_element_satisfying_predicate() {
+        final Stream<Integer> prefix = stopAfter(Stream.of(0, 1, 2, 3, 4, 5, 6, 1, 2, 3), e -> e >= 5);
+
+        final AtomicInteger expectedCurrValue = new AtomicInteger(-1);
+        assertTrue(prefix.allMatch(v -> v == expectedCurrValue.incrementAndGet()));
+        assertEquals(5, expectedCurrValue.get());
+    }
+
+    @Test
+    public void stopAfter_returns_the_whole_stream_if_no_element_satisfies_predicate() {
+        final List<Integer> numbers = List.of(0, 1, 2, 3, 4, 5, 6, 1, 2, 3);
+        final List<Integer> prefix = stopAfter(numbers.stream(), e -> e >= 7).toList();
+
+        assertTrue(numbers.containsAll(prefix) && numbers.size() == prefix.size());
+    }
     
     @Test
-    public void can_zip_steams_of_different_size() {
+    public void distinct_returns_a_stream_whose_elements_are_distinct_according_to_mapper() {
+        final List<Pair<String, Integer>> elements = List.of(pair("one", 1), pair("two", 2), pair("one", 3), pair("three", 1));
+
+        // distinct by key
+        assertEquals(List.of(pair("one", 1), pair("two", 2), pair("three", 1)), 
+                StreamUtils.distinct(elements.stream(), Pair::getKey).toList());
+        // distinct by value
+        assertEquals(List.of(pair("one", 1), pair("two", 2), pair("one", 3)), 
+                StreamUtils.distinct(elements.stream(), Pair::getValue).toList());
+    }
+
+    @Test
+    public void distinct_returns_a_stream_with_order_preserved() {
+        final List<Pair<String, Integer>> elements = List.of(pair("one", 1), pair("two", 2), pair("two", 22), pair("one", 11));
+
+        assertEquals(List.of(pair("one", 1), pair("two", 2)), 
+                StreamUtils.distinct(elements.stream(), Pair::getKey).toList());
+    }
+    
+    @Test
+    public void can_zip_streams_of_different_size() {
         assertEquals(listOf(0, 2, 4), zip(Stream.of(0, 1, 2), Stream.of(0, 1, 2, 3), (x, y) -> x+y).collect(toList()));
         assertEquals(listOf(0, 2, 4), zip(Stream.of(0, 1, 2, 3), Stream.of(0, 1, 2), (x, y) -> x+y).collect(toList()));
         assertEquals(listOf(), zip(Stream.<Integer>empty(), Stream.of(0, 1, 2), (x, y) -> x+y).collect(toList()));
@@ -208,5 +248,12 @@ public class StreamUtilsTest {
         assertEquals(0, windowedAsList.size());
     }
 
+    @Test
+    public void typeFilter_preserves_only_instances_of_the_given_type_in_a_stream() {
+        assertEquals(List.of(1), Stream.of("one", 1).mapMulti(typeFilter(Integer.class)).toList());
+        assertEquals(List.of(1), Stream.of("one", 1).mapMulti(typeFilter(Number.class)).toList());
+        assertEquals(List.of("one", 1), Stream.of("one", 1).mapMulti(typeFilter(Object.class)).toList());
+        assertEquals(List.of(), Stream.of("one", 1).mapMulti(typeFilter(List.class)).toList());
+    }
 
 }

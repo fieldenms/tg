@@ -1,25 +1,26 @@
 package ua.com.fielden.platform.entity.query.metadata;
 
 import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.eql.meta.EntityTypeInfo.getEntityTypeInfo;
+import static ua.com.fielden.platform.eql.meta.EntityTypeInfo.getEntityTypeInfoPair;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
+import java.util.SortedMap;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
-import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 public class DomainMetadataAnalyser {
-    private final Logger logger = Logger.getLogger(DomainMetadataAnalyser.class);
+    private final Logger logger = getLogger(DomainMetadataAnalyser.class);
     private final Map<Class<? extends AbstractEntity<?>>, AbstractEntityMetadata> entityMetadataMap = new HashMap<>();
     private final DomainMetadata domainMetadata;
 
@@ -28,10 +29,6 @@ public class DomainMetadataAnalyser {
         entityMetadataMap.putAll(domainMetadata.getPersistedEntityMetadataMap());
         entityMetadataMap.putAll(domainMetadata.getModelledEntityMetadataMap());
         entityMetadataMap.putAll(domainMetadata.getPureEntityMetadataMap());
-    }
-
-    public <ET extends AbstractEntity<?>> PersistedEntityMetadata<ET> getPersistedEntityMetadata(final Class<ET> entityType) {
-        return (PersistedEntityMetadata) entityMetadataMap.get(entityType);
     }
 
     public <ET extends AbstractEntity<?>> AbstractEntityMetadata<ET> getEntityMetadata(final Class<ET> entityType) {
@@ -46,19 +43,18 @@ public class DomainMetadataAnalyser {
         } else {
             try {
                 final AbstractEntityMetadata<ET> newOne;
-                final EntityTypeInfo<ET> parentInfo = new EntityTypeInfo<>(entityType);
-                switch (parentInfo.category) {
+                switch (getEntityTypeInfo(entityType).category) {
                 case PERSISTENT:
-                    newOne = domainMetadata.generatePersistedEntityMetadata(parentInfo);
+                    newOne = domainMetadata.generatePersistedEntityMetadata(entityType, getEntityTypeInfo(entityType));
                     break;
                 case QUERY_BASED:
-                    newOne = domainMetadata.generateModelledEntityMetadata(parentInfo);
+                    newOne = domainMetadata.generateModelledEntityMetadata(getEntityTypeInfoPair(entityType));
                     break;
                 case UNION:
-                    newOne = domainMetadata.generateUnionedEntityMetadata(parentInfo);
+                    newOne = domainMetadata.generateUnionedEntityMetadata(getEntityTypeInfoPair(entityType));
                     break;
                 default:
-                    newOne = domainMetadata.generatePureEntityMetadata(parentInfo);
+                    newOne = domainMetadata.generatePureEntityMetadata(entityType);
                 }
 
                 entityMetadataMap.put(entityType, newOne);
@@ -106,58 +102,11 @@ public class DomainMetadataAnalyser {
         }
     }
 
-    public boolean isNullable(final Class<? extends AbstractEntity<?>> entityType, final String dotNotatedPropName) {
-        final PropertyMetadata simplePropInfo = getPropPersistenceInfoExplicitly(entityType, dotNotatedPropName);
-        if (simplePropInfo != null) {
-            return simplePropInfo.isNullable();
-        } else {
-            final Pair<String, String> propSplit = EntityUtils.splitPropByFirstDot(dotNotatedPropName);
-            final PropertyMetadata firstPropInfo = getPropPersistenceInfoExplicitly(entityType, propSplit.getKey());
-            if (firstPropInfo != null && firstPropInfo.getJavaType() != null) {
-                return isNullable(firstPropInfo.getJavaType(), propSplit.getValue()) || firstPropInfo.isNullable();
-            } else {
-                throw new IllegalArgumentException("Couldn't determine nullability for prop [" + dotNotatedPropName + "] in type [" + entityType + "]");
-            }
-        }
-    }
-
-    public Collection<PropertyMetadata> getPropertyMetadatasForEntity(final Class<? extends AbstractEntity<?>> entityType) {
-        final AbstractEntityMetadata epm = getEntityMetadata(entityType);
+    public <ET extends AbstractEntity<?>> SortedMap<String, PropertyMetadata> getPropertyMetadatasForEntity(final Class<ET> entityType) {
+        final AbstractEntityMetadata<ET> epm = getEntityMetadata(entityType);
         if (epm == null) {
             throw new IllegalStateException("Missing ppi map for entity type: " + entityType);
         }
-        return epm.getProps().values();
-    }
-
-    public DbVersion getDbVersion() {
-        return domainMetadata.dbVersion;
-    }
-
-    public Map<Class<?>, Object> getHibTypesDefaults() {
-        return domainMetadata.getHibTypesDefaults();
-    }
-
-    public Object getBooleanValue(final boolean value) {
-        return domainMetadata.getBooleanValue(value);
-    }
-
-    public Set<String> getLeafPropsFromFirstLevelProps(final String parentProp, final Class<? extends AbstractEntity<?>> entityType, final Set<String> firstLevelProps) {
-        final Set<String> result = new HashSet<>();
-
-        for (final String prop : firstLevelProps) {
-            final PropertyMetadata propMetadata = getPropPersistenceInfoExplicitly(entityType, prop);
-            if (propMetadata.isEntityOfPersistedType()) {
-                final Set<String> keyProps = new HashSet<>(Finder.getFieldNames(Finder.getKeyMembers(propMetadata.getJavaType())));
-                if (EntityUtils.isCompositeEntity(propMetadata.getJavaType())) {
-                    result.addAll(getLeafPropsFromFirstLevelProps(prop, propMetadata.getJavaType(), keyProps));
-                } else {
-                    result.add((parentProp != null ? (parentProp + ".") : "") + prop);
-                }
-            } else {
-                result.add((parentProp != null ? (parentProp + ".") : "") + prop);
-            }
-        }
-
-        return result;
+        return Collections.unmodifiableSortedMap(epm.getProps());
     }
 }

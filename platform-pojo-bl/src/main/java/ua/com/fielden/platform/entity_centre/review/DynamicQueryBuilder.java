@@ -4,8 +4,10 @@ import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
+import static java.util.Optional.empty;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Stream.concat;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
@@ -13,6 +15,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.entity_centre.mnemonics.DateMnemonicUtils.dateOfRangeThatIncludes;
 import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.paramValue;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
+import static ua.com.fielden.platform.reflection.Finder.getFields;
 import static ua.com.fielden.platform.reflection.Finder.getPropertyDescriptors;
 import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
@@ -22,6 +25,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
 import static ua.com.fielden.platform.utils.EntityUtils.isRangeType;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import static ua.com.fielden.platform.utils.MiscUtilities.prepare;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
@@ -37,8 +41,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
@@ -65,6 +69,7 @@ import ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum;
 import ua.com.fielden.platform.entity_centre.mnemonics.DateRangeSelectorEnum;
 import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
 import ua.com.fielden.platform.exceptions.AbstractPlatformRuntimeException;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -76,18 +81,18 @@ import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 
 /**
- * An utility class that is responsible for building query implementation of {@link DynamicEntityQueryCriteria}.
+ * A utility class that is responsible for building query implementation of {@link DynamicEntityQueryCriteria}.
  *
  * @author TG Team
  *
  */
 public class DynamicQueryBuilder {
-    private static final Logger logger = Logger.getLogger(DynamicQueryBuilder.class);
+    private static final Logger logger = getLogger(DynamicQueryBuilder.class);
 
     private DynamicQueryBuilder() {}
 
     /**
-     * This is a class which represents high-level abstraction for criterion in dynamic criteria. <br>
+     * This is a class that represents high-level abstraction for a crit-only property in a dynamic criteria entity. <br>
      * <br>
      * Consists of one or possibly two (for "from"/"to" or "is"/"is not") values / exclusiveness-flags, <br>
      * and strictly single datePrefix/Mnemonic/AndBefore triplet, "orNull" and "not" flags, and other stuff, which are necessary for query composition.
@@ -97,7 +102,7 @@ public class DynamicQueryBuilder {
      */
     public static class QueryProperty {
 
-        private static final String ERR_MISSING_CRITONLY_SUBMODEL = "@CritOnly property [%s] in [%s] has no submodel with name [%s_] defined.";
+        private static final String ERR_CRITONLY_SUBMODEL_INACCESSIBLE = "@CritOnly property [%s] in [%s] has inaccessible submodel with name [%s_].";
         private static final String ERR_INCOMPATIBLE_CRITONLY_SUBMODEL_TYPE = "Submodel [%s_] for @CritOnly property [%s] in [%s] should have type ICompoundCondition0.";
         private static final String QP_PREFIX = "QP_";
 
@@ -142,6 +147,16 @@ public class DynamicQueryBuilder {
          */
         public static String queryPropertyParamName(final String propertyName) {
             return QP_PREFIX + propertyName;
+        }
+
+        /**
+         * Creates parameter name for {@link QueryProperty} instance (should be used to expand mnemonics value into conditions from EQL critCondition operator).
+         *
+         * @param propertyPath
+         * @return
+         */
+        public static String queryPropertyParamName(final IConvertableToPath propertyPath) {
+            return QP_PREFIX + propertyPath.toPath();
         }
 
         public QueryProperty(final Class<?> entityClass, final String propertyName) {
@@ -190,10 +205,11 @@ public class DynamicQueryBuilder {
 
             final CritOnly critAnnotation = analyser.getPropertyFieldAnnotation(CritOnly.class);
             this.critOnly = critAnnotation != null;
-            this.critOnlyWithModel = critOnly && isCritOnlyWithSubmodel(critAnnotation, analyser.propertyTypes[analyser.propertyTypes.length - 2], analyser.propertyNames[analyser.propertyNames.length - 1]);
+            final Optional<Field> critOnlySubmodelFieldOpt = critOnly ? findCritOnlySubmodelField(critAnnotation, analyser.propertyTypes[analyser.propertyTypes.length - 2], analyser.propertyNames[analyser.propertyNames.length - 1]) : empty();
+            this.critOnlyWithModel = critOnlySubmodelFieldOpt.isPresent();
             if (this.critOnlyWithModel) {
                 this.propertyUnderCondition = critAnnotation.propUnderCondition();
-                this.critOnlyModel = getCritOnlySubmodel(analyser.propertyTypes[analyser.propertyTypes.length - 2], analyser.propertyNames[analyser.propertyNames.length - 1]);
+                this.critOnlyModel = getCritOnlySubmodel(critOnlySubmodelFieldOpt.get(), analyser.propertyTypes[analyser.propertyTypes.length - 2], analyser.propertyNames[analyser.propertyNames.length - 1]);
             } else {
                 this.propertyUnderCondition = "";
                 this.critOnlyModel = null;
@@ -333,27 +349,25 @@ public class DynamicQueryBuilder {
         }
 
         /**
-         * Determines if the crit-only property is defined with a sub-model, which needs to be taken into account when building the final query.
+         * Finds a submodel for a crit-only property, if present.
+         * It is important to traverse the type hierarchy. This is important for the Entity Centre generated types, because they extend the original entity type, where crit-only properties are defined.
          *
          * @param critAnnotation
          * @param entityType
          * @param propertyName
          * @return
          */
-        private static boolean isCritOnlyWithSubmodel(final CritOnly critAnnotation, final Class<?> entityType, final String propertyName) {
-            try {
-                return !StringUtils.isEmpty(critAnnotation.propUnderCondition()) /* a property name is specified */ &&
-                       !AbstractEntity.class.equals(critAnnotation.entityUnderCondition()) /* a domain entity is specified */ &&
-                        isPropertyPresent(critAnnotation.entityUnderCondition(), critAnnotation.propUnderCondition()) /* a specified property belongs to a domain entity */ &&
-                        entityType.getDeclaredField(propertyName + "_") != null /* there is a sub-model*/;
-            } catch (NoSuchFieldException | SecurityException e) {
-                return false;
-            }
+        private static Optional<Field> findCritOnlySubmodelField(final CritOnly critAnnotation, final Class<?> entityType, final String propertyName) {
+            final var canGetFieldInfo = !StringUtils.isEmpty(critAnnotation.propUnderCondition()) && /* a property name is specified */
+                                        !AbstractEntity.class.equals(critAnnotation.entityUnderCondition()) && /* a domain entity is specified */
+                                        isPropertyPresent(critAnnotation.entityUnderCondition(), critAnnotation.propUnderCondition()); /* a specified property belongs to a domain entity */
+            return canGetFieldInfo
+                   ? getFields(entityType, false).stream().filter(field -> (propertyName + "_").equals(field.getName())).findFirst() /* there may be a sub-model in type hierarchy */
+                   : empty();
         }
 
-        private static ICompoundCondition0<?> getCritOnlySubmodel(final Class<?> type, final String propertyName) {
+        private static ICompoundCondition0<?> getCritOnlySubmodel(final Field exprField, final Class<?> type, final String propertyName) {
             try {
-                final Field exprField = type.getDeclaredField(propertyName + "_");
                 exprField.setAccessible(true);
                 final Object value = exprField.get(null);
                 if (value instanceof ICompoundCondition0) {
@@ -361,8 +375,8 @@ public class DynamicQueryBuilder {
                 } else {
                     throw new EntityCentreExecutionException(format(ERR_INCOMPATIBLE_CRITONLY_SUBMODEL_TYPE, propertyName, propertyName, type.getSimpleName()));
                 }
-            } catch (final NoSuchFieldException | IllegalAccessException ex) {
-                throw new EntityCentreExecutionException(format(ERR_MISSING_CRITONLY_SUBMODEL, propertyName, type.getSimpleName(), propertyName));
+            } catch (final IllegalAccessException ex) {
+                throw new EntityCentreExecutionException(format(ERR_CRITONLY_SUBMODEL_INACCESSIBLE, propertyName, type.getSimpleName(), propertyName));
             }
         }
 
@@ -1118,17 +1132,23 @@ public class DynamicQueryBuilder {
      * @return
      */
     private static ConditionModel propertyLike(final String propertyNameWithKey, final List<String> searchValues, final Class<? extends AbstractEntity<?>> propType) {
-        final Map<Boolean, List<String>> searchVals = searchValues.stream().collect(groupingBy(str -> str.contains("*")));
+        // A map to separate exact (false) and wildcard (true) search values; this provides a way to optimise the database query.
+        final Map<Boolean, List<String>> exactAndWildcardSearchVals = searchValues.stream().collect(groupingBy(str -> str.contains("*")));
         final String propertyNameWithoutKey = getPropertyNameWithoutKeyPart(propertyNameWithKey);
-        if (searchVals.containsKey(false) && searchVals.containsKey(true)) {
+        if (exactAndWildcardSearchVals.containsKey(false) && exactAndWildcardSearchVals.containsKey(true)) { // both exact and whildcard search values are present
             return cond()
-                    .prop(propertyNameWithoutKey).in().model(select(propType).where().prop("key").in().values(searchVals.get(false).toArray()).model())
-                    .or().prop(propertyNameWithKey).iLike().anyOfValues(prepCritValuesForEntityTypedProp(searchVals.get(true))).model();
-        } else if (searchVals.containsKey(false) && !searchVals.containsKey(true)) {
+                    // Condition for exact search values; union entities need ".id" to help EQL.
+                    .prop(propertyNameWithoutKey + (isUnionEntityType(propType) ? ".id" : "")).in().model(select(propType).where().prop(KEY).in().values(exactAndWildcardSearchVals.get(false).toArray()).model())
+                    // Condition for wildcard search values.
+                    .or().prop(propertyNameWithKey).iLike().anyOfValues(prepCritValuesForEntityTypedProp(exactAndWildcardSearchVals.get(true))).model();
+        } else if (exactAndWildcardSearchVals.containsKey(false) && !exactAndWildcardSearchVals.containsKey(true)) { // only exact search values are present
             return cond()
-                    .prop(propertyNameWithoutKey).in().model(select(propType).where().prop("key").in().values(searchVals.get(false).toArray()).model()).model();
-        } else {
-            return cond().prop(propertyNameWithKey).iLike().anyOfValues(prepCritValuesForEntityTypedProp(searchVals.get(true))).model();
+                    // Condition for exact search values; union entities need ".id" to help EQL.
+                    .prop(propertyNameWithoutKey + (isUnionEntityType(propType) ? ".id" : "")).in().model(select(propType).where().prop(KEY).in().values(exactAndWildcardSearchVals.get(false).toArray()).model()).model();
+        } else { // only whildcard search values are present
+            return cond()
+                    // Condition for wildcard search values.
+                    .prop(propertyNameWithKey).iLike().anyOfValues(prepCritValuesForEntityTypedProp(exactAndWildcardSearchVals.get(true))).model();
         }
     }
 
@@ -1157,7 +1177,8 @@ public class DynamicQueryBuilder {
      * @return
      */
     private static <E extends AbstractEntity<?>> IJoin<E> createJoinCondition(final Class<E> managedType) {
-        return select(select(managedType).model()).as(ALIAS);
+        // Wrapping into additional query with all calculated properties materialised into columns is needed to handle SQL Server limitation of aggregation on sub-queries.
+        return select(select(managedType).model().setShouldMaterialiseCalcPropsAsColumnsInSqlQuery(true)).as(ALIAS);
     }
 
     private static final String ALIAS = "alias_for_main_criteria_type";
@@ -1170,6 +1191,19 @@ public class DynamicQueryBuilder {
      */
     public static String createConditionProperty(final String property) {
         return property.isEmpty() ? ALIAS : ALIAS + "." + property;
+    }
+
+    /**
+     * The same as {@link #createConditionProperty(String)}, but with parameter of type {@link IConvertableToPath}.
+     * <p>
+     * <b>IMPORTANT:</b> At this stage there no way to differentiate between property meta-models coming from aliased and non-aliased instance of entity meta-models.
+     * It is important to use with method only in application to properties from non-aliased meta-models. Otherwise, a runtime error would occur at the EQL/SQL level due to incorrect aliases.
+     *
+     * @param property – a property meta-model coming from a non-aliased instance of an entity meta-model.
+     * @return
+     */
+    public static String createConditionProperty(final IConvertableToPath property) {
+        return createConditionProperty(property.toPath());
     }
 
     /**
@@ -1210,7 +1244,7 @@ public class DynamicQueryBuilder {
         }
         ISubsequentCompletedAndYielded<E> yieldedQuery = null;
         for (final Map.Entry<String, String> yieldProperty : yieldProperties.entrySet()) {
-            yieldedQuery = yieldedQuery == null ? yield(genClass, yieldProperty, baseQuery) : yield(genClass, yieldProperty, yieldedQuery);
+            yieldedQuery = yieldedQuery == null ? DynamicQueryBuilder.yield(genClass, yieldProperty, baseQuery) : DynamicQueryBuilder.yield(genClass, yieldProperty, yieldedQuery);
         }
         if (yieldedQuery == null) {
             throw new IllegalStateException("The query was compound incorrectly!");
@@ -1233,19 +1267,17 @@ public class DynamicQueryBuilder {
     /**
      * Groups the given query by specified property.
      *
-     * @param proeprtyName
-     * @param query
      * @return
      */
     //TODO Later the genClass property must be removed. This is an interim solution that allows to add .amount prefix to the money properties.
-    private static <E extends AbstractEntity<?>> ISubsequentCompletedAndYielded<E> yield(final Class<E> genClass, final Map.Entry<String, String> yield, final ICompleted<E> query) {
+    private static <E extends AbstractEntity<?>> ISubsequentCompletedAndYielded<E> yield(final Class<E> genClass, final Map.Entry<String, String> toYield, final ICompleted<E> query) {
         //TODO this code must be removed as a interim solution
-        String aliasValue = yield.getValue();
+        String aliasValue = toYield.getValue();
         if (!aliasValue.isEmpty() && Money.class.isAssignableFrom(PropertyTypeDeterminator.determinePropertyType(genClass, aliasValue))) {
             aliasValue += ".amount";
         }
         //remove code above
-        return query.yield().prop(yield.getKey().isEmpty() ? ALIAS : ALIAS + "." + yield.getKey()).as(aliasValue);
+        return query.yield().prop(toYield.getKey().isEmpty() ? ALIAS : ALIAS + "." + toYield.getKey()).as(aliasValue);
     }
 
     /**

@@ -7,6 +7,7 @@ import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
@@ -15,7 +16,8 @@ import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 
 @KeyType(DynamicEntityKey.class)
-@DescTitle("Desc title")
+@KeyTitle("Domain Property")
+@DescTitle("Description")
 @CompanionObject(DomainPropertyCo.class)
 @MapEntityTo
 @DenyIntrospection
@@ -32,6 +34,12 @@ public class DomainProperty extends AbstractEntity<DynamicEntityKey> {
     @Title(value = "Holder", desc = "Indicates a type where this property belongs, which may be an entity type or a component-like type (e.g. a union type).")
     @CompositeKeyMember(2)
     private DomainPropertyHolder holder;
+
+    // Re-introduce `desc` to make it more than 255 characters
+    @IsProperty(length = 1024)
+    @MapTo
+    @Title("Description")
+    private String desc;
 
     @IsProperty
     @MapTo
@@ -57,7 +65,7 @@ public class DomainProperty extends AbstractEntity<DynamicEntityKey> {
     @MapTo
     @Title("DB Column")
     private String dbColumn;
-    
+
     @IsProperty
     @MapTo
     @Required
@@ -142,5 +150,17 @@ public class DomainProperty extends AbstractEntity<DynamicEntityKey> {
 
     public String getName() {
         return name;
+    }
+
+    @Override
+    @Observable
+    public DomainProperty setDesc(final String desc) {
+        this.desc = desc;
+        return this;
+    }
+
+    @Override
+    public String getDesc() {
+        return desc;
     }
 }

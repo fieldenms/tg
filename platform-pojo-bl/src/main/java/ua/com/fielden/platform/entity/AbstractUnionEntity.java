@@ -1,15 +1,18 @@
 package ua.com.fielden.platform.entity;
 
 import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
@@ -154,13 +157,13 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
     }
 
     /**
-     * Provides the list of property names, which are common for entity types used in "polymorphic" association.
+     * Provides the set of property names, which are common for entity types used in "polymorphic" association.
      *
      * @param type
      * @param propertyFilter
      * @return
      */
-    public static final List<String> commonProperties(final Class<? extends AbstractUnionEntity> type) {
+    public static final Set<String> commonProperties(final Class<? extends AbstractUnionEntity> type) {
         // collect all properties of entity type
         final List<Class<? extends AbstractEntity<?>>> propertyTypes = new ArrayList<>();
         final List<Field> fields = unionProperties(type);
@@ -221,7 +224,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
      *             - throws when couldn't found property getter or setter for some property.
      */
     public static final List<Method> commonMethods(final Class<? extends AbstractUnionEntity> type) {
-        final List<String> commonProperties = commonProperties(type);
+        final Set<String> commonProperties = commonProperties(type);
         final List<Field> unionProperties = unionProperties(type);
         final List<Method> commonMethods = new ArrayList<>();
         final Class<?> propertyType = unionProperties.get(0).getType();
@@ -234,5 +237,23 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
             }
         }
         return commonMethods;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        // use standard equality from AbstractEntity and, if equals, compare active entities
+        if (!super.equals(obj)) { // there are special handling for id-only-proxies and may be more specialisation in future
+            return false;
+        }
+        // this.getType() and obj.getType() are equal as per super.equals call; so we can safely convert 'obj' to AbstractUnionEntity
+        return equalsEx(this.activeEntity(), ((AbstractUnionEntity) obj).activeEntity());
+    }
+
+    @Override
+    public int hashCode() {
+        return ofNullable(activeEntity()).map(AbstractEntity::hashCode).orElse(0) * 23;
     }
 }

@@ -12,7 +12,7 @@ import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 public class EntityAggregatesRetrievalModel<T extends AbstractEntity<?>> extends AbstractRetrievalModel<T> {
 
     public EntityAggregatesRetrievalModel(final fetch<T> originalFetch, final DomainMetadataAnalyser domainMetadataAnalyser) {
-        super(originalFetch, domainMetadataAnalyser);
+        super(originalFetch, domainMetadataAnalyser, true);
 
         validateModel();
 
@@ -42,6 +42,11 @@ public class EntityAggregatesRetrievalModel<T extends AbstractEntity<?>> extends
     private void addEntityPropsModel(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
         final EntityRetrievalModel<?> existingFetch = getRetrievalModels().get(propName);
         fetch<?> finalFetch = existingFetch != null ? existingFetch.originalFetch.unionWith(fetchModel) : fetchModel;
-        addEntityPropFetchModel(propName, new EntityRetrievalModel<>(finalFetch, getDomainMetadataAnalyser()));
+        addEntityPropFetchModel(propName, new EntityRetrievalModel<>(finalFetch, getDomainMetadataAnalyser(), false));
+    }
+
+    @Override
+    public boolean containsOnlyTotals() {
+        return false;
     }
 }

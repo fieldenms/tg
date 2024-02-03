@@ -16,7 +16,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.restlet.Message;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -31,6 +32,8 @@ import org.restlet.util.Series;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Inject;
 
+import ua.com.fielden.platform.continuation.NeedMoreData;
+import ua.com.fielden.platform.continuation.NeedMoreDataException;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleQueryContainer;
@@ -53,7 +56,7 @@ public class RestServerUtil {
     private static final String ERR_COULD_NOT_FIND_ENTITY = "Could not find entity.";
 
     private final ISerialiser serialiser;
-    private final Logger logger = Logger.getLogger(RestServerUtil.class);
+    private final Logger logger = LogManager.getLogger(RestServerUtil.class);
 
     @Inject
     public RestServerUtil(final ISerialiser serialiser) {
@@ -268,26 +271,35 @@ public class RestServerUtil {
             if (ex instanceof Result) {
                 final Result thrownResult = (Result) ex;
                 if (thrownResult.isSuccessful()) {
-                    throw failure(format("The successful result [%s] was thrown during unsuccesful saving of entity with id [%s] of type [%s]. This is most likely programming error.", thrownResult, entity.getId(), entity.getClass().getSimpleName()));
+                    throw failure(format("The successful result [%s] was thrown during unsuccesful saving of entity with id [%s] of type [%s]. This is most likely a programming error.", thrownResult, entity.getId(), entity.getClass().getSimpleName()));
                 }
 
-                // iterate over properties in search of the first invalid one (without required checks)
-                final Optional<Result> firstFailure = entity.nonProxiedProperties()
-                .filter(mp -> mp.getFirstFailure() != null)
-                .findFirst().map(mp -> mp.getFirstFailure());
+                // we don't want continuation related exceptions to pollute the log with errors and stack traces – simply log an informative message
+                if (ex instanceof NeedMoreData continuationEx) {
+                    if (continuationEx.getEx() instanceof NeedMoreDataException nmdEx) {
+                        logger.info(format("NMD Continuation: %s, %s, %s", nmdEx.getMessage(), nmdEx.continuationTypeStr, nmdEx.continuationProperty));
+                    } else { // just in case...
+                        logger.info(format("NMD Continuation: %s", continuationEx.getMessage()));
+                    }
+                } else {
+                    // iterate over properties in search of the first invalid one (without required checks)
+                    final Optional<Result> firstFailure = entity.nonProxiedProperties().filter(mp -> mp.getFirstFailure() != null).findFirst().map(mp -> mp.getFirstFailure());
 
-                // returns first failure if exists or successful result if there was no failure.
-                final Result isValid = firstFailure.orElse(successful(entity));
-                if (ex != isValid) {
-                    // Log the server side error only in case where exception, that was thrown, does not equal to validation result of the entity (by reference).
-                    // Please, note that Results, that are thrown in companion objects, often represents validation results of some complimentary entities during saving.
-                    // For example, see ServiceRepairSubmitActionDao save method, which internally invokes saveWorkOrder(serviceRepair) method of ServiceRepairDao, where during saving of workOrder
-                    //  some validation result is thrown.
-                    // In these cases -- server error log should report the saving error.
-                    logger.error(ex.getMessage(), ex);
+                    // returns first failure if exists or successful result if there was no failure.
+                    final Result isValid = firstFailure.orElse(successful(entity));
+                    if (ex != isValid) {
+                        // Log the server side error only in case where exception, that was thrown, does not equal to validation result of the entity (by reference).
+                        // Please, note that Results, that are thrown in companion objects, often represents validation results of some complimentary entities during saving.
+                        // For example, see ServiceRepairSubmitActionDao save method, which internally invokes saveWorkOrder(serviceRepair) method of ServiceRepairDao, where during saving of workOrder
+                        //  some validation result is thrown.
+                        // In these cases -- server error log should report the saving error.
+                        logger.error(ex.getMessage(), ex);
+                    }
                 }
                 result = thrownResult.copyWith(entity);
-                logger.warn(format("The unsuccessful result [%s] was thrown during unsuccesful saving of entity with id [%s] of type [%s]. Its instance will be overridden by the entity with id [%s] to be able to bind the entity to respective master.", thrownResult, entity.getId(), entity.getClass().getSimpleName(), entity.getId()));
+                logger.debug(format("The unsuccessful result [%s] was thrown during unsuccesful saving of entity with id [%s] of type [%s]. "
+                                  + "Its instance will be overridden by entity with id [%s] to be able to bind the entity to respective master.",
+                                    thrownResult, entity.getId(), entity.getClass().getSimpleName(), entity.getId()));
             } else {
                 logger.error(ex.getMessage(), ex);
                 result = failure(entity, ex);

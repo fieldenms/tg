@@ -39,7 +39,7 @@ public class KeyNumberTest extends AbstractDaoTestCase {
     
     @Test
     public void existing_keynumber_value_is_retrievable_by_key() {
-        assertEquals("Incorrect current WO number.", new Integer("500"), coKeyNumber.currNumber("WO"));
+        assertEquals("Incorrect current WO number.", Integer.valueOf(500), coKeyNumber.currNumber("WO"));
     }
 
     @Test

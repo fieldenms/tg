@@ -26,6 +26,6 @@ public class ChartAnalysisQueryGenerator<T extends AbstractEntity<?>> extends Gr
                 adtm().getSecondTick().usedProperties(getRoot()));
         final List<IQueryComposer<T>> result = new ArrayList<>();
         result.add(createQueryAndGroupBy(classBundle.getGeneratedClass(), adtm().getFirstTick().usedProperties(getRoot())));
-        return new AnalysisResultClassBundle<>(getCdtme(), classBundle.getGeneratedClass(), classBundle.getGeneratedClassRepresentation(), result);
+        return new AnalysisResultClassBundle<>(getCdtme(), classBundle.getGeneratedClass(), result);
     }
 }
