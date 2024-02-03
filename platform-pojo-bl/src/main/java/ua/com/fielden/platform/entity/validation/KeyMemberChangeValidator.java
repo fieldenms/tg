@@ -7,6 +7,7 @@ import ua.com.fielden.platform.entity.meta.impl.AbstractBeforeChangeEventHandler
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ref_hierarchy.*;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
@@ -40,17 +41,21 @@ public class KeyMemberChangeValidator extends AbstractBeforeChangeEventHandler<O
     @Override
     public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
         final AbstractEntity<?> entity = property.getEntity();
-        if (!entity.isPersistent() || !entity.isPersisted()) {
-            return successful(newValue);
+        if (!entity.isPersistent() || !entity.isPersisted() || EntityUtils.equalsEx(newValue, property.getOriginalValue())) {
+            return successful();
         }
 
         final IReferenceHierarchy coReferenceHierarchy = co(ReferenceHierarchy.class);
-        final var refChy = coReferenceHierarchy.save(coReferenceHierarchy.new_()
-                .setLoadedHierarchyLevel(ReferenceHierarchyLevel.REFERENCE_BY_INSTANCE)
-                .setRefEntityId(entity.getId())
-                .setRefEntityType(entity.getType().getName()));
+        final var refChy = coReferenceHierarchy.new_();
+        refChy.beginInitialising();
+        refChy.setLoadedHierarchyLevel(ReferenceHierarchyLevel.REFERENCE_BY_INSTANCE);
+        refChy.setRefEntityId(entity.getId());
+        refChy.setRefEntityType(entity.getType().getName());
+        refChy.endInitialising();
 
-        final List<TypeLevelHierarchyEntry> typeEntries = refChy.getGeneratedHierarchy().stream()
+        final var savedRefChy = coReferenceHierarchy.save(refChy);
+
+        final List<TypeLevelHierarchyEntry> typeEntries = savedRefChy.getGeneratedHierarchy().stream()
                 .mapMulti(typeFilter(ReferenceHierarchyEntry.class))
                 .filter(entry -> ReferenceHierarchyLevel.REFERENCED_BY == entry.getHierarchyLevel())
                 .flatMap(entry -> entry.getChildren().stream())
@@ -58,7 +63,7 @@ public class KeyMemberChangeValidator extends AbstractBeforeChangeEventHandler<O
                 .toList();
 
         if (typeEntries.isEmpty()) {
-            return successful(newValue);
+            return successful();
         }
 
         final String entityTitle = getEntityTitleAndDesc(entity.getType()).getKey();

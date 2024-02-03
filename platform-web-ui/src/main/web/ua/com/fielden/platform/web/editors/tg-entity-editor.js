@@ -664,6 +664,8 @@ export class TgEntityEditor extends TgEditor {
                         const embeddedMaster = e.detail;
                         if (embeddedMaster) {
                             setKeyFields(entity, embeddedMaster); // provide values into embedded master key fields from previously created 'entity'
+                            // Delete modifyFunctionalEntity callback to prevent a key property initialisation for the child entity master upon invocation of the SAVE&NEW action.
+                            delete this.tgOpenMasterAction.modifyFunctionalEntity;
                         }
                         master.removeEventListener("data-loaded-and-focused", dataLoadedCallback);
                     }
@@ -679,6 +681,13 @@ export class TgEntityEditor extends TgEditor {
                     if (!this._disabled && value !== null && value.get("id") !== null) {
                         this.assignConcreteValue(value, this.reflector().tg_convert.bind(this.reflector()));
                         this.commit();
+                        // Delete the post-action success callback to prevent continuous snatch backing of the value upon the invocation of the SAVE&NEW action.
+                        // But it should be deleted only if the master is closed (e.a. offsetParent is null),
+                        // This is needed because the SAVE action also triggers this callback and it doesn't close the master.
+                        // And so, the user may continue modifying the entity, which would require additional snatch back upon SAVE.
+                        if (master.offsetParent === null) {
+                            delete this.tgOpenMasterAction.postActionSuccess;
+                        }
                     }
                 }
                 this.tgOpenMasterAction._runDynamicActionForNew(this.newEntityMaster.rootEntityType);

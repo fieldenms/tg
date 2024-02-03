@@ -716,7 +716,9 @@ const TgEntityMasterBehaviorImpl = {
                 slf.disableView();
             }
 
-            return new Promise(function (resolve, reject) {
+            // Need to keep a reference to this promise, so that other components could check whether this master's saving request is still in progress or not
+            // This is needed for the SAVE&NEW action to know when a "new" master can be opened.
+            this._savingPromise = new Promise(function (resolve, reject) {
                 slf.debounce('invoke-saving', function () {
                     // cancel the 'invoke-saving' debouncer if there is any active one:
                     slf.cancelDebouncer('invoke-saving');
@@ -740,6 +742,7 @@ const TgEntityMasterBehaviorImpl = {
                     return resolve(slf._createSavingPromise());
                 }, 50);
             });
+            return this._savingPromise;
         }).bind(self);
 
         /**

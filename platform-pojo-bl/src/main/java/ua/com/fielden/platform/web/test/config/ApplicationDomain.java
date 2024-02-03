@@ -93,6 +93,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgOrgUnit3.class);
         add(TgOrgUnit4.class);
         add(TgOrgUnit5.class);
+        add(TeProductPrice.class);
         add(TeVehicle.class);
         add(TeVehicleFinDetails.class);
         add(TeVehicleFuelUsage.class);
@@ -157,7 +158,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
 
         add(TgSynBogie.class);
         add(MakeCompletedAction.class);
-        
+
         add(TgMeterReading.class);
         add(TgReMaxVehicleReading.class);
         add(TgPersonName.class);

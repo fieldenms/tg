@@ -250,7 +250,8 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     @Override
     public boolean containsOnlyTotals() {
         for (final String propName : getPrimProps()) {
-            if (!propsMetadata.get(propName).isAggregatedExpression()) {
+            if (!propsMetadata.containsKey(propName) // handling the case of old EQL metadata not containing ID property for Synthetic Entities with modelled rather than inherited ID property.
+                    || !propsMetadata.get(propName).isAggregatedExpression()) {
                 return false;
             }
         }
