@@ -191,7 +191,7 @@ const TgEntityMasterBehaviorImpl = {
         },
 
         /**
-         * The action that should be used by entity editors as title action to open entity master for editing or creating new entity of entity editor's type.
+         * An action that is used by entity editors as their add/edit title action to open an Entity Master, which corresponds to the editor's entity type.
          */
         titleAction: {
             type:Object
@@ -657,8 +657,8 @@ const TgEntityMasterBehaviorImpl = {
                 if (wasPersistedBeforeAction) {
                     firstViewWithNewAction.tgOpenMasterAction._runDynamicActionForNew(self.entityType);
                 } else {
-                    //Title action has postActionSuccess callback that should be removed on &NEW action in order to prevent continuous snatch back
-                    //of values into parent entity editor.
+                    // The title action has a postActionSuccess callback that should be removed upon &NEW action in order to prevent continuous snatch backing
+                    // of values into the entity editor, it was invoked from.
                     if (parentDialog._lastAction.hasAttribute('title-action')) {
                         delete parentDialog._lastAction.postActionSuccess;
                     }

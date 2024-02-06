@@ -671,7 +671,7 @@ export class TgEntityEditor extends TgEditor {
                     }
                     master.addEventListener("data-loaded-and-focused", dataLoadedCallback);
                 };
-                //The following posActionSuccess will be removed on &NEW action in tg-entity-master-behavior._newAction method.
+                // The following posActionSuccess is removed in &NEW action (refer to method tg-entity-master-behavior._newAction).
                 this.tgOpenMasterAction.postActionSuccess = (savedEntity, action, master) => {
                     let value = null;
                     if (savedEntity.type() === entity.type()) { // for EntityNewAction which is master-with-master, postActionSuccess will be invoked with savedEntity of embedded master type
