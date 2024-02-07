@@ -190,6 +190,13 @@ const TgEntityMasterBehaviorImpl = {
             type: Object
         },
 
+        /**
+         * An action that is used by entity editors as their add/edit title action to open an Entity Master, which corresponds to the editor's entity type.
+         */
+        titleAction: {
+            type:Object
+        },
+
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
         //////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -650,6 +657,11 @@ const TgEntityMasterBehaviorImpl = {
                 if (wasPersistedBeforeAction) {
                     firstViewWithNewAction.tgOpenMasterAction._runDynamicActionForNew(self.entityType);
                 } else {
+                    // The title action has a postActionSuccess callback that should be removed upon &NEW action in order to prevent continuous snatch backing
+                    // of values into the entity editor, it was invoked from.
+                    if (parentDialog._lastAction.hasAttribute('title-action')) {
+                        delete parentDialog._lastAction.postActionSuccess;
+                    }
                     parentDialog._lastAction._run();
                 }
             } else if (parentDialog && parentDialog._lastAction) {
@@ -844,11 +856,17 @@ const TgEntityMasterBehaviorImpl = {
         // Create open master action function
         self.tgOpenMasterAction = self._createOpenMasterAction();
         self.shadowRoot.appendChild(self.tgOpenMasterAction);
+        // Create entity editor's title action
+        self.titleAction = self._createOpenMasterAction();
+        self.titleAction.setAttribute("id", "titleAction");
+        self.titleAction.setAttribute('title-action', '');
+        self.shadowRoot.appendChild(self.titleAction);
     }, // end of ready callback
 
     attached: function () {
         //centre UUID of open master action should bee updated as far as some masters receives their uuid later at attache phase.
         this.tgOpenMasterAction.attrs.centreUuid = this.uuid;
+        this.titleAction.attrs.centreUuid = this.uuid;
         this._resetState(); // existing state may cause problems for cached masters: for example previous entity was new and valid and next one invalid -- blocks closing of dialog with error
         this._cachedParentNode = this.parentNode;
         this.fire('tg-entity-master-attached', this, { node: this._cachedParentNode }); // as in 'detached', start bubbling on parent node
@@ -1317,7 +1335,7 @@ const TgEntityMasterBehaviorImpl = {
                     // revalidate the current master if it is simple (i.e. doesn't have an embedded view)
                     // and entity path doesn't contain persistent and not persisted (or invalid) entity, in order to update master editors;
                     // do this, for example, if a postal 'detail.saved' event was published by child master;
-                    // these child masters include those opened with entity editor title (i.e. tgOpenMasterAction), or from property / entity / continuation actions
+                    // these child masters include those opened with entity editor title (i.e. titleAction), or from property / entity / continuation actions
                     if (!self._hasEmbededView() // skip all entity masters that has embedded masters inside
                         && !data.entityPath.some(entity => !entity.isValidWithoutException()) // skip all entities down under any unsuccessful entity in the chain
                         && !data.entityPath.some(entity => entity.type().isPersistent() && !entity.isPersisted()) // skip all entities down under any persistent entity not yet saved (NEW entity) in the chain
