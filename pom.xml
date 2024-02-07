@@ -85,6 +85,7 @@
         <module>platform-pojo-bl</module>
         <module>platform-web-ui</module>
         <module>platform-benchmark</module>
+        <module>platform-eql-grammar</module>
     </modules>
 
     <properties>
