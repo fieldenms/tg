@@ -673,7 +673,7 @@ Polymer({
             this.augmentCompoundMasterOpenerWith(data.id);
         }
 
-        this.refreshCompoundMaster().finally(res => {
+        this.refreshCompoundMaster().finally(() => {
             this._isRefreshCycle = false;
         });
     },
