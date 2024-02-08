@@ -84,13 +84,12 @@ public class EqlGrammar {
         Select,
         Expression,
         Where,
-        Condition,
-        Operand,
-        SingleOperand, MultiOperand,
+        Condition, Predicate, PredicateTail, AndCondition, OrCondition,
+        Operand, SingleOperand, MultiOperand,
         Prop,
-        Operator, LogicalOp,
         And, Or, Eq, Gt, Lt,
-        ComparisonOperation, UnaryOperator, BinaryOperator, Val, AnyProp, ExtProp, Param, Model
+        UnaryOperator, BinaryOperator, Val, AnyProp, ExtProp, Param,
+        Model
     }
 
     // Short names
@@ -112,14 +111,18 @@ public class EqlGrammar {
         // Select = select(<EntityType>) [Where] Model
         derive(Select).to(select.with(Class.class), optional(Where), Model).
 
-        // Where = where Condition { LogicalOp Condition };
-        derive(Where).to(where, Condition, noneOrMore(LogicalOp, Condition)).
+        // Where = where Condition;
+        derive(Where).to(where, Condition).
 
-        // Condition = Operand ComparisonOperation
-        derive(Condition).to(Operand, ComparisonOperation).
+        // Condition = Predicate | Condition AND Condition | Condition OR Condition;
+        // AND takes precedence over OR
+        derive(Condition).to(OrCondition).
+        derive(OrCondition).to(AndCondition, noneOrMore(or, AndCondition)).
+        derive(AndCondition).to(Predicate, noneOrMore(and, AndCondition)).
 
-        // ComparisonOperation = UnaryOperator | BinaryOperator Operand
-        derive(ComparisonOperation).to(UnaryOperator).or(BinaryOperator, Operand).
+        derive(Predicate).to(Operand, PredicateTail).
+        derive(PredicateTail).to(UnaryOperator).or(BinaryOperator, Operand).
+
         derive(UnaryOperator).to(isNull).or(isNotNull).
         derive(BinaryOperator).to(eq).or(gt).or(lt).or(ge).or(le).or(like).or(iLike).or(notLike).or(notILike).
 
@@ -163,11 +166,6 @@ public class EqlGrammar {
             or(allOfModels.many(PrimitiveResultQueryModel.class)).
             or(anyOfExpressions.many(ExpressionModel.class)).
             or(allOfExpressions.many(ExpressionModel.class)).
-
-        derive(LogicalOp).to(And).or(Or).
-        // excess rules to give resultant AST classes meaningful names instead of LogicalOp{n}
-        derive(And).to(and).
-        derive(Or).to(or).
 
         derive(Model).to(model.with(STR)).
 
