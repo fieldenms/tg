@@ -182,7 +182,7 @@ public abstract class AbstractQuery1 {
     private static List<OrderBy2> transformForYield(final OrderBy2 original, final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
         if (yields.getYieldsMap().containsKey(original.yieldName)) {
             final Yield2 yield = yields.getYieldsMap().get(original.yieldName);
-            if (yield.operand instanceof Prop2 yieldedProp && needsExtraction(yieldedProp.lastPart())) {
+            if (yield.operand instanceof Prop2 yieldedProp && needsExtraction(yieldedProp.lastPart(), yieldedProp.penultPart())) {
                 return transformForOperand(yieldedProp, original.isDesc);
             } else {
                 return asList(original);

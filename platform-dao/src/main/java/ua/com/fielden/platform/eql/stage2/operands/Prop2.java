@@ -2,12 +2,15 @@ package ua.com.fielden.platform.eql.stage2.operands;
 
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.eql.meta.PropType.LONG_PROP_TYPE;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -87,6 +90,16 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
 
     public AbstractQuerySourceItem<?> lastPart() {
         return path.get(path.size() - 1);
+    }
+
+    /**
+     * Returns a part of the {@link #path}, which precedes the last part.
+     * This requires for the path to contain at least 2 parts. And so, for shorter paths, an empty result is returned.
+     *
+     * @return
+     */
+    public Optional<AbstractQuerySourceItem<?>> penultPart() {
+        return path.size() == 1 ? empty() : of(path.get(path.size() - 2));
     }
 
     @Override
