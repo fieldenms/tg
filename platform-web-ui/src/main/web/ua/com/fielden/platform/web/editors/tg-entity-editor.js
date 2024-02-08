@@ -664,11 +664,14 @@ export class TgEntityEditor extends TgEditor {
                         const embeddedMaster = e.detail;
                         if (embeddedMaster) {
                             setKeyFields(entity, embeddedMaster); // provide values into embedded master key fields from previously created 'entity'
+                            // Delete modifyFunctionalEntity callback to prevent a key property initialisation for the child entity master upon invocation of the SAVE&NEW action.
+                            delete this.tgOpenMasterAction.modifyFunctionalEntity;
                         }
                         master.removeEventListener("data-loaded-and-focused", dataLoadedCallback);
                     }
                     master.addEventListener("data-loaded-and-focused", dataLoadedCallback);
                 };
+                // The following posActionSuccess is removed in &NEW action (refer to method tg-entity-master-behavior._newAction).
                 this.tgOpenMasterAction.postActionSuccess = (savedEntity, action, master) => {
                     let value = null;
                     if (savedEntity.type() === entity.type()) { // for EntityNewAction which is master-with-master, postActionSuccess will be invoked with savedEntity of embedded master type

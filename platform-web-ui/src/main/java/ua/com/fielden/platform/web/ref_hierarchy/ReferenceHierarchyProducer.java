@@ -38,17 +38,19 @@ public class ReferenceHierarchyProducer extends DefaultEntityProducerWithContext
         if (selectedEntitiesNotEmpty() || currentEntityNotEmpty()) {
             final AbstractEntity<?> selectedEntity = currentEntityNotEmpty() ? currentEntity() : selectedEntities().get(0);
             // we need to be smart about getting the type as it may be a synthetic entity that represents a persistent entity
-            // so we really need to handle this case here
-            final Class<? extends AbstractEntity<?>> entityType = selectedEntity.getType();
-            if (isPersistedEntityType(entityType)) {
+            // and so, we really need to handle this case here
+            final Class<? extends AbstractEntity<?>> entityType;
+            if (isPersistedEntityType(selectedEntity.getType())) {
+                entityType = selectedEntity.getType();
                 entity.setRefEntityType(entityType.getName());
-            } else if (isSyntheticBasedOnPersistentEntityType(entityType)) {
-                entity.setRefEntityType(entityType.getSuperclass().getName());
+            } else if (isSyntheticBasedOnPersistentEntityType(selectedEntity.getType())) {
+                entityType = (Class<? extends AbstractEntity<?>>) selectedEntity.getType().getSuperclass();
+                entity.setRefEntityType(entityType.getName());
             } else {
-                throw new ReflectionException(format("Unsupported entity type [%s] for Reference Hiearchy.", entityType.getSimpleName()));
+                throw new ReflectionException(format("Unsupported entity type [%s] for Reference Hiearchy.", selectedEntity.getType().getSimpleName()));
             }
-            final fetch fetchModel = fetchKeyAndDescOnly(selectedEntity.getType());
-            final AbstractEntity<?> refetchedEntity = co(selectedEntity.getType()).findById(selectedEntity.getId(), hasDescProperty(selectedEntity.getType()) ? fetchModel.with("desc") : fetchModel);
+            final fetch fetchModel = fetchKeyAndDescOnly(entityType);
+            final AbstractEntity<?> refetchedEntity = co(entityType).findById(selectedEntity.getId(), hasDescProperty(entityType) ? fetchModel.with("desc") : fetchModel);
             entity.setRefEntityId(refetchedEntity.getId());
             entity.setLoadedHierarchyLevel(REFERENCE_INSTANCE);
             entity.setTitle(refetchedEntity.getKey() + (StringUtils.isEmpty(refetchedEntity.getDesc()) ? "" : ": " + refetchedEntity.getDesc()));

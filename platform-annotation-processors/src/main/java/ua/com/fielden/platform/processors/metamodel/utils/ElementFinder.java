@@ -17,15 +17,14 @@ import javax.lang.model.util.Types;
 import java.lang.annotation.Annotation;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
+import java.util.function.*;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.iterate;
 import static ua.com.fielden.platform.utils.StreamUtils.stopAfter;
+import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
 
 /**
  * A collection of utility methods for operating on elements and types, an extension of {@link Elements} and {@link Types}. 
@@ -200,7 +199,7 @@ public class ElementFinder {
     public static Stream<VariableElement> streamDeclaredFields(final TypeElement element) {
         return element.getEnclosedElements().stream()
                 .filter(elt -> elt.getKind().isField())
-                .map(elt -> (VariableElement) elt);
+                .mapMulti(typeFilter(VariableElement.class));
     }
 
     /**
@@ -416,6 +415,11 @@ public class ElementFinder {
                     return !ignoredAnnotationNames.contains(annotQualifiedName);
                 })
                 .collect(toList());
+    }
+
+    public boolean hasAnyPresentAnnotation(final Element element, final Collection<? extends Class<? extends Annotation>> annotTypes) {
+        return elements.getAllAnnotationMirrors(element).stream()
+                .anyMatch(am -> annotTypes.stream().anyMatch(at -> isSameType(am.getAnnotationType(), at)));
     }
 
     /**
@@ -698,6 +702,16 @@ public class ElementFinder {
     }
 
     /**
+     * A filtering function that accepts only definite {@link TypeElement}s (i.e., true by {@link ElementKind#isDeclaredType()}).
+     * Intended to be passed to {@link Stream#mapMulti(BiConsumer)}.
+     */
+    public static final BiConsumer<Element, Consumer<TypeElement>> TYPE_ELEMENT_FILTER = (elt, sink) -> {
+        if (elt.getKind().isDeclaredType() && elt instanceof TypeElement typeElt) {
+            sink.accept(typeElt);
+        }
+    };
+
+    /**
      * Tests whether the element contains the {@code static} modifier.
      */
     public static boolean isStatic(final Element element) {
@@ -776,7 +790,6 @@ public class ElementFinder {
     public static TypeElement asTypeElementOfTypeMirror(final TypeMirror mirror) {
         return asTypeElement(asDeclaredType(mirror));
     }
-
 
     /**
      * Returns simple name of a type represented by the type mirror.
