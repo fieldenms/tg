@@ -50,6 +50,8 @@ import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import graphql.GraphQLContext;
+import graphql.execution.CoercedVariables;
 import graphql.execution.ValuesResolver;
 import graphql.language.Argument;
 import graphql.language.Field;
@@ -110,7 +112,8 @@ public class RootEntityUtils {
         final Map<String, Object> variables,
         final Map<String, FragmentDefinition> fragmentDefinitions,
         final Class<T> entityType,
-        final GraphQLSchema schema
+        final GraphQLSchema schema,
+        final GraphQLContext context
     ) {
         final SelectionSet selectionSet = rootField.getSelectionSet();
         // convert selectionSet to concrete properties (their dot-notated names) with their arguments
@@ -125,7 +128,8 @@ public class RootEntityUtils {
                 propertyAndArguments.getKey(),
                 propertyAndArguments.getValue(),
                 variables,
-                schema.getCodeRegistry()
+                schema.getCodeRegistry(),
+                context
             ))
             .collect(toList());
         final List<T3<String, Ordering, Byte>> propOrderingWithPriorities = propertiesAndArguments.entrySet().stream()
@@ -134,7 +138,8 @@ public class RootEntityUtils {
                 propertyAndArguments.getKey(),
                 propertyAndArguments.getValue(),
                 variables,
-                schema.getCodeRegistry()
+                schema.getCodeRegistry(),
+                context
             ))
             .flatMap(orderingProperty -> orderingProperty.isPresent() ? Stream.of(orderingProperty.get()) : Stream.empty())
             .collect(toList()); // exclude empty values
@@ -212,7 +217,8 @@ public class RootEntityUtils {
         final String property,
         final T2<List<GraphQLArgument>, List<Argument>> arguments,
         final Map<String, Object> variables,
-        final GraphQLCodeRegistry codeRegistry
+        final GraphQLCodeRegistry codeRegistry,
+        final GraphQLContext context
     ) {
         final QueryProperty queryProperty = createEmptyQueryProperty(entityType, property);
         final Class<?> type = queryProperty.getType();
@@ -224,7 +230,7 @@ public class RootEntityUtils {
         // We argue that values resolving logic is error-prone and must follow standard guidelines from ValuesResolver.
         // These guidelines include a) resolving from argument literals b) resolving from raw variable values c) scalar values coercion etc.
         // Please follow these guidelines even if ValuesResolver will be made even more private, however this is unlikely scenario.
-        final Map<String, Object> argumentValues = new ValuesResolver().getArgumentValues(codeRegistry, arguments._1, arguments._2, variables);
+        final Map<String, Object> argumentValues = ValuesResolver.getArgumentValues(codeRegistry, arguments._1, arguments._2, CoercedVariables.of(variables), context, null);
         
         if (isString(type)) {
             ofNullable(argumentValues.get(LIKE)).ifPresent(value -> {
@@ -273,7 +279,8 @@ public class RootEntityUtils {
         final String property,
         final T2<List<GraphQLArgument>, List<Argument>> arguments,
         final Map<String, Object> variables,
-        final GraphQLCodeRegistry codeRegistry
+        final GraphQLCodeRegistry codeRegistry,
+        final GraphQLContext context
     ) {
         // The following @Internal API (ValuesResolver) is used for argument value resolving.
         // It is not really clear why this API is @Internal though.
@@ -282,7 +289,7 @@ public class RootEntityUtils {
         // We argue that values resolving logic is error-prone and must follow standard guidelines from ValuesResolver.
         // These guidelines include a) resolving from argument literals b) resolving from raw variable values c) scalar values coercion etc.
         // Please follow these guidelines even if ValuesResolver will be made even more private, however this is unlikely scenario.
-        final Map<String, Object> argumentValues = new ValuesResolver().getArgumentValues(codeRegistry, arguments._1, arguments._2, variables);
+        final Map<String, Object> argumentValues = ValuesResolver.getArgumentValues(codeRegistry, arguments._1, arguments._2, CoercedVariables.of(variables), context, null);
         
         return ofNullable(argumentValues.get(ORDER))
             .map(val -> {
@@ -309,6 +316,7 @@ public class RootEntityUtils {
         final T2<List<GraphQLArgument>, List<Argument>> arguments,
         final Map<String, Object> variables,
         final GraphQLCodeRegistry codeRegistry,
+        final GraphQLContext context,
         final int significantLimit
     ) {
         // The following @Internal API (ValuesResolver) is used for argument value resolving.
@@ -318,7 +326,7 @@ public class RootEntityUtils {
         // We argue that values resolving logic is error-prone and must follow standard guidelines from ValuesResolver.
         // These guidelines include a) resolving from argument literals b) resolving from raw variable values c) scalar values coercion etc.
         // Please follow these guidelines even if ValuesResolver will be made even more private, however this is unlikely scenario.
-        final Map<String, Object> argumentValues = new ValuesResolver().getArgumentValues(codeRegistry, arguments._1, arguments._2, variables);
+        final Map<String, Object> argumentValues = ValuesResolver.getArgumentValues(codeRegistry, arguments._1, arguments._2, CoercedVariables.of(variables), context, null);
         
         return ofNullable(argumentValues.get(what)).map(val -> (int) val).filter(val -> val >= significantLimit); // value less than significantLimit will be ignored
     }
@@ -402,12 +410,10 @@ public class RootEntityUtils {
             for (final Selection selection: selectionSet.getSelections()) {
                 if (selection instanceof Field) {
                     selectionFields.add((Field) selection);
-                } else if (selection instanceof FragmentSpread) {
-                    final FragmentSpread fragmentSpread = (FragmentSpread) selection;
+                } else if (selection instanceof final FragmentSpread fragmentSpread) {
                     final FragmentDefinition fragmentDefinition = fragmentDefinitions.get(fragmentSpread.getName());
                     selectionFields.addAll(toFields(fragmentDefinition.getSelectionSet(), fragmentDefinitions));
-                } else if (selection instanceof InlineFragment) {
-                    final InlineFragment inlineFragment = (InlineFragment) selection;
+                } else if (selection instanceof final InlineFragment inlineFragment) {
                     selectionFields.addAll(toFields(inlineFragment.getSelectionSet(), fragmentDefinitions));
                 } else {
                     // this is the only three types of possible selections; log warning if something else appeared
