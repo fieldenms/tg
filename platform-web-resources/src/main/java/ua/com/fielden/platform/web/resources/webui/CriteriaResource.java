@@ -739,8 +739,8 @@ public class CriteriaResource extends AbstractWebResource {
 
                 //Enhance entities with values defined with consumer in each dynamic property.
                 processedEntities = enhanceResultEntitiesWithDynamicPropertyValues(processedEntities, resPropsWithContext);
-            //Enhance rendering hints with styles for each dynamic column.
-            processedEntities = enhanceResultEntitiesWithDynamicPropertyRenderingHints(processedEntities, resPropsWithContext, (List) pair.getKey().get("renderingHints"));
+                //Enhance rendering hints with styles for each dynamic column.
+                processedEntities = enhanceResultEntitiesWithDynamicPropertyRenderingHints(processedEntities, resPropsWithContext, (List) pair.getKey().get("renderingHints"));
 
                 final ArrayList<Object> list = new ArrayList<>();
                 list.add(isRunning ? previouslyRunCriteriaEntity : null);
