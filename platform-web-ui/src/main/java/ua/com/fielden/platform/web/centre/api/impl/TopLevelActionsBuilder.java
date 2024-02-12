@@ -11,6 +11,7 @@ import java.util.function.BiFunction;
 import org.apache.commons.lang3.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -196,7 +197,7 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     }
 
     @Override
-    public IResultSetBuilderDynamicPropsAction<T> addProps(String propName, Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, BiConsumer<T, Optional<CentreContext<T, ?>>> entityPreProcessor, BiFunction<T, Optional<CentreContext<T, ?>>, Map> renderingHintsProvider, CentreContextConfig contextConfig) {
+    public IResultSetBuilderDynamicPropsAction<T> addProps(IConvertableToPath propName, Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, BiConsumer<T, Optional<CentreContext<T, ?>>> entityPreProcessor, BiFunction<T, Optional<CentreContext<T, ?>>, Map> renderingHintsProvider, CentreContextConfig contextConfig) {
         return new ResultSetBuilder<>(builder).addProps(propName, dynColBuilderType, entityPreProcessor, renderingHintsProvider, contextConfig);
     }
 
