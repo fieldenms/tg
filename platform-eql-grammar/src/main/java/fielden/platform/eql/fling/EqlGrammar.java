@@ -88,7 +88,7 @@ public class EqlGrammar {
         Prop,
         And, Or, Eq, Gt, Lt,
         UnaryComparisonOperator, BinaryComparisonOperator, Val, AnyProp, ExtProp, Param,
-        ArithmeticalOperator, SingleOperandOrExpr, ExprBody, ArithmeticalExpr, Model
+        ArithmeticalOperator, SingleOperandOrExpr, ExprBody, ArithmeticalExpr, Condition__, Condition_, Model
     }
 
     // Short names
@@ -113,11 +113,11 @@ public class EqlGrammar {
         // Where = where Condition;
         derive(Where).to(where, Condition).
 
-        // Condition = Predicate | Condition AND Condition | Condition OR Condition;
+        // Condition = Predicate | Condition AND Condition | Condition OR Condition | begin Condition end;
         // AND takes precedence over OR
-        derive(Condition).to(OrCondition).
-        derive(OrCondition).to(AndCondition, noneOrMore(or, AndCondition)).
-        derive(AndCondition).to(Predicate, noneOrMore(and, AndCondition)).
+        derive(Condition).to(Predicate, Condition__).or(begin, Condition, end, Condition__).
+        derive(Condition_).to(or, Condition).or(and, Condition).
+        derive(Condition__).to(Condition_, Condition__).orNone().
 
         derive(Predicate).to(Operand, PredicateTail).
         derive(PredicateTail).to(UnaryComparisonOperator).or(BinaryComparisonOperator, Operand).
