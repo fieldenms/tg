@@ -4,8 +4,7 @@ import com.google.googlejavaformat.java.Formatter;
 import com.google.googlejavaformat.java.FormatterException;
 import il.ac.technion.cs.fling.EBNF;
 import il.ac.technion.cs.fling.adapters.JavaMediator;
-import il.ac.technion.cs.fling.internal.grammar.rules.Terminal;
-import il.ac.technion.cs.fling.internal.grammar.rules.Variable;
+import il.ac.technion.cs.fling.internal.grammar.rules.*;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
@@ -88,8 +87,8 @@ public class EqlGrammar {
         Operand, SingleOperand, MultiOperand,
         Prop,
         And, Or, Eq, Gt, Lt,
-        UnaryOperator, BinaryOperator, Val, AnyProp, ExtProp, Param,
-        Model
+        UnaryComparisonOperator, BinaryComparisonOperator, Val, AnyProp, ExtProp, Param,
+        ArithmeticalOperator, SingleOperandOrExpr, ExprBody, ArithmeticalExpr, Model
     }
 
     // Short names
@@ -121,13 +120,16 @@ public class EqlGrammar {
         derive(AndCondition).to(Predicate, noneOrMore(and, AndCondition)).
 
         derive(Predicate).to(Operand, PredicateTail).
-        derive(PredicateTail).to(UnaryOperator).or(BinaryOperator, Operand).
+        derive(PredicateTail).to(UnaryComparisonOperator).or(BinaryComparisonOperator, Operand).
 
-        derive(UnaryOperator).to(isNull).or(isNotNull).
-        derive(BinaryOperator).to(eq).or(gt).or(lt).or(ge).or(le).or(like).or(iLike).or(notLike).or(notILike).
+        derive(UnaryComparisonOperator).to(isNull).or(isNotNull).
+        derive(BinaryComparisonOperator).to(eq).or(gt).or(lt).or(ge).or(le).or(like).or(iLike).or(notLike).or(notILike).
 
-        specialize(Operand).into(SingleOperand, MultiOperand).
+        specialize(Operand).into(SingleOperandOrExpr, MultiOperand).
 
+        derive(SingleOperandOrExpr).to(SingleOperand).or(beginExpr, ExprBody, endExpr).
+        derive(ExprBody).to(SingleOperandOrExpr, noneOrMore(ArithmeticalOperator, SingleOperandOrExpr)).
+        derive(ArithmeticalOperator).to(add).or(sub).or(div).or(mult).or(mod).
         derive(SingleOperand).to(AnyProp).or(Val).or(Param).or(now).or(expr.with(ExpressionModel.class)).
 
         specialize(AnyProp).into(Prop, ExtProp).
