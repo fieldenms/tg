@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web_api;
 
+import static graphql.execution.CoercedVariables.of;
+import static graphql.execution.ValuesResolver.getArgumentValues;
 import static java.lang.Byte.valueOf;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -41,6 +43,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -51,7 +54,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import graphql.GraphQLContext;
-import graphql.execution.CoercedVariables;
 import graphql.execution.ValuesResolver;
 import graphql.language.Argument;
 import graphql.language.Field;
@@ -101,10 +103,12 @@ public class RootEntityUtils {
      * The argument of function is {@link IDates} instance from which 'now' moment can properly be retrieved and used for date property filtering.
      * 
      * @param rootField -- root field for GraphQL query or mutation
-     * @param variables -- existing variable values by names in the query; they can be used in {@code rootField.selectionSet}
+     * @param variables -- existing coerced variable values by names in the query; they can be used in {@code rootField.selectionSet}
      * @param fragmentDefinitions -- fragment definitions by names in the query; {@code rootField.selectionSet} can contain fragment spreads based on that definitions
      * @param entityType
      * @param schema -- GraphQL schema to assist with resolving of argument values
+     * @param context -- context in current data fetching request
+     * @param locale -- locale in current data fetching request
      * @return
      */
     public static <T extends AbstractEntity<?>> Function<IDates, T2<Optional<String>, QueryExecutionModel<T, EntityResultQueryModel<T>>>> generateQueryModelFrom(
@@ -113,7 +117,8 @@ public class RootEntityUtils {
         final Map<String, FragmentDefinition> fragmentDefinitions,
         final Class<T> entityType,
         final GraphQLSchema schema,
-        final GraphQLContext context
+        final GraphQLContext context,
+        final Locale locale
     ) {
         final SelectionSet selectionSet = rootField.getSelectionSet();
         // convert selectionSet to concrete properties (their dot-notated names) with their arguments
@@ -129,7 +134,8 @@ public class RootEntityUtils {
                 propertyAndArguments.getValue(),
                 variables,
                 schema.getCodeRegistry(),
-                context
+                context,
+                locale
             ))
             .collect(toList());
         final List<T3<String, Ordering, Byte>> propOrderingWithPriorities = propertiesAndArguments.entrySet().stream()
@@ -139,7 +145,8 @@ public class RootEntityUtils {
                 propertyAndArguments.getValue(),
                 variables,
                 schema.getCodeRegistry(),
-                context
+                context,
+                locale
             ))
             .flatMap(orderingProperty -> orderingProperty.isPresent() ? Stream.of(orderingProperty.get()) : Stream.empty())
             .collect(toList()); // exclude empty values
@@ -207,8 +214,10 @@ public class RootEntityUtils {
      * @param entityType
      * @param property
      * @param arguments -- pair of {@link GraphQLArgument} definitions and corresponding resolved {@link Argument} instances (which contain actual values)
-     * @param variables -- existing variable values by names in the query
+     * @param variables -- existing coerced variable values by names in the query
      * @param codeRegistry -- code registry that is used only to take care of field visibility during {@link ValuesResolver#getArgumentValues(List, List, Map)} conversion
+     * @param context -- context in current data fetching request
+     * @param locale -- locale in current data fetching request
      * 
      * @return
      */
@@ -218,7 +227,8 @@ public class RootEntityUtils {
         final T2<List<GraphQLArgument>, List<Argument>> arguments,
         final Map<String, Object> variables,
         final GraphQLCodeRegistry codeRegistry,
-        final GraphQLContext context
+        final GraphQLContext context,
+        final Locale locale
     ) {
         final QueryProperty queryProperty = createEmptyQueryProperty(entityType, property);
         final Class<?> type = queryProperty.getType();
@@ -230,7 +240,7 @@ public class RootEntityUtils {
         // We argue that values resolving logic is error-prone and must follow standard guidelines from ValuesResolver.
         // These guidelines include a) resolving from argument literals b) resolving from raw variable values c) scalar values coercion etc.
         // Please follow these guidelines even if ValuesResolver will be made even more private, however this is unlikely scenario.
-        final Map<String, Object> argumentValues = ValuesResolver.getArgumentValues(codeRegistry, arguments._1, arguments._2, CoercedVariables.of(variables), context, null);
+        final Map<String, Object> argumentValues = getArgumentValues(codeRegistry, arguments._1, arguments._2, of(variables), context, locale);
         
         if (isString(type)) {
             ofNullable(argumentValues.get(LIKE)).ifPresent(value -> {
@@ -270,8 +280,10 @@ public class RootEntityUtils {
      * 
      * @param property
      * @param arguments -- pair of {@link GraphQLArgument} definitions and corresponding resolved {@link Argument} instances (which contain actual values)
-     * @param variables -- existing variable values by names in the query
+     * @param variables -- existing coerced variable values by names in the query
      * @param codeRegistry -- code registry that is used only to take care of field visibility during {@link ValuesResolver#getArgumentValues(List, List, Map)} conversion
+     * @param context -- context in current data fetching request
+     * @param locale -- locale in current data fetching request
      * 
      * @return
      */
@@ -280,7 +292,8 @@ public class RootEntityUtils {
         final T2<List<GraphQLArgument>, List<Argument>> arguments,
         final Map<String, Object> variables,
         final GraphQLCodeRegistry codeRegistry,
-        final GraphQLContext context
+        final GraphQLContext context,
+        final Locale locale
     ) {
         // The following @Internal API (ValuesResolver) is used for argument value resolving.
         // It is not really clear why this API is @Internal though.
@@ -289,7 +302,7 @@ public class RootEntityUtils {
         // We argue that values resolving logic is error-prone and must follow standard guidelines from ValuesResolver.
         // These guidelines include a) resolving from argument literals b) resolving from raw variable values c) scalar values coercion etc.
         // Please follow these guidelines even if ValuesResolver will be made even more private, however this is unlikely scenario.
-        final Map<String, Object> argumentValues = ValuesResolver.getArgumentValues(codeRegistry, arguments._1, arguments._2, CoercedVariables.of(variables), context, null);
+        final Map<String, Object> argumentValues = getArgumentValues(codeRegistry, arguments._1, arguments._2, of(variables), context, locale);
         
         return ofNullable(argumentValues.get(ORDER))
             .map(val -> {
@@ -305,8 +318,10 @@ public class RootEntityUtils {
      * 
      * @param what
      * @param arguments -- pair of {@link GraphQLArgument} definitions and corresponding resolved {@link Argument} instances (which contain actual values)
-     * @param variables -- existing variable values by names in the query
+     * @param variables -- existing coerced variable values by names in the query
      * @param codeRegistry -- code registry that is used only to take care of field visibility during {@link ValuesResolver#getArgumentValues(List, List, Map)} conversion
+     * @param context -- context in current data fetching request
+     * @param locale -- locale in current data fetching request
      * @param significantLimit
      * 
      * @return
@@ -317,6 +332,7 @@ public class RootEntityUtils {
         final Map<String, Object> variables,
         final GraphQLCodeRegistry codeRegistry,
         final GraphQLContext context,
+        final Locale locale,
         final int significantLimit
     ) {
         // The following @Internal API (ValuesResolver) is used for argument value resolving.
@@ -326,7 +342,7 @@ public class RootEntityUtils {
         // We argue that values resolving logic is error-prone and must follow standard guidelines from ValuesResolver.
         // These guidelines include a) resolving from argument literals b) resolving from raw variable values c) scalar values coercion etc.
         // Please follow these guidelines even if ValuesResolver will be made even more private, however this is unlikely scenario.
-        final Map<String, Object> argumentValues = ValuesResolver.getArgumentValues(codeRegistry, arguments._1, arguments._2, CoercedVariables.of(variables), context, null);
+        final Map<String, Object> argumentValues = getArgumentValues(codeRegistry, arguments._1, arguments._2, of(variables), context, locale);
         
         return ofNullable(argumentValues.get(what)).map(val -> (int) val).filter(val -> val >= significantLimit); // value less than significantLimit will be ignored
     }

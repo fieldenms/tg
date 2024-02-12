@@ -85,7 +85,8 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
             environment.getFragmentsByName(),
             entityType,
             environment.getGraphQLSchema(),
-            environment.getGraphQlContext()
+            environment.getGraphQlContext(),
+            environment.getLocale()
         ).apply(dates);
         final Builder<List<T>> result = DataFetcherResult.<List<T>>newResult().data(coFinder.findAsReader(entityType, true).getPage( // reader must be uninstrumented
             warningAndModel._2,
@@ -95,6 +96,7 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
                 environment.getVariables(),
                 environment.getGraphQLSchema().getCodeRegistry(),
                 environment.getGraphQlContext(),
+                environment.getLocale(),
                 0
             ).orElse(DEFAULT_PAGE_NUMBER),
             extractValue(
@@ -103,6 +105,7 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
                 environment.getVariables(),
                 environment.getGraphQLSchema().getCodeRegistry(),
                 environment.getGraphQlContext(),
+                environment.getLocale(),
                 1
             ).orElse(DEFAULT_PAGE_CAPACITY)
         ).data());
