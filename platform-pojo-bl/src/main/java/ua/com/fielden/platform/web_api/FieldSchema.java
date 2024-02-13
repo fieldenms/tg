@@ -3,6 +3,8 @@ package ua.com.fielden.platform.web_api;
 import static graphql.Scalars.GraphQLBoolean;
 import static graphql.Scalars.GraphQLInt;
 import static graphql.Scalars.GraphQLString;
+import static graphql.scalars.ExtendedScalars.GraphQLBigDecimal;
+import static graphql.scalars.ExtendedScalars.GraphQLLong;
 import static graphql.schema.GraphQLArgument.newArgument;
 import static graphql.schema.GraphQLEnumType.newEnum;
 import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
@@ -516,13 +518,13 @@ public class FieldSchema {
             )));
         } else if (Integer.class.isAssignableFrom(propertyType)) {
             return of(t2(GraphQLInt, createRangeArgumentsFor(GraphQLInt)));
-//        } else if (Long.class.isAssignableFrom(propertyType)) {
-//            // Even though we add here the support for Long values [-9,223,372,036,854,775,808; 9,223,372,036,854,775,807] = [-2^63; 2^63 - 1],
-//            // the actual support would be limited to              [    -9,007,199,254,740,992;     9,007,199,254,740,991] = [-2^53; 2^53 - 1];
-//            // This is because Javascript numbers, that are used in GraphiQL client, truncates higher numbers with zeros and performs weird rounding.
-//            return of(t2(GraphQLLong, createRangeArgumentsFor(GraphQLLong)));
-//        } else if (BigDecimal.class.isAssignableFrom(propertyType)) {
-//            return of(t2(GraphQLBigDecimal, createRangeArgumentsFor(GraphQLBigDecimal)));
+        } else if (Long.class.isAssignableFrom(propertyType)) {
+            // Even though we add here the support for Long values [-9,223,372,036,854,775,808; 9,223,372,036,854,775,807] = [-2^63; 2^63 - 1],
+            // the actual support would be limited to              [    -9,007,199,254,740,992;     9,007,199,254,740,991] = [-2^53; 2^53 - 1];
+            // This is because Javascript numbers, that are used in GraphiQL client, truncates higher numbers with zeros and performs weird rounding.
+            return of(t2(GraphQLLong, createRangeArgumentsFor(GraphQLLong)));
+        } else if (BigDecimal.class.isAssignableFrom(propertyType)) {
+            return of(t2(GraphQLBigDecimal, createRangeArgumentsFor(GraphQLBigDecimal)));
         } else if (Money.class.isAssignableFrom(propertyType)) {
             return of(t2(GraphQLMoney, createRangeArgumentsFor(GraphQLMoney)));
         } else if (isDate(propertyType)) {
