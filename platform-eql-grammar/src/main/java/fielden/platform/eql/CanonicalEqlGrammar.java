@@ -1,5 +1,6 @@
 package fielden.platform.eql;
 
+import fielden.platform.eql.fling.BnfToHtml;
 import fielden.platform.eql.fling.BnfToText;
 import il.ac.technion.cs.fling.EBNF;
 import il.ac.technion.cs.fling.internal.grammar.rules.Terminal;
@@ -7,6 +8,10 @@ import il.ac.technion.cs.fling.internal.grammar.rules.Variable;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.model.*;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
+
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
 
 import static fielden.platform.eql.CanonicalEqlGrammar.EqlTerminal.values;
 import static fielden.platform.eql.CanonicalEqlGrammar.EqlTerminal.*;
@@ -324,16 +329,29 @@ public final class CanonicalEqlGrammar {
 
     private CanonicalEqlGrammar() {}
 
-    public static void main(String[] args) {
+    // print-bnf html FILE -- creates an HTML document with the BNF
+    // print-bnf -- prints the BNF to stdout in human-readable format
+    public static void main(String[] args) throws IOException {
         if (args.length < 1) {
             System.err.println("usage: %s command".formatted(CanonicalEqlGrammar.class.getCanonicalName()));
             System.exit(1);
         }
 
         final String command = args[0];
-        if ("print-bnf".equals(command))
-            System.out.println(new BnfToText().bnfToText(canonical_bnf));
-        else {
+        if ("print-bnf".equals(command)) {
+            if (args.length > 1 && "html".equals(args[1])) {
+                String html = new BnfToHtml().bnfToHtml(canonical_bnf);
+                final PrintStream out;
+                if (args.length > 2) {
+                    out = new PrintStream(new FileOutputStream(args[2]));
+                } else {
+                    out = System.out;
+                }
+                out.println(html);
+            } else {
+                System.out.println(new BnfToText().bnfToText(canonical_bnf));
+            }
+        } else {
             System.err.println("Unrecognised command: %s".formatted(command));
             System.exit(1);
         }
