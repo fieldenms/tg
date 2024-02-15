@@ -51,19 +51,27 @@ public final class CanonicalEqlGrammar {
 
         derive(Predicate).
             to(Operand, UnaryComparisonOperator).
-            or(Operand, BinaryComparisonOperator, Operand).
+            or(Operand, ComparisonOperator, ComparisonOperand).
+            or(Operand, QuantifiedComparisonOperator, QuantifiedOperand).
             or(Operand, MembershipOperator, MembershipOperand).
 
         derive(UnaryComparisonOperator).
             to(isNull).or(isNotNull).
 
-        derive(BinaryComparisonOperator).
-            to(eq).or(gt).or(lt).or(ge).or(le).
-            or(like).or(iLike).or(likeWithCast).or(iLikeWithCast).
+        derive(ComparisonOperator).
+            to(like).or(iLike).or(likeWithCast).or(iLikeWithCast).
             or(notLike).or(notLikeWithCast).or(notILikeWithCast).or(notILike).
 
-        specialize(Operand).
+        specialize(ComparisonOperand).
             into(SingleOperand, Expr, MultiOperand).
+
+        derive(QuantifiedComparisonOperator).
+            to(eq).or(gt).or(lt).or(ge).or(le).or(ne).
+
+        derive(QuantifiedOperand).
+            to(all.with(SingleResultQueryModel.class)).
+            or(any.with(SingleResultQueryModel.class)).
+            or(ComparisonOperand).
 
         derive(Expr).
             to(beginExpr, ExprBody, endExpr).
@@ -184,7 +192,7 @@ public final class CanonicalEqlGrammar {
         ArithmeticalOperator, SingleOperandOrExpr, ExprBody, Expr,
         UnaryFunction, UnaryFunctionName, IfNull, DateDiffInterval, DateDiffIntervalUnit, DateAddInterval, DateAddIntervalUnit, Round, Concat, CaseWhen, CaseWhenEnd,
         MembershipOperator,
-        MembershipOperand, Model
+        MembershipOperand, ComparisonOperator, ComparisonOperand, QuantifiedComparisonOperator, QuantifiedOperand, Model
     }
 
     public enum EqlTerminal implements Terminal {
