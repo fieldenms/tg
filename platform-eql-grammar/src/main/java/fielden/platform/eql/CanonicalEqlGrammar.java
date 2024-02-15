@@ -39,7 +39,7 @@ public final class CanonicalEqlGrammar {
             into(Select, Expression).
 
         derive(Select).
-            to(select.with(Class.class), optional(as.with(STR)), optional(Where), Model).
+            to(select.with(Class.class), optional(as.with(STR)), optional(Join), optional(Where), Model).
 
         derive(Where).
             to(where, Condition).
@@ -185,6 +185,20 @@ public final class CanonicalEqlGrammar {
             or(condition.with(ConditionModel.class)).
             or(negatedCondition.with(ConditionModel.class)).
 
+        derive(Join).
+            to(JoinOperator, optional(as.with(STR)), JoinCondition, noneOrMore(Join)).
+
+        derive(JoinOperator).
+            to(join.with(Class.class)).
+            or(join.with(EntityResultQueryModel.class)).
+            or(join.with(AggregatedResultQueryModel.class)).
+            or(leftJoin.with(Class.class)).
+            or(leftJoin.with(EntityResultQueryModel.class)).
+            or(leftJoin.with(AggregatedResultQueryModel.class)).
+
+        derive(JoinCondition).
+            to(on, Condition).
+
         derive(Model).
             to(model.with(STR)).
 
@@ -206,7 +220,9 @@ public final class CanonicalEqlGrammar {
         ArithmeticalOperator, SingleOperandOrExpr, ExprBody, Expr,
         UnaryFunction, UnaryFunctionName, IfNull, DateDiffInterval, DateDiffIntervalUnit, DateAddInterval, DateAddIntervalUnit, Round, Concat, CaseWhen, CaseWhenEnd,
         MembershipOperator,
-        MembershipOperand, ComparisonOperator, ComparisonOperand, QuantifiedComparisonOperator, QuantifiedOperand, SingleConditionPredicate, Model
+        MembershipOperand, ComparisonOperator, ComparisonOperand, QuantifiedComparisonOperator, QuantifiedOperand, SingleConditionPredicate, Join, JoinOperator,
+        JoinCondition,
+        Model
     }
 
     public enum EqlTerminal implements Terminal {
