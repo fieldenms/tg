@@ -39,7 +39,12 @@ public final class CanonicalEqlGrammar {
             into(Select, Expression).
 
         derive(Select).
-            to(select.with(Class.class), optional(as.with(STR)), optional(Join), optional(Where), Model).
+            to(select.with(Class.class),
+                    optional(as.with(STR)),
+                    optional(Join),
+                    optional(Where),
+                    optional(GroupBy),
+                    Model).
 
         derive(Where).
             to(where, Condition).
@@ -199,6 +204,9 @@ public final class CanonicalEqlGrammar {
         derive(JoinCondition).
             to(on, Condition).
 
+        derive(GroupBy).
+            to(groupBy, SingleOperandOrExpr, optional(GroupBy)).
+
         derive(Model).
             to(model.with(STR)).
 
@@ -222,7 +230,7 @@ public final class CanonicalEqlGrammar {
         MembershipOperator,
         MembershipOperand, ComparisonOperator, ComparisonOperand, QuantifiedComparisonOperator, QuantifiedOperand, SingleConditionPredicate, Join, JoinOperator,
         JoinCondition,
-        Model
+        Model, GroupBy,
     }
 
     public enum EqlTerminal implements Terminal {
