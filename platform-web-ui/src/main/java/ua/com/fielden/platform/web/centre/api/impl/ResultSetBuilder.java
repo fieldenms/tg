@@ -200,7 +200,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilderDynamicPropsAction<T> addProps(String propName, Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, BiConsumer<T, Optional<CentreContext<T, ?>>> entityPreProcessor, CentreContextConfig contextConfig) {
+    public IResultSetBuilderDynamicPropsAction<T> addProps(final String propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<T, Optional<CentreContext<T, ?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
         final ResultSetProp<T> prop = dynamicProps(propName, dynColBuilderType, entityPreProcessor, contextConfig);
         this.builder.addToResultSet(prop);
         return new ResultSetDynamicPropertyBuilder<>(this, prop);

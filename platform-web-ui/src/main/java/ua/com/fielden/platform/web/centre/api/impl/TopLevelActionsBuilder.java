@@ -197,7 +197,7 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     }
 
     @Override
-    public IResultSetBuilderDynamicPropsAction<T> addProps(IConvertableToPath propName, Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, BiConsumer<T, Optional<CentreContext<T, ?>>> entityPreProcessor, BiFunction<T, Optional<CentreContext<T, ?>>, Map> renderingHintsProvider, CentreContextConfig contextConfig) {
+    public IResultSetBuilderDynamicPropsAction<T> addProps(final IConvertableToPath propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<T, Optional<CentreContext<T, ?>>> entityPreProcessor, final BiFunction<T, Optional<CentreContext<T, ?>>, Map> renderingHintsProvider, final CentreContextConfig contextConfig) {
         return new ResultSetBuilder<>(builder).addProps(propName, dynColBuilderType, entityPreProcessor, renderingHintsProvider, contextConfig);
     }
 
