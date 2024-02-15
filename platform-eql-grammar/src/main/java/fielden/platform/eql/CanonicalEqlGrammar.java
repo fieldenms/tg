@@ -53,8 +53,11 @@ public final class CanonicalEqlGrammar {
 
         derive(UnaryComparisonOperator).
             to(isNull).or(isNotNull).
+
         derive(BinaryComparisonOperator).
-            to(eq).or(gt).or(lt).or(ge).or(le).or(like).or(iLike).or(notLike).or(notILike).
+            to(eq).or(gt).or(lt).or(ge).or(le).
+            or(like).or(iLike).or(likeWithCast).or(iLikeWithCast).
+            or(notLike).or(notLikeWithCast).or(notILikeWithCast).or(notILike).
 
         specialize(Operand).
             into(SingleOperand, Expr, MultiOperand).
