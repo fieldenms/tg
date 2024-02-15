@@ -1,5 +1,6 @@
 package fielden.platform.eql;
 
+import fielden.platform.eql.fling.BnfToText;
 import il.ac.technion.cs.fling.EBNF;
 import il.ac.technion.cs.fling.internal.grammar.rules.Terminal;
 import il.ac.technion.cs.fling.internal.grammar.rules.Variable;
@@ -168,5 +169,20 @@ public final class CanonicalEqlGrammar {
     }
 
     private CanonicalEqlGrammar() {}
+
+    public static void main(String[] args) {
+        if (args.length < 1) {
+            System.err.println("usage: %s command".formatted(CanonicalEqlGrammar.class.getCanonicalName()));
+            System.exit(1);
+        }
+
+        final String command = args[0];
+        if ("print-bnf".equals(command))
+            System.out.println(new BnfToText().bnfToText(canonical_bnf));
+        else {
+            System.err.println("Unrecognised command: %s".formatted(command));
+            System.exit(1);
+        }
+    }
 
 }

@@ -4,11 +4,8 @@ import com.google.googlejavaformat.java.Formatter;
 import com.google.googlejavaformat.java.FormatterException;
 import il.ac.technion.cs.fling.EBNF;
 import il.ac.technion.cs.fling.adapters.JavaMediator;
-import il.ac.technion.cs.fling.internal.grammar.rules.*;
-import il.ac.technion.cs.fling.internal.grammar.types.ClassParameter;
-import il.ac.technion.cs.fling.internal.grammar.types.Parameter;
-import il.ac.technion.cs.fling.internal.grammar.types.StringTypeParameter;
-import il.ac.technion.cs.fling.internal.grammar.types.VarargsClassParameter;
+import il.ac.technion.cs.fling.internal.grammar.rules.Terminal;
+import il.ac.technion.cs.fling.internal.grammar.rules.Variable;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
@@ -18,17 +15,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static fielden.platform.eql.fling.EqlGrammar.V.*;
 import static fielden.platform.eql.fling.EqlGrammar.Σ.*;
 import static il.ac.technion.cs.fling.grammars.api.BNFAPI.bnf;
 import static il.ac.technion.cs.fling.internal.grammar.rules.Quantifiers.noneOrMore;
 import static il.ac.technion.cs.fling.internal.grammar.rules.Quantifiers.optional;
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.joining;
 
 public class EqlGrammar {
 
@@ -255,71 +248,11 @@ public class EqlGrammar {
     }
 
     public static void printBNF() {
-        System.out.println(toString(bnf));
+        System.out.println(new BnfToText().bnfToText(bnf));
     }
 
     private static String formatSource(String s, @Nullable Formatter formatter) throws FormatterException {
         return formatter != null ? formatter.formatSource(s) : s;
-    }
-
-    private static String toString(EBNF ebnf) {
-        return ebnf.rules()
-                .collect(groupingBy(rule -> rule.variable, LinkedHashMap::new, Collectors.toList()))
-                .entrySet().stream()
-                .map(entry -> {
-                    var variable = entry.getKey();
-                    var rules = entry.getValue();
-                    return new ERule(variable, rules.stream().flatMap(ERule::bodies).toList());
-                })
-                .map(EqlGrammar::toString).collect(joining("\n"));
-    }
-
-    private static String toString(ERule eRule) {
-        return eRule.bodies()
-                .map(EqlGrammar::toString)
-                .collect(joining(" | ", "%s = ".formatted(eRule.variable), ";"));
-    }
-
-    private static String toString(final Body body) {
-        return body.stream().map(EqlGrammar::toString).collect(joining(" "));
-    }
-
-    private static String toString(Component component) {
-        return component.isToken() ? toString(component.asToken())
-                : component.isQuantifier() ? toString(component.asQuantifier())
-                : (component.isVariable() || component.isTerminal()) ? component.name()
-                : fail("Unrecognised rule component: %s", component);
-    }
-
-    private static String toString(Token token) {
-        return !token.isParameterized() ? token.name()
-                : token.name() + token.parameters().map(EqlGrammar::toString).collect(joining(", ", "(", ")"));
-    }
-
-    private static String toString(Parameter parameter) {
-        return parameter.isStringTypeParameter() ? toString(parameter.asStringTypeParameter())
-                : parameter.isVariableTypeParameter() ? parameter.asVariableTypeParameter().variable.name()
-                : parameter.isVarargsTypeParameter() ? "{ %s }*".formatted(parameter.asVarargsVariableTypeParameter().variable.name())
-                : fail("Unrecognised token parameter: %s", parameter);
-    }
-
-    private static String toString(StringTypeParameter parameter) {
-        String s = "<%s>".formatted(parameter instanceof ClassParameter cp ? cp.parameterClass.getSimpleName()
-                : parameter instanceof VarargsClassParameter vcp ? vcp.parameterClass.getSimpleName()
-                : fail("Unrecognised token parameter: %s", parameter));
-        return parameter instanceof VarargsClassParameter ? s + "*" : s;
-    }
-
-    private static String toString(Quantifier quantifier) {
-        var symbols = quantifier.symbols().map(EqlGrammar::toString);
-        return quantifier instanceof NoneOrMore ? symbols.collect(joining(" ", "{ ", " }*"))
-                : quantifier instanceof OneOrMore ? symbols.collect(joining(" ", "{ ", " }+"))
-                : quantifier instanceof Opt ? symbols.collect(joining(" ", "{ ", " }?"))
-                : fail("Unrecognised quantifier: %s", quantifier);
-    }
-
-    private static <T> T fail(String formatString, Object... args) {
-        throw new RuntimeException(String.format(formatString, args));
     }
 
 }
