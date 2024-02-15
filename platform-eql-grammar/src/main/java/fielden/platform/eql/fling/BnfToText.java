@@ -29,13 +29,14 @@ public class BnfToText {
                     var rules = entry.getValue();
                     return new ERule(variable, rules.stream().flatMap(ERule::bodies).toList());
                 })
-                .map(this::toString).collect(joining("\n"));
+                .map(this::toString).collect(joining("\n\n"));
     }
 
     protected String toString(ERule eRule) {
+        final int prefixLen = eRule.variable.name().length();
         return eRule.bodies()
                 .map(this::toString)
-                .collect(joining(" | ", "%s = ".formatted(eRule.variable), ";"));
+                .collect(joining("\n%s | ".formatted(" ".repeat(prefixLen)), "%s = ".formatted(eRule.variable), ";"));
     }
 
     protected String toString(final Body body) {
