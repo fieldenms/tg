@@ -1,0 +1,172 @@
+package fielden.platform.eql;
+
+import il.ac.technion.cs.fling.EBNF;
+import il.ac.technion.cs.fling.internal.grammar.rules.Terminal;
+import il.ac.technion.cs.fling.internal.grammar.rules.Variable;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
+
+import static fielden.platform.eql.CanonicalEqlGrammar.EqlTerminal.*;
+import static fielden.platform.eql.CanonicalEqlGrammar.EqlVariable.*;
+import static il.ac.technion.cs.fling.grammars.api.BNFAPI.bnf;
+import static il.ac.technion.cs.fling.internal.grammar.rules.Quantifiers.noneOrMore;
+import static il.ac.technion.cs.fling.internal.grammar.rules.Quantifiers.optional;
+
+/**
+ * Canonical representation of EQL's grammar.
+ */
+public final class CanonicalEqlGrammar {
+
+    // Short names
+    private static final Class<String> STR = String.class;
+    private static final Class<Object> OBJ = Object.class;
+    private static final Class<Enum> ENUM = Enum.class;
+    private static final Class<IConvertableToPath> PROP_PATH = IConvertableToPath.class;
+
+    /**
+     * Canonical EQL grammar in Extended Backus-Naur form.
+     * <p>
+     * <b>NOTE</b>: Should <b>not</b> be used for fluent API generation but for <b>reference</b> only.
+     */
+    // @formatter:off
+    public static final EBNF canonical_bnf = bnf(). //
+        start(Query).
+
+        specialize(Query).
+            into(Select, Expression).
+
+        derive(Select).
+            to(select.with(Class.class), optional(Where), Model).
+
+        derive(Where).
+            to(where, Condition).
+
+        // AND takes precedence over OR
+        derive(Condition).
+            to(Predicate).or(Condition, and, Condition).or(Condition, or, Condition).or(begin, Condition, end).
+
+        derive(Predicate).
+            to(Operand, UnaryComparisonOperator).or(Operand, BinaryComparisonOperator, Operand).
+
+        derive(UnaryComparisonOperator).
+            to(isNull).or(isNotNull).
+        derive(BinaryComparisonOperator).
+            to(eq).or(gt).or(lt).or(ge).or(le).or(like).or(iLike).or(notLike).or(notILike).
+
+        specialize(Operand).
+            into(SingleOperand, Expr, MultiOperand).
+
+        derive(Expr).
+            to(beginExpr, ExprBody, endExpr).
+        derive(ExprBody).
+            to(SingleOperandOrExpr, noneOrMore(ArithmeticalOperator, SingleOperandOrExpr)).
+        derive(SingleOperandOrExpr).
+            to(SingleOperand).or(Expr).
+        derive(ArithmeticalOperator).
+            to(add).or(sub).or(div).or(mult).or(mod).
+        derive(SingleOperand).
+            to(AnyProp).or(Val).or(Param).
+            or(now).
+            or(expr.with(ExpressionModel.class)).
+
+        specialize(AnyProp).
+            into(Prop, ExtProp).
+        derive(Prop).
+            to(prop.with(STR)).or(prop.with(PROP_PATH)).or(prop.with(ENUM)).
+        derive(ExtProp).
+            to(extProp.with(STR)).or(extProp.with(PROP_PATH)).or(extProp.with(ENUM)).
+
+        derive(Val).
+            to(val.with(OBJ)).or(iVal.with(OBJ)).
+
+        derive(Param).
+            to(param.with(STR)).or(param.with(ENUM)).
+            or(iParam.with(STR)).or(iParam.with(ENUM)).
+
+        derive(MultiOperand).
+            to(anyOfProps.many(STR)).or(anyOfProps.many(PROP_PATH)).
+            or(allOfProps.many(STR)).or(allOfProps.many(PROP_PATH)).
+            or(anyOfValues.many(OBJ)).or(allOfValues.many(OBJ)).
+            or(anyOfParams.many(STR)).or(anyOfIParams.many(STR)).
+            or(allOfParams.many(STR)).or(allOfIParams.many(STR)).
+            or(anyOfModels.many(PrimitiveResultQueryModel.class)).
+            or(allOfModels.many(PrimitiveResultQueryModel.class)).
+            or(anyOfExpressions.many(ExpressionModel.class)).
+            or(allOfExpressions.many(ExpressionModel.class)).
+
+        derive(Model).
+            to(model.with(STR)).
+
+        derive(Expression).
+            to(expr, model).
+
+        build();
+    // @formatter:on
+
+    public enum EqlVariable implements Variable {
+        Query,
+        Select,
+        Expression,
+        Where,
+        Condition, Predicate,
+        Operand, SingleOperand, MultiOperand,
+        AnyProp, ExtProp, Prop,
+        UnaryComparisonOperator, BinaryComparisonOperator, Val, Param,
+        ArithmeticalOperator, SingleOperandOrExpr, ExprBody, Expr,
+        Model
+    }
+
+    public enum EqlTerminal implements Terminal {
+        select, where,
+        eq, gt, lt, ge, le, ne,
+        like, iLike, notLike, likeWithCast, iLikeWithCast, notLikeWithCast, notILikeWithCast, notILike,
+        in, notIn,
+        isNull, isNotNull,
+        and, or,
+        expr,
+        begin, notBegin, end,
+        prop, extProp,
+        val, iVal,
+        param, iParam,
+        now,
+        count,
+        upperCase, lowerCase,
+        secondOf, minuteOf, hourOf, dayOf, monthOf, yearOf, dayOfWeekOf,
+        ifNull,
+        addTimeIntervalOf,
+        caseWhen,
+        round,
+        concat,
+        absOf,
+        dateOf,
+        anyOfProps, allOfProps,
+        anyOfValues, allOfValues,
+        anyOfParams, allOfParams, anyOfIParams, allOfIParams,
+        anyOfModels, allOfModels,
+        anyOfExpressions, allOfExpressions,
+        exists, notExists, existsAnyOf, notExistsAnyOf, existsAllOf, notExistsAllOf,
+        critCondition, condition, negatedCondition,
+        all, any,
+        values,
+        props,
+        params, iParams,
+        maxOf, minOf, sumOf, countOf, avgOf, countAll, sumOfDistinct, countOfDistinct, avgOfDistinct,
+        between,
+        seconds, minutes, hours, days, months, years,
+        to,
+        when, then, otherwise,
+        endAsInt, endAsBool, endAsStr, endAsDecimal,
+        with,
+        as, asRequired,
+        model, modelAsEntity, modelAsPrimitive, modelAsAggregate,
+        add, sub, mult, div, mod,
+        beginExpr, endExpr,
+        join, leftJoin, on,
+        yield, yieldAll,
+        groupBy, asc, desc, order,
+    }
+
+    private CanonicalEqlGrammar() {}
+
+}

@@ -107,7 +107,7 @@ public class EqlGrammar {
     private static final Class<IConvertableToPath> PROP_PATH = IConvertableToPath.class;
 
     /**
-     * EQL grammar in Extended Backus-Naur form.
+     * EQL grammar in Extended Backus-Naur form for the purposes of fluent API generation.
      */
     // @formatter:off
     public static final EBNF bnf = bnf(). //
