@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
+import static fielden.platform.eql.CanonicalEqlGrammar.EqlTerminal.values;
 import static fielden.platform.eql.CanonicalEqlGrammar.EqlTerminal.*;
 import static fielden.platform.eql.CanonicalEqlGrammar.EqlVariable.*;
 import static il.ac.technion.cs.fling.grammars.api.BNFAPI.bnf;
@@ -49,7 +50,9 @@ public final class CanonicalEqlGrammar {
             to(Predicate).or(Condition, and, Condition).or(Condition, or, Condition).or(begin, Condition, end).
 
         derive(Predicate).
-            to(Operand, UnaryComparisonOperator).or(Operand, BinaryComparisonOperator, Operand).
+            to(Operand, UnaryComparisonOperator).
+            or(Operand, BinaryComparisonOperator, Operand).
+            or(Operand, MembershipOperator, MembershipOperand).
 
         derive(UnaryComparisonOperator).
             to(isNull).or(isNotNull).
@@ -151,6 +154,15 @@ public final class CanonicalEqlGrammar {
             or(anyOfExpressions.many(ExpressionModel.class)).
             or(allOfExpressions.many(ExpressionModel.class)).
 
+        derive(MembershipOperator).
+            to(in).or(notIn).
+
+        derive(MembershipOperand).
+            to(values.many(OBJ)).
+            or(props.many(STR)).or(props.many(PROP_PATH)).
+            or(params.many(STR)).or(iParams.many(STR)).
+            or(model.with(SingleResultQueryModel.class)).
+
         derive(Model).
             to(model.with(STR)).
 
@@ -170,7 +182,9 @@ public final class CanonicalEqlGrammar {
         AnyProp, ExtProp, Prop,
         UnaryComparisonOperator, BinaryComparisonOperator, Val, Param,
         ArithmeticalOperator, SingleOperandOrExpr, ExprBody, Expr,
-        UnaryFunction, UnaryFunctionName, IfNull, DateDiffInterval, DateDiffIntervalUnit, DateAddInterval, DateAddIntervalUnit, Round, Concat, CaseWhen, CaseWhenEnd, Model
+        UnaryFunction, UnaryFunctionName, IfNull, DateDiffInterval, DateDiffIntervalUnit, DateAddInterval, DateAddIntervalUnit, Round, Concat, CaseWhen, CaseWhenEnd,
+        MembershipOperator,
+        MembershipOperand, Model
     }
 
     public enum EqlTerminal implements Terminal {
