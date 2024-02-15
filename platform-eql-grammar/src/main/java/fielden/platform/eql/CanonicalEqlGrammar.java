@@ -6,6 +6,7 @@ import il.ac.technion.cs.fling.internal.grammar.rules.Terminal;
 import il.ac.technion.cs.fling.internal.grammar.rules.Variable;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 import static fielden.platform.eql.CanonicalEqlGrammar.EqlTerminal.*;
@@ -68,13 +69,64 @@ public final class CanonicalEqlGrammar {
             to(add).or(sub).or(div).or(mult).or(mod).
         derive(SingleOperand).
             to(AnyProp).or(Val).or(Param).
-            or(now).
             or(expr.with(ExpressionModel.class)).
+            or(model.with(SingleResultQueryModel.class)).
+            or(UnaryFunction).
+            or(IfNull).
+            or(now).
+            or(DateDiffInterval).
+            or(DateAddInterval).
+            or(Round).
+            or(Concat).
+            or(CaseWhen).
+
+        derive(UnaryFunction).
+            to(UnaryFunctionName, SingleOperandOrExpr).
+
+        derive(UnaryFunctionName).
+            to(upperCase).or(lowerCase).
+            or(secondOf).or(minuteOf).or(hourOf).or(dayOf).or(monthOf).or(yearOf).or(dayOfWeekOf).
+            or(absOf).
+            or(dateOf).
+
+        derive(IfNull).
+            to(ifNull, SingleOperandOrExpr, then, SingleOperandOrExpr).
+
+        derive(DateDiffInterval).
+            to(count, DateDiffIntervalUnit, between, SingleOperandOrExpr).
+
+        derive(DateDiffIntervalUnit).
+            to(seconds).or(minutes).or(hours).or(days).or(months).or(years).
+
+        derive(DateAddInterval).
+            to(addTimeIntervalOf, SingleOperandOrExpr, DateAddIntervalUnit, to, SingleOperandOrExpr).
+
+        derive(DateAddIntervalUnit).
+            to(seconds).or(minutes).or(hours).or(days).or(months).or(years).
+
+        derive(Round).
+            to(round, SingleOperandOrExpr, to.with(Integer.class)).
+
+        derive(Concat).
+            to(concat, SingleOperandOrExpr, (noneOrMore(with, SingleOperandOrExpr)), end).
+
+        derive(CaseWhen).
+            to(caseWhen, Condition, then, SingleOperandOrExpr,
+                    noneOrMore(when, Condition, then, SingleOperandOrExpr),
+                    optional(otherwise, SingleOperandOrExpr),
+                    CaseWhenEnd).
+
+        derive(CaseWhenEnd).
+            to(end).or(endAsInt).or(endAsBool).
+            or(endAsStr.with(Integer.class)).
+            or(endAsDecimal.with(Integer.class/*, Integer.class*/)).
 
         specialize(AnyProp).
             into(Prop, ExtProp).
+
         derive(Prop).
             to(prop.with(STR)).or(prop.with(PROP_PATH)).or(prop.with(ENUM)).
+
         derive(ExtProp).
             to(extProp.with(STR)).or(extProp.with(PROP_PATH)).or(extProp.with(ENUM)).
 
@@ -115,7 +167,7 @@ public final class CanonicalEqlGrammar {
         AnyProp, ExtProp, Prop,
         UnaryComparisonOperator, BinaryComparisonOperator, Val, Param,
         ArithmeticalOperator, SingleOperandOrExpr, ExprBody, Expr,
-        Model
+        UnaryFunction, UnaryFunctionName, IfNull, DateDiffInterval, DateDiffIntervalUnit, DateAddInterval, DateAddIntervalUnit, Round, Concat, CaseWhen, CaseWhenEnd, Model
     }
 
     public enum EqlTerminal implements Terminal {
