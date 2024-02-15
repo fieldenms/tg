@@ -73,6 +73,7 @@ public class BnfToHtml {
                 .%s {
                   font-style: italic;
                 }
+                a.%1$s { text-decoration: none; }
                 """.formatted(NONTERMINAL_CLASS));
 
         sb.append("""
