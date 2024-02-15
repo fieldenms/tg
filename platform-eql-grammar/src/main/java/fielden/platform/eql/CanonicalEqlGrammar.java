@@ -39,7 +39,7 @@ public final class CanonicalEqlGrammar {
             into(Select, Expression).
 
         derive(Select).
-            to(select.with(Class.class), optional(Where), Model).
+            to(select.with(Class.class), optional(as.with(STR)), optional(Where), Model).
 
         derive(Where).
             to(where, Condition).
