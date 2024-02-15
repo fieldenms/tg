@@ -197,7 +197,7 @@ public final class CanonicalEqlGrammar {
             or(negatedCondition.with(ConditionModel.class)).
 
         derive(Join).
-            to(JoinOperator, optional(as.with(STR)), JoinCondition, noneOrMore(Join)).
+            to(JoinOperator, optional(as.with(STR)), JoinCondition, optional(Join)).
 
         derive(JoinOperator).
             to(join.with(Class.class)).
