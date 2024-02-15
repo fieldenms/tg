@@ -15,6 +15,9 @@ import static il.ac.technion.cs.fling.grammars.api.BNFAPI.bnf;
 import static il.ac.technion.cs.fling.internal.grammar.rules.Quantifiers.noneOrMore;
 import static il.ac.technion.cs.fling.internal.grammar.rules.Quantifiers.optional;
 
+// Use a forked version of Fling which has additional features:
+// https://github.com/homedirectory/fling
+
 /**
  * Canonical representation of EQL's grammar.
  */
@@ -144,7 +147,7 @@ public final class CanonicalEqlGrammar {
         derive(CaseWhenEnd).
             to(end).or(endAsInt).or(endAsBool).
             or(endAsStr.with(Integer.class)).
-            or(endAsDecimal.with(Integer.class/*, Integer.class*/)).
+            or(endAsDecimal.with(Integer.class, Integer.class)).
 
         specialize(AnyProp).
             into(Prop, ExtProp).
@@ -189,10 +192,10 @@ public final class CanonicalEqlGrammar {
             or(notExistsAnyOf.many(QueryModel.class)).
             or(existsAllOf.many(QueryModel.class)).
             or(notExistsAllOf.many(QueryModel.class)).
-            or(critCondition.with(STR/*, STR*/)).
-            or(critCondition.with(PROP_PATH/*, PROP_PATH*/)).
-            or(critCondition.with(ICompoundCondition0.class/*, STR, STR*/)).
-            or(critCondition.with(ICompoundCondition0.class/*, STR, STR, OBJ*/)).
+            or(critCondition.with(STR, STR)).
+            or(critCondition.with(PROP_PATH, PROP_PATH)).
+            or(critCondition.with(ICompoundCondition0.class, STR, STR)).
+            or(critCondition.with(ICompoundCondition0.class, STR, STR, OBJ)).
             or(condition.with(ConditionModel.class)).
             or(negatedCondition.with(ConditionModel.class)).
 
