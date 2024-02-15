@@ -4,9 +4,8 @@ import fielden.platform.eql.fling.BnfToText;
 import il.ac.technion.cs.fling.EBNF;
 import il.ac.technion.cs.fling.internal.grammar.rules.Terminal;
 import il.ac.technion.cs.fling.internal.grammar.rules.Variable;
-import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
+import ua.com.fielden.platform.entity.query.model.*;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 import static fielden.platform.eql.CanonicalEqlGrammar.EqlTerminal.values;
@@ -54,6 +53,7 @@ public final class CanonicalEqlGrammar {
             or(Operand, ComparisonOperator, ComparisonOperand).
             or(Operand, QuantifiedComparisonOperator, QuantifiedOperand).
             or(Operand, MembershipOperator, MembershipOperand).
+            or(SingleConditionPredicate).
 
         derive(UnaryComparisonOperator).
             to(isNull).or(isNotNull).
@@ -171,6 +171,20 @@ public final class CanonicalEqlGrammar {
             or(params.many(STR)).or(iParams.many(STR)).
             or(model.with(SingleResultQueryModel.class)).
 
+        derive(SingleConditionPredicate).
+            to(exists.with(QueryModel.class)).
+            or(notExists.with(QueryModel.class)).
+            or(existsAnyOf.many(QueryModel.class)).
+            or(notExistsAnyOf.many(QueryModel.class)).
+            or(existsAllOf.many(QueryModel.class)).
+            or(notExistsAllOf.many(QueryModel.class)).
+            or(critCondition.with(STR/*, STR*/)).
+            or(critCondition.with(PROP_PATH/*, PROP_PATH*/)).
+            or(critCondition.with(ICompoundCondition0.class/*, STR, STR*/)).
+            or(critCondition.with(ICompoundCondition0.class/*, STR, STR, OBJ*/)).
+            or(condition.with(ConditionModel.class)).
+            or(negatedCondition.with(ConditionModel.class)).
+
         derive(Model).
             to(model.with(STR)).
 
@@ -192,7 +206,7 @@ public final class CanonicalEqlGrammar {
         ArithmeticalOperator, SingleOperandOrExpr, ExprBody, Expr,
         UnaryFunction, UnaryFunctionName, IfNull, DateDiffInterval, DateDiffIntervalUnit, DateAddInterval, DateAddIntervalUnit, Round, Concat, CaseWhen, CaseWhenEnd,
         MembershipOperator,
-        MembershipOperand, ComparisonOperator, ComparisonOperand, QuantifiedComparisonOperator, QuantifiedOperand, Model
+        MembershipOperand, ComparisonOperator, ComparisonOperand, QuantifiedComparisonOperator, QuantifiedOperand, SingleConditionPredicate, Model
     }
 
     public enum EqlTerminal implements Terminal {
