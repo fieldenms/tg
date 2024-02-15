@@ -208,7 +208,9 @@ public final class CanonicalEqlGrammar {
             to(groupBy, SingleOperandOrExpr, optional(GroupBy)).
 
         derive(Model).
-            to(model.with(STR)).
+            to(model).
+            or(modelAsEntity.with(Class.class)).
+            or(modelAsAggregate).
 
         derive(Expression).
             to(expr, model).
