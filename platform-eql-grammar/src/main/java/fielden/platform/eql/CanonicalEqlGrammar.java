@@ -68,10 +68,10 @@ public final class CanonicalEqlGrammar {
             to(Predicate).or(Condition, and, Condition).or(Condition, or, Condition).or(begin, Condition, end).
 
         derive(Predicate).
-            to(Operand, UnaryComparisonOperator).
-            or(Operand, ComparisonOperator, ComparisonOperand).
-            or(Operand, QuantifiedComparisonOperator, QuantifiedOperand).
-            or(Operand, MembershipOperator, MembershipOperand).
+            to(ComparisonOperand, UnaryComparisonOperator).
+            or(ComparisonOperand, ComparisonOperator, ComparisonOperand).
+            or(ComparisonOperand, QuantifiedComparisonOperator, QuantifiedOperand).
+            or(ComparisonOperand, MembershipOperator, MembershipOperand).
             or(SingleConditionPredicate).
 
         derive(UnaryComparisonOperator).
@@ -265,7 +265,7 @@ public final class CanonicalEqlGrammar {
         Expression,
         Where,
         Condition, Predicate,
-        Operand, SingleOperand, MultiOperand,
+        SingleOperand, MultiOperand,
         AnyProp, ExtProp, Prop,
         UnaryComparisonOperator, BinaryComparisonOperator, Val, Param,
         ArithmeticalOperator, SingleOperandOrExpr, ExprBody, Expr,
