@@ -1,5 +1,6 @@
 package fielden.platform.eql;
 
+import fielden.platform.eql.fling.BnfToG4;
 import fielden.platform.eql.fling.BnfToHtml;
 import fielden.platform.eql.fling.BnfToText;
 import il.ac.technion.cs.fling.EBNF;
@@ -331,7 +332,8 @@ public final class CanonicalEqlGrammar {
     private CanonicalEqlGrammar() {}
 
     // print-bnf html FILE -- creates an HTML document with the BNF
-    // print-bnf -- prints the BNF to stdout in human-readable format
+    // print-bnf g4 FILE -- creates an ANTLR g4 grammar for the BNF
+    // print-bnf text FILE -- prints the BNF to stdout in human-readable format
     // verify -- verifies the BNF for correctness
     public static void main(String[] args) throws IOException {
         if (args.length < 1) {
@@ -341,17 +343,23 @@ public final class CanonicalEqlGrammar {
 
         final String command = args[0];
         if ("print-bnf".equals(command)) {
-            if (args.length > 1 && "html".equals(args[1])) {
-                String html = new BnfToHtml().bnfToHtml(canonical_bnf);
+            if (args.length > 1) {
+                String format = args[1];
+
                 final PrintStream out;
                 if (args.length > 2) {
                     out = new PrintStream(new FileOutputStream(args[2]));
                 } else {
                     out = System.out;
                 }
-                out.println(html);
-            } else {
-                System.out.println(new BnfToText().bnfToText(canonical_bnf));
+
+                if ("html".equals(format)) {
+                    out.println(new BnfToHtml().bnfToHtml(canonical_bnf));
+                } else if ("g4".equals(format)) {
+                    out.println(new BnfToG4().bnfToG4(canonical_bnf, "EQL"));
+                } else {
+                    out.println(new BnfToText().bnfToText(canonical_bnf));
+                }
             }
         } else if ("verify".equals(command))  {
             verifyBnf(canonical_bnf);
