@@ -40,7 +40,7 @@ public final class CanonicalEqlGrammar {
      * <b>NOTE</b>: Should <b>not</b> be used for fluent API generation but for <b>reference</b> only.
      */
     // @formatter:off
-    public static final EBNF canonical_bnf = bnf(). //
+    public static final EBNF canonical_bnf = bnf().
         start(Query).
 
         specialize(Query).
@@ -267,14 +267,14 @@ public final class CanonicalEqlGrammar {
         Condition, Predicate,
         SingleOperand, MultiOperand,
         AnyProp, ExtProp, Prop,
-        UnaryComparisonOperator, BinaryComparisonOperator, Val, Param,
+        UnaryComparisonOperator, Val, Param,
         ArithmeticalOperator, SingleOperandOrExpr, ExprBody, Expr,
         UnaryFunction, UnaryFunctionName, IfNull, DateDiffInterval, DateDiffIntervalUnit, DateAddInterval, DateAddIntervalUnit, Round, Concat, CaseWhen, CaseWhenEnd,
         MembershipOperator,
         MembershipOperand, ComparisonOperator, ComparisonOperand, QuantifiedComparisonOperator, QuantifiedOperand, SingleConditionPredicate, Join, JoinOperator,
         JoinCondition,
         Model, GroupBy,
-        FirstYield, YieldOperand, YieldOperandFunction, YieldOperandFunctionName, YieldAliasOrModel, YieldAlias, SubsequentYield
+        FirstYield, YieldOperand, YieldOperandFunction, YieldOperandFunctionName, YieldAlias, SubsequentYield
     }
 
     public enum EqlTerminal implements Terminal {
