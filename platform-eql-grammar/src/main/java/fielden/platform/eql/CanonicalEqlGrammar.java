@@ -16,6 +16,7 @@ import java.io.PrintStream;
 import static fielden.platform.eql.CanonicalEqlGrammar.EqlTerminal.values;
 import static fielden.platform.eql.CanonicalEqlGrammar.EqlTerminal.*;
 import static fielden.platform.eql.CanonicalEqlGrammar.EqlVariable.*;
+import static fielden.platform.eql.fling.BnfVerifier.verifyBnf;
 import static il.ac.technion.cs.fling.grammars.api.BNFAPI.bnf;
 import static il.ac.technion.cs.fling.internal.grammar.rules.Quantifiers.noneOrMore;
 import static il.ac.technion.cs.fling.internal.grammar.rules.Quantifiers.optional;
@@ -331,6 +332,7 @@ public final class CanonicalEqlGrammar {
 
     // print-bnf html FILE -- creates an HTML document with the BNF
     // print-bnf -- prints the BNF to stdout in human-readable format
+    // verify -- verifies the BNF for correctness
     public static void main(String[] args) throws IOException {
         if (args.length < 1) {
             System.err.println("usage: %s command".formatted(CanonicalEqlGrammar.class.getCanonicalName()));
@@ -351,6 +353,8 @@ public final class CanonicalEqlGrammar {
             } else {
                 System.out.println(new BnfToText().bnfToText(canonical_bnf));
             }
+        } else if ("verify".equals(command))  {
+            verifyBnf(canonical_bnf);
         } else {
             System.err.println("Unrecognised command: %s".formatted(command));
             System.exit(1);
