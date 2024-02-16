@@ -89,6 +89,12 @@ public class BnfToHtml {
                 }
                 """.formatted(DELIMITER_ROW_CLASS));
 
+        sb.append("""
+                .%s {
+                  color: gray;
+                }
+                """.formatted(PARAMETER_CLASS));
+
         return style(sb.toString());
     }
 
