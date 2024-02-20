@@ -30,16 +30,18 @@ import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityTyp
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.time.Duration;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.apache.logging.log4j.Logger;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.criteria.enhanced.CentreEntityQueryCriteriaToEnhance;
@@ -91,19 +93,20 @@ import ua.com.fielden.platform.utils.Pair;
 public class CriteriaGenerator implements ICriteriaGenerator {
     private static final String ERR_CRIT_TYPE_GEN_CENTRE_MANAGER_MISSING = "Criteria type for [%s; %s; %s] config identifier could not be generated -- centreManager must not be null.";
     private static final String ERR_CRIT_TYPE_GEN_WITH_EMPTY_KEY_PART = "Criteria type for [%s; %s; %s] config identifier could not be generated -- all parts must not be null.";
+    private static final String ERR_CRIT_TYPE_GEN = "Criteria type for [%s; %s; %s] config identifier could not be generated.";
     private static final Logger LOGGER = getLogger(CriteriaGenerator.class);
 
     private final EntityFactory entityFactory;
 
     private final ICompanionObjectFinder coFinder;
 
-    private final Map<T3<User, Class<? extends MiWithConfigurationSupport<?>>, Optional<String>>, Class<?>> generatedClasses;
+    private final Cache<T3<User, Class<? extends MiWithConfigurationSupport<?>>, Optional<String>>, Class<?>> generatedClasses;
 
     @Inject
     public CriteriaGenerator(final EntityFactory entityFactory, final ICompanionObjectFinder controllerProvider) {
         this.entityFactory = entityFactory;
         this.coFinder = controllerProvider;
-        this.generatedClasses = new HashMap<>();
+        this.generatedClasses = CacheBuilder.newBuilder().expireAfterAccess(Duration.ofMinutes(5)).maximumSize(2000).concurrencyLevel(50).build();
     }
 
     @SuppressWarnings({ "unchecked", "deprecation" })
@@ -168,14 +171,17 @@ public class CriteriaGenerator implements ICriteriaGenerator {
             final Class<T> root = (Class<T>) getEntityType(miType);
             final Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>> queryCriteriaClass;
             final T3<User, Class<? extends MiWithConfigurationSupport<?>>, Optional<String>> configKey = t3(user, miType, saveAsName);
-            if (generatedClasses.containsKey(configKey)) {
-                queryCriteriaClass = (Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>) generatedClasses.get(configKey);
-            } else {
-                final MiType miTypeAnnotation = new MiTypeAnnotation().newInstance(miType);
-                final Annotation [] customAnnotations = saveAsName.isPresent() ? new Annotation[] {miTypeAnnotation, new SaveAsNameAnnotation().newInstance(saveAsName.get())} : new Annotation[] {miTypeAnnotation};
-                queryCriteriaClass = generateCriteriaType(root, centreManager.getFirstTick().checkedProperties(root), centreManager.getEnhancer().getManagedType(root), customAnnotations);
-                generatedClasses.put(configKey, queryCriteriaClass);
+            
+            try {
+                queryCriteriaClass = (Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>) generatedClasses.get(configKey, () -> {
+                    final MiType miTypeAnnotation = new MiTypeAnnotation().newInstance(miType);
+                    final Annotation [] customAnnotations = saveAsName.isPresent() ? new Annotation[] {miTypeAnnotation, new SaveAsNameAnnotation().newInstance(saveAsName.get())} : new Annotation[] {miTypeAnnotation};
+                    return generateCriteriaType(root, centreManager.getFirstTick().checkedProperties(root), centreManager.getEnhancer().getManagedType(root), customAnnotations);
+                });
+            } catch (final ExecutionException ex) {
+                throw new CriteriaGeneratorException(format(ERR_CRIT_TYPE_GEN, user, miType, saveAsName), ex);
             }
+            
             return t2(queryCriteriaClass, root);
         }, centreManager);
     }
@@ -220,7 +226,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      */
     @Override
     public void clear() {
-        generatedClasses.clear();
+        generatedClasses.invalidateAll();
     }
 
     /**
