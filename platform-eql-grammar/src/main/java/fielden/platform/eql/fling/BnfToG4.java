@@ -4,6 +4,7 @@ import il.ac.technion.cs.fling.EBNF;
 import il.ac.technion.cs.fling.internal.grammar.rules.*;
 
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import static java.util.stream.Collectors.*;
 import static org.apache.commons.lang3.StringUtils.uncapitalize;
@@ -13,9 +14,25 @@ import static org.apache.commons.lang3.StringUtils.uncapitalize;
  */
 public class BnfToG4 {
 
-    public BnfToG4() {}
+    protected final EBNF bnf;
+    protected final String grammarName;
+    protected final Map<Terminal, /*rule name*/ String> lexerRules;
 
-    public String bnfToG4(EBNF bnf, String grammarName) {
+    public BnfToG4(EBNF bnf, String grammarName) {
+        this.bnf = bnf;
+        this.grammarName = grammarName;
+        this.lexerRules = bnf.Σ.stream().map(tok -> tok.terminal).distinct()
+                .collect(toMap(Function.identity(), t -> t.name().toUpperCase()));
+    }
+
+    protected String lexerRule(Terminal terminal) {
+        String rule = lexerRules.get(terminal);
+        if (rule == null)
+            throw new IllegalArgumentException("Terminal doesn't belong to this grammar: %s".formatted(terminal));
+        return rule;
+    }
+
+    public String bnfToG4() {
         var sb = new StringBuilder();
 
         sb.append("grammar %s;\n\n".formatted(grammarName));
@@ -36,10 +53,16 @@ public class BnfToG4 {
                     sb.append('\n');
                 });
 
+        lexerRules.forEach((token, ruleName) -> {
+            sb.append("%s : '%s' ;\n".formatted(ruleName, token.name()));
+        });
+
         sb.append("""
+                
                 WHITESPACE : [ \\r\\t\\n]+ -> skip ;
                 COMMENT : '//' .*? '\\n' -> skip ;
                 BLOCK_COMMENT : '/*' .*? '*/' -> skip ;
+                
                 """);
 
         return sb.toString();
@@ -75,7 +98,7 @@ public class BnfToG4 {
     }
 
     protected String convert(Terminal terminal) {
-        return "'%s'".formatted(terminal.name());
+        return lexerRule(terminal);
     }
 
     protected String convert(Quantifier quantifier) {

@@ -356,7 +356,7 @@ public final class CanonicalEqlGrammar {
                 if ("html".equals(format)) {
                     out.println(new BnfToHtml().bnfToHtml(canonical_bnf));
                 } else if ("g4".equals(format)) {
-                    out.println(new BnfToG4().bnfToG4(canonical_bnf, "EQL"));
+                    out.println(new BnfToG4(canonical_bnf, "EQL").bnfToG4());
                 } else {
                     out.println(new BnfToText().bnfToText(canonical_bnf));
                 }
