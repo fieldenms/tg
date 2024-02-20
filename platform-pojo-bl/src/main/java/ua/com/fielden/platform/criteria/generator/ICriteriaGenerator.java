@@ -30,17 +30,6 @@ public interface ICriteriaGenerator {
     );
     
     /**
-     * Generates Entity Centre criteria entity type with from/to, is/isNot properties; sets the values from {@code centreManager} configuration.
-     * <p>
-     * This method remains only for purposes of testing.
-     */
-    @Deprecated
-    <T extends AbstractEntity<?>> EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>> generateCentreQueryCriteria(
-        final Class<T> root,
-        final ICentreDomainTreeManagerAndEnhancer centreManager
-    );
-    
-    /**
      * Clears the state in this {@link ICriteriaGenerator} instance.
      * <p>
      * {@link ICriteriaGenerator} is used for generation of selection criteria entity and is thus closely related to Web UI configurations.
