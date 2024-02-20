@@ -7,6 +7,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
+import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 
 /**
  * A contract for criteria generator.
@@ -24,7 +25,7 @@ public interface ICriteriaGenerator {
      * @param cdtm
      * @return
      */
-    public <T extends AbstractEntity<?>> EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>> generateCentreQueryCriteria(final Class<T> root, ICentreDomainTreeManagerAndEnhancer cdtm, final Class<?> miType, final Annotation... customAnnotations);
+    public <T extends AbstractEntity<?>> EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>> generateCentreQueryCriteria(final Class<T> root, ICentreDomainTreeManagerAndEnhancer cdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final Annotation... customAnnotations);
     
     /**
      * Generates and configures {@link EntityQueryCriteria} instance.

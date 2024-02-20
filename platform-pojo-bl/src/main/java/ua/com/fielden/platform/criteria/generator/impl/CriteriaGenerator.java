@@ -70,6 +70,7 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.ui.menu.SaveAsName;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -88,7 +89,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 
     private final ICompanionObjectFinder coFinder;
 
-    private final Map<T2<Class<?>, String>, Class<?>> generatedClasses;
+    private final Map<T2<Class<? extends MiWithConfigurationSupport<?>>, String>, Class<?>> generatedClasses;
 
     @Inject
     public CriteriaGenerator(final EntityFactory entityFactory, final ICompanionObjectFinder controllerProvider) {
@@ -103,12 +104,12 @@ public class CriteriaGenerator implements ICriteriaGenerator {
     }
 
     @Override
-    public <T extends AbstractEntity<?>> EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>> generateCentreQueryCriteria(final Class<T> root, final ICentreDomainTreeManagerAndEnhancer cdtme, final Class<?> miType, final Annotation... customAnnotations) {
+    public <T extends AbstractEntity<?>> EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>> generateCentreQueryCriteria(final Class<T> root, final ICentreDomainTreeManagerAndEnhancer cdtme, final Class<? extends MiWithConfigurationSupport<?>> miType, final Annotation... customAnnotations) {
         return (EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>>) generateQueryCriteria(root, cdtme, miType, customAnnotations);
     }
 
     @SuppressWarnings({ "unchecked" })
-    private <T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> EntityQueryCriteria<CDTME, T, IEntityDao<T>> generateQueryCriteria(final Class<T> root, final CDTME cdtme, final Class<?> miType, final Annotation... customAnnotations) {
+    private <T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> EntityQueryCriteria<CDTME, T, IEntityDao<T>> generateQueryCriteria(final Class<T> root, final CDTME cdtme, final Class<? extends MiWithConfigurationSupport<?>> miType, final Annotation... customAnnotations) {
         try {
             final Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>> queryCriteriaClass;
 
@@ -116,7 +117,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
                     .filter(annotation -> annotation.annotationType().equals(SaveAsName.class))
                     .findAny()
                     .map(annotation -> ((SaveAsName)annotation).value());
-            final T2<Class<?>, String> key = t2(miType, saveAsNameOpt.orElse(null));
+            final T2<Class<? extends MiWithConfigurationSupport<?>>, String> key = t2(miType, saveAsNameOpt.orElse(null));
             if (miType != null && generatedClasses.containsKey(key)) {
                 queryCriteriaClass = (Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>>) generatedClasses.get(key);
             } else {
