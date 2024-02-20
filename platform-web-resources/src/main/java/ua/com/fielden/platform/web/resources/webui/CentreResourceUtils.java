@@ -609,7 +609,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
         // generates validation prototype
-        final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria(user, miType, saveAsName, cdtmae);
+        final M validationPrototype = (M) critGenerator.<T>generateCentreQueryCriteria(user, miType, saveAsName, cdtmae);
 
         validationPrototype.setMiType(miType);
         validationPrototype.setDevice(device);
