@@ -5,12 +5,17 @@ import il.ac.technion.cs.fling.internal.grammar.rules.*;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 import static java.util.stream.Collectors.*;
 import static org.apache.commons.lang3.StringUtils.uncapitalize;
 
 /**
  * Converts a BNF to an ANTLR grammar in the g4 format.
+ * <p>
+ * Rules with the right hand side in the form of a single terminal or an alternation between single terminals are
+ * generated with <a href=https://github.com/antlr/antlr4/blob/master/doc/parser-rules.md#rule-element-labels>rule element labels</a>
+ * to make the resulting parse trees easier to work with.
  */
 public class BnfToG4 {
 
@@ -69,9 +74,10 @@ public class BnfToG4 {
     }
 
     protected String convert(ERule eRule) {
+        Function<String, String> labeler = isSingleTerminalRule(eRule) ? s -> "token=" + s : Function.identity();
         return "%s :\n      %s\n;".formatted(
                 convert(eRule.variable),
-                eRule.bodies().map(this::convert).collect(joining("\n    | ")));
+                eRule.bodies().map(this::convert).map(labeler).collect(joining("\n    | ")));
     }
 
     protected String convert(Body body) {
@@ -109,6 +115,10 @@ public class BnfToG4 {
             default -> fail("Unrecognised quantifier: %s", quantifier);
         };
         return quantifier.symbols().map(this::convert).collect(joining(" ", "(", ")" + q));
+    }
+
+    static boolean isSingleTerminalRule(final ERule rule) {
+        return rule.bodies().allMatch(body -> body.size() == 1 && (body.getFirst().isTerminal() || body.getFirst().isToken()));
     }
 
     protected static <T> T fail(String formatString, Object... args) {
