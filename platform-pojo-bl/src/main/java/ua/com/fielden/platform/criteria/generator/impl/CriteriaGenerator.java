@@ -31,6 +31,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.WeakHashMap;
 import java.util.stream.Stream;
 
@@ -68,6 +69,8 @@ import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.ui.menu.SaveAsName;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -85,7 +88,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 
     private final ICompanionObjectFinder coFinder;
 
-    private final Map<Class<?>, Class<?>> generatedClasses;
+    private final Map<T2<Class<?>, String>, Class<?>> generatedClasses;
 
     @Inject
     public CriteriaGenerator(final EntityFactory entityFactory, final ICompanionObjectFinder controllerProvider) {
@@ -109,11 +112,16 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         try {
             final Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>> queryCriteriaClass;
 
-            if (miType != null && generatedClasses.containsKey(miType)) {
-                queryCriteriaClass = (Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>>) generatedClasses.get(miType);
+            final Optional<String> saveAsNameOpt = Stream.of(customAnnotations)
+                    .filter(annotation -> annotation.annotationType().equals(SaveAsName.class))
+                    .findAny()
+                    .map(annotation -> ((SaveAsName)annotation).value());
+            final T2<Class<?>, String> key = t2(miType, saveAsNameOpt.orElse(null));
+            if (miType != null && generatedClasses.containsKey(key)) {
+                queryCriteriaClass = (Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>>) generatedClasses.get(key);
             } else {
                 queryCriteriaClass = generateCriteriaType(root, cdtme.getFirstTick().checkedProperties(root), cdtme.getEnhancer().getManagedType(root), customAnnotations);
-                generatedClasses.put(miType, queryCriteriaClass);
+                generatedClasses.put(key, queryCriteriaClass);
             }
 
             final DefaultEntityProducerWithContext<EntityQueryCriteria<CDTME, T, IEntityDao<T>>> criteriaEntityProducer = new DefaultEntityProducerWithContext<>(entityFactory, (Class<EntityQueryCriteria<CDTME, T, IEntityDao<T>>>) queryCriteriaClass, coFinder);
