@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Optional.empty;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -29,6 +30,7 @@ import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgSystem;
 import ua.com.fielden.platform.sample.domain.crit_gen.CriteriaGeneratorTestModule;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
+import ua.com.fielden.platform.ui.menu.sample.MiTgSystem;
 
 public class EntityExistsValidationTest extends AbstractDaoTestCase {
     private final CriteriaGeneratorTestModule module = new CriteriaGeneratorTestModule();
@@ -58,7 +60,7 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
     public void existing_but_inactive_entity_can_be_assigned_to_property_with_default_validation_on_criteria_entity() {
         cdtm.getFirstTick().check(TgSystem.class, "critOnlySingleCategory", true);
         final ICriteriaGenerator cg = injector.getInstance(ICriteriaGenerator.class);
-        final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TgSystem, IEntityDao<TgSystem>> criteriaEntity = cg.generateCentreQueryCriteria(TgSystem.class, cdtm);
+        final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TgSystem, IEntityDao<TgSystem>> criteriaEntity = cg.generateCentreQueryCriteria(getUser(), MiTgSystem.class, empty(), cdtm);
         
         final TgCategory cat2 = co$(TgCategory.class).findByKey("Cat2");
         criteriaEntity.set("tgSystem_critOnlySingleCategory", cat2);
@@ -96,7 +98,7 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
     public void non_existing_entity_can_be_assigned_to_property_with_default_validation_on_criteria_entity() {
         cdtm.getFirstTick().check(TgSystem.class, "critOnlySingleCategory", true);
         final ICriteriaGenerator cg = injector.getInstance(ICriteriaGenerator.class);
-        final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TgSystem, IEntityDao<TgSystem>> criteriaEntity = cg.generateCentreQueryCriteria(TgSystem.class, cdtm);
+        final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TgSystem, IEntityDao<TgSystem>> criteriaEntity = cg.generateCentreQueryCriteria(getUser(), MiTgSystem.class, empty(), cdtm);
         
         final TgCategory cat2 = co$(TgCategory.class).findByKey("Cat2");
         

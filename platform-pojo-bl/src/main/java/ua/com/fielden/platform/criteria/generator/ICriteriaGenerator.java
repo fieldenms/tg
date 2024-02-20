@@ -1,16 +1,16 @@
 package ua.com.fielden.platform.criteria.generator;
 
-import java.lang.annotation.Annotation;
+import java.util.Optional;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
-import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 
 /**
- * A contract for criteria generator.
+ * A contract for Entity Centre criteria entity generation.
  *
  * @author TG Team
  *
@@ -18,24 +18,27 @@ import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 public interface ICriteriaGenerator {
     
     /**
-     * Generates and configures {@link EntityQueryCriteria} instance.
-     *
-     * @param <T>
-     * @param root
-     * @param cdtm
-     * @return
+     * Generates Entity Centre criteria entity type with from/to, is/isNot properties; sets the values from {@code centreManager} configuration.
+     * <p>
+     * Triplet [user; miType; saveAsName] identifies Entity Centre configuration for which criteria entity needs to be generated.
      */
-    public <T extends AbstractEntity<?>> EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>> generateCentreQueryCriteria(final Class<T> root, ICentreDomainTreeManagerAndEnhancer cdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final Annotation... customAnnotations);
+    <T extends AbstractEntity<?>> EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>> generateCentreQueryCriteria(
+        final User user,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final Optional<String> saveAsName,
+        final ICentreDomainTreeManagerAndEnhancer centreManager
+    );
     
     /**
-     * Generates and configures {@link EntityQueryCriteria} instance.
-     *
-     * @param <T>
-     * @param root
-     * @param cdtm
-     * @return
+     * Generates Entity Centre criteria entity type with from/to, is/isNot properties; sets the values from {@code centreManager} configuration.
+     * <p>
+     * This method remains only for purposes of testing.
      */
-    public <T extends AbstractEntity<?>> EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>> generateCentreQueryCriteria(Class<T> root, ICentreDomainTreeManagerAndEnhancer cdtm, final Annotation... customAnnotations);
+    @Deprecated
+    <T extends AbstractEntity<?>> EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>> generateCentreQueryCriteria(
+        final Class<T> root,
+        final ICentreDomainTreeManagerAndEnhancer centreManager
+    );
     
     /**
      * Clears the state in this {@link ICriteriaGenerator} instance.

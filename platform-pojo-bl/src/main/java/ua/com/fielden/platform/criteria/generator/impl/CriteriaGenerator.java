@@ -25,6 +25,7 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determ
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -33,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.WeakHashMap;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.apache.logging.log4j.Logger;
@@ -69,9 +71,12 @@ import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.ui.menu.MiType;
+import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.ui.menu.SaveAsName;
+import ua.com.fielden.platform.ui.menu.SaveAsNameAnnotation;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -98,49 +103,30 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         this.generatedClasses = new WeakHashMap<>();
     }
 
-    @Override
-    public <T extends AbstractEntity<?>> EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>> generateCentreQueryCriteria(final Class<T> root, final ICentreDomainTreeManagerAndEnhancer cdtme, final Annotation... customAnnotations) {
-        return (EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>>) generateQueryCriteria(root, cdtme, null, customAnnotations);
-    }
-
-    @Override
-    public <T extends AbstractEntity<?>> EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>> generateCentreQueryCriteria(final Class<T> root, final ICentreDomainTreeManagerAndEnhancer cdtme, final Class<? extends MiWithConfigurationSupport<?>> miType, final Annotation... customAnnotations) {
-        return (EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>>) generateQueryCriteria(root, cdtme, miType, customAnnotations);
-    }
-
     @SuppressWarnings({ "unchecked" })
-    private <T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> EntityQueryCriteria<CDTME, T, IEntityDao<T>> generateQueryCriteria(final Class<T> root, final CDTME cdtme, final Class<? extends MiWithConfigurationSupport<?>> miType, final Annotation... customAnnotations) {
+    private <T extends AbstractEntity<?>> EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>> generateCentreQueryCriteria(
+        final Supplier<T2<Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>, Class<T>>> queryCriteriaClassAndRootSupplier,
+        final ICentreDomainTreeManagerAndEnhancer cdtme
+    ) {
         try {
-            final Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>> queryCriteriaClass;
+            final var queryCriteriaClassAndRoot = queryCriteriaClassAndRootSupplier.get();
 
-            final Optional<String> saveAsNameOpt = Stream.of(customAnnotations)
-                    .filter(annotation -> annotation.annotationType().equals(SaveAsName.class))
-                    .findAny()
-                    .map(annotation -> ((SaveAsName)annotation).value());
-            final T2<Class<? extends MiWithConfigurationSupport<?>>, String> key = t2(miType, saveAsNameOpt.orElse(null));
-            if (miType != null && generatedClasses.containsKey(key)) {
-                queryCriteriaClass = (Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>>) generatedClasses.get(key);
-            } else {
-                queryCriteriaClass = generateCriteriaType(root, cdtme.getFirstTick().checkedProperties(root), cdtme.getEnhancer().getManagedType(root), customAnnotations);
-                generatedClasses.put(key, queryCriteriaClass);
-            }
-
-            final DefaultEntityProducerWithContext<EntityQueryCriteria<CDTME, T, IEntityDao<T>>> criteriaEntityProducer = new DefaultEntityProducerWithContext<>(entityFactory, (Class<EntityQueryCriteria<CDTME, T, IEntityDao<T>>>) queryCriteriaClass, coFinder);
-            final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteriaEntity = criteriaEntityProducer.newEntity();
+            final DefaultEntityProducerWithContext<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>> criteriaEntityProducer = new DefaultEntityProducerWithContext<>(entityFactory, (Class<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>) queryCriteriaClassAndRoot._1, coFinder);
+            final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteriaEntity = criteriaEntityProducer.newEntity();
             criteriaEntity.beginInitialising();
             criteriaEntity.setKey("not required");
             criteriaEntity.endInitialising();
 
             //Set dao for generated entity query criteria.
             final Field daoField = Finder.findFieldByName(EntityQueryCriteria.class, "dao");
-            final boolean isDaoAccessable = daoField.isAccessible();
+            final boolean isDaoAccessable = daoField.isAccessible(); // TODO
             daoField.setAccessible(true);
-            daoField.set(criteriaEntity, coFinder.find(root));
+            daoField.set(criteriaEntity, coFinder.find(queryCriteriaClassAndRoot._2));
             daoField.setAccessible(isDaoAccessable);
 
             //Set domain tree manager for entity query criteria.
             final Field dtmField = Finder.findFieldByName(EntityQueryCriteria.class, "cdtme");
-            final boolean isCdtmeAccessable = dtmField.isAccessible();
+            final boolean isCdtmeAccessable = dtmField.isAccessible(); // TODO
             dtmField.setAccessible(true);
             dtmField.set(criteriaEntity, cdtme);
             dtmField.setAccessible(isCdtmeAccessable);
@@ -149,11 +135,41 @@ public class CriteriaGenerator implements ICriteriaGenerator {
             //in order to synchronise entity query criteria values with model values
             synchroniseWithModel(criteriaEntity);
 
-            return criteriaEntity;
+            return (EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>>) criteriaEntity;
         } catch (final Exception e) {
             LOGGER.error(e.getMessage(), e);
             throw new IllegalStateException(e);
         }
+    }
+
+    @Override
+    @Deprecated
+    public <T extends AbstractEntity<?>> EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>> generateCentreQueryCriteria(final Class<T> root, final ICentreDomainTreeManagerAndEnhancer centreManager) {
+        return generateCentreQueryCriteria(() -> t2(generateCriteriaType(root, centreManager.getFirstTick().checkedProperties(root), centreManager.getEnhancer().getManagedType(root)), root), centreManager);
+    }
+
+    @Override
+    public <T extends AbstractEntity<?>> EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>> generateCentreQueryCriteria(
+        final User user,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final Optional<String> saveAsName,
+        final ICentreDomainTreeManagerAndEnhancer centreManager
+    ) {
+        return generateCentreQueryCriteria(() -> {
+            // TODO miType should be not null
+            final Class<T> root = (Class<T>) getEntityType(miType);
+            final Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>> queryCriteriaClass;
+            final T2<Class<? extends MiWithConfigurationSupport<?>>, String> key = t2(miType, saveAsName.orElse(null));
+            if (generatedClasses.containsKey(key)) {
+                queryCriteriaClass = (Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>) generatedClasses.get(key);
+            } else {
+                final MiType miTypeAnnotation = new MiTypeAnnotation().newInstance(miType);
+                final Annotation [] customAnnotations = saveAsName.isPresent() ? new Annotation[] {miTypeAnnotation, new SaveAsNameAnnotation().newInstance(saveAsName.get())} : new Annotation[] {miTypeAnnotation};
+                queryCriteriaClass = generateCriteriaType(root, centreManager.getFirstTick().checkedProperties(root), centreManager.getEnhancer().getManagedType(root), customAnnotations);
+                generatedClasses.put(key, queryCriteriaClass);
+            }
+            return t2(queryCriteriaClass, root);
+        }, centreManager);
     }
 
     /**

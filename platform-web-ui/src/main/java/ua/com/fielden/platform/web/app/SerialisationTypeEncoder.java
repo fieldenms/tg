@@ -10,9 +10,7 @@ import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoad
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
 
-import java.lang.annotation.Annotation;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -38,10 +36,8 @@ import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.menu.MiType;
-import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.ui.menu.SaveAsName;
-import ua.com.fielden.platform.ui.menu.SaveAsNameAnnotation;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
 public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
@@ -126,9 +122,7 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
                 final Class<?> root = findClass(originalAndSuffix[0]);
                 if (EntityQueryCriteria.class.isAssignableFrom(root)) {
                     // In the case where fully fledged criteria entity type does not exist on this server node, and thus could not yet be deserialised, we need to generate criteria type with exact correspondence to 'previouslyRunCentre'.
-                    final MiType miTypeAnnotation = new MiTypeAnnotation().newInstance(miType);
-                    final Annotation [] annotations = saveAsName.isPresent() ? new Annotation[] {miTypeAnnotation, new SaveAsNameAnnotation().newInstance(saveAsName.get())} : new Annotation[] {miTypeAnnotation};
-                    final Class<?> managedType = stripIfNeeded(criteriaGenerator.generateCentreQueryCriteria(getEntityType(miType), previouslyRunCentre, miType, annotations).getClass());
+                    final Class<?> managedType = stripIfNeeded(criteriaGenerator.generateCentreQueryCriteria(user, miType, saveAsName, previouslyRunCentre).getClass());
                     try {
                         // The type name from client-side needs to be promoted to this server node very similarly as it is done below for centre managed types ('adjustManagedTypeName' call).
                         final String predefinedTypeName = root.getName() + DynamicTypeNamingService.APPENDIX + "_" + originalAndSuffix[1];
