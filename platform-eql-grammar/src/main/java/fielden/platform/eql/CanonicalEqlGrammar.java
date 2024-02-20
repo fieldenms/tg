@@ -72,27 +72,27 @@ public final class CanonicalEqlGrammar {
         derive(Predicate).
             to(ComparisonOperand, UnaryComparisonOperator).
             or(ComparisonOperand, ComparisonOperator, ComparisonOperand).
-            or(ComparisonOperand, QuantifiedComparisonOperator, QuantifiedOperand).
+            or(ComparisonOperand, ComparisonOperator, QuantifiedOperand).
+            or(ComparisonOperand, LikeOperator, ComparisonOperand).
             or(ComparisonOperand, MembershipOperator, MembershipOperand).
             or(SingleConditionPredicate).
 
         derive(UnaryComparisonOperator).
             to(isNull).or(isNotNull).
 
-        derive(ComparisonOperator).
+        derive(LikeOperator).
             to(like).or(iLike).or(likeWithCast).or(iLikeWithCast).
             or(notLike).or(notLikeWithCast).or(notILikeWithCast).or(notILike).
 
         specialize(ComparisonOperand).
             into(SingleOperand, Expr, MultiOperand).
 
-        derive(QuantifiedComparisonOperator).
+        derive(ComparisonOperator).
             to(eq).or(gt).or(lt).or(ge).or(le).or(ne).
 
         derive(QuantifiedOperand).
             to(all.with(SingleResultQueryModel.class)).
             or(any.with(SingleResultQueryModel.class)).
-            or(ComparisonOperand).
 
         derive(Expr).
             to(beginExpr, ExprBody, endExpr).
@@ -103,7 +103,8 @@ public final class CanonicalEqlGrammar {
         derive(ArithmeticalOperator).
             to(add).or(sub).or(div).or(mult).or(mod).
         derive(SingleOperand).
-            to(AnyProp).or(Val).or(Param).
+            to(Prop).or(ExtProp).
+            or(Val).or(Param).
             or(expr.with(ExpressionModel.class)).
             or(model.with(SingleResultQueryModel.class)).
             or(UnaryFunction).
@@ -155,9 +156,6 @@ public final class CanonicalEqlGrammar {
             to(end).or(endAsInt).or(endAsBool).
             or(endAsStr.with(Integer.class)).
             or(endAsDecimal.with(Integer.class, Integer.class)).
-
-        specialize(AnyProp).
-            into(Prop, ExtProp).
 
         derive(Prop).
             to(prop.with(STR)).or(prop.with(PROP_PATH)).or(prop.with(ENUM)).
@@ -268,15 +266,15 @@ public final class CanonicalEqlGrammar {
         Where,
         Condition, Predicate,
         SingleOperand, MultiOperand,
-        AnyProp, ExtProp, Prop,
+        ExtProp, Prop,
         UnaryComparisonOperator, Val, Param,
         ArithmeticalOperator, SingleOperandOrExpr, ExprBody, Expr,
         UnaryFunction, UnaryFunctionName, IfNull, DateDiffInterval, DateDiffIntervalUnit, DateAddInterval, DateAddIntervalUnit, Round, Concat, CaseWhen, CaseWhenEnd,
         MembershipOperator,
-        MembershipOperand, ComparisonOperator, ComparisonOperand, QuantifiedComparisonOperator, QuantifiedOperand, SingleConditionPredicate, Join, JoinOperator,
+        MembershipOperand, ComparisonOperator, ComparisonOperand, QuantifiedOperand, SingleConditionPredicate, Join, JoinOperator,
         JoinCondition,
         Model, GroupBy,
-        FirstYield, YieldOperand, YieldOperandFunction, YieldOperandFunctionName, YieldAlias, SubsequentYield
+        FirstYield, YieldOperand, YieldOperandFunction, YieldOperandFunctionName, YieldAlias, LikeOperator, SubsequentYield
     }
 
     public enum EqlTerminal implements Terminal {
