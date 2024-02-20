@@ -59,8 +59,8 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
     @Test
     public void existing_but_inactive_entity_can_be_assigned_to_property_with_default_validation_on_criteria_entity() {
         cdtm.getFirstTick().check(TgSystem.class, "critOnlySingleCategory", true);
-        final ICriteriaGenerator cg = injector.getInstance(ICriteriaGenerator.class);
-        final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TgSystem, IEntityDao<TgSystem>> criteriaEntity = cg.generateCentreQueryCriteria(getUser(), MiTgSystem.class, empty(), cdtm);
+        final var cg = injector.getInstance(ICriteriaGenerator.class);
+        final var criteriaEntity = cg.generateCentreQueryCriteria(getUser(), MiTgSystem.class, empty(), cdtm);
         
         final TgCategory cat2 = co$(TgCategory.class).findByKey("Cat2");
         criteriaEntity.set("tgSystem_critOnlySingleCategory", cat2);
@@ -97,8 +97,8 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
     @Test
     public void non_existing_entity_can_be_assigned_to_property_with_default_validation_on_criteria_entity() {
         cdtm.getFirstTick().check(TgSystem.class, "critOnlySingleCategory", true);
-        final ICriteriaGenerator cg = injector.getInstance(ICriteriaGenerator.class);
-        final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TgSystem, IEntityDao<TgSystem>> criteriaEntity = cg.generateCentreQueryCriteria(getUser(), MiTgSystem.class, empty(), cdtm);
+        final var cg = injector.getInstance(ICriteriaGenerator.class);
+        final var criteriaEntity = cg.generateCentreQueryCriteria(getUser(), MiTgSystem.class, empty(), cdtm);
         
         final TgCategory cat2 = co$(TgCategory.class).findByKey("Cat2");
         
