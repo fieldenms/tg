@@ -73,13 +73,23 @@ public final class CanonicalEqlGrammar {
             or(label("left", Condition), or, label("right", Condition)).
             or(begin, Condition, end).
 
-        derive(Predicate).
-            to(ComparisonOperand, UnaryComparisonOperator).
-            or(label("left", ComparisonOperand), label("op", ComparisonOperator), label("right", ComparisonOperand)).
-            or(label("left", ComparisonOperand), label("op", ComparisonOperator), label("right", QuantifiedOperand)).
-            or(label("left", ComparisonOperand), label("op", LikeOperator), label("right", ComparisonOperand)).
-            or(label("left", ComparisonOperand), label("op", MembershipOperator), label("right", MembershipOperand)).
-            or(SingleConditionPredicate).
+        specialize(Predicate).
+            into(UnaryPredicate, ComparisonPredicate, QuantifiedComparisonPredicate, LikePredicate, MembershipPredicate, SingleConditionPredicate).
+
+        derive(UnaryPredicate).
+            to(label("left", ComparisonOperand), UnaryComparisonOperator).
+
+        derive(ComparisonPredicate).
+            to(label("left", ComparisonOperand), label("op", ComparisonOperator), label("right", ComparisonOperand)).
+
+        derive(QuantifiedComparisonPredicate).
+            to(label("left", ComparisonOperand), label("op", ComparisonOperator), QuantifiedOperand).
+
+        derive(LikePredicate).
+            to(label("left", ComparisonOperand), label("op", LikeOperator), label("right", ComparisonOperand)).
+
+        derive(MembershipPredicate).
+            to(label("left", ComparisonOperand), label("op", MembershipOperator), MembershipOperand).
 
         derive(UnaryComparisonOperator).
             to(isNull).or(isNotNull).
@@ -279,6 +289,8 @@ public final class CanonicalEqlGrammar {
         JoinCondition,
         Model, GroupBy,
         FirstYield, YieldOperand, YieldOperandFunction, YieldOperandFunctionName, YieldAlias, LikeOperator, SubsequentYield
+        UnaryPredicate,
+        ComparisonPredicate, QuantifiedComparisonPredicate, LikePredicate, MembershipPredicate, SubsequentYield
     }
 
     public enum EqlTerminal implements Terminal {
