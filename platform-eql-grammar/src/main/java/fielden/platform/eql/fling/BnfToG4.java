@@ -131,7 +131,10 @@ public class BnfToG4 {
             case Opt $ -> "?";
             default -> fail("Unrecognised quantifier: %s", quantifier);
         };
-        return quantifier.symbols().map(this::convert).collect(joining(" ", "(", ")" + q));
+        String s = quantifier.symbols().map(this::convert).collect(joining(" "));
+        if (quantifier.symbols().count() > 1)
+            s = "(%s)".formatted(s);
+        return s + q;
     }
 
     protected String convert(LabeledTempSymbol symbol) {
