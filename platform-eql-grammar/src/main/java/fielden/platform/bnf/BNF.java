@@ -1,6 +1,7 @@
 package fielden.platform.bnf;
 
-import java.util.*;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static java.util.Collections.unmodifiableSet;

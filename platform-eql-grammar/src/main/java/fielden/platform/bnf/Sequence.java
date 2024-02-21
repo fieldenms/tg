@@ -10,13 +10,24 @@ import java.util.stream.Stream;
 public final class Sequence implements List<Term>, Term {
 
     private final List<Term> terms;
+    private final TermMetadata metadata;
+
+    public Sequence(Collection<Term> terms, TermMetadata metadata) {
+        this.terms = List.copyOf(terms);
+        this.metadata = metadata;
+    }
 
     public Sequence(Collection<Term> terms) {
-        this.terms = List.copyOf(terms);
+        this(terms, TermMetadata.EMPTY_METADATA);
     }
 
     public Sequence(Term... terms) {
-        this(Arrays.asList(terms));
+        this(Arrays.asList(terms), TermMetadata.EMPTY_METADATA);
+    }
+
+    @Override
+    public <V> Sequence annotate(final TermMetadata.Key<V> key, final V value) {
+        return new Sequence(terms, TermMetadata.merge(metadata, key, value));
     }
 
     @Override

@@ -17,4 +17,22 @@ public non-sealed interface Terminal extends Symbol {
         return with(List.of(new VarArityParameter(varArityParameter)));
     }
 
+    @Override
+    default <V> Terminal annotate(TermMetadata.Key<V> key, V value) {
+        final var newMetadata = TermMetadata.merge(metadata(), key, value);
+        final String name = name();
+
+        return new Terminal() {
+            @Override
+            public String name() {
+                return name;
+            }
+
+            @Override
+            public TermMetadata metadata() {
+                return newMetadata;
+            }
+        };
+    }
+
 }

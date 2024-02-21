@@ -169,16 +169,11 @@ public final class FluentBNF {
             }
         }
 
-        void add(final LabeledTerm labeledTerm) {
-            add(labeledTerm.term);
-        }
-
         void add(final Term term) {
             switch (term) {
-            case Notation x -> add(x);
-            case Sequence x -> add(x);
-            case Symbol x -> add(x);
-            case LabeledTerm x -> add(x);
+                case Notation x -> add(x);
+                case Sequence x -> add(x);
+                case Symbol x -> add(x);
             }
         }
     }
