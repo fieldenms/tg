@@ -29,24 +29,6 @@
             <scope>compile</scope>
         </dependency>
 
-        <!--
-        This dependency should be installed manually.
-        https://github.com/homedirectory/fling/
-         -->
-        <dependency>
-            <groupId>org.spartan</groupId>
-            <artifactId>fling</artifactId>
-            <version>1.1.0</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google.googlejavaformat</groupId>
-            <artifactId>google-java-format</artifactId>
-            <version>1.19.2</version>
-            <scope>compile</scope>
-        </dependency>
-
     </dependencies>
 
     <build>
