@@ -1,6 +1,7 @@
 package fielden.platform.eql.fling;
 
 import fielden.platform.eql.fling.BNF.Rule;
+import fielden.platform.eql.fling.LabeledTempSymbol.LabeledTerminal;
 import il.ac.technion.cs.fling.internal.grammar.rules.*;
 
 import java.util.Map;
@@ -78,7 +79,9 @@ public class BnfToG4 {
     }
 
     protected String convert(Component component) {
-        return component.isToken() ? convert(component.asToken())
+        // it is important to match labeled symbol first since it is more specific
+        return component instanceof LabeledTempSymbol s ? convert(s)
+                : component.isToken() ? convert(component.asToken())
                 : component.isQuantifier() ? convert(component.asQuantifier())
                 : component.isVariable() ? convert(component.asVariable())
                 : component.isTerminal() ? convert(component.asTerminal())
@@ -97,7 +100,11 @@ public class BnfToG4 {
     }
 
     protected String convert(Terminal terminal) {
-        return lexerRule(terminal);
+        String s = lexerRule(terminal);
+        return switch (terminal) {
+            case LabeledTerminal lt -> "%s=%s".formatted(lt.label(), s);
+            default -> s;
+        } ;
     }
 
     protected String convert(Quantifier quantifier) {
@@ -108,6 +115,10 @@ public class BnfToG4 {
             default -> fail("Unrecognised quantifier: %s", quantifier);
         };
         return quantifier.symbols().map(this::convert).collect(joining(" ", "(", ")" + q));
+    }
+
+    protected String convert(LabeledTempSymbol symbol) {
+        return "%s=%s".formatted(symbol.label(), convert(symbol.symbol().normalize()));
     }
 
     static boolean isSingleTerminalRule(final Rule rule) {
