@@ -157,23 +157,23 @@ public class CriteriaGenerator implements ICriteriaGenerator {
     ) {
         return generateCentreQueryCriteria(() -> {
             if (user == null || miType == null || saveAsName == null) {
-                throw new CriteriaGeneratorException(format(ERR_CRIT_TYPE_GEN_WITH_EMPTY_KEY_PART, user, miType, saveAsName));
+                throw new CriteriaGeneratorException(ERR_CRIT_TYPE_GEN_WITH_EMPTY_KEY_PART.formatted(user, miType, saveAsName));
             }
             if (centreManager == null) {
-                throw new CriteriaGeneratorException(format(ERR_CRIT_TYPE_GEN_CENTRE_MANAGER_MISSING, user, miType, saveAsName));
+                throw new CriteriaGeneratorException(ERR_CRIT_TYPE_GEN_CENTRE_MANAGER_MISSING.formatted(user, miType, saveAsName));
             }
+
             final Class<T> root = (Class<T>) getEntityType(miType);
-            final Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>> queryCriteriaClass;
             final T3<User, Class<? extends MiWithConfigurationSupport<?>>, Optional<String>> configKey = t3(user, miType, saveAsName);
-            
+            final Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>> queryCriteriaClass;
             try {
                 queryCriteriaClass = (Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>) generatedClasses.get(configKey, () -> {
                     final MiType miTypeAnnotation = new MiTypeAnnotation().newInstance(miType);
-                    final Annotation [] customAnnotations = saveAsName.isPresent() ? new Annotation[] {miTypeAnnotation, new SaveAsNameAnnotation().newInstance(saveAsName.get())} : new Annotation[] {miTypeAnnotation};
+                    final Annotation [] customAnnotations = saveAsName.map(name -> new Annotation[] {miTypeAnnotation, new SaveAsNameAnnotation().newInstance(name)}).orElseGet(() -> new Annotation[] {miTypeAnnotation});
                     return generateCriteriaType(root, centreManager.getFirstTick().checkedProperties(root), centreManager.getEnhancer().getManagedType(root), customAnnotations);
                 });
             } catch (final ExecutionException ex) {
-                throw new CriteriaGeneratorException(format(ERR_CRIT_TYPE_GEN, user, miType, saveAsName), ex);
+                throw new CriteriaGeneratorException(ERR_CRIT_TYPE_GEN.formatted(user, miType, saveAsName), ex);
             }
             
             return t2(queryCriteriaClass, root);
