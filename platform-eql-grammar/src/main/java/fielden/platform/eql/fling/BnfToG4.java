@@ -3,6 +3,7 @@ package fielden.platform.eql.fling;
 import fielden.platform.eql.fling.BNF.Rule;
 import fielden.platform.eql.fling.LabeledTempSymbol.LabeledTerminal;
 import il.ac.technion.cs.fling.internal.grammar.rules.*;
+import ua.com.fielden.platform.utils.StreamUtils;
 
 import java.util.Map;
 import java.util.function.Function;
@@ -52,9 +53,12 @@ public class BnfToG4 {
                     sb.append('\n');
                 });
 
-        lexerRules.forEach((token, ruleName) -> {
-            sb.append("%s : '%s' ;\n".formatted(ruleName, token.name()));
-        });
+        StreamUtils.distinct(lexerRules.entrySet().stream(), Map.Entry::getValue)
+                .forEach(entry -> {
+                    var terminal = entry.getKey();
+                    var ruleName = entry.getValue();
+                    sb.append("%s : '%s' ;\n".formatted(ruleName, terminal.name()));
+                });
 
         sb.append("""
                 
