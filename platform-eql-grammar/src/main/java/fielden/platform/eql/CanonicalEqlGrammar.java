@@ -19,6 +19,7 @@ import static fielden.platform.eql.CanonicalEqlGrammar.EqlTerminal.*;
 import static fielden.platform.eql.CanonicalEqlGrammar.EqlVariable.*;
 import static fielden.platform.eql.fling.BNF.Fluent.start;
 import static fielden.platform.eql.fling.BnfVerifier.verifyBnf;
+import static fielden.platform.eql.fling.LabeledTempSymbol.label;
 import static il.ac.technion.cs.fling.internal.grammar.rules.Quantifiers.noneOrMore;
 import static il.ac.technion.cs.fling.internal.grammar.rules.Quantifiers.optional;
 
@@ -67,14 +68,17 @@ public final class CanonicalEqlGrammar {
 
         // AND takes precedence over OR
         derive(Condition).
-            to(Predicate).or(Condition, and, Condition).or(Condition, or, Condition).or(begin, Condition, end).
+            to(Predicate).
+            or(label("left", Condition), and, label("right", Condition)).
+            or(label("left", Condition), or, label("right", Condition)).
+            or(begin, Condition, end).
 
         derive(Predicate).
             to(ComparisonOperand, UnaryComparisonOperator).
-            or(ComparisonOperand, ComparisonOperator, ComparisonOperand).
-            or(ComparisonOperand, ComparisonOperator, QuantifiedOperand).
-            or(ComparisonOperand, LikeOperator, ComparisonOperand).
-            or(ComparisonOperand, MembershipOperator, MembershipOperand).
+            or(label("left", ComparisonOperand), label("op", ComparisonOperator), label("right", ComparisonOperand)).
+            or(label("left", ComparisonOperand), label("op", ComparisonOperator), label("right", QuantifiedOperand)).
+            or(label("left", ComparisonOperand), label("op", LikeOperator), label("right", ComparisonOperand)).
+            or(label("left", ComparisonOperand), label("op", MembershipOperator), label("right", MembershipOperand)).
             or(SingleConditionPredicate).
 
         derive(UnaryComparisonOperator).
@@ -117,7 +121,7 @@ public final class CanonicalEqlGrammar {
             or(CaseWhen).
 
         derive(UnaryFunction).
-            to(UnaryFunctionName, SingleOperandOrExpr).
+            to(label("funcName", UnaryFunctionName), label("argument", SingleOperandOrExpr)).
 
         derive(UnaryFunctionName).
             to(upperCase).or(lowerCase).
@@ -126,16 +130,16 @@ public final class CanonicalEqlGrammar {
             or(dateOf).
 
         derive(IfNull).
-            to(ifNull, SingleOperandOrExpr, then, SingleOperandOrExpr).
+            to(ifNull, label("nullable", SingleOperandOrExpr), then, label("other", SingleOperandOrExpr)).
 
         derive(DateDiffInterval).
-            to(count, DateDiffIntervalUnit, between, SingleOperandOrExpr, and, SingleOperandOrExpr).
+            to(count, label("unit", DateDiffIntervalUnit), between, label("startDate", SingleOperandOrExpr), and, label("endDate", SingleOperandOrExpr)).
 
         derive(DateDiffIntervalUnit).
             to(seconds).or(minutes).or(hours).or(days).or(months).or(years).
 
         derive(DateAddInterval).
-            to(addTimeIntervalOf, SingleOperandOrExpr, DateAddIntervalUnit, to, SingleOperandOrExpr).
+            to(addTimeIntervalOf, label("left", SingleOperandOrExpr), label("unit", DateAddIntervalUnit), to, label("right", SingleOperandOrExpr)).
 
         derive(DateAddIntervalUnit).
             to(seconds).or(minutes).or(hours).or(days).or(months).or(years).
@@ -149,7 +153,7 @@ public final class CanonicalEqlGrammar {
         derive(CaseWhen).
             to(caseWhen, Condition, then, SingleOperandOrExpr,
                     noneOrMore(when, Condition, then, SingleOperandOrExpr),
-                    optional(otherwise, SingleOperandOrExpr),
+                    optional(otherwise, label("otherwiseOperand", SingleOperandOrExpr)),
                     CaseWhenEnd).
 
         derive(CaseWhenEnd).
@@ -205,7 +209,7 @@ public final class CanonicalEqlGrammar {
             or(negatedCondition.with(ConditionModel.class)).
 
         derive(Join).
-            to(JoinOperator, optional(as.with(STR)), JoinCondition, optional(Join)).
+            to(JoinOperator, (optional(label("alias", as).with(STR))), JoinCondition, optional(Join)).
 
         derive(JoinOperator).
             to(join.with(Class.class)).
@@ -219,7 +223,7 @@ public final class CanonicalEqlGrammar {
             to(on, Condition).
 
         derive(GroupBy).
-            to(groupBy, SingleOperandOrExpr, optional(GroupBy)).
+            to(groupBy, label("operand", SingleOperandOrExpr), optional(GroupBy)).
 
         derive(FirstYield).
             to(yield, YieldOperand, modelAsEntity.with(Class.class)).
@@ -233,7 +237,7 @@ public final class CanonicalEqlGrammar {
             or(YieldOperandFunction).
 
         derive(YieldOperandFunction).
-            to(YieldOperandFunctionName, SingleOperandOrExpr).
+            to(label("funcName", YieldOperandFunctionName), label("argument", SingleOperandOrExpr)).
 
         derive(YieldOperandFunctionName).
             to(maxOf).or(minOf).or(sumOf).or(countOf).or(avgOf).
