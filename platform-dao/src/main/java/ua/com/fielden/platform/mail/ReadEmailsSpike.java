@@ -21,7 +21,7 @@ import jakarta.mail.StoreClosedException;
 import jakarta.mail.internet.InternetAddress;
 
 
-public class ReadEmails {
+public class ReadEmailsSpike {
 
     private void println(final String data) {
         out.println(data);
@@ -171,7 +171,7 @@ public class ReadEmails {
             err.println("Email server address, user and password are required.");
             System.exit(1);
         }
-        new ReadEmails().processMail(args[0], args[1], args[2]);
+        new ReadEmailsSpike().processMail(args[0], args[1], args[2]);
     }
 
 }

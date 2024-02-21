@@ -361,13 +361,13 @@ public class SmtpEmailSender {
     }
 
     /**
-     * This
+     * This method assumes that attachments have already been pre-validated and
+     * only valid files are passed in.
      *
      * @param fromAddress
      * @param csvToAddresses
      * @param subject
      * @param body
-     * @param type
      * @param attachments
      */
     private void sendPlainMessageWithAttachments(
