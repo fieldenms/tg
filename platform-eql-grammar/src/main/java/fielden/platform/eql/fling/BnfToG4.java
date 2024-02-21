@@ -1,13 +1,13 @@
 package fielden.platform.eql.fling;
 
-import il.ac.technion.cs.fling.EBNF;
+import fielden.platform.eql.fling.BNF.Rule;
 import il.ac.technion.cs.fling.internal.grammar.rules.*;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.uncapitalize;
 
 /**
@@ -19,14 +19,14 @@ import static org.apache.commons.lang3.StringUtils.uncapitalize;
  */
 public class BnfToG4 {
 
-    protected final EBNF bnf;
+    protected final BNF bnf;
     protected final String grammarName;
     protected final Map<Terminal, /*rule name*/ String> lexerRules;
 
-    public BnfToG4(EBNF bnf, String grammarName) {
+    public BnfToG4(BNF bnf, String grammarName) {
         this.bnf = bnf;
         this.grammarName = grammarName;
-        this.lexerRules = bnf.Σ.stream().map(tok -> tok.terminal).distinct()
+        this.lexerRules = bnf.tokens().stream().map(tok -> tok.terminal).distinct()
                 .collect(toMap(Function.identity(), t -> t.name().toUpperCase()));
     }
 
@@ -41,16 +41,9 @@ public class BnfToG4 {
         var sb = new StringBuilder();
 
         sb.append("grammar %s;\n\n".formatted(grammarName));
-        sb.append("start : %s EOF;\n\n".formatted(convert(bnf.ε)));
+        sb.append("start : %s EOF;\n\n".formatted(convert(bnf.start())));
 
-        bnf.rules()
-                .collect(groupingBy(rule -> rule.variable, LinkedHashMap::new, toList()))
-                .entrySet().stream()
-                .map(entry -> {
-                    var variable = entry.getKey();
-                    var rules = entry.getValue();
-                    return new ERule(variable, rules.stream().flatMap(ERule::bodies).toList());
-                })
+        bnf.rules().stream()
                 .map(this::convert)
                 .forEach(rule -> {
                     sb.append(rule);
@@ -73,11 +66,11 @@ public class BnfToG4 {
         return sb.toString();
     }
 
-    protected String convert(ERule eRule) {
-        Function<String, String> labeler = isSingleTerminalRule(eRule) ? s -> "token=" + s : Function.identity();
+    protected String convert(Rule rule) {
+        Function<String, String> labeler = isSingleTerminalRule(rule) ? s -> "token=" + s : Function.identity();
         return "%s :\n      %s\n;".formatted(
-                convert(eRule.variable),
-                eRule.bodies().map(this::convert).map(labeler).collect(joining("\n    | ")));
+                convert(rule.lhs()),
+                rule.rhs().map(this::convert).map(labeler).collect(joining("\n    | ")));
     }
 
     protected String convert(Body body) {
@@ -117,8 +110,12 @@ public class BnfToG4 {
         return quantifier.symbols().map(this::convert).collect(joining(" ", "(", ")" + q));
     }
 
-    static boolean isSingleTerminalRule(final ERule rule) {
-        return rule.bodies().allMatch(body -> body.size() == 1 && (body.getFirst().isTerminal() || body.getFirst().isToken()));
+    static boolean isSingleTerminalRule(final Rule rule) {
+        return switch (rule) {
+            case BNF.Specialization $ -> false;
+            case BNF.Derivation derivation -> derivation.rhs()
+                    .allMatch(body -> body.size() == 1 && (body.getFirst().isTerminal() || body.getFirst().isToken()));
+        };
     }
 
     protected static <T> T fail(String formatString, Object... args) {

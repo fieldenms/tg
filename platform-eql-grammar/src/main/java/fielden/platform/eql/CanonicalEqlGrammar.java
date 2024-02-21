@@ -1,9 +1,9 @@
 package fielden.platform.eql;
 
+import fielden.platform.eql.fling.BNF;
 import fielden.platform.eql.fling.BnfToG4;
 import fielden.platform.eql.fling.BnfToHtml;
 import fielden.platform.eql.fling.BnfToText;
-import il.ac.technion.cs.fling.EBNF;
 import il.ac.technion.cs.fling.internal.grammar.rules.Terminal;
 import il.ac.technion.cs.fling.internal.grammar.rules.Variable;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
@@ -17,8 +17,8 @@ import java.io.PrintStream;
 import static fielden.platform.eql.CanonicalEqlGrammar.EqlTerminal.values;
 import static fielden.platform.eql.CanonicalEqlGrammar.EqlTerminal.*;
 import static fielden.platform.eql.CanonicalEqlGrammar.EqlVariable.*;
+import static fielden.platform.eql.fling.BNF.Fluent.start;
 import static fielden.platform.eql.fling.BnfVerifier.verifyBnf;
-import static il.ac.technion.cs.fling.grammars.api.BNFAPI.bnf;
 import static il.ac.technion.cs.fling.internal.grammar.rules.Quantifiers.noneOrMore;
 import static il.ac.technion.cs.fling.internal.grammar.rules.Quantifiers.optional;
 
@@ -42,7 +42,7 @@ public final class CanonicalEqlGrammar {
      * <b>NOTE</b>: Should <b>not</b> be used for fluent API generation but for <b>reference</b> only.
      */
     // @formatter:off
-    public static final EBNF canonical_bnf = bnf().
+    public static final BNF canonical_bnf =
         start(Query).
 
         specialize(Query).

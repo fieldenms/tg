@@ -1,42 +1,29 @@
 package fielden.platform.eql.fling;
 
-import il.ac.technion.cs.fling.EBNF;
 import il.ac.technion.cs.fling.internal.grammar.rules.*;
 import il.ac.technion.cs.fling.internal.grammar.types.ClassParameter;
 import il.ac.technion.cs.fling.internal.grammar.types.Parameter;
 import il.ac.technion.cs.fling.internal.grammar.types.StringTypeParameter;
 import il.ac.technion.cs.fling.internal.grammar.types.VarargsClassParameter;
 
-import java.util.LinkedHashMap;
-import java.util.stream.Collectors;
-
-import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
 
 /**
- * Converts {@link EBNF} instances to a human-readable text format.
+ * Converts {@link BNF} instances to a human-readable text format.
  */
 public class BnfToText {
 
     public BnfToText() {}
 
-    public String bnfToText(EBNF ebnf) {
-        return ebnf.rules()
-                .collect(groupingBy(rule -> rule.variable, LinkedHashMap::new, Collectors.toList()))
-                .entrySet().stream()
-                .map(entry -> {
-                    var variable = entry.getKey();
-                    var rules = entry.getValue();
-                    return new ERule(variable, rules.stream().flatMap(ERule::bodies).toList());
-                })
-                .map(this::toString).collect(joining("\n\n"));
+    public String bnfToText(BNF ebnf) {
+        return ebnf.rules().stream().map(this::toString).collect(joining("\n\n"));
     }
 
-    protected String toString(ERule eRule) {
-        final int prefixLen = eRule.variable.name().length();
-        return eRule.bodies()
+    protected String toString(BNF.Rule rule) {
+        final int prefixLen = rule.lhs().name().length();
+        return rule.rhs()
                 .map(this::toString)
-                .collect(joining("\n%s | ".formatted(" ".repeat(prefixLen)), "%s = ".formatted(eRule.variable), ";"));
+                .collect(joining("\n%s | ".formatted(" ".repeat(prefixLen)), "%s = ".formatted(rule.lhs().name()), ";"));
     }
 
     protected String toString(final Body body) {

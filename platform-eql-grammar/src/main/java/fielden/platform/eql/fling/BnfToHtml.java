@@ -1,23 +1,19 @@
 package fielden.platform.eql.fling;
 
-import il.ac.technion.cs.fling.EBNF;
 import il.ac.technion.cs.fling.internal.grammar.rules.*;
 import il.ac.technion.cs.fling.internal.grammar.types.*;
 import j2html.tags.DomContent;
 
-import java.util.LinkedHashMap;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static j2html.TagCreator.*;
-import static java.util.stream.Collectors.groupingBy;
 
 /**
- * Converts {@link EBNF} instances to HTML.
+ * Converts {@link BNF} instances to HTML.
  */
 public class BnfToHtml {
 
@@ -29,7 +25,7 @@ public class BnfToHtml {
 
     public BnfToHtml() {}
 
-    public String bnfToHtml(EBNF ebnf) {
+    public String bnfToHtml(BNF bnf) {
         // @formatter:off
         return document(
                 html(
@@ -37,15 +33,7 @@ public class BnfToHtml {
                  body(
                   table(
                    each(withDelimiter(
-                           ebnf.rules()
-                                   .collect(groupingBy(rule -> rule.variable, LinkedHashMap::new, Collectors.toList()))
-                                   .entrySet().stream()
-                                   .map(entry -> {
-                                       var variable = entry.getKey();
-                                       var rules = entry.getValue();
-                                       return new ERule(variable, rules.stream().flatMap(ERule::bodies).toList());
-                                   })
-                                   .map(this::toHtml),
+                           bnf.rules().stream().map(this::toHtml),
                            tr(td(), td()).withClass(DELIMITER_ROW_CLASS)))
                   )
                  )
@@ -98,11 +86,11 @@ public class BnfToHtml {
         return style(sb.toString());
     }
 
-    protected DomContent toHtml(ERule eRule) {
+    protected DomContent toHtml(BNF.Rule rule) {
         var first = tr(
-                td(a(eRule.variable.name()).attr("name", eRule.variable.name()).withClass(NONTERMINAL_LHS_CLASS)),
+                td(a(rule.lhs().name()).attr("name", rule.lhs().name()).withClass(NONTERMINAL_LHS_CLASS)),
                 td(""));
-       var rest = eRule.bodies().map(this::toHtml);
+       var rest = rule.rhs().map(this::toHtml);
        return each(first, each(rest));
     }
 

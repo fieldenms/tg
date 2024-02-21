@@ -248,7 +248,8 @@ public class EqlGrammar {
     }
 
     public static void printBNF() {
-        System.out.println(new BnfToText().bnfToText(bnf));
+        // switched to our own BNF representation so this won't work
+//        System.out.println(new BnfToText().bnfToText(bnf));
     }
 
     private static String formatSource(String s, @Nullable Formatter formatter) throws FormatterException {
