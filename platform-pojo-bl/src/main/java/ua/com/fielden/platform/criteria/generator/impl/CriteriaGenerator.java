@@ -220,7 +220,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      */
     @Override
     public void clear() {
-        generatedClasses.invalidateAll();
+        generatedClasses.cleanUp();
     }
 
     /**
