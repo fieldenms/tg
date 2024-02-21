@@ -1,6 +1,8 @@
 package fielden.platform.eql.fling;
 
+import fielden.platform.eql.fling.BNF.Derivation;
 import fielden.platform.eql.fling.BNF.Rule;
+import fielden.platform.eql.fling.BNF.Specialization;
 import fielden.platform.eql.fling.LabeledTempSymbol.LabeledTerminal;
 import il.ac.technion.cs.fling.internal.grammar.rules.*;
 import ua.com.fielden.platform.utils.StreamUtils;
@@ -10,6 +12,7 @@ import java.util.function.Function;
 
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.capitalize;
 import static org.apache.commons.lang3.StringUtils.uncapitalize;
 
 /**
@@ -18,6 +21,9 @@ import static org.apache.commons.lang3.StringUtils.uncapitalize;
  * Rules with the right hand side in the form of a single terminal or an alternation between single terminals are
  * generated with <a href=https://github.com/antlr/antlr4/blob/master/doc/parser-rules.md#rule-element-labels>rule element labels</a>
  * to make the resulting parse trees easier to work with.
+ * <p>
+ * ANTLR parser rules corresponding to BNF <i>specialization</i> rules are generated with
+ * <a href=https://github.com/antlr/antlr4/blob/master/doc/parser-rules.md#alternative-labels>alternative labels</a>.
  */
 public class BnfToG4 {
 
@@ -72,10 +78,17 @@ public class BnfToG4 {
     }
 
     protected String convert(Rule rule) {
-        Function<String, String> labeler = isSingleTerminalRule(rule) ? s -> "token=" + s : Function.identity();
+        Function<String, String> labeler =  switch (rule) {
+            case Derivation $ -> isSingleTerminalRule(rule) ? s -> "token=" + s : Function.identity();
+            case Specialization $ -> s -> makeAltLabelName(rule, s);
+        };
         return "%s :\n      %s\n;".formatted(
                 convert(rule.lhs()),
                 rule.rhs().map(this::convert).map(labeler).collect(joining("\n    | ")));
+    }
+
+    protected String makeAltLabelName(Rule rule, String alt) {
+        return "%s # %s_%s".formatted(alt, capitalize(rule.lhs().name()), capitalize(alt));
     }
 
     protected String convert(Body body) {
@@ -127,8 +140,8 @@ public class BnfToG4 {
 
     static boolean isSingleTerminalRule(final Rule rule) {
         return switch (rule) {
-            case BNF.Specialization $ -> false;
-            case BNF.Derivation derivation -> derivation.rhs()
+            case Specialization $ -> false;
+            case Derivation derivation -> derivation.rhs()
                     .allMatch(body -> body.size() == 1 && (body.getFirst().isTerminal() || body.getFirst().isToken()));
         };
     }
