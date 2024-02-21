@@ -284,11 +284,23 @@ public record BNF(
             tokens.add(t);
         }
 
+        private void add(final LabeledTempSymbol symbol) {
+            add(symbol.symbol().normalize());
+        }
+
+        private void add(final Symbol symbol) {
+            switch (symbol) {
+                case Variable v -> add(v);
+                case Token tok -> add(tok);
+                case LabeledTempSymbol s -> add(s);
+                default -> throw new IllegalStateException("Unexpected value: " + symbol);
+            }
+        }
+
         private void add(final Component component) {
             switch (component) {
                 case Quantifier q -> add(q);
-                case Token tok -> add(tok);
-                case Variable v -> add(v);
+                case Symbol sym -> add(sym);
                 default -> throw new IllegalStateException("Unexpected value: " + component);
             }
         }
