@@ -255,7 +255,35 @@ public class SmtpEmailSender {
         }
 
         final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.PLAIN, body, filePaths);
-        sendPlainMessageWithAttachments(fromAddress, csvToAddresses, subject, t2._1, t2._2);
+        sendPlainMessageWithAttachments(empty(), fromAddress, csvToAddresses, subject, t2._1, t2._2);
+    }
+
+    /**
+     * Sends a plain text email with attachments and custom Reply-To addresses.
+     *
+     * @param csvReplyToAddresses
+     * @param fromAddress
+     * @param csvToAddresses
+     * @param subject
+     * @param body
+     * @param filePaths
+     */
+    public void sendPlainMessageWithAttachments(
+            final String csvReplyToAddresses,
+            final String fromAddress,
+            final String csvToAddresses,
+            final String subject,
+            final String body,
+            final Path... filePaths) {
+        if (filePaths.length == 0) {
+            throw new EmailException(ERR_AT_LEAST_ONE_ATTACHMENT_IS_EXPECTED);
+        }
+        if (StringUtils.isBlank(csvReplyToAddresses)) {
+            throw new EmailException(ERR_ARGUMENT_CSV_REPLY_TO_ADDRESSES_CANNOT_BE_BLANK);
+        }
+
+        final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.PLAIN, body, filePaths);
+        sendPlainMessageWithAttachments(of(csvReplyToAddresses), fromAddress, csvToAddresses, subject, t2._1, t2._2);
     }
 
     /**
@@ -280,7 +308,37 @@ public class SmtpEmailSender {
         }
 
         final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.PLAIN, body, coAttachment, attachments);
-        sendPlainMessageWithAttachments(fromAddress, csvToAddresses, subject, t2._1, t2._2);
+        sendPlainMessageWithAttachments(empty(), fromAddress, csvToAddresses, subject, t2._1, t2._2);
+    }
+
+    /**
+     * Sends a plain text email with attachments and custom Reply-To addresses.
+     *
+     * @param csvReplyToAddresses
+     * @param fromAddress
+     * @param csvToAddresses
+     * @param subject
+     * @param body
+     * @param coAttachment
+     * @param attachments
+     */
+    public void sendPlainMessageWithAttachments(
+            final String csvReplyToAddresses,
+            final String fromAddress,
+            final String csvToAddresses,
+            final String subject,
+            final String body,
+            final IAttachment coAttachment,
+            final Attachment... attachments) {
+        if (attachments.length == 0) {
+            throw new EmailException(ERR_AT_LEAST_ONE_ATTACHMENT_IS_EXPECTED);
+        }
+        if (StringUtils.isBlank(csvReplyToAddresses)) {
+            throw new EmailException(ERR_ARGUMENT_CSV_REPLY_TO_ADDRESSES_CANNOT_BE_BLANK);
+        }
+
+        final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.PLAIN, body, coAttachment, attachments);
+        sendPlainMessageWithAttachments(of(csvReplyToAddresses), fromAddress, csvToAddresses, subject, t2._1, t2._2);
     }
 
     /**
@@ -413,6 +471,7 @@ public class SmtpEmailSender {
      * This method assumes that attachments have already been pre-validated and
      * only valid files are passed in.
      *
+     * @param csvReplyToAddresses
      * @param fromAddress
      * @param csvToAddresses
      * @param subject
@@ -420,6 +479,7 @@ public class SmtpEmailSender {
      * @param attachments
      */
     private void sendPlainMessageWithAttachments(
+            final Optional<String> csvReplyToAddresses,
             final String fromAddress,
             final String csvToAddresses,
             final String subject,
@@ -429,6 +489,9 @@ public class SmtpEmailSender {
             final Session session = newEmailSession();
             final MimeMessage message = new MimeMessage(session);
             message.setFrom(new InternetAddress(fromAddress));
+            if (csvReplyToAddresses.isPresent()) {
+                assignReplyToAddresses(csvReplyToAddresses.get(), message);
+            }
             assignToAddresses(csvToAddresses, message);
             message.setSubject(subject);
 
@@ -454,6 +517,9 @@ public class SmtpEmailSender {
             final Session session = newEmailSession();
             final MimeMessage message = new MimeMessage(session);
             message.setFrom(new InternetAddress(fromAddress));
+            if (csvReplyToAddresses.isPresent()) {
+                assignReplyToAddresses(csvReplyToAddresses.get(), message);
+            }
             assignToAddresses(csvToAddresses, message);
             message.setSubject(subject);
 
