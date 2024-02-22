@@ -16,4 +16,9 @@ public record OneOrMore(Term term, TermMetadata metadata) implements Notation {
         return new OneOrMore(term);
     }
 
+    @Override
+    public String toString() {
+        return "{%s}+".formatted(term);
+    }
+
 }

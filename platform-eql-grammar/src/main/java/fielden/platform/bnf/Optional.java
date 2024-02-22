@@ -16,4 +16,9 @@ public record Optional(Term term, TermMetadata metadata) implements Notation {
         return new Optional(term);
     }
 
+    @Override
+    public String toString() {
+        return "{%s}?".formatted(term);
+    }
+
 }

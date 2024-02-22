@@ -3,6 +3,8 @@ package fielden.platform.bnf;
 import java.util.Arrays;
 import java.util.List;
 
+import static java.util.stream.Collectors.joining;
+
 /**
  * A token is a parameterised terminal.
  */
@@ -29,6 +31,13 @@ public record Token(String name, TermMetadata metadata, List<? extends Parameter
     @Override
     public Token normalize() {
         return new Token(name, TermMetadata.EMPTY_METADATA, parameters);
+    }
+
+    @Override
+    public String toString() {
+        return "%s%s".formatted(
+                name,
+                parameters.isEmpty() ? "" : parameters.stream().map(Parameter::toString).collect(joining(",", "(", ")")));
     }
 
 }

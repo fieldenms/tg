@@ -1,5 +1,7 @@
 package fielden.platform.bnf;
 
+import java.util.Objects;
+
 /**
  * A variable is a nonterminal symbol.
  */
@@ -30,6 +32,16 @@ public non-sealed interface Variable extends Symbol {
             @Override
             public TermMetadata metadata() {
                 return newMetadata;
+            }
+
+            @Override
+            public String toString() {
+                return name;
+            }
+
+            @Override
+            public int hashCode() {
+                return Objects.hash(name, newMetadata);
             }
         };
     }

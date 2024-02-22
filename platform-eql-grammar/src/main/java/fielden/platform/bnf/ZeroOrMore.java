@@ -16,4 +16,9 @@ public record ZeroOrMore(Term term, TermMetadata metadata) implements Notation {
         return new ZeroOrMore(term);
     }
 
+    @Override
+    public String toString() {
+        return "{%s}*".formatted(term);
+    }
+
 }
