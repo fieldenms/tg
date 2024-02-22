@@ -28,14 +28,5 @@ public interface ICriteriaGenerator {
         final Optional<String> saveAsName,
         final ICentreDomainTreeManagerAndEnhancer centreManager
     );
-    
-    /**
-     * Clears the state in this {@link ICriteriaGenerator} instance.
-     * <p>
-     * {@link ICriteriaGenerator} is used for generation of selection criteria entity and is thus closely related to Web UI configurations.
-     * This method is potentially useful for situations where Web UI configurations should be re-created and invalidated, for e.g. in Eclipse Debug mode
-     * to preserve open server when adding / removing selection criteria properties to Web UI centre configurations.
-     */
-    void clear();
-    
+
 }

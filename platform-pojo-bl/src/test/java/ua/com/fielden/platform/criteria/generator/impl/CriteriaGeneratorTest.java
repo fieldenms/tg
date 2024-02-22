@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import com.google.inject.Injector;
@@ -494,6 +495,11 @@ public class CriteriaGeneratorTest {
                 }
             }
         };
+    }
+
+    @Before
+    public void setup() {
+        CriteriaGenerator.invalidateCache();
     }
 
     @Test
