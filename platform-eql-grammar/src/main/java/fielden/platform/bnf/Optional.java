@@ -11,4 +11,9 @@ public record Optional(Term term, TermMetadata metadata) implements Notation {
         return new Optional(term, TermMetadata.merge(metadata(), key, value));
     }
 
+    @Override
+    public Optional normalize() {
+        return new Optional(term);
+    }
+
 }

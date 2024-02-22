@@ -18,14 +18,25 @@ public non-sealed interface Terminal extends Symbol {
     }
 
     @Override
+    default Terminal normalize() {
+        return this;
+    }
+
+    @Override
     default <V> Terminal annotate(TermMetadata.Key<V> key, V value) {
         final var newMetadata = TermMetadata.merge(metadata(), key, value);
         final String name = name();
+        final Terminal normal = normalize();
 
         return new Terminal() {
             @Override
             public String name() {
                 return name;
+            }
+
+            @Override
+            public Terminal normalize() {
+                return normal;
             }
 
             @Override

@@ -11,4 +11,9 @@ public record OneOrMore(Term term, TermMetadata metadata) implements Notation {
         return new OneOrMore(term, TermMetadata.merge(metadata(), key, value));
     }
 
+    @Override
+    public OneOrMore normalize() {
+        return new OneOrMore(term);
+    }
+
 }

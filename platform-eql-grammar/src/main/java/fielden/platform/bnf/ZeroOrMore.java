@@ -11,4 +11,9 @@ public record ZeroOrMore(Term term, TermMetadata metadata) implements Notation {
         return new ZeroOrMore(term, TermMetadata.merge(metadata(), key, value));
     }
 
+    @Override
+    public ZeroOrMore normalize() {
+        return new ZeroOrMore(term);
+    }
+
 }

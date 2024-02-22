@@ -26,6 +26,11 @@ public final class Sequence implements List<Term>, Term {
     }
 
     @Override
+    public Term normalize() {
+        return new Sequence(terms);
+    }
+
+    @Override
     public <V> Sequence annotate(final TermMetadata.Key<V> key, final V value) {
         return new Sequence(terms, TermMetadata.merge(metadata, key, value));
     }

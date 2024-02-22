@@ -26,4 +26,9 @@ public record Token(String name, TermMetadata metadata, List<? extends Parameter
         return !parameters.isEmpty();
     }
 
+    @Override
+    public Token normalize() {
+        return new Token(name, TermMetadata.EMPTY_METADATA, parameters);
+    }
+
 }
