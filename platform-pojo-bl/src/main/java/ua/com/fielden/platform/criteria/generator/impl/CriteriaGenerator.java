@@ -100,13 +100,12 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 
     private final ICompanionObjectFinder coFinder;
 
-    private final Cache<T3<User, Class<? extends MiWithConfigurationSupport<?>>, Optional<String>>, Class<?>> generatedClasses;
+    private static final Cache<T3<User, Class<? extends MiWithConfigurationSupport<?>>, Optional<String>>, Class<?>> GENERATED_CLASSES = CacheBuilder.newBuilder().expireAfterAccess(Duration.ofMinutes(5)).maximumSize(2000).concurrencyLevel(50).initialCapacity(500).build();;
 
     @Inject
     public CriteriaGenerator(final EntityFactory entityFactory, final ICompanionObjectFinder controllerProvider) {
         this.entityFactory = entityFactory;
         this.coFinder = controllerProvider;
-        this.generatedClasses = CacheBuilder.newBuilder().expireAfterAccess(Duration.ofMinutes(5)).maximumSize(2000).concurrencyLevel(50).build();
     }
 
     @SuppressWarnings({ "unchecked", "deprecation" })
@@ -167,7 +166,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
             final T3<User, Class<? extends MiWithConfigurationSupport<?>>, Optional<String>> configKey = t3(user, miType, saveAsName);
             final Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>> queryCriteriaClass;
             try {
-                queryCriteriaClass = (Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>) generatedClasses.get(configKey, () -> {
+                queryCriteriaClass = (Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>) GENERATED_CLASSES.get(configKey, () -> {
                     final MiType miTypeAnnotation = new MiTypeAnnotation().newInstance(miType);
                     final Annotation [] customAnnotations = saveAsName.map(name -> new Annotation[] {miTypeAnnotation, new SaveAsNameAnnotation().newInstance(name)}).orElseGet(() -> new Annotation[] {miTypeAnnotation});
                     return generateCriteriaType(root, centreManager.getFirstTick().checkedProperties(root), centreManager.getEnhancer().getManagedType(root), customAnnotations);
@@ -222,13 +221,21 @@ public class CriteriaGenerator implements ICriteriaGenerator {
     }
 
     /**
-     * {@inheritDoc}
-     * <p>
-     * This implementation clears generated selection criteria classes that become out-dated when adding / removing selection criteria properties to Web UI centre configurations.
+     * Clears/invalidates the cache of generated entity classes, which represent selection criteria entities and are closely related to Web UI configurations.
+     * This method is primarily designed for situations where Web UI configurations need to be re-created and invalidated, such as when running the app in a debug mode
+     * where selection criteria are added/removed from Web UI centre configurations.
      */
-    @Override
-    public void clear() {
-        generatedClasses.cleanUp();
+    public static void invalidateCache() {
+        GENERATED_CLASSES.invalidateAll();
+    }
+
+    /**
+     * A convenient method to kick-in a cleanup of the cache with generated entity classes.
+     * This method is intended to be used in a cleanup service to create an opportunity for performing the cache maintenance operations.
+     */
+    public static long cleanUp() {
+        GENERATED_CLASSES.cleanUp();
+        return GENERATED_CLASSES.size();
     }
 
     /**
