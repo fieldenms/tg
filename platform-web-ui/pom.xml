@@ -35,6 +35,9 @@
                 <directory>src/main/web</directory>
             </resource>
             <resource>
+                <directory>src/main/ts</directory>
+            </resource>
+            <resource>
                 <directory>src/test/web</directory>
                 <excludes>
                     <exclude>**/*.*</exclude>

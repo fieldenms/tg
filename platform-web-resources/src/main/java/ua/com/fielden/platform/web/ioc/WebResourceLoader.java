@@ -10,6 +10,7 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.basic.config.Workflows.deployment;
 import static ua.com.fielden.platform.basic.config.Workflows.vulcanizing;
 import static ua.com.fielden.platform.serialisation.api.SerialiserEngines.JACKSON;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.ResourceLoader.getStream;
 import static ua.com.fielden.platform.utils.ResourceLoader.getText;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.getCustomView;
@@ -23,6 +24,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -36,6 +40,7 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.serialisation.jackson.EntityType;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
@@ -276,7 +281,50 @@ public class WebResourceLoader implements IWebResourceLoader {
     }
 
     private static Optional<String> getFileSource(final String filePath) {
-        return ofNullable(getText(filePath));
+        return ofNullable(replaceBareModuleSpecifier(getText(filePath)));
     }
 
+    private static String replaceBareModuleSpecifier(String fileText) {
+        if (fileText != null) {
+            final Pattern importWithFrom = Pattern.compile("((import|export)\\s*?[^;]+?\\s*?from\\s*?[\"'])([^\\/\\/.][^\"']*?)([\"'];)", Pattern.MULTILINE);
+            final Pattern simpleImport = Pattern.compile("((import\\s*?)[\"'])([^\\/\\.][^\"']*?)([\"'];)", Pattern.MULTILINE);
+
+            return importWithFrom.matcher(simpleImport.matcher(fileText).replaceAll(WebResourceLoader::nodeResolver))
+                    .replaceAll(WebResourceLoader::nodeResolver);
+        }
+        return null;
+    }
+
+    private static String nodeResolver(MatchResult matchResult) {
+        return matchResult.group(1) + "/resources/node_modules/" + resolveModule(matchResult.group(3)) + matchResult.group(4);
+    }
+
+    private static String resolveModule(final String moduleName) {
+        if (moduleName.endsWith(".js")) {
+            return moduleName;
+        } else if (moduleName.indexOf(".") < 0){
+            String packagePath = generateFileName(listOf("node_modules/"), moduleName + "/package.json");
+            if (!isEmpty(packagePath)) {
+                return getMain(getText(packagePath))
+                        .map(mainModuleName -> moduleName + "/" + mainModuleName)
+                        .orElse(moduleName + "/index.js");
+            } else {
+                return moduleName + "/index.js";
+            }
+        } else {
+            return moduleName;
+        }
+
+    }
+
+    private static Optional<String> getMain(final String fileText) {
+        if (fileText != null) {
+            Pattern pattern = Pattern.compile("['\"]?+main['\"]?+\\s*?:\\s*?[\"'](.+)[\"']", Pattern.MULTILINE);
+            Matcher matcher = pattern.matcher(fileText);
+            if (matcher.find()) {
+                return Optional.ofNullable(matcher.group(1));
+            }
+        }
+        return Optional.empty();
+    }
 }
