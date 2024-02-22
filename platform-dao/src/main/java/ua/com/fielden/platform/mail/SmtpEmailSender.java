@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.mail;
 
+import static java.util.Optional.*;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static java.lang.String.format;
-import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
@@ -10,9 +10,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
@@ -47,6 +45,8 @@ import ua.com.fielden.platform.types.tuples.T2;
  *
  */
 public class SmtpEmailSender {
+
+    public static final String ERR_ARGUMENT_CSV_REPLY_TO_ADDRESSES_CANNOT_BE_BLANK = "Argument [csvReplyToAddresses] cannot be blank.";
 
     private static enum EmailType {
         PLAIN {
@@ -171,7 +171,28 @@ public class SmtpEmailSender {
             final String csvToAddresses,
             final String subject,
             final String body) {
-        sendMessage(fromAddress, csvToAddresses, subject, body, EmailType.PLAIN);
+        sendMessage(empty(), fromAddress, csvToAddresses, subject, body, EmailType.PLAIN);
+    }
+
+    /**
+     * Sends a plain text email with no attachments and custom Reply-To addresses
+     *
+     * @param csvReplyToAddresses
+     * @param fromAddress
+     * @param csvToAddresses
+     * @param subject
+     * @param body
+     */
+    public void sendPlainMessage(
+            final String csvReplyToAddresses,
+            final String fromAddress,
+            final String csvToAddresses,
+            final String subject,
+            final String body) {
+        if (StringUtils.isBlank(csvReplyToAddresses)) {
+            throw new EmailException(ERR_ARGUMENT_CSV_REPLY_TO_ADDRESSES_CANNOT_BE_BLANK);
+        }
+        sendMessage(of(csvReplyToAddresses), fromAddress, csvToAddresses, subject, body, EmailType.PLAIN);
     }
 
     /**
@@ -187,7 +208,28 @@ public class SmtpEmailSender {
             final String csvToAddresses,
             final String subject,
             final String body) {
-        sendMessage(fromAddress, csvToAddresses, subject, body, EmailType.HTML);
+        sendMessage(empty(), fromAddress, csvToAddresses, subject, body, EmailType.HTML);
+    }
+
+    /**
+     * Sends a HTML text email with no attachments and custom Reply-To addresses
+     *
+     * @param csvReplyToAddresses
+     * @param fromAddress
+     * @param csvToAddresses
+     * @param subject
+     * @param body
+     */
+    public void sendHtmlMessage(
+            final String csvReplyToAddresses,
+            final String fromAddress,
+            final String csvToAddresses,
+            final String subject,
+            final String body) {
+        if (StringUtils.isBlank(csvReplyToAddresses)) {
+            throw new EmailException(ERR_ARGUMENT_CSV_REPLY_TO_ADDRESSES_CANNOT_BE_BLANK);
+        }
+        sendMessage(of(csvReplyToAddresses), fromAddress, csvToAddresses, subject, body, EmailType.HTML);
     }
 
     /**
@@ -340,6 +382,7 @@ public class SmtpEmailSender {
 
 
     private void sendMessage(
+            final Optional<String> csvReplyToAddresses,
             final String fromAddress,
             final String csvToAddresses,
             final String subject,
@@ -349,6 +392,9 @@ public class SmtpEmailSender {
             final Session session = newEmailSession();
             final MimeMessage message = new MimeMessage(session);
             message.setFrom(new InternetAddress(fromAddress));
+            if (csvReplyToAddresses.isPresent()) {
+                assignReplyToAddresses(csvReplyToAddresses.get(), message);
+            }
             assignToAddresses(csvToAddresses, message);
             message.setSubject(subject);
             type.setBodyText(message, body);
@@ -427,11 +473,20 @@ public class SmtpEmailSender {
      * @throws MessagingException
      * @throws AddressException
      */
-    private void assignToAddresses(final String csvToAddresses, final MimeMessage message) throws MessagingException, AddressException {
+    private static void assignToAddresses(final String csvToAddresses, final MimeMessage message) throws MessagingException {
         final String[] toAddresses = csvToAddresses.trim().split("[,;]");
-        for (final String toAddresse : toAddresses) {
-            message.addRecipient(Message.RecipientType.TO, new InternetAddress(toAddresse));
+        for (final String toAddress : toAddresses) {
+            message.addRecipient(Message.RecipientType.TO, new InternetAddress(toAddress));
         }
+    }
+
+    private static void assignReplyToAddresses(final String csvReplyToAddresses, final MimeMessage message) throws MessagingException {
+        final var replyToAddresses = csvReplyToAddresses.trim().split("[,;]");
+        final var addresses = new InternetAddress[replyToAddresses.length];
+        for (int index = 0; index < addresses.length; index++) {
+            addresses[index] = new InternetAddress(replyToAddresses[index]);
+        }
+        message.setReplyTo(addresses);
     }
 
     private static void addImagesInline(final Multipart parent, final Path[] images) throws MessagingException {
@@ -506,9 +561,9 @@ public class SmtpEmailSender {
         return Stream.of(filePaths).map(path -> {
             final File file = path.toFile();
             if (file.exists() && file.canRead()) {
-                return t2(Optional.of(file), file.getName());
+                return t2(of(file), file.getName());
             } else {
-                return t2(Optional.empty(), file.getName());
+                return t2(empty(), file.getName());
             }
         });
     }
