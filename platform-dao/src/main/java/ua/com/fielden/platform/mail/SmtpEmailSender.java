@@ -47,6 +47,9 @@ import ua.com.fielden.platform.types.tuples.T2;
 public class SmtpEmailSender {
 
     public static final String ERR_ARGUMENT_CSV_REPLY_TO_ADDRESSES_CANNOT_BE_BLANK = "Argument [csvReplyToAddresses] cannot be blank.";
+    public static final String ERR_AT_LEAST_ONE_ATTACHMENT_IS_EXPECTED = "At least one attachment is expected.";
+    public static final String ERR_AT_LEAST_ONE_IMAGE_IS_EXPECTED = "At least one image is expected.";
+    public static final String ERR_EMAIL_SENDING_FAILED = "Error during email sending.";
 
     private static enum EmailType {
         PLAIN {
@@ -248,7 +251,7 @@ public class SmtpEmailSender {
             final String body,
             final Path... filePaths) {
         if (filePaths.length == 0) {
-            throw new EmailException("At least one attachment is expected.");
+            throw new EmailException(ERR_AT_LEAST_ONE_ATTACHMENT_IS_EXPECTED);
         }
 
         final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.PLAIN, body, filePaths);
@@ -273,7 +276,7 @@ public class SmtpEmailSender {
             final IAttachment coAttachment,
             final Attachment... attachments) {
         if (attachments.length == 0) {
-            throw new EmailException("At least one attachment is expected.");
+            throw new EmailException(ERR_AT_LEAST_ONE_ATTACHMENT_IS_EXPECTED);
         }
 
         final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.PLAIN, body, coAttachment, attachments);
@@ -296,7 +299,7 @@ public class SmtpEmailSender {
             final String body,
             final Path... filePaths) {
         if (filePaths.length == 0) {
-            throw new EmailException("At least one attachment is expected.");
+            throw new EmailException(ERR_AT_LEAST_ONE_ATTACHMENT_IS_EXPECTED);
         }
 
         final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.HTML, body, filePaths);
@@ -320,7 +323,7 @@ public class SmtpEmailSender {
             final IAttachment coAttachment,
             final Attachment... attachments) {
         if (attachments.length == 0) {
-            throw new EmailException("At least one attachment is expected.");
+            throw new EmailException(ERR_AT_LEAST_ONE_ATTACHMENT_IS_EXPECTED);
         }
 
         final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.HTML, body, coAttachment, attachments);
@@ -347,11 +350,11 @@ public class SmtpEmailSender {
             final IAttachment coAttachment,
             final Attachment... attachments) {
         if (imagePaths.length == 0) {
-            throw new EmailException("At least one image is expected.");
+            throw new EmailException(ERR_AT_LEAST_ONE_IMAGE_IS_EXPECTED);
         }
 
         if (attachments.length == 0) {
-            throw new EmailException("At least one attachment is expected.");
+            throw new EmailException(ERR_AT_LEAST_ONE_ATTACHMENT_IS_EXPECTED);
         }
 
         final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.HTML, body, coAttachment, attachments);
@@ -401,8 +404,8 @@ public class SmtpEmailSender {
             message.setSentDate(new Timestamp(System.currentTimeMillis()));
             Transport.send(message);
         } catch (final Exception ex) {
-            logger.error("Error during email sending.", ex);
-            throw new EmailException("Error during email sending.", ex);
+            logger.error(ERR_EMAIL_SENDING_FAILED, ex);
+            throw new EmailException(ERR_EMAIL_SENDING_FAILED, ex);
         }
     }
 
@@ -434,8 +437,8 @@ public class SmtpEmailSender {
             message.saveChanges();
             Transport.send(message);
         } catch (final Exception ex) {
-            logger.error("Error during email sending.", ex);
-            throw new EmailException("Error during email sending.", ex);
+            logger.error(ERR_EMAIL_SENDING_FAILED, ex);
+            throw new EmailException(ERR_EMAIL_SENDING_FAILED, ex);
         }
 
     }
@@ -460,8 +463,8 @@ public class SmtpEmailSender {
             message.saveChanges();
             Transport.send(message);
         } catch (final Exception ex) {
-            logger.error("Error during email sending.", ex);
-            throw new EmailException("Error during email sending.", ex);
+            logger.error(ERR_EMAIL_SENDING_FAILED, ex);
+            throw new EmailException(ERR_EMAIL_SENDING_FAILED, ex);
         }
     }
 
