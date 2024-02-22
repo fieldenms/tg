@@ -1,16 +1,21 @@
 package fielden.platform.bnf.util;
 
 import fielden.platform.bnf.*;
-import ua.com.fielden.platform.utils.StreamUtils;
 
-import java.util.Map;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.ZonedDateTime;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.function.Function;
 
 import static fielden.platform.bnf.TermMetadata.LABEL;
-import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.*;
 import static org.apache.commons.lang3.StringUtils.capitalize;
 import static org.apache.commons.lang3.StringUtils.uncapitalize;
+import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
 
 /**
  * Converts a BNF to an ANTLR grammar in the g4 format.
@@ -26,25 +31,20 @@ public class BnfToG4 {
 
     protected final BNF bnf;
     protected final String grammarName;
-    protected final Map<Terminal, /*rule name*/ String> lexerRules;
 
     public BnfToG4(BNF bnf, String grammarName) {
-        this.bnf = bnf;
+        this.bnf = stripParameters(bnf);
         this.grammarName = grammarName;
-        this.lexerRules = bnf.terminals().stream().distinct()
-                .collect(toMap(Function.identity(), t -> t.name().toUpperCase()));
     }
 
     protected String lexerRule(Terminal terminal) {
-        String rule = lexerRules.get(terminal);
-        if (rule == null)
-            throw new IllegalArgumentException("Terminal doesn't belong to this grammar: %s".formatted(terminal));
-        return rule;
+        return terminal.name().toUpperCase();
     }
 
     public String bnfToG4() {
         var sb = new StringBuilder();
 
+        sb.append("// This grammar was generated. Timestamp: %s\n\n".formatted(ZonedDateTime.now().toString()));
         sb.append("grammar %s;\n\n".formatted(grammarName));
         sb.append("start : %s EOF;\n\n".formatted(convert(bnf.start())));
 
@@ -56,12 +56,10 @@ public class BnfToG4 {
                     sb.append('\n');
                 });
 
-        StreamUtils.distinct(lexerRules.entrySet().stream(), Map.Entry::getValue)
-                .forEach(entry -> {
-                    var terminal = entry.getKey();
-                    var ruleName = entry.getValue();
-                    sb.append("%s : '%s' ;\n".formatted(ruleName, terminal.name()));
-                });
+        bnf.terminals().stream()
+                .map(terminal -> "%s : '%s' ;\n".formatted(lexerRule(terminal), terminal.name()))
+                .distinct()
+                .forEach(sb::append);
 
         sb.append("""
                 
@@ -153,6 +151,38 @@ public class BnfToG4 {
             case Specialization $ -> false;
             case Derivation derivation -> derivation.rhs()
                     .allMatch(body -> body.size() == 1 && body.getFirst() instanceof Terminal);
+        };
+    }
+
+    private static BNF stripParameters(final BNF bnf) {
+        final Set<Rule> newRules = bnf.rules().stream()
+                .map(rule -> switch (rule) {
+                    case Derivation derivation -> derivation.map(term -> switch (term) {
+                        case Token token -> token.stripParameters();
+                        default -> term;
+                    });
+                    case Specialization $ -> $;
+                })
+                .map(BnfToG4::deduplicate)
+                .collect(toCollection(LinkedHashSet::new));
+
+        final Set<Terminal> newTerminals = bnf.terminals().stream()
+                .map(terminal -> switch (terminal) {
+                    case Token token -> token.stripParameters();
+                    default -> terminal;
+                })
+                .collect(toSet());
+
+        return new BNF(newTerminals, bnf.variables(), bnf.start(), newRules);
+    }
+
+    /**
+     * @return a new rule without duplicate alternations on the right-hand side
+     */
+    private static Rule deduplicate(Rule rule) {
+        return switch (rule) {
+            case Derivation d -> new Derivation(d.lhs(), d.rhs().distinct().toList());
+            case Specialization s -> new Specialization(s.lhs(), s.specializers().stream().distinct().toList());
         };
     }
 

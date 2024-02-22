@@ -1,10 +1,7 @@
 package fielden.platform.bnf;
 
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.IntFunction;
-import java.util.function.Predicate;
-import java.util.function.UnaryOperator;
+import java.util.function.*;
 import java.util.stream.Stream;
 
 public final class Sequence implements List<Term>, Term {
@@ -12,12 +9,12 @@ public final class Sequence implements List<Term>, Term {
     private final List<Term> terms;
     private final TermMetadata metadata;
 
-    public Sequence(Collection<Term> terms, TermMetadata metadata) {
+    public Sequence(Collection<? extends Term> terms, TermMetadata metadata) {
         this.terms = List.copyOf(terms);
         this.metadata = metadata;
     }
 
-    public Sequence(Collection<Term> terms) {
+    public Sequence(Collection<? extends Term> terms) {
         this(terms, TermMetadata.EMPTY_METADATA);
     }
 
@@ -33,6 +30,10 @@ public final class Sequence implements List<Term>, Term {
     @Override
     public <V> Sequence annotate(final TermMetadata.Key<V> key, final V value) {
         return new Sequence(terms, TermMetadata.merge(metadata, key, value));
+    }
+
+    public Sequence map(final Function<? super Term, ? extends Term> mapper) {
+        return new Sequence(terms.stream().map(mapper).toList());
     }
 
     @Override

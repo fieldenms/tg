@@ -2,6 +2,7 @@ package fielden.platform.bnf;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
@@ -24,6 +25,10 @@ public final class Derivation implements Rule {
     @Override
     public Variable lhs() {
         return lhs;
+    }
+
+    public Rule map(final Function<? super Term, ? extends Term> mapper) {
+        return new Derivation(lhs, rhs.stream().map(seq -> seq.map(mapper)).toList());
     }
 
     @Override

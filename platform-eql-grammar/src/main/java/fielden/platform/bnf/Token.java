@@ -33,6 +33,12 @@ public record Token(String name, TermMetadata metadata, List<? extends Parameter
         return new Token(name, TermMetadata.EMPTY_METADATA, parameters);
     }
 
+    public Token stripParameters() {
+        if (hasParameters())
+            return new Token(name, metadata);
+        return this;
+    }
+
     @Override
     public String toString() {
         return "%s%s".formatted(
