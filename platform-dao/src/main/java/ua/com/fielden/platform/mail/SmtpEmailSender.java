@@ -361,7 +361,35 @@ public class SmtpEmailSender {
         }
 
         final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.HTML, body, filePaths);
-        sendHtmlMessageWithImagesAndAttachments(fromAddress, csvToAddresses, subject, t2._1, new Path[] {}, t2._2);
+        sendHtmlMessageWithImagesAndAttachments(empty(), fromAddress, csvToAddresses, subject, t2._1, new Path[] {}, t2._2);
+    }
+
+    /**
+     * Sends a HTML text email with attachments with custom Reply-To addresses.
+     *
+     * @param csvReplyToAddresses
+     * @param fromAddress
+     * @param csvToAddresses
+     * @param subject
+     * @param body
+     * @param filePaths
+     */
+    public void sendHtmlMessageWithAttachments(
+            final String csvReplyToAddresses,
+            final String fromAddress,
+            final String csvToAddresses,
+            final String subject,
+            final String body,
+            final Path... filePaths) {
+        if (filePaths.length == 0) {
+            throw new EmailException(ERR_AT_LEAST_ONE_ATTACHMENT_IS_EXPECTED);
+        }
+        if (StringUtils.isBlank(csvReplyToAddresses)) {
+            throw new EmailException(ERR_ARGUMENT_CSV_REPLY_TO_ADDRESSES_CANNOT_BE_BLANK);
+        }
+
+        final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.HTML, body, filePaths);
+        sendHtmlMessageWithImagesAndAttachments(of(csvReplyToAddresses), fromAddress, csvToAddresses, subject, t2._1, new Path[] {}, t2._2);
     }
 
     /**
@@ -385,8 +413,38 @@ public class SmtpEmailSender {
         }
 
         final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.HTML, body, coAttachment, attachments);
-        sendHtmlMessageWithImagesAndAttachments(fromAddress, csvToAddresses, subject, t2._1, new Path[] {}, t2._2);
+        sendHtmlMessageWithImagesAndAttachments(empty(), fromAddress, csvToAddresses, subject, t2._1, new Path[] {}, t2._2);
     }
+
+    /**
+     * Sends a HTML text email with attachments with custom Repoly-To addresses.
+     *
+     * @param csvReplyToAddresses
+     * @param fromAddress
+     * @param csvToAddresses
+     * @param subject
+     * @param body
+     * @param attachments
+     */
+    public void sendHtmlMessageWithAttachments(
+            final String csvReplyToAddresses,
+            final String fromAddress,
+            final String csvToAddresses,
+            final String subject,
+            final String body,
+            final IAttachment coAttachment,
+            final Attachment... attachments) {
+        if (attachments.length == 0) {
+            throw new EmailException(ERR_AT_LEAST_ONE_ATTACHMENT_IS_EXPECTED);
+        }
+        if (StringUtils.isBlank(csvReplyToAddresses)) {
+            throw new EmailException(ERR_ARGUMENT_CSV_REPLY_TO_ADDRESSES_CANNOT_BE_BLANK);
+        }
+
+        final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.HTML, body, coAttachment, attachments);
+        sendHtmlMessageWithImagesAndAttachments(of(csvReplyToAddresses), fromAddress, csvToAddresses, subject, t2._1, new Path[] {}, t2._2);
+    }
+
 
     /**
      * Sends a HTML text email with embedded images and attachments.
@@ -416,7 +474,42 @@ public class SmtpEmailSender {
         }
 
         final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.HTML, body, coAttachment, attachments);
-        sendHtmlMessageWithImagesAndAttachments(fromAddress, csvToAddresses, subject, t2._1, imagePaths, t2._2);
+        sendHtmlMessageWithImagesAndAttachments(empty(), fromAddress, csvToAddresses, subject, t2._1, imagePaths, t2._2);
+    }
+
+    /**
+     * Sends a HTML text email with embedded images and attachments, with custom Reply-To addresses.
+     *
+     * @param csvReplyToAddresses
+     * @param fromAddress
+     * @param csvToAddresses
+     * @param subject
+     * @param body
+     * @param imagePaths
+     * @param coAttachment
+     * @param attachments
+     */
+    public void sendHtmlMessageWithImagesAndAttachments(
+            final String csvReplyToAddresses,
+            final String fromAddress,
+            final String csvToAddresses,
+            final String subject,
+            final String body,
+            final Path[] imagePaths,
+            final IAttachment coAttachment,
+            final Attachment... attachments) {
+        if (imagePaths.length == 0) {
+            throw new EmailException(ERR_AT_LEAST_ONE_IMAGE_IS_EXPECTED);
+        }
+        if (attachments.length == 0) {
+            throw new EmailException(ERR_AT_LEAST_ONE_ATTACHMENT_IS_EXPECTED);
+        }
+        if (StringUtils.isBlank(csvReplyToAddresses)) {
+            throw new EmailException(ERR_ARGUMENT_CSV_REPLY_TO_ADDRESSES_CANNOT_BE_BLANK);
+        }
+
+        final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.HTML, body, coAttachment, attachments);
+        sendHtmlMessageWithImagesAndAttachments(of(csvReplyToAddresses), fromAddress, csvToAddresses, subject, t2._1, imagePaths, t2._2);
     }
 
     /**
@@ -429,7 +522,6 @@ public class SmtpEmailSender {
      * @param imagePaths
      * @param filePaths
      */
-
     public void sendHtmlMessageWithImagesAndAttachments(
             final String fromAddress,
             final String csvToAddresses,
@@ -438,7 +530,34 @@ public class SmtpEmailSender {
             final Path[] imagePaths,
             final Path... filePaths) {
         final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.HTML, body, filePaths);
-        sendHtmlMessageWithImagesAndAttachments(fromAddress, csvToAddresses, subject, t2._1, imagePaths, t2._2);
+        sendHtmlMessageWithImagesAndAttachments(empty(), fromAddress, csvToAddresses, subject, t2._1, imagePaths, t2._2);
+    }
+
+    /**
+     * Sends a HTML text email with embedded images and attachments, and custom Reply-To addresses.
+     *
+     * @param csvReplyToAddresses
+     * @param fromAddress
+     * @param csvToAddresses
+     * @param subject
+     * @param body
+     * @param imagePaths
+     * @param filePaths
+     */
+    public void sendHtmlMessageWithImagesAndAttachments(
+            final String csvReplyToAddresses,
+            final String fromAddress,
+            final String csvToAddresses,
+            final String subject,
+            final String body,
+            final Path[] imagePaths,
+            final Path... filePaths) {
+        if (StringUtils.isBlank(csvReplyToAddresses)) {
+            throw new EmailException(ERR_ARGUMENT_CSV_REPLY_TO_ADDRESSES_CANNOT_BE_BLANK);
+        }
+
+        final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.HTML, body, filePaths);
+        sendHtmlMessageWithImagesAndAttachments(of(csvReplyToAddresses), fromAddress, csvToAddresses, subject, t2._1, imagePaths, t2._2);
     }
 
 
@@ -507,6 +626,7 @@ public class SmtpEmailSender {
     }
 
     private void sendHtmlMessageWithImagesAndAttachments(
+            final Optional<String> csvReplyToAddresses,
             final String fromAddress,
             final String csvToAddresses,
             final String subject,
