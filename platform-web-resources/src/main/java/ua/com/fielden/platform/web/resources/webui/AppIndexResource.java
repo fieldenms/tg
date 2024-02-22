@@ -13,6 +13,7 @@ import org.restlet.resource.Get;
 
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
+import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IDates;
@@ -67,8 +68,8 @@ public class AppIndexResource extends AbstractWebResource {
             //  changing Web UI configurations (all configurations should exist in scope of IWebUiConfig.initConfiguration() method).
             webUiConfig.clearConfiguration();
             webUiConfig.initConfiguration();
-            // clears inner state in criteria generator, e.g. cached generated types
-            criteriaGenerator.clear();
+            // invalidate a cache with generated types, representing entity centres
+            CriteriaGenerator.invalidateCache();
         }
         return createRepresentation(webResourceLoader, TEXT_HTML, "/app/tg-app-index.html", getReference().getRemainingPart());
     }
