@@ -571,7 +571,9 @@ public class SmtpEmailSender {
         try {
             final Session session = newEmailSession();
             final MimeMessage message = new MimeMessage(session);
-            message.setFrom(new InternetAddress(fromAddress));
+            if (!StringUtils.isBlank(fromAddress)) {
+                message.setFrom(new InternetAddress(fromAddress));
+            }
             if (csvReplyToAddresses.isPresent()) {
                 assignReplyToAddresses(csvReplyToAddresses.get(), message);
             }
@@ -607,7 +609,9 @@ public class SmtpEmailSender {
         try {
             final Session session = newEmailSession();
             final MimeMessage message = new MimeMessage(session);
-            message.setFrom(new InternetAddress(fromAddress));
+            if (!StringUtils.isBlank(fromAddress)) {
+                message.setFrom(new InternetAddress(fromAddress));
+            }
             if (csvReplyToAddresses.isPresent()) {
                 assignReplyToAddresses(csvReplyToAddresses.get(), message);
             }
@@ -636,7 +640,9 @@ public class SmtpEmailSender {
         try {
             final Session session = newEmailSession();
             final MimeMessage message = new MimeMessage(session);
-            message.setFrom(new InternetAddress(fromAddress));
+            if (!StringUtils.isBlank(fromAddress)) {
+                message.setFrom(new InternetAddress(fromAddress));
+            }
             if (csvReplyToAddresses.isPresent()) {
                 assignReplyToAddresses(csvReplyToAddresses.get(), message);
             }
@@ -830,6 +836,8 @@ public class SmtpEmailSender {
 //        sender.sendPlainMessageWithAttachments("oles@fielden.com.au", "oles.hodych@gmail.com", "Plain text with text mime type", "Plain text, but HTML mime type", path1, path2);
 //        sender.sendHtmlMessageWithAttachments("oles@fielden.com.au", "oles.hodych@gmail.com ", "Html text with HTML mime type", "Html text, but HTML mime type</br></br>", path1, path2);
 //        sender.sendHtmlMessage("oles@fielden.com.au", "oles@fielden.com.au  ", "Plain text with HTML mime type", "Plain text, but HTML mime type");
+        sender.sendPlainMessage("", "CC:support@fielden.com.au", "Only CC HTML text with TXT mime type", "<html>Please open the <a href='https://tgdev.com:8092/login'>link</a> to reset you password.</html>");
+        sender.sendPlainMessage("", "BCC:support@fielden.com.au", "Only BCC HTML text with TXT mime type", "<html>Please open the <a href='https://tgdev.com:8092/login'>link</a> to reset you password.</html>");
         sender.sendPlainMessage("oles@fielden.com.au", "oles@fielden.com.au,CC:support@fielden.com.au", "HTML text with TXT mime type", "<html>Please open the <a href='https://tgdev.com:8092/login'>link</a> to reset you password.</html>");
         sender.sendPlainMessage("support@fielden.com.au;support@client.com", "oles@fielden.com.au", "oles@fielden.com.au", "HTML text with TXT mime type", "<html>Please open the <a href='https://tgdev.com:8092/login'>link</a> to reset you password.</html>");
 //        sender.sendHtmlMessage("oles@fielden.com.au", "oles@fielden.com.au", "HTML text with HTML mime type, not <html> block", "Please open the <a href='https://tgdev.com:8092/login'>link</a> to reset you password.");
