@@ -51,7 +51,7 @@ public final class CanonicalEqlGrammar {
                     opt(Join),
                     opt(Where),
                     opt(GroupBy),
-                    FirstYield).
+                    AnyYield).
             or(select.with(Class.class),
                     opt(as.with(STR)),
                     opt(Join),
@@ -231,11 +231,17 @@ public final class CanonicalEqlGrammar {
         derive(GroupBy).
             to(groupBy, label("operand", SingleOperandOrExpr), opt(GroupBy)).
 
-        derive(FirstYield).
-            to(yield, YieldOperand, modelAsEntity.with(Class.class)).
-            or(yield, YieldOperand, modelAsPrimitive).
-            or(yieldAll, SubsequentYield).
-            or(yield, YieldOperand, YieldAlias, SubsequentYield).
+        specialize(AnyYield).
+            into(Yield1, YieldMany).
+
+        derive(Yield1).
+            to(yield, label("operand", YieldOperand), label("model_", Yield1Model)).
+
+        derive(YieldMany).
+            to(opt(yieldAll), repeat1(AliasedYield), label("model_", YieldManyModel)).
+
+        derive(AliasedYield).
+            to(yield, label("operand", YieldOperand), label("alias", YieldAlias)).
 
         derive(YieldOperand).
             to(SingleOperandOrExpr).
@@ -253,9 +259,12 @@ public final class CanonicalEqlGrammar {
             to(as.with(STR)).or(as.with(ENUM)).or(as.with(PROP_PATH)).
             or(asRequired.with(STR)).or(asRequired.with(ENUM)).or(asRequired.with(PROP_PATH)).
 
-        derive(SubsequentYield).
-            to(yield, YieldOperand, YieldAlias, SubsequentYield).
-            or(modelAsEntity.with(Class.class)).
+        derive(Yield1Model).
+            to(modelAsEntity.with(Class.class)).
+            or(modelAsPrimitive).
+
+        derive(YieldManyModel).
+            to(modelAsEntity.with(Class.class)).
             or(modelAsAggregate).
 
         derive(Model).
@@ -284,9 +293,9 @@ public final class CanonicalEqlGrammar {
         MembershipOperand, ComparisonOperator, ComparisonOperand, QuantifiedOperand, SingleConditionPredicate, Join, JoinOperator,
         JoinCondition,
         Model, GroupBy,
-        FirstYield, YieldOperand, YieldOperandFunction, YieldOperandFunctionName, YieldAlias, LikeOperator, SubsequentYield,
+        AnyYield, YieldOperand, YieldOperandFunction, YieldOperandFunctionName, YieldAlias, LikeOperator, SubsequentYield,
         UnaryPredicate,
-        ComparisonPredicate, QuantifiedComparisonPredicate, LikePredicate, MembershipPredicate
+        ComparisonPredicate, QuantifiedComparisonPredicate, LikePredicate, AliasedYield, YieldManyModel, Yield1Model, Yield1, YieldMany, MembershipPredicate
     }
 
     public enum EqlTerminal implements Terminal {
