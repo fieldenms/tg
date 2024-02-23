@@ -13,6 +13,7 @@ import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Stream;
 
+import jakarta.mail.Message.RecipientType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 
@@ -21,7 +22,6 @@ import jakarta.activation.DataSource;
 import jakarta.activation.FileDataSource;
 import jakarta.mail.Authenticator;
 import jakarta.mail.BodyPart;
-import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Multipart;
 import jakarta.mail.PasswordAuthentication;
@@ -135,7 +135,7 @@ public class SmtpEmailSender {
         this.maybePort = ofNullable(hostAndPort.length == 2 ? hostAndPort[1] : null);
     }
 
-    private Session newEmailSession() {
+    public Session newEmailSession() {
         final Properties props = new Properties();
         final String username = System.getProperty("email.smtp.username", System.getenv("email.smtp.username"));
         final String password = System.getProperty("email.smtp.password", System.getenv("email.smtp.password"));
@@ -575,7 +575,7 @@ public class SmtpEmailSender {
             if (csvReplyToAddresses.isPresent()) {
                 assignReplyToAddresses(csvReplyToAddresses.get(), message);
             }
-            assignToAddresses(csvToAddresses, message);
+            assignRecipientAddresses(csvToAddresses, message);
             message.setSubject(subject);
             type.setBodyText(message, body);
             message.setSentDate(new Timestamp(System.currentTimeMillis()));
@@ -611,7 +611,7 @@ public class SmtpEmailSender {
             if (csvReplyToAddresses.isPresent()) {
                 assignReplyToAddresses(csvReplyToAddresses.get(), message);
             }
-            assignToAddresses(csvToAddresses, message);
+            assignRecipientAddresses(csvToAddresses, message);
             message.setSubject(subject);
 
             message.setContent(buildPlainMultipart(body, attachments));
@@ -640,7 +640,7 @@ public class SmtpEmailSender {
             if (csvReplyToAddresses.isPresent()) {
                 assignReplyToAddresses(csvReplyToAddresses.get(), message);
             }
-            assignToAddresses(csvToAddresses, message);
+            assignRecipientAddresses(csvToAddresses, message);
             message.setSubject(subject);
 
             // add everything to the email
@@ -655,17 +655,34 @@ public class SmtpEmailSender {
     }
 
     /**
-     * A helper method to process and assign the TO addresses.
+     * A helper method to process and assign TO, CC and BCC addresses.
      *
-     * @param csvToAddresses
+     * @param csvAddresses
      * @param message
      * @throws MessagingException
-     * @throws AddressException
      */
-    private static void assignToAddresses(final String csvToAddresses, final MimeMessage message) throws MessagingException {
-        final String[] toAddresses = csvToAddresses.trim().split("[,;]");
-        for (final String toAddress : toAddresses) {
-            message.addRecipient(Message.RecipientType.TO, new InternetAddress(toAddress));
+    public static void assignRecipientAddresses(final String csvAddresses, final MimeMessage message) throws MessagingException {
+        final String[] addresses = csvAddresses.trim().split("[,;]");
+        for (final String address : addresses) {
+            final RecipientType recipientType;
+            final String emailAddress;
+            // CC address
+            if (address.toUpperCase().startsWith("CC:")) {
+                recipientType = RecipientType.CC;
+                emailAddress = address.substring(3);
+            }
+            // BCC address
+            else if (address.toUpperCase().startsWith("BCC:")) {
+                recipientType = RecipientType.BCC;
+                emailAddress = address.substring(4);
+            }
+            // TO address
+            else {
+                recipientType = RecipientType.TO;
+                emailAddress = address.toUpperCase().startsWith("TO:") ? address.substring(3) : address;
+
+            }
+            message.addRecipient(recipientType, new InternetAddress(emailAddress));
         }
     }
 
@@ -790,7 +807,7 @@ public class SmtpEmailSender {
     }
 
     public static void main(final String[] args) {
-        final SmtpEmailSender sender = new SmtpEmailSender(System.getProperty("email.smtp"));
+        final SmtpEmailSender sender = new SmtpEmailSender("localhost");
         final Path path1 = Paths.get(".classpath");
         final Path path2 = Paths.get(".project");
         final Path path3 = Paths.get("desktop-script.sh");
@@ -808,11 +825,13 @@ public class SmtpEmailSender {
         imagePaths[0] = pathImage;
 //        sender.sendHtmlMessageWithAttachments("oles@fielden.com.au", "oles@fielden.com.au", "HtmlMessageWithAttachments", htmlBodyWithoutImage, path1, path2, path3, path4);
         sender.sendHtmlMessageWithImagesAndAttachments("oles@fielden.com.au", "oles@fielden.com.au", "HtmlMessageWithImagesAndAttachments", htmlBodyWithImage, imagePaths, path1, path2, path3, path4);
+        sender.sendHtmlMessageWithImagesAndAttachments("support@fielden.com.au", "oles@fielden.com.au", "oles@fielden.com.au", "HtmlMessageWithImagesAndAttachments", htmlBodyWithImage, imagePaths, path1, path2, path3, path4);
 //        sender.sendPlainMessageWithAttachments("oles@fielden.com.au", "oles@fielden.com.au", "PlainMessageWithAttachments", plainBody, path1, path2, path3, path4);
 //        sender.sendPlainMessageWithAttachments("oles@fielden.com.au", "oles.hodych@gmail.com", "Plain text with text mime type", "Plain text, but HTML mime type", path1, path2);
 //        sender.sendHtmlMessageWithAttachments("oles@fielden.com.au", "oles.hodych@gmail.com ", "Html text with HTML mime type", "Html text, but HTML mime type</br></br>", path1, path2);
 //        sender.sendHtmlMessage("oles@fielden.com.au", "oles@fielden.com.au  ", "Plain text with HTML mime type", "Plain text, but HTML mime type");
-//        sender.sendPlainMessage("oles@fielden.com.au", "oles@fielden.com.au", "HTML text with TXT mime type", "<html>Please open the <a href='https://tgdev.com:8092/login'>link</a> to reset you password.</html>");
+        sender.sendPlainMessage("oles@fielden.com.au", "oles@fielden.com.au,CC:support@fielden.com.au", "HTML text with TXT mime type", "<html>Please open the <a href='https://tgdev.com:8092/login'>link</a> to reset you password.</html>");
+        sender.sendPlainMessage("support@fielden.com.au;support@client.com", "oles@fielden.com.au", "oles@fielden.com.au", "HTML text with TXT mime type", "<html>Please open the <a href='https://tgdev.com:8092/login'>link</a> to reset you password.</html>");
 //        sender.sendHtmlMessage("oles@fielden.com.au", "oles@fielden.com.au", "HTML text with HTML mime type, not <html> block", "Please open the <a href='https://tgdev.com:8092/login'>link</a> to reset you password.");
 //        sender.sendHtmlMessage("oles@fielden.com.au", "oles@fielden.com.au", "HTML text with HTML mime type", "<html>Please open the <a href='https://tgdev.com:8092/login'>link</a> to reset you password.</html>");
     }
