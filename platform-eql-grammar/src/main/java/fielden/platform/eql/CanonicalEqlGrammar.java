@@ -44,7 +44,7 @@ public final class CanonicalEqlGrammar {
         start(Query).
 
         specialize(Query).
-            into(Select, StandaloneExpression, StandaloneCondExpr).
+            into(Select, StandaloneExpression, StandaloneCondExpr, OrderBy).
 
         derive(Select).
             to(select.with(Class.class),
@@ -277,12 +277,23 @@ public final class CanonicalEqlGrammar {
             to(expr, label("operand", YieldOperand), repeat(ArithmeticalOperator, YieldOperand), model).
 
         derive(StandaloneCondExpr).
-            to(cond, label("condition", StandaloneCondition), model).
+            to(cond, StandaloneCondition, model).
 
         derive(StandaloneCondition).
             to(Predicate).
             or(label("left", StandaloneCondition), and, label("right", StandaloneCondition)).
             or(label("left", StandaloneCondition), or, label("right", StandaloneCondition)).
+
+        derive(OrderBy).
+            to(orderBy, repeat1(OrderByOperand), model).
+
+        derive(OrderByOperand).
+            to(SingleOperandOrExpr, Order).
+            or(yield.with(STR), Order).
+            or(order.with(OrderingModel.class)).
+
+        derive(Order).
+            to(asc).or(desc).
 
         build();
     // @formatter:on
@@ -306,7 +317,7 @@ public final class CanonicalEqlGrammar {
         UnaryPredicate,
         ComparisonPredicate, QuantifiedComparisonPredicate, LikePredicate, AliasedYield, YieldManyModel, Yield1Model, Yield1, YieldMany, StandaloneCondExpr,
         StandaloneCondition,
-        MembershipPredicate
+        OrderBy, Order, OrderByOperand, MembershipPredicate
     }
 
     public enum EqlTerminal implements Terminal {
@@ -356,7 +367,7 @@ public final class CanonicalEqlGrammar {
         beginExpr, endExpr,
         join, leftJoin, on,
         yield, yieldAll,
-        groupBy, asc, desc, order, cond,
+        groupBy, asc, desc, order, cond, orderBy,
     }
 
     private CanonicalEqlGrammar() {}
