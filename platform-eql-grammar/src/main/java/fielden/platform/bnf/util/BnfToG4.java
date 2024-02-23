@@ -2,11 +2,7 @@ package fielden.platform.bnf.util;
 
 import fielden.platform.bnf.*;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.ZonedDateTime;
-import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Function;
@@ -15,17 +11,20 @@ import static fielden.platform.bnf.TermMetadata.LABEL;
 import static java.util.stream.Collectors.*;
 import static org.apache.commons.lang3.StringUtils.capitalize;
 import static org.apache.commons.lang3.StringUtils.uncapitalize;
-import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
 
 /**
  * Converts a BNF to an ANTLR grammar in the g4 format.
  * <p>
- * Rules with the right hand side in the form of a single terminal or an alternation between single terminals are
- * generated with <a href=https://github.com/antlr/antlr4/blob/master/doc/parser-rules.md#rule-element-labels>rule element labels</a>
- * to make the resulting parse trees easier to work with.
- * <p>
- * ANTLR parser rules corresponding to BNF <i>specialization</i> rules are generated with
- * <a href=https://github.com/antlr/antlr4/blob/master/doc/parser-rules.md#alternative-labels>alternative labels</a>.
+ * Grammar generation details:
+ * <ul>
+ *   <li> Terminal rules, i.e., rules with the right hand side in the form of a single terminal or an alternation between
+ *        single terminals are generated with
+ *        <a href=https://github.com/antlr/antlr4/blob/master/doc/parser-rules.md#rule-element-labels>rule element labels</a>
+ *        to make the resulting parse trees easier to work with.
+ *   <li> ANTLR parser rules that have one or more alternatives are generated with
+ *        <a href=https://github.com/antlr/antlr4/blob/master/doc/parser-rules.md#alternative-labels>alternative labels</a>
+ *        unless the rule is a terminal rule.
+ * </ul>
  */
 public class BnfToG4 {
 
