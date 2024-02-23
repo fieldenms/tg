@@ -44,7 +44,7 @@ public final class CanonicalEqlGrammar {
         start(Query).
 
         specialize(Query).
-            into(Select, Expression).
+            into(Select, StandaloneExpression).
 
         derive(Select).
             to(select.with(Class.class),
@@ -273,8 +273,8 @@ public final class CanonicalEqlGrammar {
             or(modelAsEntity.with(Class.class)).
             or(modelAsAggregate).
 
-        derive(Expression).
-            to(expr, model).
+        derive(StandaloneExpression).
+            to(expr, label("operand", YieldOperand), repeat(ArithmeticalOperator, YieldOperand), model).
 
         build();
     // @formatter:on
@@ -282,7 +282,7 @@ public final class CanonicalEqlGrammar {
     public enum EqlVariable implements Variable {
         Query,
         Select,
-        Expression,
+        StandaloneExpression,
         Where,
         Condition, Predicate,
         SingleOperand, MultiOperand,
