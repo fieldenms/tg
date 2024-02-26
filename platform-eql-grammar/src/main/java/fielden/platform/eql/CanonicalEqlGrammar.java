@@ -46,19 +46,27 @@ public final class CanonicalEqlGrammar {
         specialize(Query).
             into(Select, StandaloneExpression, StandaloneCondExpr, OrderBy).
 
-        derive(Select).
-            to(select.with(Class.class),
-                    opt(as.with(STR)),
-                    opt(Join),
-                    opt(Where),
-                    opt(GroupBy),
-                    AnyYield).
-            or(select.with(Class.class),
-                    opt(as.with(STR)),
-                    opt(Join),
-                    opt(Where),
-                    opt(GroupBy),
-                    Model).
+        specialize(Select).
+            into(SelectFrom, SourcelessSelect).
+
+        derive(SelectFrom).
+            to(SelectSource,
+               opt(label("alias", as).with(STR)),
+               opt(Join),
+               opt(Where),
+               opt(GroupBy),
+               SelectEnd).
+
+        derive(SelectSource).
+            to(select.with(Class.class)).
+            or(select.rest(EntityResultQueryModel.class)).
+            or(select.rest(AggregatedResultQueryModel.class)).
+
+        derive(SourcelessSelect).
+            to(select, opt(GroupBy), SelectEnd).
+
+        specialize(SelectEnd).
+            into(AnyYield, Model).
 
         derive(Where).
             to(where, Condition).
@@ -317,7 +325,7 @@ public final class CanonicalEqlGrammar {
         UnaryPredicate,
         ComparisonPredicate, QuantifiedComparisonPredicate, LikePredicate, AliasedYield, YieldManyModel, Yield1Model, Yield1, YieldMany, StandaloneCondExpr,
         StandaloneCondition,
-        OrderBy, Order, OrderByOperand, MembershipPredicate
+        OrderBy, Order, OrderByOperand, SelectFrom, SelectSource, SelectEnd, SourcelessSelect, MembershipPredicate
     }
 
     public enum EqlTerminal implements Terminal {

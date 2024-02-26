@@ -1,4 +1,4 @@
-// This grammar was generated. Timestamp: 2024-02-23T12:29:12.113332856+02:00[Europe/Kyiv]
+// This grammar was generated. Timestamp: 2024-02-26T13:31:52.325163479+02:00[Europe/Kyiv]
 
 grammar EQL;
 
@@ -6,12 +6,31 @@ start : query EOF;
 
 query :
       select # Query_Select
-    | expression # Query_Expression
+    | standaloneExpression # Query_StandaloneExpression
+    | standaloneCondExpr # Query_StandaloneCondExpr
+    | orderBy # Query_OrderBy
 ;
 
 select :
-      SELECT AS? join? where? groupBy? anyYield
-    | SELECT AS? join? where? groupBy? model
+      selectFrom # Select_SelectFrom
+    | sourcelessSelect # Select_SourcelessSelect
+;
+
+selectFrom :
+      selectSource alias=AS? join? where? groupBy? selectEnd
+;
+
+selectSource :
+      token=SELECT
+;
+
+sourcelessSelect :
+      SELECT groupBy? selectEnd
+;
+
+selectEnd :
+      anyYield # SelectEnd_AnyYield
+    | model # SelectEnd_Model
 ;
 
 where :
@@ -330,133 +349,162 @@ model :
     | token=MODELASAGGREGATE
 ;
 
-expression :
-      EXPR MODEL
+standaloneExpression :
+      EXPR operand=yieldOperand (arithmeticalOperator yieldOperand)* MODEL
 ;
 
-TO : 'to' ;
-ALLOFVALUES : 'allOfValues' ;
-LOWERCASE : 'lowerCase' ;
-EXTPROP : 'extProp' ;
-DIV : 'div' ;
-WHERE : 'where' ;
-DAYOF : 'dayOf' ;
-UPPERCASE : 'upperCase' ;
-MAXOF : 'maxOf' ;
-ENDEXPR : 'endExpr' ;
-SECONDS : 'seconds' ;
-COUNTOFDISTINCT : 'countOfDistinct' ;
-ADDTIMEINTERVALOF : 'addTimeIntervalOf' ;
-ENDASBOOL : 'endAsBool' ;
-MODELASENTITY : 'modelAsEntity' ;
-MINUTEOF : 'minuteOf' ;
-VAL : 'val' ;
-EXISTSANYOF : 'existsAnyOf' ;
-YIELD : 'yield' ;
-OR : 'or' ;
-YEAROF : 'yearOf' ;
-IFNULL : 'ifNull' ;
-ILIKE : 'iLike' ;
-NOW : 'now' ;
-YIELDALL : 'yieldAll' ;
-AVGOFDISTINCT : 'avgOfDistinct' ;
-ANYOFPARAMS : 'anyOfParams' ;
+standaloneCondExpr :
+      COND standaloneCondition MODEL
+;
+
+standaloneCondition :
+      predicate
+    | left=standaloneCondition AND right=standaloneCondition
+    | left=standaloneCondition OR right=standaloneCondition
+;
+
+orderBy :
+      ORDERBY orderByOperand+ MODEL
+;
+
+orderByOperand :
+      singleOperandOrExpr order
+    | YIELD order
+    | ORDER
+;
+
+order :
+      token=ASC
+    | token=DESC
+;
+
 NOTLIKE : 'notLike' ;
-ABSOF : 'absOf' ;
-EXPR : 'expr' ;
-SUB : 'sub' ;
-AS : 'as' ;
-END : 'end' ;
-NOTILIKE : 'notILike' ;
-ANYOFEXPRESSIONS : 'anyOfExpressions' ;
-MINOF : 'minOf' ;
-BEGINEXPR : 'beginExpr' ;
-MOD : 'mod' ;
-NE : 'ne' ;
-WHEN : 'when' ;
-IN : 'in' ;
-NOTEXISTSALLOF : 'notExistsAllOf' ;
-PARAM : 'param' ;
-JOIN : 'join' ;
-ILIKEWITHCAST : 'iLikeWithCast' ;
-SELECT : 'select' ;
-SECONDOF : 'secondOf' ;
-MINUTES : 'minutes' ;
-LE : 'le' ;
-DAYS : 'days' ;
-ENDASDECIMAL : 'endAsDecimal' ;
-MONTHS : 'months' ;
-BEGIN : 'begin' ;
-COUNTOF : 'countOf' ;
-EXISTS : 'exists' ;
-WITH : 'with' ;
-ANYOFPROPS : 'anyOfProps' ;
+VAL : 'val' ;
 PARAMS : 'params' ;
-ROUND : 'round' ;
-YEARS : 'years' ;
-ANYOFMODELS : 'anyOfModels' ;
-NOTEXISTSANYOF : 'notExistsAnyOf' ;
-ALL : 'all' ;
-IPARAM : 'iParam' ;
-MULT : 'mult' ;
-ON : 'on' ;
-NEGATEDCONDITION : 'negatedCondition' ;
-ALLOFIPARAMS : 'allOfIParams' ;
-NOTILIKEWITHCAST : 'notILikeWithCast' ;
-EQ : 'eq' ;
-COUNT : 'count' ;
-NOTEXISTS : 'notExists' ;
-PROPS : 'props' ;
-SUMOF : 'sumOf' ;
-ASREQUIRED : 'asRequired' ;
-IVAL : 'iVal' ;
-IPARAMS : 'iParams' ;
-MODEL : 'model' ;
-DATEOF : 'dateOf' ;
+IN : 'in' ;
+MONTHS : 'months' ;
+MODELASENTITY : 'modelAsEntity' ;
 NOTLIKEWITHCAST : 'notLikeWithCast' ;
-LIKE : 'like' ;
-SUMOFDISTINCT : 'sumOfDistinct' ;
-VALUES : 'values' ;
-THEN : 'then' ;
-ALLOFEXPRESSIONS : 'allOfExpressions' ;
-EXISTSALLOF : 'existsAllOf' ;
 OTHERWISE : 'otherwise' ;
-GROUPBY : 'groupBy' ;
-ALLOFPARAMS : 'allOfParams' ;
-LEFTJOIN : 'leftJoin' ;
-PROP : 'prop' ;
-ALLOFPROPS : 'allOfProps' ;
-BETWEEN : 'between' ;
-COUNTALL : 'countAll' ;
-MODELASAGGREGATE : 'modelAsAggregate' ;
-CONCAT : 'concat' ;
-ANYOFIPARAMS : 'anyOfIParams' ;
-ENDASINT : 'endAsInt' ;
-MODELASPRIMITIVE : 'modelAsPrimitive' ;
-AND : 'and' ;
-ISNULL : 'isNull' ;
-MONTHOF : 'monthOf' ;
-NOTIN : 'notIn' ;
-AVGOF : 'avgOf' ;
-DAYOFWEEKOF : 'dayOfWeekOf' ;
-LIKEWITHCAST : 'likeWithCast' ;
-ALLOFMODELS : 'allOfModels' ;
-LT : 'lt' ;
-ANY : 'any' ;
-ENDASSTR : 'endAsStr' ;
-HOUROF : 'hourOf' ;
-ADD : 'add' ;
-CONDITION : 'condition' ;
-GE : 'ge' ;
-ISNOTNULL : 'isNotNull' ;
-CRITCONDITION : 'critCondition' ;
-ANYOFVALUES : 'anyOfValues' ;
 GT : 'gt' ;
+NOW : 'now' ;
+UPPERCASE : 'upperCase' ;
+LE : 'le' ;
+NOTEXISTSANYOF : 'notExistsAnyOf' ;
+MINUTES : 'minutes' ;
+WHEN : 'when' ;
+ALLOFVALUES : 'allOfValues' ;
+NOTIN : 'notIn' ;
+NE : 'ne' ;
+ANYOFEXPRESSIONS : 'anyOfExpressions' ;
+YIELDALL : 'yieldAll' ;
+COND : 'cond' ;
+SECONDOF : 'secondOf' ;
+MONTHOF : 'monthOf' ;
+SUB : 'sub' ;
+ANYOFPARAMS : 'anyOfParams' ;
+NOTILIKEWITHCAST : 'notILikeWithCast' ;
+CONDITION : 'condition' ;
+PROP : 'prop' ;
+SUMOFDISTINCT : 'sumOfDistinct' ;
+HOUROF : 'hourOf' ;
+AVGOF : 'avgOf' ;
+ENDEXPR : 'endExpr' ;
+LIKEWITHCAST : 'likeWithCast' ;
+LT : 'lt' ;
+SELECT : 'select' ;
+ANYOFMODELS : 'anyOfModels' ;
+JOIN : 'join' ;
+EQ : 'eq' ;
+MODELASAGGREGATE : 'modelAsAggregate' ;
+ENDASBOOL : 'endAsBool' ;
+AS : 'as' ;
+TO : 'to' ;
+ISNOTNULL : 'isNotNull' ;
+WITH : 'with' ;
+DAYS : 'days' ;
+IPARAM : 'iParam' ;
+END : 'end' ;
+BETWEEN : 'between' ;
+ALL : 'all' ;
+LEFTJOIN : 'leftJoin' ;
+MULT : 'mult' ;
+PARAM : 'param' ;
+COUNTOFDISTINCT : 'countOfDistinct' ;
+AND : 'and' ;
+EXISTSALLOF : 'existsAllOf' ;
+ANYOFPROPS : 'anyOfProps' ;
+SECONDS : 'seconds' ;
+NOTEXISTSALLOF : 'notExistsAllOf' ;
+IVAL : 'iVal' ;
+ON : 'on' ;
+EXTPROP : 'extProp' ;
+PROPS : 'props' ;
+YIELD : 'yield' ;
+COUNT : 'count' ;
+DESC : 'desc' ;
+MODEL : 'model' ;
+EXISTSANYOF : 'existsAnyOf' ;
+ADD : 'add' ;
+ENDASSTR : 'endAsStr' ;
+OR : 'or' ;
+VALUES : 'values' ;
+ALLOFEXPRESSIONS : 'allOfExpressions' ;
+ADDTIMEINTERVALOF : 'addTimeIntervalOf' ;
+ILIKE : 'iLike' ;
+YEARS : 'years' ;
+CONCAT : 'concat' ;
+ASC : 'asc' ;
+ORDER : 'order' ;
+DATEOF : 'dateOf' ;
+NOTILIKE : 'notILike' ;
+MINOF : 'minOf' ;
+ALLOFPARAMS : 'allOfParams' ;
+DAYOF : 'dayOf' ;
+BEGIN : 'begin' ;
+LIKE : 'like' ;
+COUNTALL : 'countAll' ;
+GE : 'ge' ;
+ANYOFIPARAMS : 'anyOfIParams' ;
+NEGATEDCONDITION : 'negatedCondition' ;
+ALLOFPROPS : 'allOfProps' ;
+NOTEXISTS : 'notExists' ;
+EXPR : 'expr' ;
+THEN : 'then' ;
+ALLOFIPARAMS : 'allOfIParams' ;
+DAYOFWEEKOF : 'dayOfWeekOf' ;
+EXISTS : 'exists' ;
+ORDERBY : 'orderBy' ;
+MOD : 'mod' ;
+ROUND : 'round' ;
+ENDASDECIMAL : 'endAsDecimal' ;
+MODELASPRIMITIVE : 'modelAsPrimitive' ;
+IPARAMS : 'iParams' ;
+ABSOF : 'absOf' ;
+ENDASINT : 'endAsInt' ;
+ALLOFMODELS : 'allOfModels' ;
+SUMOF : 'sumOf' ;
+GROUPBY : 'groupBy' ;
 HOURS : 'hours' ;
+ANY : 'any' ;
+AVGOFDISTINCT : 'avgOfDistinct' ;
+BEGINEXPR : 'beginExpr' ;
+YEAROF : 'yearOf' ;
 CASEWHEN : 'caseWhen' ;
+MAXOF : 'maxOf' ;
+CRITCONDITION : 'critCondition' ;
+WHERE : 'where' ;
+LOWERCASE : 'lowerCase' ;
+MINUTEOF : 'minuteOf' ;
+ISNULL : 'isNull' ;
+DIV : 'div' ;
+ANYOFVALUES : 'anyOfValues' ;
+COUNTOF : 'countOf' ;
+ASREQUIRED : 'asRequired' ;
+IFNULL : 'ifNull' ;
+ILIKEWITHCAST : 'iLikeWithCast' ;
 
 WHITESPACE : [ \r\t\n]+ -> skip ;
 COMMENT : '//' .*? '\n' -> skip ;
 BLOCK_COMMENT : '/*' .*? '*/' -> skip ;
-
 
