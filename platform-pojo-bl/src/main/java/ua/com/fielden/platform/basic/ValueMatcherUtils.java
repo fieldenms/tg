@@ -29,11 +29,11 @@ public class ValueMatcherUtils {
     }
 
     public static ConditionModel createStrictSearchByKeyCriteriaModel(final Class<? extends AbstractEntity<?>> entityType, final String searchString) {
-        ConditionModel keyCriteria = cond().prop(KEY).iLikeWithCast().val(searchString).model();
+        ConditionModel keyCriteria = cond().prop(KEY).iLikeWithCast().val(searchString.trim()).model();
 
         if (isCompositeEntity((Class<? extends AbstractEntity<?>>) entityType)) {
             for (final String propName : keyPaths(entityType)) {
-                keyCriteria = cond().condition(keyCriteria).or().prop(propName).iLikeWithCast().val(searchString).model();
+                keyCriteria = cond().condition(keyCriteria).or().prop(propName).iLikeWithCast().val(searchString.trim()).model();
             }
         }
 
@@ -41,7 +41,7 @@ public class ValueMatcherUtils {
     }
 
     public static ConditionModel createRelaxedSearchByKeyCriteriaModel(final String searchString) {
-        return cond().prop(KEY).iLikeWithCast().val(searchString).model();
+        return cond().prop(KEY).iLikeWithCast().val(searchString.trim()).model();
     }
 
 }

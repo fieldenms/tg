@@ -40,6 +40,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
@@ -847,7 +848,7 @@ public class DynamicQueryBuilder {
         final String[] crits = criteria.split(",");
         for (int index = 0; index < crits.length; index++) {
             if (!crits[index].contains("*")) {
-                crits[index] = "*" + crits[index] + "*";
+                crits[index] = "*" + crits[index].trim() + "*";
             }
             crits[index] = prepare(crits[index]);
         }
@@ -863,7 +864,7 @@ public class DynamicQueryBuilder {
      */
     private static String prepCritValuesForSingleStringTypedProp(final String criteria) {
         if (!criteria.contains("*")) {
-            return prepare("*" + criteria + "*");
+            return prepare("*" + criteria.trim() + "*");
         }
         return prepare(criteria);
     }
@@ -876,6 +877,16 @@ public class DynamicQueryBuilder {
      */
     public static String[] prepCritValuesForEntityTypedProp(final List<String> criteria) {
         return prepare(criteria);
+    }
+
+    /**
+     * Creates new array based on the passed list of string. This method also trims every element of the passed list.
+     *
+     * @param criteria
+     * @return
+     */
+    public static String[] prepExectCritValuesForEntityTypedProp(final List<String> criteria) {
+        return criteria.stream().map(crit -> crit.trim()).toArray(String[]::new);
     }
 
     /**
@@ -1115,7 +1126,7 @@ public class DynamicQueryBuilder {
         final Map<Boolean, List<String>> searchVals = searchValues.stream().collect(groupingBy(str -> str.contains("*")));
         final Set<PropertyDescriptor<AbstractEntity<?>>> matchedPropDescriptors = new LinkedHashSet<>();
         concat(
-            searchVals.getOrDefault(false, emptyList()).stream(),
+            stream(prepExectCritValuesForEntityTypedProp(searchVals.getOrDefault(false, emptyList()))),
             stream(prepCritValuesForEntityTypedProp(searchVals.getOrDefault(true, emptyList())))
         ).forEach(val -> matchedPropDescriptors.addAll(new PojoValueMatcher<>(allPropertyDescriptors, KEY, allPropertyDescriptors.size()).findMatches(val)));
         return matchedPropDescriptors.isEmpty()
@@ -1144,7 +1155,7 @@ public class DynamicQueryBuilder {
         } else if (exactAndWildcardSearchVals.containsKey(false) && !exactAndWildcardSearchVals.containsKey(true)) { // only exact search values are present
             return cond()
                     // Condition for exact search values; union entities need ".id" to help EQL.
-                    .prop(propertyNameWithoutKey + (isUnionEntityType(propType) ? ".id" : "")).in().model(select(propType).where().prop(KEY).in().values(exactAndWildcardSearchVals.get(false).toArray()).model()).model();
+                    .prop(propertyNameWithoutKey + (isUnionEntityType(propType) ? ".id" : "")).in().model(select(propType).where().prop(KEY).in().values(prepExectCritValuesForEntityTypedProp(exactAndWildcardSearchVals.get(false))).model()).model();
         } else { // only whildcard search values are present
             return cond()
                     // Condition for wildcard search values.
