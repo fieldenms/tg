@@ -1,4 +1,4 @@
-// This grammar was generated. Timestamp: 2024-02-26T13:31:52.325163479+02:00[Europe/Kyiv]
+// This grammar was generated. Timestamp: 2024-02-26T15:43:48.195266260+02:00[Europe/Kyiv]
 
 grammar EQL;
 
@@ -38,10 +38,11 @@ where :
 ;
 
 condition :
-      predicate
-    | left=condition AND right=condition
-    | left=condition OR right=condition
-    | BEGIN condition END
+      predicate                          # PredicateCondition
+    | left=condition AND right=condition # AndCondition
+    | left=condition OR right=condition  # OrCondition
+    | BEGIN condition END                # CompoundCondition
+    | NOTBEGIN condition END             # NegatedCompoundCondition
 ;
 
 predicate :
@@ -435,6 +436,7 @@ AND : 'and' ;
 EXISTSALLOF : 'existsAllOf' ;
 ANYOFPROPS : 'anyOfProps' ;
 SECONDS : 'seconds' ;
+NOTBEGIN : 'notBegin' ;
 NOTEXISTSALLOF : 'notExistsAllOf' ;
 IVAL : 'iVal' ;
 ON : 'on' ;

@@ -77,6 +77,7 @@ public final class CanonicalEqlGrammar {
             or(label("left", Condition), and, label("right", Condition)).
             or(label("left", Condition), or, label("right", Condition)).
             or(begin, Condition, end).
+            or(notBegin, Condition, end).
 
         specialize(Predicate).
             into(UnaryPredicate, ComparisonPredicate, QuantifiedComparisonPredicate, LikePredicate, MembershipPredicate, SingleConditionPredicate).
