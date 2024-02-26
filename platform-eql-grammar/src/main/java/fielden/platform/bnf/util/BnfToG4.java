@@ -93,6 +93,7 @@ public class BnfToG4 {
         bnf.terminals().stream()
                 .map(terminal -> "%s : '%s' ;\n".formatted(lexerRule(terminal), terminal.name()))
                 .distinct()
+                .sorted()
                 .forEach(sb::append);
 
         sb.append("""
