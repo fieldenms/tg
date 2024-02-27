@@ -6,9 +6,9 @@ start : query EOF;
 
 query :
       select # Query_Select
-    | standaloneExpression # Query_StandaloneExpression
-    | standaloneCondExpr # Query_StandaloneCondExpr
-    | orderBy # Query_OrderBy
+    | EXPR operand=yieldOperand (arithmeticalOperator yieldOperand)* MODEL # StandaloneExpression
+    | COND standaloneCondition MODEL # StandaloneCondExpr
+    | ORDERBY orderByOperand+ MODEL # OrderBy
 ;
 
 select :
@@ -46,32 +46,20 @@ condition :
 ;
 
 predicate :
-      unaryPredicate # Predicate_UnaryPredicate
-    | comparisonPredicate # Predicate_ComparisonPredicate
-    | quantifiedComparisonPredicate # Predicate_QuantifiedComparisonPredicate
-    | likePredicate # Predicate_LikePredicate
-    | membershipPredicate # Predicate_MembershipPredicate
-    | singleConditionPredicate # Predicate_SingleConditionPredicate
-;
-
-unaryPredicate :
-      left=comparisonOperand unaryComparisonOperator
-;
-
-comparisonPredicate :
-      left=comparisonOperand op=comparisonOperator right=comparisonOperand
-;
-
-quantifiedComparisonPredicate :
-      left=comparisonOperand op=comparisonOperator quantifiedOperand
-;
-
-likePredicate :
-      left=comparisonOperand op=likeOperator right=comparisonOperand
-;
-
-membershipPredicate :
-      left=comparisonOperand op=membershipOperator membershipOperand
+      left=comparisonOperand unaryComparisonOperator # UnaryPredicate
+    | left=comparisonOperand comparisonOperator right=comparisonOperand # ComparisonPredicate
+    | left=comparisonOperand comparisonOperator quantifiedOperand # QuantifiedComparisonPredicate
+    | left=comparisonOperand likeOperator right=comparisonOperand # LikePredicate
+    | left=comparisonOperand membershipOperator membershipOperand # MembershipPredicate
+    | (token=EXISTS
+     | token=NOTEXISTS
+     | token=EXISTSANYOF
+     | token=NOTEXISTSANYOF
+     | token=EXISTSALLOF
+     | token=NOTEXISTSALLOF
+     | token=CRITCONDITION
+     | token=CONDITION
+     | token=NEGATEDCONDITION) # SingleConditionPredicate
 ;
 
 unaryComparisonOperator :
@@ -132,24 +120,22 @@ arithmeticalOperator :
 ;
 
 singleOperand :
-      prop
-    | extProp
-    | val
-    | param
-    | EXPR
-    | MODEL
-    | unaryFunction
-    | ifNull
-    | NOW
-    | dateDiffInterval
-    | dateAddInterval
-    | round
-    | concat
-    | caseWhen
-;
-
-unaryFunction :
-      funcName=unaryFunctionName argument=singleOperandOrExpr
+      token=PROP # Prop
+    | token=EXTPROP # ExtProp
+    | (token=VAL | token=IVAL) # Val
+    | (token=PARAM | token=IPARAM) # Param
+    // expr(ExpressionModel)
+    | token=EXPR # SingleOperand_Expr
+    // model(SingleResultQueryModel)
+    | token=MODEL # SingleOperand_Model
+    | funcName=unaryFunctionName argument=singleOperand # UnaryFunction
+    | IFNULL nullable=singleOperand THEN other=singleOperand # IfNull
+    | NOW # SingleOperand_Now
+    | COUNT unit=dateDiffIntervalUnit BETWEEN startDate=singleOperandOrExpr AND endDate=singleOperandOrExpr # DateDiffInterval
+    | ADDTIMEINTERVALOF left=singleOperandOrExpr unit=dateAddIntervalUnit TO right=singleOperandOrExpr # DateAddInterval
+    | ROUND singleOperandOrExpr TO # Round
+    | CONCAT singleOperandOrExpr (WITH singleOperandOrExpr)* END # Concat
+    | CASEWHEN condition THEN singleOperandOrExpr (WHEN condition THEN singleOperandOrExpr)* (OTHERWISE otherwiseOperand=singleOperandOrExpr)? caseWhenEnd # CaseWhen
 ;
 
 unaryFunctionName :
@@ -166,14 +152,6 @@ unaryFunctionName :
     | token=DATEOF
 ;
 
-ifNull :
-      IFNULL nullable=singleOperandOrExpr THEN other=singleOperandOrExpr
-;
-
-dateDiffInterval :
-      COUNT unit=dateDiffIntervalUnit BETWEEN startDate=singleOperandOrExpr AND endDate=singleOperandOrExpr
-;
-
 dateDiffIntervalUnit :
       token=SECONDS
     | token=MINUTES
@@ -181,10 +159,6 @@ dateDiffIntervalUnit :
     | token=DAYS
     | token=MONTHS
     | token=YEARS
-;
-
-dateAddInterval :
-      ADDTIMEINTERVALOF left=singleOperandOrExpr unit=dateAddIntervalUnit TO right=singleOperandOrExpr
 ;
 
 dateAddIntervalUnit :
@@ -196,42 +170,12 @@ dateAddIntervalUnit :
     | token=YEARS
 ;
 
-round :
-      ROUND singleOperandOrExpr TO
-;
-
-concat :
-      CONCAT singleOperandOrExpr (WITH singleOperandOrExpr)* END
-;
-
-caseWhen :
-      CASEWHEN condition THEN singleOperandOrExpr (WHEN condition THEN singleOperandOrExpr)* (OTHERWISE otherwiseOperand=singleOperandOrExpr)? caseWhenEnd
-;
-
 caseWhenEnd :
       token=END
     | token=ENDASINT
     | token=ENDASBOOL
     | token=ENDASSTR
     | token=ENDASDECIMAL
-;
-
-prop :
-      token=PROP
-;
-
-extProp :
-      token=EXTPROP
-;
-
-val :
-      token=VAL
-    | token=IVAL
-;
-
-param :
-      token=PARAM
-    | token=IPARAM
 ;
 
 multiOperand :
@@ -262,18 +206,6 @@ membershipOperand :
     | token=MODEL
 ;
 
-singleConditionPredicate :
-      token=EXISTS
-    | token=NOTEXISTS
-    | token=EXISTSANYOF
-    | token=NOTEXISTSANYOF
-    | token=EXISTSALLOF
-    | token=NOTEXISTSALLOF
-    | token=CRITCONDITION
-    | token=CONDITION
-    | token=NEGATEDCONDITION
-;
-
 join :
       joinOperator alias=AS? joinCondition join?
 ;
@@ -292,16 +224,8 @@ groupBy :
 ;
 
 anyYield :
-      yield1 # AnyYield_Yield1
-    | yieldMany # AnyYield_YieldMany
-;
-
-yield1 :
-      YIELD operand=yieldOperand model_=yield1Model
-;
-
-yieldMany :
-      YIELDALL? aliasedYield+ model_=yieldManyModel
+      YIELD operand=yieldOperand model_=yield1Model # Yield1
+    | YIELDALL? aliasedYield+ model_=yieldManyModel # YieldMany
 ;
 
 aliasedYield :
@@ -309,13 +233,9 @@ aliasedYield :
 ;
 
 yieldOperand :
-      singleOperandOrExpr
-    | COUNTALL
-    | yieldOperandFunction
-;
-
-yieldOperandFunction :
-      funcName=yieldOperandFunctionName argument=singleOperandOrExpr
+      singleOperandOrExpr # YieldOperand_SingleOperandOrExpr
+    | COUNTALL # YieldOperand_CountAll
+    | funcName=yieldOperandFunctionName argument=singleOperandOrExpr # YieldOperandFunction
 ;
 
 yieldOperandFunctionName :
@@ -350,28 +270,16 @@ model :
     | token=MODELASAGGREGATE
 ;
 
-standaloneExpression :
-      EXPR operand=yieldOperand (arithmeticalOperator yieldOperand)* MODEL
-;
-
-standaloneCondExpr :
-      COND standaloneCondition MODEL
-;
-
 standaloneCondition :
-      predicate
-    | left=standaloneCondition AND right=standaloneCondition
-    | left=standaloneCondition OR right=standaloneCondition
-;
-
-orderBy :
-      ORDERBY orderByOperand+ MODEL
+      predicate # StandaloneCondition_Predicate
+    | left=standaloneCondition AND right=standaloneCondition # AndStandaloneCondition
+    | left=standaloneCondition OR right=standaloneCondition  # OrStandaloneCondition
 ;
 
 orderByOperand :
-      singleOperandOrExpr order
-    | YIELD order
-    | ORDER
+      singleOperandOrExpr order # OrderByOperand_Single
+    | YIELD order # OrderByOperand_Yield
+    | ORDER # OrderByOperand_OrderingModel
 ;
 
 order :
