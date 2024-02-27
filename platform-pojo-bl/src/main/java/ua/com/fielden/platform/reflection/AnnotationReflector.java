@@ -54,8 +54,8 @@ public final class AnnotationReflector {
     private static final Logger LOGGER = getLogger(AnnotationReflector.class);
 
     /** A global lazy static cache of annotations, which is used for annotation information retrieval. */
-    private static final Cache<Class<?>, Map<String, Map<Class<? extends Annotation>, Annotation>>> METHOD_ANNOTATIONS = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
-    private static final Cache<Class<?>, Map<String, Map<Class<? extends Annotation>, Annotation>>> FIELD_ANNOTATIONS = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
+    private static final Cache<Class<?>, Cache<String, Map<Class<? extends Annotation>, Annotation>>> METHOD_ANNOTATIONS = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
+    private static final Cache<Class<?>, Cache<String, Map<Class<? extends Annotation>, Annotation>>> FIELD_ANNOTATIONS = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
 
     public static T2<Long, Long> cleanUp() {
         METHOD_ANNOTATIONS.cleanUp();
@@ -121,43 +121,45 @@ public final class AnnotationReflector {
         final Class<?> klass = field.getDeclaringClass();
         final String name = field.getName();
 
-        final Map<String, Map<Class<? extends Annotation>, Annotation>> cachedMethods;
+        final Cache<String, Map<Class<? extends Annotation>, Annotation>> cachedFieldAnnotations;
         try {
-            cachedMethods = FIELD_ANNOTATIONS.get(klass, HashMap::new);
+            cachedFieldAnnotations = FIELD_ANNOTATIONS.get(klass, () -> CacheBuilder.newBuilder().weakValues().build());
         } catch (final ExecutionException ex) {
             LOGGER.error(ex);
             throw new ReflectionException(format("Could not get annotation for field [%s].", field), ex);
         }
 
-        return annotationExtractionHelper(field, name, cachedMethods);
+        return annotationExtractionHelper(field, name, cachedFieldAnnotations);
     }
 
     private static Map<Class<? extends Annotation>, Annotation> getMethodAnnotations(final Method method) {
         final Class<?> klass = method.getDeclaringClass();
         final String name = method.getName();
 
-        final Map<String, Map<Class<? extends Annotation>, Annotation>> cachedMethods;
+        final Cache<String, Map<Class<? extends Annotation>, Annotation>> cachedMethodAnnotations;
         try {
-            cachedMethods = METHOD_ANNOTATIONS.get(klass, HashMap::new);
+            cachedMethodAnnotations = METHOD_ANNOTATIONS.get(klass, () -> CacheBuilder.newBuilder().weakValues().build());
         } catch (final ExecutionException ex) {
             LOGGER.error(ex);
             throw new ReflectionException(format("Could not get annotation for method [%s].", method), ex);
         }
 
-        return annotationExtractionHelper(method, name, cachedMethods);
+        return annotationExtractionHelper(method, name, cachedMethodAnnotations);
     }
 
-    private static Map<Class<? extends Annotation>, Annotation> annotationExtractionHelper(final AnnotatedElement el, final String name, final Map<String, Map<Class<? extends Annotation>, Annotation>> cachedMethods) {
-        final Map<Class<? extends Annotation>, Annotation> cached = cachedMethods.get(name);
-        if (cached == null) {
-            final Map<Class<? extends Annotation>, Annotation> newCached = new HashMap<>();
-            for (final Annotation ann : el.getAnnotations()) {
-                newCached.put(ann.annotationType(), ann);
-            }
-            cachedMethods.put(name, newCached);
-            return newCached;
+    private static Map<Class<? extends Annotation>, Annotation> annotationExtractionHelper(final AnnotatedElement el, final String name, final Cache<String, Map<Class<? extends Annotation>, Annotation>> cachedAnnotations) {
+        try {
+            return cachedAnnotations.get(name, () -> {
+                    final Map<Class<? extends Annotation>, Annotation> newCached = new HashMap<>();
+                    for (final Annotation ann : el.getAnnotations()) {
+                        newCached.put(ann.annotationType(), ann);
+                    }
+                    cachedAnnotations.put(name, newCached);
+                    return newCached;
+            });
+        } catch (final ExecutionException ex) {
+            throw new ReflectionException("Could not get annotations for [%s]".formatted(name), ex);
         }
-        return cached;
     }
 
     /**
