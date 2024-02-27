@@ -220,11 +220,10 @@ public final class AnnotationReflector {
      *
      * Returns a whole list of methods (including private, protected and public). This method processes the whole class hierarchy.
      * <p>
-     * Important : overridden methods resolves as different. (e.g.: both overridden "getKey()" from {@link AbstractUnionEntity} and original "getKey()" from {@link AbstractEntity}
-     * will be returned for {@link AbstractUnionEntity} descendant)
+     * Important : overridden methods resolve as different. (e.g.: both overridden "getKey()" from {@link AbstractUnionEntity} and original "getKey()" from {@link AbstractEntity}
+     * would be returned for a {@link AbstractUnionEntity} descendant)
      *
      * @param type
-     * @param annotation
      * @return
      */
     public static List<Method> getMethods(final Class<?> type) {
@@ -343,11 +342,10 @@ public final class AnnotationReflector {
     }
 
     /**
-     * Returns <code>true</code> if {@link Calculated} annotation represents <i>contextual</i> calculated property, <code>false</code> otherwise. <i>Contextual</i> calculated
+     * Returns {@code true} if {@link Calculated} annotation represents <i>contextual</i> calculated property, <code>false</code> otherwise. <i>Contextual</i> calculated
      * properties are generated using {@link IDomainTreeEnhancer} and can be dependent on type higher than direct parent type.
      *
-     * @param root
-     * @param property
+     * @param calculatedAnnotation
      * @return
      */
     public static boolean isContextual(final Calculated calculatedAnnotation) {
