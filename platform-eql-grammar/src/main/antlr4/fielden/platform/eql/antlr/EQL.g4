@@ -79,9 +79,8 @@ likeOperator :
 ;
 
 comparisonOperand :
-      singleOperand # ComparisonOperand_SingleOperand
-    | expr # ComparisonOperand_Expr
-    | multiOperand # ComparisonOperand_MultiOperand
+      singleOperand # ComparisonOperand_Single
+    | multiOperand # ComparisonOperand_Multi
 ;
 
 comparisonOperator :
@@ -98,17 +97,8 @@ quantifiedOperand :
     | token=ANY
 ;
 
-expr :
-      BEGINEXPR exprBody ENDEXPR
-;
-
 exprBody :
-      singleOperandOrExpr (arithmeticalOperator singleOperandOrExpr)*
-;
-
-singleOperandOrExpr :
-      singleOperand
-    | expr
+      singleOperand (arithmeticalOperator singleOperand)*
 ;
 
 arithmeticalOperator :
@@ -131,11 +121,12 @@ singleOperand :
     | funcName=unaryFunctionName argument=singleOperand # UnaryFunction
     | IFNULL nullable=singleOperand THEN other=singleOperand # IfNull
     | NOW # SingleOperand_Now
-    | COUNT unit=dateDiffIntervalUnit BETWEEN startDate=singleOperandOrExpr AND endDate=singleOperandOrExpr # DateDiffInterval
-    | ADDTIMEINTERVALOF left=singleOperandOrExpr unit=dateAddIntervalUnit TO right=singleOperandOrExpr # DateAddInterval
-    | ROUND singleOperandOrExpr TO # Round
-    | CONCAT singleOperandOrExpr (WITH singleOperandOrExpr)* END # Concat
-    | CASEWHEN condition THEN singleOperandOrExpr (WHEN condition THEN singleOperandOrExpr)* (OTHERWISE otherwiseOperand=singleOperandOrExpr)? caseWhenEnd # CaseWhen
+    | COUNT unit=dateDiffIntervalUnit BETWEEN startDate=singleOperand AND endDate=singleOperand # DateDiffInterval
+    | ADDTIMEINTERVALOF left=singleOperand unit=dateAddIntervalUnit TO right=singleOperand # DateAddInterval
+    | ROUND singleOperand TO # Round
+    | CONCAT singleOperand (WITH singleOperand)* END # Concat
+    | CASEWHEN condition THEN singleOperand (WHEN condition THEN singleOperand)* (OTHERWISE otherwiseOperand=singleOperand)? caseWhenEnd # CaseWhen
+    | BEGINEXPR exprBody ENDEXPR # Expr
 ;
 
 unaryFunctionName :
@@ -220,7 +211,7 @@ joinCondition :
 ;
 
 groupBy :
-      GROUPBY operand=singleOperandOrExpr groupBy?
+      GROUPBY operand=singleOperand groupBy?
 ;
 
 anyYield :
@@ -233,9 +224,9 @@ aliasedYield :
 ;
 
 yieldOperand :
-      singleOperandOrExpr # YieldOperand_SingleOperandOrExpr
+      singleOperand # YieldOperand_SingleOperandOrExpr
     | COUNTALL # YieldOperand_CountAll
-    | funcName=yieldOperandFunctionName argument=singleOperandOrExpr # YieldOperandFunction
+    | funcName=yieldOperandFunctionName argument=singleOperand # YieldOperandFunction
 ;
 
 yieldOperandFunctionName :
@@ -277,7 +268,7 @@ standaloneCondition :
 ;
 
 orderByOperand :
-      singleOperandOrExpr order # OrderByOperand_Single
+      singleOperand order # OrderByOperand_Single
     | YIELD order # OrderByOperand_Yield
     | ORDER # OrderByOperand_OrderingModel
 ;

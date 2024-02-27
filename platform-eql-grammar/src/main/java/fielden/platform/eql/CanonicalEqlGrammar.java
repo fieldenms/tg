@@ -117,9 +117,7 @@ public final class CanonicalEqlGrammar {
         derive(Expr).
             to(beginExpr, ExprBody, endExpr).
         derive(ExprBody).
-            to(SingleOperandOrExpr, repeat(ArithmeticalOperator, SingleOperandOrExpr)).
-        derive(SingleOperandOrExpr).
-            to(SingleOperand).or(Expr).
+            to(SingleOperand, repeat(ArithmeticalOperator, SingleOperand)).
         derive(ArithmeticalOperator).
             to(add).or(sub).or(div).or(mult).or(mod).
         derive(SingleOperand).
@@ -135,9 +133,10 @@ public final class CanonicalEqlGrammar {
             or(Round).
             or(Concat).
             or(CaseWhen).
+            or(Expr).
 
         derive(UnaryFunction).
-            to(label("funcName", UnaryFunctionName), label("argument", SingleOperandOrExpr)).
+            to(label("funcName", UnaryFunctionName), label("argument", SingleOperand)).
 
         derive(UnaryFunctionName).
             to(upperCase).or(lowerCase).
@@ -146,30 +145,30 @@ public final class CanonicalEqlGrammar {
             or(dateOf).
 
         derive(IfNull).
-            to(ifNull, label("nullable", SingleOperandOrExpr), then, label("other", SingleOperandOrExpr)).
+            to(ifNull, label("nullable", SingleOperand), then, label("other", SingleOperand)).
 
         derive(DateDiffInterval).
-            to(count, label("unit", DateDiffIntervalUnit), between, label("startDate", SingleOperandOrExpr), and, label("endDate", SingleOperandOrExpr)).
+            to(count, label("unit", DateDiffIntervalUnit), between, label("startDate", SingleOperand), and, label("endDate", SingleOperand)).
 
         derive(DateDiffIntervalUnit).
             to(seconds).or(minutes).or(hours).or(days).or(months).or(years).
 
         derive(DateAddInterval).
-            to(addTimeIntervalOf, label("left", SingleOperandOrExpr), label("unit", DateAddIntervalUnit), to, label("right", SingleOperandOrExpr)).
+            to(addTimeIntervalOf, label("left", SingleOperand), label("unit", DateAddIntervalUnit), to, label("right", SingleOperand)).
 
         derive(DateAddIntervalUnit).
             to(seconds).or(minutes).or(hours).or(days).or(months).or(years).
 
         derive(Round).
-            to(round, SingleOperandOrExpr, to.with(Integer.class)).
+            to(round, SingleOperand, to.with(Integer.class)).
 
         derive(Concat).
-            to(concat, SingleOperandOrExpr, (repeat(with, SingleOperandOrExpr)), end).
+            to(concat, SingleOperand, (repeat(with, SingleOperand)), end).
 
         derive(CaseWhen).
-            to(caseWhen, Condition, then, SingleOperandOrExpr,
-                    repeat(when, Condition, then, SingleOperandOrExpr),
-                    opt(otherwise, label("otherwiseOperand", SingleOperandOrExpr)),
+            to(caseWhen, Condition, then, SingleOperand,
+                    repeat(when, Condition, then, SingleOperand),
+                    opt(otherwise, label("otherwiseOperand", SingleOperand)),
                     CaseWhenEnd).
 
         derive(CaseWhenEnd).
@@ -239,7 +238,7 @@ public final class CanonicalEqlGrammar {
             to(on, Condition).
 
         derive(GroupBy).
-            to(groupBy, label("operand", SingleOperandOrExpr), opt(GroupBy)).
+            to(groupBy, label("operand", SingleOperand), opt(GroupBy)).
 
         specialize(AnyYield).
             into(Yield1, YieldMany).
@@ -254,12 +253,12 @@ public final class CanonicalEqlGrammar {
             to(yield, label("operand", YieldOperand), label("alias", YieldAlias)).
 
         derive(YieldOperand).
-            to(SingleOperandOrExpr).
+            to(SingleOperand).
             or(countAll).
             or(YieldOperandFunction).
 
         derive(YieldOperandFunction).
-            to(label("funcName", YieldOperandFunctionName), label("argument", SingleOperandOrExpr)).
+            to(label("funcName", YieldOperandFunctionName), label("argument", SingleOperand)).
 
         derive(YieldOperandFunctionName).
             to(maxOf).or(minOf).or(sumOf).or(countOf).or(avgOf).
@@ -297,7 +296,7 @@ public final class CanonicalEqlGrammar {
             to(orderBy, repeat1(OrderByOperand), model).
 
         derive(OrderByOperand).
-            to(SingleOperandOrExpr, Order).
+            to(SingleOperand, Order).
             or(yield.with(STR), Order).
             or(order.with(OrderingModel.class)).
 
@@ -316,7 +315,7 @@ public final class CanonicalEqlGrammar {
         SingleOperand, MultiOperand,
         ExtProp, Prop,
         UnaryComparisonOperator, Val, Param,
-        ArithmeticalOperator, SingleOperandOrExpr, ExprBody, Expr,
+        ArithmeticalOperator, ExprBody, Expr,
         UnaryFunction, UnaryFunctionName, IfNull, DateDiffInterval, DateDiffIntervalUnit, DateAddInterval, DateAddIntervalUnit, Round, Concat, CaseWhen, CaseWhenEnd,
         MembershipOperator,
         MembershipOperand, ComparisonOperator, ComparisonOperand, QuantifiedOperand, SingleConditionPredicate, Join, JoinOperator,
