@@ -1,6 +1,8 @@
 package fielden.platform.bnf;
 
-public record ZeroOrMore(Term term, TermMetadata metadata) implements Notation {
+import java.util.function.Function;
+
+public record ZeroOrMore(Term term, TermMetadata metadata) implements Quantifier {
 
     public ZeroOrMore(Term term) {
         this(term, TermMetadata.EMPTY_METADATA);
@@ -14,6 +16,11 @@ public record ZeroOrMore(Term term, TermMetadata metadata) implements Notation {
     @Override
     public ZeroOrMore normalize() {
         return new ZeroOrMore(term);
+    }
+
+    @Override
+    public ZeroOrMore recMap(final Function<? super Term, ? extends Term> mapper) {
+        return new ZeroOrMore(term.recMap(mapper), metadata);
     }
 
     @Override

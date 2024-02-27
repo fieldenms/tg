@@ -4,6 +4,7 @@ import fielden.platform.bnf.*;
 import j2html.TagCreator;
 import j2html.tags.DomContent;
 
+import java.util.List;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Consumer;
@@ -90,14 +91,12 @@ public class BnfToHtml {
         var first = tr(
                 td(a(rule.lhs().name()).attr("name", rule.lhs().name()).withClass(NONTERMINAL_LHS_CLASS)),
                 td(""));
-       var rest = rule.rhs().map(this::ruleBodyToHtml);
+       var rest = rule.rhs().options().stream().map(this::ruleBodyToHtml);
        return each(first, TagCreator.each(rest));
     }
 
-    protected DomContent ruleBodyToHtml(final Sequence seq) {
-        return tr(
-                td(),
-                td(each(withDelimiter(seq.stream().map(this::toHtml), text(" ")))));
+    protected DomContent ruleBodyToHtml(final Term term) {
+        return tr(td(), td(toHtml(term)));
     }
 
     protected DomContent toHtml(Term term) {
@@ -161,15 +160,33 @@ public class BnfToHtml {
         return span("<%s>".formatted(text)).withClass(PARAMETER_CLASS);
     }
 
-    protected DomContent toHtml(Notation notation) {
-        String q = switch (notation) {
-            case ZeroOrMore $ -> "*";
-            case OneOrMore $ -> "+";
-            case Optional $ -> "?";
+    protected DomContent toHtml(final Notation notation) {
+        return switch (notation) {
+            case Alternation alternation -> toHtml(alternation);
+            case Quantifier quantifier -> toHtml(quantifier);
+        };
+    }
+
+    protected DomContent toHtml(final Alternation alternation) {
+        final List<? extends Term> options = alternation.options();
+        if (options.size() == 1) {
+            return toHtml(options.getFirst());
+        }
+        return each(
+                text("{"),
+                each(withDelimiter(options.stream().map(this::toHtml), text(" | "))),
+                text("}"));
+    }
+
+    protected DomContent toHtml(final Quantifier quantifier) {
+        final String q = switch (quantifier) {
+            case ZeroOrMore x -> "*";
+            case OneOrMore x ->  "+";
+            case Optional x ->   "?";
         };
         return each(
                 text("{"),
-                toHtml(notation.term()),
+                toHtml(quantifier.term()),
                 text("}"),
                 text(q)
         );

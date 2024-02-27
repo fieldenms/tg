@@ -114,7 +114,7 @@ public class BnfToG4 {
         };
         return "%s :\n      %s\n;".formatted(
                 convert(rule.lhs()),
-                rule.rhs().map(this::convert).map(labeler).collect(joining("\n    | ")));
+                rule.rhs().options().stream().map(this::convert).map(labeler).collect(joining("\n    | ")));
     }
 
     protected String makeAltLabelName(Rule rule, String alt) {
@@ -165,33 +165,45 @@ public class BnfToG4 {
     }
 
     protected String convert(final Notation notation) {
-        final String q = switch (notation) {
-            case ZeroOrMore $ -> "*";
-            case OneOrMore $ -> "+";
-            case Optional $ -> "?";
+        return switch (notation) {
+            case Quantifier quantifier -> convert(quantifier);
+            case Alternation alternation -> convert(alternation);
         };
+    }
 
-        final String s = convert(notation.term());
+    protected String convert(final Alternation alternation) {
+        final List<? extends Term> options = alternation.options();
+        if (options.size() == 1) {
+            return convert(options.getFirst());
+        }
+        return options.stream().map(this::convert).collect(joining(" | ", "(", ")"));
+    }
 
-        final Function<String, String> wrapper = switch (notation.term()) {
-            case Sequence seq -> (seq.size() > 1) ? str -> "(%s)".formatted(str) : Function.identity();
+    protected String convert(final Quantifier quantifier) {
+        final String q = switch (quantifier) {
+            case ZeroOrMore x -> "*";
+            case OneOrMore x ->  "+";
+            case Optional x ->   "?";
+        };
+        final Function<String, String> wrapper = switch (quantifier.term()) {
+            case Sequence seq when (seq.size() > 1) -> "(%s)"::formatted;
             default -> Function.identity();
         };
 
-        return wrapper.apply(s) + q;
+        return wrapper.apply(convert(quantifier.term())) + q;
     }
 
     static boolean isSingleTerminalRule(final Rule rule) {
         return switch (rule) {
             case Specialization $ -> false;
-            case Derivation derivation -> derivation.rhs()
-                    .allMatch(body -> body.size() == 1 && body.getFirst() instanceof Terminal);
+            case Derivation derivation -> derivation.rhs().options().stream()
+                    .allMatch(seq -> seq.size() == 1 && seq.getFirst() instanceof Terminal);
         };
     }
 
     protected Collection<JavaFile> generateFiles() {
         return originalBnf.rules().stream()
-                .flatMap(Rule::rhsTerms)
+                .flatMap(rule -> rule.rhs().flatten())
                 .mapMulti(typeFilter(Token.class))
                 .filter(Token::hasParameters)
                 .map(Token::normalize)
@@ -270,7 +282,7 @@ public class BnfToG4 {
     private static BNF stripParameters(final BNF bnf) {
         final Set<Rule> newRules = bnf.rules().stream()
                 .map(rule -> switch (rule) {
-                    case Derivation derivation -> derivation.map(term -> switch (term) {
+                    case Derivation derivation -> derivation.recMap(term -> switch (term) {
                         case Token token -> token.stripParameters();
                         default -> term;
                     });
@@ -294,7 +306,7 @@ public class BnfToG4 {
      */
     private static Rule deduplicate(Rule rule) {
         return switch (rule) {
-            case Derivation d -> new Derivation(d.lhs(), d.rhs().distinct().toList());
+            case Derivation d -> new Derivation(d.lhs(), new Alternation(d.rhs().options().stream().distinct().toList(), d.rhs().metadata()));
             case Specialization s -> new Specialization(s.lhs(), s.specializers().stream().distinct().toList());
         };
     }

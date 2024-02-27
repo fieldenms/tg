@@ -2,7 +2,6 @@ package fielden.platform.bnf.util;
 
 import fielden.platform.bnf.BNF;
 import fielden.platform.bnf.Rule;
-import fielden.platform.bnf.Term;
 import fielden.platform.bnf.Variable;
 import org.apache.commons.collections4.CollectionUtils;
 
@@ -25,7 +24,8 @@ public final class BnfVerifier {
     }
 
     private static Stream<Variable> ruleRhsVariables(Rule rule) {
-        return rule.rhsTerms().mapMulti((term, sink) -> {if (term instanceof Variable v) sink.accept(v);});
+        return rule.rhs().flatten()
+                .mapMulti((term, sink) -> {if (term instanceof Variable v) sink.accept(v);});
     }
 
 }

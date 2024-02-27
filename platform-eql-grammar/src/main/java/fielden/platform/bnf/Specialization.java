@@ -1,15 +1,14 @@
 package fielden.platform.bnf;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
 
 public record Specialization(Variable lhs, List<Variable> specializers) implements Rule {
 
     @Override
-    public Stream<Sequence> rhs() {
-        return specializers.stream().map(Sequence::new);
+    public Alternation rhs() {
+        return new Alternation(specializers.stream().map(Sequence::new).toList());
     }
 
     @Override

@@ -1,6 +1,8 @@
 package fielden.platform.bnf;
 
-public record Optional(Term term, TermMetadata metadata) implements Notation {
+import java.util.function.Function;
+
+public record Optional(Term term, TermMetadata metadata) implements Quantifier {
 
     public Optional(Term term) {
         this(term, TermMetadata.EMPTY_METADATA);
@@ -14,6 +16,11 @@ public record Optional(Term term, TermMetadata metadata) implements Notation {
     @Override
     public Optional normalize() {
         return new Optional(term);
+    }
+
+    @Override
+    public Optional recMap(final Function<? super Term, ? extends Term> mapper) {
+        return new Optional(term.recMap(mapper), metadata);
     }
 
     @Override

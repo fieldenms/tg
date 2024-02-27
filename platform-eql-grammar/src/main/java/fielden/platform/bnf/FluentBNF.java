@@ -93,14 +93,13 @@ public final class FluentBNF {
 
         @Override
         protected Rule finishRule() {
-            return new Derivation(lhs, bodies);
+            return new Derivation(lhs, new Alternation(bodies));
         }
 
         @Override
         protected boolean buildsRule() {
             return true;
         }
-
     }
 
     private static final class SpecializationImpl extends BnfBodyImpl implements FluentBNF.ISpecialization {
@@ -142,12 +141,15 @@ public final class FluentBNF {
 
         void add(final Rule rule) {
             add(rule.lhs());
-            rule.rhs().forEach(this::add);
+            rule.rhs().options().forEach(this::add);
             rules.add(rule);
         }
 
         void add(final Notation notation) {
-            add(notation.term());
+            switch (notation) {
+                case Alternation alternation -> alternation.options().forEach(this::add);
+                case Quantifier quantifier -> add(quantifier.term());
+            }
         }
 
         void add(final Sequence sequence) {

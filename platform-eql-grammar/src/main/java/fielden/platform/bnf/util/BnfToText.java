@@ -17,7 +17,7 @@ public class BnfToText {
 
     protected String toString(Rule rule) {
         final int prefixLen = rule.lhs().name().length();
-        return rule.rhs()
+        return rule.rhs().options().stream()
                 .map(this::toString)
                 .collect(joining("\n%s | ".formatted(" ".repeat(prefixLen)), "%s = ".formatted(rule.lhs().name()), ";"));
     }
@@ -81,14 +81,25 @@ public class BnfToText {
     private static String wrapParameter(String text) {
         return "<%s>".formatted(text);
     }
-
+    
     protected String toString(Notation notation) {
-        String q = switch (notation) {
+        return switch (notation) {
+            case Alternation alternation -> toString(alternation);
+            case Quantifier quantifier -> toString(quantifier);
+        };
+    }
+
+    protected String toString(Alternation alternation) {
+        return alternation.options().stream().map(this::toString).collect(joining(" | "));
+    }
+
+    protected String toString(Quantifier quantifier) {
+        String q = switch (quantifier) {
             case ZeroOrMore $ -> "*";
             case OneOrMore $ -> "+";
             case Optional $ -> "?";
         };
-        return "{%s}%s".formatted(toString(notation.term()), q);
+        return "{%s}%s".formatted(toString(quantifier.term()), q);
     }
 
 }

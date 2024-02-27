@@ -6,6 +6,8 @@ import java.util.stream.Stream;
 
 public final class Sequence implements List<Term>, Term {
 
+    private static final Sequence EMPTY_SEQUENCE = new Sequence();
+
     private final List<Term> terms;
     private final TermMetadata metadata;
 
@@ -22,6 +24,16 @@ public final class Sequence implements List<Term>, Term {
         this(Arrays.asList(terms), TermMetadata.EMPTY_METADATA);
     }
 
+    public static Sequence of(Term... terms) {
+        if (terms.length == 0) {
+            return EMPTY_SEQUENCE;
+        }
+        else if (terms.length == 1 && terms[0] instanceof Sequence seq) {
+            return seq;
+        }
+        return new Sequence(terms);
+    }
+
     @Override
     public Term normalize() {
         return new Sequence(terms);
@@ -32,8 +44,18 @@ public final class Sequence implements List<Term>, Term {
         return new Sequence(terms, TermMetadata.merge(metadata, key, value));
     }
 
+    @Override
+    public Sequence recMap(final Function<? super Term, ? extends Term> mapper) {
+        return new Sequence(terms.stream().map(t -> t.recMap(mapper)).toList(), metadata);
+    }
+
     public Sequence map(final Function<? super Term, ? extends Term> mapper) {
-        return new Sequence(terms.stream().map(mapper).toList());
+        return new Sequence(terms.stream().map(mapper).toList(), metadata);
+    }
+
+    @Override
+    public Stream<Term> flatten() {
+        return terms.stream().flatMap(Term::flatten);
     }
 
     @Override

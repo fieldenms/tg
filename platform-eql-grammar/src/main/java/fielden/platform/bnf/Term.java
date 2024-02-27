@@ -1,5 +1,8 @@
 package fielden.platform.bnf;
 
+import java.util.function.Function;
+import java.util.stream.Stream;
+
 /**
  * The most general grammar term.
  */
@@ -19,5 +22,12 @@ public sealed interface Term permits Notation, Sequence, Symbol {
     }
 
     <V> Term annotate(TermMetadata.Key<V> key, V value);
+
+    Stream<Term> flatten();
+
+    /**
+     * Recursive map.
+     */
+    Term recMap(Function<? super Term, ? extends Term> mapper);
 
 }
