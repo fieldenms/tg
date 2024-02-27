@@ -56,13 +56,14 @@ public class MiscUtilities {
      * Creates a new array of values based on the passed list by changing * to %.
      *
      * @param criteria
+     * @param trim - indicates whether elements of criteria list parameter should be trimmed or not.
      * @return
      */
-    public static String[] prepare(final List<String> criteria) {
+    public static String[] prepare(final List<String> criteria, final boolean trim) {
         final List<String> result = new ArrayList<>();
         if (criteria != null) {
             for (final String crit : criteria) {
-                result.add(prepare(crit));
+                result.add(prepare(crit, trim));
             }
         }
         // eliminate empty or null values
@@ -96,13 +97,15 @@ public class MiscUtilities {
      * Converts auto-completer-like regular expression to normal regular expression (simply replaces all '*' with '%' characters)
      *
      * @param autocompleterExp
+     * @param trim - indicates whether autocompleterExp parameter should be trimmed or not.
      * @return
      */
-    public static String prepare(final String autocompleterExp) {
-        if ("*".equals(autocompleterExp.trim())) {
+    public static String prepare(final String autocompleterExp, final boolean trim) {
+        if ("*".equals(trim ? autocompleterExp.trim(): autocompleterExp)) {
             return null;
         }
-        return autocompleterExp.replace("*", "%").trim();
+        final String processedExpr = autocompleterExp.replace("*", "%");
+        return trim ? processedExpr.trim(): processedExpr;
     }
 
     /**

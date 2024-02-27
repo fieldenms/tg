@@ -762,7 +762,7 @@ public class EntityResourceUtils {
     public static AbstractEntity<?> findAndFetchBy(final String searchString, final Class<AbstractEntity<?>> entityType, final Optional<String> optActiveProp, final fetch<AbstractEntity<?>> fetch, final IEntityDao<AbstractEntity<?>> companion) {
         if (isCompositeEntity(entityType)) {
             //logger.debug(format("KEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
-            final String compositeKeyAsString = MiscUtilities.prepare(prepSearchStringForCompositeKey(entityType, searchString));
+            final String compositeKeyAsString = MiscUtilities.prepare(prepSearchStringForCompositeKey(entityType, searchString), true);
             final EntityResultQueryModel<AbstractEntity<?>> model = select(entityType).where().prop(KEY).iLike().val(compositeKeyAsString).model().setFilterable(true);
             final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> qem = from(model).with(fetch).model();
             try {
@@ -798,7 +798,7 @@ public class EntityResourceUtils {
             }
         } else {
             //logger.debug(format("KEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
-            final String[] keys = MiscUtilities.prepare(Arrays.asList(searchString));
+            final String[] keys = MiscUtilities.prepare(Arrays.asList(searchString), true);
             final String key;
             if (keys.length > 1) {
                 throw new IllegalArgumentException(format("Value [%s] does not represent a single key value, which is required for coversion to an instance of type [%s].", searchString, entityType.getName()));

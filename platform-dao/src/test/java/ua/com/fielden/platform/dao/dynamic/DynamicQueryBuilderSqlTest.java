@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.dao.dynamic;
 
+import static java.util.Arrays.stream;
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -54,6 +55,7 @@ import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.IDates;
 
 /**
@@ -557,7 +559,27 @@ public class DynamicQueryBuilderSqlTest {
     }
 
     @Test
-    public void query_composition_for_property_of_type_string_with_wildchards_in_crit_value_preserves_the_original_placement_of_wildcards_and_does_not_inject_them_at_the_beginning_and_end() {
+    public void query_composition_for_property_of_type_string_without_wildcards_and_with_whitespaces_in_crit_value_should_not_trim_whitespaces_and_should_automatically_injects_wildcards_at_the_beginning_and_end() {
+        //"entityProp.stringProp"
+        set_up();
+        final QueryProperty property = queryProperties.get("stringProp");
+        property.setValue(" Some string value ");
+
+        final String cbn = property.getConditionBuildingName();
+
+        final ICompleted<? extends AbstractEntity<?>> expected = //
+                /**/iJoin.where().condition(cond() //
+                /*  */.condition(cond().prop(cbn).isNotNull().and() //
+                        /*    */.condition(cond().prop(cbn).iLike().anyOfValues(new Object[] { "% Some string value %" }).model()) //
+                        /*  */.model()) //
+                /**/.model()); //
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
+
+        assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
+    }
+
+    @Test
+    public void query_composition_for_property_of_type_string_with_wildcards_in_crit_value_preserves_the_original_placement_of_wildcards_and_does_not_inject_them_at_the_beginning_and_end() {
         //"entityProp.stringProp"
         set_up();
         final QueryProperty property = queryProperties.get("stringProp");
@@ -578,7 +600,28 @@ public class DynamicQueryBuilderSqlTest {
     }
 
     @Test
-    public void query_composition_for_property_of_type_string_with_and_without_wildchards_in_crit_values_retain_original_whildcards_and_autoinject_wildcards_at_the_beginning_and_end_for_values_with_no_wildcards() {
+    public void query_composition_for_property_of_type_string_with_wildcards_and_whitespaces_in_crit_value_should_not_trim_whitespaces_and_should_preserves_the_original_placement_of_wildcards_and_does_not_inject_them_at_the_beginning_and_end() {
+        //"entityProp.stringProp"
+        set_up();
+        final QueryProperty property = queryProperties.get("stringProp");
+        final String critValue = " Some string value* , *Some string value , Some string *values, *Some string value* ";
+        property.setValue(critValue);
+
+        final String cbn = property.getConditionBuildingName();
+
+        final ICompleted<? extends AbstractEntity<?>> expected = //
+                /**/iJoin.where().condition(cond() //
+                /*  */.condition(cond().prop(cbn).isNotNull().and() //
+                        /*    */.condition(cond().prop(cbn).iLike().anyOfValues(critValue.replace("*", "%").split(",")).model()) //
+                        /*  */.model()) //
+                /**/.model()); //
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
+
+        assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
+    }
+
+    @Test
+    public void query_composition_for_property_of_type_string_with_and_without_wildcards_in_crit_values_retain_original_whildcards_and_autoinject_wildcards_at_the_beginning_and_end_for_values_with_no_wildcards() {
         //"entityProp.stringProp"
         set_up();
         final QueryProperty property = queryProperties.get("stringProp");
@@ -597,6 +640,25 @@ public class DynamicQueryBuilderSqlTest {
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
     }
 
+    @Test
+    public void query_composition_for_property_of_type_string_with_and_without_wildhards_and_with_whitespaces_in_crit_values_should_not_trim_whitespaces_and_should_retain_original_whildcards_and_autoinject_wildcards_at_the_beginning_and_end_for_values_with_no_wildcards() {
+        //"entityProp.stringProp"
+        set_up();
+        final QueryProperty property = queryProperties.get("stringProp");
+        property.setValue(" Some string value,*Some string value , Some string *value , *Some string* value");
+
+        final String cbn = property.getConditionBuildingName();
+
+        final ICompleted<? extends AbstractEntity<?>> expected = //
+                /**/iJoin.where().condition(cond() //
+                /*  */.condition(cond().prop(cbn).isNotNull().and() //
+                        /*    */.condition(cond().prop(cbn).iLike().anyOfValues(new String[] {"% Some string value%", "%Some string value ", " Some string %value ", " %Some string% value"}).model()) //
+                        /*  */.model()) //
+                /**/.model()); //
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
+
+        assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
+    }
 
     @Test
     public void query_composition_for_properties_of_entity_type_with_wildcard_selection_crit_value_uses_iLike_operator() {
@@ -614,6 +676,28 @@ public class DynamicQueryBuilderSqlTest {
         /*    */.condition(cond().prop(cbn).iLike().anyOfValues((Object[]) DynamicQueryBuilder.prepCritValuesForEntityTypedProp((List<String>) property.getValue())).model()) //
         /*  */.model()) //
         /**/.model()); //
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
+
+        assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
+    }
+
+    @Test
+    public void query_composition_for_selection_crit_of_entity_value_with_wildcards_and_whitespaces_should_trim_whitespaces() {
+        final String propertyName = "entityProp";
+
+        set_up();
+        final QueryProperty property = queryProperties.get(propertyName);
+        property.setValue(Arrays.asList(" some val 1* ", " some val 2* "));
+
+        final String cbn = property.getConditionBuildingName();
+        final List<String> critValuesWithWildcard = CollectionUtil.listOf("some val 1*", "some val 2*");
+
+        final ICompleted<? extends AbstractEntity<?>> expected = //
+                /**/iJoin.where().condition(cond() //
+                /*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn)).isNotNull().and() //
+                        /*    */.condition(cond().prop(cbn).iLike().anyOfValues(DynamicQueryBuilder.prepCritValuesForEntityTypedProp(critValuesWithWildcard)).model()) //
+                        /*  */.model()) //
+                /**/.model()); //
         final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
@@ -638,6 +722,30 @@ public class DynamicQueryBuilderSqlTest {
         /*  */.condition(cond().prop(cbnNoKey).in().model(select(SlaveEntity.class).where().prop("key").in().values("some val 1", "some val 2").model()).model()) //
         /*  */.model()) //
         /**/.model()); //
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
+
+        assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
+    }
+
+    @Test
+    public void query_composition_for_selection_crit_of_entity_value_with_whitespaces_should_trim_whitespaces() {
+        final String propertyName = "entityProp";
+
+        set_up();
+        final QueryProperty property = queryProperties.get(propertyName);
+        final String[] critValues = new String[] {" some val 1 ", " some val 2 "};
+        property.setValue(Arrays.asList(critValues));
+
+
+        final String cbn = property.getConditionBuildingName();
+        final String cbnNoKey = cbn.substring(0, cbn.length() - 4); // cut off ".key" from the name
+
+        final ICompleted<? extends AbstractEntity<?>> expected = //
+                /**/iJoin.where().condition(cond() //
+                /*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn)).isNotNull().and() //
+                        /*  */.condition(cond().prop(cbnNoKey).in().model(select(SlaveEntity.class).where().prop("key").in().values("some val 1", "some val 2").model()).model()) //
+                        /*  */.model()) //
+                /**/.model()); //
         final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
@@ -672,6 +780,41 @@ public class DynamicQueryBuilderSqlTest {
 
         final ICompleted<? extends AbstractEntity<?>> expected = //
         /**/iJoin.where().condition(whereCondition);
+
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
+
+        assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
+    }
+
+    @Test
+    public void query_composition_for_selection_crit_of_entity_typed_values_with_some_wildcard_and_whitespaces_also_trims_whitespaces() {
+        final String propertyName = "entityProp";
+
+        set_up();
+        final QueryProperty property = queryProperties.get(propertyName);
+        final String[] critValues = new String[] {"some val 1 ", " some val 2* ", " some val 3*", " some val 4",};
+        property.setValue(Arrays.asList(critValues));
+
+        final String[] critValuesWithWildcard = new String[] {"some val 2*", "some val 3*"};
+
+        final String cbn = property.getConditionBuildingName();
+        final String cbnNoKey = cbn.substring(0, cbn.length() - 4); // cut off ".key" from the name
+
+
+        final EntityResultQueryModel<SlaveEntity> subSelect = select(SlaveEntity.class).where().prop("key").in().values("some val 1", "some val 4").model();
+        final ConditionModel whereCondition = cond()
+                .condition(
+                        cond().prop(getPropertyNameWithoutKeyPart(cbn)).isNotNull()
+                                .and()
+                                .condition(
+                                        cond().prop(cbnNoKey).in().model(subSelect)
+                                                .or().prop(cbn).iLike().anyOfValues(prepCritValuesForEntityTypedProp(Arrays.asList(critValuesWithWildcard)))
+                                                .model())
+                                .model())
+                .model();
+
+        final ICompleted<? extends AbstractEntity<?>> expected = //
+                /**/iJoin.where().condition(whereCondition);
 
         final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 

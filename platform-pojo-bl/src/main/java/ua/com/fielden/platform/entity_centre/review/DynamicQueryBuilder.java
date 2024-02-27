@@ -848,9 +848,9 @@ public class DynamicQueryBuilder {
         final String[] crits = criteria.split(",");
         for (int index = 0; index < crits.length; index++) {
             if (!crits[index].contains("*")) {
-                crits[index] = "*" + crits[index].trim() + "*";
+                crits[index] = "*" + crits[index] + "*";
             }
-            crits[index] = prepare(crits[index]);
+            crits[index] = prepare(crits[index], false);
         }
         return crits;
     }
@@ -864,9 +864,9 @@ public class DynamicQueryBuilder {
      */
     private static String prepCritValuesForSingleStringTypedProp(final String criteria) {
         if (!criteria.contains("*")) {
-            return prepare("*" + criteria.trim() + "*");
+            return prepare("*" + criteria + "*", false);
         }
-        return prepare(criteria);
+        return prepare(criteria, false);
     }
 
     /**
@@ -876,7 +876,7 @@ public class DynamicQueryBuilder {
      * @return
      */
     public static String[] prepCritValuesForEntityTypedProp(final List<String> criteria) {
-        return prepare(criteria);
+        return prepare(criteria, true);
     }
 
     /**
@@ -1149,7 +1149,7 @@ public class DynamicQueryBuilder {
         if (exactAndWildcardSearchVals.containsKey(false) && exactAndWildcardSearchVals.containsKey(true)) { // both exact and whildcard search values are present
             return cond()
                     // Condition for exact search values; union entities need ".id" to help EQL.
-                    .prop(propertyNameWithoutKey + (isUnionEntityType(propType) ? ".id" : "")).in().model(select(propType).where().prop(KEY).in().values(exactAndWildcardSearchVals.get(false).toArray()).model())
+                    .prop(propertyNameWithoutKey + (isUnionEntityType(propType) ? ".id" : "")).in().model(select(propType).where().prop(KEY).in().values(prepExectCritValuesForEntityTypedProp(exactAndWildcardSearchVals.get(false))).model())
                     // Condition for wildcard search values.
                     .or().prop(propertyNameWithKey).iLike().anyOfValues(prepCritValuesForEntityTypedProp(exactAndWildcardSearchVals.get(true))).model();
         } else if (exactAndWildcardSearchVals.containsKey(false) && !exactAndWildcardSearchVals.containsKey(true)) { // only exact search values are present
