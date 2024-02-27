@@ -48,7 +48,7 @@ public final class Reflector {
     /**
      * A maximum cache size for caching reflection related information.
      */
-    public static final int MAXIMUM_CACHE_SIZE = 32000;
+    public static final int MAXIMUM_CACHE_SIZE = 10_000;
     /**
      * A cache for {@link Method} instances.
      */
