@@ -154,7 +154,6 @@ public final class AnnotationReflector {
                     for (final Annotation ann : el.getAnnotations()) {
                         newCached.put(ann.annotationType(), ann);
                     }
-                    cachedAnnotations.put(name, newCached);
                     return newCached;
             });
         } catch (final ExecutionException ex) {
