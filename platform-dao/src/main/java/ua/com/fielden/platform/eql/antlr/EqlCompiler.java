@@ -5,6 +5,7 @@ import org.antlr.v4.runtime.ListTokenSource;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Token;
 import ua.com.fielden.platform.eql.antlr.tokens.PropToken;
+import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 
 import java.util.List;
 
@@ -95,6 +96,12 @@ import java.util.List;
  */
 public final class EqlCompiler {
 
+    private final QueryModelToStage1Transformer transformer;
+
+    public EqlCompiler(final QueryModelToStage1Transformer transformer) {
+        this.transformer = transformer;
+    }
+
     public EqlCompilationResult compile(final List<? extends Token> tokens) {
         final var tokenStream = new CommonTokenStream(new ListTokenSource(tokens));
         final var parser = new EQLParser(tokenStream);
@@ -106,7 +113,7 @@ public final class EqlCompiler {
         }
     }
 
-    private static final class Visitor extends EQLBaseVisitor<EqlCompilationResult> {
+    private final class Visitor extends EQLBaseVisitor<EqlCompilationResult> {
 
         @Override
         public EqlCompilationResult visitStart(final EQLParser.StartContext ctx) {
@@ -115,22 +122,22 @@ public final class EqlCompiler {
 
         @Override
         public EqlCompilationResult visitQuery_Select(final EQLParser.Query_SelectContext ctx) {
-            return new SelectVisitor().visitQuery_Select(ctx);
+            return new SelectVisitor(transformer).visitQuery_Select(ctx);
         }
 
         @Override
         public EqlCompilationResult visitStandaloneExpression(final EQLParser.StandaloneExpressionContext ctx) {
-            return new StandaloneExpressionVisitor().visitStandaloneExpression(ctx);
+            return new StandaloneExpressionVisitor(transformer).visitStandaloneExpression(ctx);
         }
 
         @Override
         public EqlCompilationResult visitStandaloneCondExpr(final EQLParser.StandaloneCondExprContext ctx) {
-            return new StandaloneConditionVisitor().visitStandaloneCondExpr(ctx);
+            return new StandaloneConditionVisitor(transformer).visitStandaloneCondExpr(ctx);
         }
 
         @Override
         public EqlCompilationResult visitOrderBy(final EQLParser.OrderByContext ctx) {
-            return new OrderByVisitor().visitOrderBy(ctx);
+            return new OrderByVisitor(transformer).visitOrderBy(ctx);
         }
 
     }

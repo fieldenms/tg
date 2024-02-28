@@ -1,25 +1,13 @@
 package ua.com.fielden.platform.eql.stage0;
 
-import static java.util.Collections.emptyMap;
-import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ORDER_TOKENS;
-import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QUERY_TOKEN;
-import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.SORT_ORDER;
-import static ua.com.fielden.platform.eql.stage1.conditions.Conditions1.EMPTY_CONDITIONS;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.IRetrievalModel;
-import ua.com.fielden.platform.entity.query.fluent.enums.QueryTokens;
-import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
+import ua.com.fielden.platform.eql.antlr.EqlCompilationResult;
+import ua.com.fielden.platform.eql.antlr.EqlCompiler;
 import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage1.QueryComponents1;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
@@ -27,11 +15,15 @@ import ua.com.fielden.platform.eql.stage1.queries.ResultQuery1;
 import ua.com.fielden.platform.eql.stage1.queries.SourceQuery1;
 import ua.com.fielden.platform.eql.stage1.queries.SubQuery1;
 import ua.com.fielden.platform.eql.stage1.queries.SubQueryForExists1;
-import ua.com.fielden.platform.eql.stage1.sources.IJoinNode1;
 import ua.com.fielden.platform.eql.stage1.sources.ISource1;
 import ua.com.fielden.platform.eql.stage1.sundries.OrderBys1;
-import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
-import ua.com.fielden.platform.utils.Pair;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static java.util.Collections.emptyMap;
+import static ua.com.fielden.platform.eql.stage1.conditions.Conditions1.EMPTY_CONDITIONS;
+import static ua.com.fielden.platform.eql.stage1.sundries.OrderBys1.EMPTY_ORDER_BYS;
 
 /**
  * Transforms EQL models in form of fluent API tokens to the stage 1 representation.
@@ -86,45 +78,20 @@ public class QueryModelToStage1Transformer {
     }
 
     private QueryComponents1 parseTokensIntoComponents(final QueryModel<?> qryModel, final OrderingModel orderModel) {
-        final QrySourcesBuilder from = new QrySourcesBuilder(this);
-        final ConditionsBuilder where = new ConditionsBuilder(null, this);
-        final QryYieldsBuilder select = new QryYieldsBuilder(this);
-        final QryGroupsBuilder groupBy = new QryGroupsBuilder(this);
+        final EqlCompilationResult result = new EqlCompiler(this).compile(qryModel.getTokens());
 
-        ITokensBuilder active = null;
-
-//        for (final Pair<TokenCategory, Object> pair : qryModel.getTokens()) {
-//            if (QUERY_TOKEN != pair.getKey()) {
-//                if (active != null) {
-//                    active.add(pair.getKey(), pair.getValue());
-//                }
-//            } else {
-//                switch ((QueryTokens) pair.getValue()) {
-//                case WHERE:
-//                    active = where;
-//                    where.setChild(new ConditionBuilder(where, this));
-//                    break;
-//                case FROM:
-//                    active = from;
-//                    break;
-//                case YIELD:
-//                    active = select;
-//                    select.setChild(new YieldBuilder(select, this));
-//                    break;
-//                case GROUP_BY:
-//                    active = groupBy;
-//                    groupBy.setChild(new GroupBuilder(groupBy, this));
-//                    break;
-//                default:
-//                    break;
-//                }
-//            }
-//        }
-
-        final IJoinNode1<? extends IJoinNode2<?>> fromModel = from.getModel();
-        final Conditions1 udfModel = fromModel == null ? EMPTY_CONDITIONS : generateUserDataFilteringCondition(qryModel.isFilterable(), filter, username, fromModel.mainSource());
-
-        return new QueryComponents1(fromModel, where.getModel(), udfModel, select.getModel(), groupBy.getModel(), produceOrderBys(orderModel), qryModel.isYieldAll(), qryModel.shouldMaterialiseCalcPropsAsColumnsInSqlQuery);
+        switch (result) {
+            case EqlCompilationResult.Select select -> {
+                final Conditions1 udfModel = select.joinRoot() == null
+                        ? EMPTY_CONDITIONS
+                        : generateUserDataFilteringCondition(qryModel.isFilterable(), filter, username, select.joinRoot().mainSource());
+                return new QueryComponents1(
+                        select.joinRoot(), select.whereConditions(), udfModel, select.yields(), select.groups(),
+                        orderModel == null ? EMPTY_ORDER_BYS : produceOrderBys(orderModel),
+                        qryModel.isYieldAll(), qryModel.shouldMaterialiseCalcPropsAsColumnsInSqlQuery);
+            }
+            default -> throw new IllegalStateException("Expected a Select Query but was: %s".formatted(result.description()));
+        }
     }
 
     private Conditions1 generateUserDataFilteringCondition(final boolean filterable, final IFilter filter, final String username, final ISource1<?> mainSource) {
@@ -140,40 +107,13 @@ public class QueryModelToStage1Transformer {
         return EMPTY_CONDITIONS;
     }
 
-//    private List<Pair<TokenCategory, Object>> linearizeTokens(final List<Pair<TokenCategory, Object>> tokens) {
-//        final List<Pair<TokenCategory, Object>> result = new ArrayList<>();
-//        for (final Pair<TokenCategory, Object> pair : tokens) {
-//            if (ORDER_TOKENS == pair.getKey()) {
-//                result.addAll(linearizeTokens(((OrderingModel) pair.getValue()).getTokens()));
-//            } else {
-//                result.add(pair);
-//            }
-//        }
-//
-//        return result;
-//    }
-
     private OrderBys1 produceOrderBys(final OrderingModel orderModel) {
-        final QryOrderingsBuilder orderBy = new QryOrderingsBuilder(null, this);
+        final EqlCompilationResult result = new EqlCompiler(this).compile(orderModel.getTokens());
 
-        if (orderModel != null) {
-//            final List<Pair<TokenCategory, Object>> linearizedTokens = linearizeTokens(orderModel.getTokens());
-//            for (final Iterator<Pair<TokenCategory, Object>> iterator = linearizedTokens.iterator(); iterator.hasNext();) {
-//                final Pair<TokenCategory, Object> pair = iterator.next();
-//                if (SORT_ORDER == pair.getKey()) {
-//                    orderBy.add(pair.getKey(), pair.getValue());
-//                    if (iterator.hasNext()) {
-//                        orderBy.setChild(new OrderByBuilder(orderBy, this));
-//                    }
-//                } else {
-//                    if (orderBy.getChild() == null) {
-//                        orderBy.setChild(new OrderByBuilder(orderBy, this));
-//                    }
-//                    orderBy.add(pair.getKey(), pair.getValue());
-//                }
-//            }
-        }
-        return orderBy.getModel();
+        return switch (result) {
+            case EqlCompilationResult.OrderBy orderBy -> orderBy.model();
+            default -> throw new IllegalStateException("Expected an Order By expression but was: %s".formatted(result.description()));
+        };
     }
 
     public Object getParamValue(final String paramName) {
