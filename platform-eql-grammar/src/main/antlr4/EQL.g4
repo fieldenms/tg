@@ -1,5 +1,3 @@
-// This grammar was generated. Timestamp: 2024-02-26T15:43:48.195266260+02:00[Europe/Kyiv]
-
 grammar EQL;
 
 start : query EOF;
@@ -12,20 +10,12 @@ query :
 ;
 
 select :
-      selectFrom # Select_SelectFrom
-    | sourcelessSelect # Select_SourcelessSelect
-;
-
-selectFrom :
-      selectSource alias=AS? join? where? groupBy? selectEnd
+      selectSource alias=AS? join? where? groupBy? selectEnd # SelectFrom
+    | SELECT groupBy? selectEnd # SourcelessSelect
 ;
 
 selectSource :
       token=SELECT
-;
-
-sourcelessSelect :
-      SELECT groupBy? selectEnd
 ;
 
 selectEnd :
