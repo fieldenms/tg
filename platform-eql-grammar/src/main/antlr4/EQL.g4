@@ -19,8 +19,8 @@ selectSource :
 ;
 
 selectEnd :
-      anyYield # SelectEnd_AnyYield
-    | model # SelectEnd_Model
+      model # SelectEnd_Model
+    | anyYield # SelectEnd_AnyYield
 ;
 
 where :
@@ -206,7 +206,7 @@ groupBy :
 
 anyYield :
       YIELD operand=yieldOperand model_=yield1Model # Yield1
-    | YIELDALL? aliasedYield+ model_=yieldManyModel # YieldMany
+    | YIELDALL? aliasedYield* model_=yieldManyModel # YieldMany
 ;
 
 aliasedYield :

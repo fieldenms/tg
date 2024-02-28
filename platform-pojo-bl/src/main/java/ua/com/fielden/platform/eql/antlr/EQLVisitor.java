@@ -65,19 +65,19 @@ public interface EQLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitSelectSource(EQLParser.SelectSourceContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code SelectEnd_AnyYield}
-	 * labeled alternative in {@link EQLParser#selectEnd}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitSelectEnd_AnyYield(EQLParser.SelectEnd_AnyYieldContext ctx);
-	/**
 	 * Visit a parse tree produced by the {@code SelectEnd_Model}
 	 * labeled alternative in {@link EQLParser#selectEnd}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitSelectEnd_Model(EQLParser.SelectEnd_ModelContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code SelectEnd_AnyYield}
+	 * labeled alternative in {@link EQLParser#selectEnd}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSelectEnd_AnyYield(EQLParser.SelectEnd_AnyYieldContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link EQLParser#where}.
 	 * @param ctx the parse tree

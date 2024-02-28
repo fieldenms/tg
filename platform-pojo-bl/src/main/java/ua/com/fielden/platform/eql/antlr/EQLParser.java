@@ -603,28 +603,23 @@ public class EQLParser extends Parser {
 		try {
 			setState(132);
 			_errHandler.sync(this);
-			switch (_input.LA(1)) {
-			case YIELD:
-			case YIELDALL:
-				_localctx = new SelectEnd_AnyYieldContext(_localctx);
+			switch ( getInterpreter().adaptivePredict(_input,9,_ctx) ) {
+			case 1:
+				_localctx = new SelectEnd_ModelContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
 				setState(130);
-				anyYield();
-				}
-				break;
-			case MODEL:
-			case MODELASAGGREGATE:
-			case MODELASENTITY:
-				_localctx = new SelectEnd_ModelContext(_localctx);
-				enterOuterAlt(_localctx, 2);
-				{
-				setState(131);
 				model();
 				}
 				break;
-			default:
-				throw new NoViableAltException(this);
+			case 2:
+				_localctx = new SelectEnd_AnyYieldContext(_localctx);
+				enterOuterAlt(_localctx, 2);
+				{
+				setState(131);
+				anyYield();
+				}
+				break;
 			}
 		}
 		catch (RecognitionException re) {
@@ -3152,21 +3147,21 @@ public class EQLParser extends Parser {
 					}
 				}
 
-				setState(402); 
+				setState(404);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-				do {
+				while (_la==YIELD) {
 					{
 					{
 					setState(401);
 					aliasedYield();
 					}
 					}
-					setState(404); 
+					setState(406);
 					_errHandler.sync(this);
 					_la = _input.LA(1);
-				} while ( _la==YIELD );
-				setState(406);
+				}
+				setState(407);
 				((YieldManyContext)_localctx).model_ = yieldManyModel();
 				}
 				break;
@@ -4040,7 +4035,7 @@ public class EQLParser extends Parser {
 		"\3\27\3\27\5\27\u0170\n\27\3\30\3\30\3\30\3\30\3\30\5\30\u0177\n\30\3"+
 		"\31\3\31\5\31\u017b\n\31\3\31\3\31\5\31\u017f\n\31\3\32\3\32\5\32\u0183"+
 		"\n\32\3\33\3\33\3\33\3\34\3\34\3\34\5\34\u018b\n\34\3\35\3\35\3\35\3\35"+
-		"\3\35\5\35\u0192\n\35\3\35\6\35\u0195\n\35\r\35\16\35\u0196\3\35\3\35"+
+		"\3\35\5\35\u0192\n\35\3\35\7\35\u0195\n\35\f\35\16\35\u0198\13\35\3\35"+
 		"\5\35\u019b\n\35\3\36\3\36\3\36\3\36\3\37\3\37\3\37\3\37\3\37\5\37\u01a6"+
 		"\n\37\3 \3 \3 \3 \3 \3 \3 \3 \5 \u01b0\n \3!\3!\5!\u01b4\n!\3\"\3\"\5"+
 		"\"\u01b8\n\"\3#\3#\5#\u01bc\n#\3$\3$\3$\5$\u01c1\n$\3%\3%\3%\3%\3%\3%"+
@@ -4065,7 +4060,7 @@ public class EQLParser extends Parser {
 		"vx\5\66\34\2wv\3\2\2\2wx\3\2\2\2xy\3\2\2\2yz\5\n\6\2z\u0081\3\2\2\2{}"+
 		"\7q\2\2|~\5\66\34\2}|\3\2\2\2}~\3\2\2\2~\177\3\2\2\2\177\u0081\5\n\6\2"+
 		"\u0080l\3\2\2\2\u0080{\3\2\2\2\u0081\7\3\2\2\2\u0082\u0083\7q\2\2\u0083"+
-		"\t\3\2\2\2\u0084\u0087\58\35\2\u0085\u0087\5F$\2\u0086\u0084\3\2\2\2\u0086"+
+		"\t\3\2\2\2\u0084\u0087\5F$\2\u0085\u0087\58\35\2\u0086\u0084\3\2\2\2\u0086"+
 		"\u0085\3\2\2\2\u0087\13\3\2\2\2\u0088\u0089\7{\2\2\u0089\u008a\5\16\b"+
 		"\2\u008a\r\3\2\2\2\u008b\u008c\b\b\1\2\u008c\u0096\5\20\t\2\u008d\u008e"+
 		"\7\32\2\2\u008e\u008f\5\16\b\2\u008f\u0090\7,\2\2\u0090\u0096\3\2\2\2"+
@@ -4168,10 +4163,10 @@ public class EQLParser extends Parser {
 		"\u0188\79\2\2\u0188\u018a\5 \21\2\u0189\u018b\5\66\34\2\u018a\u0189\3"+
 		"\2\2\2\u018a\u018b\3\2\2\2\u018b\67\3\2\2\2\u018c\u018d\7\177\2\2\u018d"+
 		"\u018e\5<\37\2\u018e\u018f\5B\"\2\u018f\u019b\3\2\2\2\u0190\u0192\7\u0080"+
-		"\2\2\u0191\u0190\3\2\2\2\u0191\u0192\3\2\2\2\u0192\u0194\3\2\2\2\u0193"+
-		"\u0195\5:\36\2\u0194\u0193\3\2\2\2\u0195\u0196\3\2\2\2\u0196\u0194\3\2"+
-		"\2\2\u0196\u0197\3\2\2\2\u0197\u0198\3\2\2\2\u0198\u0199\5D#\2\u0199\u019b"+
-		"\3\2\2\2\u019a\u018c\3\2\2\2\u019a\u0191\3\2\2\2\u019b9\3\2\2\2\u019c"+
+		"\2\2\u0191\u0190\3\2\2\2\u0191\u0192\3\2\2\2\u0192\u0196\3\2\2\2\u0193"+
+		"\u0195\5:\36\2\u0194\u0193\3\2\2\2\u0195\u0198\3\2\2\2\u0196\u0194\3\2"+
+		"\2\2\u0196\u0197\3\2\2\2\u0197\u0199\3\2\2\2\u0198\u0196\3\2\2\2\u0199"+
+		"\u019b\5D#\2\u019a\u018c\3\2\2\2\u019a\u0191\3\2\2\2\u019b9\3\2\2\2\u019c"+
 		"\u019d\7\177\2\2\u019d\u019e\5<\37\2\u019e\u019f\5@!\2\u019f;\3\2\2\2"+
 		"\u01a0\u01a6\5 \21\2\u01a1\u01a6\7\"\2\2\u01a2\u01a3\5> \2\u01a3\u01a4"+
 		"\5 \21\2\u01a4\u01a6\3\2\2\2\u01a5\u01a0\3\2\2\2\u01a5\u01a1\3\2\2\2\u01a5"+
