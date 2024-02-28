@@ -67,6 +67,17 @@
                  <groupId>org.antlr</groupId>
                  <artifactId>antlr4-maven-plugin</artifactId>
                  <version>4.9.3</version>
+                 <configuration>
+                     <outputDirectory>
+                         ${project.basedir}/../platform-pojo-bl/src/main/java/ua/com/fielden/platform/eql/antlr
+                     </outputDirectory>
+                     <visitor>true</visitor>
+                     <listener>false</listener>
+                     <arguments>
+                         <arg>-package</arg>
+                         <arg>ua.com.fielden.platform.eql.antlr</arg>
+                     </arguments>
+                 </configuration>
                  <executions>
                      <execution>
                          <id>antlr</id>
