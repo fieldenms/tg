@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.entity.query.model;
 
 import org.antlr.v4.runtime.Token;
-import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
+import ua.com.fielden.platform.eql.antlr.EQLLexer;
 
 import java.util.List;
 
@@ -20,9 +20,9 @@ public class ExpressionModel extends AbstractModel {
         super(tokens);
     }
 
+    // TODO rather than use this method, compile as standalone expression and use the result
     public boolean containsSingleValueToken() {
-        // TODO
-        throw new UnsupportedOperationException();
-//        return getTokens().size() == 1 && getTokens().get(0).getKey() == TokenCategory.VAL;
+        return tokens.size() == 1 && tokens.getFirst().getType() == EQLLexer.VAL;
     }
+
 }

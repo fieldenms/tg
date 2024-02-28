@@ -10,7 +10,7 @@ import java.util.Objects;
 import static java.lang.String.format;
 
 public abstract class AbstractModel {
-    private final List<Token> tokens = new ArrayList<>();
+    protected final List<Token> tokens = new ArrayList<>();
 
     protected AbstractModel() {
     }
