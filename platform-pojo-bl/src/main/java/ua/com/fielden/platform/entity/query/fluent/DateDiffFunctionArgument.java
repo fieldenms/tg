@@ -6,43 +6,44 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IExprOperand0;
 
 abstract class DateDiffFunctionArgument<T, ET extends AbstractEntity<?>> //
-               extends ExprOperand<IDateDiffFunctionBetween<T, ET>, IExprOperand0<IDateDiffFunctionBetween<T, ET>, ET>, ET> //
-               implements IDateDiffFunctionArgument<T, ET> {
+		extends ExprOperand<IDateDiffFunctionBetween<T, ET>, IExprOperand0<IDateDiffFunctionBetween<T, ET>, ET>, ET> //
+		implements IDateDiffFunctionArgument<T, ET> {
 
-    protected DateDiffFunctionArgument(final Tokens tokens) {
-        super(tokens);
-    }
-    
-	protected abstract T nextForDateDiffFunctionArgument(final Tokens tokens);
+	protected DateDiffFunctionArgument(final EqlSentenceBuilder builder) {
+		super(builder);
+	}
 
-    @Override
-    protected IExprOperand0<IDateDiffFunctionBetween<T, ET>, ET> nextForExprOperand(final Tokens tokens) {
-    	return new ExprOperand0<IDateDiffFunctionBetween<T, ET>, ET>(tokens) {
+	protected abstract T nextForDateDiffFunctionArgument(final EqlSentenceBuilder builder);
+
+	@Override
+	protected IExprOperand0<IDateDiffFunctionBetween<T, ET>, ET> nextForExprOperand(final EqlSentenceBuilder builder) {
+		return new ExprOperand0<IDateDiffFunctionBetween<T, ET>, ET>(builder) {
 
 			@Override
-			protected IDateDiffFunctionBetween<T, ET> nextForExprOperand0(final Tokens tokens) {
-				return new DateDiffFunctionBetween<T, ET>(tokens) {
+			protected IDateDiffFunctionBetween<T, ET> nextForExprOperand0(final EqlSentenceBuilder builder) {
+				return new DateDiffFunctionBetween<T, ET>(builder) {
 
 					@Override
-					protected T nextForDateDiffFunctionBetween(final Tokens tokens) {
-						return DateDiffFunctionArgument.this.nextForDateDiffFunctionArgument(tokens);
+					protected T nextForDateDiffFunctionBetween(final EqlSentenceBuilder builder) {
+						return DateDiffFunctionArgument.this.nextForDateDiffFunctionArgument(builder);
 					}
-					
+
 				};
 			}
-        	
-        };
-    }
 
-    @Override
-    protected IDateDiffFunctionBetween<T, ET> nextForSingleOperand(final Tokens tokens) {
-    	return new DateDiffFunctionBetween<T, ET>(tokens) {
+		};
+	}
+
+	@Override
+	protected IDateDiffFunctionBetween<T, ET> nextForSingleOperand(final EqlSentenceBuilder builder) {
+		return new DateDiffFunctionBetween<T, ET>(builder) {
 
 			@Override
-			protected T nextForDateDiffFunctionBetween(final Tokens tokens) {
-				return DateDiffFunctionArgument.this.nextForDateDiffFunctionArgument(tokens);
+			protected T nextForDateDiffFunctionBetween(final EqlSentenceBuilder builder) {
+				return DateDiffFunctionArgument.this.nextForDateDiffFunctionArgument(builder);
 			}
-        	
-        };
-    }
+
+		};
+	}
+
 }

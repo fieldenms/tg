@@ -8,25 +8,26 @@ abstract class DateAddIntervalFunctionTo<T, ET extends AbstractEntity<?>> //
 		extends AbstractQueryLink //
 		implements IDateAddIntervalFunctionTo<T, ET> {
 
-    protected DateAddIntervalFunctionTo(final Tokens tokens) {
-        super(tokens);
-    }
-    
-	protected abstract T nextForDateAddIntervalFunctionTo(final Tokens tokens);
+	protected DateAddIntervalFunctionTo(final EqlSentenceBuilder builder) {
+		super(builder);
+	}
+
+	protected abstract T nextForDateAddIntervalFunctionTo(final EqlSentenceBuilder builder);
 
 	@Override
 	public IFunctionLastArgument<T, ET> to() {
-		return createFunctionLastArgument(getTokens());
+		return createFunctionLastArgument(builder);
 	}
 
-	private FunctionLastArgument<T, ET> createFunctionLastArgument(final Tokens tokens) {
-		return new FunctionLastArgument<T, ET>(tokens) {
+	private FunctionLastArgument<T, ET> createFunctionLastArgument(final EqlSentenceBuilder builder) {
+		return new FunctionLastArgument<T, ET>(builder) {
 
 			@Override
-			protected T nextForFunctionLastArgument(final Tokens tokens) {
-				return DateAddIntervalFunctionTo.this.nextForDateAddIntervalFunctionTo(tokens);
+			protected T nextForFunctionLastArgument(final EqlSentenceBuilder builder) {
+				return DateAddIntervalFunctionTo.this.nextForDateAddIntervalFunctionTo(builder);
 			}
 
 		};
 	}
+
 }

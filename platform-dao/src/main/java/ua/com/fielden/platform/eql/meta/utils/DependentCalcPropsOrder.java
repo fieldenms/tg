@@ -59,6 +59,7 @@ public class DependentCalcPropsOrder {
                 calcPropsOfEntityType.add(calcPropChunk.name());
             }
 
+            // TODO replace by compilation of standalone expression
             final Expression1 exp1 = (Expression1) new StandAloneExpressionBuilder(gen, calcPropChunk.data().expression.expressionModel()).getResult().getValue();
             final TransformationContextFromStage1To2 prc = TransformationContextFromStage1To2.forCalcPropContext(querySourceInfoProvider).cloneWithAdded(source);
             try {

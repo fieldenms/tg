@@ -11,43 +11,44 @@ class CompletedAndYielded<ET extends AbstractEntity<?>> //
 		extends CompletedCommon<ET> //
 		implements ICompletedAndYielded<ET> {
 
-    protected CompletedAndYielded(final Tokens tokens) {
-        super(tokens);
-    }
-    
+	protected CompletedAndYielded(final EqlSentenceBuilder builder) {
+		super(builder);
+	}
+
 	@Override
 	public EntityResultQueryModel<ET> model() {
-		return new EntityResultQueryModel<ET>(getTokens().getValues(), (Class<ET>) getTokens().getMainSourceType(),	false);
+		return new EntityResultQueryModel<ET>(builder.model().getTokens(), (Class<ET>) builder.getMainSourceType(), false);
 	}
 
 	@Override
 	public <T extends AbstractEntity<?>> EntityResultQueryModel<T> modelAsEntity(final Class<T> resultType) {
-		return new EntityResultQueryModel<T>(getTokens().getValues(), resultType, getTokens().isYieldAll());
+		return new EntityResultQueryModel<T>(builder.getTokens(), resultType, builder.isYieldAll());
 	}
 
 	@Override
 	public ISubsequentCompletedAndYielded<ET> yieldAll() {
-		return new SubsequentCompletedAndYielded<ET>(getTokens().yieldAll());
+		return new SubsequentCompletedAndYielded<ET>(builder.yieldAll());
 	}
 
 	@Override
 	public IFunctionYieldedLastArgument<IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET> yield() {
-		return createFunctionYieldedLastArgument(getTokens().yield());
+		return createFunctionYieldedLastArgument(builder.yield());
 	}
 
-	private FunctionYieldedLastArgument<IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET> createFunctionYieldedLastArgument(final Tokens tokens) {
-		return new FunctionYieldedLastArgument<IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET>(tokens) {
+	private FunctionYieldedLastArgument<IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET> createFunctionYieldedLastArgument(final EqlSentenceBuilder builder) {
+		return new FunctionYieldedLastArgument<IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET>(builder) {
 
 			@Override
-			protected IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>> nextForFunctionYieldedLastArgument(final Tokens tokens) {
-				return new FirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>(tokens) {
+			protected IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>> nextForFunctionYieldedLastArgument(final EqlSentenceBuilder builder) {
+				return new FirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>(builder) {
 					@Override
-					protected ISubsequentCompletedAndYielded<ET> nextForFirstYieldedItemAlias(final Tokens tokens) {
-						return new SubsequentCompletedAndYielded<ET>(tokens);
+					protected ISubsequentCompletedAndYielded<ET> nextForFirstYieldedItemAlias(final EqlSentenceBuilder builder) {
+						return new SubsequentCompletedAndYielded<ET>(builder);
 					}
 				};
 			}
 
 		};
 	}
+
 }

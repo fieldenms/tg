@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
 import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,45 +17,46 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
+import ua.com.fielden.platform.types.tuples.T2;
 
 abstract class ConditionalOperand<T1 extends IComparisonOperator<T2, ET>, T2 extends ILogicalOperator<?>, ET extends AbstractEntity<?>> //
         extends ExpConditionalOperand<T1, ET> //
         implements IComparisonOperand<T1, ET>, ISingleConditionOperator<T2> {
 
-    protected ConditionalOperand(final Tokens tokens) {
-        super(tokens);
+    protected ConditionalOperand(final EqlSentenceBuilder builder) {
+        super(builder);
     }
 
-    protected abstract T2 nextForConditionalOperand(final Tokens tokens);
+    protected abstract T2 nextForConditionalOperand(final EqlSentenceBuilder builder);
 
     @Override
     public T2 exists(final QueryModel subQuery) {
-        return nextForConditionalOperand(getTokens().exists(false, subQuery));
+        return nextForConditionalOperand(builder.exists(false, subQuery));
     }
 
     @Override
     public T2 notExists(final QueryModel subQuery) {
-        return nextForConditionalOperand(getTokens().exists(true, subQuery));
+        return nextForConditionalOperand(builder.exists(true, subQuery));
     }
 
     @Override
     public T2 existsAnyOf(final QueryModel... subQueries) {
-        return nextForConditionalOperand(getTokens().existsAnyOf(false, subQueries));
+        return nextForConditionalOperand(builder.existsAnyOf(false, subQueries));
     }
 
     @Override
     public T2 notExistsAnyOf(final QueryModel... subQueries) {
-        return nextForConditionalOperand(getTokens().existsAnyOf(true, subQueries));
+        return nextForConditionalOperand(builder.existsAnyOf(true, subQueries));
     }
 
     @Override
     public T2 existsAllOf(final QueryModel... subQueries) {
-        return nextForConditionalOperand(getTokens().existsAllOf(false, subQueries));
+        return nextForConditionalOperand(builder.existsAllOf(false, subQueries));
     }
 
     @Override
     public T2 notExistsAllOf(final QueryModel... subQueries) {
-        return nextForConditionalOperand(getTokens().existsAllOf(true, subQueries));
+        return nextForConditionalOperand(builder.existsAllOf(true, subQueries));
     }
 
     /**
@@ -61,7 +64,7 @@ abstract class ConditionalOperand<T1 extends IComparisonOperator<T2, ET>, T2 ext
      */
     @Override
     public T2 critCondition(final String propName, final String critPropName) {
-        return nextForConditionalOperand(getTokens().critCondition(propName, critPropName));
+        return nextForConditionalOperand(builder.critCondition(propName, critPropName));
     }
 
     /**
@@ -77,7 +80,7 @@ abstract class ConditionalOperand<T1 extends IComparisonOperator<T2, ET>, T2 ext
      */
     @Override
     public T2 critCondition(final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName) {
-        return nextForConditionalOperand(getTokens().critCondition(collectionQueryStart, propName, critPropName, Optional.empty()));
+        return nextForConditionalOperand(builder.critCondition(collectionQueryStart, propName, critPropName, empty()));
     }
 
     /**
@@ -88,16 +91,17 @@ abstract class ConditionalOperand<T1 extends IComparisonOperator<T2, ET>, T2 ext
         if (!(defaultValue instanceof List) && !(defaultValue instanceof String) && !(defaultValue instanceof ua.com.fielden.platform.types.tuples.T2)) {
             throw new EqlException(format("Argument [defaultValue] for property [%s] in a [critCondition] call should either be a list of strings, a string, or a tuple (T2).", propName));
         }
-        return nextForConditionalOperand(getTokens().critCondition(collectionQueryStart, propName, critPropName, Optional.of(defaultValue)));
+        return nextForConditionalOperand(builder.critCondition(collectionQueryStart, propName, critPropName, of(defaultValue)));
     }
 
     @Override
     public T2 condition(final ConditionModel condition) {
-        return nextForConditionalOperand(getTokens().cond(condition));
+        return nextForConditionalOperand(builder.cond(condition));
     }
 
     @Override
     public T2 negatedCondition(final ConditionModel condition) {
-        return nextForConditionalOperand(getTokens().negatedCond(condition));
+        return nextForConditionalOperand(builder.negatedCond(condition));
     }
+
 }

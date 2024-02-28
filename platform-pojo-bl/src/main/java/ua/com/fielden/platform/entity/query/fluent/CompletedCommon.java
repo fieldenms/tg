@@ -9,17 +9,18 @@ class CompletedCommon<ET extends AbstractEntity<?>> //
 		extends AbstractQueryLink //
 		implements ICompletedCommon<ET> {
 
-    protected CompletedCommon(final Tokens tokens) {
-        super(tokens);
-    }
-    
+	protected CompletedCommon(final EqlSentenceBuilder builder) {
+		super(builder);
+	}
+
 	@Override
 	public <T extends AbstractEntity<?>> EntityResultQueryModel<T> modelAsEntity(final Class<T> resultType) {
-		return new EntityResultQueryModel<T>(getTokens().getValues(), resultType, getTokens().isYieldAll());
+		return new EntityResultQueryModel<T>(builder.getTokens(), resultType, builder.isYieldAll());
 	}
 
 	@Override
 	public AggregatedResultQueryModel modelAsAggregate() {
-		return new AggregatedResultQueryModel(getTokens().getValues(), getTokens().isYieldAll());
+		return new AggregatedResultQueryModel(builder.getTokens(), builder.isYieldAll());
 	}
+
 }

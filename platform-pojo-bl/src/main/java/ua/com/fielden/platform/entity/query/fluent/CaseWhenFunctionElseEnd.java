@@ -8,23 +8,24 @@ abstract class CaseWhenFunctionElseEnd<T, ET extends AbstractEntity<?>> //
 		extends CaseWhenFunctionEnd<T> //
 		implements ICaseWhenFunctionElseEnd<T, ET> {
 
-    protected CaseWhenFunctionElseEnd(final Tokens tokens) {
-        super(tokens);
-    }
-    
-	@Override
-	public ICaseWhenFunctionLastArgument<T, ET> otherwise() {
-		return createCaseWhenFunctionLastArgument(getTokens());
+	protected CaseWhenFunctionElseEnd(final EqlSentenceBuilder builder) {
+		super(builder);
 	}
 
-	private CaseWhenFunctionLastArgument<T, ET> createCaseWhenFunctionLastArgument(final Tokens tokens) {
-		return new CaseWhenFunctionLastArgument<T, ET>(tokens) {
+	@Override
+	public ICaseWhenFunctionLastArgument<T, ET> otherwise() {
+		return createCaseWhenFunctionLastArgument(builder);
+	}
+
+	private CaseWhenFunctionLastArgument<T, ET> createCaseWhenFunctionLastArgument(final EqlSentenceBuilder builder) {
+		return new CaseWhenFunctionLastArgument<T, ET>(builder) {
 
 			@Override
-			protected T nextForCaseWhenFunctionLastArgument(final Tokens tokens) {
-				return CaseWhenFunctionElseEnd.this.nextForCaseWhenFunctionEnd(tokens);
+			protected T nextForCaseWhenFunctionLastArgument(final EqlSentenceBuilder builder) {
+				return CaseWhenFunctionElseEnd.this.nextForCaseWhenFunctionEnd(builder);
 			}
 
 		};
 	}
+
 }

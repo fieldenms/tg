@@ -21,9 +21,10 @@ public class StandAloneConditionBuilder extends AbstractTokensBuilder {
         this.negated = negated;
         setChild(new ConditionBuilder(this, queryBuilder));
 
-        for (final Pair<TokenCategory, Object> tokenPair : exprModel.getTokens()) {
-            add(tokenPair.getKey(), tokenPair.getValue());
-        }
+        throw new UnsupportedOperationException();
+//        for (final Pair<TokenCategory, Object> tokenPair : exprModel.getTokens()) {
+//            add(tokenPair.getKey(), tokenPair.getValue());
+//        }
     }
 
     @Override

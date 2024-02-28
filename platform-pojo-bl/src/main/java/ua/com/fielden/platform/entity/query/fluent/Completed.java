@@ -8,23 +8,24 @@ class Completed<ET extends AbstractEntity<?>> //
 		extends CompletedAndYielded<ET> //
 		implements ICompleted<ET> {
 
-    public Completed(final Tokens tokens) {
-        super(tokens);
-    }
-    
-	@Override
-	public IFunctionLastArgument<ICompleted<ET>, ET> groupBy() {
-		return createFunctionLastArgument(getTokens().groupBy());
+	public Completed(final EqlSentenceBuilder builder) {
+		super(builder);
 	}
 
-	private FunctionLastArgument<ICompleted<ET>, ET> createFunctionLastArgument(final Tokens tokens) {
-		return new FunctionLastArgument<ICompleted<ET>, ET> (tokens) {
+	@Override
+	public IFunctionLastArgument<ICompleted<ET>, ET> groupBy() {
+		return createFunctionLastArgument(builder.groupBy());
+	}
+
+	private FunctionLastArgument<ICompleted<ET>, ET> createFunctionLastArgument(final EqlSentenceBuilder builder) {
+		return new FunctionLastArgument<ICompleted<ET>, ET>(builder) {
 
 			@Override
-			protected ICompleted<ET> nextForFunctionLastArgument(final Tokens tokens) {
-				return new Completed<ET>(tokens);
+			protected ICompleted<ET> nextForFunctionLastArgument(final EqlSentenceBuilder builder) {
+				return new Completed<ET>(builder);
 			}
 
 		};
 	}
+
 }

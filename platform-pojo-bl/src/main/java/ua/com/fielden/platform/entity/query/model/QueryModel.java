@@ -6,6 +6,7 @@ import static org.apache.commons.lang3.StringUtils.rightPad;
 import java.util.List;
 import java.util.Objects;
 
+import org.antlr.v4.runtime.Token;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.utils.Pair;
@@ -19,7 +20,7 @@ public abstract class QueryModel<T extends AbstractEntity<?>> extends AbstractMo
     protected QueryModel() {
     }
 
-    public QueryModel(final List<Pair<TokenCategory, Object>> tokens, final Class<T> resultType, final boolean yieldAll) {
+    public QueryModel(final List<? extends Token> tokens, final Class<T> resultType, final boolean yieldAll) {
         super(tokens);
         this.resultType = resultType;
         this.yieldAll = yieldAll;

@@ -9,23 +9,23 @@ abstract class DateAddIntervalFunctionArgument<T, ET extends AbstractEntity<?>> 
 		extends ExprOperand<IDateAddIntervalUnit<T, ET>, IExprOperand0<IDateAddIntervalUnit<T, ET>, ET>, ET> //
 		implements IDateAddIntervalFunctionArgument<T, ET> {
 
-    protected DateAddIntervalFunctionArgument(final Tokens tokens) {
-        super(tokens);
-    }
-    
-	protected abstract T nextForDateAddIntervalFunctionArgument(final Tokens tokens);
-	
+	protected DateAddIntervalFunctionArgument(final EqlSentenceBuilder builder) {
+		super(builder);
+	}
+
+	protected abstract T nextForDateAddIntervalFunctionArgument(final EqlSentenceBuilder builder);
+
 	@Override
-	protected IExprOperand0<IDateAddIntervalUnit<T, ET>, ET> nextForExprOperand(final Tokens tokens) {
-		return new ExprOperand0<IDateAddIntervalUnit<T, ET>, ET>(tokens) {
+	protected IExprOperand0<IDateAddIntervalUnit<T, ET>, ET> nextForExprOperand(final EqlSentenceBuilder builder) {
+		return new ExprOperand0<IDateAddIntervalUnit<T, ET>, ET>(builder) {
 
 			@Override
-			protected IDateAddIntervalUnit<T, ET> nextForExprOperand0(final Tokens tokens) {
-				return new DateAddIntervalUnit<T, ET>(tokens) {
+			protected IDateAddIntervalUnit<T, ET> nextForExprOperand0(final EqlSentenceBuilder builder) {
+				return new DateAddIntervalUnit<T, ET>(builder) {
 
 					@Override
-					protected T nextForDateAddIntervalUnit(final Tokens tokens) {
-						return DateAddIntervalFunctionArgument.this.nextForDateAddIntervalFunctionArgument(tokens);
+					protected T nextForDateAddIntervalUnit(final EqlSentenceBuilder builder) {
+						return DateAddIntervalFunctionArgument.this.nextForDateAddIntervalFunctionArgument(builder);
 					}
 
 				};
@@ -33,14 +33,14 @@ abstract class DateAddIntervalFunctionArgument<T, ET extends AbstractEntity<?>> 
 
 		};
 	}
-	
+
 	@Override
-	protected IDateAddIntervalUnit<T, ET> nextForSingleOperand(final Tokens tokens) {
-		return new DateAddIntervalUnit<T, ET>(tokens) {
+	protected IDateAddIntervalUnit<T, ET> nextForSingleOperand(final EqlSentenceBuilder builder) {
+		return new DateAddIntervalUnit<T, ET>(builder) {
 
 			@Override
-			protected T nextForDateAddIntervalUnit(Tokens tokens) {
-				return DateAddIntervalFunctionArgument.this.nextForDateAddIntervalFunctionArgument(tokens);
+			protected T nextForDateAddIntervalUnit(EqlSentenceBuilder builder) {
+				return DateAddIntervalFunctionArgument.this.nextForDateAddIntervalFunctionArgument(builder);
 			}
 		};
 	}

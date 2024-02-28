@@ -8,17 +8,18 @@ public final class StandAloneExpOperationAndClose //
 		extends ArithmeticalOperator<IStandAloneExprOperand> //
 		implements IStandAloneExprOperationAndClose {
 
-    public StandAloneExpOperationAndClose(final Tokens tokens) {
-        super(tokens);
-    }
-    
-	@Override
-	public ExpressionModel model() {
-		return new ExpressionModel(getTokens().getValues());
+	public StandAloneExpOperationAndClose(final EqlSentenceBuilder builder) {
+		super(builder);
 	}
 
 	@Override
-	protected IStandAloneExprOperand nextForArithmeticalOperator(final Tokens tokens) {
-		return new StandAloneExpOperand(tokens);
+	public ExpressionModel model() {
+		return new ExpressionModel(builder.getTokens());
 	}
+
+	@Override
+	protected IStandAloneExprOperand nextForArithmeticalOperator(final EqlSentenceBuilder builder) {
+		return new StandAloneExpOperand(builder);
+	}
+
 }

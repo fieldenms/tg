@@ -6,36 +6,37 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IYieldExprOperationOrEnd1;
 
 abstract class YieldExprOperationOrEnd1<T, ET extends AbstractEntity<?>> //
-		extends ExprOperationOrEnd<IYieldExprItem1<T, ET>, IYieldExprOperationOrEnd0<T, ET>, ET> //
-		implements IYieldExprOperationOrEnd1<T, ET> {
+        extends ExprOperationOrEnd<IYieldExprItem1<T, ET>, IYieldExprOperationOrEnd0<T, ET>, ET> //
+        implements IYieldExprOperationOrEnd1<T, ET> {
 
-    protected YieldExprOperationOrEnd1(final Tokens tokens) {
-        super(tokens);
+    protected YieldExprOperationOrEnd1(final EqlSentenceBuilder builder) {
+        super(builder);
     }
-    
-	protected abstract T nextForYieldExprOperationOrEnd1(final Tokens tokens);
 
-	@Override
-	protected IYieldExprOperationOrEnd0<T, ET> nextForExprOperationOrEnd(final Tokens tokens) {
-		return new YieldExprOperationOrEnd0<T, ET>(tokens) {
+    protected abstract T nextForYieldExprOperationOrEnd1(final EqlSentenceBuilder builder);
 
-			@Override
-			protected T nextForYieldExprOperationOrEnd0(final Tokens tokens) {
-				return YieldExprOperationOrEnd1.this.nextForYieldExprOperationOrEnd1(tokens);
-			}
+    @Override
+    protected IYieldExprOperationOrEnd0<T, ET> nextForExprOperationOrEnd(final EqlSentenceBuilder builder) {
+        return new YieldExprOperationOrEnd0<T, ET>(builder) {
 
-		};
-	}
+            @Override
+            protected T nextForYieldExprOperationOrEnd0(final EqlSentenceBuilder builder) {
+                return YieldExprOperationOrEnd1.this.nextForYieldExprOperationOrEnd1(builder);
+            }
 
-	@Override
-	protected IYieldExprItem1<T, ET> nextForArithmeticalOperator(final Tokens tokens) {
-		return new YieldExprItem1<T, ET>(tokens) {
+        };
+    }
 
-			@Override
-			protected T nextForYieldExprItem1(final Tokens tokens) {
-				return YieldExprOperationOrEnd1.this.nextForYieldExprOperationOrEnd1(tokens);
-			}
+    @Override
+    protected IYieldExprItem1<T, ET> nextForArithmeticalOperator(final EqlSentenceBuilder builder) {
+        return new YieldExprItem1<T, ET>(builder) {
 
-		};
-	}
+            @Override
+            protected T nextForYieldExprItem1(final EqlSentenceBuilder builder) {
+                return YieldExprOperationOrEnd1.this.nextForYieldExprOperationOrEnd1(builder);
+            }
+
+        };
+    }
+
 }

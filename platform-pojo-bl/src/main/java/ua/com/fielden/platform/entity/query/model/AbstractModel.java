@@ -1,25 +1,25 @@
 package ua.com.fielden.platform.entity.query.model;
 
-import static java.lang.String.*;
-import java.util.ArrayList;
-import java.util.List;
-
+import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.StringUtils;
 
-import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
-import ua.com.fielden.platform.utils.Pair;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+import static java.lang.String.format;
 
 public abstract class AbstractModel {
-    private final List<Pair<TokenCategory, Object>> tokens = new ArrayList<>();
+    private final List<Token> tokens = new ArrayList<>();
 
     protected AbstractModel() {
     }
 
-    public AbstractModel(final List<Pair<TokenCategory, Object>> tokens) {
+    public AbstractModel(final List<? extends Token> tokens) {
         this.tokens.addAll(tokens);
     }
 
-    public List<Pair<TokenCategory, Object>> getTokens() {
+    public List<? extends Token> getTokens() {
         return tokens;
     }
 
@@ -33,31 +33,14 @@ public abstract class AbstractModel {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (!(obj instanceof AbstractModel)) {
-            return false;
-        }
-        final AbstractModel other = (AbstractModel) obj;
-        if (tokens == null) {
-            if (other.tokens != null) {
-                return false;
-            }
-        } else if (!tokens.equals(other.tokens)) {
-            return false;
-        }
-        return true;
+        return this == obj || obj instanceof AbstractModel other && Objects.equals(tokens, other.tokens);
     }
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        for (final Pair<TokenCategory, Object> pair : tokens) {
-            sb.append(format("\n\t%s%s", StringUtils.rightPad(pair.getKey().toString(), 32, '.'), pair.getValue()));
+        for (final var token : tokens) {
+            sb.append(format("\n\t%s", StringUtils.rightPad(token.toString(), 32, '.')));
         }
         return sb.toString();
     }

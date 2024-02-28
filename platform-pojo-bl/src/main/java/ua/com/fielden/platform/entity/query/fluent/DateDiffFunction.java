@@ -8,25 +8,26 @@ abstract class DateDiffFunction<T, ET extends AbstractEntity<?>> //
 		extends AbstractQueryLink //
 		implements IDateDiffFunction<T, ET> {
 
-    protected DateDiffFunction(final Tokens tokens) {
-        super(tokens);
-    }
-    
-	protected abstract T nextForDateDiffFunction(final Tokens tokens);
+	protected DateDiffFunction(final EqlSentenceBuilder builder) {
+		super(builder);
+	}
+
+	protected abstract T nextForDateDiffFunction(final EqlSentenceBuilder builder);
 
 	@Override
 	public IDateDiffFunctionArgument<T, ET> between() {
-		return createDateDiffFunctionArgument(getTokens());
+		return createDateDiffFunctionArgument(builder);
 	}
 
-	private DateDiffFunctionArgument<T, ET> createDateDiffFunctionArgument(final Tokens tokens) {
-		return new DateDiffFunctionArgument<T, ET>(tokens) {
+	private DateDiffFunctionArgument<T, ET> createDateDiffFunctionArgument(final EqlSentenceBuilder builder) {
+		return new DateDiffFunctionArgument<T, ET>(builder) {
 
 			@Override
-			protected T nextForDateDiffFunctionArgument(final Tokens tokens) {
-				return DateDiffFunction.this.nextForDateDiffFunction(tokens);
+			protected T nextForDateDiffFunctionArgument(final EqlSentenceBuilder builder) {
+				return DateDiffFunction.this.nextForDateDiffFunction(builder);
 			}
 
 		};
 	}
+
 }

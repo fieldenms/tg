@@ -21,9 +21,10 @@ public class StandAloneExpressionBuilder extends AbstractTokensBuilder {
     public StandAloneExpressionBuilder(final QueryModelToStage1Transformer queryBuilder, final ExpressionModel exprModel) {
         super(null, queryBuilder);
 
-        for (final Pair<TokenCategory, Object> tokenPair : exprModel.getTokens()) {
-            add(tokenPair.getKey(), tokenPair.getValue());
-        }
+        throw new UnsupportedOperationException();
+//        for (final Pair<TokenCategory, Object> tokenPair : exprModel.getTokens()) {
+//            add(tokenPair.getKey(), tokenPair.getValue());
+//        }
     }
 
     @Override

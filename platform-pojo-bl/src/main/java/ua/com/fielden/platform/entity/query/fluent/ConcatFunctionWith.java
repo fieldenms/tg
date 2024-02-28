@@ -8,29 +8,30 @@ abstract class ConcatFunctionWith<T, ET extends AbstractEntity<?>> //
 		extends AbstractQueryLink //
 		implements IConcatFunctionWith<T, ET> {
 
-    protected ConcatFunctionWith(final Tokens tokens) {
-        super(tokens);
-    }
-    
-	protected abstract T nextForConcatFunctionWith(final Tokens tokens);
+	protected ConcatFunctionWith(final EqlSentenceBuilder builder) {
+		super(builder);
+	}
+
+	protected abstract T nextForConcatFunctionWith(final EqlSentenceBuilder builder);
 
 	@Override
 	public T end() {
-		return nextForConcatFunctionWith(getTokens().endOfFunction());
+		return nextForConcatFunctionWith(builder.endOfFunction());
 	}
 
 	@Override
 	public IConcatFunctionArgument<T, ET> with() {
-		return createConcatFunctionArgument(getTokens());
+		return createConcatFunctionArgument(builder);
 	}
 
-	private ConcatFunctionArgument<T, ET> createConcatFunctionArgument(final Tokens tokens) {
-		return new ConcatFunctionArgument<T, ET>(tokens) {
+	private ConcatFunctionArgument<T, ET> createConcatFunctionArgument(final EqlSentenceBuilder builder) {
+		return new ConcatFunctionArgument<T, ET>(builder) {
 
 			protected @Override
-			T nextForConcatFunctionArgument(final Tokens tokens) {
-				return ConcatFunctionWith.this.nextForConcatFunctionWith(tokens);
+			T nextForConcatFunctionArgument(final EqlSentenceBuilder builder) {
+				return ConcatFunctionWith.this.nextForConcatFunctionWith(builder);
 			}
 		};
 	}
+
 }

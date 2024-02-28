@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.entity.query.model;
 
-import java.util.List;
-
+import org.antlr.v4.runtime.Token;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
-import ua.com.fielden.platform.utils.Pair;
+
+import java.util.List;
 
 /**
  * Represents a computational model for expressions, which can be used together with entity query API.
@@ -16,11 +16,13 @@ public class ExpressionModel extends AbstractModel {
     protected ExpressionModel() {
     }
 
-    public ExpressionModel(final List<Pair<TokenCategory, Object>> tokens) {
+    public ExpressionModel(final List<? extends Token> tokens) {
         super(tokens);
     }
 
     public boolean containsSingleValueToken() {
-        return getTokens().size() == 1 && getTokens().get(0).getKey() == TokenCategory.VAL;
+        // TODO
+        throw new UnsupportedOperationException();
+//        return getTokens().size() == 1 && getTokens().get(0).getKey() == TokenCategory.VAL;
     }
 }

@@ -93,33 +93,33 @@ public class QueryModelToStage1Transformer {
 
         ITokensBuilder active = null;
 
-        for (final Pair<TokenCategory, Object> pair : qryModel.getTokens()) {
-            if (QUERY_TOKEN != pair.getKey()) {
-                if (active != null) {
-                    active.add(pair.getKey(), pair.getValue());
-                }
-            } else {
-                switch ((QueryTokens) pair.getValue()) {
-                case WHERE:
-                    active = where;
-                    where.setChild(new ConditionBuilder(where, this));
-                    break;
-                case FROM:
-                    active = from;
-                    break;
-                case YIELD:
-                    active = select;
-                    select.setChild(new YieldBuilder(select, this));
-                    break;
-                case GROUP_BY:
-                    active = groupBy;
-                    groupBy.setChild(new GroupBuilder(groupBy, this));
-                    break;
-                default:
-                    break;
-                }
-            }
-        }
+//        for (final Pair<TokenCategory, Object> pair : qryModel.getTokens()) {
+//            if (QUERY_TOKEN != pair.getKey()) {
+//                if (active != null) {
+//                    active.add(pair.getKey(), pair.getValue());
+//                }
+//            } else {
+//                switch ((QueryTokens) pair.getValue()) {
+//                case WHERE:
+//                    active = where;
+//                    where.setChild(new ConditionBuilder(where, this));
+//                    break;
+//                case FROM:
+//                    active = from;
+//                    break;
+//                case YIELD:
+//                    active = select;
+//                    select.setChild(new YieldBuilder(select, this));
+//                    break;
+//                case GROUP_BY:
+//                    active = groupBy;
+//                    groupBy.setChild(new GroupBuilder(groupBy, this));
+//                    break;
+//                default:
+//                    break;
+//                }
+//            }
+//        }
 
         final IJoinNode1<? extends IJoinNode2<?>> fromModel = from.getModel();
         final Conditions1 udfModel = fromModel == null ? EMPTY_CONDITIONS : generateUserDataFilteringCondition(qryModel.isFilterable(), filter, username, fromModel.mainSource());
@@ -140,38 +140,38 @@ public class QueryModelToStage1Transformer {
         return EMPTY_CONDITIONS;
     }
 
-    private List<Pair<TokenCategory, Object>> linearizeTokens(final List<Pair<TokenCategory, Object>> tokens) {
-        final List<Pair<TokenCategory, Object>> result = new ArrayList<>();
-        for (final Pair<TokenCategory, Object> pair : tokens) {
-            if (ORDER_TOKENS == pair.getKey()) {
-                result.addAll(linearizeTokens(((OrderingModel) pair.getValue()).getTokens()));
-            } else {
-                result.add(pair);
-            }
-        }
-
-        return result;
-    }
+//    private List<Pair<TokenCategory, Object>> linearizeTokens(final List<Pair<TokenCategory, Object>> tokens) {
+//        final List<Pair<TokenCategory, Object>> result = new ArrayList<>();
+//        for (final Pair<TokenCategory, Object> pair : tokens) {
+//            if (ORDER_TOKENS == pair.getKey()) {
+//                result.addAll(linearizeTokens(((OrderingModel) pair.getValue()).getTokens()));
+//            } else {
+//                result.add(pair);
+//            }
+//        }
+//
+//        return result;
+//    }
 
     private OrderBys1 produceOrderBys(final OrderingModel orderModel) {
         final QryOrderingsBuilder orderBy = new QryOrderingsBuilder(null, this);
 
         if (orderModel != null) {
-            final List<Pair<TokenCategory, Object>> linearizedTokens = linearizeTokens(orderModel.getTokens());
-            for (final Iterator<Pair<TokenCategory, Object>> iterator = linearizedTokens.iterator(); iterator.hasNext();) {
-                final Pair<TokenCategory, Object> pair = iterator.next();
-                if (SORT_ORDER == pair.getKey()) {
-                    orderBy.add(pair.getKey(), pair.getValue());
-                    if (iterator.hasNext()) {
-                        orderBy.setChild(new OrderByBuilder(orderBy, this));
-                    }
-                } else {
-                    if (orderBy.getChild() == null) {
-                        orderBy.setChild(new OrderByBuilder(orderBy, this));
-                    }
-                    orderBy.add(pair.getKey(), pair.getValue());
-                }
-            }
+//            final List<Pair<TokenCategory, Object>> linearizedTokens = linearizeTokens(orderModel.getTokens());
+//            for (final Iterator<Pair<TokenCategory, Object>> iterator = linearizedTokens.iterator(); iterator.hasNext();) {
+//                final Pair<TokenCategory, Object> pair = iterator.next();
+//                if (SORT_ORDER == pair.getKey()) {
+//                    orderBy.add(pair.getKey(), pair.getValue());
+//                    if (iterator.hasNext()) {
+//                        orderBy.setChild(new OrderByBuilder(orderBy, this));
+//                    }
+//                } else {
+//                    if (orderBy.getChild() == null) {
+//                        orderBy.setChild(new OrderByBuilder(orderBy, this));
+//                    }
+//                    orderBy.add(pair.getKey(), pair.getValue());
+//                }
+//            }
         }
         return orderBy.getModel();
     }
