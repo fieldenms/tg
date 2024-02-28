@@ -56,14 +56,13 @@ public class MiscUtilities {
      * Creates a new array of values based on the passed list by changing * to %.
      *
      * @param criteria
-     * @param trim - indicates whether elements of criteria list parameter should be trimmed or not.
      * @return
      */
-    public static String[] prepare(final List<String> criteria, final boolean trim) {
+    public static String[] prepare(final List<String> criteria) {
         final List<String> result = new ArrayList<>();
         if (criteria != null) {
             for (final String crit : criteria) {
-                result.add(prepare(crit, trim));
+                result.add(prepare(crit));
             }
         }
         // eliminate empty or null values
@@ -97,15 +96,26 @@ public class MiscUtilities {
      * Converts auto-completer-like regular expression to normal regular expression (simply replaces all '*' with '%' characters)
      *
      * @param autocompleterExp
-     * @param trim - indicates whether autocompleterExp parameter should be trimmed or not.
      * @return
      */
-    public static String prepare(final String autocompleterExp, final boolean trim) {
-        if ("*".equals(trim ? autocompleterExp.trim(): autocompleterExp)) {
+    public static String prepare(final String autocompleterExp) {
+        if ("*".equals(autocompleterExp.trim())) {
             return null;
         }
-        final String processedExpr = autocompleterExp.replace("*", "%");
-        return trim ? processedExpr.trim(): processedExpr;
+        return autocompleterExp.replace("*", "%").trim();
+    }
+
+    /**
+     * Converts auto-completer-like regular expression for string typed property into normal regular expression (simply replaces all '*' with '%' characters) without trimming it
+     *
+     * @param stringExpr - The expression for string property
+     * @return converted into SQL like regular expression without trimming stringExpr
+     */
+    public static String prepareStringExpression(final String stringExpr) {
+        if ("*".equals(stringExpr)) {
+            return null;
+        }
+        return stringExpr.replace("*", "%");
     }
 
     /**

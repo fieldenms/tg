@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.utils;
 
 import static java.lang.Class.forName;
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static java.util.Locale.getDefault;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
@@ -24,6 +25,7 @@ import static ua.com.fielden.platform.reflection.Finder.getPropertyDescriptors;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
+import static ua.com.fielden.platform.utils.MiscUtilities.prepare;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -258,7 +260,7 @@ public class EntityResourceUtils {
      */
     @SuppressWarnings("unused")
     private static <M extends AbstractEntity<?>> void logPropertyApplication(final String actionCaption, final boolean apply, final boolean shortLog, final Class<M> type, final String name, final boolean isEntityStale, final Map<String, Object> valAndOrigVal, final M entity, final String... propertiesToLogArray) {
-        final Set<String> propertiesToLog = new LinkedHashSet<>(Arrays.asList(propertiesToLogArray));
+        final Set<String> propertiesToLog = new LinkedHashSet<>(asList(propertiesToLogArray));
         if (propertiesToLog.contains(name)) {
             final StringBuilder builder = new StringBuilder(actionCaption);
             builder.append(":\t");
@@ -611,7 +613,7 @@ public class EntityResourceUtils {
             }
             final ParameterizedType parameterizedEntityType = (ParameterizedType) type.getAnnotatedSuperclass().getType();
             if (parameterizedEntityType.getActualTypeArguments().length != 1 || !(parameterizedEntityType.getActualTypeArguments()[0] instanceof Class)) {
-                throw Result.failure(new IllegalStateException(format("The type parameters %s of functional entity %s (for collection modification) is malformed.", Arrays.asList(parameterizedEntityType.getActualTypeArguments()), type.getSimpleName())));
+                throw Result.failure(new IllegalStateException(format("The type parameters %s of functional entity %s (for collection modification) is malformed.", asList(parameterizedEntityType.getActualTypeArguments()), type.getSimpleName())));
             }
             propertyType = (Class<?>) parameterizedEntityType.getActualTypeArguments()[0];
         } else {
@@ -762,7 +764,7 @@ public class EntityResourceUtils {
     public static AbstractEntity<?> findAndFetchBy(final String searchString, final Class<AbstractEntity<?>> entityType, final Optional<String> optActiveProp, final fetch<AbstractEntity<?>> fetch, final IEntityDao<AbstractEntity<?>> companion) {
         if (isCompositeEntity(entityType)) {
             //logger.debug(format("KEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
-            final String compositeKeyAsString = MiscUtilities.prepare(prepSearchStringForCompositeKey(entityType, searchString), true);
+            final String compositeKeyAsString = prepare(prepSearchStringForCompositeKey(entityType, searchString));
             final EntityResultQueryModel<AbstractEntity<?>> model = select(entityType).where().prop(KEY).iLike().val(compositeKeyAsString).model().setFilterable(true);
             final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> qem = from(model).with(fetch).model();
             try {
@@ -798,7 +800,7 @@ public class EntityResourceUtils {
             }
         } else {
             //logger.debug(format("KEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
-            final String[] keys = MiscUtilities.prepare(Arrays.asList(searchString), true);
+            final String[] keys = prepare(asList(searchString));
             final String key;
             if (keys.length > 1) {
                 throw new IllegalArgumentException(format("Value [%s] does not represent a single key value, which is required for coversion to an instance of type [%s].", searchString, entityType.getName()));

@@ -27,6 +27,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isRangeType;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import static ua.com.fielden.platform.utils.MiscUtilities.prepare;
+import static ua.com.fielden.platform.utils.MiscUtilities.prepareStringExpression;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.reflect.Field;
@@ -850,7 +851,7 @@ public class DynamicQueryBuilder {
             if (!crits[index].contains("*")) {
                 crits[index] = "*" + crits[index] + "*";
             }
-            crits[index] = prepare(crits[index], false);
+            crits[index] = prepareStringExpression(crits[index]);
         }
         return crits;
     }
@@ -864,9 +865,9 @@ public class DynamicQueryBuilder {
      */
     private static String prepCritValuesForSingleStringTypedProp(final String criteria) {
         if (!criteria.contains("*")) {
-            return prepare("*" + criteria + "*", false);
+            return prepareStringExpression("*" + criteria + "*");
         }
-        return prepare(criteria, false);
+        return prepareStringExpression(criteria);
     }
 
     /**
@@ -876,7 +877,7 @@ public class DynamicQueryBuilder {
      * @return
      */
     public static String[] prepCritValuesForEntityTypedProp(final List<String> criteria) {
-        return prepare(criteria, true);
+        return prepare(criteria);
     }
 
     /**

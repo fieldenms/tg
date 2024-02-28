@@ -780,7 +780,7 @@ export class TgEntityEditor extends TgEditor {
         let inputText = ''; // default value
         if (this.multi === false) {
             // assign the actual search string
-            inputText = ignoreInputText === true ? defaultSearchQuery : this._prepInput(this.decoratedInput().value) || defaultSearchQuery;
+            inputText = ignoreInputText === true ? defaultSearchQuery : this._prepInput(this.decoratedInput().value.trim()) || defaultSearchQuery;
         } else {
             // The following manipulations with indexes are required in case of multi selection
             // in order to determine what part of the input text should be used for search and
