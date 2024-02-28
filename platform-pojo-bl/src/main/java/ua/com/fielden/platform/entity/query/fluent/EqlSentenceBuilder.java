@@ -5,6 +5,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.model.*;
+import ua.com.fielden.platform.eql.antlr.tokens.*;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 import java.util.ArrayList;
@@ -13,6 +14,8 @@ import java.util.Objects;
 import java.util.Optional;
 
 import static java.util.Collections.unmodifiableList;
+import static ua.com.fielden.platform.eql.antlr.EQLLexer.*;
+import static ua.com.fielden.platform.eql.antlr.tokens.SimpleTokens.token;
 
 /**
  * Builds a sentence in the EQL language out of {@linkplain Token ANTLR tokens}.
@@ -457,11 +460,23 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder endOfFunction() {
-        throw new UnsupportedOperationException();
+        return _add(token(END));
     }
 
-    public EqlSentenceBuilder endOfFunction(final ITypeCast typeCast) {
-        throw new UnsupportedOperationException();
+    public EqlSentenceBuilder endAsInt() {
+        return _add(token(ENDASINT));
+    }
+
+    public EqlSentenceBuilder endAsBool() {
+        return _add(token(ENDASBOOL));
+    }
+
+    public EqlSentenceBuilder endAsStr(final int length) {
+        return _add(new EndAsStrToken(length));
+    }
+
+    public EqlSentenceBuilder endAsDecimal(final int precision, final int scale) {
+        return _add(new EndAsDecimalToken(precision, scale));
     }
 
     public EqlSentenceBuilder where() {

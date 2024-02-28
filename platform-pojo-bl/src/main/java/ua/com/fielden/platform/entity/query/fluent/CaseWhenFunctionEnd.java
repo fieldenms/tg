@@ -19,22 +19,22 @@ abstract class CaseWhenFunctionEnd<T> //
 
 	@Override
 	public T endAsInt() {
-		return nextForCaseWhenFunctionEnd(builder.endOfFunction(TypeCastAsInteger.INSTANCE));
+		return nextForCaseWhenFunctionEnd(builder.endAsInt());
 	}
 
 	@Override
 	public T endAsBool() {
-		return nextForCaseWhenFunctionEnd(builder.endOfFunction(TypeCastAsBoolean.INSTANCE));
+		return nextForCaseWhenFunctionEnd(builder.endAsBool());
 	}
 
 	@Override
 	public T endAsStr(final int length) {
-		return nextForCaseWhenFunctionEnd(builder.endOfFunction(TypeCastAsString.getInstance(length)));
+		return nextForCaseWhenFunctionEnd(builder.endAsStr(length));
 	}
 
 	@Override
 	public T endAsDecimal(final int presicion, final int scale) {
-		return nextForCaseWhenFunctionEnd(builder.endOfFunction(TypeCastAsDecimal.getInstance(presicion, scale)));
+		return nextForCaseWhenFunctionEnd(builder.endAsDecimal(presicion, scale));
 	}
 
 }
