@@ -14,6 +14,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import static java.util.Collections.unmodifiableList;
+import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.*;
 import static ua.com.fielden.platform.eql.antlr.tokens.SimpleTokens.token;
 
@@ -504,19 +505,33 @@ final class EqlSentenceBuilder {
     }
 
     public <E extends AbstractEntity<?>> EqlSentenceBuilder from() {
-        throw new UnsupportedOperationException();
+        this.mainSourceType = EntityAggregates.class;
+        return _add(SelectToken.values());
     }
 
     public <E extends AbstractEntity<?>> EqlSentenceBuilder from(final Class<E> entityType) {
-        throw new UnsupportedOperationException();
+        if (entityType == null) {
+            throw new IllegalArgumentException("Missing entity type in query: " + tokens.stream().map(Token::getText).collect(joining(" ")));
+        }
+        this.mainSourceType = entityType;
+        return _add(SelectToken.entityType(entityType));
     }
 
     public EqlSentenceBuilder from(final AggregatedResultQueryModel... sourceModels) {
-        throw new UnsupportedOperationException();
+        if (sourceModels.length == 0) {
+            throw new IllegalArgumentException("No models were specified as a source in the FROM statement!");
+        }
+        this.mainSourceType = EntityAggregates.class;
+        return _add(SelectToken.aggregateModels(List.of(sourceModels)));
     }
 
-    public <T extends AbstractEntity<?>> EqlSentenceBuilder from(final EntityResultQueryModel<T>... sourceModels) {
-        throw new UnsupportedOperationException();
+    @SafeVarargs
+    public final <T extends AbstractEntity<?>> EqlSentenceBuilder from(final EntityResultQueryModel<T>... sourceModels) {
+        if (sourceModels.length == 0) {
+            throw new IllegalArgumentException("No models were specified as a source in the FROM statement!");
+        }
+        this.mainSourceType = sourceModels[0].getResultType();
+        return _add(SelectToken.entityModels(List.of(sourceModels)));
     }
 
     public <E extends AbstractEntity<?>> EqlSentenceBuilder innerJoin(final Class<E> entityType) {
