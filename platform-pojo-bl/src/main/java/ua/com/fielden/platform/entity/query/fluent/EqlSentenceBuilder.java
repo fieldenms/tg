@@ -320,6 +320,14 @@ final class EqlSentenceBuilder {
         throw new UnsupportedOperationException();
     }
 
+    public EqlSentenceBuilder then() {
+        return _add(token(THEN));
+    }
+
+    public EqlSentenceBuilder otherwise() {
+        return _add(token(OTHERWISE));
+    }
+
     public EqlSentenceBuilder concat() {
         throw new UnsupportedOperationException();
     }

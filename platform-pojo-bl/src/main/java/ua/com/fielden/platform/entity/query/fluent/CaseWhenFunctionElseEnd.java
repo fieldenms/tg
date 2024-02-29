@@ -14,7 +14,7 @@ abstract class CaseWhenFunctionElseEnd<T, ET extends AbstractEntity<?>> //
 
 	@Override
 	public ICaseWhenFunctionLastArgument<T, ET> otherwise() {
-		return createCaseWhenFunctionLastArgument(builder);
+		return createCaseWhenFunctionLastArgument(builder.otherwise());
 	}
 
 	private CaseWhenFunctionLastArgument<T, ET> createCaseWhenFunctionLastArgument(final EqlSentenceBuilder builder) {

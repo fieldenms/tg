@@ -17,7 +17,7 @@ abstract class FunctionCompoundCondition0<T, ET extends AbstractEntity<?>> //
 
 	@Override
 	public ICaseWhenFunctionArgument<T, ET> then() {
-		return createCaseWhenFunctionArgument(builder);
+		return createCaseWhenFunctionArgument(builder.then());
 	}
 
 	@Override
