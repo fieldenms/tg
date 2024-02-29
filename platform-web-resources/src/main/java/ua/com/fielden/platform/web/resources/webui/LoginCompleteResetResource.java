@@ -99,7 +99,7 @@ public class LoginCompleteResetResource extends AbstractWebResource {
 
     private static Representation pageToReportResetSessionExpiration(final Logger logger) {
         try {
-            final byte[] body = ResourceLoader.getText("ua/com/fielden/platform/web/login-expired-reset.html").getBytes("UTF-8");
+            final byte[] body = ResourceLoader.getText("ua/com/fielden/platform/js/login-expired-reset.html").getBytes("UTF-8");
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body), MediaType.TEXT_HTML));
         } catch (final Exception ex) {
             logger.fatal(ex);
@@ -109,7 +109,7 @@ public class LoginCompleteResetResource extends AbstractWebResource {
 
     private Representation pageToProvideNewPassword(final String uuid, final Logger logger) {
         try {
-            final byte[] body = ResourceLoader.getText("ua/com/fielden/platform/web/login-complete-reset.html")
+            final byte[] body = ResourceLoader.getText("ua/com/fielden/platform/js/login-complete-reset.html")
                     .replace("@title", "Login Complete Reset")
                     .replace("@demoPassword", demoSecret)
                     .replace("@demoPasswdError", DEMO_SECRET_ERROR)

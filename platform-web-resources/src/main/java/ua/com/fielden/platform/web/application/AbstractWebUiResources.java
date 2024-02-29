@@ -86,7 +86,7 @@ public abstract class AbstractWebUiResources extends Application {
             final IWebUiConfig webApp) {
         super(context);
         this.webApp = webApp;
-        //        this.platformJsScriptsLocation = "../../tg/platform-web-ui/src/main/web/ua/com/fielden/platform/web/";
+        //        this.platformJsScriptsLocation = "../../tg/platform-web-ui/src/main/web/ua/com/fielden/platform/js/";
         //        this.platformVendorJsScriptsLocation = "../../tg/platform-web-ui/src/main/resources/";
         // --> TODO not so elegant and flexible. There should be more elegant version for development and deployment. Use application.props file.
         //        this.platformGisJsScriptsLocation = platformJsScriptsLocation + "gis/";
@@ -163,7 +163,7 @@ public abstract class AbstractWebUiResources extends Application {
 
         // attache internal components and related resources
         //final Set<String> webComponents = new HashSet<>();
-        //webComponents.addAll(Arrays.asList("", "ua/com/fielden/platform/web/"));
+        //webComponents.addAll(Arrays.asList("", "ua/com/fielden/platform/js/"));
         //router.attach("/resources/", new FileResourceFactory(Collections.unmodifiableSet(webComponents)), Template.MODE_STARTS_WITH);
         ///////////////////////////////////////////
         /////////// Configuring the guard /////////

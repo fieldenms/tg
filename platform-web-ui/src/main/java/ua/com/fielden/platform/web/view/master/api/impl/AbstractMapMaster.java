@@ -47,7 +47,7 @@ public abstract class AbstractMapMaster<T extends AbstractFunctionalEntityWithCe
         final StringBuilder prefDimBuilder = new StringBuilder();
         prefDimBuilder.append("{'width': function() {return '100%'}, 'height': function() {return '100%'}, 'widthUnit': '', 'heightUnit': ''}");
 
-        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
+        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/js/master/tg-entity-master-template.js")
                 .replace(IMPORTS, createImports(linkedSetOf("gis/tg-map")) + "import { " + gisComponentName + " } from '/resources/" + gisComponentImportPath + ".js';\n" )
                 .replace(ENTITY_TYPE, flattenedNameOf(entityType))
                 .replace("<!--@tg-entity-master-content-->", tgMessageMap.toString())

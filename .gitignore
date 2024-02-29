@@ -57,4 +57,4 @@ bin/
 dependency-reduced-pom.xml
 
 #ignore libraries installed by node package manafer as it can be installed locally with package.json file
-platform-web-ui/src/main/ts/node_modules
+platform-web-ui/src/main/web/ua/com/fielden/platform/ts/node_modules

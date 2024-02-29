@@ -14,7 +14,7 @@ public class CustomTestView extends AbstractCustomView {
 
     @Override
     public IRenderable build() {
-        final String text = ResourceLoader.getText("ua/com/fielden/platform/web/spikes/custom-view-template.html");
+        final String text = ResourceLoader.getText("ua/com/fielden/platform/js/spikes/custom-view-template.html");
         final String customView = text.
                 replaceAll("@viewName", getViewName()).
                 replace("@customViewContent", "It's cutom view content");

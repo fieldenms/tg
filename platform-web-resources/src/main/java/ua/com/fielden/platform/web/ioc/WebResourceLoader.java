@@ -24,6 +24,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -40,7 +41,6 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.serialisation.jackson.EntityType;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
@@ -129,7 +129,7 @@ public class WebResourceLoader implements IWebResourceLoader {
      * @return
      */
     private static Optional<String> getReflectorSource(final IWebUiConfig webUiConfig, final ISerialiser serialiser, final TgJackson tgJackson) {
-        final Optional<String> originalSource = ofNullable(getText("ua/com/fielden/platform/web/reflection/tg-reflector.js"));
+        final Optional<String> originalSource = ofNullable(getText("ua/com/fielden/platform/js/reflection/tg-reflector.js"));
         return originalSource.map(src -> src.replace("@typeTable", new String(serialiser.serialise(enhanceWithMasterInfo(webUiConfig, tgJackson.getTypeTable()), JACKSON), UTF_8)));
     }
 
@@ -276,34 +276,33 @@ public class WebResourceLoader implements IWebResourceLoader {
             logger.error(format("The requested resource (%s) wasn't found.", originalPath));
             return empty();
         } else {
-            return getFileSource(filePath);
+            return getFile(filePath, resourcePaths);
         }
     }
 
-    private static Optional<String> getFileSource(final String filePath) {
-        return ofNullable(replaceBareModuleSpecifier(getText(filePath)));
+    private static Optional<String> getFile(final String filePath, final List<String> resourcePaths) {
+        return ofNullable(replaceBareModuleSpecifier(getText(filePath), resourcePaths));
     }
 
-    private static String replaceBareModuleSpecifier(String fileText) {
+    private static String replaceBareModuleSpecifier(String fileText, final List<String> resourcePaths) {
         if (fileText != null) {
             final Pattern importWithFrom = Pattern.compile("((import|export)\\s*?[^;]+?\\s*?from\\s*?[\"'])([^\\/\\/.][^\"']*?)([\"'];)", Pattern.MULTILINE);
             final Pattern simpleImport = Pattern.compile("((import\\s*?)[\"'])([^\\/\\.][^\"']*?)([\"'];)", Pattern.MULTILINE);
 
-            return importWithFrom.matcher(simpleImport.matcher(fileText).replaceAll(WebResourceLoader::nodeResolver))
-                    .replaceAll(WebResourceLoader::nodeResolver);
+            Function<MatchResult, String> nodeResolver = matchResult -> matchResult.group(1) + "/resources/node_modules/"
+                    + resolveModule(matchResult.group(3), resourcePaths) + matchResult.group(4);
+
+            return importWithFrom.matcher(simpleImport.matcher(fileText).replaceAll(nodeResolver))
+                    .replaceAll(nodeResolver);
         }
         return null;
     }
 
-    private static String nodeResolver(MatchResult matchResult) {
-        return matchResult.group(1) + "/resources/node_modules/" + resolveModule(matchResult.group(3)) + matchResult.group(4);
-    }
-
-    private static String resolveModule(final String moduleName) {
+    private static String resolveModule(final String moduleName, final List<String> resourcePaths) {
         if (moduleName.endsWith(".js")) {
             return moduleName;
         } else if (moduleName.indexOf(".") < 0){
-            String packagePath = generateFileName(listOf("node_modules/"), moduleName + "/package.json");
+            String packagePath = generateFileName(resourcePaths, "node_modules/" + moduleName + "/package.json");
             if (!isEmpty(packagePath)) {
                 return getMain(getText(packagePath))
                         .map(mainModuleName -> moduleName + "/" + mainModuleName)
