@@ -17,7 +17,7 @@ final class SubsequentCompletedAndYielded<ET extends AbstractEntity<?>> //
 
 	@Override
 	public <T extends AbstractEntity<?>> EntityResultQueryModel<T> modelAsEntity(final Class<T> resultType) {
-		return new EntityResultQueryModel<T>(builder.modelAsEntity(resultType).getTokens(), resultType, builder.isYieldAll());
+		return new EntityResultQueryModel<T>(builder.modelAsEntity(resultType).getTokenSource(), resultType, builder.isYieldAll());
 	}
 
 	@Override
@@ -27,7 +27,7 @@ final class SubsequentCompletedAndYielded<ET extends AbstractEntity<?>> //
 
 	@Override
 	public AggregatedResultQueryModel modelAsAggregate() {
-		return new AggregatedResultQueryModel(builder.modelAsAggregate().getTokens(), builder.isYieldAll());
+		return new AggregatedResultQueryModel(builder.modelAsAggregate().getTokenSource(), builder.isYieldAll());
 	}
 
 	private FunctionYieldedLastArgument<ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET> createFunctionYieldedLastArgument(final EqlSentenceBuilder builder) {

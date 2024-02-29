@@ -453,13 +453,13 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         expected.add(new Pair(TokenCategory.LOGICAL_OPERATOR, LogicalOperator.OR));
         expected.add(new Pair(TokenCategory.PROP, "bbb"));
         expected.add(new Pair(TokenCategory.NULL_OPERATOR, true));
-        assertEquals(expected, c1.getTokens());
+        assertEquals(expected, c1.getTokenSource().tokens());
 
         final IStandAloneConditionOperand<AbstractEntity<?>> s = cond();
 
         final IStandAloneConditionComparisonOperator<AbstractEntity<?>> d = s.prop("aaa");
         final ConditionModel c2 = d.eq().val(111).or().prop("bbb").isNotNull().model();
-        assertEquals(expected, c2.getTokens());
+        assertEquals(expected, c2.getTokenSource().tokens());
 
         //System.out.println(cond().round().prop("a").to(3).eq().val(0).and().beginExpr().prop("a").endExpr().isNotNull().and().now().eq().val(1).and().exists(null).and().condition(null).and().concat().prop("a").with().prop("b").with().prop("c").end().eq().all(null).and().condition(null).model().getTokens());
     }

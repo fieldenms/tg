@@ -17,12 +17,12 @@ class CompletedAndYielded<ET extends AbstractEntity<?>> //
 
 	@Override
 	public EntityResultQueryModel<ET> model() {
-		return new EntityResultQueryModel<ET>(builder.model().getTokens(), (Class<ET>) builder.getMainSourceType(), false);
+		return new EntityResultQueryModel<ET>(builder.model().getTokenSource(), (Class<ET>) builder.getMainSourceType(), false);
 	}
 
 	@Override
 	public <T extends AbstractEntity<?>> EntityResultQueryModel<T> modelAsEntity(final Class<T> resultType) {
-		return new EntityResultQueryModel<T>(builder.modelAsEntity(resultType).getTokens(), resultType, builder.isYieldAll());
+		return new EntityResultQueryModel<T>(builder.modelAsEntity(resultType).getTokenSource(), resultType, builder.isYieldAll());
 	}
 
 	@Override

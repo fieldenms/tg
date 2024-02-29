@@ -78,7 +78,7 @@ public class QueryModelToStage1Transformer {
     }
 
     private QueryComponents1 parseTokensIntoComponents(final QueryModel<?> qryModel, final OrderingModel orderModel) {
-        final EqlCompilationResult result = new EqlCompiler(this).compile(qryModel.getTokens());
+        final EqlCompilationResult result = new EqlCompiler(this).compile(qryModel.getTokenSource());
 
         switch (result) {
             case EqlCompilationResult.Select select -> {
@@ -108,7 +108,7 @@ public class QueryModelToStage1Transformer {
     }
 
     private OrderBys1 produceOrderBys(final OrderingModel orderModel) {
-        final EqlCompilationResult result = new EqlCompiler(this).compile(orderModel.getTokens());
+        final EqlCompilationResult result = new EqlCompiler(this).compile(orderModel.getTokenSource());
 
         return switch (result) {
             case EqlCompilationResult.OrderBy orderBy -> orderBy.model();

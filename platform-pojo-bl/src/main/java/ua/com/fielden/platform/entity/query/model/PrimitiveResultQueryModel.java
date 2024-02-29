@@ -1,15 +1,10 @@
 package ua.com.fielden.platform.entity.query.model;
 
-import org.antlr.v4.runtime.Token;
-
-import java.util.List;
+import ua.com.fielden.platform.eql.antlr.ListTokenSource;
 
 public class PrimitiveResultQueryModel extends SingleResultQueryModel {
 
-    protected PrimitiveResultQueryModel() {
-    }
-
-    public PrimitiveResultQueryModel(final List<? extends Token> tokens) {
+    public PrimitiveResultQueryModel(final ListTokenSource tokens) {
         super(tokens, null, false);
     }
 

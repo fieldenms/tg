@@ -1,8 +1,6 @@
 package ua.com.fielden.platform.entity.query.model;
 
-import org.antlr.v4.runtime.Token;
-
-import java.util.List;
+import ua.com.fielden.platform.eql.antlr.ListTokenSource;
 
 /**
  * Represents a computational model for expressions, which can be used together with entity query API.
@@ -11,10 +9,8 @@ import java.util.List;
  * 
  */
 public class OrderingModel extends AbstractModel {
-    protected OrderingModel() {
-    }
 
-    public OrderingModel(final List<? extends Token> tokens) {
+    public OrderingModel(final ListTokenSource tokens) {
         super(tokens);
     }
 }

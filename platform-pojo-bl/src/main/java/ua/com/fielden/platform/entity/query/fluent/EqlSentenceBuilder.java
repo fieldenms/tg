@@ -5,6 +5,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.model.*;
+import ua.com.fielden.platform.eql.antlr.ListTokenSource;
 import ua.com.fielden.platform.eql.antlr.tokens.*;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
@@ -586,6 +587,10 @@ final class EqlSentenceBuilder {
 
     public List<? extends Token> getTokens() {
         return unmodifiableList(tokens);
+    }
+
+    public ListTokenSource getTokenSource() {
+        return new ListTokenSource(tokens);
     }
 
     public Class<? extends AbstractEntity<?>> getMainSourceType() {

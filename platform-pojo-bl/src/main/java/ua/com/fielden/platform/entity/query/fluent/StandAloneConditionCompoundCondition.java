@@ -15,7 +15,7 @@ public final class StandAloneConditionCompoundCondition<ET extends AbstractEntit
 
 	@Override
 	public ConditionModel model() {
-		return new ConditionModel(builder.model().getTokens());
+		return new ConditionModel(builder.model().getTokenSource());
 	}
 
 	@Override

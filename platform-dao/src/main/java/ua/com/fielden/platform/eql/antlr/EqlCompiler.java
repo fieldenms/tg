@@ -5,8 +5,7 @@ import org.antlr.v4.runtime.misc.ParseCancellationException;
 import ua.com.fielden.platform.eql.antlr.tokens.PropToken;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 
-import java.util.List;
-
+import static java.util.Objects.requireNonNullElse;
 import static java.util.stream.Collectors.joining;
 
 /**
@@ -105,14 +104,14 @@ public final class EqlCompiler {
     /**
      * Throws a runtime exception if parsing fails.
      *
-     * @param tokens  expression to compile
+     * @param tokenSource  source of tokens representing the expression to compile
      * @return  compilation result
      */
-    public EqlCompilationResult compile(final List<? extends Token> tokens) {
-        final var tokenStream = new CommonTokenStream(new ListTokenSource(tokens));
+    public EqlCompilationResult compile(final ListTokenSource tokenSource) {
+        final var tokenStream = new CommonTokenStream(tokenSource);
         final var parser = new EQLParser(tokenStream);
 
-        parser.addErrorListener(new ThrowingErrorListener(tokens));
+        parser.addErrorListener(new ThrowingErrorListener(tokenSource));
 
         final var visitor = new Visitor();
         return parser.start().accept(visitor);
@@ -149,10 +148,10 @@ public final class EqlCompiler {
 
     private static final class ThrowingErrorListener extends BaseErrorListener {
 
-        private final List<? extends Token> tokens;
+        private final ListTokenSource tokenSource;
 
-        public ThrowingErrorListener(final List<? extends Token> tokens) {
-            this.tokens = tokens;
+        public ThrowingErrorListener(final ListTokenSource tokenSource) {
+            this.tokenSource = tokenSource;
         }
 
         @Override
@@ -164,8 +163,12 @@ public final class EqlCompiler {
                     """
                     Failed to parse an EQL expression.
                     Expression: %s
+                    Source: %s
                     Reason: %s
-                    """.formatted(tokens.stream().map(Token::getText).collect(joining(" ")), msg),
+                    """.formatted(
+                            tokenSource.tokens().stream().map(Token::getText).collect(joining(" ")),
+                            requireNonNullElse(tokenSource.getSourceName(), "unknown"),
+                            msg),
                     e);
         }
 
