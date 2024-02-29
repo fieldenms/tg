@@ -37,6 +37,9 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
     private final List<SourceQuery1> models = new ArrayList<>();
     private final boolean isSyntheticEntity;
 
+    /**
+     * @param alias  the alias of this source or {@code null}
+     */
     public Source1BasedOnQueries(final List<SourceQuery1> models, final String alias, final Integer id, final Class<? extends AbstractEntity<?>> syntheticEntityType) {
         super(determineSourceType(models, syntheticEntityType), alias, id);
         this.isSyntheticEntity = syntheticEntityType != null;
