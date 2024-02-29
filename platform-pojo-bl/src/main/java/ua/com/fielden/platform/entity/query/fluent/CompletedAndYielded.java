@@ -22,7 +22,7 @@ class CompletedAndYielded<ET extends AbstractEntity<?>> //
 
 	@Override
 	public <T extends AbstractEntity<?>> EntityResultQueryModel<T> modelAsEntity(final Class<T> resultType) {
-		return new EntityResultQueryModel<T>(builder.getTokens(), resultType, builder.isYieldAll());
+		return new EntityResultQueryModel<T>(builder.modelAsEntity(resultType).getTokens(), resultType, builder.isYieldAll());
 	}
 
 	@Override

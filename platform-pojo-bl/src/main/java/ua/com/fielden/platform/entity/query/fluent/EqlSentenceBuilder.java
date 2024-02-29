@@ -164,7 +164,7 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder model(final SingleResultQueryModel model) {
-        throw new UnsupportedOperationException();
+        return _add(new ModelToken(model));
     }
 
     public EqlSentenceBuilder param(final String paramName) {
@@ -544,7 +544,19 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder model() {
-        throw new UnsupportedOperationException();
+        return _add(token(MODEL));
+    }
+
+    public EqlSentenceBuilder modelAsEntity(final Class<? extends AbstractEntity<?>> type) {
+        return _add(new ModelAsEntityToken(type));
+    }
+
+    public EqlSentenceBuilder modelAsAggregate() {
+        return _add(token(MODELASAGGREGATE));
+    }
+
+    public EqlSentenceBuilder modelAsPrimitive() {
+        return _add(token(MODELASPRIMITIVE));
     }
 
     // -----------------------------------------------------------------------------------------------------------------

@@ -13,7 +13,7 @@ final class OrderingItemCloseable //
 
 	@Override
 	public OrderingModel model() {
-		return new OrderingModel(builder.getTokens());
+		return new OrderingModel(builder.model().getTokens());
 	}
 
 }
