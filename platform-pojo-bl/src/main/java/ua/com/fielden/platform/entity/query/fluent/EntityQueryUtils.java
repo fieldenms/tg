@@ -48,17 +48,17 @@ public class EntityQueryUtils {
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	public static IStandAloneExprOperand expr() {
-		return new StandAloneExpOperand(new EqlSentenceBuilder());
+		return new StandAloneExpOperand(new EqlSentenceBuilder().expr());
 	}
 
 	public static <ET extends AbstractEntity<?>> IStandAloneConditionOperand<ET> cond() {
-		return new StandAloneConditionOperand<>(new EqlSentenceBuilder());
+		return new StandAloneConditionOperand<>(new EqlSentenceBuilder().cond());
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	public static IOrderingItem orderBy() {
-		return new OrderingItem(new EqlSentenceBuilder());
+		return new OrderingItem(new EqlSentenceBuilder().orderBy());
 	}
 
 	public static <T extends AbstractEntity<?>> Builder<T, EntityResultQueryModel<T>> from(

@@ -177,8 +177,16 @@ final class EqlSentenceBuilder {
         throw new UnsupportedOperationException();
     }
 
+    public EqlSentenceBuilder expr() {
+        return _add(token(EXPR));
+    }
+
     public EqlSentenceBuilder expr(final ExpressionModel exprModel) {
         throw new UnsupportedOperationException();
+    }
+
+    public EqlSentenceBuilder cond() {
+        return _add(token(COND));
     }
 
     public EqlSentenceBuilder cond(final ConditionModel conditionModel) {
