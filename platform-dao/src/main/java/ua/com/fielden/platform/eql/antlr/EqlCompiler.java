@@ -1,13 +1,13 @@
 package ua.com.fielden.platform.eql.antlr;
 
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.ListTokenSource;
-import org.antlr.v4.runtime.RecognitionException;
-import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.misc.ParseCancellationException;
 import ua.com.fielden.platform.eql.antlr.tokens.PropToken;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 
 import java.util.List;
+
+import static java.util.stream.Collectors.joining;
 
 /**
  * Compiles EQL sentences (sequences of tokens) into Stage 1 representation.
@@ -102,15 +102,20 @@ public final class EqlCompiler {
         this.transformer = transformer;
     }
 
+    /**
+     * Throws a runtime exception if parsing fails.
+     *
+     * @param tokens  expression to compile
+     * @return  compilation result
+     */
     public EqlCompilationResult compile(final List<? extends Token> tokens) {
         final var tokenStream = new CommonTokenStream(new ListTokenSource(tokens));
         final var parser = new EQLParser(tokenStream);
+
+        parser.addErrorListener(new ThrowingErrorListener(tokens));
+
         final var visitor = new Visitor();
-        try {
-            return parser.start().accept(visitor);
-        } catch (RecognitionException e) {
-            throw new RuntimeException("Compilation of an EQL expression failed", e);
-        }
+        return parser.start().accept(visitor);
     }
 
     private final class Visitor extends EQLBaseVisitor<EqlCompilationResult> {
@@ -138,6 +143,30 @@ public final class EqlCompiler {
         @Override
         public EqlCompilationResult visitOrderBy(final EQLParser.OrderByContext ctx) {
             return new OrderByVisitor(transformer).visitOrderBy(ctx);
+        }
+
+    }
+
+    private static final class ThrowingErrorListener extends BaseErrorListener {
+
+        private final List<? extends Token> tokens;
+
+        public ThrowingErrorListener(final List<? extends Token> tokens) {
+            this.tokens = tokens;
+        }
+
+        @Override
+        public void syntaxError(
+                final Recognizer<?, ?> recognizer, final Object offendingSymbol,
+                final int line, final int charPositionInLine, final String msg,
+                final RecognitionException e) {
+            throw new ParseCancellationException(
+                    """
+                    Failed to parse an EQL expression.
+                    Expression: %s
+                    Reason: %s
+                    """.formatted(tokens.stream().map(Token::getText).collect(joining(" ")), msg),
+                    e);
         }
 
     }
