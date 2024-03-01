@@ -17,7 +17,11 @@ public class Yield1 {
         this.alias = alias;
         this.hasNonnullableHint = hasNonnullableHint;
     }
-    
+
+    public Yield1(final ISingleOperand1<? extends ISingleOperand2<?>> operand) {
+        this(operand, "", false);
+    }
+
     public Yield2 transform(final TransformationContextFromStage1To2 context) {
         return new Yield2(operand.transform(context), alias, hasNonnullableHint);
     }
