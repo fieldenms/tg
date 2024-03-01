@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.antlr;
 
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
+import ua.com.fielden.platform.eql.stage1.conditions.ICondition1;
 import ua.com.fielden.platform.eql.stage1.sources.IJoinNode1;
 import ua.com.fielden.platform.eql.stage1.sundries.GroupBys1;
 import ua.com.fielden.platform.eql.stage1.sundries.Yields1;
@@ -38,7 +39,12 @@ final class SelectVisitor extends AbstractEqlVisitor<EqlCompilationResult.Select
     }
 
     private Conditions1 compileWhere(final WhereContext where) {
-        throw new UnsupportedOperationException();
+        if (where == null) {
+            return Conditions1.EMPTY_CONDITIONS;
+        }
+
+        final ICondition1<?> condition = where.condition().accept(new ConditionVisitor(transformer));
+        return Conditions1.conditions(condition);
     }
 
 }
