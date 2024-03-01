@@ -23,6 +23,8 @@ final class YieldsVisitor extends AbstractEqlVisitor<YieldsVisitor.Result> {
 
     record Result(Yields1 yields, boolean yieldAll) {}
 
+    public static final Result DEFAULT_RESULT = new Result(Yields1.EMPTY_YIELDS, false);
+
     @Override
     public Result visitYield1(final Yield1Context ctx) {
         // no need to process the Model context since that information is represented by the resulting type of a fluent API method call chain

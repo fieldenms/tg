@@ -36,7 +36,7 @@ final class SelectVisitor extends AbstractEqlVisitor<EqlCompilationResult.Select
     private YieldsVisitor.Result compileYields(final SelectEndContext selectEndContext) {
         return switch (selectEndContext) {
             case SelectEnd_AnyYieldContext ctx -> ctx.anyYield().accept(new YieldsVisitor(transformer));
-            default -> null;
+            default -> YieldsVisitor.DEFAULT_RESULT;
         };
     }
 
