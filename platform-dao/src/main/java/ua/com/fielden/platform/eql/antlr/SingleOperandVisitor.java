@@ -1,17 +1,26 @@
 package ua.com.fielden.platform.eql.antlr;
 
+import org.antlr.v4.runtime.Token;
+import ua.com.fielden.platform.entity.query.fluent.*;
 import ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator;
 import ua.com.fielden.platform.eql.antlr.tokens.*;
 import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
+import ua.com.fielden.platform.eql.stage1.conditions.ICondition1;
 import ua.com.fielden.platform.eql.stage1.operands.*;
+import ua.com.fielden.platform.eql.stage1.operands.functions.CaseWhen1;
 import ua.com.fielden.platform.eql.stage1.operands.functions.RoundTo1;
+import ua.com.fielden.platform.eql.stage2.conditions.ICondition2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.StreamUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.eql.antlr.EQLParser.*;
+import static ua.com.fielden.platform.utils.StreamUtils.zipDo;
 
 final class SingleOperandVisitor extends AbstractEqlVisitor<ISingleOperand1<? extends ISingleOperand2<?>>> {
 
@@ -73,6 +82,36 @@ final class SingleOperandVisitor extends AbstractEqlVisitor<ISingleOperand1<? ex
             return new CompoundSingleOperand1(rand.accept(this), toArithmeticalOperator(op));
         }).toList();
         return new Expression1(first, rest);
+    }
+
+    @Override
+    public CaseWhen1 visitCaseWhen(final CaseWhenContext ctx) {
+        final List<T2<ICondition1<? extends ICondition2<?>>, ISingleOperand1<? extends ISingleOperand2<?>>>> whenThens = new ArrayList<>();
+
+        final var conditionVisitor = new ConditionVisitor(transformer);
+        zipDo(ctx.whens, ctx.thens,
+                (when, then) -> whenThens.add(T2.t2(when.accept(conditionVisitor), then.accept(this))));
+
+        final var otherwise = ofNullable(ctx.otherwiseOperand).map(x -> x.accept(this)).orElse(null);
+        return new CaseWhen1(whenThens, otherwise, makeTypeCast(ctx.caseWhenEnd()));
+    }
+
+    static ITypeCast makeTypeCast(final EQLParser.CaseWhenEndContext ctx) {
+        final Token token = ctx.token;
+        return switch (token.getType()) {
+            case EQLLexer.END -> null;
+            case EQLLexer.ENDASBOOL -> TypeCastAsBoolean.INSTANCE;
+            case EQLLexer.ENDASINT -> TypeCastAsInteger.INSTANCE;
+            case EQLLexer.ENDASSTR -> {
+                final EndAsStrToken tok = (EndAsStrToken) token;
+                yield TypeCastAsString.getInstance(tok.length);
+            }
+            case EQLLexer.ENDASDECIMAL -> {
+                final EndAsDecimalToken tok = (EndAsDecimalToken) token;
+                yield TypeCastAsDecimal.getInstance(tok.precision, tok.scale);
+            }
+            default -> unexpectedToken(token);
+        };
     }
 
     static ArithmeticalOperator toArithmeticalOperator(final ArithmeticalOperatorContext ctx) {
