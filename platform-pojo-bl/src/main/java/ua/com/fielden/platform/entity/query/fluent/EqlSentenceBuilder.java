@@ -539,7 +539,7 @@ final class EqlSentenceBuilder {
             throw new IllegalArgumentException("No models were specified as a source in the FROM statement!");
         }
         this.mainSourceType = EntityAggregates.class;
-        return _add(SelectToken.aggregateModels(List.of(sourceModels)));
+        return _add(SelectToken.models(List.of(sourceModels)));
     }
 
     @SafeVarargs
@@ -548,7 +548,7 @@ final class EqlSentenceBuilder {
             throw new IllegalArgumentException("No models were specified as a source in the FROM statement!");
         }
         this.mainSourceType = sourceModels[0].getResultType();
-        return _add(SelectToken.entityModels(List.of(sourceModels)));
+        return _add(SelectToken.models(List.of(sourceModels)));
     }
 
     public <E extends AbstractEntity<?>> EqlSentenceBuilder innerJoin(final Class<E> entityType) {
