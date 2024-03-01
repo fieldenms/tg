@@ -2953,7 +2953,6 @@ public class EQLParser extends Parser {
 		}
 	}
 	public static class YieldManyContext extends AnyYieldContext {
-		public YieldManyModelContext model_;
 		public YieldManyModelContext yieldManyModel() {
 			return getRuleContext(YieldManyModelContext.class,0);
 		}
@@ -2973,13 +2972,12 @@ public class EQLParser extends Parser {
 	}
 	public static class Yield1Context extends AnyYieldContext {
 		public YieldOperandContext operand;
-		public Yield1ModelContext model_;
 		public TerminalNode YIELD() { return getToken(EQLParser.YIELD, 0); }
-		public YieldOperandContext yieldOperand() {
-			return getRuleContext(YieldOperandContext.class,0);
-		}
 		public Yield1ModelContext yield1Model() {
 			return getRuleContext(Yield1ModelContext.class,0);
+		}
+		public YieldOperandContext yieldOperand() {
+			return getRuleContext(YieldOperandContext.class,0);
 		}
 		public Yield1Context(AnyYieldContext ctx) { copyFrom(ctx); }
 		@Override
@@ -3006,7 +3004,7 @@ public class EQLParser extends Parser {
 				setState(380);
 				((Yield1Context)_localctx).operand = yieldOperand();
 				setState(381);
-				((Yield1Context)_localctx).model_ = yield1Model();
+				yield1Model();
 				}
 				break;
 			case 2:
@@ -3038,7 +3036,7 @@ public class EQLParser extends Parser {
 					_la = _input.LA(1);
 				}
 				setState(392);
-				((YieldManyContext)_localctx).model_ = yieldManyModel();
+				yieldManyModel();
 				}
 				break;
 			}
