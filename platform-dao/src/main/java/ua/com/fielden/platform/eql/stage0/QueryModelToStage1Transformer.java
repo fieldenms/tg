@@ -78,20 +78,14 @@ public class QueryModelToStage1Transformer {
     }
 
     private QueryComponents1 parseTokensIntoComponents(final QueryModel<?> qryModel, final OrderingModel orderModel) {
-        final EqlCompilationResult result = new EqlCompiler(this).compile(qryModel.getTokenSource());
-
-        switch (result) {
-            case EqlCompilationResult.Select select -> {
-                final Conditions1 udfModel = select.joinRoot() == null
-                        ? EMPTY_CONDITIONS
-                        : generateUserDataFilteringCondition(qryModel.isFilterable(), filter, username, select.joinRoot().mainSource());
-                return new QueryComponents1(
-                        select.joinRoot(), select.whereConditions(), udfModel, select.yields(), select.groups(),
-                        orderModel == null ? EMPTY_ORDER_BYS : produceOrderBys(orderModel),
-                        qryModel.isYieldAll(), qryModel.shouldMaterialiseCalcPropsAsColumnsInSqlQuery);
-            }
-            default -> throw new IllegalStateException("Expected a Select Query but was: %s".formatted(result.description()));
-        }
+        final EqlCompilationResult.Select result = new EqlCompiler(this).compile(qryModel.getTokenSource(), EqlCompilationResult.Select.class);
+        final Conditions1 udfModel = result.joinRoot() == null
+                ? EMPTY_CONDITIONS
+                : generateUserDataFilteringCondition(qryModel.isFilterable(), filter, username, result.joinRoot().mainSource());
+        return new QueryComponents1(
+                result.joinRoot(), result.whereConditions(), udfModel, result.yields(), result.groups(),
+                orderModel == null ? EMPTY_ORDER_BYS : produceOrderBys(orderModel),
+                qryModel.isYieldAll(), qryModel.shouldMaterialiseCalcPropsAsColumnsInSqlQuery);
     }
 
     private Conditions1 generateUserDataFilteringCondition(final boolean filterable, final IFilter filter, final String username, final ISource1<?> mainSource) {
@@ -108,12 +102,8 @@ public class QueryModelToStage1Transformer {
     }
 
     private OrderBys1 produceOrderBys(final OrderingModel orderModel) {
-        final EqlCompilationResult result = new EqlCompiler(this).compile(orderModel.getTokenSource());
-
-        return switch (result) {
-            case EqlCompilationResult.OrderBy orderBy -> orderBy.model();
-            default -> throw new IllegalStateException("Expected an Order By expression but was: %s".formatted(result.description()));
-        };
+        final EqlCompilationResult.OrderBy result = new EqlCompiler(this).compile(orderModel.getTokenSource(), EqlCompilationResult.OrderBy.class);
+        return result.model();
     }
 
     public Object getParamValue(final String paramName) {

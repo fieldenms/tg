@@ -5,6 +5,7 @@ import org.antlr.v4.runtime.misc.ParseCancellationException;
 import ua.com.fielden.platform.eql.antlr.tokens.PropToken;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElse;
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.eql.antlr.EQLParser.*;
@@ -116,6 +117,21 @@ public final class EqlCompiler {
 
         final var visitor = new Visitor();
         return parser.start().accept(visitor);
+    }
+
+    /**
+     * Similar to {@link #compile(ListTokenSource)} but also ensures that the result type matches the given one --
+     * if it doesn't, throws a runtime exception.
+     */
+    public <T extends EqlCompilationResult> T compile(final ListTokenSource tokenSource, final Class<T> resultType) {
+        requireNonNull(resultType, "resultType can't be null");
+
+        final EqlCompilationResult result = compile(tokenSource);
+        if (resultType.isInstance(result)) {
+            return (T) result;
+        }
+        throw new RuntimeException("Expected EQL expression of type %s but was: %s".formatted(
+                resultType.getSimpleName(), result.getClass().getSimpleName()));
     }
 
     private final class Visitor extends EQLBaseVisitor<EqlCompilationResult> {
