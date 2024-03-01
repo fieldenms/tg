@@ -20,12 +20,14 @@ where :
 
 condition :
       predicate                          # PredicateCondition
+      // by specifying AND first we give it implicit precedence over OR
     | left=condition AND right=condition # AndCondition
     | left=condition OR right=condition  # OrCondition
     | BEGIN condition END                # CompoundCondition
     | NOTBEGIN condition END             # NegatedCompoundCondition
 ;
 
+// this rule has the largest lookahead, consider refactoring it if performance is bad
 predicate :
       left=comparisonOperand unaryComparisonOperator # UnaryPredicate
     | left=comparisonOperand comparisonOperator right=comparisonOperand # ComparisonPredicate
