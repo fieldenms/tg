@@ -386,7 +386,7 @@ YEARS : 'years' ;
 YIELD : 'yield' ;
 YIELDALL : 'yieldAll' ;
 
-WHITESPACE : [ \r\t\n]+ -> skip ;
-COMMENT : '//' .*? '\n' -> skip ;
-BLOCK_COMMENT : '/*' .*? '*/' -> skip ;
+WHITESPACE : [ \r\t\n]+ -> channel(HIDDEN) ;
+COMMENT : '//' .*? '\n' -> channel(HIDDEN) ;
+BLOCK_COMMENT : '/*' .*? '*/' -> channel(HIDDEN) ;
 

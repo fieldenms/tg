@@ -614,7 +614,7 @@ public class EQLLexer extends Lexer {
 		"\2\2\2\u052b\u052a\3\2\2\2\u052c\u052f\3\2\2\2\u052d\u052e\3\2\2\2\u052d"+
 		"\u052b\3\2\2\2\u052e\u0530\3\2\2\2\u052f\u052d\3\2\2\2\u0530\u0531\7,"+
 		"\2\2\u0531\u0532\7\61\2\2\u0532\u0533\3\2\2\2\u0533\u0534\b\u0082\2\2"+
-		"\u0534\u0104\3\2\2\2\6\2\u0516\u0520\u052d\3\b\2\2";
+		"\u0534\u0104\3\2\2\2\6\2\u0516\u0520\u052d\3\2\3\2";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {
