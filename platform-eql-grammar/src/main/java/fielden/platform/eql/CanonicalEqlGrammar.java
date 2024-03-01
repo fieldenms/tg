@@ -238,7 +238,7 @@ public final class CanonicalEqlGrammar {
             to(on, Condition).
 
         derive(GroupBy).
-            to(groupBy, label("operand", SingleOperand), opt(GroupBy)).
+            to(repeat1(groupBy, label("operand", SingleOperand))).
 
         specialize(AnyYield).
             into(Yield1, YieldMany).

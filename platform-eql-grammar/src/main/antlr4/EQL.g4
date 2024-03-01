@@ -201,7 +201,7 @@ joinCondition :
 ;
 
 groupBy :
-      GROUPBY operand=singleOperand groupBy?
+      (GROUPBY operands+=singleOperand)+
 ;
 
 anyYield :
