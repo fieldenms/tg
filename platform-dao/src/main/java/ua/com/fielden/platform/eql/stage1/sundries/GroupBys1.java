@@ -1,22 +1,26 @@
 package ua.com.fielden.platform.eql.stage1.sundries;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptySet;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
+import ua.com.fielden.platform.eql.stage2.sundries.GroupBys2;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
-import ua.com.fielden.platform.eql.stage2.sundries.GroupBys2;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 public class GroupBys1 {
     public static final GroupBys1 EMPTY_GROUP_BYS = new GroupBys1(emptyList());
     
     private final List<GroupBy1> groups;
+
+    public static GroupBys1 groupBys(final List<GroupBy1> groups) {
+        return groups.isEmpty() ? EMPTY_GROUP_BYS : new GroupBys1(groups);
+    }
 
     public GroupBys1(final List<GroupBy1> groups) {
         this.groups = groups;

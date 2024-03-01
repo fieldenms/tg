@@ -28,7 +28,9 @@ final class SelectVisitor extends AbstractEqlVisitor<EqlCompilationResult.Select
     }
 
     private GroupBys1 compileGroups(final GroupByContext groupByContext) {
-        throw new UnsupportedOperationException();
+        return groupByContext == null
+                ? GroupBys1.EMPTY_GROUP_BYS
+                : new GroupByVisitor(transformer).visitGroupBy(groupByContext);
     }
 
     private YieldsVisitor.Result compileYields(final SelectEndContext selectEndContext) {
