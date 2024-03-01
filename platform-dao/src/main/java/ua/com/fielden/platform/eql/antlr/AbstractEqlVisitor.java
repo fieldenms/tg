@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.antlr;
 
+import org.antlr.v4.runtime.Token;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 
 import java.util.ArrayList;
@@ -53,6 +54,11 @@ abstract class AbstractEqlVisitor<T> extends EQLBaseVisitor<T> {
             return (boolean) value ? Y : N;
         }
         return value;
+    }
+
+    // a generic return type is needed to be able to use this method in switch expressions
+    protected static <T> T unexpectedToken(final Token token) throws EqlParseException {
+        throw new EqlParseException("Unexpected token: %s".formatted(token.getText()));
     }
 
 }
