@@ -5,7 +5,6 @@ import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.conditions.ICondition1;
 import ua.com.fielden.platform.eql.stage1.sources.IJoinNode1;
 import ua.com.fielden.platform.eql.stage1.sundries.GroupBys1;
-import ua.com.fielden.platform.eql.stage1.sundries.Yields1;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 
 import static ua.com.fielden.platform.eql.antlr.EQLParser.*;
@@ -18,20 +17,25 @@ final class SelectVisitor extends AbstractEqlVisitor<EqlCompilationResult.Select
 
     @Override
     public EqlCompilationResult.Select visitSelect(final SelectContext ctx) {
+        final YieldsVisitor.Result yieldsResult = compileYields(ctx.selectEnd());
+
         return new EqlCompilationResult.Select(
                 compileJoinRoot(ctx),
                 compileWhere(ctx.where()),
-                compileYields(ctx.selectEnd()),
+                yieldsResult.yields(),
                 compileGroups(ctx.groupBy()),
-                false);
+                yieldsResult.yieldAll());
     }
 
     private GroupBys1 compileGroups(final GroupByContext groupByContext) {
         throw new UnsupportedOperationException();
     }
 
-    private Yields1 compileYields(final SelectEndContext selectEndContext) {
-        throw new UnsupportedOperationException();
+    private YieldsVisitor.Result compileYields(final SelectEndContext selectEndContext) {
+        return switch (selectEndContext) {
+            case SelectEnd_AnyYieldContext ctx -> ctx.anyYield().accept(new YieldsVisitor(transformer));
+            default -> null;
+        };
     }
 
     private IJoinNode1<? extends IJoinNode2<?>> compileJoinRoot(final SelectContext ctx) {
