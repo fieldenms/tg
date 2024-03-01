@@ -207,7 +207,7 @@ aliasedYield :
 ;
 
 yieldOperand :
-      singleOperand # YieldOperand_SingleOperandOrExpr
+      singleOperand # YieldOperand_SingleOperand
     | COUNTALL # YieldOperand_CountAll
     | funcName=yieldOperandFunctionName argument=singleOperand # YieldOperandFunction
 ;

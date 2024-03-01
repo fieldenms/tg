@@ -3111,17 +3111,6 @@ public class EQLParser extends Parser {
 			super.copyFrom(ctx);
 		}
 	}
-	public static class YieldOperand_SingleOperandOrExprContext extends YieldOperandContext {
-		public SingleOperandContext singleOperand() {
-			return getRuleContext(SingleOperandContext.class,0);
-		}
-		public YieldOperand_SingleOperandOrExprContext(YieldOperandContext ctx) { copyFrom(ctx); }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof EQLVisitor ) return ((EQLVisitor<? extends T>)visitor).visitYieldOperand_SingleOperandOrExpr(this);
-			else return visitor.visitChildren(this);
-		}
-	}
 	public static class YieldOperand_CountAllContext extends YieldOperandContext {
 		public TerminalNode COUNTALL() { return getToken(EQLParser.COUNTALL, 0); }
 		public YieldOperand_CountAllContext(YieldOperandContext ctx) { copyFrom(ctx); }
@@ -3144,6 +3133,17 @@ public class EQLParser extends Parser {
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
 			if ( visitor instanceof EQLVisitor ) return ((EQLVisitor<? extends T>)visitor).visitYieldOperandFunction(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class YieldOperand_SingleOperandContext extends YieldOperandContext {
+		public SingleOperandContext singleOperand() {
+			return getRuleContext(SingleOperandContext.class,0);
+		}
+		public YieldOperand_SingleOperandContext(YieldOperandContext ctx) { copyFrom(ctx); }
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof EQLVisitor ) return ((EQLVisitor<? extends T>)visitor).visitYieldOperand_SingleOperand(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -3182,7 +3182,7 @@ public class EQLParser extends Parser {
 			case UPPERCASE:
 			case VAL:
 			case YEAROF:
-				_localctx = new YieldOperand_SingleOperandOrExprContext(_localctx);
+				_localctx = new YieldOperand_SingleOperandContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
 				setState(399);

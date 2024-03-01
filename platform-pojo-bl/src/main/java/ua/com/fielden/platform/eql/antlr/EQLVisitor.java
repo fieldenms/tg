@@ -383,12 +383,12 @@ public interface EQLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitAliasedYield(EQLParser.AliasedYieldContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code YieldOperand_SingleOperandOrExpr}
+	 * Visit a parse tree produced by the {@code YieldOperand_SingleOperand}
 	 * labeled alternative in {@link EQLParser#yieldOperand}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitYieldOperand_SingleOperandOrExpr(EQLParser.YieldOperand_SingleOperandOrExprContext ctx);
+	T visitYieldOperand_SingleOperand(EQLParser.YieldOperand_SingleOperandContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code YieldOperand_CountAll}
 	 * labeled alternative in {@link EQLParser#yieldOperand}.
