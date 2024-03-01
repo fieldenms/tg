@@ -1,5 +1,14 @@
 package ua.com.fielden.platform.eql.stage1.conditions;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
+import ua.com.fielden.platform.eql.stage1.operands.Prop1;
+import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
+import ua.com.fielden.platform.eql.stage2.conditions.ICondition2;
+
+import java.util.*;
+
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
@@ -7,17 +16,7 @@ import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.AND;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
-import ua.com.fielden.platform.eql.stage1.operands.Prop1;
-import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
-import ua.com.fielden.platform.eql.stage2.conditions.ICondition2;
+import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.OR;
 
 /**
  * Represents a group of conditions combined with logical OR or AND.
@@ -40,6 +39,52 @@ public class Conditions1 implements ICondition1<Conditions2> {
         this.firstCondition = firstCondition;
         this.otherConditions.addAll(otherConditions);
         this.negated = negated;
+    }
+
+    public static Conditions1 conditions(final ICondition1<? extends ICondition2<?>> condition) {
+        // can we avoid redundant wrapping?
+        if (condition instanceof Conditions1 conditions1 && !conditions1.negated) {
+            return conditions1;
+        }
+        return new Conditions1(false, condition, List.of());
+    }
+
+    @SafeVarargs
+    public static Conditions1 conditions(final LogicalOperator operator, final ICondition1<? extends ICondition2<?>>... conditions) {
+        return conditions(operator, Arrays.asList(conditions));
+    }
+
+    public static Conditions1 conditions(final LogicalOperator operator, final List<? extends ICondition1<? extends ICondition2<?>>> conditions) {
+        if (conditions.isEmpty()) {
+            return EMPTY_CONDITIONS;
+        }
+        else if (conditions.size() == 1) {
+            // operator is unnecessary for a single condition
+            return conditions(conditions.getFirst());
+        }
+        return new Conditions1(false, conditions.getFirst(), conditions.stream().skip(1).map(c -> new CompoundCondition1(operator, c)).toList());
+    }
+
+    @SafeVarargs
+    public static Conditions1 and(final ICondition1<? extends ICondition2<?>>... conditions) {
+        return conditions(AND, conditions);
+    }
+
+    public static Conditions1 and(final List<? extends ICondition1<? extends ICondition2<?>>> conditions) {
+        return conditions(AND, conditions);
+    }
+
+    @SafeVarargs
+    public static Conditions1 or(final ICondition1<? extends ICondition2<?>>... conditions) {
+        return conditions(OR, conditions);
+    }
+
+    public static Conditions1 or(final List<? extends ICondition1<? extends ICondition2<?>>> conditions) {
+        return conditions(OR, conditions);
+    }
+
+    public Conditions1 negate() {
+        return new Conditions1(!negated, firstCondition, otherConditions);
     }
 
     public boolean isEmpty() {
