@@ -209,6 +209,16 @@ public class StreamUtils {
     }
 
     /**
+     * Constructs a zipped stream.
+     */
+    public static <A, B, Z> Stream<Z> zip(
+            final Collection<? extends A> xs, final Collection<? extends B> ys,
+            final BiFunction<? super A, ? super B, ? extends Z> combine)
+    {
+        return zip(xs.stream(), ys.stream(), combine);
+    }
+
+    /**
      * Splits stream {@code source} into a windowed stream where elements from {@code source} are placed in groups of size {@code windowSize}.
      * The last group may have its size less than the {@code windowSize}.
      *
