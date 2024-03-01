@@ -4,7 +4,7 @@ start : query EOF;
 
 query :
       select=SELECT alias=AS? join? where? groupBy? selectEnd  # Select
-    | EXPR operand=yieldOperand (arithmeticalOperator yieldOperand)* MODEL # StandaloneExpression
+    | EXPR first=yieldOperand (operators+=arithmeticalOperator rest+=yieldOperand)* MODEL # StandaloneExpression
     | COND standaloneCondition MODEL # StandaloneCondExpr
     | ORDERBY orderByOperand+ MODEL # OrderBy
 ;
@@ -81,7 +81,7 @@ quantifiedOperand :
 ;
 
 exprBody :
-      singleOperand (arithmeticalOperator singleOperand)*
+      first=singleOperand (operators+=arithmeticalOperator rest+=singleOperand)*
 ;
 
 arithmeticalOperator :
@@ -106,9 +106,16 @@ singleOperand :
     | NOW # SingleOperand_Now
     | COUNT unit=dateDiffIntervalUnit BETWEEN startDate=singleOperand AND endDate=singleOperand # DateDiffInterval
     | ADDTIMEINTERVALOF left=singleOperand unit=dateAddIntervalUnit TO right=singleOperand # DateAddInterval
-    | ROUND singleOperand TO # Round
-    | CONCAT singleOperand (WITH singleOperand)* END # Concat
-    | CASEWHEN condition THEN singleOperand (WHEN condition THEN singleOperand)* (OTHERWISE otherwiseOperand=singleOperand)? caseWhenEnd # CaseWhen
+    | ROUND singleOperand to=TO # Round
+
+    | CONCAT operands+=singleOperand (WITH operands+=singleOperand)* END
+    # Concat
+
+    | CASEWHEN whens+=condition THEN thens+=singleOperand
+      (WHEN whens+=condition THEN thens+=singleOperand)*
+      (OTHERWISE otherwiseOperand=singleOperand)? caseWhenEnd
+    # CaseWhen
+
     | BEGINEXPR exprBody ENDEXPR # Expr
 ;
 

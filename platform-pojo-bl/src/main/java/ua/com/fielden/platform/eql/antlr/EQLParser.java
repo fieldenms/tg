@@ -235,7 +235,11 @@ public class EQLParser extends Parser {
 		}
 	}
 	public static class StandaloneExpressionContext extends QueryContext {
-		public YieldOperandContext operand;
+		public YieldOperandContext first;
+		public ArithmeticalOperatorContext arithmeticalOperator;
+		public List<ArithmeticalOperatorContext> operators = new ArrayList<ArithmeticalOperatorContext>();
+		public YieldOperandContext yieldOperand;
+		public List<YieldOperandContext> rest = new ArrayList<YieldOperandContext>();
 		public TerminalNode EXPR() { return getToken(EQLParser.EXPR, 0); }
 		public TerminalNode MODEL() { return getToken(EQLParser.MODEL, 0); }
 		public List<YieldOperandContext> yieldOperand() {
@@ -361,7 +365,7 @@ public class EQLParser extends Parser {
 				setState(89);
 				match(EXPR);
 				setState(90);
-				((StandaloneExpressionContext)_localctx).operand = yieldOperand();
+				((StandaloneExpressionContext)_localctx).first = yieldOperand();
 				setState(96);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
@@ -369,9 +373,11 @@ public class EQLParser extends Parser {
 					{
 					{
 					setState(91);
-					arithmeticalOperator();
+					((StandaloneExpressionContext)_localctx).arithmeticalOperator = arithmeticalOperator();
+					((StandaloneExpressionContext)_localctx).operators.add(((StandaloneExpressionContext)_localctx).arithmeticalOperator);
 					setState(92);
-					yieldOperand();
+					((StandaloneExpressionContext)_localctx).yieldOperand = yieldOperand();
+					((StandaloneExpressionContext)_localctx).rest.add(((StandaloneExpressionContext)_localctx).yieldOperand);
 					}
 					}
 					setState(98);
@@ -1450,6 +1456,11 @@ public class EQLParser extends Parser {
 	}
 
 	public static class ExprBodyContext extends ParserRuleContext {
+		public SingleOperandContext first;
+		public ArithmeticalOperatorContext arithmeticalOperator;
+		public List<ArithmeticalOperatorContext> operators = new ArrayList<ArithmeticalOperatorContext>();
+		public SingleOperandContext singleOperand;
+		public List<SingleOperandContext> rest = new ArrayList<SingleOperandContext>();
 		public List<SingleOperandContext> singleOperand() {
 			return getRuleContexts(SingleOperandContext.class);
 		}
@@ -1481,7 +1492,7 @@ public class EQLParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(207);
-			singleOperand();
+			((ExprBodyContext)_localctx).first = singleOperand();
 			setState(213);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
@@ -1489,9 +1500,11 @@ public class EQLParser extends Parser {
 				{
 				{
 				setState(208);
-				arithmeticalOperator();
+				((ExprBodyContext)_localctx).arithmeticalOperator = arithmeticalOperator();
+				((ExprBodyContext)_localctx).operators.add(((ExprBodyContext)_localctx).arithmeticalOperator);
 				setState(209);
-				singleOperand();
+				((ExprBodyContext)_localctx).singleOperand = singleOperand();
+				((ExprBodyContext)_localctx).rest.add(((ExprBodyContext)_localctx).singleOperand);
 				}
 				}
 				setState(215);
@@ -1664,26 +1677,30 @@ public class EQLParser extends Parser {
 		}
 	}
 	public static class CaseWhenContext extends SingleOperandContext {
+		public ConditionContext condition;
+		public List<ConditionContext> whens = new ArrayList<ConditionContext>();
+		public SingleOperandContext singleOperand;
+		public List<SingleOperandContext> thens = new ArrayList<SingleOperandContext>();
 		public SingleOperandContext otherwiseOperand;
 		public TerminalNode CASEWHEN() { return getToken(EQLParser.CASEWHEN, 0); }
+		public List<TerminalNode> THEN() { return getTokens(EQLParser.THEN); }
+		public TerminalNode THEN(int i) {
+			return getToken(EQLParser.THEN, i);
+		}
+		public CaseWhenEndContext caseWhenEnd() {
+			return getRuleContext(CaseWhenEndContext.class,0);
+		}
 		public List<ConditionContext> condition() {
 			return getRuleContexts(ConditionContext.class);
 		}
 		public ConditionContext condition(int i) {
 			return getRuleContext(ConditionContext.class,i);
 		}
-		public List<TerminalNode> THEN() { return getTokens(EQLParser.THEN); }
-		public TerminalNode THEN(int i) {
-			return getToken(EQLParser.THEN, i);
-		}
 		public List<SingleOperandContext> singleOperand() {
 			return getRuleContexts(SingleOperandContext.class);
 		}
 		public SingleOperandContext singleOperand(int i) {
 			return getRuleContext(SingleOperandContext.class,i);
-		}
-		public CaseWhenEndContext caseWhenEnd() {
-			return getRuleContext(CaseWhenEndContext.class,0);
 		}
 		public List<TerminalNode> WHEN() { return getTokens(EQLParser.WHEN); }
 		public TerminalNode WHEN(int i) {
@@ -1726,14 +1743,16 @@ public class EQLParser extends Parser {
 		}
 	}
 	public static class ConcatContext extends SingleOperandContext {
+		public SingleOperandContext singleOperand;
+		public List<SingleOperandContext> operands = new ArrayList<SingleOperandContext>();
 		public TerminalNode CONCAT() { return getToken(EQLParser.CONCAT, 0); }
+		public TerminalNode END() { return getToken(EQLParser.END, 0); }
 		public List<SingleOperandContext> singleOperand() {
 			return getRuleContexts(SingleOperandContext.class);
 		}
 		public SingleOperandContext singleOperand(int i) {
 			return getRuleContext(SingleOperandContext.class,i);
 		}
-		public TerminalNode END() { return getToken(EQLParser.END, 0); }
 		public List<TerminalNode> WITH() { return getTokens(EQLParser.WITH); }
 		public TerminalNode WITH(int i) {
 			return getToken(EQLParser.WITH, i);
@@ -1805,6 +1824,7 @@ public class EQLParser extends Parser {
 		}
 	}
 	public static class RoundContext extends SingleOperandContext {
+		public Token to;
 		public TerminalNode ROUND() { return getToken(EQLParser.ROUND, 0); }
 		public SingleOperandContext singleOperand() {
 			return getRuleContext(SingleOperandContext.class,0);
@@ -2003,7 +2023,7 @@ public class EQLParser extends Parser {
 				setState(258);
 				singleOperand();
 				setState(259);
-				match(TO);
+				((RoundContext)_localctx).to = match(TO);
 				}
 				break;
 			case CONCAT:
@@ -2013,7 +2033,8 @@ public class EQLParser extends Parser {
 				setState(261);
 				match(CONCAT);
 				setState(262);
-				singleOperand();
+				((ConcatContext)_localctx).singleOperand = singleOperand();
+				((ConcatContext)_localctx).operands.add(((ConcatContext)_localctx).singleOperand);
 				setState(267);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
@@ -2023,7 +2044,8 @@ public class EQLParser extends Parser {
 					setState(263);
 					match(WITH);
 					setState(264);
-					singleOperand();
+					((ConcatContext)_localctx).singleOperand = singleOperand();
+					((ConcatContext)_localctx).operands.add(((ConcatContext)_localctx).singleOperand);
 					}
 					}
 					setState(269);
@@ -2041,11 +2063,13 @@ public class EQLParser extends Parser {
 				setState(272);
 				match(CASEWHEN);
 				setState(273);
-				condition(0);
+				((CaseWhenContext)_localctx).condition = condition(0);
+				((CaseWhenContext)_localctx).whens.add(((CaseWhenContext)_localctx).condition);
 				setState(274);
 				match(THEN);
 				setState(275);
-				singleOperand();
+				((CaseWhenContext)_localctx).singleOperand = singleOperand();
+				((CaseWhenContext)_localctx).thens.add(((CaseWhenContext)_localctx).singleOperand);
 				setState(283);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
@@ -2055,11 +2079,13 @@ public class EQLParser extends Parser {
 					setState(276);
 					match(WHEN);
 					setState(277);
-					condition(0);
+					((CaseWhenContext)_localctx).condition = condition(0);
+					((CaseWhenContext)_localctx).whens.add(((CaseWhenContext)_localctx).condition);
 					setState(278);
 					match(THEN);
 					setState(279);
-					singleOperand();
+					((CaseWhenContext)_localctx).singleOperand = singleOperand();
+					((CaseWhenContext)_localctx).thens.add(((CaseWhenContext)_localctx).singleOperand);
 					}
 					}
 					setState(285);
