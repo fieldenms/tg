@@ -21,6 +21,8 @@ import java.util.Map;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.eql.antlr.EqlCompilationResult;
+import ua.com.fielden.platform.eql.antlr.EqlCompiler;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForEntityType;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
@@ -133,8 +135,10 @@ public class PathsToTreeTransformer {
 
         for (final PropChunk calcChunk : getFirstCalcChunks(incomingTails)) {
             if (!processedCalcData.containsKey(calcChunk.name())) { // consider only calc props that have not yet been processed on the previous iteration(s)
-                // TODO replace by compilation of standalone expression
-                final Expression1 exp1 = (Expression1) (new StandAloneExpressionBuilder(gen, calcChunk.data().expression.expressionModel())).getResult().getValue();
+                final Expression1 exp1 = new EqlCompiler(gen).compile(
+                                calcChunk.data().expression.expressionModel().getTokenSource(),
+                                EqlCompilationResult.StandaloneExpression.class)
+                        .model();
                 final TransformationContextFromStage1To2 prc = TransformationContextFromStage1To2.forCalcPropContext(querySourceInfoProvider).cloneWithAdded(sourceForCalcPropResolution);
                 final Expression2 exp2 = exp1.transform(prc);
                 final Set<Prop2> expProps = exp2.collectProps();

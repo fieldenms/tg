@@ -16,6 +16,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
+import ua.com.fielden.platform.eql.antlr.EqlCompilationResult;
+import ua.com.fielden.platform.eql.antlr.EqlCompiler;
 import ua.com.fielden.platform.eql.exceptions.EqlStage2ProcessingException;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
@@ -59,8 +61,10 @@ public class DependentCalcPropsOrder {
                 calcPropsOfEntityType.add(calcPropChunk.name());
             }
 
-            // TODO replace by compilation of standalone expression
-            final Expression1 exp1 = (Expression1) new StandAloneExpressionBuilder(gen, calcPropChunk.data().expression.expressionModel()).getResult().getValue();
+            final Expression1 exp1 = new EqlCompiler(gen).compile(
+                            calcPropChunk.data().expression.expressionModel().getTokenSource(),
+                            EqlCompilationResult.StandaloneExpression.class)
+                    .model();
             final TransformationContextFromStage1To2 prc = TransformationContextFromStage1To2.forCalcPropContext(querySourceInfoProvider).cloneWithAdded(source);
             try {
                 final Expression2 exp2 = exp1.transform(prc);
