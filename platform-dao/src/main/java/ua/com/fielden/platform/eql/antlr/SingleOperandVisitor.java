@@ -96,6 +96,12 @@ final class SingleOperandVisitor extends AbstractEqlVisitor<ISingleOperand1<? ex
         return new CaseWhen1(whenThens, otherwise, makeTypeCast(ctx.caseWhenEnd()));
     }
 
+    @Override
+    public ISingleOperand1<? extends ISingleOperand2<?>> visitSingleOperand_Model(final SingleOperand_ModelContext ctx) {
+        final QueryModelToken<?> token = (QueryModelToken<?>) ctx.token;
+        return transformer.generateAsSubQuery(token.model);
+    }
+
     static ITypeCast makeTypeCast(final EQLParser.CaseWhenEndContext ctx) {
         final Token token = ctx.token;
         return switch (token.getType()) {

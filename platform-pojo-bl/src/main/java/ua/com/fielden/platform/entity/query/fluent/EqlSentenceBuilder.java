@@ -162,11 +162,11 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder model(final PrimitiveResultQueryModel model) {
-        throw new UnsupportedOperationException();
+        return _add(new QueryModelToken<>(model));
     }
 
     public EqlSentenceBuilder model(final SingleResultQueryModel model) {
-        return _add(new ModelToken(model));
+        return _add(new QueryModelToken<>(model));
     }
 
     public EqlSentenceBuilder param(final String paramName) {
