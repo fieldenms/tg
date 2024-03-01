@@ -7,6 +7,7 @@ import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 
 import static java.util.Objects.requireNonNullElse;
 import static java.util.stream.Collectors.joining;
+import static ua.com.fielden.platform.eql.antlr.EQLParser.*;
 
 /**
  * Compiles EQL sentences (sequences of tokens) into Stage 1 representation.
@@ -120,27 +121,27 @@ public final class EqlCompiler {
     private final class Visitor extends EQLBaseVisitor<EqlCompilationResult> {
 
         @Override
-        public EqlCompilationResult visitStart(final EQLParser.StartContext ctx) {
+        public EqlCompilationResult visitStart(final StartContext ctx) {
             return ctx.query().accept(this);
         }
 
         @Override
-        public EqlCompilationResult visitQuery_Select(final EQLParser.Query_SelectContext ctx) {
-            return new SelectVisitor(transformer).visitQuery_Select(ctx);
+        public EqlCompilationResult visitSelect(final SelectContext ctx) {
+            return new SelectVisitor(transformer).visitSelect(ctx);
         }
 
         @Override
-        public EqlCompilationResult visitStandaloneExpression(final EQLParser.StandaloneExpressionContext ctx) {
+        public EqlCompilationResult visitStandaloneExpression(final StandaloneExpressionContext ctx) {
             return new StandaloneExpressionVisitor(transformer).visitStandaloneExpression(ctx);
         }
 
         @Override
-        public EqlCompilationResult visitStandaloneCondExpr(final EQLParser.StandaloneCondExprContext ctx) {
+        public EqlCompilationResult visitStandaloneCondExpr(final StandaloneCondExprContext ctx) {
             return new StandaloneConditionVisitor(transformer).visitStandaloneCondExpr(ctx);
         }
 
         @Override
-        public EqlCompilationResult visitOrderBy(final EQLParser.OrderByContext ctx) {
+        public EqlCompilationResult visitOrderBy(final OrderByContext ctx) {
             return new OrderByVisitor(transformer).visitOrderBy(ctx);
         }
 

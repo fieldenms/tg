@@ -3,19 +3,10 @@ grammar EQL;
 start : query EOF;
 
 query :
-      select # Query_Select
+      select=SELECT alias=AS? join? where? groupBy? selectEnd  # Select
     | EXPR operand=yieldOperand (arithmeticalOperator yieldOperand)* MODEL # StandaloneExpression
     | COND standaloneCondition MODEL # StandaloneCondExpr
     | ORDERBY orderByOperand+ MODEL # OrderBy
-;
-
-select :
-      selectSource alias=AS? join? where? groupBy? selectEnd # SelectFrom
-    | SELECT groupBy? selectEnd # SourcelessSelect
-;
-
-selectSource :
-      token=SELECT
 ;
 
 selectEnd :

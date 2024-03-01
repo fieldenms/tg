@@ -17,12 +17,12 @@ public interface EQLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitStart(EQLParser.StartContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code Query_Select}
+	 * Visit a parse tree produced by the {@code Select}
 	 * labeled alternative in {@link EQLParser#query}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitQuery_Select(EQLParser.Query_SelectContext ctx);
+	T visitSelect(EQLParser.SelectContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code StandaloneExpression}
 	 * labeled alternative in {@link EQLParser#query}.
@@ -44,26 +44,6 @@ public interface EQLVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitOrderBy(EQLParser.OrderByContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code SelectFrom}
-	 * labeled alternative in {@link EQLParser#select}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitSelectFrom(EQLParser.SelectFromContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code SourcelessSelect}
-	 * labeled alternative in {@link EQLParser#select}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitSourcelessSelect(EQLParser.SourcelessSelectContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link EQLParser#selectSource}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitSelectSource(EQLParser.SelectSourceContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code SelectEnd_Model}
 	 * labeled alternative in {@link EQLParser#selectEnd}.

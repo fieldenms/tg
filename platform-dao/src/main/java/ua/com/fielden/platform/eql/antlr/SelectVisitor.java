@@ -3,6 +3,8 @@ package ua.com.fielden.platform.eql.antlr;
 
 import java.util.List;
 
+import static ua.com.fielden.platform.eql.antlr.EQLParser.*;
+
 final class SelectVisitor extends AbstractEqlVisitor<EqlCompilationResult.Select> {
 
     SelectVisitor(final QueryModelToStage1Transformer transformer) {
@@ -10,7 +12,7 @@ final class SelectVisitor extends AbstractEqlVisitor<EqlCompilationResult.Select
     }
 
     @Override
-    public EqlCompilationResult.Select visitQuery_Select(final EQLParser.Query_SelectContext ctx) {
+    public EqlCompilationResult.Select visitSelect(final SelectContext ctx) {
         throw new UnsupportedOperationException();
     }
 
