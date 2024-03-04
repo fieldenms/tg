@@ -20,6 +20,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.emptyCondition;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.queryPropertyParamName;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.buildCondition;
+import static ua.com.fielden.platform.eql.antlr.EQLParser.*;
 
 final class ConditionVisitor extends AbstractEqlVisitor<ICondition1<?>> {
 
@@ -28,38 +29,38 @@ final class ConditionVisitor extends AbstractEqlVisitor<ICondition1<?>> {
     }
 
     @Override
-    public Conditions1 visitAndCondition(final EQLParser.AndConditionContext ctx) {
+    public Conditions1 visitAndCondition(final AndConditionContext ctx) {
         return Conditions1.and(ctx.left.accept(this), ctx.right.accept(this));
     }
 
     @Override
-    public Conditions1 visitOrCondition(final EQLParser.OrConditionContext ctx) {
+    public Conditions1 visitOrCondition(final OrConditionContext ctx) {
         return Conditions1.or(ctx.left.accept(this), ctx.right.accept(this));
     }
 
     @Override
-    public ICondition1<?> visitCompoundCondition(final EQLParser.CompoundConditionContext ctx) {
+    public ICondition1<?> visitCompoundCondition(final CompoundConditionContext ctx) {
         return ctx.condition().accept(this);
     }
 
     @Override
-    public Conditions1 visitNegatedCompoundCondition(final EQLParser.NegatedCompoundConditionContext ctx) {
+    public Conditions1 visitNegatedCompoundCondition(final NegatedCompoundConditionContext ctx) {
         return Conditions1.conditions(ctx.condition().accept(this)).negate();
     }
 
     @Override
-    public ICondition1<?> visitPredicateCondition(final EQLParser.PredicateConditionContext ctx) {
+    public ICondition1<?> visitPredicateCondition(final PredicateConditionContext ctx) {
         return ctx.predicate().accept(this);
     }
 
     @Override
-    public LikePredicate1 visitLikePredicate(final EQLParser.LikePredicateContext ctx) {
+    public ICondition1<?> visitLikePredicate(final LikePredicateContext ctx) {
         final var visitor = new ComparisonOperandVisitor(transformer);
         return new LikePredicate1(ctx.left.accept(visitor), ctx.right.accept(visitor), LikeOptions.options().build());
     }
 
     @Override
-    public ICondition1<?> visitSingleConditionPredicate(final EQLParser.SingleConditionPredicateContext ctx) {
+    public ICondition1<?> visitSingleConditionPredicate(final SingleConditionPredicateContext ctx) {
         return switch (ctx.token) {
             case ExistsToken tok -> makeExistencePredicate(false, tok.model);
             case NotExistsToken tok -> makeExistencePredicate(true, tok.model);
@@ -169,7 +170,7 @@ final class ConditionVisitor extends AbstractEqlVisitor<ICondition1<?>> {
 
     // ----------------------------------------
 
-    private static ComparisonOperator toComparisonOperator(final EQLParser.ComparisonOperatorContext ctx) {
+    private static ComparisonOperator toComparisonOperator(final ComparisonOperatorContext ctx) {
         return switch (ctx.token.getType()) {
             case EQLLexer.EQ -> ComparisonOperator.EQ;
             case EQLLexer.NE -> ComparisonOperator.NE;
