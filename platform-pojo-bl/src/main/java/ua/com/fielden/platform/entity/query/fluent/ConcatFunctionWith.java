@@ -21,7 +21,7 @@ abstract class ConcatFunctionWith<T, ET extends AbstractEntity<?>> //
 
 	@Override
 	public IConcatFunctionArgument<T, ET> with() {
-		return createConcatFunctionArgument(builder);
+		return createConcatFunctionArgument(builder.with());
 	}
 
 	private ConcatFunctionArgument<T, ET> createConcatFunctionArgument(final EqlSentenceBuilder builder) {

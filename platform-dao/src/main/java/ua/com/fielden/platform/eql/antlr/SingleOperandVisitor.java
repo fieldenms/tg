@@ -9,6 +9,7 @@ import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.conditions.ICondition1;
 import ua.com.fielden.platform.eql.stage1.operands.*;
 import ua.com.fielden.platform.eql.stage1.operands.functions.CaseWhen1;
+import ua.com.fielden.platform.eql.stage1.operands.functions.Concat1;
 import ua.com.fielden.platform.eql.stage1.operands.functions.RoundTo1;
 import ua.com.fielden.platform.eql.stage2.conditions.ICondition2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
@@ -100,6 +101,17 @@ final class SingleOperandVisitor extends AbstractEqlVisitor<ISingleOperand1<? ex
     public ISingleOperand1<? extends ISingleOperand2<?>> visitSingleOperand_Model(final SingleOperand_ModelContext ctx) {
         final QueryModelToken<?> token = (QueryModelToken<?>) ctx.token;
         return transformer.generateAsSubQuery(token.model);
+    }
+
+    @Override
+    public ISingleOperand1<? extends ISingleOperand2<?>> visitSingleOperand_Expr(final SingleOperand_ExprContext ctx) {
+        final ExprToken token = (ExprToken) ctx.token;
+        return new EqlCompiler(transformer).compile(token.model.getTokenSource(), EqlCompilationResult.StandaloneExpression.class).model();
+    }
+
+    @Override
+    public Concat1 visitConcat(final ConcatContext ctx) {
+        return new Concat1(ctx.operands.stream().map(c -> c.accept(this)).toList());
     }
 
     static ITypeCast makeTypeCast(final EQLParser.CaseWhenEndContext ctx) {
