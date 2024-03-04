@@ -11,6 +11,7 @@ import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryPro
 import ua.com.fielden.platform.eql.antlr.tokens.*;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.conditions.*;
+import ua.com.fielden.platform.eql.stage1.operands.*;
 import ua.com.fielden.platform.types.tuples.T2;
 
 import java.util.List;
@@ -55,8 +56,10 @@ final class ConditionVisitor extends AbstractEqlVisitor<ICondition1<?>> {
 
     @Override
     public ICondition1<?> visitLikePredicate(final LikePredicateContext ctx) {
+        final LikeOptions options = LikeOptions.options().build(); // TODO
         final var visitor = new ComparisonOperandVisitor(transformer);
-        return new LikePredicate1(ctx.left.accept(visitor), ctx.right.accept(visitor), LikeOptions.options().build());
+        final var rightFinisher = ctx.right.accept(visitor);
+        return ctx.left.accept(visitor).apply(left -> rightFinisher.apply(right -> new LikePredicate1(left, right, options)));
     }
 
     @Override
@@ -84,11 +87,11 @@ final class ConditionVisitor extends AbstractEqlVisitor<ICondition1<?>> {
     }
 
     @Override
-    public ICondition1<?> visitComparisonPredicate(final EQLParser.ComparisonPredicateContext ctx) {
-        return new ComparisonPredicate1(
-                ctx.left.accept(new ComparisonOperandVisitor(transformer)),
-                toComparisonOperator(ctx.comparisonOperator()),
-                ctx.right.accept(new ComparisonOperandVisitor(transformer)));
+    public ICondition1<?> visitComparisonPredicate(final ComparisonPredicateContext ctx) {
+        final var visitor = new ComparisonOperandVisitor(transformer);
+        final var rightFinisher = ctx.right.accept(visitor);
+        final var comparisonOperator = toComparisonOperator(ctx.comparisonOperator());
+        return ctx.left.accept(visitor).apply(left -> rightFinisher.apply(right -> new ComparisonPredicate1(left, comparisonOperator, right)));
     }
 
     // ----------------------------------------

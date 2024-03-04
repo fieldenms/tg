@@ -2,11 +2,15 @@ package ua.com.fielden.platform.eql.antlr;
 
 import org.antlr.v4.runtime.Token;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
+import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
+import ua.com.fielden.platform.eql.stage1.operands.Value1;
+import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.N;
 import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.Y;
@@ -28,6 +32,17 @@ abstract class AbstractEqlVisitor<T> extends EQLBaseVisitor<T> {
             //TODO throw exception for all contexts except YIELD (as NULL operands can't be used in SQL conditions, groupings, etc).
             return null;
         }
+    }
+
+    /**
+     * Returns operands that should be used in place of the given parameter, which is typically used to denote multiple
+     * values to be supplied to {@code anyOf} / {@code allOf}.
+     */
+    protected Stream<? extends ISingleOperand1<? extends ISingleOperand2<?>>> substParam(final String param, final boolean ignoreNull) {
+        return switch (getParamValue(param)) {
+            case List<?> list -> list.stream().map(o -> new Value1(preprocessValue(o), ignoreNull));
+            case Object o -> Stream.of(new Value1(preprocessValue(o), ignoreNull));
+        };
     }
 
     protected static Object preprocessValue(final Object value) {
