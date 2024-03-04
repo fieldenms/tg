@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.antlr;
 
+import org.antlr.v4.runtime.Token;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.LikeOptions;
@@ -12,9 +13,12 @@ import ua.com.fielden.platform.eql.antlr.tokens.*;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.conditions.*;
 import ua.com.fielden.platform.eql.stage1.operands.*;
+import ua.com.fielden.platform.eql.stage2.operands.ISetOperand2;
+import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.types.tuples.T2;
 
 import java.util.List;
+import java.util.function.Function;
 
 import static java.lang.Boolean.TRUE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
@@ -92,6 +96,44 @@ final class ConditionVisitor extends AbstractEqlVisitor<ICondition1<?>> {
         final var rightFinisher = ctx.right.accept(visitor);
         final var comparisonOperator = toComparisonOperator(ctx.comparisonOperator());
         return ctx.left.accept(visitor).apply(left -> rightFinisher.apply(right -> new ComparisonPredicate1(left, comparisonOperator, right)));
+    }
+
+    @Override
+    public ICondition1<?> visitUnaryPredicate(final UnaryPredicateContext ctx) {
+        return ctx.left.accept(new ComparisonOperandVisitor(transformer)).apply(chooseUnaryPredicate(ctx));
+    }
+
+    private static Function<ISingleOperand1<? extends ISingleOperand2<?>>, ICondition1<?>> chooseUnaryPredicate(final UnaryPredicateContext ctx) {
+        final Token token = ctx.unaryComparisonOperator().token;
+
+        return switch (token.getType()) {
+            case ISNULL -> op -> new NullPredicate1(op, false);
+            case ISNOTNULL -> op -> new NullPredicate1(op, true);
+            default -> unexpectedToken(token);
+        };
+    }
+
+    @Override
+    public ICondition1<?> visitMembershipPredicate(final MembershipPredicateContext membershipCtx) {
+        final boolean negated = switch (membershipCtx.membershipOperator().token.getType()) {
+            case IN -> false;
+            case NOTIN -> true;
+            default -> unexpectedToken(membershipCtx.membershipOperator().token);
+        };
+        final var set = compileMembershipOperand(membershipCtx.membershipOperand());
+        return membershipCtx.comparisonOperand().accept(new ComparisonOperandVisitor(transformer))
+                .apply(operand -> new SetPredicate1(operand, negated, set));
+    }
+
+    private ISetOperand1<? extends ISetOperand2<?>> compileMembershipOperand(final MembershipOperandContext ctx) {
+        return switch (ctx.token) {
+            case ValuesToken tok -> new OperandsBasedSet1(tok.values.stream().map(v -> new Value1(preprocessValue(v))).toList());
+            case PropsToken tok -> new OperandsBasedSet1(tok.props.stream().map(p -> new Prop1(p, false)).toList());
+            case ParamsToken tok -> new OperandsBasedSet1(tok.params.stream().flatMap(p -> substParam(p, false)).toList());
+            case IParamsToken tok -> new OperandsBasedSet1(tok.params.stream().flatMap(p -> substParam(p, true)).toList());
+            case QueryModelToken<?> tok -> new QueryBasedSet1(transformer.generateAsSubQuery(tok.model));
+            default -> unexpectedToken(ctx.token);
+        };
     }
 
     // ----------------------------------------
