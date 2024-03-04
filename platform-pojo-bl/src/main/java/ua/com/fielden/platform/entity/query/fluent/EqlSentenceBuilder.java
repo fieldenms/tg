@@ -9,10 +9,7 @@ import ua.com.fielden.platform.eql.antlr.ListTokenSource;
 import ua.com.fielden.platform.eql.antlr.tokens.*;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.joining;
@@ -141,7 +138,7 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder in(final boolean negated) {
-        throw new UnsupportedOperationException();
+        return _add(negated ? token(NOTIN) : token(IN));
     }
 
     public EqlSentenceBuilder yield(final String yieldName) {
@@ -273,25 +270,26 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder setOfProps(final String... props) {
-        throw new UnsupportedOperationException();
+        return _add(new PropsToken(Arrays.asList(props)));
     }
 
     public EqlSentenceBuilder setOfProps(final IConvertableToPath... props) {
-        throw new UnsupportedOperationException();
+        return _add(new PropsToken(Arrays.stream(props).map(IConvertableToPath::toPath).toList()));
     }
 
     public EqlSentenceBuilder setOfParams(final String... params) {
-        throw new UnsupportedOperationException();
+        return _add(new ParamsToken(Arrays.asList(params)));
     }
 
     public EqlSentenceBuilder setOfIParams(final String... params) {
-        throw new UnsupportedOperationException();
+        return _add(new IParamsToken(Arrays.asList(params)));
     }
 
     public EqlSentenceBuilder setOfValues(final Object... values) {
-        throw new UnsupportedOperationException();
+        return _add(new ValuesToken(valuePreprocessor.applyMany(values).toList()));
     }
 
+    // TODO remove?
     public EqlSentenceBuilder setOfExpressions(final ExpressionModel... expressions) {
         throw new UnsupportedOperationException();
     }
