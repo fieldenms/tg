@@ -354,6 +354,10 @@ final class EqlSentenceBuilder {
         return _add(new ToToken(precision));
     }
 
+    public EqlSentenceBuilder to() {
+        return _add(token(TO));
+    }
+
     public EqlSentenceBuilder ifNull() {
         return _add(token(IFNULL));
     }

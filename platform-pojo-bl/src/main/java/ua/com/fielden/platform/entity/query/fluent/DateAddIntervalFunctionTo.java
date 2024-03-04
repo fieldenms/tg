@@ -16,7 +16,7 @@ abstract class DateAddIntervalFunctionTo<T, ET extends AbstractEntity<?>> //
 
 	@Override
 	public IFunctionLastArgument<T, ET> to() {
-		return createFunctionLastArgument(builder);
+		return createFunctionLastArgument(builder.to());
 	}
 
 	private FunctionLastArgument<T, ET> createFunctionLastArgument(final EqlSentenceBuilder builder) {
