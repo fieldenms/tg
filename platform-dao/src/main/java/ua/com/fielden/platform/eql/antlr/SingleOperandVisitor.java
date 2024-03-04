@@ -8,9 +8,7 @@ import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.conditions.ICondition1;
 import ua.com.fielden.platform.eql.stage1.operands.*;
-import ua.com.fielden.platform.eql.stage1.operands.functions.CaseWhen1;
-import ua.com.fielden.platform.eql.stage1.operands.functions.Concat1;
-import ua.com.fielden.platform.eql.stage1.operands.functions.RoundTo1;
+import ua.com.fielden.platform.eql.stage1.operands.functions.*;
 import ua.com.fielden.platform.eql.stage2.conditions.ICondition2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -18,6 +16,7 @@ import ua.com.fielden.platform.utils.StreamUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.eql.antlr.EQLParser.*;
@@ -112,6 +111,30 @@ final class SingleOperandVisitor extends AbstractEqlVisitor<ISingleOperand1<? ex
     @Override
     public Concat1 visitConcat(final ConcatContext ctx) {
         return new Concat1(ctx.operands.stream().map(c -> c.accept(this)).toList());
+    }
+
+    @Override
+    public SingleOperandFunction1<? extends ISingleOperand2<?>> visitUnaryFunction(final UnaryFunctionContext ctx) {
+        return chooseSingleOperandFunction(ctx.funcName).apply(ctx.argument.accept(this));
+    }
+
+    static Function<ISingleOperand1<? extends ISingleOperand2<?>>, SingleOperandFunction1<? extends ISingleOperand2<?>>>
+    chooseSingleOperandFunction(final UnaryFunctionNameContext ctx)
+    {
+        return switch (ctx.token.getType()) {
+            case UPPERCASE   -> UpperCaseOf1::new;
+            case LOWERCASE   -> LowerCaseOf1::new;
+            case SECONDOF    -> SecondOf1::new;
+            case MINUTEOF    -> MinuteOf1::new;
+            case HOUROF      -> HourOf1::new;
+            case DAYOF       -> DayOf1::new;
+            case MONTHOF     -> MonthOf1::new;
+            case YEAROF      -> YearOf1::new;
+            case DAYOFWEEKOF -> DayOfWeekOf1::new;
+            case ABSOF       -> AbsOf1::new;
+            case DATEOF      -> DateOf1::new;
+            default -> unexpectedToken(ctx.token);
+        };
     }
 
     static ITypeCast makeTypeCast(final EQLParser.CaseWhenEndContext ctx) {
