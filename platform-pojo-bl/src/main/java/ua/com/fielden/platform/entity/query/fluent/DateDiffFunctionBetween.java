@@ -16,7 +16,7 @@ abstract class DateDiffFunctionBetween<T, ET extends AbstractEntity<?>> //
 
 	@Override
 	public IFunctionLastArgument<T, ET> and() {
-		return createFunctionLastArgument(builder);
+		return createFunctionLastArgument(builder.and());
 	}
 
 	private FunctionLastArgument<T, ET> createFunctionLastArgument(final EqlSentenceBuilder builder) {

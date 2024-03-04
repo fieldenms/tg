@@ -16,7 +16,7 @@ abstract class DateDiffFunction<T, ET extends AbstractEntity<?>> //
 
 	@Override
 	public IDateDiffFunctionArgument<T, ET> between() {
-		return createDateDiffFunctionArgument(builder);
+		return createDateDiffFunctionArgument(builder.between());
 	}
 
 	private DateDiffFunctionArgument<T, ET> createDateDiffFunctionArgument(final EqlSentenceBuilder builder) {

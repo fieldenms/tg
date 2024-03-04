@@ -326,6 +326,10 @@ final class EqlSentenceBuilder {
         return _add(token(YEARS));
     }
 
+    public EqlSentenceBuilder between() {
+        return _add(token(BETWEEN));
+    }
+
     public EqlSentenceBuilder caseWhenFunction() {
         return _add(token(CASEWHEN));
     }
