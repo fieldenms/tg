@@ -44,8 +44,8 @@ final class SingleOperandVisitor extends AbstractEqlVisitor<ISingleOperand1<? ex
     @Override
     public ISingleOperand1<? extends ISingleOperand2<?>> visitVal(final ValContext ctx) {
         return switch (ctx.token) {
-            case ValToken tok -> new Value1(tok.value);
-            case IValToken tok -> new Value1(tok.value, true);
+            case ValToken tok -> new Value1(preprocessValue(tok.value));
+            case IValToken tok -> new Value1(preprocessValue(tok.value), true);
             default -> unexpectedToken(ctx.token);
         };
     }
