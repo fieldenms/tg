@@ -14,8 +14,8 @@ public abstract class AbstractModel {
         this.tokenSource = tokenSource;
     }
 
-    public ListTokenSource getTokenSource() {
-        return tokenSource;
+    public final ListTokenSource getTokenSource() {
+        return tokenSource.restart();
     }
 
     @Override
