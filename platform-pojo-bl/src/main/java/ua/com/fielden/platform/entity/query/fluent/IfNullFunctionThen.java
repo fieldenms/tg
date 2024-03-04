@@ -16,7 +16,7 @@ abstract class IfNullFunctionThen<T, ET extends AbstractEntity<?>> //
 
 	@Override
 	public IFunctionLastArgument<T, ET> then() {
-		return createFunctionLastArgument(builder);
+		return createFunctionLastArgument(builder.then());
 	}
 
 	private FunctionLastArgument<T, ET> createFunctionLastArgument(final EqlSentenceBuilder builder) {
