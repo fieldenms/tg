@@ -526,7 +526,7 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder joinAlias(final String alias) {
-        throw new UnsupportedOperationException();
+        return _add(new AsToken(alias));
     }
 
     public <E extends AbstractEntity<?>> EqlSentenceBuilder from() {

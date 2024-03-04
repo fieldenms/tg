@@ -12,4 +12,9 @@ public final class AsToken extends CommonToken {
         this.alias = alias;
     }
 
+    @Override
+    public String getText() {
+        return "as(\"%s\")".formatted(alias);
+    }
+
 }
