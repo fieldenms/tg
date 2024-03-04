@@ -254,6 +254,7 @@ public final class CanonicalEqlGrammar {
 
         derive(YieldOperand).
             to(SingleOperand).
+            or(beginExpr, YieldOperand, repeat(ArithmeticalOperator, YieldOperand), endExpr).
             or(countAll).
             or(YieldOperandFunction).
 

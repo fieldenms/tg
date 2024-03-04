@@ -390,6 +390,13 @@ public interface EQLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitYieldOperand_SingleOperand(EQLParser.YieldOperand_SingleOperandContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code YieldOperandExpr}
+	 * labeled alternative in {@link EQLParser#yieldOperand}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitYieldOperandExpr(EQLParser.YieldOperandExprContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code YieldOperand_CountAll}
 	 * labeled alternative in {@link EQLParser#yieldOperand}.
 	 * @param ctx the parse tree

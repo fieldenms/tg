@@ -215,6 +215,7 @@ aliasedYield :
 
 yieldOperand :
       singleOperand # YieldOperand_SingleOperand
+    | BEGINEXPR first=yieldOperand (operators+=arithmeticalOperator rest+=yieldOperand)* ENDEXPR # YieldOperandExpr
     | COUNTALL # YieldOperand_CountAll
     | funcName=yieldOperandFunctionName argument=singleOperand # YieldOperandFunction
 ;
