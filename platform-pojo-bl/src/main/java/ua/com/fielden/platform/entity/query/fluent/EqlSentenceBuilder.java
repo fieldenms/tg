@@ -206,67 +206,67 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder anyOfProps(final String... props) {
-        throw new UnsupportedOperationException();
+        return _add(new AnyOfPropsToken(Arrays.asList(props)));
     }
 
     public EqlSentenceBuilder anyOfProps(final IConvertableToPath... props) {
-        throw new UnsupportedOperationException();
+        return _add(new AnyOfPropsToken(Arrays.stream(props).map(IConvertableToPath::toPath).toList()));
     }
 
     public EqlSentenceBuilder anyOfParams(final String... params) {
-        throw new UnsupportedOperationException();
+        return _add(new AnyOfParamsToken(Arrays.asList(params)));
     }
 
     public EqlSentenceBuilder anyOfIParams(final String... params) {
-        throw new UnsupportedOperationException();
+        return _add(new AnyOfIParamsToken(Arrays.asList(params)));
     }
 
     public EqlSentenceBuilder anyOfModels(final PrimitiveResultQueryModel... models) {
-        throw new UnsupportedOperationException();
+        return _add(new AnyOfModelsToken(Arrays.asList(models)));
     }
 
     public EqlSentenceBuilder anyOfValues(final Object... values) {
-        throw new UnsupportedOperationException();
+        return _add(new AnyOfValuesToken(valuePreprocessor.applyMany(values).toList()));
     }
 
     public EqlSentenceBuilder anyOfExpressions(final ExpressionModel... expressions) {
-        throw new UnsupportedOperationException();
+        return _add(new AnyOfExpressionsToken(Arrays.asList(expressions)));
     }
 
     public EqlSentenceBuilder allOfProps(final String... props) {
-        throw new UnsupportedOperationException();
+        return _add(new AllOfPropsToken(Arrays.asList(props)));
     }
 
     public EqlSentenceBuilder allOfProps(final IConvertableToPath... props) {
-        throw new UnsupportedOperationException();
+        return _add(new AllOfPropsToken(Arrays.stream(props).map(IConvertableToPath::toPath).toList()));
     }
 
     public EqlSentenceBuilder allOfParams(final String... params) {
-        throw new UnsupportedOperationException();
+        return _add(new AllOfParamsToken(Arrays.asList(params)));
     }
 
     public EqlSentenceBuilder allOfIParams(final String... params) {
-        throw new UnsupportedOperationException();
+        return _add(new AllOfIParamsToken(Arrays.asList(params)));
     }
 
     public EqlSentenceBuilder allOfModels(final PrimitiveResultQueryModel... models) {
-        throw new UnsupportedOperationException();
+        return _add(new AllOfModelsToken(Arrays.asList(models)));
     }
 
     public EqlSentenceBuilder allOfValues(final Object... values) {
-        throw new UnsupportedOperationException();
+        return _add(new AllOfValuesToken(valuePreprocessor.applyMany(values).toList()));
     }
 
     public EqlSentenceBuilder allOfExpressions(final ExpressionModel... expressions) {
-        throw new UnsupportedOperationException();
+        return _add(new AllOfExpressionsToken(Arrays.asList(expressions)));
     }
 
     public EqlSentenceBuilder any(final SingleResultQueryModel subQuery) {
-        throw new UnsupportedOperationException();
+        return _add(new AnyToken(subQuery));
     }
 
     public EqlSentenceBuilder all(final SingleResultQueryModel subQuery) {
-        throw new UnsupportedOperationException();
+        return _add(new AllToken(subQuery));
     }
 
     public EqlSentenceBuilder setOfProps(final String... props) {

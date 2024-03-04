@@ -91,6 +91,7 @@ public final class CollectionUtil {
 
         return Optional.of(Arrays.copyOfRange(array, 1, array.length));
     }
+
     /**
      * Converts collection to a string separating the elements with a provided separator.
      * <p>
@@ -100,6 +101,24 @@ public final class CollectionUtil {
         final StringBuilder buffer = new StringBuilder();
         for (final Iterator<T> iter = collection.iterator(); iter.hasNext();) {
             buffer.append(iter.next() + (iter.hasNext() ? separator : ""));
+        }
+        return buffer.toString();
+    }
+
+    /**
+     * Converts collection to a string separating the elements with a provided separator.
+     * <p>
+     * No precaution is taken if toString representation of an element already contains a symbol equal to a separator.
+     *
+     * @param mapper  maps each collection element to its string representation
+     */
+    public static <T> String toString(final Collection<T> collection, final Function<? super T, String> mapper, final String separator) {
+        final StringBuilder buffer = new StringBuilder();
+        for (final Iterator<T> iter = collection.iterator(); iter.hasNext();) {
+            buffer.append(mapper.apply(iter.next()));
+            if (iter.hasNext()) {
+                buffer.append(separator);
+            }
         }
         return buffer.toString();
     }
