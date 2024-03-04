@@ -61,31 +61,31 @@ final class EqlSentenceBuilder {
     // BUILDING METHODS
 
     public EqlSentenceBuilder and() {
-        throw new UnsupportedOperationException();
+        return _add(token(AND));
     }
 
     public EqlSentenceBuilder or() {
-        throw new UnsupportedOperationException();
+        return _add(token(OR));
     }
 
     public EqlSentenceBuilder beginCondition(final boolean negated) {
-        throw new UnsupportedOperationException();
+        return _add(token(negated ? NOTBEGIN : BEGIN));
     }
 
     public EqlSentenceBuilder endCondition() {
-        throw new UnsupportedOperationException();
+        return _add(token(END));
     }
 
     public EqlSentenceBuilder beginExpression() {
-        throw new UnsupportedOperationException();
+        return _add(token(BEGINEXPR));
     }
 
     public EqlSentenceBuilder endExpression() {
-        throw new UnsupportedOperationException();
+        return _add(token(ENDEXPR));
     }
 
     public EqlSentenceBuilder exists(final boolean negated, final QueryModel model) {
-        throw new UnsupportedOperationException();
+        return _add(negated ? new NotExistsToken(model) : new ExistsToken(model));
     }
 
     public EqlSentenceBuilder existsAnyOf(final boolean negated, final QueryModel... subQueries) {
@@ -97,44 +97,47 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder critCondition(final String propName, final String critPropName) {
-        throw new UnsupportedOperationException();
+        return _add(new CritConditionToken(propName, critPropName));
     }
 
-    public EqlSentenceBuilder critCondition(final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName, final Optional<Object> defaultValue) {
-        throw new UnsupportedOperationException();
+    public EqlSentenceBuilder critCondition(
+            final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName,
+            final Optional<Object> defaultValue)
+    {
+        return _add(new CritConditionToken(collectionQueryStart, propName, critPropName, defaultValue));
     }
 
     public EqlSentenceBuilder isNull(final boolean negated) {
-        throw new UnsupportedOperationException();
+        return _add(token(negated ? ISNOTNULL : ISNULL));
     }
 
     public EqlSentenceBuilder lt() {
-        throw new UnsupportedOperationException();
+        return _add(token(LT));
     }
 
     public EqlSentenceBuilder gt() {
-        throw new UnsupportedOperationException();
+        return _add(token(GT));
     }
 
     public EqlSentenceBuilder le() {
-        throw new UnsupportedOperationException();
+        return _add(token(LE));
     }
 
     public EqlSentenceBuilder ge() {
-        throw new UnsupportedOperationException();
+        return _add(token(GE));
     }
 
     public EqlSentenceBuilder eq() {
-        throw new UnsupportedOperationException();
+        return _add(token(EQ));
     }
 
     public EqlSentenceBuilder ne() {
-        throw new UnsupportedOperationException();
+        return _add(token(NE));
     }
 
     public EqlSentenceBuilder like(final LikeOptions options) {
         // TODO options
-        throw new UnsupportedOperationException();
+        return _add(token(LIKE));
     }
 
     public EqlSentenceBuilder in(final boolean negated) {
@@ -146,19 +149,19 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder prop(final String propName) {
-        throw new UnsupportedOperationException();
+        return _add(new PropToken(propName));
     }
 
     public EqlSentenceBuilder extProp(final String propName) {
-        throw new UnsupportedOperationException();
+        return _add(new ExtPropToken(propName));
     }
 
     public EqlSentenceBuilder val(final Object value) {
-        throw new UnsupportedOperationException();
+        return _add(new ValToken(valuePreprocessor.apply(value)));
     }
 
     public EqlSentenceBuilder iVal(final Object value) {
-        throw new UnsupportedOperationException();
+        return _add(new IValToken(valuePreprocessor.apply(value)));
     }
 
     public EqlSentenceBuilder model(final PrimitiveResultQueryModel model) {
@@ -170,11 +173,11 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder param(final String paramName) {
-        throw new UnsupportedOperationException();
+        return _add(new ParamToken(paramName));
     }
 
     public EqlSentenceBuilder iParam(final String paramName) {
-        throw new UnsupportedOperationException();
+        return _add(new IParamToken(paramName));
     }
 
     public EqlSentenceBuilder expr() {
@@ -182,7 +185,7 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder expr(final ExpressionModel exprModel) {
-        throw new UnsupportedOperationException();
+        return _add(new ExprToken(exprModel));
     }
 
     public EqlSentenceBuilder cond() {
@@ -190,19 +193,19 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder cond(final ConditionModel conditionModel) {
-        throw new UnsupportedOperationException();
+        return _add(new ConditionToken(conditionModel));
     }
 
     public EqlSentenceBuilder negatedCond(final ConditionModel conditionModel) {
-        throw new UnsupportedOperationException();
+        return _add(new NegatedConditionToken(conditionModel));
     }
 
     public EqlSentenceBuilder as(final String yieldAlias) {
-        throw new UnsupportedOperationException();
+        return _add(new AsToken(yieldAlias));
     }
 
     public EqlSentenceBuilder asRequired(final String yieldAlias) {
-        throw new UnsupportedOperationException();
+        return _add(new AsRequiredToken(yieldAlias));
     }
 
     public EqlSentenceBuilder anyOfProps(final String... props) {
@@ -294,39 +297,39 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder addDateInterval() {
-        throw new UnsupportedOperationException();
+        return _add(token(ADDTIMEINTERVALOF));
     }
 
     public EqlSentenceBuilder countDateIntervalFunction() {
-        throw new UnsupportedOperationException();
+        return _add(token(COUNT));
     }
 
     public EqlSentenceBuilder secondsInterval() {
-        throw new UnsupportedOperationException();
+        return _add(token(SECONDS));
     }
 
     public EqlSentenceBuilder minutesInterval() {
-        throw new UnsupportedOperationException();
+        return _add(token(MINUTES));
     }
 
     public EqlSentenceBuilder hoursInterval() {
-        throw new UnsupportedOperationException();
+        return _add(token(HOURS));
     }
 
     public EqlSentenceBuilder daysInterval() {
-        throw new UnsupportedOperationException();
+        return _add(token(DAYS));
     }
 
     public EqlSentenceBuilder monthsInterval() {
-        throw new UnsupportedOperationException();
+        return _add(token(MONTHS));
     }
 
     public EqlSentenceBuilder yearsInterval() {
-        throw new UnsupportedOperationException();
+        return _add(token(YEARS));
     }
 
     public EqlSentenceBuilder caseWhenFunction() {
-        throw new UnsupportedOperationException();
+        return _add(token(CASEWHEN));
     }
 
     public EqlSentenceBuilder then() {
@@ -338,123 +341,127 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder concat() {
-        throw new UnsupportedOperationException();
+        return _add(token(CONCAT));
+    }
+
+    public EqlSentenceBuilder with() {
+        return _add(token(WITH));
     }
 
     public EqlSentenceBuilder round() {
-        throw new UnsupportedOperationException();
+        return _add(token(ROUND));
     }
 
-    public EqlSentenceBuilder to(final Integer precision) {
-        throw new UnsupportedOperationException();
+    public EqlSentenceBuilder to(final int precision) {
+        return _add(new ToToken(precision));
     }
 
     public EqlSentenceBuilder ifNull() {
-        throw new UnsupportedOperationException();
+        return _add(token(IFNULL));
     }
 
     public EqlSentenceBuilder uppercase() {
-        throw new UnsupportedOperationException();
+        return _add(token(UPPERCASE));
     }
 
     public EqlSentenceBuilder lowercase() {
-        throw new UnsupportedOperationException();
+        return _add(token(LOWERCASE));
     }
 
     public EqlSentenceBuilder now() {
-        throw new UnsupportedOperationException();
+        return _add(token(NOW));
     }
 
     public EqlSentenceBuilder secondOf() {
-        throw new UnsupportedOperationException();
+        return _add(token(SECONDOF));
     }
 
     public EqlSentenceBuilder minuteOf() {
-        throw new UnsupportedOperationException();
+        return _add(token(MINUTEOF));
     }
 
     public EqlSentenceBuilder hourOf() {
-        throw new UnsupportedOperationException();
+        return _add(token(HOUROF));
     }
 
     public EqlSentenceBuilder dayOf() {
-        throw new UnsupportedOperationException();
+        return _add(token(DAYOF));
     }
 
     public EqlSentenceBuilder monthOf() {
-        throw new UnsupportedOperationException();
+        return _add(token(MONTHOF));
     }
 
     public EqlSentenceBuilder yearOf() {
-        throw new UnsupportedOperationException();
+        return _add(token(YEAROF));
     }
 
     public EqlSentenceBuilder dayOfWeekOf() {
-        throw new UnsupportedOperationException();
+        return _add(token(DAYOFWEEKOF));
     }
 
     public EqlSentenceBuilder dateOf() {
-        throw new UnsupportedOperationException();
+        return _add(token(DATEOF));
     }
 
     public EqlSentenceBuilder absOf() {
-        throw new UnsupportedOperationException();
+        return _add(token(ABSOF));
     }
 
     public EqlSentenceBuilder sumOf() {
-        throw new UnsupportedOperationException();
+        return _add(token(SUMOF));
     }
 
     public EqlSentenceBuilder maxOf() {
-        throw new UnsupportedOperationException();
+        return _add(token(MAXOF));
     }
 
     public EqlSentenceBuilder minOf() {
-        throw new UnsupportedOperationException();
+        return _add(token(MINOF));
     }
 
     public EqlSentenceBuilder countOf() {
-        throw new UnsupportedOperationException();
+        return _add(token(COUNTOF));
     }
 
     public EqlSentenceBuilder averageOf() {
-        throw new UnsupportedOperationException();
+        return _add(token(AVGOF));
     }
 
     public EqlSentenceBuilder sumOfDistinct() {
-        throw new UnsupportedOperationException();
+        return _add(token(SUMOFDISTINCT));
     }
 
     public EqlSentenceBuilder countOfDistinct() {
-        throw new UnsupportedOperationException();
+        return _add(token(COUNTOFDISTINCT));
     }
 
     public EqlSentenceBuilder averageOfDistinct() {
-        throw new UnsupportedOperationException();
+        return _add(token(AVGOFDISTINCT));
     }
 
     public EqlSentenceBuilder countAll() {
-        throw new UnsupportedOperationException();
+        return _add(token(COUNTALL));
     }
 
     public EqlSentenceBuilder add() {
-        throw new UnsupportedOperationException();
+        return _add(token(ADD));
     }
 
     public EqlSentenceBuilder subtract() {
-        throw new UnsupportedOperationException();
+        return _add(token(SUB));
     }
 
     public EqlSentenceBuilder divide() {
-        throw new UnsupportedOperationException();
+        return _add(token(DIV));
     }
 
     public EqlSentenceBuilder multiply() {
-        throw new UnsupportedOperationException();
+        return _add(token(MULT));
     }
 
     public EqlSentenceBuilder modulo() {
-        throw new UnsupportedOperationException();
+        return _add(token(MOD));
     }
 
     public EqlSentenceBuilder order(OrderingModel order) {
@@ -462,19 +469,19 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder asc() {
-        throw new UnsupportedOperationException();
+        return _add(token(ASC));
     }
 
     public EqlSentenceBuilder desc() {
-        throw new UnsupportedOperationException();
+        return _add(token(DESC));
     }
 
     public EqlSentenceBuilder on() {
-        throw new UnsupportedOperationException();
+        return _add(token(ON));
     }
 
     public EqlSentenceBuilder conditionStart() {
-        throw new UnsupportedOperationException();
+        return _add(token(WHEN));
     }
 
     public EqlSentenceBuilder endOfFunction() {
@@ -498,23 +505,26 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder where() {
-        throw new UnsupportedOperationException();
+        return _add(token(WHERE));
     }
 
     public EqlSentenceBuilder yield() {
-        throw new UnsupportedOperationException();
+        return _add(token(YIELD));
     }
 
     public EqlSentenceBuilder yieldAll() {
-        throw new UnsupportedOperationException();
+        final EqlSentenceBuilder copy = makeCopy();
+        copy.tokens.add(token(YIELDALL));
+        copy.yieldAll = true;
+        return copy;
     }
 
     public EqlSentenceBuilder groupBy() {
-        throw new UnsupportedOperationException();
+        return _add(token(GROUPBY));
     }
 
     public EqlSentenceBuilder orderBy() {
-        throw new UnsupportedOperationException();
+        return _add(token(ORDERBY));
     }
 
     public EqlSentenceBuilder joinAlias(final String alias) {
