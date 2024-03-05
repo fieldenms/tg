@@ -6,7 +6,7 @@ query :
       select=SELECT alias=AS? join? where? groupBy? selectEnd  # Select
     | EXPR first=yieldOperand (operators+=arithmeticalOperator rest+=yieldOperand)* MODEL # StandaloneExpression
     | COND standaloneCondition MODEL # StandaloneCondExpr
-    | ORDERBY orderByOperand+ MODEL # OrderBy
+    | ORDERBY operands+=orderByOperand+ MODEL # OrderBy
 ;
 
 selectEnd :
@@ -252,8 +252,8 @@ standaloneCondition :
 
 orderByOperand :
       singleOperand order # OrderByOperand_Single
-    | YIELD order # OrderByOperand_Yield
-    | ORDER # OrderByOperand_OrderingModel
+    | yield=YIELD order # OrderByOperand_Yield
+    | token=ORDER # OrderByOperand_OrderingModel
 ;
 
 order :

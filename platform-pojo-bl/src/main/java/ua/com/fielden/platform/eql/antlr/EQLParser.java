@@ -220,6 +220,8 @@ public class EQLParser extends Parser {
 		}
 	}
 	public static class OrderByContext extends QueryContext {
+		public OrderByOperandContext orderByOperand;
+		public List<OrderByOperandContext> operands = new ArrayList<OrderByOperandContext>();
 		public TerminalNode ORDERBY() { return getToken(EQLParser.ORDERBY, 0); }
 		public TerminalNode MODEL() { return getToken(EQLParser.MODEL, 0); }
 		public List<OrderByOperandContext> orderByOperand() {
@@ -416,7 +418,8 @@ public class EQLParser extends Parser {
 						{
 						{
 						setState(104);
-						orderByOperand();
+						((OrderByContext)_localctx).orderByOperand = orderByOperand();
+						((OrderByContext)_localctx).operands.add(((OrderByContext)_localctx).orderByOperand);
 						}
 						}
 						break;
@@ -3711,10 +3714,11 @@ public class EQLParser extends Parser {
 		}
 	}
 	public static class OrderByOperand_YieldContext extends OrderByOperandContext {
-		public TerminalNode YIELD() { return getToken(EQLParser.YIELD, 0); }
+		public Token yield;
 		public OrderContext order() {
 			return getRuleContext(OrderContext.class,0);
 		}
+		public TerminalNode YIELD() { return getToken(EQLParser.YIELD, 0); }
 		public OrderByOperand_YieldContext(OrderByOperandContext ctx) { copyFrom(ctx); }
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
@@ -3723,6 +3727,7 @@ public class EQLParser extends Parser {
 		}
 	}
 	public static class OrderByOperand_OrderingModelContext extends OrderByOperandContext {
+		public Token token;
 		public TerminalNode ORDER() { return getToken(EQLParser.ORDER, 0); }
 		public OrderByOperand_OrderingModelContext(OrderByOperandContext ctx) { copyFrom(ctx); }
 		@Override
@@ -3780,7 +3785,7 @@ public class EQLParser extends Parser {
 				enterOuterAlt(_localctx, 2);
 				{
 				setState(453);
-				match(YIELD);
+				((OrderByOperand_YieldContext)_localctx).yield = match(YIELD);
 				setState(454);
 				order();
 				}
@@ -3790,7 +3795,7 @@ public class EQLParser extends Parser {
 				enterOuterAlt(_localctx, 3);
 				{
 				setState(455);
-				match(ORDER);
+				((OrderByOperand_OrderingModelContext)_localctx).token = match(ORDER);
 				}
 				break;
 			default:
