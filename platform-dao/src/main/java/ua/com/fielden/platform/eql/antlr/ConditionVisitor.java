@@ -5,6 +5,7 @@ import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.LikeOptions;
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.Quantifier;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
@@ -13,6 +14,7 @@ import ua.com.fielden.platform.eql.antlr.tokens.*;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.conditions.*;
 import ua.com.fielden.platform.eql.stage1.operands.*;
+import ua.com.fielden.platform.eql.stage1.queries.SubQuery1;
 import ua.com.fielden.platform.eql.stage2.operands.ISetOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -133,6 +135,28 @@ final class ConditionVisitor extends AbstractEqlVisitor<ICondition1<?>> {
             case ParamsToken tok -> new OperandsBasedSet1(tok.params.stream().flatMap(p -> substParam(p, false)).toList());
             case IParamsToken tok -> new OperandsBasedSet1(tok.params.stream().flatMap(p -> substParam(p, true)).toList());
             case QueryModelToken<?> tok -> new QueryBasedSet1(transformer.generateAsSubQuery(tok.model));
+            default -> unexpectedToken(ctx.token);
+        };
+    }
+
+    @Override
+    public ICondition1<?> visitQuantifiedComparisonPredicate(final QuantifiedComparisonPredicateContext ctx) {
+        final var operator = toComparisonOperator(ctx.comparisonOperator());
+        final Quantifier quantifier = switch (ctx.quantifiedOperand().token) {
+            case AllToken $ -> Quantifier.ALL;
+            case AnyToken $ -> Quantifier.ANY;
+            default -> unexpectedToken(ctx.quantifiedOperand().token);
+        };
+        return ctx.left.accept(new ComparisonOperandVisitor(transformer))
+                // to be consistent with source ID generation logic, the quantified operand has to be recompiled for each comparison operand
+                // TODO room for optimisation
+                .apply(leftRand -> new QuantifiedPredicate1(leftRand, operator, quantifier, compileQuantifiedOperand(ctx.quantifiedOperand())));
+    }
+
+    private SubQuery1 compileQuantifiedOperand(final QuantifiedOperandContext ctx) {
+        return switch (ctx.token) {
+            case AllToken tok -> transformer.generateAsSubQuery(tok.model);
+            case AnyToken tok -> transformer.generateAsSubQuery(tok.model);
             default -> unexpectedToken(ctx.token);
         };
     }
