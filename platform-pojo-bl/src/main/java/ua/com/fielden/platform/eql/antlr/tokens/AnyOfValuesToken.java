@@ -18,7 +18,7 @@ public final class AnyOfValuesToken extends CommonToken {
     @Override
     public String getText() {
         // TODO quote strings
-        return "allOfValues(%s)".formatted(CollectionUtil.toString(values, ", "));
+        return "anyOfValues(%s)".formatted(CollectionUtil.toString(values, ", "));
     }
 
 }

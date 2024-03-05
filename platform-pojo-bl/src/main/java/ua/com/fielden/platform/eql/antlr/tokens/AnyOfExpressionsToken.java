@@ -20,7 +20,7 @@ public final class AnyOfExpressionsToken extends CommonToken {
 
     @Override
     public String getText() {
-        return "allOfExpressions(\n%s\n)".formatted(models.stream()
+        return "anyOfExpressions(\n%s\n)".formatted(models.stream()
                 .map(m -> m.getTokenSource().tokens().stream().map(Token::getText).collect(joining(" ", "(", ")")))
                 .collect(joining("\n")));
     }
