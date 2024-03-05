@@ -22,6 +22,7 @@ import ua.com.fielden.platform.sample.domain.EntityTwo;
 import ua.com.fielden.platform.sample.domain.EntityWithUnionEntityWithSkipExistsValidation;
 import ua.com.fielden.platform.sample.domain.TeAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TeFuelUsageByType;
+import ua.com.fielden.platform.sample.domain.TeNamedValuesVector;
 import ua.com.fielden.platform.sample.domain.TeProductPrice;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
 import ua.com.fielden.platform.sample.domain.TeVehicleFinDetails;
@@ -138,6 +139,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgTimesheet.class);
         add(TgVehicle.class);
         add(TgReVehicleWithHighPrice.class);
+        add(TeNamedValuesVector.class);
         add(TeProductPrice.class);
         add(TeVehicle.class);
         add(TgVehicleFinDetails.class);
