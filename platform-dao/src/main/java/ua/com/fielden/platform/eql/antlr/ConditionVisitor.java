@@ -114,15 +114,16 @@ final class ConditionVisitor extends AbstractEqlVisitor<ICondition1<?>> {
     }
 
     @Override
-    public ICondition1<?> visitMembershipPredicate(final MembershipPredicateContext membershipCtx) {
-        final boolean negated = switch (membershipCtx.membershipOperator().token.getType()) {
+    public ICondition1<?> visitMembershipPredicate(final MembershipPredicateContext ctx) {
+        final boolean negated = switch (ctx.membershipOperator().token.getType()) {
             case IN -> false;
             case NOTIN -> true;
-            default -> unexpectedToken(membershipCtx.membershipOperator().token);
+            default -> unexpectedToken(ctx.membershipOperator().token);
         };
-        final var set = compileMembershipOperand(membershipCtx.membershipOperand());
-        return membershipCtx.comparisonOperand().accept(new ComparisonOperandVisitor(transformer))
-                .apply(operand -> new SetPredicate1(operand, negated, set));
+        return ctx.comparisonOperand().accept(new ComparisonOperandVisitor(transformer))
+                // to be consistent with source ID generation logic, the membership operand has to be recompiled for each comparison operand
+                // TODO room for optimisation
+                .apply(operand -> new SetPredicate1(operand, negated, compileMembershipOperand(ctx.membershipOperand())));
     }
 
     private ISetOperand1<? extends ISetOperand2<?>> compileMembershipOperand(final MembershipOperandContext ctx) {
