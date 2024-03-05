@@ -568,27 +568,44 @@ final class EqlSentenceBuilder {
     }
 
     public <E extends AbstractEntity<?>> EqlSentenceBuilder innerJoin(final Class<E> entityType) {
-        throw new UnsupportedOperationException();
+        return _add(JoinToken.entityType(entityType));
     }
 
     public <E extends AbstractEntity<?>> EqlSentenceBuilder leftJoin(final Class<E> entityType) {
-        throw new UnsupportedOperationException();
+        return _add(LeftJoinToken.entityType(entityType));
     }
 
     public EqlSentenceBuilder innerJoin(final AggregatedResultQueryModel... sourceModels) {
-        throw new UnsupportedOperationException();
+        if (sourceModels.length >= 1) {
+            return _add(JoinToken.models(Arrays.asList(sourceModels)));
+        } else {
+            throw new IllegalArgumentException("No models were specified as a source in the FROM statement!");
+        }
     }
 
     public <E extends AbstractEntity<?>> EqlSentenceBuilder innerJoin(final EntityResultQueryModel<E>... sourceModels) {
-        throw new UnsupportedOperationException();
+        if (sourceModels.length >= 1) {
+            return _add(JoinToken.models(Arrays.asList(sourceModels)));
+        } else {
+            throw new IllegalArgumentException("No models were specified as a source in the FROM statement!");
+        }
     }
 
     public EqlSentenceBuilder leftJoin(final AggregatedResultQueryModel... sourceModels) {
-        throw new UnsupportedOperationException();
+        if (sourceModels.length >= 1) {
+            return _add(LeftJoinToken.models(Arrays.asList(sourceModels)));
+        } else {
+            throw new IllegalArgumentException("No models were specified as a source in the FROM statement!");
+        }
     }
 
-    public <E extends AbstractEntity<?>> EqlSentenceBuilder leftJoin(final EntityResultQueryModel<E>... sourceModels) {
-        throw new UnsupportedOperationException();
+    @SafeVarargs
+    public final <E extends AbstractEntity<?>> EqlSentenceBuilder leftJoin(final EntityResultQueryModel<E>... sourceModels) {
+        if (sourceModels.length >= 1) {
+            return _add(LeftJoinToken.models(Arrays.asList(sourceModels)));
+        } else {
+            throw new IllegalArgumentException("No models were specified as a source in the FROM statement!");
+        }
     }
 
     public EqlSentenceBuilder model() {
