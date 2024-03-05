@@ -140,9 +140,36 @@ final class EqlSentenceBuilder {
         return _add(token(NE));
     }
 
-    public EqlSentenceBuilder like(final LikeOptions options) {
-        // TODO options
+    public EqlSentenceBuilder like() {
         return _add(token(LIKE));
+    }
+
+    public EqlSentenceBuilder notLike() {
+        return _add(token(NOTLIKE));
+    }
+
+    public EqlSentenceBuilder iLike() {
+        return _add(token(ILIKE));
+    }
+
+    public EqlSentenceBuilder notILike() {
+        return _add(token(NOTILIKE));
+    }
+
+    public EqlSentenceBuilder likeWithCast() {
+        return _add(token(LIKEWITHCAST));
+    }
+
+    public EqlSentenceBuilder notLikeWithCast() {
+        return _add(token(NOTLIKEWITHCAST));
+    }
+
+    public EqlSentenceBuilder iLikeWithCast() {
+        return _add(token(ILIKEWITHCAST));
+    }
+
+    public EqlSentenceBuilder notILikeWithCast() {
+        return _add(token(NOTILIKEWITHCAST));
     }
 
     public EqlSentenceBuilder in(final boolean negated) {

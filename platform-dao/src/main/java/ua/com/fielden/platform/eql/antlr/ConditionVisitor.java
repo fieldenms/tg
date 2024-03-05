@@ -62,7 +62,17 @@ final class ConditionVisitor extends AbstractEqlVisitor<ICondition1<?>> {
 
     @Override
     public ICondition1<?> visitLikePredicate(final LikePredicateContext ctx) {
-        final LikeOptions options = LikeOptions.options().build(); // TODO
+        final LikeOptions options = switch (ctx.likeOperator().token.getType()) {
+            case LIKE -> LikeOptions.DEFAULT_OPTIONS;
+            case NOTLIKE -> LikeOptions.options().negated().build();
+            case ILIKE -> LikeOptions.options().caseInsensitive().build();
+            case NOTILIKE -> LikeOptions.options().caseInsensitive().negated().build();
+            case LIKEWITHCAST -> LikeOptions.options().withCast().build();
+            case NOTLIKEWITHCAST -> LikeOptions.options().withCast().negated().build();
+            case ILIKEWITHCAST -> LikeOptions.options().withCast().caseInsensitive().build();
+            case NOTILIKEWITHCAST -> LikeOptions.options().withCast().caseInsensitive().negated().build();
+            default -> unexpectedToken(ctx.likeOperator().token);
+        };
         final var visitor = new ComparisonOperandVisitor(transformer);
         final var rightFinisher = ctx.right.accept(visitor);
         return ctx.left.accept(visitor).apply(left -> rightFinisher.apply(right -> new LikePredicate1(left, right, options)));

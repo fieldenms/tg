@@ -61,42 +61,42 @@ abstract class ComparisonOperator<T extends ILogicalOperator<?>, ET extends Abst
 
     @Override
     public IComparisonOperand<T, ET> like() {
-        return createIComparisonOperand(builder.like(options().build()));
+        return createIComparisonOperand(builder.like());
     }
 
     @Override
     public IComparisonOperand<T, ET> notLike() {
-        return createIComparisonOperand(builder.like(options().negated().build()));
+        return createIComparisonOperand(builder.notLike());
     }
 
     @Override
     public IComparisonOperand<T, ET> iLike() {
-        return createIComparisonOperand(builder.like(options().caseInsensitive().build()));
+        return createIComparisonOperand(builder.iLike());
     }
 
     @Override
     public IComparisonOperand<T, ET> notILike() {
-        return createIComparisonOperand(builder.like(options().caseInsensitive().negated().build()));
+        return createIComparisonOperand(builder.notILike());
     }
 
     @Override
     public IComparisonOperand<T, ET> likeWithCast() {
-        return createIComparisonOperand(builder.like(options().withCast().build()));
+        return createIComparisonOperand(builder.likeWithCast());
     }
 
     @Override
     public IComparisonOperand<T, ET> notLikeWithCast() {
-        return createIComparisonOperand(builder.like(options().withCast().negated().build()));
+        return createIComparisonOperand(builder.notLikeWithCast());
     }
 
     @Override
     public IComparisonOperand<T, ET> iLikeWithCast() {
-        return createIComparisonOperand(builder.like(options().caseInsensitive().withCast().build()));
+        return createIComparisonOperand(builder.iLikeWithCast());
     }
 
     @Override
     public IComparisonOperand<T, ET> notILikeWithCast() {
-        return createIComparisonOperand(builder.like(options().caseInsensitive().negated().withCast().build()));
+        return createIComparisonOperand(builder.notILikeWithCast());
     }
 
     @Override
