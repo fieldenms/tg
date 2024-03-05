@@ -94,7 +94,7 @@ public class QueryModelToStage1Transformer {
             final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), null, username);
             if (filteringCondition != null) {
                 // LOGGER.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() + "]");
-                return new StandAloneConditionBuilder(this, filteringCondition, false).getModel();
+                return new EqlCompiler(this).compile(filteringCondition.getTokenSource(), EqlCompilationResult.StandaloneCondition.class).model();
             }
         }
 
