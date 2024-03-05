@@ -104,7 +104,7 @@ singleOperand :
     | funcName=unaryFunctionName argument=singleOperand # UnaryFunction
     | IFNULL nullable=singleOperand THEN other=singleOperand # IfNull
     | NOW # SingleOperand_Now
-    | COUNT unit=dateIntervalUnit BETWEEN startDate=singleOperand AND endDate=singleOperand # DateDiffInterval
+    | COUNT unit=dateIntervalUnit BETWEEN endDate=singleOperand AND startDate=singleOperand # DateDiffInterval
     | ADDTIMEINTERVALOF left=singleOperand unit=dateIntervalUnit TO right=singleOperand # DateAddInterval
     | ROUND singleOperand to=TO # Round
 

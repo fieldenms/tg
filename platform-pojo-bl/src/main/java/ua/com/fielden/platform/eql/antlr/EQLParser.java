@@ -1656,8 +1656,8 @@ public class EQLParser extends Parser {
 	}
 	public static class DateDiffIntervalContext extends SingleOperandContext {
 		public DateIntervalUnitContext unit;
-		public SingleOperandContext startDate;
 		public SingleOperandContext endDate;
+		public SingleOperandContext startDate;
 		public TerminalNode COUNT() { return getToken(EQLParser.COUNT, 0); }
 		public TerminalNode BETWEEN() { return getToken(EQLParser.BETWEEN, 0); }
 		public TerminalNode AND() { return getToken(EQLParser.AND, 0); }
@@ -1992,11 +1992,11 @@ public class EQLParser extends Parser {
 				setState(244);
 				match(BETWEEN);
 				setState(245);
-				((DateDiffIntervalContext)_localctx).startDate = singleOperand();
+				((DateDiffIntervalContext)_localctx).endDate = singleOperand();
 				setState(246);
 				match(AND);
 				setState(247);
-				((DateDiffIntervalContext)_localctx).endDate = singleOperand();
+				((DateDiffIntervalContext)_localctx).startDate = singleOperand();
 				}
 				break;
 			case ADDTIMEINTERVALOF:
