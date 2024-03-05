@@ -42,7 +42,6 @@ import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityTyp
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalManagedType;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getVersion;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -98,10 +97,7 @@ import ua.com.fielden.platform.types.either.Right;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.config.MainMenuItemCo;
-import ua.com.fielden.platform.ui.menu.MiType;
-import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.ui.menu.SaveAsNameAnnotation;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -613,9 +609,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
         // generates validation prototype
-        final MiType miTypeAnnotation = new MiTypeAnnotation().newInstance(miType);
-        final Annotation [] annotations = saveAsName.isPresent() ? new Annotation[] {miTypeAnnotation, new SaveAsNameAnnotation().newInstance(saveAsName.get())} : new Annotation[] {miTypeAnnotation};
-        final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria((Class<T>) getEntityType(miType), cdtmae, miType, annotations);
+        final M validationPrototype = (M) critGenerator.<T>generateCentreQueryCriteria(user, miType, saveAsName, cdtmae);
 
         validationPrototype.setMiType(miType);
         validationPrototype.setDevice(device);

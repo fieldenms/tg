@@ -323,7 +323,7 @@ public class MetaModelFinderTest {
                 .sorted((e1, e2) -> e1.getQualifiedName().toString().compareTo(e2.getQualifiedName().toString()))
                 .toList();
 
-        assertEquals(CollectionUtil.toString(expected, ","), CollectionUtil.toString(actual, ","));
+        assertEquals(CollectionUtil.toString(expected, "\n"), CollectionUtil.toString(actual, "\n"));
     }
 
     @Test

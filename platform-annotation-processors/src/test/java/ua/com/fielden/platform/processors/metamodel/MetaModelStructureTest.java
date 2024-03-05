@@ -18,7 +18,6 @@ import ua.com.fielden.platform.processors.test_utils.ProcessingRule;
 import ua.com.fielden.platform.processors.test_utils.exceptions.TestCaseConfigException;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
@@ -34,7 +33,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_ALIASED_NAME_SUFFIX;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_NAME_SUFFIX;
-
+import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.TYPE_ELEMENT_FILTER;
 
 /**
  * Tests that verify the structure of the generated meta-models that are based on a set of categories for structural representation of entities.
@@ -261,8 +260,7 @@ public class MetaModelStructureTest {
     public void aliased_meta_model_extends_a_regular_one() {
         final Elements elements = elementFinder.elements;
         final List<MetaModelElement> aliasedMetaModels = elements.getPackageElement(TEST_META_MODELS_PKG_NAME).getEnclosedElements().stream()
-                .filter(el -> el.getKind() == ElementKind.CLASS)
-                .map(el -> (TypeElement) el)
+                .mapMulti(TYPE_ELEMENT_FILTER)
                 .filter(metaModelFinder::isMetaModel)
                 .map(te -> metaModelFinder.newMetaModelElement(te))
                 .filter(metaModelFinder::isMetaModelAliased)
@@ -290,8 +288,7 @@ public class MetaModelStructureTest {
     public void aliased_meta_model_provides_public_read_only_alias_String() {
         final Elements elements = elementFinder.elements;
         final List<MetaModelElement> aliasedMetaModels = elements.getPackageElement(TEST_META_MODELS_PKG_NAME).getEnclosedElements().stream()
-                .filter(el -> el.getKind() == ElementKind.CLASS)
-                .map(el -> (TypeElement) el)
+                .mapMulti(TYPE_ELEMENT_FILTER)
                 .filter(metaModelFinder::isMetaModel)
                 .map(te -> metaModelFinder.newMetaModelElement(te))
                 .filter(metaModelFinder::isMetaModelAliased)

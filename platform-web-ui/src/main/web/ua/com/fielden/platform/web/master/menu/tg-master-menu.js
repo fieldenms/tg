@@ -661,16 +661,21 @@ Polymer({
     },
 
     _refreshCompoundMaster: function (data, envelope) {
-        if (!data.canClose) {
-            this._isRefreshCycle = true;
+        // A compound master should be refreshed even if it gets closed in order to snatch a newly persisted entity instance back into the property editor, if the master was invoked from that editor.
+        // The SAVE&NEW and SAVE&CLOSE actions do close compound entity masters and, in the same manner as the simple SAVE action, they should refresh a corresponding compound entity master.
+        // This is necessary to correctly update the dialog's title, post action.success event, and snatch a newly persisted entity instance back into a property editor, if the master was invoked from it.
+        // However, the SAVE&NEW action opens the same instance of the master to create a new entity. This causes an exceptional situation because that master instance may not finish its refreshing lifecycle.
+        // And so, we need to make sure that a "new" master instance is opened only after the previous refresh cycle has completed.
+        this._isRefreshCycle = true;
 
-            // promotes saved entity (main or detail) id into compound master "opener" in case of successful save
-            if (envelope.topic === 'save.post.success') {
-                this.augmentCompoundMasterOpenerWith(data.id);
-            }
-
-            this.refreshCompoundMaster();
+        // promotes the saved entity (main or detail) id into the compound master "opener" if it was saved successfully
+        if (envelope.topic === 'save.post.success') {
+            this.augmentCompoundMasterOpenerWith(data.id);
         }
+
+        this.refreshCompoundMaster().finally(() => {
+            this._isRefreshCycle = false;
+        });
     },
 
     _getMasterEntityChanged: function (newValue, oldValue) {
@@ -698,8 +703,6 @@ Polymer({
                 }
             }
         }
-
-        this._isRefreshCycle = false;
     },
 
     /**

@@ -1,15 +1,16 @@
 package ua.com.fielden.platform.criteria.generator;
 
-import java.lang.annotation.Annotation;
+import java.util.Optional;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
-import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
+import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 
 /**
- * A contract for criteria generator.
+ * A contract for Entity Centre criteria entity generation.
  *
  * @author TG Team
  *
@@ -17,32 +18,15 @@ import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria
 public interface ICriteriaGenerator {
     
     /**
-     * Generates and configures {@link EntityQueryCriteria} instance.
-     *
-     * @param <T>
-     * @param root
-     * @param cdtm
-     * @return
-     */
-    public <T extends AbstractEntity<?>> EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>> generateCentreQueryCriteria(final Class<T> root, ICentreDomainTreeManagerAndEnhancer cdtm, final Class<?> miType, final Annotation... customAnnotations);
-    
-    /**
-     * Generates and configures {@link EntityQueryCriteria} instance.
-     *
-     * @param <T>
-     * @param root
-     * @param cdtm
-     * @return
-     */
-    public <T extends AbstractEntity<?>> EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>> generateCentreQueryCriteria(Class<T> root, ICentreDomainTreeManagerAndEnhancer cdtm, final Annotation... customAnnotations);
-    
-    /**
-     * Clears the state in this {@link ICriteriaGenerator} instance.
+     * Generates Entity Centre criteria entity type with from/to, is/isNot properties; sets the values from {@code centreManager} configuration.
      * <p>
-     * {@link ICriteriaGenerator} is used for generation of selection criteria entity and is thus closely related to Web UI configurations.
-     * This method is potentially useful for situations where Web UI configurations should be re-created and invalidated, for e.g. in Eclipse Debug mode
-     * to preserve open server when adding / removing selection criteria properties to Web UI centre configurations.
+     * Triplet [user; miType; saveAsName] identifies Entity Centre configuration for which criteria entity needs to be generated.
      */
-    void clear();
-    
+    <T extends AbstractEntity<?>> EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>> generateCentreQueryCriteria(
+        final User user,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final Optional<String> saveAsName,
+        final ICentreDomainTreeManagerAndEnhancer centreManager
+    );
+
 }
