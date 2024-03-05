@@ -5,7 +5,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.model.*;
-import ua.com.fielden.platform.eql.antlr.ListTokenSource;
+import ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource;
 import ua.com.fielden.platform.eql.antlr.tokens.*;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
@@ -14,7 +14,7 @@ import java.util.*;
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.*;
-import static ua.com.fielden.platform.eql.antlr.tokens.SimpleTokens.token;
+import static ua.com.fielden.platform.eql.antlr.tokens.util.SimpleTokens.token;
 
 /**
  * Builds a sentence in the EQL language out of {@linkplain Token ANTLR tokens}.

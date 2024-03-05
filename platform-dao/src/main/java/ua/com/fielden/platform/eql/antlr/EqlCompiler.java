@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.antlr;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import ua.com.fielden.platform.eql.antlr.tokens.PropToken;
+import ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 
 import static java.util.Objects.requireNonNull;
@@ -109,7 +110,7 @@ public final class EqlCompiler {
      * @param tokenSource  source of tokens representing the expression to compile
      * @return  compilation result
      */
-    public EqlCompilationResult compile(final ListTokenSource tokenSource) {
+    public EqlCompilationResult compile(final ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource tokenSource) {
         final var tokenStream = new CommonTokenStream(tokenSource);
         final var parser = new EQLParser(tokenStream);
 

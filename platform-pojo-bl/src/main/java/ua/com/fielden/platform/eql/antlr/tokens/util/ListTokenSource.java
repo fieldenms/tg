@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.antlr;
+package ua.com.fielden.platform.eql.antlr.tokens.util;
 
 import org.antlr.v4.runtime.Token;
 import ua.com.fielden.platform.entity.query.QuerySourceCodeInfo;

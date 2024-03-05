@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.entity.query.model;
 
 import org.apache.commons.lang3.StringUtils;
-import ua.com.fielden.platform.eql.antlr.ListTokenSource;
+import ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource;
 
 import java.util.Objects;
 

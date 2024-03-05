@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.entity.query.model;
 
 import ua.com.fielden.platform.eql.antlr.EQLLexer;
-import ua.com.fielden.platform.eql.antlr.ListTokenSource;
+import ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource;
 
 /**
  * Represents a computational model for expressions, which can be used together with entity query API.

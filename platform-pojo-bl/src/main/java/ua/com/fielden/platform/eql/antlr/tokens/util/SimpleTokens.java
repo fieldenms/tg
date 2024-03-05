@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.antlr.tokens;
+package ua.com.fielden.platform.eql.antlr.tokens.util;
 
 import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.Token;

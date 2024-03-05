@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.eql.antlr.tokens.util;
 
 import org.antlr.v4.runtime.Token;
-import ua.com.fielden.platform.eql.antlr.ListTokenSource;
 
 import java.util.Collection;
 
