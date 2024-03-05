@@ -20,7 +20,7 @@ public class SecondOf3 extends SingleOperandFunction3 {
         case MSSQL:
             return format("DATEPART(ss, %s)", operand.sql(dbVersion));
         case POSTGRESQL:
-            return format("CAST(EXTRACT(SECOND FROM %s) AS INT)", operand.sql(dbVersion));
+            return format("CAST(EXTRACT(SECOND FROM %s \\:\\:timestamp) AS INT)", operand.sql(dbVersion));
         default:
             return super.sql(dbVersion);
         }
@@ -32,9 +32,9 @@ public class SecondOf3 extends SingleOperandFunction3 {
         final int result = super.hashCode();
         return prime * result + SecondOf3.class.getName().hashCode();
     }
-    
+
     @Override
     public boolean equals(final Object obj) {
         return this == obj || super.equals(obj) && obj instanceof SecondOf3;
-    }  
+    }
 }

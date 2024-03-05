@@ -86,10 +86,10 @@ public abstract class AbstractFunction3 extends AbstractSingleOperand3 {
             final var opSql = operand.sql(dbVersion);
             final var expression = "case " +
                                    // TODO DD/MM/YYYY should really only be used for the case of @DateOnly or LocalDate once supported
-                                   "when extract(milliseconds from %s) = 0 and extract(minutes from %s) = 0 and extract(hours from %s) = 0 then to_char(%s, 'DD/MM/YYYY') " +
-                                   "when extract(milliseconds from %s) = 0 then to_char(%s, 'DD/MM/YYYY HH24:MI') " +
-                                   "when cast(floor(extract(milliseconds from %s)) as integer) - 1000 * cast(floor(extract(seconds from %s)) as integer) > 0 then to_char(%s, 'DD/MM/YYYY HH24:MI:SS.MS') " +
-                                   "else to_char(%s, 'DD/MM/YYYY HH24:MI:SS') end";
+                                   "when extract(milliseconds from %s \\:\\:timestamp) = 0 and extract(minutes from %s \\:\\:timestamp) = 0 and extract(hours from %s \\:\\:timestamp) = 0 then to_char(%s \\:\\:timestamp , 'DD/MM/YYYY') " +
+                                   "when extract(milliseconds from %s \\:\\:timestamp) = 0 then to_char(%s \\:\\:timestamp, 'DD/MM/YYYY HH24:MI') " +
+                                   "when cast(floor(extract(milliseconds from %s \\:\\:timestamp)) as integer) - 1000 * cast(floor(extract(seconds from %s \\:\\:timestamp)) as integer) > 0 then to_char(%s \\:\\:timestamp, 'DD/MM/YYYY HH24:MI:SS.MS') " +
+                                   "else to_char(%s \\:\\:timestamp, 'DD/MM/YYYY HH24:MI:SS') end";
             return expression.formatted(
                     opSql, opSql, opSql, opSql,
                     opSql, opSql,
