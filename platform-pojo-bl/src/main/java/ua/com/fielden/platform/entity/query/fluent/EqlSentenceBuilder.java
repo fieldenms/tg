@@ -150,7 +150,7 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder yield(final String yieldName) {
-        throw new UnsupportedOperationException();
+        return _add(new YieldToken(yieldName));
     }
 
     public EqlSentenceBuilder prop(final String propName) {
@@ -478,8 +478,8 @@ final class EqlSentenceBuilder {
         return _add(token(MOD));
     }
 
-    public EqlSentenceBuilder order(OrderingModel order) {
-        throw new UnsupportedOperationException();
+    public EqlSentenceBuilder order(OrderingModel model) {
+        return _add(new OrderToken(model));
     }
 
     public EqlSentenceBuilder asc() {
