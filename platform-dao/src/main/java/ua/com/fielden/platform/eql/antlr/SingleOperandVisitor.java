@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.antlr;
 import org.antlr.v4.runtime.Token;
 import ua.com.fielden.platform.entity.query.fluent.*;
 import ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit;
 import ua.com.fielden.platform.eql.antlr.tokens.*;
 import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
@@ -78,7 +79,7 @@ final class SingleOperandVisitor extends AbstractEqlVisitor<ISingleOperand1<? ex
     @Override
     public ISingleOperand1<? extends ISingleOperand2<?>> visitExprBody(final ExprBodyContext ctx) {
         final var first = ctx.first.accept(this);
-        final List<CompoundSingleOperand1> rest = StreamUtils.zip(ctx.rest.stream(), ctx.operators.stream(), (rand, op) -> {
+        final List<CompoundSingleOperand1> rest = StreamUtils.zip(ctx.rest, ctx.operators, (rand, op) -> {
             return new CompoundSingleOperand1(rand.accept(this), toArithmeticalOperator(op));
         }).toList();
         return new Expression1(first, rest);
@@ -116,6 +117,33 @@ final class SingleOperandVisitor extends AbstractEqlVisitor<ISingleOperand1<? ex
     @Override
     public SingleOperandFunction1<? extends ISingleOperand2<?>> visitUnaryFunction(final UnaryFunctionContext ctx) {
         return chooseSingleOperandFunction(ctx.funcName).apply(ctx.argument.accept(this));
+    }
+
+    @Override
+    public ISingleOperand1<? extends ISingleOperand2<?>> visitIfNull(final IfNullContext ctx) {
+        return new IfNull1(ctx.nullable.accept(this), ctx.other.accept(this));
+    }
+
+    @Override
+    public ISingleOperand1<? extends ISingleOperand2<?>> visitDateAddInterval(final DateAddIntervalContext ctx) {
+        return new AddDateInterval1(ctx.left.accept(this), toIntervalUnit(ctx.unit), ctx.right.accept(this));
+    }
+
+    @Override
+    public ISingleOperand1<? extends ISingleOperand2<?>> visitDateDiffInterval(final DateDiffIntervalContext ctx) {
+        return new CountDateInterval1(toIntervalUnit(ctx.unit), ctx.endDate.accept(this), ctx.startDate.accept(this));
+    }
+
+    private static DateIntervalUnit toIntervalUnit(final DateIntervalUnitContext ctx) {
+        return switch (ctx.token.getType()) {
+            case SECONDS -> DateIntervalUnit.SECOND;
+            case MINUTES -> DateIntervalUnit.MINUTE;
+            case HOURS -> DateIntervalUnit.HOUR;
+            case DAYS -> DateIntervalUnit.DAY;
+            case MONTHS -> DateIntervalUnit.MONTH;
+            case YEARS -> DateIntervalUnit.YEAR;
+            default -> unexpectedToken(ctx.token);
+        };
     }
 
     static Function<ISingleOperand1<? extends ISingleOperand2<?>>, SingleOperandFunction1<? extends ISingleOperand2<?>>>
