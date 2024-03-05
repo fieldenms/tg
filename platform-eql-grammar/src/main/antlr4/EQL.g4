@@ -215,7 +215,8 @@ aliasedYield :
 
 yieldOperand :
       singleOperand # YieldOperand_SingleOperand
-    | BEGINEXPR first=yieldOperand (operators+=arithmeticalOperator rest+=yieldOperand)* ENDEXPR # YieldOperandExpr
+      // use {BEGIN,END}YIELDEXPR instead of {BEGIN,END}EXPR to avoid ambiguity with singleOperand
+    | BEGINYIELDEXPR first=yieldOperand (operators+=arithmeticalOperator rest+=yieldOperand)* ENDYIELDEXPR # YieldOperandExpr
     | COUNTALL # YieldOperand_CountAll
     | funcName=yieldOperandFunctionName argument=singleOperand # YieldOperandFunction
 ;
@@ -294,6 +295,7 @@ AVGOF : 'avgOf' ;
 AVGOFDISTINCT : 'avgOfDistinct' ;
 BEGIN : 'begin' ;
 BEGINEXPR : 'beginExpr' ;
+BEGINYIELDEXPR : 'beginYieldExpr' ;
 BETWEEN : 'between' ;
 CASEWHEN : 'caseWhen' ;
 CONCAT : 'concat' ;
@@ -316,6 +318,7 @@ ENDASDECIMAL : 'endAsDecimal' ;
 ENDASINT : 'endAsInt' ;
 ENDASSTR : 'endAsStr' ;
 ENDEXPR : 'endExpr' ;
+ENDYIELDEXPR : 'endYieldExpr' ;
 EQ : 'eq' ;
 EXISTS : 'exists' ;
 EXISTSALLOF : 'existsAllOf' ;

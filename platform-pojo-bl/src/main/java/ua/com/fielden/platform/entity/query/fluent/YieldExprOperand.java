@@ -15,7 +15,7 @@ abstract class YieldExprOperand<T1, T2, ET extends AbstractEntity<?>> //
 
 	@Override
 	public T2 beginExpr() {
-		return nextForYieldExprOperand(builder.beginExpression());
+		return nextForYieldExprOperand(builder.beginYieldExpression());
 	}
 
 }
