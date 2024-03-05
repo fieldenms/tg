@@ -303,17 +303,11 @@ public interface EQLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitUnaryFunctionName(EQLParser.UnaryFunctionNameContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link EQLParser#dateDiffIntervalUnit}.
+	 * Visit a parse tree produced by {@link EQLParser#dateIntervalUnit}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitDateDiffIntervalUnit(EQLParser.DateDiffIntervalUnitContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link EQLParser#dateAddIntervalUnit}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitDateAddIntervalUnit(EQLParser.DateAddIntervalUnitContext ctx);
+	T visitDateIntervalUnit(EQLParser.DateIntervalUnitContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link EQLParser#caseWhenEnd}.
 	 * @param ctx the parse tree

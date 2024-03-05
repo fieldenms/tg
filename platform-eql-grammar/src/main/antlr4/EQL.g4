@@ -104,8 +104,8 @@ singleOperand :
     | funcName=unaryFunctionName argument=singleOperand # UnaryFunction
     | IFNULL nullable=singleOperand THEN other=singleOperand # IfNull
     | NOW # SingleOperand_Now
-    | COUNT unit=dateDiffIntervalUnit BETWEEN startDate=singleOperand AND endDate=singleOperand # DateDiffInterval
-    | ADDTIMEINTERVALOF left=singleOperand unit=dateAddIntervalUnit TO right=singleOperand # DateAddInterval
+    | COUNT unit=dateIntervalUnit BETWEEN startDate=singleOperand AND endDate=singleOperand # DateDiffInterval
+    | ADDTIMEINTERVALOF left=singleOperand unit=dateIntervalUnit TO right=singleOperand # DateAddInterval
     | ROUND singleOperand to=TO # Round
 
     | CONCAT operands+=singleOperand (WITH operands+=singleOperand)* END
@@ -133,16 +133,7 @@ unaryFunctionName :
     | token=DATEOF
 ;
 
-dateDiffIntervalUnit :
-      token=SECONDS
-    | token=MINUTES
-    | token=HOURS
-    | token=DAYS
-    | token=MONTHS
-    | token=YEARS
-;
-
-dateAddIntervalUnit :
+dateIntervalUnit :
       token=SECONDS
     | token=MINUTES
     | token=HOURS

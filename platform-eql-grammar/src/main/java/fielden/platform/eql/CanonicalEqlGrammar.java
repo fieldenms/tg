@@ -148,16 +148,13 @@ public final class CanonicalEqlGrammar {
             to(ifNull, label("nullable", SingleOperand), then, label("other", SingleOperand)).
 
         derive(DateDiffInterval).
-            to(count, label("unit", DateDiffIntervalUnit), between, label("startDate", SingleOperand), and, label("endDate", SingleOperand)).
+            to(count, label("unit", DateIntervalUnit), between, label("startDate", SingleOperand), and, label("endDate", SingleOperand)).
 
-        derive(DateDiffIntervalUnit).
+        derive(DateIntervalUnit).
             to(seconds).or(minutes).or(hours).or(days).or(months).or(years).
 
         derive(DateAddInterval).
-            to(addTimeIntervalOf, label("left", SingleOperand), label("unit", DateAddIntervalUnit), to, label("right", SingleOperand)).
-
-        derive(DateAddIntervalUnit).
-            to(seconds).or(minutes).or(hours).or(days).or(months).or(years).
+            to(addTimeIntervalOf, label("left", SingleOperand), label("unit", DateIntervalUnit), to, label("right", SingleOperand)).
 
         derive(Round).
             to(round, SingleOperand, to.with(Integer.class)).
@@ -317,7 +314,7 @@ public final class CanonicalEqlGrammar {
         ExtProp, Prop,
         UnaryComparisonOperator, Val, Param,
         ArithmeticalOperator, ExprBody, Expr,
-        UnaryFunction, UnaryFunctionName, IfNull, DateDiffInterval, DateDiffIntervalUnit, DateAddInterval, DateAddIntervalUnit, Round, Concat, CaseWhen, CaseWhenEnd,
+        UnaryFunction, UnaryFunctionName, IfNull, DateDiffInterval, DateAddInterval, Round, Concat, CaseWhen, CaseWhenEnd,
         MembershipOperator,
         MembershipOperand, ComparisonOperator, ComparisonOperand, QuantifiedOperand, SingleConditionPredicate, Join, JoinOperator,
         JoinCondition,
@@ -326,7 +323,7 @@ public final class CanonicalEqlGrammar {
         UnaryPredicate,
         ComparisonPredicate, QuantifiedComparisonPredicate, LikePredicate, AliasedYield, YieldManyModel, Yield1Model, Yield1, YieldMany, StandaloneCondExpr,
         StandaloneCondition,
-        OrderBy, Order, OrderByOperand, SelectFrom, SelectSource, SelectEnd, SourcelessSelect, MembershipPredicate
+        OrderBy, Order, OrderByOperand, SelectFrom, SelectSource, SelectEnd, SourcelessSelect, DateIntervalUnit, MembershipPredicate
     }
 
     public enum EqlTerminal implements Terminal {
