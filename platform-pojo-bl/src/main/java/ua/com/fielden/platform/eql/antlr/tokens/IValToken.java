@@ -1,15 +1,21 @@
 package ua.com.fielden.platform.eql.antlr.tokens;
 
-import org.antlr.v4.runtime.CommonToken;
-import ua.com.fielden.platform.eql.antlr.EQLLexer;
+import ua.com.fielden.platform.eql.antlr.tokens.util.TokensFormatter;
 
-public final class IValToken extends CommonToken {
+import static ua.com.fielden.platform.eql.antlr.EQLLexer.IVAL;
+
+public final class IValToken extends AbstractParameterisedEqlToken {
 
     public final Object value;
 
     public IValToken(final Object value) {
-        super(EQLLexer.IVAL, "iVal");
+        super(IVAL, "iVal");
         this.value = value;
+    }
+
+    @Override
+    public String parametersText() {
+        return TokensFormatter.getInstance().formatLiteral(value);
     }
 
 }

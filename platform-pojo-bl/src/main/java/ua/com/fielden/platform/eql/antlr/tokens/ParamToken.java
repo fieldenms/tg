@@ -1,15 +1,19 @@
 package ua.com.fielden.platform.eql.antlr.tokens;
 
-import org.antlr.v4.runtime.CommonToken;
-import ua.com.fielden.platform.eql.antlr.EQLLexer;
+import static ua.com.fielden.platform.eql.antlr.EQLLexer.PARAM;
 
-public final class ParamToken extends CommonToken {
+public final class ParamToken extends AbstractParameterisedEqlToken {
 
     public final String paramName;
 
     public ParamToken(final String paramName) {
-        super(EQLLexer.PARAM, "param");
+        super(PARAM, "param");
         this.paramName = paramName;
+    }
+
+    @Override
+    public String parametersText() {
+        return paramName;
     }
 
 }

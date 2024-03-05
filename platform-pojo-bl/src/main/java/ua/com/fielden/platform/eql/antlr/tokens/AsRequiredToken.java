@@ -1,15 +1,21 @@
 package ua.com.fielden.platform.eql.antlr.tokens;
 
-import org.antlr.v4.runtime.CommonToken;
-import ua.com.fielden.platform.eql.antlr.EQLLexer;
+import org.apache.commons.lang3.StringUtils;
 
-public final class AsRequiredToken extends CommonToken {
+import static ua.com.fielden.platform.eql.antlr.EQLLexer.ASREQUIRED;
+
+public final class AsRequiredToken extends AbstractParameterisedEqlToken {
 
     public final String alias;
 
     public AsRequiredToken(final String alias) {
-        super(EQLLexer.ASREQUIRED, "asRequired");
+        super(ASREQUIRED, "asRequired");
         this.alias = alias;
+    }
+
+    @Override
+    public String parametersText() {
+        return StringUtils.wrap(alias, '"');
     }
 
 }

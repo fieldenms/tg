@@ -1,15 +1,19 @@
 package ua.com.fielden.platform.eql.antlr.tokens;
 
-import org.antlr.v4.runtime.CommonToken;
-import ua.com.fielden.platform.eql.antlr.EQLLexer;
+import static ua.com.fielden.platform.eql.antlr.EQLLexer.ENDASSTR;
 
-public final class EndAsStrToken extends CommonToken {
+public final class EndAsStrToken extends AbstractParameterisedEqlToken {
 
     public final int length;
 
     public EndAsStrToken(final int length) {
-        super(EQLLexer.ENDASSTR, "endAsStr");
+        super(ENDASSTR, "endAsStr");
         this.length = length;
+    }
+
+    @Override
+    public String parametersText() {
+        return String.valueOf(length);
     }
 
 }

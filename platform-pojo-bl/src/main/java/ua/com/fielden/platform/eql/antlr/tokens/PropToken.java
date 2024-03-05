@@ -1,20 +1,18 @@
 package ua.com.fielden.platform.eql.antlr.tokens;
 
-import org.antlr.v4.runtime.CommonToken;
-import ua.com.fielden.platform.eql.antlr.EQLLexer;
+import static ua.com.fielden.platform.eql.antlr.EQLLexer.PROP;
 
-public final class PropToken extends CommonToken {
+public final class PropToken extends AbstractParameterisedEqlToken {
 
     public final String propPath;
 
     public PropToken(String propPath) {
-        super(EQLLexer.PROP, "prop");
+        super(PROP, "prop");
         this.propPath = propPath;
     }
 
-    @Override
-    public String getText() {
-        return "prop(\"%s\")".formatted(propPath);
+    public String parametersText() {
+        return "\"%s\"".formatted(propPath);
     }
 
 }

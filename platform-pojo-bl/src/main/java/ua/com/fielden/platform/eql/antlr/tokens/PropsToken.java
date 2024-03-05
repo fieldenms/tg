@@ -1,23 +1,22 @@
 package ua.com.fielden.platform.eql.antlr.tokens;
 
-import org.antlr.v4.runtime.CommonToken;
-import ua.com.fielden.platform.eql.antlr.EQLLexer;
-
 import java.util.List;
-import java.util.stream.Collectors;
 
-public final class PropsToken extends CommonToken {
+import static java.util.List.copyOf;
+import static java.util.stream.Collectors.joining;
+import static ua.com.fielden.platform.eql.antlr.EQLLexer.PROPS;
+
+public final class PropsToken extends AbstractParameterisedEqlToken {
 
     public final List<String> props;
 
     public PropsToken(final List<String> props) {
-        super(EQLLexer.PROPS, "props");
-        this.props = List.copyOf(props);
+        super(PROPS, "props");
+        this.props = copyOf(props);
     }
 
-    @Override
-    public String getText() {
-        return "props(%s)".formatted(props.stream().map("\"%s\""::formatted).collect(Collectors.joining(", ")));
+    public String parametersText() {
+        return props.stream().map("\"%s\""::formatted).collect(joining(", "));
     }
 
 }

@@ -1,18 +1,27 @@
 package ua.com.fielden.platform.eql.antlr.tokens;
 
-import org.antlr.v4.runtime.CommonToken;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
-import ua.com.fielden.platform.eql.antlr.EQLLexer;
+import ua.com.fielden.platform.eql.antlr.tokens.util.TokensFormatter;
 
 import java.util.List;
 
-public final class ExistsAllOfToken extends CommonToken {
+import static java.util.stream.Collectors.joining;
+import static ua.com.fielden.platform.eql.antlr.EQLLexer.EXISTSALLOF;
+
+public final class ExistsAllOfToken extends AbstractParameterisedEqlToken {
 
     public final List<QueryModel> models;
 
     public ExistsAllOfToken(final List<QueryModel> models) {
-        super(EQLLexer.EXISTSALLOF, "existsAllOf");
+        super(EXISTSALLOF, "existsAllOf");
         this.models = models;
+    }
+
+    @Override
+    public String parametersText() {
+        return models.stream()
+                .map(m -> "(%s)".formatted(TokensFormatter.getInstance().format(m.getTokenSource().tokens())))
+                .collect(joining(",\n", "\n", "\n"));
     }
 
 }

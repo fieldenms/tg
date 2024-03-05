@@ -1,20 +1,18 @@
 package ua.com.fielden.platform.eql.antlr.tokens;
 
-import org.antlr.v4.runtime.CommonToken;
-import ua.com.fielden.platform.eql.antlr.EQLLexer;
+import static ua.com.fielden.platform.eql.antlr.EQLLexer.YIELD;
 
-public final class YieldToken extends CommonToken {
+public final class YieldToken extends AbstractParameterisedEqlToken {
 
     public final String yieldName;
 
     public YieldToken(String yieldName) {
-        super(EQLLexer.YIELD, "yield");
+        super(YIELD, "yield");
         this.yieldName = yieldName;
     }
 
-    @Override
-    public String getText() {
-        return "yield(\"%s\")".formatted(yieldName);
+    public String parametersText() {
+        return "\"%s\"".formatted(yieldName);
     }
 
 }

@@ -1,16 +1,20 @@
 package ua.com.fielden.platform.eql.antlr.tokens;
 
-import org.antlr.v4.runtime.CommonToken;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
-import ua.com.fielden.platform.eql.antlr.EQLLexer;
+import ua.com.fielden.platform.eql.antlr.tokens.util.TokensFormatter;
 
 import java.util.List;
 
-public sealed abstract class SelectToken extends CommonToken {
+import static java.util.List.copyOf;
+import static java.util.stream.Collectors.joining;
+import static ua.com.fielden.platform.eql.antlr.EQLLexer.SELECT;
+import static ua.com.fielden.platform.eql.antlr.tokens.SelectToken.Values.INSTANCE;
+
+public sealed abstract class SelectToken extends AbstractParameterisedEqlToken {
 
     SelectToken() {
-        super(EQLLexer.SELECT, "select");
+        super(SELECT, "select");
     }
 
     public static EntityType entityType(final Class<? extends AbstractEntity<?>> entityType) {
@@ -18,7 +22,7 @@ public sealed abstract class SelectToken extends CommonToken {
     }
 
     public static Values values() {
-        return Values.INSTANCE;
+        return INSTANCE;
     }
 
     public static Models models(List<? extends QueryModel<?>> models) {
@@ -32,6 +36,11 @@ public sealed abstract class SelectToken extends CommonToken {
             super();
             this.entityType = entityType;
         }
+
+        @Override
+        public String parametersText() {
+            return entityType.getSimpleName();
+        }
     }
 
     /**
@@ -39,14 +48,27 @@ public sealed abstract class SelectToken extends CommonToken {
      */
     public static final class Values extends SelectToken {
         public static final Values INSTANCE = new Values();
+
+        @Override
+        public String parametersText() {
+            return "";
+        }
     }
 
     public static final class Models extends SelectToken {
         public final List<QueryModel<?>> models;
 
         public Models(List<? extends QueryModel<?>> models) {
-            this.models = List.copyOf(models);
+            this.models = copyOf(models);
         }
+
+        @Override
+        public String parametersText() {
+            return models.stream()
+                    .map(m -> "(%s)".formatted(TokensFormatter.getInstance().format(m.getTokenSource())))
+                    .collect(joining(",\n", "\n", "\n"));
+        }
+
     }
 
 }

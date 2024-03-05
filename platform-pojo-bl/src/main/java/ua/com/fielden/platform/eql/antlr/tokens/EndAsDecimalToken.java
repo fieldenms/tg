@@ -1,17 +1,21 @@
 package ua.com.fielden.platform.eql.antlr.tokens;
 
-import org.antlr.v4.runtime.CommonToken;
-import ua.com.fielden.platform.eql.antlr.EQLLexer;
+import static ua.com.fielden.platform.eql.antlr.EQLLexer.ENDASDECIMAL;
 
-public final class EndAsDecimalToken extends CommonToken {
+public final class EndAsDecimalToken extends AbstractParameterisedEqlToken {
 
     public final Integer precision;
     public final Integer scale;
 
     public EndAsDecimalToken(final Integer precision, final Integer scale) {
-        super(EQLLexer.ENDASDECIMAL, "endAsDecimal");
+        super(ENDASDECIMAL, "endAsDecimal");
         this.precision = precision;
         this.scale = scale;
+    }
+
+    @Override
+    public String parametersText() {
+        return "precision=%s, scale=%s".formatted(precision, scale);
     }
 
 }

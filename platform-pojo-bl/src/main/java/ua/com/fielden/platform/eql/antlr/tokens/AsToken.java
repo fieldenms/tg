@@ -1,20 +1,20 @@
 package ua.com.fielden.platform.eql.antlr.tokens;
 
-import org.antlr.v4.runtime.CommonToken;
-import ua.com.fielden.platform.eql.antlr.EQLLexer;
+import org.apache.commons.lang3.StringUtils;
 
-public final class AsToken extends CommonToken {
+import static ua.com.fielden.platform.eql.antlr.EQLLexer.AS;
+
+public final class AsToken extends AbstractParameterisedEqlToken {
 
     public final String alias;
 
     public AsToken(final String alias) {
-        super(EQLLexer.AS, "as");
+        super(AS, "as");
         this.alias = alias;
     }
 
-    @Override
-    public String getText() {
-        return "as(\"%s\")".formatted(alias);
+    public String parametersText() {
+        return StringUtils.wrap(alias, '"');
     }
 
 }

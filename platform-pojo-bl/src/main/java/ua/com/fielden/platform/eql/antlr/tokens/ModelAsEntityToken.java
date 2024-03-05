@@ -1,21 +1,20 @@
 package ua.com.fielden.platform.eql.antlr.tokens;
 
-import org.antlr.v4.runtime.CommonToken;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.antlr.EQLLexer;
 
-public final class ModelAsEntityToken extends CommonToken {
+import static ua.com.fielden.platform.eql.antlr.EQLLexer.MODELASENTITY;
+
+public final class ModelAsEntityToken extends AbstractParameterisedEqlToken {
 
     public final Class<? extends AbstractEntity<?>> entityType;
 
     public ModelAsEntityToken(final Class<? extends AbstractEntity<?>> entityType) {
-        super(EQLLexer.MODELASENTITY, "modelAsEntity");
+        super(MODELASENTITY, "modelAsEntity");
         this.entityType = entityType;
     }
 
-    @Override
-    public String getText() {
-        return "modelAsEntity(%s)".formatted(entityType.getSimpleName());
+    public String parametersText() {
+        return entityType.getSimpleName();
     }
 
 }

@@ -1,15 +1,19 @@
 package ua.com.fielden.platform.eql.antlr.tokens;
 
-import org.antlr.v4.runtime.CommonToken;
-import ua.com.fielden.platform.eql.antlr.EQLLexer;
+import static ua.com.fielden.platform.eql.antlr.EQLLexer.TO;
 
-public final class ToToken extends CommonToken {
+public final class ToToken extends AbstractParameterisedEqlToken {
 
     public final int value;
 
     public ToToken(final int value) {
-        super(EQLLexer.TO, "to(%s)".formatted(value));
+        super(TO, "to(%s)".formatted(value));
         this.value = value;
+    }
+
+    @Override
+    public String parametersText() {
+        return String.valueOf(value);
     }
 
 }

@@ -1,23 +1,22 @@
 package ua.com.fielden.platform.eql.antlr.tokens;
 
-import org.antlr.v4.runtime.CommonToken;
-import org.antlr.v4.runtime.Token;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
-import ua.com.fielden.platform.eql.antlr.EQLLexer;
-import ua.com.fielden.platform.utils.CollectionUtil;
+import ua.com.fielden.platform.eql.antlr.tokens.util.TokensFormatter;
 
-public final class AnyToken extends CommonToken {
+import static ua.com.fielden.platform.eql.antlr.EQLLexer.ANY;
+
+public final class AnyToken extends AbstractParameterisedEqlToken {
 
     public final SingleResultQueryModel model;
 
     public AnyToken(final SingleResultQueryModel model) {
-        super(EQLLexer.ANY, "any");
+        super(ANY, "any");
         this.model = model;
     }
 
     @Override
-    public String getText() {
-        return "any(%s)".formatted(CollectionUtil.toString(model.getTokenSource().tokens(), Token::getText, " "));
+    public String parametersText() {
+        return TokensFormatter.getInstance().format(model.getTokenSource());
     }
 
 }

@@ -1,15 +1,21 @@
 package ua.com.fielden.platform.eql.antlr.tokens;
 
-import org.antlr.v4.runtime.CommonToken;
-import ua.com.fielden.platform.eql.antlr.EQLLexer;
+import org.apache.commons.lang3.StringUtils;
 
-public final class ExtPropToken extends CommonToken {
+import static ua.com.fielden.platform.eql.antlr.EQLLexer.EXTPROP;
+
+public final class ExtPropToken extends AbstractParameterisedEqlToken {
 
     public final String propPath;
 
     public ExtPropToken(final String propPath) {
-        super(EQLLexer.EXTPROP, "extProp");
+        super(EXTPROP, "extProp");
         this.propPath = propPath;
+    }
+
+    @Override
+    public String parametersText() {
+        return StringUtils.wrap(propPath, '"');
     }
 
 }

@@ -1,25 +1,22 @@
 package ua.com.fielden.platform.eql.antlr.tokens;
 
-import org.antlr.v4.runtime.CommonToken;
-import ua.com.fielden.platform.eql.antlr.EQLLexer;
 import ua.com.fielden.platform.utils.CollectionUtil;
 
 import java.util.List;
 
-import static org.apache.commons.lang3.StringUtils.wrap;
+import static ua.com.fielden.platform.eql.antlr.EQLLexer.ANYOFPARAMS;
 
-public final class AnyOfParamsToken extends CommonToken {
+public final class AnyOfParamsToken extends AbstractParameterisedEqlToken {
 
     public final List<String> params;
 
     public AnyOfParamsToken(final List<String> params) {
-        super(EQLLexer.ANYOFPARAMS, "anyOfParams");
+        super(ANYOFPARAMS, "anyOfParams");
         this.params = params;
     }
 
-    @Override
-    public String getText() {
-        return "anyOfParams(%s)".formatted(CollectionUtil.toString(params, p -> wrap(p, '"'), ", "));
+    public String parametersText() {
+        return CollectionUtil.toString(params, ", ");
     }
 
 }

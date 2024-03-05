@@ -1,21 +1,21 @@
 package ua.com.fielden.platform.eql.antlr.tokens;
 
-import org.antlr.v4.runtime.CommonToken;
-import ua.com.fielden.platform.eql.antlr.EQLLexer;
+import ua.com.fielden.platform.eql.antlr.tokens.util.TokensFormatter;
 
-public final class ValToken extends CommonToken {
+import static java.lang.String.valueOf;
+import static ua.com.fielden.platform.eql.antlr.EQLLexer.VAL;
+
+public final class ValToken extends AbstractParameterisedEqlToken {
 
     public final Object value;
 
     public ValToken(final Object value) {
-        super(EQLLexer.VAL, "val");
+        super(VAL, "val");
         this.value = value;
     }
 
-    @Override
-    public String getText() {
-        final String str = value instanceof String s ? "\"%s\"".formatted(s) : String.valueOf(value);
-        return "val(%s)".formatted(str);
+    public String parametersText() {
+        return TokensFormatter.getInstance().formatLiteral(value);
     }
 
 }
