@@ -1,8 +1,11 @@
 package ua.com.fielden.platform.eql.antlr;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.antlr.tokens.AsToken;
+import ua.com.fielden.platform.eql.antlr.tokens.JoinToken;
+import ua.com.fielden.platform.eql.antlr.tokens.LeftJoinToken;
 import ua.com.fielden.platform.eql.antlr.tokens.SelectToken;
 import ua.com.fielden.platform.eql.exceptions.EqlStage0ProcessingException;
 import ua.com.fielden.platform.eql.meta.EntityTypeInfo;
@@ -16,6 +19,7 @@ import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 
 import java.util.List;
+import java.util.function.BiFunction;
 
 import static ua.com.fielden.platform.eql.antlr.EQLParser.*;
 import static ua.com.fielden.platform.eql.meta.EntityTypeInfo.getEntityTypeInfo;
@@ -61,14 +65,59 @@ final class SelectVisitor extends AbstractEqlVisitor<EqlCompilationResult.Select
             case SelectToken.EntityType tok -> firstSource = compileEntitySource(tok.entityType, alias);
             case SelectToken.Values $ -> {
                 // TODO replace null by singleton of new ISource1 or IJoinNode1 subtype
+                // we can return early because sourceless selects can't have joins
                 return null;
             }
             case SelectToken.Models tok -> firstSource = compileModelsSource(tok.models, alias);
         }
 
-        var ignored = ctx.join();
+        return compileJoin(new JoinLeafNode1(firstSource), ctx.join());
+    }
 
-        return new JoinLeafNode1(firstSource);
+    /**
+     * @param restCtx  the next join context or {@code null}
+     */
+    private IJoinNode1<? extends IJoinNode2<?>> compileJoin(final IJoinNode1<?> accumulator, final JoinContext restCtx) {
+        if (restCtx == null) {
+            return accumulator;
+        }
+
+        final var conditions = Conditions1.conditions(restCtx.joinCondition().condition().accept(new ConditionVisitor(transformer)));
+        final String alias = restCtx.alias == null ? null : ((AsToken) restCtx.alias).alias;
+        final var result = compileJoinOperator(restCtx.joinOperator(), alias, (joinType, node) -> {
+            return new JoinInnerNode1(accumulator, node, joinType, conditions);
+        });
+        return compileJoin(result, restCtx.join());
+    }
+
+    private <T> T compileJoinOperator(
+            final JoinOperatorContext ctx, final String maybeAlias,
+            final BiFunction<JoinType, JoinLeafNode1, ? extends T> continuation)
+    {
+        final JoinType type;
+        final JoinLeafNode1 node;
+
+        switch (ctx.token) {
+            case LeftJoinToken.EntityType tok -> {
+                type = JoinType.LJ;
+                node = new JoinLeafNode1(compileEntitySource(tok.entityType, maybeAlias));
+            }
+            case LeftJoinToken.Models tok -> {
+                type = JoinType.LJ;
+                node = new JoinLeafNode1(compileModelsSource(tok.models, maybeAlias));
+            }
+            case JoinToken.EntityType tok -> {
+                type = JoinType.IJ;
+                node = new JoinLeafNode1(compileEntitySource(tok.entityType, maybeAlias));
+            }
+            case JoinToken.Models tok -> {
+                type = JoinType.IJ;
+                node = new JoinLeafNode1(compileModelsSource(tok.models, maybeAlias));
+            }
+            default -> throw new EqlParseException("Unexpected token: %s".formatted(ctx.token.getText()));
+        }
+
+        return continuation.apply(type, node);
     }
 
     private Source1BasedOnQueries compileModelsSource(final List<? extends QueryModel<?>> models, final String maybeAlias) {
