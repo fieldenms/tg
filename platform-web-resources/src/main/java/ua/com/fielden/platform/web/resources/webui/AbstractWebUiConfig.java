@@ -85,6 +85,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 public abstract class AbstractWebUiConfig implements IWebUiConfig {
     private final Logger logger = LogManager.getLogger(getClass());
     private static final String ERR_IN_COMPOUND_EMITTER = "Event source compound emitter should have cought this error. Something went wrong in WebUiConfig.";
+    private static final String CREATE_DEFAULT_CONFIG_INFO = "Creating default %s configurations for [%s]-typed centres (caching)...";
 
     private final String title;
     private WebUiBuilder webUiBuilder;
@@ -434,8 +435,6 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
             .build()
         );
     }
-
-    private static final String CREATE_DEFAULT_CONFIG_INFO = "Creating default %s configurations for [%s]-typed centres (caching)...";
 
     @Override
     public void loadCentreGeneratedTypesAndCriteriaTypes(final Class<?> entityType) {
