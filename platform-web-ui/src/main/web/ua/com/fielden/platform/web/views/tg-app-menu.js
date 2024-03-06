@@ -101,6 +101,7 @@ const template = html`
         <div id="logoutContainer" class="layout horizontal center" style="display: contents">
             <span class="flex truncate" style="font-size:1rem; padding-right:4px; text-align: right;">[[menuConfig.userName]]</span>
             <paper-icon-button id="logoutButton" icon="tg-icons:logout" tooltip-text="Logout" on-tap="_logout"></paper-icon-button>
+            <slot name="helpAction"></slot>
         </div>
     </div>
 

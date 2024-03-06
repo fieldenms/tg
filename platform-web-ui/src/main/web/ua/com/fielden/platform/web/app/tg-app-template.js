@@ -25,6 +25,7 @@ import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
 import { TgEntityMasterBehavior } from '/resources/master/tg-entity-master-behavior.js';
+import { TgViewWithHelpBehavior } from '/resources/components/tg-view-with-help-behavior.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js'
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
@@ -46,7 +47,15 @@ const template = html`
     <tg-message-panel></tg-message-panel>
     <div class="relative flex">
         <neon-animated-pages id="pages" class="fit" attr-for-selected="name" on-neon-animation-finish="_animationFinished" animate-initial-selection>
-            <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]" app-title="[[appTitle]]"></tg-app-menu>
+            <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]" app-title="[[appTitle]]">
+                <paper-icon-button id="helpAction" slot="helpAction" icon="icons:help-outline" 
+                    on-mousedown="_helpMouseDownEventHandler" 
+                    on-touchstart="_helpMouseDownEventHandler" 
+                    on-mouseup="_helpMouseUpEventHandler" 
+                    on-touchend="_helpMouseUpEventHandler" 
+                    tooltip-text="Tap to open help in a window or tap with Ctrl/Cmd to open help in a tab.<br>Alt&nbsp+&nbspTap or long touch to edit the help link.">
+                </paper-icon-button>
+            </tg-app-menu>
             <template is="dom-repeat" items="[[menuConfig.menu]]" on-dom-change="_modulesRendered">
                 <tg-app-view class="fit hero-animatable" name$="[[item.key]]" menu="[[menuConfig.menu]]" menu-item="[[item]]" can-edit="[[menuConfig.canEdit]]" menu-save-callback="[[_saveMenuVisibilityChanges]]" selected-module="[[_selectedModule]]" selected-submodule="{{_selectedSubmodule}}">
                     <tg-ui-action
@@ -93,6 +102,26 @@ const template = html`
             require-selection-criteria='false'
             require-selected-entities='NONE'
             require-master-entity='false'>
+        </tg-ui-action>
+        <tg-ui-action
+            id="tgOpenHelpMasterAction"
+            slot="helpAction"
+            ui-role='ICON'
+            component-uri = '/master_ui/ua.com.fielden.platform.entity.UserDefinableHelp'
+            element-name = 'tg-UserDefinableHelp-master'
+            short-desc="Show help"
+            long-desc="Show help"
+            show-dialog='[[_showHelpDialog]]'
+            toaster='[[toaster]]'
+            create-context-holder='[[_createContextHolder]]'
+            attrs='[[_tgOpenHelpMasterActionAttrs]]'
+            require-selection-criteria='false'
+            require-selected-entities='ONE'
+            require-master-entity='false'
+            current-entity = '[[_currentEntityForHelp]]'
+            modify-functional-entity = '[[_modifyHelpEntity]]'
+            post-action-success = '[[_postOpenHelpMasterAction]]'
+            hidden>
         </tg-ui-action>
     </tg-entity-master>`;
 
@@ -205,7 +234,7 @@ Polymer({
 
     observers: ['_routeChanged(_route.path)'],
 
-    behaviors: [TgEntityMasterBehavior, IronA11yKeysBehavior, TgTooltipBehavior, TgFocusRestorationBehavior, IronResizableBehavior],
+    behaviors: [TgEntityMasterBehavior, TgViewWithHelpBehavior, IronA11yKeysBehavior, TgTooltipBehavior, TgFocusRestorationBehavior, IronResizableBehavior],
     
     keyBindings: {
         'f3': '_searchMenu',
@@ -532,6 +561,10 @@ Polymer({
         return this._masterDom()._toastGreeting();
     },
 
+    getOpenHelpMasterAction: function () {
+        return this.$.tgOpenHelpMasterAction;
+    },
+
     ready: function () {
         //setting the uuid for this master.
         this.uuid = this.is + '/' + generateUUID();
@@ -540,7 +573,12 @@ Polymer({
         this.tgOpenMasterAction.requireMasterEntity = 'false';
         //Binding to 'this' functions those are used outside the scope of this component.
         this._checkWhetherCanLeave = this._checkWhetherCanLeave.bind(this);
-        
+
+        //Configure help action
+        this._currentEntityForHelp = () => {
+            return this._reflector().newEntity(this._currEntity.type().notEnhancedFullClassName());
+        }
+
         //Configuring menu visibility save functionality.
         this._saveMenuVisibilityChanges = function (visibleItems, invisibleItems) {
             if (this._saveIdentifier) {
