@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.eql.antlr.tokens.util;
 
 import org.antlr.v4.runtime.Token;
-import ua.com.fielden.platform.entity.query.QuerySourceCodeInfo;
 
 import java.util.List;
 
@@ -22,10 +21,6 @@ public final class ListTokenSource extends org.antlr.v4.runtime.ListTokenSource 
 
     public ListTokenSource(final List<? extends Token> tokens, final String sourceName) {
         super(tokens, sourceName);
-    }
-
-    public ListTokenSource(final List<? extends Token> tokens, final QuerySourceCodeInfo sourceInfo) {
-        this(tokens, "%s at line %s in method %s".formatted(sourceInfo.className(), sourceInfo.line(), sourceInfo.methodName()));
     }
 
     public List<Token> tokens() {
