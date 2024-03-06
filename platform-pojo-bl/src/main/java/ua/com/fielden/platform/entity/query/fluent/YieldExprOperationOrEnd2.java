@@ -39,4 +39,9 @@ abstract class YieldExprOperationOrEnd2<T, ET extends AbstractEntity<?>> //
         };
     }
 
+    @Override
+    public IYieldExprOperationOrEnd1<T, ET> endExpr() {
+        return nextForExprOperationOrEnd(builder.endYieldExpression());
+    }
+
 }
