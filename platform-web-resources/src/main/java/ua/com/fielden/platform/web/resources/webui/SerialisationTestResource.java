@@ -40,9 +40,6 @@ import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithOtherEnt
 import ua.com.fielden.platform.serialisation.jackson.entities.FactoryForTestingEntities;
 import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
 import ua.com.fielden.platform.types.Colour;
-import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
-import ua.com.fielden.platform.ui.menu.sample.MiEmptyEntity;
-import ua.com.fielden.platform.ui.menu.sample.MiEntityWithOtherEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
@@ -433,13 +430,13 @@ public class SerialisationTestResource extends AbstractWebResource {
                 factory.createEntityWithHyperlink(),
                 factory.createUninstrumentedEntity(true, EntityWithOtherEntity.class),
                 factory.createInstrumentedEntity(true, EntityWithOtherEntity.class),
-                factory.createUninstrumentedGeneratedEntity(true, EntityWithOtherEntity.class, MiEntityWithOtherEntity.class)._1,
-                factory.createInstrumentedGeneratedEntity(true, EntityWithOtherEntity.class, MiEntityWithOtherEntity.class)._1,
+                factory.createUninstrumentedGeneratedEntity(true, EntityWithOtherEntity.class)._1,
+                factory.createInstrumentedGeneratedEntity(true, EntityWithOtherEntity.class)._1,
                 createAndSetIdOnlyProxy(factory.createUninstrumentedEntity(false, EntityWithOtherEntity.class), restUtil.getSerialiser()),
                 createAndSetIdOnlyProxy(factory.createInstrumentedEntity(false, EntityWithOtherEntity.class), restUtil.getSerialiser()),
                 factory.createInstrumentedEntity(false, EntityWithOtherEntity.class).set("prop", createIdOnlyProxy(restUtil.getSerialiser())), // here idOnlyProxy instance really goes into lastInvalidValue due to EntityExistsValidator. It is worthwhile not to remove this weird case for additional checking.
-                createAndSetIdOnlyProxy(factory.createUninstrumentedGeneratedEntity(false, EntityWithOtherEntity.class, MiEntityWithOtherEntity.class)._1, restUtil.getSerialiser()),
-                createAndSetIdOnlyProxy(factory.createInstrumentedGeneratedEntity(false, EntityWithOtherEntity.class, MiEntityWithOtherEntity.class)._1, restUtil.getSerialiser()));
+                createAndSetIdOnlyProxy(factory.createUninstrumentedGeneratedEntity(false, EntityWithOtherEntity.class)._1, restUtil.getSerialiser()),
+                createAndSetIdOnlyProxy(factory.createInstrumentedGeneratedEntity(false, EntityWithOtherEntity.class)._1, restUtil.getSerialiser()));
     }
     
     private static AbstractEntity<?> createAndSetIdOnlyProxy(final AbstractEntity<?> entity, final ISerialiser serialiser) {
@@ -457,7 +454,6 @@ public class SerialisationTestResource extends AbstractWebResource {
         try {
             final Class<? extends AbstractEntity<?>> tmp = startModification(EmptyEntity.class)
                     .modifyTypeName(nextTypeName(EmptyEntity.class.getName()))
-                    .addClassAnnotations(new MiTypeAnnotation().newInstance(MiEmptyEntity.class))
                     .endModification();
             emptyEntityTypeEnhanced = (Class<AbstractEntity<?>>) tmp;
         } catch (final ClassNotFoundException e) {

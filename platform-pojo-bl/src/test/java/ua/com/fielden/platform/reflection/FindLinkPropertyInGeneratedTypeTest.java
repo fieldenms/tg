@@ -7,7 +7,9 @@ import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedP
 import java.util.HashSet;
 import java.util.Set;
 
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.inject.Injector;
@@ -30,6 +32,16 @@ import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
  * 
  */
 public class FindLinkPropertyInGeneratedTypeTest {
+
+    @BeforeClass
+    public static void beforeTestClass() {
+        DomainTreeEnhancer.HASH_NAMING_MODE = false;
+    }
+
+    @AfterClass
+    public static void afterTestClass() {
+        DomainTreeEnhancer.HASH_NAMING_MODE = true;
+    }
 
     private final Module module = new CommonTestEntityModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();

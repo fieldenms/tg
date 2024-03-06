@@ -65,6 +65,23 @@ public class Checksum {
     }
 
     /**
+     * Calculates a SHA1 code for the passed in byte array.
+     * 
+     * @param dataBytes
+     * @return
+     */
+    public static String sha256(final byte[] dataBytes) {
+        try {
+            final MessageDigest md = MessageDigest.getInstance("SHA256");
+            md.update(dataBytes);
+            final byte[] mdbytes = md.digest();
+            return HexString.bufferToHex(mdbytes, 0, mdbytes.length);
+        } catch (final Exception ex) {
+            throw new ChecksumException("Exception occurred while calculating SHA256 for a byte array.", ex);
+        }
+    }
+
+    /**
      * Takes an existing file or a directory and calculates checksum for that file or all files in a directory (excluding sub-directories) returning a map of file
      * name/checksum/file size entries, where file name is a key and checksum/file size is represented by a {@link Pair} class.
      * 

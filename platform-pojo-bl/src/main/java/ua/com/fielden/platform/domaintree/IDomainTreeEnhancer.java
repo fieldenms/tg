@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.domaintree;
 
-import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Map;
 
@@ -10,7 +9,6 @@ import ua.com.fielden.platform.domaintree.impl.CustomProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
-import ua.com.fielden.platform.reflection.asm.impl.TypeMaker;
 
 /**
  * This interface defines how domain can be enhanced via <b>calculated properties</b> management. <br>
@@ -67,32 +65,6 @@ public interface IDomainTreeEnhancer extends IRootTyped {
      * @return
      */
     Class<?> adjustManagedTypeName(final Class<?> root, final String clientGeneratedTypeNameSuffix);
-    
-    /**
-     * Adjusts managed type for <code>root</code> with new type annotations. This method is strictly applicable only to the roots which {@link #getManagedType(Class)} is generated and 
-     * is used to provide additional information into generated type, for example [miType; saveAsName; user] for this centre manager.
-     * <p>
-     * It is important that additional annotations have their target specified as <code>TYPE</code> and retention as <code>RUNTIME</code> (as per documentation of {@link TypeMaker#addClassAnnotations(Annotation...)} method).
-     * 
-     * @param root
-     * @param additionalAnnotations -- array of custom user-defined annotations to be generated into root's managed type
-     * @return
-     */
-    Class<?> adjustManagedTypeAnnotations(final Class<?> root, final Annotation... additionalAnnotations);
-    
-    /**
-     * Replaces existing managed type by new one.
-     * <p>
-     * This method should be used with caution. New generated type must be equal in sense of calculated / custom properties and root types.
-     * This may only be useful when the type has some additional information generated inside, like @SaveAsName annotation.
-     * 
-     * @param root
-     * @param newManagedType -- managed type to replace existing one
-     * @return
-     */
-    default Class<?> replaceManagedTypeBy(final Class<?> root, final Class<?> newManagedType) {
-        return newManagedType;
-    }
     
     /**
      * Adds the <code>calculatedProperty</code> to root type's {@link ICalculatedProperty#getRoot()} hierarchy. Throws {@link IncorrectCalcPropertyException} when the calculated

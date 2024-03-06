@@ -1,15 +1,18 @@
 package ua.com.fielden.platform.domaintree.impl;
 
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toCollection;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.criteria.generator.impl.TypeDiffSerialiser.TYPE_DIFF_SERIALISER;
+import static ua.com.fielden.platform.cypher.Checksum.sha256;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -47,8 +50,6 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
-import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
@@ -67,6 +68,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
  */
 public final class DomainTreeEnhancer extends AbstractDomainTree implements IDomainTreeEnhancer {
     private static final Logger logger = getLogger(DomainTreeEnhancer.class);
+    public static boolean HASH_NAMING_MODE = true;
 
     /**
      * Holds a mapping between the original and the enhanced types. Contains pairs of [original -> real] or [original -> original] (in case of not enhanced type).
@@ -213,22 +215,13 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final Set<Class<?>> rootTypes,
             final Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedPropertiesInfo,
-            final Map<Class<?>, List<CustomProperty>> customProperties,
-            final Optional<Class<? extends MiWithConfigurationSupport<?>>> miType) {
+            final Map<Class<?>, List<CustomProperty>> customProperties) {
         final DomainTreeEnhancer cachedInstance = domainTreeEnhancerCache.getDomainTreeEnhancerFor(rootTypes, calculatedPropertiesInfo, customProperties);
         if (cachedInstance != null) {
             return new DomainTreeEnhancer(cachedInstance);
         } else {
             final DomainTreeEnhancer newInstance = new DomainTreeEnhancer(entityFactory, rootTypes, calculatedPropertiesInfo, customProperties);
-            
-            if (miType.isPresent()) {
-                for (final Class<?> root: rootTypes) {
-                    if (isGenerated(newInstance.getManagedType(root))) {
-                        newInstance.adjustManagedTypeAnnotations(root, new MiTypeAnnotation().newInstance(miType.get()));
-                    }
-                }
-                domainTreeEnhancerCache.putDomainTreeEnhancerFor(rootTypes, calculatedPropertiesInfo, customProperties, newInstance);
-            }
+            domainTreeEnhancerCache.putDomainTreeEnhancerFor(rootTypes, calculatedPropertiesInfo, customProperties, newInstance);
             return newInstance;
         }
     }
@@ -378,7 +371,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         for (final Entry<Class<?>, Map<String, Map<String, IProperty>>> entry : groupedCalculatedProperties.entrySet()) {
             final Class<?> originalRoot = entry.getKey();
             // generate predefined root type name for all calculated properties
-            final String predefinedRootTypeName = rootNameSuffix.isPresent() ? originalRoot.getName() + APPENDIX + "_" + rootNameSuffix.get() : nextTypeName(originalRoot.getName());
+            final String predefinedRootTypeName = originalRoot.getName() + APPENDIX + "_" + (rootNameSuffix.isPresent() ? rootNameSuffix.get() : HASH_NAMING_MODE ? sha256(TYPE_DIFF_SERIALISER.serialise(linkedMapOf(t2("calculatedProperties", calculatedPropertiesInfo(calculatedProperties, rootTypes)), t2("customProperties", customProperties)))) : nextTypeName(originalRoot.getName()));
             if (entry.getValue() == null) {
                 originalAndEnhancedRootTypes.put(originalRoot, originalRoot);
             } else {
@@ -393,8 +386,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
                         int i = 0;
                         for (final Entry<String, IProperty> nameWithProp : props.entrySet()) {
                             final IProperty iProp = nameWithProp.getValue();
-                            if (iProp instanceof CalculatedProperty) {
-                                final CalculatedProperty prop = (CalculatedProperty) iProp;
+                            if (iProp instanceof final CalculatedProperty prop) {
                                 final String originationProperty = prop.getOriginationProperty() == null ? "" : prop.getOriginationProperty();
                                 final Annotation calcAnnotation = new CalculatedAnnotation().contextualExpression(prop.getContextualExpression()).rootTypeName(predefinedRootTypeName).contextPath(prop.getContextPath()).origination(originationProperty).attribute(prop.getAttribute()).category(prop.category()).newInstance();
                                 final IsProperty isPropAnnot = prop.getPrecision() != null && prop.getScale() != null ? new IsPropertyAnnotation(prop.getPrecision(), prop.getScale()).newInstance() : NewProperty.DEFAULT_IS_PROPERTY_ANNOTATION;
@@ -451,48 +443,6 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         rootNameSuffix = of(clientGeneratedTypeNameSuffix);
         apply();
         return getManagedType(root);
-    }
-    
-    @Override
-    public Class<?> adjustManagedTypeAnnotations(final Class<?> root, final Annotation... additionalAnnotations) {
-        validateManagedType(root);
-        final Class<?> managedType = getManagedType(root);
-        if (additionalAnnotations.length == 0) {
-            logger.warn(format("\t\t\t\tEnded to adjustManagedTypeAnnotations for root [%s]. No annotations have been specified, root's managed type was not changed.", root.getSimpleName()));
-            return managedType;
-        }
-        rootAnnotations.addAll(asList(additionalAnnotations));
-        apply();
-        return getManagedType(root);
-    }
-    
-    /**
-     * Replaces inner data with new data derived from <code>newManagedType</code>.
-     * 
-     * @param root
-     * @param newManagedType
-     * @return
-     */
-    private Class<?> adjustManagedType(final Class<?> root, final Class<?> newManagedType) {
-        originalAndEnhancedRootTypes.put(root, newManagedType);
-        return getManagedType(root);
-    }
-    
-    @Override
-    public Class<?> replaceManagedTypeBy(final Class<?> root, final Class<?> newManagedType) {
-        validateManagedType(root);
-        return adjustManagedType(root, newManagedType);
-    }
-    
-    /**
-     * Validates managed type in context of whether it can be adjusted with additional annotations.
-     * 
-     * @param root
-     */
-    private void validateManagedType(final Class<?> root) {
-        if (!isGenerated(getManagedType(root))) {
-            throw new DomainTreeException(format("The type for root [%s] is not generated. It is prohibited to generate additional annotations inside that type.", root.getSimpleName()));
-        }
     }
     
     /**
@@ -787,9 +737,9 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      *
      * @return
      */
-    protected Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedPropertiesInfo() {
+    public static Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedPropertiesInfo(final Map<Class<?>, List<CalculatedProperty>> calculatedProperties, final Set<Class<?>> rootTypes) {
         final Map<Class<?>, Set<CalculatedPropertyInfo>> map = new LinkedHashMap<>();
-        for (final Class<?> root: rootTypes()) {
+        for (final Class<?> root: rootTypes) {
             map.put(root, new LinkedHashSet<>());
         }
         for (final Entry<Class<?>, List<CalculatedProperty>> entry : calculatedProperties.entrySet()) {
@@ -829,7 +779,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         // IMPORTANT : rootTypes() and calculatedPropertiesInfo() are the mirror for "calculatedProperties".
         // So they should be used for serialisation, comparison and hashCode() implementation.
         result = prime * result + rootTypes().hashCode();
-        result = prime * result + calculatedPropertiesInfo().hashCode();
+        result = prime * result + calculatedPropertiesInfo(calculatedProperties, rootTypes()).hashCode();
         result = prime * result + customProperties().hashCode();
         return result;
     }
@@ -848,7 +798,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         final DomainTreeEnhancer other = (DomainTreeEnhancer) obj;
         // IMPORTANT : rootTypes() and calculatedPropertiesInfo() are the mirror for "calculatedProperties".
         // So they should be used for serialisation, comparison and hashCode() implementation.
-        return rootTypes().equals(other.rootTypes()) && calculatedPropertiesInfo().equals(other.calculatedPropertiesInfo()) && customProperties().equals(other.customProperties());
+        return rootTypes().equals(other.rootTypes()) && calculatedPropertiesInfo(calculatedProperties, rootTypes()).equals(calculatedPropertiesInfo(other.calculatedProperties, other.rootTypes())) && customProperties().equals(other.customProperties());
     }
 
     @Override

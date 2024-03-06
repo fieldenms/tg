@@ -1,137 +1,65 @@
 package ua.com.fielden.platform.web.app;
 
-import static java.lang.String.format;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static org.apache.logging.log4j.LogManager.getLogger;
+import static java.util.regex.Pattern.quote;
 import static ua.com.fielden.platform.reflection.ClassesRetriever.findClass;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
-
-import java.util.Optional;
-import java.util.regex.Pattern;
-
-import org.apache.logging.log4j.Logger;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
 
 import com.google.inject.Inject;
 
-import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
-import ua.com.fielden.platform.security.user.IUser;
-import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter;
-import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
-import ua.com.fielden.platform.ui.config.MainMenuItemCo;
-import ua.com.fielden.platform.ui.menu.MiType;
-import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.ui.menu.SaveAsName;
-import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
 public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
-    private final Logger logger = getLogger(getClass());
     private TgJackson tgJackson;
     private EntityTypeInfoGetter entityTypeInfoGetter;
-    private final IDeviceProvider deviceProvider;
-    private final ICriteriaGenerator criteriaGenerator;
-    private final IUserProvider userProvider;
-    private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
-    private final EntityCentreConfigCo eccCompanion;
-    private final MainMenuItemCo mmiCompanion;
-    private final IUser userCompanion;
-    private final ICompanionObjectFinder companionFinder;
     
     @Inject
-    public SerialisationTypeEncoder(
-            final IDeviceProvider deviceProvider,
-            final ICriteriaGenerator criteriaGenerator,
-            final IUserProvider userProvider,
-            final IDomainTreeEnhancerCache domainTreeEnhancerCache,
-            final IWebUiConfig webUiConfig,
-            final EntityCentreConfigCo eccCompanion,
-            final MainMenuItemCo mmiCompanion,
-            final IUser userCompanion,
-            final ICompanionObjectFinder companionFinder) {
-        this.deviceProvider = deviceProvider;
-        this.criteriaGenerator = criteriaGenerator;
-        this.userProvider = userProvider;
-        this.domainTreeEnhancerCache = domainTreeEnhancerCache;
+    public SerialisationTypeEncoder(final IWebUiConfig webUiConfig) {
         this.webUiConfig = webUiConfig;
-        this.eccCompanion = eccCompanion;
-        this.mmiCompanion = mmiCompanion;
-        this.userCompanion = userCompanion;
-        this.companionFinder = companionFinder;
     }
     
     @Override
     public <T extends AbstractEntity<?>> String encode(final Class<T> entityType) {
-        final String entityTypeName = entityType.getName();
-        if (isGenerated(entityType)) { // here we have both simple entity types AND criteria entity types
-            final MiType miTypeAnnotation = entityType.getAnnotation(MiType.class);
-            final Class<? extends MiWithConfigurationSupport<?>> miType = miTypeAnnotation.value();
-            final SaveAsName saveAsNameAnnotation = entityType.getAnnotation(SaveAsName.class);
-            final String saveAsName = saveAsNameAnnotation == null ? "" : saveAsNameAnnotation.value();
-            logger.debug(format("============encode============== miType = [%s], saveAsName = [%s]", miType, saveAsName));
-            return entityTypeName + ":" + miType.getName() + ":" + saveAsName;
-        } else {
-            return entityTypeName;
-        }
+        return entityType.getName();
     }
     
     @Override
     public <T extends AbstractEntity<?>> Class<T> decode(final String entityTypeId) {
-        final boolean isGenerated = entityTypeId.contains(":");
-        final String entityTypeName;
+        final boolean isGenerated = entityTypeId.contains(APPENDIX); // entityTypeId.contains(":");
         Class<T> decodedEntityType = null;
         
+        final String entityTypeName = entityTypeId;
         if (isGenerated) {
-            logger.debug(format("-------------decode------------- entityTypeId = [%s]", entityTypeId));
-            entityTypeName = entityTypeId.substring(0, entityTypeId.indexOf(":"));
-            
             try {
                 decodedEntityType = (Class<T>) findClass(entityTypeName);
             } catch (final ReflectionException doesNotExistException) {
-                final String[] parts = entityTypeId.split(":");
-                if (parts.length < 2 || parts.length > 3) {
-                    throw new SerialisationTypeEncoderException(format("Generated type has unknown format for its identifier %s.", entityTypeId));
-                }
-                final String miTypeName = parts[1];
-                final Optional<String> saveAsName = parts.length > 2 ? of(parts[2]) : empty();
-                final Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>) findClass(miTypeName);
-                
-                final User user = userProvider.getUser();
-                if (user == null) { // the user is unknown at this stage!
-                    throw new SerialisationTypeEncoderException(format("User is somehow unknown during decoding of entity type inside deserialisation process."));
-                }
-                final String[] originalAndSuffix = entityTypeName.split(Pattern.quote(DynamicTypeNamingService.APPENDIX + "_"));
-                
-                final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, deviceProvider.getDeviceProfile(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                final String[] originalAndSuffix = entityTypeName.split(quote(APPENDIX + "_"));
                 final Class<?> root = findClass(originalAndSuffix[0]);
                 if (EntityQueryCriteria.class.isAssignableFrom(root)) {
-                    // In the case where fully fledged criteria entity type does not exist on this server node, and thus could not yet be deserialised, we need to generate criteria type with exact correspondence to 'previouslyRunCentre'.
-                    final Class<?> managedType = stripIfNeeded(criteriaGenerator.generateCentreQueryCriteria(user, miType, saveAsName, previouslyRunCentre).getClass());
+                    final var sha256AndManagedType = originalAndSuffix.length > 2 ? (originalAndSuffix[1] + APPENDIX + "_" + originalAndSuffix[2]) : originalAndSuffix[1]; // -- this SHA256 may be used later to load user-defined type transformations from database
+                    
+                    // In the case where fully fledged criteria entity type does not exist on this server node, and thus could not yet be deserialised, we need to generate criteria type and its managedType; start with managedType first
+                    decode(sha256AndManagedType.substring(64).replace("$$$", "."));
+                    
                     try {
-                        // The type name from client-side needs to be promoted to this server node very similarly as it is done below for centre managed types ('adjustManagedTypeName' call).
-                        final String predefinedTypeName = root.getName() + DynamicTypeNamingService.APPENDIX + "_" + originalAndSuffix[1];
-                        decodedEntityType = (Class<T>) startModification(managedType).modifyTypeName(predefinedTypeName).endModification();
-                    } catch (final ClassNotFoundException e) {
-                        throw new SerialisationTypeEncoderException(e.getMessage());
+                        decodedEntityType = (Class<T>) findClass(entityTypeName);
+                    } catch (final ReflectionException doesNotExistExceptionAgain) {
+                        throw new SerialisationTypeEncoderException(String.format("Decoded entity type %s must be present after forced loading.", entityTypeName));
                     }
                 } else {
-                    decodedEntityType = (Class<T>) previouslyRunCentre.getEnhancer().adjustManagedTypeName(root, originalAndSuffix[1]);
+                    // final var sha256 = originalAndSuffix[1]; -- this SHA256 may be used later to load user-defined type transformations from database
+                    webUiConfig.loadCentreGeneratedTypesAndCriteriaTypes(root);
+                    try {
+                        decodedEntityType = (Class<T>) findClass(entityTypeName); // (Class<T>) previouslyRunCentre.getEnhancer().adjustManagedTypeName(root, originalAndSuffix[1]);
+                    } catch (final ReflectionException doesNotExistExceptionAgain) {
+                        throw new SerialisationTypeEncoderException(String.format("Decoded entity type %s must be present after forced loading.", entityTypeName));
+                    }
                 }
                 if (entityTypeInfoGetter.get(decodedEntityType.getName()) != null) {
                     throw new SerialisationTypeEncoderException(String.format("Somehow decoded entity type %s was already registered in TgJackson.", decodedEntityType.getName()));
@@ -139,7 +67,6 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
                 tgJackson.registerNewEntityType((Class<AbstractEntity<?>>) decodedEntityType);
             }
         } else {
-            entityTypeName = entityTypeId;
             decodedEntityType = (Class<T>) findClass(entityTypeName);
         }
         

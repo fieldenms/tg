@@ -27,7 +27,6 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
 import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
@@ -119,7 +118,6 @@ import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.ui.menu.SaveAsNameAnnotation;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
@@ -302,7 +300,7 @@ public class CentreUpdater {
             final ICompanionObjectFinder companionFinder) {
         final String deviceSpecificName = deviceSpecific(saveAsSpecific(name, saveAsName), device);
         final Map<String, Object> updatedDiff = updateDifferences(miType, user, deviceSpecificName, name, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
-        return loadCentreFromDefaultAndDiff(user, miType, saveAsName, updatedDiff, webUiConfig, domainTreeEnhancerCache, companionFinder);
+        return loadCentreFromDefaultAndDiff(miType, updatedDiff, webUiConfig, companionFinder);
     }
     
     /**
@@ -878,41 +876,13 @@ public class CentreUpdater {
      * @return
      */
     private static ICentreDomainTreeManagerAndEnhancer loadCentreFromDefaultAndDiff(
-            final User user,
             final Class<? extends MiWithConfigurationSupport<?>> miType,
-            final Optional<String> saveAsName,
             final Map<String, Object> updatedDiff,
             final IWebUiConfig webUiConfig,
-            final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final ICompanionObjectFinder companionFinder) {
         final ICentreDomainTreeManagerAndEnhancer defaultCentre = getDefaultCentre(miType, webUiConfig);
         // applies diffCentre on top of defaultCentre to produce loadedCentre:
-        final ICentreDomainTreeManagerAndEnhancer loadedCentre = applyDifferences(defaultCentre, updatedDiff, getEntityType(miType), companionFinder);
-        // For all generated types on freshCentre (and on its derivatives like 'unchanged freshCentre', 'previouslyRun centre', 'unchanged previouslyRun centre' etc.) there is a need to
-        //  provide miType information inside its generated type to be sent to the client application. This is done through the use of
-        //  annotation miType and other custom annotations, for example @SaveAsName.
-        if (saveAsName.isPresent()) { // this is saveAs user-specific configuration
-            // We need to provide a new MiType annotation with saveAsName there.
-            // However, it should be done in a smart way, i.e. look for cached (by means of (user, miType, saveAsName)) generated type.
-            // If there is such a type, just replace generated type information inside loadedCentre.getEnhancer().
-            // Otherwise, perform adjustManagedTypeAnnotations and cache adjusted generated type for future reference.
-            final Class<?> cachedGeneratedType = domainTreeEnhancerCache.getGeneratedTypeFor(miType, saveAsName.get(), user.getId());
-            if (cachedGeneratedType != null) {
-                for (final Class<?> root: loadedCentre.getRepresentation().rootTypes()) {
-                    if (isGenerated(loadedCentre.getEnhancer().getManagedType(root))) {
-                        loadedCentre.getEnhancer().replaceManagedTypeBy(root, cachedGeneratedType);
-                    }
-                }
-            } else {
-                for (final Class<?> root: loadedCentre.getRepresentation().rootTypes()) {
-                    if (isGenerated(loadedCentre.getEnhancer().getManagedType(root))) {
-                        final Class<?> newGeneratedType = loadedCentre.getEnhancer().adjustManagedTypeAnnotations(root, new SaveAsNameAnnotation().newInstance(saveAsName.get()));
-                        domainTreeEnhancerCache.putGeneratedTypeFor(miType, saveAsName.get(), user.getId(), newGeneratedType);
-                    }
-                }
-            }
-        }// otherwise, no need to add @SaveAsName annotation (or use cached type with that annotation)
-        return loadedCentre;
+        return applyDifferences(defaultCentre, updatedDiff, getEntityType(miType), companionFinder);
     }
     
     /**

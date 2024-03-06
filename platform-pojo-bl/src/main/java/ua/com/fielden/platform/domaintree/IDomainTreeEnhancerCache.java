@@ -39,25 +39,4 @@ public interface IDomainTreeEnhancerCache {
      */
     DomainTreeEnhancer putDomainTreeEnhancerFor(final Set<Class<?>> rootTypes, final Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedPropertiesInfo, final Map<Class<?>, List<CustomProperty>> customProperties, final DomainTreeEnhancer domainTreeEnhancer);
     
-    /**
-     * Retrieves generated type for named (saveAs) centre configuration by its <code>miType</code>, <code>saveAsName</code> and <code>userId</code>.
-     * 
-     * @param miType
-     * @param saveAsName
-     * @param userId
-     * @return
-     */
-    Class<?> getGeneratedTypeFor(final Class<?> miType, final String saveAsName, final Long userId);
-    
-    /**
-     * Puts generated type for named (saveAs) centre configuration by its <code>miType</code>, <code>saveAsName</code> and <code>userId</code>.
-     * 
-     * @param miType
-     * @param saveAsName
-     * @param userId
-     * @param generatedType
-     * @return
-     */
-    Class<?> putGeneratedTypeFor(final Class<?> miType, final String saveAsName, final Long userId, final Class<?> generatedType);
-    
 }

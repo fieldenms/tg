@@ -609,7 +609,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
         // generates validation prototype
-        final M validationPrototype = (M) critGenerator.<T>generateCentreQueryCriteria(user, miType, saveAsName, cdtmae);
+        final M validationPrototype = (M) critGenerator.<T>generateCentreQueryCriteria(cdtmae);
 
         validationPrototype.setMiType(miType);
         validationPrototype.setDevice(device);
@@ -1156,8 +1156,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final IUser userCompanion,
         final ICentreConfigSharingModel sharingModel) {
 
-        final Class<? extends MiWithConfigurationSupport<?>> miType = EntityResourceUtils.getMiType((Class<EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>>) criteriaEntity.getClass());
-        final EntityCentre<AbstractEntity<?>> centre = (EntityCentre<AbstractEntity<?>>) webUiConfig.getCentres().get(miType);
+        final EntityCentre<AbstractEntity<?>> centre = (EntityCentre<AbstractEntity<?>>) webUiConfig.getCentres().get(criteriaEntity.miType());
         adhocParams.putAll(centreContextHolder.getCustomObject());
         // at this stage (during exporting of centre data) appliedCriteriaEntity is valid, because it represents 'previouslyRun' centre criteria which is getting updated only if Run was initiated and selection criteria validation succeeded
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>) criteriaEntity;

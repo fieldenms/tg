@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.criteria.generator.impl;
 
 import static java.util.Arrays.asList;
-import static java.util.Optional.empty;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -10,8 +9,11 @@ import static ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator.
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.critName;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.from;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.to;
+import static ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.calculatedPropertiesInfo;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.isPropertyAnnotationPresent;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -20,7 +22,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +36,7 @@ import ua.com.fielden.platform.criteria.enhanced.SecondParam;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
@@ -49,16 +51,13 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
-import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.sample.domain.crit_gen.CriteriaGeneratorTestModule;
 import ua.com.fielden.platform.sample.domain.crit_gen.LastLevelEntity;
-import ua.com.fielden.platform.sample.domain.crit_gen.MiTopLevelEntity;
 import ua.com.fielden.platform.sample.domain.crit_gen.TopLevelEntity;
-import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 import ua.com.fielden.platform.utils.Pair;
@@ -71,21 +70,21 @@ public class CriteriaGeneratorTest {
     }
     private final EntityFactory entityFactory = injector.getInstance(EntityFactory.class);
     private final ICriteriaGenerator cg = injector.getInstance(ICriteriaGenerator.class);
+    private final IDomainTreeEnhancerCache domainTreeEnhancerCache = injector.getInstance(IDomainTreeEnhancerCache.class);
 
-    @SuppressWarnings("serial")
-    private final CentreDomainTreeManagerAndEnhancer cdtm = new CentreDomainTreeManagerAndEnhancer(entityFactory, new HashSet<Class<?>>() {
-        {
-            add(TopLevelEntity.class);
-        }
-    });
+    private final CentreDomainTreeManagerAndEnhancer cdtm0;
     {
+        final var cdtm00 = new CentreDomainTreeManagerAndEnhancer(entityFactory, setOf(TopLevelEntity.class));
         //Adding calculated properties to the centre domain tree manager and enhancer.
-        cdtm.getEnhancer().addCalculatedProperty(TopLevelEntity.class, "", "3 + integerProp", "firstCalc", "firstCalc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
-        cdtm.getEnhancer().addCalculatedProperty(TopLevelEntity.class, "entityProp.entityProp", "3 + MONTH(dateProp)", "secondCalc", "secondCalc", CalculatedPropertyAttribute.NO_ATTR, "dateProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
-        cdtm.getEnhancer().addCalculatedProperty(TopLevelEntity.class, "", "3 + moneyProp", "thirdCalc", "thirdCalc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
-        cdtm.getEnhancer().apply();
+        cdtm00.getEnhancer().addCalculatedProperty(TopLevelEntity.class, "", "3 + integerProp", "firstCalc", "firstCalc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        cdtm00.getEnhancer().addCalculatedProperty(TopLevelEntity.class, "entityProp.entityProp", "3 + MONTH(dateProp)", "secondCalc", "secondCalc", CalculatedPropertyAttribute.NO_ATTR, "dateProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        cdtm00.getEnhancer().addCalculatedProperty(TopLevelEntity.class, "", "3 + moneyProp", "thirdCalc", "thirdCalc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
 
-        //Configuring first tick check properties.
+        cdtm0 = new CentreDomainTreeManagerAndEnhancer(entityFactory, domainTreeEnhancerCache, cdtm00.getFirstTick().rootTypes(), t2(calculatedPropertiesInfo(cdtm00.getEnhancer().calculatedProperties(), cdtm00.getFirstTick().rootTypes()), cdtm00.getEnhancer().customProperties()));
+        configureFirstTick(cdtm0);
+    }
+
+    private static void configureFirstTick(final ICentreDomainTreeManagerAndEnhancer cdtm) {
         cdtm.getFirstTick().check(TopLevelEntity.class, "critSingleEntity", true);
         cdtm.getFirstTick().check(TopLevelEntity.class, "critRangeEntity", true);
         cdtm.getFirstTick().check(TopLevelEntity.class, "critISingleProperty", true);
@@ -106,39 +105,40 @@ public class CriteriaGeneratorTest {
         cdtm.getFirstTick().setValue(TopLevelEntity.class, "integerProp", Integer.valueOf(30));
         cdtm.getFirstTick().setValue(TopLevelEntity.class, "moneyProp", new Money(BigDecimal.valueOf(30.0)));
     }
+    private CentreDomainTreeManagerAndEnhancer cdtm;
 
     private final Class<TopLevelEntity> root = TopLevelEntity.class;
-    private final Class<?> managedType = cdtm.getEnhancer().getManagedType(root);
+    private final Class<?> managedType = cdtm0.getEnhancer().getManagedType(root);
     private final Class<?> entityPropType = PropertyTypeDeterminator.determinePropertyType(managedType, "entityProp");
 
     @SuppressWarnings("serial")
     private final Map<String, Object> oldValues = new HashMap<String, Object>() {
         {
-            put("topLevelEntity_firstCalc_from", cdtm.getFirstTick().getValue(TopLevelEntity.class, "firstCalc"));
-            put("topLevelEntity_firstCalc_to", cdtm.getFirstTick().getValue2(TopLevelEntity.class, "firstCalc"));
-            put("topLevelEntity_thirdCalc_from", cdtm.getFirstTick().getValue(TopLevelEntity.class, "thirdCalc"));
-            put("topLevelEntity_thirdCalc_to", cdtm.getFirstTick().getValue2(TopLevelEntity.class, "thirdCalc"));
-            put("topLevelEntity_integerProp_from", cdtm.getFirstTick().getValue(TopLevelEntity.class, "integerProp"));
-            put("topLevelEntity_integerProp_to", cdtm.getFirstTick().getValue2(TopLevelEntity.class, "integerProp"));
-            put("topLevelEntity_moneyProp_from", cdtm.getFirstTick().getValue(TopLevelEntity.class, "moneyProp"));
-            put("topLevelEntity_moneyProp_to", cdtm.getFirstTick().getValue2(TopLevelEntity.class, "moneyProp"));
-            put("topLevelEntity_booleanProp_is", cdtm.getFirstTick().getValue(TopLevelEntity.class, "booleanProp"));
-            put("topLevelEntity_booleanProp_not", cdtm.getFirstTick().getValue2(TopLevelEntity.class, "booleanProp"));
-            put("topLevelEntity_stringProp", cdtm.getFirstTick().getValue(TopLevelEntity.class, "stringProp"));
-            put("topLevelEntity_", cdtm.getFirstTick().getValue(TopLevelEntity.class, ""));
-            put("topLevelEntity_entityProp", cdtm.getFirstTick().getValue(TopLevelEntity.class, "entityProp"));
-            put("topLevelEntity_entityProp_entityProp_secondCalc_from", cdtm.getFirstTick().getValue(TopLevelEntity.class, "entityProp.entityProp.secondCalc"));
-            put("topLevelEntity_entityProp_entityProp_secondCalc_to", cdtm.getFirstTick().getValue2(TopLevelEntity.class, "entityProp.entityProp.secondCalc"));
-            put("topLevelEntity_entityProp_entityProp_dateProp_from", cdtm.getFirstTick().getValue(TopLevelEntity.class, "entityProp.entityProp.dateProp"));
-            put("topLevelEntity_entityProp_entityProp_dateProp_to", cdtm.getFirstTick().getValue2(TopLevelEntity.class, "entityProp.entityProp.dateProp"));
-            put("topLevelEntity_entityProp_entityProp_simpleEntityProp", cdtm.getFirstTick().getValue(TopLevelEntity.class, "entityProp.entityProp.simpleEntityProp"));
-            put("topLevelEntity_critSingleEntity", cdtm.getFirstTick().getValue(TopLevelEntity.class, "critSingleEntity"));
-            put("topLevelEntity_critRangeEntity", cdtm.getFirstTick().getValue(TopLevelEntity.class, "critRangeEntity"));
-            put("topLevelEntity_critISingleProperty", cdtm.getFirstTick().getValue(TopLevelEntity.class, "critISingleProperty"));
-            put("topLevelEntity_critIRangeProperty_from", cdtm.getFirstTick().getValue(TopLevelEntity.class, "critIRangeProperty"));
-            put("topLevelEntity_critIRangeProperty_to", cdtm.getFirstTick().getValue2(TopLevelEntity.class, "critIRangeProperty"));
-            put("topLevelEntity_critSSingleProperty", cdtm.getFirstTick().getValue(TopLevelEntity.class, "critSSingleProperty"));
-            put("topLevelEntity_critSRangeProperty", cdtm.getFirstTick().getValue(TopLevelEntity.class, "critSRangeProperty"));
+            put("topLevelEntity_firstCalc_from", cdtm0.getFirstTick().getValue(TopLevelEntity.class, "firstCalc"));
+            put("topLevelEntity_firstCalc_to", cdtm0.getFirstTick().getValue2(TopLevelEntity.class, "firstCalc"));
+            put("topLevelEntity_thirdCalc_from", cdtm0.getFirstTick().getValue(TopLevelEntity.class, "thirdCalc"));
+            put("topLevelEntity_thirdCalc_to", cdtm0.getFirstTick().getValue2(TopLevelEntity.class, "thirdCalc"));
+            put("topLevelEntity_integerProp_from", cdtm0.getFirstTick().getValue(TopLevelEntity.class, "integerProp"));
+            put("topLevelEntity_integerProp_to", cdtm0.getFirstTick().getValue2(TopLevelEntity.class, "integerProp"));
+            put("topLevelEntity_moneyProp_from", cdtm0.getFirstTick().getValue(TopLevelEntity.class, "moneyProp"));
+            put("topLevelEntity_moneyProp_to", cdtm0.getFirstTick().getValue2(TopLevelEntity.class, "moneyProp"));
+            put("topLevelEntity_booleanProp_is", cdtm0.getFirstTick().getValue(TopLevelEntity.class, "booleanProp"));
+            put("topLevelEntity_booleanProp_not", cdtm0.getFirstTick().getValue2(TopLevelEntity.class, "booleanProp"));
+            put("topLevelEntity_stringProp", cdtm0.getFirstTick().getValue(TopLevelEntity.class, "stringProp"));
+            put("topLevelEntity_", cdtm0.getFirstTick().getValue(TopLevelEntity.class, ""));
+            put("topLevelEntity_entityProp", cdtm0.getFirstTick().getValue(TopLevelEntity.class, "entityProp"));
+            put("topLevelEntity_entityProp_entityProp_secondCalc_from", cdtm0.getFirstTick().getValue(TopLevelEntity.class, "entityProp.entityProp.secondCalc"));
+            put("topLevelEntity_entityProp_entityProp_secondCalc_to", cdtm0.getFirstTick().getValue2(TopLevelEntity.class, "entityProp.entityProp.secondCalc"));
+            put("topLevelEntity_entityProp_entityProp_dateProp_from", cdtm0.getFirstTick().getValue(TopLevelEntity.class, "entityProp.entityProp.dateProp"));
+            put("topLevelEntity_entityProp_entityProp_dateProp_to", cdtm0.getFirstTick().getValue2(TopLevelEntity.class, "entityProp.entityProp.dateProp"));
+            put("topLevelEntity_entityProp_entityProp_simpleEntityProp", cdtm0.getFirstTick().getValue(TopLevelEntity.class, "entityProp.entityProp.simpleEntityProp"));
+            put("topLevelEntity_critSingleEntity", cdtm0.getFirstTick().getValue(TopLevelEntity.class, "critSingleEntity"));
+            put("topLevelEntity_critRangeEntity", cdtm0.getFirstTick().getValue(TopLevelEntity.class, "critRangeEntity"));
+            put("topLevelEntity_critISingleProperty", cdtm0.getFirstTick().getValue(TopLevelEntity.class, "critISingleProperty"));
+            put("topLevelEntity_critIRangeProperty_from", cdtm0.getFirstTick().getValue(TopLevelEntity.class, "critIRangeProperty"));
+            put("topLevelEntity_critIRangeProperty_to", cdtm0.getFirstTick().getValue2(TopLevelEntity.class, "critIRangeProperty"));
+            put("topLevelEntity_critSSingleProperty", cdtm0.getFirstTick().getValue(TopLevelEntity.class, "critSSingleProperty"));
+            put("topLevelEntity_critSRangeProperty", cdtm0.getFirstTick().getValue(TopLevelEntity.class, "critSRangeProperty"));
         }
     };
 
@@ -499,14 +499,13 @@ public class CriteriaGeneratorTest {
 
     @Before
     public void setup() {
-        CriteriaGenerator.invalidateCache();
+        cdtm = new CentreDomainTreeManagerAndEnhancer(entityFactory, domainTreeEnhancerCache, cdtm0.getFirstTick().rootTypes(), t2(calculatedPropertiesInfo(cdtm0.getEnhancer().calculatedProperties(), cdtm0.getFirstTick().rootTypes()), cdtm0.getEnhancer().customProperties()));
+        configureFirstTick(cdtm);
     }
 
     @Test
     public void test_that_criteria_generation_works_correctly() {
-        final User user = entityFactory.newEntity(User.class).setKey("USER");
-        user.isValid().ifFailure(Result::throwRuntime);
-        final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao<TopLevelEntity>> criteriaEntity = cg.generateCentreQueryCriteria(user, MiTopLevelEntity.class, empty(), cdtm);
+        final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao<TopLevelEntity>> criteriaEntity = cg.generateCentreQueryCriteria(cdtm);
         assertNotNull("The centre domain tree manager can not be null", criteriaEntity.getCentreDomainTreeMangerAndEnhancer());
         final List<Field> criteriaProperties = CriteriaReflector.getCriteriaProperties(criteriaEntity.getClass());
         assertEquals("The number of criteria properties is incorrect", propertyNames.size(), criteriaProperties.size());
@@ -523,9 +522,7 @@ public class CriteriaGeneratorTest {
     @Test
     public void test_that_setting_default_value_when_criterion_already_has_other_value_works() {
         cdtm.getRepresentation().getFirstTick().setValueByDefault(TopLevelEntity.class, "stringProp", "default");
-        final User user = entityFactory.newEntity(User.class).setKey("USER");
-        user.isValid().ifFailure(Result::throwRuntime);
-        final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao<TopLevelEntity>> criteriaEntity = cg.generateCentreQueryCriteria(user, MiTopLevelEntity.class, empty(), cdtm);
+        final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao<TopLevelEntity>> criteriaEntity = cg.generateCentreQueryCriteria(cdtm);
         assertEquals("Value should have been set", "default", cdtm.getFirstTick().getValue(TopLevelEntity.class, "stringProp"));
         criteriaEntity.set("topLevelEntity_stringProp", "value");
         assertEquals("Value should have been set", "value", cdtm.getFirstTick().getValue(TopLevelEntity.class, "stringProp"));
@@ -613,15 +610,17 @@ public class CriteriaGeneratorTest {
     @Test
     public void critOnly_multi_dateOnly_property_generates_left_and_right_dateOnly_criteria() {
         final String property = "datePropDateOnlyMulti";
-        assertTrue(isPropertyAnnotationPresent(DateOnly.class, generateCriteriaType(root, asList(property), root), critName(root, from(property))));
-        assertTrue(isPropertyAnnotationPresent(DateOnly.class, generateCriteriaType(root, asList(property), root), critName(root, to(property))));
+        final var generatedCriteriaType = generateCriteriaType(root, asList(property), root);
+        assertTrue(isPropertyAnnotationPresent(DateOnly.class, generatedCriteriaType, critName(root, from(property))));
+        assertTrue(isPropertyAnnotationPresent(DateOnly.class, generatedCriteriaType, critName(root, to(property))));
     }
     
     @Test
     public void dateOnly_property_generates_left_and_right_dateOnly_criteria() {
         final String property = "datePropDateOnly";
-        assertTrue(isPropertyAnnotationPresent(DateOnly.class, generateCriteriaType(root, asList(property), root), critName(root, from(property))));
-        assertTrue(isPropertyAnnotationPresent(DateOnly.class, generateCriteriaType(root, asList(property), root), critName(root, to(property))));
+        final var generatedCriteriaType = generateCriteriaType(root, asList(property), root);
+        assertTrue(isPropertyAnnotationPresent(DateOnly.class, generatedCriteriaType, critName(root, from(property))));
+        assertTrue(isPropertyAnnotationPresent(DateOnly.class, generatedCriteriaType, critName(root, to(property))));
     }
     
     @Test
@@ -633,15 +632,17 @@ public class CriteriaGeneratorTest {
     @Test
     public void critOnly_multi_timeOnly_property_generates_left_and_right_timeOnly_criteria() {
         final String property = "datePropTimeOnlyMulti";
-        assertTrue(isPropertyAnnotationPresent(TimeOnly.class, generateCriteriaType(root, asList(property), root), critName(root, from(property))));
-        assertTrue(isPropertyAnnotationPresent(TimeOnly.class, generateCriteriaType(root, asList(property), root), critName(root, to(property))));
+        final var generatedCriteriaType = generateCriteriaType(root, asList(property), root);
+        assertTrue(isPropertyAnnotationPresent(TimeOnly.class, generatedCriteriaType, critName(root, from(property))));
+        assertTrue(isPropertyAnnotationPresent(TimeOnly.class, generatedCriteriaType, critName(root, to(property))));
     }
     
     @Test
     public void timeOnly_property_generates_left_and_right_timeOnly_criteria() {
         final String property = "datePropTimeOnly";
-        assertTrue(isPropertyAnnotationPresent(TimeOnly.class, generateCriteriaType(root, asList(property), root), critName(root, from(property))));
-        assertTrue(isPropertyAnnotationPresent(TimeOnly.class, generateCriteriaType(root, asList(property), root), critName(root, to(property))));
+        final var generatedCriteriaType = generateCriteriaType(root, asList(property), root);
+        assertTrue(isPropertyAnnotationPresent(TimeOnly.class, generatedCriteriaType, critName(root, from(property))));
+        assertTrue(isPropertyAnnotationPresent(TimeOnly.class, generatedCriteriaType, critName(root, to(property))));
     }
     
     @Test

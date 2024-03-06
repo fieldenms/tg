@@ -8,6 +8,8 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 
 import java.util.HashSet;
 
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.inject.Injector;
@@ -21,6 +23,7 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeMan
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisAddToAggregationTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisAddToDistributionTickManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -44,6 +47,16 @@ public class ChartAnalysisQueryGenerationTest {
 
     private final Injector injector = createInjector();
     private final EntityFactory factory = createFactory(injector);
+
+    @BeforeClass
+    public static void beforeTestClass() {
+        DomainTreeEnhancer.HASH_NAMING_MODE = false;
+    }
+
+    @AfterClass
+    public static void afterTestClass() {
+        DomainTreeEnhancer.HASH_NAMING_MODE = true;
+    }
 
     private Injector createInjector() {
         final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();

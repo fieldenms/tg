@@ -14,7 +14,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.inject.Injector;
@@ -62,6 +64,16 @@ public abstract class AbstractDomainTreeTest {
     private static final String PERFORM_ADDITIONAL_INITIALISATION_PROCESS_FOR = "performAdditionalInitialisationProcess_for_";
     private static final String MANAGE_TESTING_DTM_FOR = "manageTestingDTM_for_";
     private static final String ASSERT_INNER_CROSS_REFERENCES_FOR = "assertInnerCrossReferences_for_";
+
+    @BeforeClass
+    public static void beforeTestClass() {
+        DomainTreeEnhancer.HASH_NAMING_MODE = false;
+    }
+
+    @AfterClass
+    public static void afterTestClass() {
+        DomainTreeEnhancer.HASH_NAMING_MODE = true;
+    }
 
     /** A base types to be checked for its non-emptiness and non-emptiness of their children. */
     private static final List<Class<?>> DOMAIN_TREE_TYPES = CollectionUtil.listOf(
