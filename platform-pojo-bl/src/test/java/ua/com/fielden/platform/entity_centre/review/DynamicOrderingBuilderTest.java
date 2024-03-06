@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.inject.Injector;
@@ -38,10 +37,9 @@ public class DynamicOrderingBuilderTest {
         return injector.getInstance(EntityFactory.class);
     }
 
-    private static Class<? extends AbstractEntity<?>> masterKlass;
+    private static final Class<? extends AbstractEntity<?>> masterKlass;
 
-    @BeforeClass
-    public static void beforeTestClass() {
+    static {
         final IDomainTreeEnhancer dte = new DomainTreeEnhancer(factory, new HashSet<Class<?>>() {
             {
                 add(MasterEntity.class);
