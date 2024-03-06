@@ -33,17 +33,15 @@ import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.apache.logging.log4j.Logger;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.criteria.enhanced.CentreEntityQueryCriteriaToEnhance;
@@ -88,14 +86,13 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class CriteriaGenerator implements ICriteriaGenerator {
     private static final String ERR_CRIT_TYPE_GEN_CENTRE_MANAGER_MISSING = "Criteria type could not be generated for empty centreManager.";
-    private static final String ERR_CRIT_TYPE_GEN = "Criteria type for [%s] could not be generated.";
     private static final Logger LOGGER = getLogger(CriteriaGenerator.class);
 
     private final EntityFactory entityFactory;
 
     private final ICompanionObjectFinder coFinder;
 
-    private static final Cache<T2<Class<?>, List<String>>, Class<?>> GENERATED_CLASSES = CacheBuilder.newBuilder().expireAfterAccess(Duration.ofMinutes(5)).maximumSize(2000).concurrencyLevel(50).initialCapacity(500).build();
+    private static final ConcurrentMap<T2<Class<?>, List<String>>, Class<?>> GENERATED_CLASSES = new ConcurrentHashMap<>();
 
     @Inject
     public CriteriaGenerator(final EntityFactory entityFactory, final ICompanionObjectFinder controllerProvider) {
@@ -151,16 +148,12 @@ public class CriteriaGenerator implements ICriteriaGenerator {
             final var root = (Class<T>) centreManager.getFirstTick().rootTypes().iterator().next(); // multiple root types are rather rudimentary (were used in Snappy); single one must exist here
             final var managedType = centreManager.getEnhancer().getManagedType(root);
             final var checkedProperties = centreManager.getFirstTick().checkedProperties(root);
-            try {
-                return t2(
-                    (Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>) GENERATED_CLASSES.get(
-                        t2(managedType, checkedProperties),
-                        () -> generateCriteriaType(root, checkedProperties, managedType, true)
-                    ), root
-                );
-            } catch (final ExecutionException ex) {
-                throw new CriteriaGeneratorException(ERR_CRIT_TYPE_GEN.formatted(root.getSimpleName()), ex);
-            }
+            return t2(
+                (Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>) GENERATED_CLASSES.computeIfAbsent(
+                    t2(managedType, checkedProperties),
+                    (key) -> generateCriteriaType(root, checkedProperties, managedType, true)
+                ), root
+            );
         }, centreManager);
     }
 
@@ -232,16 +225,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * where selection criteria are added/removed from Web UI centre configurations.
      */
     public static void invalidateCache() {
-        GENERATED_CLASSES.invalidateAll();
-    }
-
-    /**
-     * A convenient method to kick-in a cleanup of the cache with generated entity classes.
-     * This method is intended to be used in a cleanup service to create an opportunity for performing the cache maintenance operations.
-     */
-    public static long cleanUp() {
-        GENERATED_CLASSES.cleanUp();
-        return GENERATED_CLASSES.size();
+        GENERATED_CLASSES.clear();
     }
 
     /**
