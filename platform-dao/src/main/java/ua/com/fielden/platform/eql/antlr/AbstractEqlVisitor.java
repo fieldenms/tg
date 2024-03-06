@@ -40,8 +40,8 @@ abstract class AbstractEqlVisitor<T> extends EQLBaseVisitor<T> {
      */
     protected Stream<? extends ISingleOperand1<? extends ISingleOperand2<?>>> substParam(final String param, final boolean ignoreNull) {
         return switch (getParamValue(param)) {
-            case List<?> list -> list.stream().map(o -> new Value1(preprocessValue(o), ignoreNull));
-            case Object o -> Stream.of(new Value1(preprocessValue(o), ignoreNull));
+            case List<?> list -> list.stream().map(o -> new Value1(o, ignoreNull));
+            case Object o -> Stream.of(new Value1(o, ignoreNull));
             case null -> Stream.of(new Value1(null, ignoreNull));
         };
     }
