@@ -12,8 +12,6 @@ import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.not;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.to;
 import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.applySnapshot;
-import static ua.com.fielden.platform.criteria.generator.impl.TypeDiffSerialiser.TYPE_DIFF_SERIALISER;
-import static ua.com.fielden.platform.cypher.Checksum.sha256;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isPlaceholder;
@@ -24,7 +22,7 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotati
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotationOptionally;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.generateCriteriaTypeName;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
@@ -138,13 +136,14 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         }
     }
 
+    @SuppressWarnings({ "unchecked" })
     @Override
     public <T extends AbstractEntity<?>> EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>> generateCentreQueryCriteria(final ICentreDomainTreeManagerAndEnhancer centreManager) {
         return generateCentreQueryCriteria(() -> {
             if (centreManager == null) {
                 throw new CriteriaGeneratorException(ERR_CRIT_TYPE_GEN_CENTRE_MANAGER_MISSING);
             }
-            final var root = (Class<T>) centreManager.getFirstTick().rootTypes().iterator().next(); // multiple root types are rather rudimentary (were used in Snappy); single one must exist here
+            final var root = (Class<T>) centreManager.getRepresentation().rootTypes().iterator().next(); // multiple root types are rather rudimentary (were used in Snappy); single one must exist here
             final var managedType = centreManager.getEnhancer().getManagedType(root);
             final var checkedProperties = centreManager.getFirstTick().checkedProperties(root);
             return t2(
@@ -174,7 +173,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * @return
      */
     @SuppressWarnings({ "unchecked" })
-    static <CDTME extends ICentreDomainTreeManagerAndEnhancer, T extends AbstractEntity<?>> Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>> generateCriteriaType(
+    static <T extends AbstractEntity<?>> Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>> generateCriteriaType(
         final Class<T> root,
         final List<String> properties,
         final Class<?> managedType)
@@ -186,15 +185,10 @@ public class CriteriaGenerator implements ICriteriaGenerator {
             }
         }
         try {
-            return (Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>>)
+            return (Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>)
                     DynamicEntityClassLoader.startModification(CentreEntityQueryCriteriaToEnhance.class)
                     .addProperties(newProperties.toArray(new NewProperty[0]))
-                    .modifyTypeName(
-                        CentreEntityQueryCriteriaToEnhance.class.getName()
-                        + APPENDIX + "_"
-                        + sha256(TYPE_DIFF_SERIALISER.serialise(linkedMapOf(t2("properties", properties))))
-                        + managedType.getName().replace(".", "$$$")
-                    )
+                    .modifyTypeName(generateCriteriaTypeName(CentreEntityQueryCriteriaToEnhance.class, linkedMapOf(t2("properties", properties)), managedType))
                     .endModification();
         } catch (final ClassNotFoundException ex) {
             throw new CriteriaGeneratorException(format("Criteria type for [%s] could not be generated.", root.getSimpleName()), ex);

@@ -21,6 +21,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.getPropertyDescriptors;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.decodeOriginalTypeFromCriteriaType;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
@@ -41,7 +42,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -77,7 +77,6 @@ import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.EntityJsonDeserialiser;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
@@ -958,8 +957,7 @@ public class EntityResourceUtils {
      * @return
      */
     public static Class<? extends AbstractEntity<?>> getOriginalType(final Class<? extends AbstractEntity<?>> criteriaType) {
-        final String[] originalAndSuffix = criteriaType.getName().split(Pattern.quote(DynamicTypeNamingService.APPENDIX + "_"));
-        return (Class<? extends AbstractEntity<?>>) ClassesRetriever.findClass(originalAndSuffix[1].substring(64).replace("$$$", "."));
+        return (Class<? extends AbstractEntity<?>>) ClassesRetriever.findClass(decodeOriginalTypeFromCriteriaType(criteriaType.getName()));
     }
 
     /**

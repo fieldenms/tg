@@ -1,9 +1,10 @@
 package ua.com.fielden.platform.web.app;
 
-import static java.util.regex.Pattern.quote;
 import static ua.com.fielden.platform.reflection.ClassesRetriever.findClass;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.decodeOriginalGeneratedTypeFromCriteriaType;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.decodeOriginalTypeFrom;
 
 import com.google.inject.Inject;
 
@@ -32,7 +33,7 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
     
     @Override
     public <T extends AbstractEntity<?>> Class<T> decode(final String entityTypeId) {
-        final boolean isGenerated = entityTypeId.contains(APPENDIX); // entityTypeId.contains(":");
+        final boolean isGenerated = entityTypeId.contains(APPENDIX);
         Class<T> decodedEntityType = null;
         
         final String entityTypeName = entityTypeId;
@@ -40,21 +41,21 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
             try {
                 decodedEntityType = (Class<T>) findClass(entityTypeName);
             } catch (final ReflectionException doesNotExistException) {
-                final String[] originalAndSuffix = entityTypeName.split(quote(APPENDIX + "_"));
-                final Class<?> root = findClass(originalAndSuffix[0]);
+                final Class<?> root = findClass(decodeOriginalTypeFrom(entityTypeName));
                 if (EntityQueryCriteria.class.isAssignableFrom(root)) {
-                    final var sha256AndManagedType = originalAndSuffix.length > 2 ? (originalAndSuffix[1] + APPENDIX + "_" + originalAndSuffix[2]) : originalAndSuffix[1]; // -- this SHA256 may be used later to load user-defined type transformations from database
-                    
-                    // In the case where fully fledged criteria entity type does not exist on this server node, and thus could not yet be deserialised, we need to generate criteria type and its managedType; start with managedType first
-                    webUiConfig.loadCentreGeneratedTypesAndCriteriaTypes(getOriginalType(decode(sha256AndManagedType.substring(64).replace("$$$", "."))));
-                    
+                    // In the case where fully fledged criteria entity type does not exist on this server node, and thus could not yet be deserialised, we need to generate criteria type and its managedType;
+                    // start with managedType first - decode() invocation below
+                    final var decodedManagedType = decode(decodeOriginalGeneratedTypeFromCriteriaType(entityTypeName));
+                    // continue with loading of all criteria + managed types for this decodedManagedType original type (may be from different centres with distinct miTypes)
+                    webUiConfig.loadCentreGeneratedTypesAndCriteriaTypes(getOriginalType(decodedManagedType));
                     try {
                         decodedEntityType = (Class<T>) findClass(entityTypeName);
                     } catch (final ReflectionException doesNotExistExceptionAgain) {
                         throw new SerialisationTypeEncoderException(String.format("Decoded entity type %s must be present after forced loading.", entityTypeName));
                     }
                 } else {
-                    // final var sha256 = originalAndSuffix[1]; -- this SHA256 may be used later to load user-defined type transformations from database
+                    // In the case where fully fledged managed entity type does not exist on this server node, and thus could not yet be deserialised, we need to generate it managedType;
+                    // load all criteria + managed types for this root original type (may be from different centres with distinct miTypes)
                     webUiConfig.loadCentreGeneratedTypesAndCriteriaTypes(root);
                     try {
                         decodedEntityType = (Class<T>) findClass(entityTypeName);

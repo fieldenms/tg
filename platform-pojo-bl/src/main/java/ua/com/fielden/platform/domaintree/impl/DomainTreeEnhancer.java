@@ -1,15 +1,11 @@
 package ua.com.fielden.platform.domaintree.impl;
 
 import static java.lang.String.format;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
 import static java.util.stream.Collectors.toCollection;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.criteria.generator.impl.TypeDiffSerialiser.TYPE_DIFF_SERIALISER;
-import static ua.com.fielden.platform.cypher.Checksum.sha256;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.generateTypeName;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 
@@ -23,7 +19,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
@@ -80,7 +75,6 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     private final Map<Class<?>, List<CustomProperty>> customProperties;
     
     private final transient List<Annotation> rootAnnotations = new ArrayList<>();
-    private transient Optional<String> rootNameSuffix = empty();
     
     /**
      * Constructs a new instance of domain enhancer with clean, not enhanced, domain.
@@ -138,7 +132,6 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         super(enhancer.getFactory());
         
         this.rootAnnotations.addAll(enhancer.rootAnnotations);
-        this.rootNameSuffix = enhancer.rootNameSuffix;
         
         this.originalAndEnhancedRootTypes = new LinkedHashMap<>();
         for (final Entry<Class<?>, Class<?>> entry: enhancer.originalAndEnhancedRootTypes.entrySet()) {
@@ -345,7 +338,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     @Override
     public void apply() {
         //////////// Performs migration [calculatedProperties => originalAndEnhancedRootTypes] ////////////
-        final Map<Class<?>, Class<?>> freshOriginalAndEnhancedRootTypes = generateHierarchy(originalAndEnhancedRootTypes.keySet(), calculatedProperties, customProperties, rootAnnotations, rootNameSuffix);
+        final Map<Class<?>, Class<?>> freshOriginalAndEnhancedRootTypes = generateHierarchy(originalAndEnhancedRootTypes.keySet(), calculatedProperties, customProperties, rootAnnotations);
         originalAndEnhancedRootTypes.clear();
         originalAndEnhancedRootTypes.putAll(freshOriginalAndEnhancedRootTypes);
     }
@@ -360,7 +353,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      * @param customProperties
      * @return
      */
-    protected static Map<Class<?>, Class<?>> generateHierarchy(final Set<Class<?>> rootTypes, final Map<Class<?>, List<CalculatedProperty>> calculatedProperties, final Map<Class<?>, List<CustomProperty>> customProperties, final List<Annotation> rootAnnotations, final Optional<String> rootNameSuffix) {
+    protected static Map<Class<?>, Class<?>> generateHierarchy(final Set<Class<?>> rootTypes, final Map<Class<?>, List<CalculatedProperty>> calculatedProperties, final Map<Class<?>, List<CustomProperty>> customProperties, final List<Annotation> rootAnnotations) {
         // single classLoader instance is needed for single "apply" transaction
         final Map<Class<?>, Class<?>> originalAndEnhancedRootTypes = createOriginalAndEnhancedRootTypes(rootTypes);
         final Map<Class<?>, Map<String, Map<String, IProperty>>> groupedCalculatedProperties = groupByPaths(calculatedProperties, customProperties, rootTypes);
@@ -369,7 +362,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         for (final Entry<Class<?>, Map<String, Map<String, IProperty>>> entry : groupedCalculatedProperties.entrySet()) {
             final Class<?> originalRoot = entry.getKey();
             // generate predefined root type name for all calculated properties
-            final String predefinedRootTypeName = originalRoot.getName() + APPENDIX + "_" + (rootNameSuffix.isPresent() ? rootNameSuffix.get() : sha256(TYPE_DIFF_SERIALISER.serialise(linkedMapOf(t2("calculatedProperties", calculatedPropertiesInfo(calculatedProperties, rootTypes)), t2("customProperties", customProperties)))));
+            final String predefinedRootTypeName = generateTypeName(originalRoot, linkedMapOf(t2("calculatedProperties", calculatedPropertiesInfo(calculatedProperties, rootTypes)), t2("customProperties", customProperties)));
             if (entry.getValue() == null) {
                 originalAndEnhancedRootTypes.put(originalRoot, originalRoot);
             } else {
@@ -430,17 +423,6 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
             }
         }
         return originalAndEnhancedRootTypes;
-    }
-    
-    @Override
-    public Class<?> adjustManagedTypeName(final Class<?> root, final String clientGeneratedTypeNameSuffix) {
-        final Class<?> managedType = getManagedType(root);
-        if (!DynamicEntityClassLoader.isGenerated(managedType)) {
-            throw new DomainTreeException(format("The type for root [%s] is not generated. But it should be, because the same type on client application is generated and its suffix is [%s].", root.getSimpleName(), clientGeneratedTypeNameSuffix));
-        }
-        rootNameSuffix = of(clientGeneratedTypeNameSuffix);
-        apply();
-        return getManagedType(root);
     }
     
     /**

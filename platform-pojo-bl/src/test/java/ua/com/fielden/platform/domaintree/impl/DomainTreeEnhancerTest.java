@@ -23,7 +23,6 @@ import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedProperty
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
-import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.testing.EnhancingMasterEntity;
 import ua.com.fielden.platform.domaintree.testing.EnhancingSlaveEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
@@ -683,41 +682,6 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
         dtm().addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.slaveEntityProp.masterEntityProp", "SUM(8 * integerProp)", "Sum of octuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
 
         dtm().apply();
-    }
-    
-    @Test
-    public void adjusting_of_a_name_for_ungenerated_type_leads_to_exception() {
-        // clear domain
-        dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp.oldSingle");
-        dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp.oldDouble");
-        dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.oldTriple");
-        dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "oldQuadruple");
-        dtm().apply();
-
-        // check the snapshot of domain
-        checkEmptyDomain(dtm());
-        
-        try {
-            dtm().adjustManagedTypeName(EnhancingMasterEntity.class, "grwe7w64329y4e3289dfh293h");
-            fail("Adjusting of a name for ungenerated type should fail.");
-        } catch (final DomainTreeException e) {
-        }
-    }
-    
-    @Test
-    public void adjusting_of_a_name_for_generated_type_replaces_the_name_and_do_not_change_domain_tree_enhancer_semantics() {
-        final IDomainTreeEnhancer dtmCopy = dtm();
-        try {
-            initEachTest();
-        } catch (final Exception e) {
-            throw new IllegalStateException();
-        }
-        
-        final String newSuffix = "grwe7w64329y4e3289dfh293h";
-        final Class<?> adjustedType = dtm().adjustManagedTypeName(EnhancingMasterEntity.class, newSuffix);
-        assertEquals("ua.com.fielden.platform.domaintree.testing.EnhancingMasterEntity$$TgEntity_" + newSuffix, adjustedType.getName());
-        
-        assertTrue("dte instance should be equal after generated type naming adjustments.", EntityUtils.equalsEx(dtmCopy, dtm()));
     }
 
 }
