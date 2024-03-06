@@ -42,6 +42,7 @@ abstract class AbstractEqlVisitor<T> extends EQLBaseVisitor<T> {
         return switch (getParamValue(param)) {
             case List<?> list -> list.stream().map(o -> new Value1(preprocessValue(o), ignoreNull));
             case Object o -> Stream.of(new Value1(preprocessValue(o), ignoreNull));
+            case null -> Stream.of(new Value1(null, ignoreNull));
         };
     }
 
