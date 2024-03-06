@@ -4,6 +4,7 @@ import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import ua.com.fielden.platform.eql.antlr.tokens.PropToken;
 import ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource;
+import ua.com.fielden.platform.eql.exceptions.EqlStage0ProcessingException;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 
 import static java.util.Objects.requireNonNull;
@@ -116,8 +117,26 @@ public final class EqlCompiler {
 
         parser.addErrorListener(new ThrowingErrorListener(tokenSource));
 
+        // parsing stage, results in a complete parse tree
+        final var tree = parser.start();
+
+        // compilation stage
         final var visitor = new Visitor();
-        return parser.start().accept(visitor);
+        try {
+            return tree.accept(visitor);
+        } catch (final Exception e) {
+            throw new EqlStage0ProcessingException(
+                    """
+                    Failed to compile an EQL expression.
+                    Expression: %s
+                    Source: %s
+                    Reason: %s
+                    """.formatted(
+                            tokenSource.tokens().stream().map(Token::getText).collect(joining(" ")),
+                            requireNonNullElse(tokenSource.getSourceName(), "unknown"),
+                            e.getLocalizedMessage()),
+                    e);
+        }
     }
 
     /**
