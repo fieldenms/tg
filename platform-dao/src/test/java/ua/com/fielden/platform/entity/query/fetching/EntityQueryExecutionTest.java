@@ -961,6 +961,20 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     }
 
     @Test
+    public void nested_expressions_in_yields_can_use_yield_operands() {
+        final var model = select(TgVehicle.class).yield().
+                beginExpr().
+                    beginExpr().prop("price").endExpr().
+                    add().
+                    beginExpr().prop("purchasePrice").endExpr().
+                endExpr().
+                as("total").
+                modelAsAggregate();
+
+        aggregateDao.getAllEntities(from(model).model());
+    }
+
+    @Test
     public void test_nested_uncorrelated_subqueries() {
         final EntityResultQueryModel<TgVehicle> vehSubqry = select(TgVehicle.class).where().prop("model").eq().extProp("id").model();
         final EntityResultQueryModel<TgVehicleModel> vehModelSubqry = select(TgVehicleModel.class).where().prop("key").eq().val("316").and().exists(vehSubqry).model();
