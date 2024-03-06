@@ -22,9 +22,7 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.inject.Injector;
@@ -69,16 +67,6 @@ public class DynamicQueryBuilderSqlTest {
     private final static Injector injector = createInjector();
     private final static EntityFactory entityFactory = createFactory();
     private final static IDates dates = injector.getInstance(IDates.class);
-
-    @BeforeClass
-    public static void beforeTestClass() {
-        DomainTreeEnhancer.HASH_NAMING_MODE = false;
-    }
-
-    @AfterClass
-    public static void afterTestClass() {
-        DomainTreeEnhancer.HASH_NAMING_MODE = true;
-    }
 
     private static Injector createInjector() {
         final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();

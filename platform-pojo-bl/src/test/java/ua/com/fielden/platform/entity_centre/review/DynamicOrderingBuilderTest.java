@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -43,8 +42,6 @@ public class DynamicOrderingBuilderTest {
 
     @BeforeClass
     public static void beforeTestClass() {
-        DomainTreeEnhancer.HASH_NAMING_MODE = false;
-
         final IDomainTreeEnhancer dte = new DomainTreeEnhancer(factory, new HashSet<Class<?>>() {
             {
                 add(MasterEntity.class);
@@ -62,11 +59,6 @@ public class DynamicOrderingBuilderTest {
         dte.apply();
 
         masterKlass = (Class<? extends AbstractEntity<?>>) dte.getManagedType(MasterEntity.class);
-    }
-
-    @AfterClass
-    public static void afterTestClass() {
-        DomainTreeEnhancer.HASH_NAMING_MODE = true;
     }
 
     @Test

@@ -25,7 +25,6 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getProperty
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotationOptionally;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
@@ -151,7 +150,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
             return t2(
                 (Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>) GENERATED_CLASSES.computeIfAbsent(
                     t2(managedType, checkedProperties),
-                    (key) -> generateCriteriaType(root, checkedProperties, managedType, true)
+                    (key) -> generateCriteriaType(root, checkedProperties, managedType)
                 ), root
             );
         }, centreManager);
@@ -163,23 +162,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * This method exists for testing purposes only.
      */
     public <T extends AbstractEntity<?>> EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>> generateCentreQueryCriteriaForTesting(final Class<T> root, final ICentreDomainTreeManagerAndEnhancer centreManager) {
-        return generateCentreQueryCriteria(() -> t2(generateCriteriaType(root, centreManager.getFirstTick().checkedProperties(root), centreManager.getEnhancer().getManagedType(root), false), root), centreManager);
-    }
-
-    /**
-     * Generates criteria entity type for the specified <code>properties</code> subset and <code>managedType</code>.
-     * 
-     * @param root -- root type from which <code>managedType</code> has been derived (calculated props added)
-     * @param properties
-     * @param managedType
-     * @return
-     */
-    static <CDTME extends ICentreDomainTreeManagerAndEnhancer, T extends AbstractEntity<?>> Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>> generateCriteriaType(
-        final Class<T> root,
-        final List<String> properties,
-        final Class<?> managedType)
-    {
-        return generateCriteriaType(root, properties, managedType, true);
+        return generateCentreQueryCriteria(() -> t2(generateCriteriaType(root, centreManager.getFirstTick().checkedProperties(root), centreManager.getEnhancer().getManagedType(root)), root), centreManager);
     }
 
     /**
@@ -194,8 +177,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
     static <CDTME extends ICentreDomainTreeManagerAndEnhancer, T extends AbstractEntity<?>> Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>> generateCriteriaType(
         final Class<T> root,
         final List<String> properties,
-        final Class<?> managedType,
-        final boolean HASH_NAMING_MODE)
+        final Class<?> managedType)
     {
         final List<NewProperty> newProperties = new ArrayList<>();
         for (final String propertyName : properties) {
@@ -210,7 +192,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
                     .modifyTypeName(
                         CentreEntityQueryCriteriaToEnhance.class.getName()
                         + APPENDIX + "_"
-                        + (HASH_NAMING_MODE ? sha256(TYPE_DIFF_SERIALISER.serialise(linkedMapOf(t2("properties", properties)))) : nextTypeName(root.getName()))
+                        + sha256(TYPE_DIFF_SERIALISER.serialise(linkedMapOf(t2("properties", properties))))
                         + managedType.getName().replace(".", "$$$")
                     )
                     .endModification();

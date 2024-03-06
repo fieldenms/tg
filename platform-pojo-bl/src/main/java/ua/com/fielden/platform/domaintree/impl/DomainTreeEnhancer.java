@@ -10,7 +10,6 @@ import static ua.com.fielden.platform.cypher.Checksum.sha256;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 
@@ -68,7 +67,6 @@ import ua.com.fielden.platform.utils.EntityUtils;
  */
 public final class DomainTreeEnhancer extends AbstractDomainTree implements IDomainTreeEnhancer {
     private static final Logger logger = getLogger(DomainTreeEnhancer.class);
-    public static boolean HASH_NAMING_MODE = true;
 
     /**
      * Holds a mapping between the original and the enhanced types. Contains pairs of [original -> real] or [original -> original] (in case of not enhanced type).
@@ -371,7 +369,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         for (final Entry<Class<?>, Map<String, Map<String, IProperty>>> entry : groupedCalculatedProperties.entrySet()) {
             final Class<?> originalRoot = entry.getKey();
             // generate predefined root type name for all calculated properties
-            final String predefinedRootTypeName = originalRoot.getName() + APPENDIX + "_" + (rootNameSuffix.isPresent() ? rootNameSuffix.get() : HASH_NAMING_MODE ? sha256(TYPE_DIFF_SERIALISER.serialise(linkedMapOf(t2("calculatedProperties", calculatedPropertiesInfo(calculatedProperties, rootTypes)), t2("customProperties", customProperties)))) : nextTypeName(originalRoot.getName()));
+            final String predefinedRootTypeName = originalRoot.getName() + APPENDIX + "_" + (rootNameSuffix.isPresent() ? rootNameSuffix.get() : sha256(TYPE_DIFF_SERIALISER.serialise(linkedMapOf(t2("calculatedProperties", calculatedPropertiesInfo(calculatedProperties, rootTypes)), t2("customProperties", customProperties)))));
             if (entry.getValue() == null) {
                 originalAndEnhancedRootTypes.put(originalRoot, originalRoot);
             } else {
