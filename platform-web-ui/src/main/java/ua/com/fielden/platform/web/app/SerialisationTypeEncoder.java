@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.app;
 
 import static java.util.regex.Pattern.quote;
 import static ua.com.fielden.platform.reflection.ClassesRetriever.findClass;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
 
 import com.google.inject.Inject;
@@ -45,7 +46,7 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
                     final var sha256AndManagedType = originalAndSuffix.length > 2 ? (originalAndSuffix[1] + APPENDIX + "_" + originalAndSuffix[2]) : originalAndSuffix[1]; // -- this SHA256 may be used later to load user-defined type transformations from database
                     
                     // In the case where fully fledged criteria entity type does not exist on this server node, and thus could not yet be deserialised, we need to generate criteria type and its managedType; start with managedType first
-                    decode(sha256AndManagedType.substring(64).replace("$$$", "."));
+                    webUiConfig.loadCentreGeneratedTypesAndCriteriaTypes(getOriginalType(decode(sha256AndManagedType.substring(64).replace("$$$", "."))));
                     
                     try {
                         decodedEntityType = (Class<T>) findClass(entityTypeName);
@@ -56,7 +57,7 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
                     // final var sha256 = originalAndSuffix[1]; -- this SHA256 may be used later to load user-defined type transformations from database
                     webUiConfig.loadCentreGeneratedTypesAndCriteriaTypes(root);
                     try {
-                        decodedEntityType = (Class<T>) findClass(entityTypeName); // (Class<T>) previouslyRunCentre.getEnhancer().adjustManagedTypeName(root, originalAndSuffix[1]);
+                        decodedEntityType = (Class<T>) findClass(entityTypeName);
                     } catch (final ReflectionException doesNotExistExceptionAgain) {
                         throw new SerialisationTypeEncoderException(String.format("Decoded entity type %s must be present after forced loading.", entityTypeName));
                     }
