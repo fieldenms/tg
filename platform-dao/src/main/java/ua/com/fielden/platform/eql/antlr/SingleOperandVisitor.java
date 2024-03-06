@@ -21,6 +21,7 @@ import java.util.function.Function;
 
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.eql.antlr.EQLParser.*;
+import static ua.com.fielden.platform.eql.stage1.operands.Value1.value;
 import static ua.com.fielden.platform.utils.StreamUtils.zipDo;
 
 final class SingleOperandVisitor extends AbstractEqlVisitor<ISingleOperand1<? extends ISingleOperand2<?>>> {
@@ -44,8 +45,8 @@ final class SingleOperandVisitor extends AbstractEqlVisitor<ISingleOperand1<? ex
     @Override
     public ISingleOperand1<? extends ISingleOperand2<?>> visitVal(final ValContext ctx) {
         return switch (ctx.token) {
-            case ValToken tok -> new Value1(preprocessValue(tok.value));
-            case IValToken tok -> new Value1(preprocessValue(tok.value), true);
+            case ValToken tok -> value(preprocessValue(tok.value));
+            case IValToken tok -> value(preprocessValue(tok.value), true);
             default -> unexpectedToken(ctx.token);
         };
     }
@@ -53,8 +54,8 @@ final class SingleOperandVisitor extends AbstractEqlVisitor<ISingleOperand1<? ex
     @Override
     public ISingleOperand1<? extends ISingleOperand2<?>> visitParam(final ParamContext ctx) {
         return switch (ctx.token) {
-            case ParamToken tok -> new Value1(getParamValue(tok.paramName));
-            case IParamToken tok -> new Value1(getParamValue(tok.paramName), true);
+            case ParamToken tok -> value(getParamValue(tok.paramName));
+            case IParamToken tok -> value(getParamValue(tok.paramName), true);
             default -> unexpectedToken(ctx.token);
         };
     }
