@@ -1,9 +1,12 @@
 package ua.com.fielden.platform.sample.domain.crit_gen;
 
 import com.google.inject.Scopes;
+import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 
+import ua.com.fielden.platform.basic.config.ApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
@@ -28,8 +31,16 @@ public class CriteriaGeneratorTestModule extends EntityModuleWithPropertyFactory
         super.configure();
         bindConstant().annotatedWith(Names.named("app.name")).to("Unit Tests");
         bindConstant().annotatedWith(Names.named("email.smtp")).to("192.168.1.8");
-        bindConstant().annotatedWith(Names.named("email.fromAddress")).to("tests@tg.org"); 
+        bindConstant().annotatedWith(Names.named("email.fromAddress")).to("tests@tg.org");
+        bindConstant().annotatedWith(Names.named("reports.path")).to("path");
+        bindConstant().annotatedWith(Names.named("domain.path")).to("path");
+        bindConstant().annotatedWith(Names.named("domain.package")).to("package");
+        bindConstant().annotatedWith(Names.named("tokens.path")).to("path");
+        bindConstant().annotatedWith(Names.named("tokens.package")).to("package");
+        bindConstant().annotatedWith(Names.named("workflow")).to("development");
+        bindConstant().annotatedWith(Names.named("auth.mode")).to("SSO");
 
+        bind(IApplicationSettings.class).to(ApplicationSettings.class).in(Singleton.class);
         bind(IApplicationDomainProvider.class).to(ApplicationDomain.class);
         bind(ITopLevelEntity.class).to(TopLevelEntityDaoStub.class);
         bind(ILastLevelEntity.class).to(LastLevelEntityDaoStub.class);

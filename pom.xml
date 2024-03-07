@@ -76,6 +76,12 @@
         </developer>
     </developers>
 
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <junit.version>4.13.2</junit.version>
+        <posgresql.version>42.7.2</posgresql.version>
+    </properties>
+
     <modules>
         <module>platform-annotation-processors</module>
         <module>platform-annotations</module>
@@ -87,11 +93,6 @@
         <module>platform-benchmark</module>
         <module>platform-eql-grammar</module>
     </modules>
-
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <junit.version>4.13.2</junit.version>
-    </properties>
 
     <dependencies>
         <dependency>

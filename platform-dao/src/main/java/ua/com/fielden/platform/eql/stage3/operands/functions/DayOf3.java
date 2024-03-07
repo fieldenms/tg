@@ -19,7 +19,7 @@ public class DayOf3 extends SingleOperandFunction3 {
         case MSSQL:
             return format("DAY(%s)", operand.sql(dbVersion));
         case POSTGRESQL:
-            return format("CAST(EXTRACT(DAY FROM %s) AS INT)", operand.sql(dbVersion));
+            return format("CAST(EXTRACT(DAY FROM %s \\:\\:timestamp) AS INT)", operand.sql(dbVersion));
         default:
             return super.sql(dbVersion);
         }
@@ -31,9 +31,9 @@ public class DayOf3 extends SingleOperandFunction3 {
         final int result = super.hashCode();
         return prime * result + DayOf3.class.getName().hashCode();
     }
-    
+
     @Override
     public boolean equals(final Object obj) {
-        return this == obj || super.equals(obj) && obj instanceof DayOf3; 
+        return this == obj || super.equals(obj) && obj instanceof DayOf3;
     }
 }
