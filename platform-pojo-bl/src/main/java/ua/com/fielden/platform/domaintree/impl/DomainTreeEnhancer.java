@@ -209,7 +209,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         } else {
             final DomainTreeEnhancer newInstance = new DomainTreeEnhancer(entityFactory, rootTypes, calculatedPropertiesInfo, customProperties);
             domainTreeEnhancerCache.putDomainTreeEnhancerFor(rootTypes, calculatedPropertiesInfo, customProperties, newInstance);
-            return newInstance;
+            return new DomainTreeEnhancer(newInstance); // need to also perform copy here as above (where cachedInstance != null); this is to avoid further mutation of cached instance (e.g. in postCentreCreated hooks)
         }
     }
     
