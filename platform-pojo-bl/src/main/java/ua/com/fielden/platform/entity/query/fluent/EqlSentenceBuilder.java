@@ -5,8 +5,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.model.*;
-import ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource;
 import ua.com.fielden.platform.eql.antlr.tokens.*;
+import ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 import java.util.*;
@@ -15,6 +15,8 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.*;
+import static ua.com.fielden.platform.eql.antlr.tokens.IValToken.iValToken;
+import static ua.com.fielden.platform.eql.antlr.tokens.ValToken.valToken;
 import static ua.com.fielden.platform.eql.antlr.tokens.util.SimpleTokens.token;
 
 /**
@@ -190,11 +192,11 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder val(final Object value) {
-        return _add(new ValToken(valuePreprocessor.apply(value)));
+        return _add(valToken(valuePreprocessor.apply(value)));
     }
 
     public EqlSentenceBuilder iVal(final Object value) {
-        return _add(new IValToken(valuePreprocessor.apply(value)));
+        return _add(iValToken(valuePreprocessor.apply(value)));
     }
 
     public EqlSentenceBuilder model(final PrimitiveResultQueryModel model) {
