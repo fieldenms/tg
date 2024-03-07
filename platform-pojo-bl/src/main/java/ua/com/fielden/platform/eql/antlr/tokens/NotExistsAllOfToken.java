@@ -10,9 +10,9 @@ import static ua.com.fielden.platform.eql.antlr.EQLLexer.NOTEXISTSALLOF;
 
 public final class NotExistsAllOfToken extends AbstractParameterisedEqlToken {
 
-    public final List<QueryModel> models;
+    public final List<? extends QueryModel> models;
 
-    public NotExistsAllOfToken(final List<QueryModel> models) {
+    public NotExistsAllOfToken(final List<? extends QueryModel> models) {
         super(NOTEXISTSALLOF, "notExistsAllOf");
         this.models = models;
     }

@@ -10,9 +10,9 @@ import static ua.com.fielden.platform.eql.antlr.EQLLexer.NOTEXISTSANYOF;
 
 public final class NotExistsAnyOfToken extends AbstractParameterisedEqlToken {
 
-    public final List<QueryModel> models;
+    public final List<? extends QueryModel> models;
 
-    public NotExistsAnyOfToken(final List<QueryModel> models) {
+    public NotExistsAnyOfToken(final List<? extends QueryModel> models) {
         super(NOTEXISTSANYOF, "notExistsAnyOf");
         this.models = models;
     }

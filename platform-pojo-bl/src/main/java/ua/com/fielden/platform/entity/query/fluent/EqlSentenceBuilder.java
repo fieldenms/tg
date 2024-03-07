@@ -11,6 +11,7 @@ import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 import java.util.*;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.*;
@@ -94,11 +95,11 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder existsAnyOf(final boolean negated, final QueryModel... subQueries) {
-        throw new UnsupportedOperationException();
+        return _add(negated ? new NotExistsAnyOfToken(asList(subQueries)) : new ExistsAnyOfToken(asList(subQueries)));
     }
 
     public EqlSentenceBuilder existsAllOf(final boolean negated, final QueryModel... subQueries) {
-        throw new UnsupportedOperationException();
+        return _add(negated ? new NotExistsAllOfToken(asList(subQueries)) : new ExistsAllOfToken(asList(subQueries)));
     }
 
     public EqlSentenceBuilder critCondition(final String propName, final String critPropName) {
@@ -241,7 +242,7 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder anyOfProps(final String... props) {
-        return _add(new AnyOfPropsToken(Arrays.asList(props)));
+        return _add(new AnyOfPropsToken(asList(props)));
     }
 
     public EqlSentenceBuilder anyOfProps(final IConvertableToPath... props) {
@@ -249,15 +250,15 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder anyOfParams(final String... params) {
-        return _add(new AnyOfParamsToken(Arrays.asList(params)));
+        return _add(new AnyOfParamsToken(asList(params)));
     }
 
     public EqlSentenceBuilder anyOfIParams(final String... params) {
-        return _add(new AnyOfIParamsToken(Arrays.asList(params)));
+        return _add(new AnyOfIParamsToken(asList(params)));
     }
 
     public EqlSentenceBuilder anyOfModels(final PrimitiveResultQueryModel... models) {
-        return _add(new AnyOfModelsToken(Arrays.asList(models)));
+        return _add(new AnyOfModelsToken(asList(models)));
     }
 
     public EqlSentenceBuilder anyOfValues(final Object... values) {
@@ -265,11 +266,11 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder anyOfExpressions(final ExpressionModel... expressions) {
-        return _add(new AnyOfExpressionsToken(Arrays.asList(expressions)));
+        return _add(new AnyOfExpressionsToken(asList(expressions)));
     }
 
     public EqlSentenceBuilder allOfProps(final String... props) {
-        return _add(new AllOfPropsToken(Arrays.asList(props)));
+        return _add(new AllOfPropsToken(asList(props)));
     }
 
     public EqlSentenceBuilder allOfProps(final IConvertableToPath... props) {
@@ -277,15 +278,15 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder allOfParams(final String... params) {
-        return _add(new AllOfParamsToken(Arrays.asList(params)));
+        return _add(new AllOfParamsToken(asList(params)));
     }
 
     public EqlSentenceBuilder allOfIParams(final String... params) {
-        return _add(new AllOfIParamsToken(Arrays.asList(params)));
+        return _add(new AllOfIParamsToken(asList(params)));
     }
 
     public EqlSentenceBuilder allOfModels(final PrimitiveResultQueryModel... models) {
-        return _add(new AllOfModelsToken(Arrays.asList(models)));
+        return _add(new AllOfModelsToken(asList(models)));
     }
 
     public EqlSentenceBuilder allOfValues(final Object... values) {
@@ -293,7 +294,7 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder allOfExpressions(final ExpressionModel... expressions) {
-        return _add(new AllOfExpressionsToken(Arrays.asList(expressions)));
+        return _add(new AllOfExpressionsToken(asList(expressions)));
     }
 
     public EqlSentenceBuilder any(final SingleResultQueryModel subQuery) {
@@ -305,7 +306,7 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder setOfProps(final String... props) {
-        return _add(new PropsToken(Arrays.asList(props)));
+        return _add(new PropsToken(asList(props)));
     }
 
     public EqlSentenceBuilder setOfProps(final IConvertableToPath... props) {
@@ -313,11 +314,11 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder setOfParams(final String... params) {
-        return _add(new ParamsToken(Arrays.asList(params)));
+        return _add(new ParamsToken(asList(params)));
     }
 
     public EqlSentenceBuilder setOfIParams(final String... params) {
-        return _add(new IParamsToken(Arrays.asList(params)));
+        return _add(new IParamsToken(asList(params)));
     }
 
     public EqlSentenceBuilder setOfValues(final Object... values) {
@@ -612,7 +613,7 @@ final class EqlSentenceBuilder {
 
     public EqlSentenceBuilder innerJoin(final AggregatedResultQueryModel... sourceModels) {
         if (sourceModels.length >= 1) {
-            return _add(JoinToken.models(Arrays.asList(sourceModels)));
+            return _add(JoinToken.models(asList(sourceModels)));
         } else {
             throw new IllegalArgumentException("No models were specified as a source in the FROM statement!");
         }
@@ -620,7 +621,7 @@ final class EqlSentenceBuilder {
 
     public <E extends AbstractEntity<?>> EqlSentenceBuilder innerJoin(final EntityResultQueryModel<E>... sourceModels) {
         if (sourceModels.length >= 1) {
-            return _add(JoinToken.models(Arrays.asList(sourceModels)));
+            return _add(JoinToken.models(asList(sourceModels)));
         } else {
             throw new IllegalArgumentException("No models were specified as a source in the FROM statement!");
         }
@@ -628,7 +629,7 @@ final class EqlSentenceBuilder {
 
     public EqlSentenceBuilder leftJoin(final AggregatedResultQueryModel... sourceModels) {
         if (sourceModels.length >= 1) {
-            return _add(LeftJoinToken.models(Arrays.asList(sourceModels)));
+            return _add(LeftJoinToken.models(asList(sourceModels)));
         } else {
             throw new IllegalArgumentException("No models were specified as a source in the FROM statement!");
         }
@@ -637,7 +638,7 @@ final class EqlSentenceBuilder {
     @SafeVarargs
     public final <E extends AbstractEntity<?>> EqlSentenceBuilder leftJoin(final EntityResultQueryModel<E>... sourceModels) {
         if (sourceModels.length >= 1) {
-            return _add(LeftJoinToken.models(Arrays.asList(sourceModels)));
+            return _add(LeftJoinToken.models(asList(sourceModels)));
         } else {
             throw new IllegalArgumentException("No models were specified as a source in the FROM statement!");
         }

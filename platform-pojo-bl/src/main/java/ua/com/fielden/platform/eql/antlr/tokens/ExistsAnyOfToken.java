@@ -10,9 +10,9 @@ import static ua.com.fielden.platform.eql.antlr.EQLLexer.EXISTSANYOF;
 
 public final class ExistsAnyOfToken extends AbstractParameterisedEqlToken {
 
-    public final List<QueryModel> models;
+    public final List<? extends QueryModel> models;
 
-    public ExistsAnyOfToken(final List<QueryModel> models) {
+    public ExistsAnyOfToken(final List<? extends QueryModel> models) {
         super(EXISTSANYOF, "existsAnyOf");
         this.models = models;
     }
