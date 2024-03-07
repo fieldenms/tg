@@ -1,10 +1,13 @@
 package ua.com.fielden.platform.web.app;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.ClassesRetriever.findClass;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.decodeOriginalGeneratedTypeFromCriteriaType;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.decodeOriginalTypeFrom;
+
+import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
 
@@ -17,6 +20,11 @@ import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter;
 
 public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
+    private static final Logger LOGGER = getLogger(SerialisationTypeEncoder.class);
+    private static final String ERR_DECODED_ENTITY_TYPE_MUST_BE_PRESENT = "Decoded entity type %s must be present after forced loading.";
+    private static final String ERR_CLIENT_APP_IS_OUTDATED = "Client application is outdated. Please reload.";
+    private static final String ERR_DECODED_TYPE_WAS_ALREADY_REGISTERED = "Somehow decoded entity type %s was already registered in TgJackson.";
+
     private TgJackson tgJackson;
     private EntityTypeInfoGetter entityTypeInfoGetter;
     private final IWebUiConfig webUiConfig;
@@ -48,23 +56,19 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
                     final var decodedManagedType = decode(decodeOriginalGeneratedTypeFromCriteriaType(entityTypeName));
                     // continue with loading of all criteria + managed types for this decodedManagedType original type (may be from different centres with distinct miTypes)
                     webUiConfig.loadCentreGeneratedTypesAndCriteriaTypes(getOriginalType(decodedManagedType));
-                    try {
-                        decodedEntityType = (Class<T>) findClass(entityTypeName);
-                    } catch (final ReflectionException doesNotExistExceptionAgain) {
-                        throw new SerialisationTypeEncoderException(String.format("Decoded entity type %s must be present after forced loading.", entityTypeName));
-                    }
                 } else {
                     // In the case where fully fledged managed entity type does not exist on this server node, and thus could not yet be deserialised, we need to generate it managedType;
                     // load all criteria + managed types for this root original type (may be from different centres with distinct miTypes)
                     webUiConfig.loadCentreGeneratedTypesAndCriteriaTypes(root);
-                    try {
-                        decodedEntityType = (Class<T>) findClass(entityTypeName);
-                    } catch (final ReflectionException doesNotExistExceptionAgain) {
-                        throw new SerialisationTypeEncoderException(String.format("Decoded entity type %s must be present after forced loading.", entityTypeName));
-                    }
+                }
+                try {
+                    decodedEntityType = (Class<T>) findClass(entityTypeName);
+                } catch (final ReflectionException doesNotExistExceptionAgain) {
+                    LOGGER.error(ERR_DECODED_ENTITY_TYPE_MUST_BE_PRESENT.formatted(entityTypeName));
+                    throw new SerialisationTypeEncoderException(ERR_CLIENT_APP_IS_OUTDATED);
                 }
                 if (entityTypeInfoGetter.get(decodedEntityType.getName()) != null) {
-                    throw new SerialisationTypeEncoderException(String.format("Somehow decoded entity type %s was already registered in TgJackson.", decodedEntityType.getName()));
+                    throw new SerialisationTypeEncoderException(ERR_DECODED_TYPE_WAS_ALREADY_REGISTERED.formatted(decodedEntityType.getName()));
                 }
                 tgJackson.registerNewEntityType((Class<AbstractEntity<?>>) decodedEntityType);
             }

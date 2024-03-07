@@ -89,6 +89,9 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 
     private final ICompanionObjectFinder coFinder;
 
+    /**
+     * Cache of generated criteria types where key is a pair of [managedType; properties for selection criteria] and value is corresponding generated criteria entity type.
+     */
     private static final ConcurrentMap<T2<Class<?>, List<String>>, Class<?>> GENERATED_CLASSES = new ConcurrentHashMap<>();
 
     @Inject
@@ -145,11 +148,11 @@ public class CriteriaGenerator implements ICriteriaGenerator {
             }
             final var root = (Class<T>) centreManager.getRepresentation().rootTypes().iterator().next(); // multiple root types are rather rudimentary (were used in Snappy); single one must exist here
             final var managedType = centreManager.getEnhancer().getManagedType(root);
-            final var checkedProperties = centreManager.getFirstTick().checkedProperties(root);
+            final var propsForSelectionCriteria = centreManager.getFirstTick().checkedProperties(root);
             return t2(
                 (Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>) GENERATED_CLASSES.computeIfAbsent(
-                    t2(managedType, checkedProperties),
-                    (key) -> generateCriteriaType(root, checkedProperties, managedType)
+                    t2(managedType, propsForSelectionCriteria),
+                    key -> generateCriteriaType(root, propsForSelectionCriteria, managedType)
                 ), root
             );
         }, centreManager);

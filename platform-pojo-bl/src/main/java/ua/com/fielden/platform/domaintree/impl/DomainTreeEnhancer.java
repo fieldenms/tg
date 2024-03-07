@@ -208,7 +208,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
             final Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedPropertiesInfo,
             final Map<Class<?>, List<CustomProperty>> customProperties) {
         final DomainTreeEnhancer cachedInstance = domainTreeEnhancerCache.getDomainTreeEnhancerFor(rootTypes, calculatedPropertiesInfo, customProperties);
-        if (cachedInstance != null) {
+        if (cachedInstance != null) { // TODO provide atomicity here
             return new DomainTreeEnhancer(cachedInstance);
         } else {
             final DomainTreeEnhancer newInstance = new DomainTreeEnhancer(entityFactory, rootTypes, calculatedPropertiesInfo, customProperties);

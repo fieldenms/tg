@@ -83,7 +83,7 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
      * Otherwise, performs {@link #defineClass(String, byte[])} and caches entry in form {@code [genTypeName : (genType, origType)]}.
      */
     private Class<?> doDefineClass(final String name, final byte[] bytes) {
-        return cache.computeIfAbsent(name, (key) -> {
+        return cache.computeIfAbsent(name, key -> {
             // define the class, load it and cache for later reuse
             final Class<?> klass = defineClass(name, bytes, 0, bytes.length);
             return t2(new WeakReference<>(klass), determineOriginalType(klass));

@@ -65,7 +65,7 @@ public class Checksum {
     }
 
     /**
-     * Calculates a SHA1 code for the passed in byte array.
+     * Calculates a SHA256 code for the passed in byte array.
      * 
      * @param dataBytes
      * @return
