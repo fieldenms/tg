@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.eql.antlr.tokens;
 
+import java.util.Objects;
+
+import static java.lang.String.valueOf;
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.TO;
 
 public final class ToToken extends AbstractParameterisedEqlToken {
@@ -13,7 +16,18 @@ public final class ToToken extends AbstractParameterisedEqlToken {
 
     @Override
     public String parametersText() {
-        return String.valueOf(value);
+        return valueOf(value);
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        return this == o || o instanceof ToToken that &&
+                value == that.value;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(value);
     }
 
 }

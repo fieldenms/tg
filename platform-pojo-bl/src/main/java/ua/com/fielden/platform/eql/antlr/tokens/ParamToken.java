@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.antlr.tokens;
 
+import java.util.Objects;
+
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.PARAM;
 
 public final class ParamToken extends AbstractParameterisedEqlToken {
@@ -14,6 +16,17 @@ public final class ParamToken extends AbstractParameterisedEqlToken {
     @Override
     public String parametersText() {
         return paramName;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        return this == o || o instanceof ParamToken that &&
+                Objects.equals(paramName, that.paramName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(paramName);
     }
 
 }

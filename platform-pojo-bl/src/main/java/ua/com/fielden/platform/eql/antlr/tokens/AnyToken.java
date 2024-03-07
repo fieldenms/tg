@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.eql.antlr.tokens;
 
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
-import ua.com.fielden.platform.eql.antlr.tokens.util.TokensFormatter;
+
+import java.util.Objects;
 
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.ANY;
+import static ua.com.fielden.platform.eql.antlr.tokens.util.TokensFormatter.getInstance;
 
 public final class AnyToken extends AbstractParameterisedEqlToken {
 
@@ -16,7 +18,18 @@ public final class AnyToken extends AbstractParameterisedEqlToken {
 
     @Override
     public String parametersText() {
-        return TokensFormatter.getInstance().format(model.getTokenSource());
+        return getInstance().format(model.getTokenSource());
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        return this == o || o instanceof AnyToken that &&
+                Objects.equals(model, that.model);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(model);
     }
 
 }
