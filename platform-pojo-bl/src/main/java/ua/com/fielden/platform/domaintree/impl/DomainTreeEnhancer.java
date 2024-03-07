@@ -73,9 +73,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
 
     /** Holds current domain differences from "standard" domain (all custom properties for all root types). */
     private final Map<Class<?>, List<CustomProperty>> customProperties;
-    
-    private final transient List<Annotation> rootAnnotations = new ArrayList<>();
-    
+
     /**
      * Constructs a new instance of domain enhancer with clean, not enhanced, domain.
      * <p>
@@ -130,8 +128,6 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      */
     private DomainTreeEnhancer(final DomainTreeEnhancer enhancer) {
         super(enhancer.getFactory());
-        
-        this.rootAnnotations.addAll(enhancer.rootAnnotations);
         
         this.originalAndEnhancedRootTypes = new LinkedHashMap<>();
         for (final Entry<Class<?>, Class<?>> entry: enhancer.originalAndEnhancedRootTypes.entrySet()) {
@@ -338,7 +334,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     @Override
     public void apply() {
         //////////// Performs migration [calculatedProperties => originalAndEnhancedRootTypes] ////////////
-        final Map<Class<?>, Class<?>> freshOriginalAndEnhancedRootTypes = generateHierarchy(originalAndEnhancedRootTypes.keySet(), calculatedProperties, customProperties, rootAnnotations);
+        final Map<Class<?>, Class<?>> freshOriginalAndEnhancedRootTypes = generateHierarchy(originalAndEnhancedRootTypes.keySet(), calculatedProperties, customProperties);
         originalAndEnhancedRootTypes.clear();
         originalAndEnhancedRootTypes.putAll(freshOriginalAndEnhancedRootTypes);
     }
@@ -353,7 +349,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      * @param customProperties
      * @return
      */
-    protected static Map<Class<?>, Class<?>> generateHierarchy(final Set<Class<?>> rootTypes, final Map<Class<?>, List<CalculatedProperty>> calculatedProperties, final Map<Class<?>, List<CustomProperty>> customProperties, final List<Annotation> rootAnnotations) {
+    protected static Map<Class<?>, Class<?>> generateHierarchy(final Set<Class<?>> rootTypes, final Map<Class<?>, List<CalculatedProperty>> calculatedProperties, final Map<Class<?>, List<CustomProperty>> customProperties) {
         // single classLoader instance is needed for single "apply" transaction
         final Map<Class<?>, Class<?>> originalAndEnhancedRootTypes = createOriginalAndEnhancedRootTypes(rootTypes);
         final Map<Class<?>, Map<String, Map<String, IProperty>>> groupedCalculatedProperties = groupByPaths(calculatedProperties, customProperties, rootTypes);
@@ -414,7 +410,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
                 // modify root type name with predefinedRootTypeName
                 final Class<?> enhancedRoot = originalAndEnhancedRootTypes.get(originalRoot);
                 if (originalRoot != enhancedRoot) { // calculated properties exist -- root type should be enhanced
-                    final Class<?> rootWithPredefinedName = startModification(enhancedRoot).addClassAnnotations(rootAnnotations.toArray(new Annotation[rootAnnotations.size()])).modifyTypeName(predefinedRootTypeName)./* TODO modifySupertypeName(originalRoot.getName()).*/endModification();
+                    final Class<?> rootWithPredefinedName = startModification(enhancedRoot).modifyTypeName(predefinedRootTypeName)./* TODO modifySupertypeName(originalRoot.getName()).*/endModification();
                     originalAndEnhancedRootTypes.put(originalRoot, rootWithPredefinedName);
                 }
             } catch (final ClassNotFoundException e) {
