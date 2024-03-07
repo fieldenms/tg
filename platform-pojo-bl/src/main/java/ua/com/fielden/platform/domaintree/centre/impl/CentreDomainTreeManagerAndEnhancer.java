@@ -17,7 +17,6 @@ import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.IRootTyped;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -90,7 +89,6 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
      */
     public CentreDomainTreeManagerAndEnhancer(
             final EntityFactory entityFactory,
-            final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final Set<Class<?>> rootTypes,
             final T2<Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>> calculatedAndCustomProperties) {
         this(
@@ -101,7 +99,6 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
             ),
             createFrom(
                 entityFactory,
-                domainTreeEnhancerCache,
                 validateRootTypes(rootTypes),
                 calculatedAndCustomProperties._1,
                 calculatedAndCustomProperties._2

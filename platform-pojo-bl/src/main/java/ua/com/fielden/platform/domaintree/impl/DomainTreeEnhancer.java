@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoad
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.generateTypeName;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 
 import java.lang.annotation.Annotation;
@@ -20,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
@@ -27,7 +30,6 @@ import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.IProperty;
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -44,6 +46,7 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
@@ -62,6 +65,13 @@ import ua.com.fielden.platform.utils.EntityUtils;
  */
 public final class DomainTreeEnhancer extends AbstractDomainTree implements IDomainTreeEnhancer {
     private static final Logger logger = getLogger(DomainTreeEnhancer.class);
+    /**
+     * Cache of {@link DomainTreeEnhancer}s with keys as [rootTypes; calcProps; customProps].
+     * <p>
+     * The main purpose of this accidental (by means of complexity) cache is to reduce heavy calculated properties re-computation and to 
+     * reduce the count of resultant generated entity types.
+     */
+    private static final ConcurrentMap<T3<Set<Class<?>>, Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>>, DomainTreeEnhancer> domainTreeEnhancers = new ConcurrentHashMap<>();
 
     /**
      * Holds a mapping between the original and the enhanced types. Contains pairs of [original -> real] or [original -> original] (in case of not enhanced type).
@@ -190,7 +200,6 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      * We need to consider {@link DomainTreeEnhancer} cache management when implementing ability to add calculated properties from UI.
      * 
      * @param serialiser
-     * @param domainTreeEnhancerCache
      * @param rootTypes
      * @param calculatedPropertiesInfo
      * @param customProperties
@@ -199,18 +208,14 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      */
     public static DomainTreeEnhancer createFrom(
             final EntityFactory entityFactory,
-            final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final Set<Class<?>> rootTypes,
             final Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedPropertiesInfo,
             final Map<Class<?>, List<CustomProperty>> customProperties) {
-        final DomainTreeEnhancer cachedInstance = domainTreeEnhancerCache.getDomainTreeEnhancerFor(rootTypes, calculatedPropertiesInfo, customProperties);
-        if (cachedInstance != null) { // TODO provide atomicity here
-            return new DomainTreeEnhancer(cachedInstance);
-        } else {
-            final DomainTreeEnhancer newInstance = new DomainTreeEnhancer(entityFactory, rootTypes, calculatedPropertiesInfo, customProperties);
-            domainTreeEnhancerCache.putDomainTreeEnhancerFor(rootTypes, calculatedPropertiesInfo, customProperties, newInstance);
-            return new DomainTreeEnhancer(newInstance); // need to also perform copy here as above (where cachedInstance != null); this is to avoid further mutation of cached instance (e.g. in postCentreCreated hooks)
-        }
+        final var cachedInstance = domainTreeEnhancers.computeIfAbsent(
+            t3(rootTypes, calculatedPropertiesInfo, customProperties),
+            key -> new DomainTreeEnhancer(entityFactory, rootTypes, calculatedPropertiesInfo, customProperties)
+        );
+        return new DomainTreeEnhancer(cachedInstance); // need to perform copy here; this is to avoid further mutation of cached instance (e.g. in postCentreCreated hooks)
     }
     
     private boolean hasNoAdditionalProperties(final Class<?> rootType) {
