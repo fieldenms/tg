@@ -13,8 +13,6 @@ import com.google.inject.Injector;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.matcher.Matcher;
 
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
-import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.security.AuthorisationInterceptor;
@@ -53,8 +51,6 @@ public abstract class EntityModule extends AbstractModule implements IModuleWith
         bindInterceptor(any(), // match any class
                 annotatedWith(Authorise.class), // having annotated methods
                 ai); // the intercepter
-        
-        bind(IDomainTreeEnhancerCache.class).toInstance(DomainTreeEnhancerCache.CACHE);
         
         // request static IDates injection into TgScalars;
         // static injection occurs at the time when an injector is created

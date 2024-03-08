@@ -4,8 +4,6 @@ import java.io.InputStream;
 
 import com.google.inject.Inject;
 
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
-import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
@@ -27,13 +25,13 @@ public class Serialiser implements ISerialiser {
     private final ISerialisationClassProvider provider;
 
     @Inject
-    public Serialiser(final EntityFactory factory, final ISerialisationClassProvider provider, final IDomainTreeEnhancerCache domainTreeEnhancerCache) {
+    public Serialiser(final EntityFactory factory, final ISerialisationClassProvider provider) {
         this.factory = factory;
         this.provider = provider;
     }
     
     public static Serialiser createSerialiserWithJackson(final EntityFactory factory, final ISerialisationClassProvider provider, final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
-        final Serialiser serialiser = new Serialiser(factory, provider, DomainTreeEnhancerCache.CACHE);
+        final Serialiser serialiser = new Serialiser(factory, provider);
         serialiser.initJacksonEngine(serialisationTypeEncoder, idOnlyProxiedEntityTypeCache);
         return serialiser;
     }
