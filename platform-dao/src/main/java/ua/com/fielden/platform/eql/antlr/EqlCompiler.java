@@ -132,9 +132,9 @@ public final class EqlCompiler {
                     Source: %s
                     Reason: %s
                     """.formatted(
-                            tokenSource.tokens().stream().map(Token::getText).collect(joining(" ")),
+                            TokensFormatter.getInstance().format(tokenSource),
                             requireNonNullElse(tokenSource.getSourceName(), "unknown"),
-                            e.getLocalizedMessage()),
+                            requireNonNullElse(e.getLocalizedMessage(), "unknown")),
                     e);
         }
     }
@@ -203,7 +203,7 @@ public final class EqlCompiler {
                     Source: %s
                     Reason: %s
                     """.formatted(
-                            tokenSource.tokens().stream().map(Token::getText).collect(joining(" ")),
+                            TokensFormatter.getInstance().format(tokenSource),
                             requireNonNullElse(tokenSource.getSourceName(), "unknown"),
                             msg),
                     e);

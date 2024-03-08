@@ -30,7 +30,7 @@ import ua.com.fielden.platform.eql.stage3.sources.ISource3;
  */
 public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuery2> {
 
-    public static final String ERR_AUTO_YIELD_IMPOSSIBLE_FOR_QUERY_WITH_MAIN_SOURCE_HAVING_NO_ID = "Auto-yield is not possible when the main source of the query doesn't contain ID property.";
+    public static final String ERR_AUTO_YIELD_IMPOSSIBLE_FOR_QUERY_WITH_MAIN_SOURCE_HAVING_NO_ID = "Auto-yield is not possible when the main source of the query doesn't contain property [id].";
 
     public SubQuery1(final QueryComponents1 queryComponents, final Class<? extends AbstractEntity<?>> resultType) {
         super(queryComponents, resultType);

@@ -1,34 +1,27 @@
 package ua.com.fielden.platform.eql.stage1.sources;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
+import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
+import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
+import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
+import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForEntityType;
+import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForPrimType;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
+import ua.com.fielden.platform.eql.stage1.queries.SourceQuery1;
+import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
+import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnQueries;
+import ua.com.fielden.platform.utils.CollectionUtil;
+
+import java.util.*;
+
 import static java.lang.String.format;
 import static java.util.Collections.emptySortedMap;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_ENTITY;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.SortedMap;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
-import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
-import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
-import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForEntityType;
-import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForPrimType;
-import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
-import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
-import ua.com.fielden.platform.eql.stage1.queries.SourceQuery1;
-import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
-import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnQueries;
 
 public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries> {
     public static final String ERR_CONFLICT_BETWEEN_YIELDED_AND_DECLARED_PROP_TYPE = "There is a problem while trying to determine the type for property [%s] of a query source based on queries with result type [%s].\n"
@@ -85,7 +78,11 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
                     ) {
                         createdProps.put(yield.name(), new QuerySourceItemForEntityType<>(yield.name(), querySourceInfoProvider.getModelledQuerySourceInfo((Class<? extends AbstractEntity<?>>) declaredProp.javaType()), declaredEntityTypeQuerySourceInfoItem.hibType, yield.nonnullable()));
                     } else {
-                        throw new EqlStage1ProcessingException(format(ERR_CONFLICT_BETWEEN_YIELDED_AND_DECLARED_PROP_TYPE, declaredEntityTypeQuerySourceInfoItem.name, sourceType.getName(), declaredEntityTypeQuerySourceInfoItem.javaType().getName(), yield.propType().javaType().getName()));
+                        throw new EqlStage1ProcessingException(
+                                format(ERR_CONFLICT_BETWEEN_YIELDED_AND_DECLARED_PROP_TYPE,
+                                        declaredEntityTypeQuerySourceInfoItem.name, sourceType.getName(),
+                                        declaredEntityTypeQuerySourceInfoItem.javaType().getName(),
+                                        yield.propType().javaType().getName()));
                     }
                 } else {
                     // TODO need to ensure that in case of UE or complex value all declared subprops match yielded ones.
@@ -160,4 +157,10 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
 
         return Objects.equals(models, other.models) && Objects.equals(isSyntheticEntity, other.isSyntheticEntity);
     }
+
+    @Override
+    public String toString() {
+        return "Source(%s, alias=%s, id=%s, models=(%s))".formatted(sourceType().getTypeName(), alias, id, CollectionUtil.toString(models, "; "));
+    }
+
 }
