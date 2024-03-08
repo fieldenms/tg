@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.criteria.generator.impl;
 
 import static java.util.Arrays.asList;
-import static java.util.Optional.empty;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -12,6 +11,7 @@ import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.to;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.isPropertyAnnotationPresent;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -20,11 +20,9 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import com.google.inject.Injector;
@@ -49,16 +47,13 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
-import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.sample.domain.crit_gen.CriteriaGeneratorTestModule;
 import ua.com.fielden.platform.sample.domain.crit_gen.LastLevelEntity;
-import ua.com.fielden.platform.sample.domain.crit_gen.MiTopLevelEntity;
 import ua.com.fielden.platform.sample.domain.crit_gen.TopLevelEntity;
-import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 import ua.com.fielden.platform.utils.Pair;
@@ -72,12 +67,7 @@ public class CriteriaGeneratorTest {
     private final EntityFactory entityFactory = injector.getInstance(EntityFactory.class);
     private final ICriteriaGenerator cg = injector.getInstance(ICriteriaGenerator.class);
 
-    @SuppressWarnings("serial")
-    private final CentreDomainTreeManagerAndEnhancer cdtm = new CentreDomainTreeManagerAndEnhancer(entityFactory, new HashSet<Class<?>>() {
-        {
-            add(TopLevelEntity.class);
-        }
-    });
+    private final CentreDomainTreeManagerAndEnhancer cdtm = new CentreDomainTreeManagerAndEnhancer(entityFactory, setOf(TopLevelEntity.class));
     {
         //Adding calculated properties to the centre domain tree manager and enhancer.
         cdtm.getEnhancer().addCalculatedProperty(TopLevelEntity.class, "", "3 + integerProp", "firstCalc", "firstCalc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
@@ -497,16 +487,9 @@ public class CriteriaGeneratorTest {
         };
     }
 
-    @Before
-    public void setup() {
-        CriteriaGenerator.invalidateCache();
-    }
-
     @Test
     public void test_that_criteria_generation_works_correctly() {
-        final User user = entityFactory.newEntity(User.class).setKey("USER");
-        user.isValid().ifFailure(Result::throwRuntime);
-        final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao<TopLevelEntity>> criteriaEntity = cg.generateCentreQueryCriteria(user, MiTopLevelEntity.class, empty(), cdtm);
+        final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao<TopLevelEntity>> criteriaEntity = cg.generateCentreQueryCriteria(cdtm);
         assertNotNull("The centre domain tree manager can not be null", criteriaEntity.getCentreDomainTreeMangerAndEnhancer());
         final List<Field> criteriaProperties = CriteriaReflector.getCriteriaProperties(criteriaEntity.getClass());
         assertEquals("The number of criteria properties is incorrect", propertyNames.size(), criteriaProperties.size());
@@ -523,9 +506,7 @@ public class CriteriaGeneratorTest {
     @Test
     public void test_that_setting_default_value_when_criterion_already_has_other_value_works() {
         cdtm.getRepresentation().getFirstTick().setValueByDefault(TopLevelEntity.class, "stringProp", "default");
-        final User user = entityFactory.newEntity(User.class).setKey("USER");
-        user.isValid().ifFailure(Result::throwRuntime);
-        final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao<TopLevelEntity>> criteriaEntity = cg.generateCentreQueryCriteria(user, MiTopLevelEntity.class, empty(), cdtm);
+        final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao<TopLevelEntity>> criteriaEntity = cg.generateCentreQueryCriteria(cdtm);
         assertEquals("Value should have been set", "default", cdtm.getFirstTick().getValue(TopLevelEntity.class, "stringProp"));
         criteriaEntity.set("topLevelEntity_stringProp", "value");
         assertEquals("Value should have been set", "value", cdtm.getFirstTick().getValue(TopLevelEntity.class, "stringProp"));

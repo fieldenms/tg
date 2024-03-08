@@ -1,12 +1,11 @@
 package ua.com.fielden.platform.web.utils;
 
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntityForContext;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.complementCriteriaEntityBeforeRunning;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntityForContext;
 
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -34,7 +33,6 @@ public class CriteriaEntityRestorer implements ICriteriaEntityRestorer {
     private final IUserProvider userProvider;
     private final IDeviceProvider deviceProvider;
     private final ICriteriaGenerator critGenerator;
-    private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
     private final EntityFactory entityFactory;
     private final ICentreConfigSharingModel sharingModel;
@@ -45,7 +43,6 @@ public class CriteriaEntityRestorer implements ICriteriaEntityRestorer {
             final IUserProvider userProvider,
             final IDeviceProvider deviceProvider,
             final ICriteriaGenerator critGenerator,
-            final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final EntityFactory entityFactory,
             final ICentreConfigSharingModel sharingModel) {
@@ -53,7 +50,6 @@ public class CriteriaEntityRestorer implements ICriteriaEntityRestorer {
         this.userProvider = userProvider;
         this.deviceProvider = deviceProvider;
         this.critGenerator = critGenerator;
-        this.domainTreeEnhancerCache = domainTreeEnhancerCache;
         this.webUiConfig = webUiConfig;
         this.entityFactory = entityFactory;
         this.sharingModel = sharingModel;
@@ -65,8 +61,8 @@ public class CriteriaEntityRestorer implements ICriteriaEntityRestorer {
         final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
         final MainMenuItemCo mmiCompanion = companionFinder.find(MainMenuItem.class);
         final IUser userCompanion = companionFinder.find(User.class);
-        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> criteriaEntity = createCriteriaEntityForContext(centreContextHolder, companionFinder, user, critGenerator, webUiConfig, entityFactory, deviceProvider.getDeviceProfile(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion, sharingModel);
-        return complementCriteriaEntityBeforeRunning(criteriaEntity, webUiConfig, companionFinder, user, critGenerator, entityFactory, centreContextHolder, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> criteriaEntity = createCriteriaEntityForContext(centreContextHolder, companionFinder, user, critGenerator, webUiConfig, entityFactory, deviceProvider.getDeviceProfile(), eccCompanion, mmiCompanion, userCompanion, sharingModel);
+        return complementCriteriaEntityBeforeRunning(criteriaEntity, webUiConfig, companionFinder, user, critGenerator, entityFactory, centreContextHolder, eccCompanion, mmiCompanion, userCompanion, sharingModel);
     }
 
 }

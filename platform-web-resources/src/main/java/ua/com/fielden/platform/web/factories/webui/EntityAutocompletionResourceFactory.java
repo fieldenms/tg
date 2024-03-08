@@ -14,7 +14,6 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.IEntityProducer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -43,7 +42,6 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 public class EntityAutocompletionResourceFactory extends Restlet {
     private final RestServerUtil restUtil;
     private final EntityFactory factory;
-    private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
     private final ICriteriaGenerator critGenerator;
     private final ICompanionObjectFinder companionFinder;
@@ -59,7 +57,6 @@ public class EntityAutocompletionResourceFactory extends Restlet {
      * @param injector
      */
     public EntityAutocompletionResourceFactory(final IWebUiConfig webUiConfig, final Injector injector) {
-        this.domainTreeEnhancerCache = injector.getInstance(IDomainTreeEnhancerCache.class);
         this.webUiConfig = webUiConfig;
         this.restUtil = injector.getInstance(RestServerUtil.class);
         this.factory = injector.getInstance(EntityFactory.class);
@@ -102,7 +99,6 @@ public class EntityAutocompletionResourceFactory extends Restlet {
                         criterionPropertyName,
                         centre,
                         restUtil,
-                        domainTreeEnhancerCache,
                         sharingModel,
                         getContext(),
                         request,

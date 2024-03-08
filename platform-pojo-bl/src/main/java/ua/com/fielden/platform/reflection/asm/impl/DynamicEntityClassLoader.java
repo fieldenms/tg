@@ -9,6 +9,7 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.logging.log4j.Logger;
 
@@ -37,10 +38,10 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
 
     /**
      * A cache of generated types.
-     * The key values are the simple names of the generated types, which is used as a convenience to get the generated type by name.
+     * The key values are the full names of the generated types, which is used as a convenience to get the generated type by name.
      * The value is a tuple, containing a generated type and the original type, used to produce the generated one.
      */
-    private static final ConcurrentHashMap<String, T2<WeakReference<Class<?>>, Class<?>>> cache = new ConcurrentHashMap<>(/*initialCapacity*/ 1000, /*loadFactor*/ 0.75f, /*concurrencyLevel*/50);  
+    private static final ConcurrentMap<String, T2<WeakReference<Class<?>>, Class<?>>> CACHE = new ConcurrentHashMap<>(/*initialCapacity*/ 1000, /*loadFactor*/ 0.75f, /*concurrencyLevel*/50);
 
     private DynamicEntityClassLoader(final ClassLoader parent) {
         super(parent, /*sealed*/ false);
@@ -53,31 +54,19 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
      */
     public static long cleanUp() {
         int count = 0;
-        for (final var entry : cache.entrySet()) {
+        for (final var entry : CACHE.entrySet()) {
             try {
                 final var t3 = entry.getValue();
                 if (t3 == null || t3._1.get() == null) {
-                    cache.remove(entry.getKey());
+                    CACHE.remove(entry.getKey());
                     count++;
                 }
             } catch (final Exception ex) {
                 LOGGER.error("Error occurred during cache cleanup.", ex);
             }
         }
-        LOGGER.info("Cache size [%s]. Evicted [%s] entries from cache.".formatted(cache.size(), count));
-        return cache.size();
-    }
-
-    /**
-     * Creates a new cache entry for the generated type.
-     * <p>
-     * The mapping has the following form: {@code [genTypeSimpleName : (genType, origType)]}.
-     * If an entry for the given type already exists, it will be overwritten.
-     *
-     * @param typePair
-     */
-    private static void cacheClass(final Class<?> genType) {
-        cache.put(genType.getSimpleName(), t2(new WeakReference<>(genType), determineOriginalType(genType)));
+        LOGGER.info("Cache size [%s]. Evicted [%s] entries from cache.".formatted(CACHE.size(), count));
+        return CACHE.size();
     }
 
     /**
@@ -89,11 +78,16 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
                 .collect(toMap(Map.Entry::getKey, entry -> doDefineClass(entry.getKey(), entry.getValue())));
     }
 
+    /**
+     * Returns already loaded class with {@code name}, if present.
+     * Otherwise, performs {@link #defineClass(String, byte[])} and caches entry in form {@code [genTypeName : (genType, origType)]}.
+     */
     private Class<?> doDefineClass(final String name, final byte[] bytes) {
-        // define the class, load it and cache for later reuse
-        final Class klass = defineClass(name, bytes, 0, bytes.length);
-        cacheClass(klass);
-        return klass;
+        return CACHE.computeIfAbsent(name, key -> {
+            // define the class, load it and cache for later reuse
+            final Class<?> klass = defineClass(name, bytes, 0, bytes.length);
+            return t2(new WeakReference<>(klass), determineOriginalType(klass));
+        })._1.get();
     }
 
     /**
@@ -142,7 +136,7 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
      */
     @SuppressWarnings("unchecked")
     public static <T extends AbstractEntity<?>> Class<T> getOriginalType(final Class<?> type) {
-        final var t3 = cache.get(type.getSimpleName());
+        final var t3 = CACHE.get(type.getName());
         if (t3 != null) {
             return (Class<T>) t3._2;
         } else {
