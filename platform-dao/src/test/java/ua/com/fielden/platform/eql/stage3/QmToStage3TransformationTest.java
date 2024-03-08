@@ -89,7 +89,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final SubQuery3 expSubQry2 = subqry(subQrySources2, subQryConditions2, yields(new Yield3(new AverageOf3(prop("purchasePrice.amount", veh2, BIGDECIMAL_PROP_TYPE), false, BIGDECIMAL_PROP_TYPE), ABSENT_ALIAS, nextSqlId(), BIGDECIMAL_PROP_TYPE)), BIGDECIMAL_PROP_TYPE);
 
         final IJoinNode3 sources = sources(ou5);
-        final Conditions3 conditions = or(and(or(isNotNull(expSubQry1), isNotNull(expSubQry2))));
+        final Conditions3 conditions = or(isNotNull(expSubQry1), isNotNull(expSubQry2));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
         assertEquals(expQry, actQry);
     }
@@ -165,7 +165,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
                           ),
                         eq(entityProp("vehicle", wo, VEHICLE), idProp(veh))
                   );
-        final Conditions3 conditions = or(and(or(isNotNull(stringProp(KEY, make)), isNotNull(stringProp(KEY, make)))));
+        final Conditions3 conditions = or(isNotNull(stringProp(KEY, make)), isNotNull(stringProp(KEY, make)));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
@@ -193,7 +193,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
                           ),
                         eq(entityProp("vehicle", wo, VEHICLE), idProp(veh))
                   );
-        final Conditions3 conditions = or(and(or(isNotNull(stringProp(KEY, make)), isNotNull(stringProp(KEY, make)))));
+        final Conditions3 conditions = or(isNotNull(stringProp(KEY, make)), isNotNull(stringProp(KEY, make)));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
@@ -218,7 +218,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
                           ),
                         eq(entityProp("vehicle", wo, VEHICLE), idProp(veh))
                   );
-        final Conditions3 conditions = or(and(or(isNotNull(stringProp(KEY, model)), isNotNull(stringProp(KEY, model)))));
+        final Conditions3 conditions = or(isNotNull(stringProp(KEY, model)), isNotNull(stringProp(KEY, model)));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
@@ -472,7 +472,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
                                 eq(entityProp("make", model, MAKE), idProp(make))),
                         eq(entityProp("model", veh, MODEL), idProp(model))
                   );
-        final Conditions3 conditions = or(and(or(isNotNull(stringProp(KEY, make)), isNotNull(stringProp(KEY, makeA)), isNotNull(stringProp(KEY, make)))));
+        final Conditions3 conditions = or(isNotNull(stringProp(KEY, make)), isNotNull(stringProp(KEY, makeA)), isNotNull(stringProp(KEY, make)));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
@@ -499,7 +499,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
                                 eq(entityProp("make", model, MAKE), idProp(make))),
                         eq(entityProp("model", veh, MODEL), idProp(model))
                   );
-        final Conditions3 conditions = or(and(or(isNotNull(stringProp(KEY, make)), isNotNull(stringProp(KEY, makeA)))));
+        final Conditions3 conditions = or(isNotNull(stringProp(KEY, make)), isNotNull(stringProp(KEY, makeA)));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
@@ -526,7 +526,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
                                 eq(entityProp("make", model, MAKE), idProp(make))),
                         eq(entityProp("model", veh, MODEL), idProp(model))
                   );
-        final Conditions3 conditions = or(and(or(isNotNull(stringProp(KEY, make)), isNotNull(stringProp(KEY, makeA)))));
+        final Conditions3 conditions = or(isNotNull(stringProp(KEY, make)), isNotNull(stringProp(KEY, makeA)));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
@@ -549,7 +549,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
                           ),
                         eq(entityProp("model", veh, MODEL), idProp(model))
                   );
-        final Conditions3 conditions = or(and(or(isNotNull(stringProp(KEY, make)), isNotNull(stringProp(KEY, make)))));
+        final Conditions3 conditions = or(isNotNull(stringProp(KEY, make)), isNotNull(stringProp(KEY, make)));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
@@ -573,7 +573,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
                           ),
                         eq(entityProp("model", veh, MODEL), idProp(model))
                   );
-        final Conditions3 conditions = or(and(or(isNotNull(stringProp(KEY, make)), isNotNull(stringProp(DESC, make)))));
+        final Conditions3 conditions = or(isNotNull(stringProp(KEY, make)), isNotNull(stringProp(DESC, make)));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
@@ -591,7 +591,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
                         model,
                         eq(entityProp("model", veh, MODEL), idProp(model))
                   );
-        final Conditions3 conditions = or(and(or(isNotNull(stringProp(KEY, model)), isNotNull(stringProp(DESC, model)))));
+        final Conditions3 conditions = or(isNotNull(stringProp(KEY, model)), isNotNull(stringProp(DESC, model)));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
@@ -643,7 +643,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
                         make,
                         eq(entityProp("make", model, MAKE), idProp(make))
                   );
-        final Conditions3 conditions = or(and(or(isNotNull(stringProp(KEY, make)), isNotNull(expSubQry), isNotNull(stringProp(KEY, make)))));
+        final Conditions3 conditions = or(isNotNull(stringProp(KEY, make)), isNotNull(expSubQry), isNotNull(stringProp(KEY, make)));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
@@ -669,7 +669,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
                         make,
                         eq(entityProp("make", model, MAKE), idProp(make))
                   );
-        final Conditions3 conditions = or(and(or(isNotNull(stringProp(KEY, make)), isNotNull(expSubQry))));
+        final Conditions3 conditions = or(isNotNull(stringProp(KEY, make)), isNotNull(expSubQry));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
@@ -687,7 +687,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
                         make,
                         eq(entityProp("make", model, MAKE), idProp(make))
                   );
-        final Conditions3 conditions = or(and(or(isNotNull(stringProp(KEY, make)), isNotNull(stringProp(KEY, make)))));
+        final Conditions3 conditions = or(isNotNull(stringProp(KEY, make)), isNotNull(stringProp(KEY, make)));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
@@ -743,7 +743,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
                         repVeh,
                         eq(entityProp("replacedBy", veh, VEHICLE), idProp(repVeh))
                   );
-        final Conditions3 conditions = or(and(or(isNotNull(stringProp(KEY, veh)), isNotNull(stringProp(KEY, repVeh)))));
+        final Conditions3 conditions = or(isNotNull(stringProp(KEY, veh)), isNotNull(stringProp(KEY, repVeh)));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
@@ -771,7 +771,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
                           ),
                         eq(entityProp("station", veh, ORG5), idProp(org5))
                   );
-        final Conditions3 conditions = or(and(or(isNotNull(dateProp("initDate", veh)), isNotNull(stringProp("name", org5)), isNotNull(stringProp("name", org4)), isNotNull(dateProp("initDate", repVeh)))));
+        final Conditions3 conditions = or(isNotNull(dateProp("initDate", veh)), isNotNull(stringProp("name", org5)), isNotNull(stringProp("name", org4)), isNotNull(dateProp("initDate", repVeh)));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
@@ -794,7 +794,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
                         ou5e,
                         eq(entityProp("station", veh, ORG5), idProp(ou5e))
                   );
-        final Conditions3 conditions = or(and(or(isNotNull(stringProp(KEY, veh)), isNotNull(stringProp(KEY, repVeh)))));
+        final Conditions3 conditions = or(isNotNull(stringProp(KEY, veh)), isNotNull(stringProp(KEY, repVeh)));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
@@ -834,13 +834,13 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
                           ),
                         eq(entityProp("station", veh, ORG5), idProp(ou5e))
                   );
-        final Conditions3 conditions = or(and(or(
+        final Conditions3 conditions = or(
                 isNotNull(stringProp(KEY, veh)),
                 isNotNull(stringProp(KEY, repVeh)),
                 isNotNull(dateProp("initDate", veh)),
                 isNotNull(stringProp("name", ou5)),
                 isNotNull(stringProp("name", ou4)),
-                isNotNull(stringProp("name", ou5eou4)))));
+                isNotNull(stringProp("name", ou5eou4)));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
@@ -885,12 +885,12 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
                           ),
                         eq(entityProp("parent", ou3, ORG2), idProp(ou2e))
                   );
-        final Conditions3 conditions = or(and(or(
+        final Conditions3 conditions = or(
                 isNotNull(dateProp("initDate", veh)),
                 isNotNull(dateProp("initDate", repVeh)),
                 isNotNull(stringProp("name", ou5)),
                 isNotNull(stringProp("name", ou4)),
-                isNotNull(stringProp(KEY, ou2eou1)))));
+                isNotNull(stringProp(KEY, ou2eou1)));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);

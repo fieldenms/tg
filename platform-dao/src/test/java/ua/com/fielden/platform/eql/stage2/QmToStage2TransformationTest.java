@@ -151,12 +151,11 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final Prop2 station_parent_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "parent"), pi(ORG4, "name"));
         final Prop2 replacedBy_initDate = prop(source, pi(VEHICLE, "replacedBy"), pi(VEHICLE, "initDate"));
 
-        final Conditions2 conditions = or(and(or(
+        final Conditions2 conditions = or(
                 isNotNull(initDate),
                 isNotNull(station_name),
                 isNotNull(station_parent_name),
-                isNotNull(replacedBy_initDate)
-                )));
+                isNotNull(replacedBy_initDate));
         final ResultQuery2 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
@@ -173,12 +172,11 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final Prop2 station_parent_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "parent"), pi(ORG4, "name"));
         final Prop2 replacedBy_initDate = prop(source, pi(VEHICLE, "replacedBy"), pi(VEHICLE, "initDate"));
 
-        final Conditions2 conditions = or(and(or(
+        final Conditions2 conditions = or(
                 isNotNull(initDate),
                 isNotNull(station_name),
                 isNotNull(station_parent_name),
-                isNotNull(replacedBy_initDate)
-                )));
+                isNotNull(replacedBy_initDate));
         final ResultQuery2 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
@@ -195,12 +193,11 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final Prop2 station_parent_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "parent"), pi(ORG4, "name"));
         final Prop2 replacedBy_initDate = prop(source, pi(VEHICLE, "replacedBy"), pi(VEHICLE, "initDate"));
 
-        final Conditions2 conditions = or(and(or(
+        final Conditions2 conditions = or(
                 isNotNull(initDate),
                 isNotNull(station_name),
                 isNotNull(station_parent_name),
-                isNotNull(replacedBy_initDate)
-                )));
+                isNotNull(replacedBy_initDate));
         final ResultQuery2 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
@@ -219,12 +216,11 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final Prop2 station_parent_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "parent"), pi(ORG4, "name"));
         final Prop2 replacedBy_initDate = prop(source2, pi(VEHICLE, "replacedBy"), pi(VEHICLE, "initDate"));
 
-        final Conditions2 conditions = or(and(or(
+        final Conditions2 conditions = or(
                 isNotNull(initDate),
                 isNotNull(station_name),
                 isNotNull(station_parent_name),
-                isNotNull(replacedBy_initDate)
-                )));
+                isNotNull(replacedBy_initDate));
         final ResultQuery2 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
