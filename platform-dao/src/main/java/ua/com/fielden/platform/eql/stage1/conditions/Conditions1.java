@@ -131,10 +131,9 @@ public class Conditions1 implements ICondition1<Conditions2> {
 
         final List<List<? extends ICondition2<?>>> transformed = formDnf().stream()
                 .map(andGroup ->
-                                  andGroup.stream().map(andGroupCondition -> andGroupCondition.transform(context))
-                                                   .filter(andGroupConditionTransformed -> !andGroupConditionTransformed.ignore())
-                                                   .collect(toList())
-                    )
+                        andGroup.stream().map(andGroupCondition -> andGroupCondition.transform(context))
+                                .filter(andGroupConditionTransformed -> !andGroupConditionTransformed.ignore())
+                                .toList())
                 .filter(transformedAndGroup -> !transformedAndGroup.isEmpty())
                 .collect(toList());
 

@@ -1,20 +1,17 @@
 package ua.com.fielden.platform.eql.stage2.conditions;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptySet;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 
 public class Conditions2 implements ICondition2<Conditions3> {
     public static final Conditions2 EMPTY_CONDITIONS = new Conditions2(false, emptyList());
@@ -56,13 +53,10 @@ public class Conditions2 implements ICondition2<Conditions3> {
 
     @Override
     public Set<Prop2> collectProps() {
-        final Set<Prop2> result = new HashSet<>();
-        for (final List<? extends ICondition2<?>> list : allConditionsAsDnf) {
-            for (final ICondition2<?> cond : list) {
-                result.addAll(cond.collectProps());
-            }
-        }
-        return result;
+        return allConditionsAsDnf.stream()
+                .flatMap(List::stream)
+                .flatMap(cond -> cond.collectProps().stream())
+                .collect(Collectors.toSet());
     }
 
     @Override
@@ -87,16 +81,13 @@ public class Conditions2 implements ICondition2<Conditions3> {
             }
         }
 
-        return allConditionsAsDnf.isEmpty() || negated ? false : true;
+        return !allConditionsAsDnf.isEmpty() && !negated;
     }
 
-    private boolean conditionMatchesAnyOf(final List<? extends ICondition2<?>> conditions, final ICondition2<?> conditionToMatch) {
-        for (final ICondition2<?> condition : conditions) {
-            if (condition.equals(conditionToMatch) || (condition instanceof Conditions2 && ((Conditions2) condition).conditionIsSatisfied(conditionToMatch))) {
-                return true;
-            }
-        }
-        return false;
+    private static boolean conditionMatchesAnyOf(final List<? extends ICondition2<?>> conditions, final ICondition2<?> conditionToMatch) {
+        return conditions.stream()
+                .anyMatch(cond -> cond.equals(conditionToMatch)
+                        || (cond instanceof Conditions2 conds && conds.conditionIsSatisfied(conditionToMatch)));
     }
 
     @Override

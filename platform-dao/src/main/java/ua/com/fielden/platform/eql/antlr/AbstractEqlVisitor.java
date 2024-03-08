@@ -5,7 +5,6 @@ import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -24,6 +23,10 @@ abstract class AbstractEqlVisitor<T> extends EQLBaseVisitor<T> {
         this.transformer = transformer;
     }
 
+    @Override
+    protected T defaultResult() {
+        throw new UnsupportedOperationException();
+    }
 
     protected Object getParamValue(final String paramName) {
         final Object paramValue = transformer.getParamValue(paramName);
@@ -48,25 +51,31 @@ abstract class AbstractEqlVisitor<T> extends EQLBaseVisitor<T> {
     }
 
     protected static Object preprocessValue(final Object value) {
-        if (value != null && (value.getClass().isArray() || value instanceof Collection<?>)) {
-            final Iterable<?> iterable = value.getClass().isArray() ? Arrays.asList((Object[]) value) : (Collection<?>) value;
-            final List<Object> values = new ArrayList<>();
-            for (final Object object : iterable) {
-                final Object furtherPreprocessed = preprocessValue(object);
-                if (furtherPreprocessed instanceof List) {
-                    values.addAll((List<?>) furtherPreprocessed);
-                } else {
-                    values.add(furtherPreprocessed);
-                }
+        if (value != null) {
+            if (value.getClass().isArray()) {
+                return preprocessValues(Arrays.asList((Object[]) value));
+            } else if (value instanceof Collection<?> collection) {
+                return preprocessValues(collection);
             }
-            return values;
-        } else {
-            return convertValue(value);
         }
+        return preprocessScalarValue(value);
+    }
+
+    protected static List<Object> preprocessValues(final Collection<?> values) {
+        return values.stream()
+                .map(AbstractEqlVisitor::preprocessValue)
+                .mapMulti((val, sink) -> {
+                    if (val instanceof List<?> list) {
+                        list.forEach(sink);
+                    } else {
+                        sink.accept(val);
+                    }
+                })
+                .toList();
     }
 
     /** Ensures that values of boolean types are converted properly. */
-    protected static Object convertValue(final Object value) {
+    protected static Object preprocessScalarValue(final Object value) {
         if (value instanceof Boolean) {
             return (boolean) value ? Y : N;
         }

@@ -32,8 +32,7 @@ import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.query.DbVersion.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
-import static ua.com.fielden.platform.utils.CollectionUtil.unmodifiableListOf;
+import static ua.com.fielden.platform.utils.CollectionUtil.*;
 
 public class EntityQueryExecutionTest extends AbstractDaoTestCase {
 
@@ -654,7 +653,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         final TgVehicle vehicle = models.get(0);
         assertEquals("Incorrect key", "CAR2", vehicle.getKey());
         assertTrue("Values of props sumOfPrices [" + vehicle.getSumOfPrices().getAmount() + "] and calc0 [" + vehicle.getCalc0() + "] should be equal", vehicle.getSumOfPrices().getAmount().compareTo(vehicle.getCalc0()) == 0);
-        assertEquals("Incorrect key", new Integer(30), vehicle.getConstValueProp());
+        assertEquals("Incorrect key", Integer.valueOf(30), vehicle.getConstValueProp());
     }
 
     @Test
@@ -794,7 +793,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         final List<TgWagon> models = wagonDao.getAllEntities(from(qry).with(fetch(TgWagon.class).with("slots", fetch(TgWagonSlot.class).with("bogie"))).model());
         assertEquals("Incorrect key", 1, models.size());
         assertEquals("Incorrect key", 8, models.get(0).getSlots().size());
-        assertEquals("Incorrect slot position", new Integer("1"), models.get(0).getSlots().iterator().next().getPosition());
+        assertEquals("Incorrect slot position", Integer.valueOf("1"), models.get(0).getSlots().iterator().next().getPosition());
         assertNotNull("Bogie should be present", models.get(0).getSlots().iterator().next().getBogie());
         assertEquals("Incorrect key", "BOGIE4", models.get(0).getSlots().iterator().next().getBogie().getKey());
     }
@@ -1427,23 +1426,8 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
 
     @Test
     public void test_that_can_query_with_nested_list_param() {
-        final List<Object> modelKeysLevel1 = new ArrayList<Object>() {
-            {
-                add("316");
-                add("317");
-                add("318");
-                add("318");
-            }
-        };
-        final List<Object> modelKeys = new ArrayList<Object>() {
-            {
-                add("316");
-                add("317");
-                add("318");
-                add("318");
-                add(modelKeysLevel1);
-            }
-        };
+        final var modelKeysLevel1 = List.of("316", "317", "318", "318");
+        final var modelKeys = listb("316", "317","318","318").addAll(modelKeysLevel1).$();
 
         final EntityResultQueryModel<TgVehicleModel> queryModel = select(TgVehicleModel.class).where().prop("key").in().params("param").model();
         assertEquals("Incorrect number of retrieved veh models.", 3, vehicleModelDao.getAllEntities(from(queryModel).with("param", modelKeys).model()).size());
@@ -1451,32 +1435,9 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
 
     @Test
     public void test_that_can_query_with_deeply_nested_list_param() {
-        final Set<Object> modelKeysLevel2 = new HashSet<Object>() {
-            {
-                add("316");
-                add("317");
-                add("318");
-                add("318");
-            }
-        };
-        final List<Object> modelKeysLevel1 = new ArrayList<Object>() {
-            {
-                add("316");
-                add("317");
-                add("318");
-                add("318");
-                add(modelKeysLevel2);
-            }
-        };
-        final List<Object> modelKeys = new ArrayList<Object>() {
-            {
-                add("316");
-                add("317");
-                add("318");
-                add("318");
-                add(modelKeysLevel1);
-            }
-        };
+        final var modelKeysLevel2 = setOf("316", "317", "318", "318");
+        final var modelKeysLevel1 = listb("316", "317", "318", "318").addAll(modelKeysLevel2).$();
+        final var modelKeys = listb("316", "317", "318", "318").addAll(modelKeysLevel1).$();
 
         final EntityResultQueryModel<TgVehicleModel> queryModel = select(TgVehicleModel.class).where().prop("key").in().params("param").model();
         assertEquals("Incorrect number of retrieved veh models.", 3, vehicleModelDao.getAllEntities(from(queryModel).with("param", modelKeys).model()).size());
@@ -1484,68 +1445,35 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
 
     @Test
     public void test_that_can_query_with_list_param() {
-        final List<String> modelKeys = new ArrayList<String>() {
-            {
-                add("316");
-                add("317");
-                add("318");
-                add("318");
-            }
-        };
+        final var modelKeys = List.of("316", "317", "318", "318");
         final EntityResultQueryModel<TgVehicleModel> queryModel = select(TgVehicleModel.class).where().prop("key").in().params("param").model();
         assertEquals("Incorrect number of retrieved veh models.", 3, vehicleModelDao.getAllEntities(from(queryModel).with("param", modelKeys).model()).size());
     }
 
     @Test
     public void test_that_can_query_with_list_param_in_anyOfParams() {
-        final List<String> modelKeys = new ArrayList<String>() {
-            {
-                add("316");
-                add("317");
-                add("318");
-                add("318");
-            }
-        };
+        final List<String> modelKeys = List.of("316", "317", "318", "318");
         final EntityResultQueryModel<TgVehicleModel> queryModel = select(TgVehicleModel.class).where().prop("key").eq().anyOfParams("param").model();
         assertEquals("Incorrect number of retrieved veh models.", 3, vehicleModelDao.getAllEntities(from(queryModel).with("param", modelKeys).model()).size());
     }
 
     @Test
     public void test_that_can_query_with_list_param_in_anyOfIParams() {
-        final List<String> modelKeys = new ArrayList<String>() {
-            {
-                add("316");
-                add("317");
-                add("318");
-                add(null);
-            }
-        };
+        final List<String> modelKeys = listOf("316", "317", "318", null);
         final EntityResultQueryModel<TgVehicleModel> queryModel = select(TgVehicleModel.class).where().prop("key").eq().anyOfIParams("param").model();
         assertEquals("Incorrect number of retrieved veh models.", 3, vehicleModelDao.getAllEntities(from(queryModel).with("param", modelKeys).model()).size());
     }
 
     @Test
     public void test_that_can_query_with_list_param_in_anyOfIParams2() {
-        final List<String> modelKeys = new ArrayList<String>() {
-            {
-                add(null);
-                add(null);
-            }
-        };
+        final List<String> modelKeys = unmodifiableListOf(null, null);
         final EntityResultQueryModel<TgVehicleModel> queryModel = select(TgVehicleModel.class).where().prop("key").eq().anyOfIParams("param").model();
         assertEquals("Incorrect number of retrieved veh models.", 7, vehicleModelDao.getAllEntities(from(queryModel).with("param", modelKeys).model()).size());
     }
 
     @Test
     public void test_that_can_query_with_set_param() {
-        final Set<String> modelKeys = new HashSet<String>() {
-            {
-                add("316");
-                add("317");
-                add("318");
-                add("318");
-            }
-        };
+        final Set<String> modelKeys = setOf("316", "317", "318", "318");
         final EntityResultQueryModel<TgVehicleModel> queryModel = select(TgVehicleModel.class).where().prop("key").in().params("param").model();
         assertEquals("Incorrect number of retrieved veh models.", 3, vehicleModelDao.getAllEntities(from(queryModel).with("param", modelKeys).model()).size());
     }
