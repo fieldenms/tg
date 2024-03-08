@@ -1039,6 +1039,17 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         assertEquals("WSHOP1", location.get("lockey"));
     }
 
+    @Test
+    public void caseWhen_can_be_used_with_multiple_conditions() {
+        run(select(TgBogie.class).where()
+                .caseWhen()
+                    .prop("key").isNull().and().prop("desc").isNull().or().val(1).gt().val(2)
+                    .then().val(1)
+                    .otherwise().val(2)
+                .end()
+                .isNotNull());
+    }
+
     @Override
     public boolean saveDataPopulationScriptToFile() {
         return false;
