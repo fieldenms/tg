@@ -1,15 +1,18 @@
 package ua.com.fielden.platform.eql.antlr;
 
-import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.BaseErrorListener;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import ua.com.fielden.platform.eql.antlr.tokens.PropToken;
 import ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource;
+import ua.com.fielden.platform.eql.antlr.tokens.util.TokensFormatter;
 import ua.com.fielden.platform.eql.exceptions.EqlStage0ProcessingException;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElse;
-import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.eql.antlr.EQLParser.*;
 
 /**
