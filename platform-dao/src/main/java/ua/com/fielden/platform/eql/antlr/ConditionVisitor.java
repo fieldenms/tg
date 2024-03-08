@@ -20,7 +20,9 @@ import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.types.tuples.T2;
 
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static java.lang.Boolean.TRUE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
@@ -37,12 +39,44 @@ final class ConditionVisitor extends AbstractEqlVisitor<ICondition1<?>> {
 
     @Override
     public Conditions1 visitAndCondition(final AndConditionContext ctx) {
-        return Conditions1.and(ctx.left.accept(this), ctx.right.accept(this));
+        final Stream.Builder<ConditionContext> builder = Stream.builder();
+        spliceAnd(ctx, builder::add);
+        return Conditions1.and(builder.build().map(c -> c.accept(this)).toList());
+    }
+
+    private void spliceAnd(final AndConditionContext ctx, final Consumer<? super ConditionContext> sink) {
+        if (ctx.left instanceof AndConditionContext andCtx) {
+            spliceAnd(andCtx, sink);
+        } else {
+            sink.accept(ctx.left);
+        }
+
+        if (ctx.right instanceof AndConditionContext andCtx) {
+            spliceAnd(andCtx, sink);
+        } else {
+            sink.accept(ctx.right);
+        }
     }
 
     @Override
     public Conditions1 visitOrCondition(final OrConditionContext ctx) {
-        return Conditions1.or(ctx.left.accept(this), ctx.right.accept(this));
+        final Stream.Builder<ConditionContext> builder = Stream.builder();
+        spliceOr(ctx, builder::add);
+        return Conditions1.or(builder.build().map(c -> c.accept(this)).toList());
+    }
+
+    private void spliceOr(final OrConditionContext ctx, final Consumer<? super ConditionContext> sink) {
+        if (ctx.left instanceof OrConditionContext orCtx) {
+            spliceOr(orCtx, sink);
+        } else {
+            sink.accept(ctx.left);
+        }
+
+        if (ctx.right instanceof OrConditionContext orCtx) {
+            spliceOr(orCtx, sink);
+        } else {
+            sink.accept(ctx.right);
+        }
     }
 
     @Override
