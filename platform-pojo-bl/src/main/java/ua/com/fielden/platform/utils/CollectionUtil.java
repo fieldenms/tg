@@ -1,29 +1,17 @@
 package ua.com.fielden.platform.utils;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.unmodifiableList;
-import static java.util.Collections.unmodifiableSet;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.types.tuples.T2;
+
+import java.util.*;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.*;
 
 /**
  * A convenience class to provide common collection related routines and algorithms.
@@ -58,6 +46,20 @@ public final class CollectionUtil {
     @SafeVarargs
     public static <T> List<T> unmodifiableListOf(final T ... elements) {
         return unmodifiableList(asList(elements));
+    }
+
+    @SafeVarargs
+    public static <T> CollectionBuilder<List<T>, T> listb(final T... xs) {
+        final List<T> list = new ArrayList<>(xs.length);
+        Collections.addAll(list, xs);
+        return new CollectionBuilder<>(list);
+    }
+
+    @SafeVarargs
+    public static <T> CollectionBuilder<Set<T>, T> setb(final T... xs) {
+        final Set<T> set = new HashSet<>(xs.length);
+        Collections.addAll(set, xs);
+        return new CollectionBuilder<>(set);
     }
 
     @SafeVarargs
@@ -189,6 +191,32 @@ public final class CollectionUtil {
         }
 
         return Optional.empty();
+    }
+
+    public static final class CollectionBuilder<C extends Collection<E>, E> {
+        private final C collection;
+
+        private CollectionBuilder(final C collection) {
+            this.collection = collection;
+        }
+
+        private CollectionBuilder(final Supplier<? extends C> supplier) {
+            this.collection = supplier.get();
+        }
+
+        public CollectionBuilder<C, E> add(final E e) {
+            collection.add(e);
+            return this;
+        }
+
+        public CollectionBuilder<C, E> addAll(final Collection<? extends E> es) {
+            collection.addAll(es);
+            return this;
+        }
+
+        public C $() {
+            return collection;
+        }
     }
 
 }
