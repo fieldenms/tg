@@ -22,7 +22,7 @@ import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter;
 public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
     private static final Logger LOGGER = getLogger(SerialisationTypeEncoder.class);
     private static final String ERR_DECODED_ENTITY_TYPE_MUST_BE_PRESENT = "Decoded entity type %s must be present after forced loading.";
-    private static final String ERR_CLIENT_APP_IS_OUTDATED = "Client application is outdated. Please reload.";
+    private static final String ERR_CLIENT_APP_IS_OUTDATED = "The client application is outdated. Please reload and try again.";
     private static final String ERR_DECODED_TYPE_WAS_ALREADY_REGISTERED = "Somehow decoded entity type %s was already registered in TgJackson.";
 
     private TgJackson tgJackson;
