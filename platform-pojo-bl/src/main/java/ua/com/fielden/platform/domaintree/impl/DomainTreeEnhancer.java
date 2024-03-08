@@ -64,7 +64,8 @@ import ua.com.fielden.platform.utils.EntityUtils;
  *
  */
 public final class DomainTreeEnhancer extends AbstractDomainTree implements IDomainTreeEnhancer {
-    private static final Logger logger = getLogger(DomainTreeEnhancer.class);
+    private static final Logger LOGGER = getLogger(DomainTreeEnhancer.class);
+
     /**
      * Cache of {@link DomainTreeEnhancer}s with keys as [rootTypes; calcProps; customProps].
      * <p>
@@ -87,8 +88,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     /**
      * Constructs a new instance of domain enhancer with clean, not enhanced, domain.
      * <p>
-     * However, no calculated properties have been added -- the resultant types will be enhanced. They will use a marker property (for more information see
-     * {@link #generateHierarchy(Set, Map)} method).
+     * However, no calculated properties have been added -- the resultant types will be enhanced. They will use a marker property (for more information see method {@link #generateHierarchy(Set, Map, Map)}).
      *
      * @param rootTypes -- root types
      *
@@ -198,12 +198,11 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      * 1. EntityCentre.createDefaultCentre method applies calculated/custom properties and after that {@link DomainTreeEnhancer} remains in the same state.<br>
      * 2. Instances, that were deserialised after retrieval from database or during copying, are not mutated afterwards.<br>
      * We need to consider {@link DomainTreeEnhancer} cache management when implementing ability to add calculated properties from UI.
-     * 
-     * @param serialiser
+     *
+     * @param entityFactory
      * @param rootTypes
      * @param calculatedPropertiesInfo
      * @param customProperties
-     * @param miType -- menu item type to which this enhancer will be related; please note that only enhancers that are related to some miType will be cached -- annotation MiType must be generated there
      * @return
      */
     public static DomainTreeEnhancer createFrom(
@@ -405,7 +404,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
                             // replace relevant root type in cache
                             originalAndEnhancedRootTypes.put(originalRoot, rootAfterPropagation);
                         } catch (final ClassNotFoundException e) {
-                            logger.error(e);
+                            LOGGER.error(e);
                             throw new IllegalStateException(e);
                         }
                     }
@@ -419,7 +418,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
                     originalAndEnhancedRootTypes.put(originalRoot, rootWithPredefinedName);
                 }
             } catch (final ClassNotFoundException e) {
-                logger.error(e);
+                LOGGER.error(e);
                 throw new IllegalStateException(e);
             }
         }
@@ -456,7 +455,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
             final String nextProp = PropertyTypeDeterminator.isDotNotation(path) ? PropertyTypeDeterminator.penultAndLast(path).getKey() : "";
             return propagateEnhancedTypeToRoot(nextEnhancedType, root, nextProp);
         } catch (final ClassNotFoundException e) {
-            logger.error(e);
+            LOGGER.error(e);
             throw new DomainTreeException("Could not propagate enahced type to root.", e);
         }
     }
@@ -564,8 +563,8 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     /**
      * Iterates through the set of calculated properties to find appropriate calc property.
      *
-     * @param root
      * @param pathAndName
+     * @param calcProperties
      * @return
      */
     protected static final CalculatedProperty calculatedProperty(final List<CalculatedProperty> calcProperties, final String pathAndName) {
