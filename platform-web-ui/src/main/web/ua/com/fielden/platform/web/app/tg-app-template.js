@@ -48,7 +48,7 @@ const template = html`
     <div class="relative flex">
         <neon-animated-pages id="pages" class="fit" attr-for-selected="name" on-neon-animation-finish="_animationFinished" animate-initial-selection>
             <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]" app-title="[[appTitle]]">
-                <paper-icon-button id="helpAction" slot="helpAction" icon="icons:help-outline" 
+                <paper-icon-button id="helpAction" slot="helpAction" icon="icons:help-outline" tabindex="1"
                     on-mousedown="_helpMouseDownEventHandler" 
                     on-touchstart="_helpMouseDownEventHandler" 
                     on-mouseup="_helpMouseUpEventHandler" 
