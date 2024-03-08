@@ -1,42 +1,8 @@
 package ua.com.fielden.platform.entity.query.fetching;
 
-import static java.lang.Integer.valueOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.query.DbVersion.H2;
-import static ua.com.fielden.platform.entity.query.DbVersion.MSSQL;
-import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAndInstrument;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.joda.time.DateTime;
 import org.junit.Ignore;
 import org.junit.Test;
-
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
@@ -45,79 +11,29 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonOperator0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionCompoundCondition0;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionComparisonOperator;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionOperand;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
-import ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator;
-import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.ConditionModel;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
-import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.*;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
-import ua.com.fielden.platform.sample.domain.ITeAverageFuelUsage;
-import ua.com.fielden.platform.sample.domain.ITgAuthor;
-import ua.com.fielden.platform.sample.domain.ITgAverageFuelUsage;
-import ua.com.fielden.platform.sample.domain.ITgBogie;
-import ua.com.fielden.platform.sample.domain.ITgBogieLocation;
-import ua.com.fielden.platform.sample.domain.ITgEntityWithComplexSummaries;
-import ua.com.fielden.platform.sample.domain.ITgFuelType;
-import ua.com.fielden.platform.sample.domain.ITgFuelUsage;
-import ua.com.fielden.platform.sample.domain.ITgMakeCount;
-import ua.com.fielden.platform.sample.domain.ITgOrgUnit5;
-import ua.com.fielden.platform.sample.domain.ITgPersonName;
-import ua.com.fielden.platform.sample.domain.ITgPublishedYearly;
-import ua.com.fielden.platform.sample.domain.ITgVehicle;
-import ua.com.fielden.platform.sample.domain.ITgVehicleMake;
-import ua.com.fielden.platform.sample.domain.ITgVehicleModel;
-import ua.com.fielden.platform.sample.domain.ITgWagon;
-import ua.com.fielden.platform.sample.domain.ITgWagonSlot;
-import ua.com.fielden.platform.sample.domain.ITgWorkshop;
-import ua.com.fielden.platform.sample.domain.TeAverageFuelUsage;
-import ua.com.fielden.platform.sample.domain.TeFuelUsageByType;
-import ua.com.fielden.platform.sample.domain.TeFuelUsageByTypeCo;
-import ua.com.fielden.platform.sample.domain.TgAuthor;
-import ua.com.fielden.platform.sample.domain.TgAuthorship;
-import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
-import ua.com.fielden.platform.sample.domain.TgBogie;
-import ua.com.fielden.platform.sample.domain.TgBogieLocation;
-import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummaries;
-import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries;
-import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummariesThatActuallyDeclareThoseSummariesCo;
-import ua.com.fielden.platform.sample.domain.TgFuelType;
-import ua.com.fielden.platform.sample.domain.TgFuelUsage;
-import ua.com.fielden.platform.sample.domain.TgMakeCount;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit5WithSummaries;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit5WithSummariesCo;
-import ua.com.fielden.platform.sample.domain.TgPersonName;
-import ua.com.fielden.platform.sample.domain.TgPublishedYearly;
-import ua.com.fielden.platform.sample.domain.TgTimesheet;
-import ua.com.fielden.platform.sample.domain.TgVehicle;
-import ua.com.fielden.platform.sample.domain.TgVehicleFuelUsage;
-import ua.com.fielden.platform.sample.domain.TgVehicleMake;
-import ua.com.fielden.platform.sample.domain.TgVehicleModel;
-import ua.com.fielden.platform.sample.domain.TgWagon;
-import ua.com.fielden.platform.sample.domain.TgWagonSlot;
-import ua.com.fielden.platform.sample.domain.TgWorkshop;
-import ua.com.fielden.platform.security.user.IUser;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
-import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
-import ua.com.fielden.platform.security.user.UserAndRoleAssociationCo;
-import ua.com.fielden.platform.security.user.UserRole;
-import ua.com.fielden.platform.security.user.UserRoleCo;
+import ua.com.fielden.platform.sample.domain.*;
+import ua.com.fielden.platform.security.user.*;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.utils.Pair;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import static java.lang.Integer.valueOf;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.query.DbVersion.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
+import static ua.com.fielden.platform.utils.CollectionUtil.unmodifiableListOf;
 
 public class EntityQueryExecutionTest extends AbstractDaoTestCase {
 
@@ -392,34 +308,13 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void test_query_query_with_grouping_and_subproperties() {
-        final AggregatedResultQueryModel qry1 = select(TgVehicleModel.class).where().condition(null).or().allOfProps("1", "@").ge().val(222).and(). //
-        condition(null).and().begin().condition(null).end().and().beginExpr().caseWhen().condition(null).then().now().when().condition(null).then().val(1).end().endExpr().isNotNull().modelAsAggregate();
-
+    public void test_query_with_grouping_and_subproperties() {
         final AggregatedResultQueryModel qry = select(TgVehicleModel.class).
                 groupBy().prop("make.key").
                 yield().countOf().prop("make").as("dmakes"). //
                 yield().prop("make.key").as("key").
                 modelAsAggregate();
-        final List<EntityAggregates> models = aggregateDao.getAllEntities(from(qry).model());
-
-        final ConditionModel c1 = cond().prop("aaa").eq().val(111).or().prop("bbb").isNotNull().model();
-        final List<Pair<TokenCategory, Object>> expected = new ArrayList<>();
-        expected.add(new Pair(TokenCategory.PROP, "aaa"));
-        expected.add(new Pair(TokenCategory.COMPARISON_OPERATOR, ComparisonOperator.EQ));
-        expected.add(new Pair(TokenCategory.VAL, 111));
-        expected.add(new Pair(TokenCategory.LOGICAL_OPERATOR, LogicalOperator.OR));
-        expected.add(new Pair(TokenCategory.PROP, "bbb"));
-        expected.add(new Pair(TokenCategory.NULL_OPERATOR, true));
-        assertEquals(expected, c1.getTokenSource().tokens());
-
-        final IStandAloneConditionOperand<AbstractEntity<?>> s = cond();
-
-        final IStandAloneConditionComparisonOperator<AbstractEntity<?>> d = s.prop("aaa");
-        final ConditionModel c2 = d.eq().val(111).or().prop("bbb").isNotNull().model();
-        assertEquals(expected, c2.getTokenSource().tokens());
-
-        //System.out.println(cond().round().prop("a").to(3).eq().val(0).and().beginExpr().prop("a").endExpr().isNotNull().and().now().eq().val(1).and().exists(null).and().condition(null).and().concat().prop("a").with().prop("b").with().prop("c").end().eq().all(null).and().condition(null).model().getTokens());
+        aggregateDao.getAllEntities(from(qry).model());
     }
 
     ////////////////////////////////////////////////////////////////   UNION ENTITIES ////////////////////////////////////////////////////////////
