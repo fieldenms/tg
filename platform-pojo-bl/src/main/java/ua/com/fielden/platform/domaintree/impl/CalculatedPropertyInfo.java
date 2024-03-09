@@ -13,6 +13,8 @@ public class CalculatedPropertyInfo {
     private final String customPropertyName;
     private final transient Integer precision;
     private final transient Integer scale;
+    private final transient String path;
+    private final transient String name;
 
     public CalculatedPropertyInfo() {
         root = null;
@@ -25,6 +27,8 @@ public class CalculatedPropertyInfo {
         customPropertyName = null;
         precision = null;
         scale = null;
+        path = null;
+        name = null;
     }
 
     public CalculatedPropertyInfo(
@@ -37,7 +41,9 @@ public class CalculatedPropertyInfo {
             final String originationProperty,
             final String desc,
             final Integer precision,
-            final Integer scale) {
+            final Integer scale,
+            final String path,
+            final String name) {
         this.root = root;
         this.contextPath = contextPath;
         this.customPropertyName = customPropertyName;
@@ -48,6 +54,8 @@ public class CalculatedPropertyInfo {
         this.desc = desc;
         this.precision = precision;
         this.scale = scale;
+        this.path = path;
+        this.name = name;
     }
 
     public Class<?> getRoot() {
@@ -170,6 +178,14 @@ public class CalculatedPropertyInfo {
             return false;
         }
         return true;
+    }
+
+    public String path() {
+        return path;
+    }
+
+    public String name() {
+        return name;
     }
 
 }
