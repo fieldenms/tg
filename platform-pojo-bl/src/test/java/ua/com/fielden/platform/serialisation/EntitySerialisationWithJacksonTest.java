@@ -69,7 +69,6 @@ import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity2;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.ui.menu.sample.MiEntityWithOtherEntity;
 import ua.com.fielden.platform.utils.DefinersExecutor;
 import ua.com.fielden.platform.web.utils.PropertyConflict;
 
@@ -790,8 +789,7 @@ public class EntitySerialisationWithJacksonTest {
     @Test
     public void uninstrumented_generated_entity_with_proxy_type_should_be_restored_into_uninstrumented_generated_entity_with_the_same_proxy_type() {
         final Class<EntityWithOtherEntity> entityType = EntityWithOtherEntity.class;
-        final Class<MiEntityWithOtherEntity> miType = MiEntityWithOtherEntity.class;
-        final T2<AbstractEntity<?>, Class<AbstractEntity<?>>> entityAndGeneratedType = factory.createUninstrumentedGeneratedEntity(true, entityType, miType);
+        final T2<AbstractEntity<?>, Class<AbstractEntity<?>>> entityAndGeneratedType = factory.createUninstrumentedGeneratedEntity(true, entityType);
         final AbstractEntity<?> entity = entityAndGeneratedType._1;
         final Class<AbstractEntity<?>> generatedType = entityAndGeneratedType._2;
         // generated type needs to be registered inside Jackson engine to be able to properly serialise / deserialise such instances
@@ -817,8 +815,7 @@ public class EntitySerialisationWithJacksonTest {
     @Test
     public void uninstrumented_generated_entity_with_id_only_proxy_property_should_be_restored_into_uninstrumented_generated_entity_with_the_same_id_only_proxy_property() {
         final Class<EntityWithOtherEntity> entityType = EntityWithOtherEntity.class;
-        final Class<MiEntityWithOtherEntity> miType = MiEntityWithOtherEntity.class;
-        final T2<AbstractEntity<?>, Class<AbstractEntity<?>>> entityAndGeneratedType = factory.createUninstrumentedGeneratedEntity(false, entityType, miType);
+        final T2<AbstractEntity<?>, Class<AbstractEntity<?>>> entityAndGeneratedType = factory.createUninstrumentedGeneratedEntity(false, entityType);
         final AbstractEntity<?> entity = entityAndGeneratedType._1;
         entity.beginInitialising().set("prop", createIdOnlyProxy()).endInitialising();
         final Class<AbstractEntity<?>> generatedType = entityAndGeneratedType._2;
@@ -846,8 +843,7 @@ public class EntitySerialisationWithJacksonTest {
     @Test
     public void instrumented_generated_entity_with_proxy_type_should_be_restored_into_instrumented_generated_entity_with_the_same_proxy_type() {
         final Class<EntityWithOtherEntity> entityType = EntityWithOtherEntity.class;
-        final Class<MiEntityWithOtherEntity> miType = MiEntityWithOtherEntity.class;
-        final T2<AbstractEntity<?>, Class<AbstractEntity<?>>> entityAndGeneratedType = factory.createInstrumentedGeneratedEntity(true, entityType, miType);
+        final T2<AbstractEntity<?>, Class<AbstractEntity<?>>> entityAndGeneratedType = factory.createInstrumentedGeneratedEntity(true, entityType);
         final AbstractEntity<?> entity = entityAndGeneratedType._1;
         final Class<AbstractEntity<?>> generatedType = entityAndGeneratedType._2;
         // generated type needs to be registered inside Jackson engine to be able to properly serialise / deserialise such instances
@@ -875,8 +871,7 @@ public class EntitySerialisationWithJacksonTest {
     @Test
     public void instrumented_generated_entity_with_id_only_proxy_property_should_be_restored_into_instrumented_generated_entity_with_the_same_id_only_proxy_property() {
         final Class<EntityWithOtherEntity> entityType = EntityWithOtherEntity.class;
-        final Class<MiEntityWithOtherEntity> miType = MiEntityWithOtherEntity.class;
-        final T2<AbstractEntity<?>, Class<AbstractEntity<?>>> entityAndGeneratedType = factory.createInstrumentedGeneratedEntity(false, entityType, miType);
+        final T2<AbstractEntity<?>, Class<AbstractEntity<?>>> entityAndGeneratedType = factory.createInstrumentedGeneratedEntity(false, entityType);
         final AbstractEntity<?> entity = entityAndGeneratedType._1;
         entity.beginInitialising().set("prop", createIdOnlyProxy()).endInitialising();
         final Class<AbstractEntity<?>> generatedType = entityAndGeneratedType._2;

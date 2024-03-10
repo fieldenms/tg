@@ -21,6 +21,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,6 +34,7 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.attachment.AttachmentPreviewEntityAction;
 import ua.com.fielden.platform.basic.config.Workflows;
+import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityDeleteActionProducer;
@@ -83,6 +85,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 public abstract class AbstractWebUiConfig implements IWebUiConfig {
     private final Logger logger = LogManager.getLogger(getClass());
     private static final String ERR_IN_COMPOUND_EMITTER = "Event source compound emitter should have cought this error. Something went wrong in WebUiConfig.";
+    private static final String CREATE_DEFAULT_CONFIG_INFO = "Creating default %s configurations for [%s]-typed centres (caching)...";
 
     private final String title;
     private WebUiBuilder webUiBuilder;
@@ -431,6 +434,28 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
             .withNoParentCentreRefresh()
             .build()
         );
+    }
+
+    @Override
+    public void loadCentreGeneratedTypesAndCriteriaTypes(final Class<?> entityType) {
+        final var critGenerator = injector.getInstance(ICriteriaGenerator.class);
+        // load all standalone centres for concrete 'entityType' (with their generated types and criteria types)
+        String log = CREATE_DEFAULT_CONFIG_INFO.formatted("standalone", entityType.getSimpleName());
+        logger.info(log);
+        getCentres().entrySet().stream()
+            .filter(entry -> entry.getValue().getEntityType().equals(entityType))
+            .map(Entry::getKey)
+            .forEach(miType -> critGenerator.generateCentreQueryCriteria(getDefaultCentre(miType, this)));
+        logger.info(log + "done");
+
+        // load all embedded centres for concrete 'entityType' (with their generated types and criteria types)
+        log = CREATE_DEFAULT_CONFIG_INFO.formatted("embedded", entityType.getSimpleName());
+        logger.info(log);
+        getEmbeddedCentres().entrySet().stream()
+            .filter(entry -> entry.getValue()._1.getEntityType().equals(entityType))
+            .map(Entry::getKey)
+            .forEach(miType -> critGenerator.generateCentreQueryCriteria(getDefaultCentre(miType, this)));
+        logger.info(log + "done");
     }
 
     @Override
