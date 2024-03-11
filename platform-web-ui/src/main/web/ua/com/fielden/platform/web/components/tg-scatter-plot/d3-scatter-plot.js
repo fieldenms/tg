@@ -76,7 +76,7 @@ const fireLabelPlacedEvent = (eventName, newRequiredMargin, chartArea) => {
 
 class ScatterPlot {
 
-    constructor(container, options, data) {
+    constructor(container, options) {
         //////////////////////Private variables can be configured through the api//////////////////////////
         //Most common configuration properties.
         this._options = {
@@ -104,7 +104,6 @@ class ScatterPlot {
         };
         this._options = options ? merge2LevelData(this._options, options) : this._options;
         this._data = [];
-        this._data = data ? data : this._data;
 
         //////////////////////Functional private variables///////////////////
         this._actualWidth = this._options.width - this._options.margin.left - this._options.margin.right;
@@ -127,22 +126,17 @@ class ScatterPlot {
         //create clip path to cut off the chart area.
         const clipPathId = generateUUID();
         this._clipPath = this._createClipPath(container, clipPathId);
-        //Create area for zooming and panning that will contain axes, grids and chart area with bars.
+        //Create area for zooming and panning that will contain axes, grids and chart area with dots.
         this._chartArea = this._createChartArea(container);
         //Create background area
         this._background = this._createBackground();
 
         //Draw grid
+        this._xGridGroup = this._drawXGrid();
         this._yGridGroup = this._drawYGrid();
 
-        //Creating bar container.
-        this._barContainer = this._createBarContainer(clipPathId);
-        //Create only Bar Container
-        this._onlyBarContainer = this._createOnlyBarContainer(clipPathId);
-        //Create Line container so that it will always after bars
-        this._lineContainer = this._createLineContainer();
-        //Create marker container
-        this._markerContainer = this._createMarkerContainer();
+        //Creating dots container.
+        this._dataContainer = this._createDataContainer(clipPathId);
 
         //Draw axes
         this._xAxisGroup = this._drawXAxes();
@@ -153,33 +147,28 @@ class ScatterPlot {
         this._xAxisLabel = this._drawXAxisLabel(container);
         this._yAxisLabel = this._drawYAxisLabel(container);
 
-        //Now draw job bars
-        this._drawBars();
-        //Also draw lines if they are present
-        this._drawLines();
-        //Draw markers after bars
-        this._drawBarLabels();
-        //Creating zoom&pan behaviour.
+        //Now draw data with dots
+        this._drawData();
+        
         this._zoom = d3.zoom()
             .scaleExtent([1, 10])
-            .translateExtent([[0, 0], [0, this._actualHeight]])
-            .extent([[0, 0], [0, this._actualHeight]])
+            .translateExtent([[0, 0], [this._actualWidth, 0]])
+            .extent([[0, 0], [this._actualWidth, 0]])
             .filter(() => {
                 return !d3.event.button && (d3.event.type !== "wheel" || d3.event.altKey);
             })
             .on("zoom", () => {
                 this._currentTransform = d3.event.transform;
-                this._yAxisGroup.call(this._yAxis.scale(this._currentTransform.rescaleY(this._ys)));
-                this._yGridGroup.call(this._yGrid.scale(this._currentTransform.rescaleY(this._ys)));
-                this._barContainer.attr("transform", "translate(0, " + this._currentTransform.y + ")scale(1, " + this._currentTransform.k + ")");
-                this._unscale();
+                this._xAxisGroup.call(this._xAxis.scale(this._currentTransform.rescaleX(this._xs)));
+                this._xGridGroup.call(this._xGrid.scale(this._currentTransform.rescaleX(this._xs)));
+                this._dataContainer.attr("transform", "translate(" + this._currentTransform.x + ", 0)scale(" + this._currentTransform.k + ", 1)");
             });
         this._chartArea.call(this._zoom).on("dblclick.zoom", null).on("wheel", function() { d3.event.altKey && d3.event.preventDefault(); });
     }
 
     repaint(resetState) {
         //The old position of origin point.Needed to update the position of viewpoint after resizing.
-        let oldY = this._yAxis.scale().invert(0);
+        let oldX = this._xAxis.scale().invert(0);
         //Calculate new width and height without margins.
         this._actualWidth = this._options.width - this._options.margin.left - this._options.margin.right;
         this._actualHeight = this._options.height - this._options.margin.bottom - this._options.margin.top;
@@ -194,11 +183,10 @@ class ScatterPlot {
 
         // Reset visualy selected and activated bars.
         if (resetState) {
-            this._selectedBars = [];
+            this._selectedData = [];
         }
         // Create new scales acoording to new width and height.
         this._xs = this._xScale();
-        this._xs1 = this._xScaleSecondary();
         this._ys = this._yScale();
         // Update clip path according to new width and height.
         this._clipPath.attr("width", this._actualWidth).attr("height", this._actualHeight);
@@ -206,35 +194,32 @@ class ScatterPlot {
         this._chartArea.attr("transform", "translate(" + this._options.margin.left + "," + this._options.margin.top + ")");
         // Update background rectangle according to new width and height
         this._background.attr("width", this._actualWidth).attr("height", this._actualHeight);
-        this._yGridGroup.call(this._yGrid.tickSize(-this._actualWidth).scale(this._ys)).call(this._yGrid.scale(this._currentTransform.rescaleY(this._ys)));
-        this._xAxisGroup.attr("transform", "translate(0," + this._actualHeight + ")").call(this._xAxis.scale(this._xs));
-        if (this._options.xAxis.orientation === LabelOrientation.VERTICAL) {
-            this._xAxisGroup.selectAll(".tick text").call(this._rotateTickText.bind(this));
-        }
-        this._yAxisGroup.call(this._yAxis.scale(this._ys)).call(this._yAxis.scale(this._currentTransform.rescaleY(this._ys)));
+
+        this._xGridGroup
+            .attr("transform", "translate(0," + this._actualHeight + ")")
+            .call(this._xGrid.tickSize(-this._actualHeight).scale(this._currentTransform.rescaleX(this._xs)));
+        this._yGridGroup.call(this._yGrid.tickSize(-this._actualWidth).scale(this._ys));
+        this._xAxisGroup.attr("transform", "translate(0," + this._actualHeight + ")").call(this._xAxis.scale(this._currentTransform.rescaleX(this._xs)));
+        this._yAxisGroup.call(this._yAxis.scale(this._ys));
+        
         // Update chart and axis captioins
         this._chartLabel.call(this._setChartLabelData.bind(this));
         this._xAxisLabel.call(this._setXAxisLabelData.bind(this));
         this._yAxisLabel.call(this._setYAxisLabelData.bind(this));
 
         // Update bars.
-        this._drawBars();
-        //update lines
-        this._drawLines();
-        //update markers after bars
-        this._drawBarLabels();
+        this._drawData();
         //Update zoom behavior
-        this._zoom.translateExtent([[0, 0], [0, this._actualHeight]])
-            .extent([[0, 0], [0, this._actualHeight]]);
-        //Unscale nodes
-        this._unscale();
+        this._zoom
+            .translateExtent([[0, 0], [this._actualWidth, 0]])
+            .extent([[0, 0], [this._actualWidth, 0]]);
 
         //Update the container translation in order to remain current translate position when window size was changed
-        let newH = this._yAxis.scale()(oldY);
+        let newW = this._xAxis.scale()(oldX);
         if (resetState) {
             this._chartArea.call(this._zoom.transform, d3.zoomIdentity);
-        } else if (newH) {
-            this._chartArea.call(this._zoom.translateBy, 0, (0 - newH) / this._currentTransform.k);
+        } else if (newW) {
+            this._chartArea.call(this._zoom.translateBy, (0 - newW) / this._currentTransform.k, 0);
         }
     }
 
@@ -254,23 +239,6 @@ class ScatterPlot {
 
     get data() {
         return this._data;
-    }
-
-    selectEntity(entity, select) {
-        this._options.dataPropertyNames.valueProps.forEach((prop, i) => {
-            const currVal = value(prop, entity);
-            if (currVal) {
-                let markerIdEnding;
-                if (this._options.mode === BarMode.STACKED) {
-                    markerIdEnding = value(prop, entity) > 0 ? 1 : -1; 
-                } else {
-                    markerIdEnding = i;
-                }
-                this._selectEntity(this._onlyBarContainer.select("#bar_" + value(this._options.dataPropertyNames.id, entity) + "_" + i).node(), 
-                                    this._markerContainer.select("#marker_" + value(this._options.dataPropertyNames.id, entity) + "_" + markerIdEnding).node(),
-                                    {data: entity, idx: i}, select);
-            }
-        });
     }
 
     _xDomain() {
@@ -323,47 +291,28 @@ class ScatterPlot {
         return this._chartArea.append("rect").attr("class", "chart-background").attr("width", this._actualWidth).attr("height", this._actualHeight);
     }
 
-    //TODO continue from here
+    _drawXGrid() {
+        return this._chartArea.append("g").attr("class", "grid x-grid")
+            .attr("transform", "translate(0, " + this._actualHeight + ")").call(this._xGrid);
+    }
+
     _drawYGrid() {
         return this._chartArea.append("g").attr("class", "grid y-grid").call(this._yGrid);
     }
 
-    _createBarContainer(clipPathId) {
+    _createDataContainer(clipPathId) {
         return this._chartArea.append("g").attr("clip-path", "url(#" + clipPathId +")").append("g").attr("class", "bar-container");
-    }
-    
-    _createOnlyBarContainer() {
-        return this._barContainer.append("g").attr("class", "only-bar-container");
-    }
-    
-    _createLineContainer () {
-        return this._barContainer.append("g").attr("class", "line-container");
-    }
-    
-    _createMarkerContainer() {
-        return this._barContainer.append("g").attr("class", "marker-container");
     }
 
     _drawXAxes() {
-        const axis = this._chartArea.append("g").attr("class", "axis x-axis")
+        return this._chartArea.append("g").attr("class", "axis x-axis")
             .attr("transform", "translate(0," + this._actualHeight + ")").call(this._xAxis);
-        if (this._options.xAxis.orientation === LabelOrientation.VERTICAL) {
-            axis.selectAll(".tick text").call(this._rotateTickText.bind(this));
-        }
-        return axis;
     }
     
-    _rotateTickText(selection) {
-        selection
-            .style("text-anchor", "end")
-            .attr("dx", "-0.8em")
-            .attr("dy", "-0.5em")
-            .attr("transform", "rotate(-90)");
-    }
-
     _drawYAxes() {
         return this._chartArea.append("g").attr("class", "axis y-axis").call(this._yAxis);
     }
+
 
     _setChartLabelData(chartLabel) {
         chartLabel.text(this._options.label)
@@ -428,12 +377,12 @@ class ScatterPlot {
         }
     }
 
-        _fireYAxisLabelWidthChanged(label, yAxisBox) {
-            const labelBox = label.node().getBBox();
-            if (!label.text() || (labelBox.width !== 0 && labelBox.height !== 0)) {
-                fireLabelPlacedEvent("y-axis-label-positioned", yAxisBox.width + labelBox.height + 20, this._chartArea.node());
-            }
+    _fireYAxisLabelWidthChanged(label, yAxisBox) {
+        const labelBox = label.node().getBBox();
+        if (!label.text() || (labelBox.width !== 0 && labelBox.height !== 0)) {
+            fireLabelPlacedEvent("y-axis-label-positioned", yAxisBox.width + labelBox.height + 20, this._chartArea.node());
         }
+    }
 
     _drawYAxisLabel(container) {
         return d3.select(container)
@@ -445,9 +394,9 @@ class ScatterPlot {
             .attr("transform", "rotate(-90)");
     }
 
-    _drawBars() {
+    _drawData() {
         const self = this;
-        const updateSelection = self._onlyBarContainer.selectAll(".bar-group").data(this._data);
+        const updateSelection = self._dataContainer.selectAll(".bar-group").data(this._data);
         const insertSelection = updateSelection.enter();
         const removeSelection = updateSelection.exit();
 
