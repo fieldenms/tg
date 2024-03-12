@@ -1,6 +1,21 @@
 import '/resources/components/d3-lib.js';
 import { generateUUID} from '/resources/reflection/tg-polymer-utils.js';
 
+//Symbols enum
+const Symbols = {
+    circle: d3.symbolCircle,
+    cross: d3.symbolCross,
+    asterisk: d3.symbolAsterisk,
+    diamond: d3.symbolDiamond,
+    diamond2: d3.symbolDiamond2,
+    plus: d3.symbolPlus,
+    square: d3.symbolSquare,
+    square2: d3.symbolSquare2,
+    star: d3.symbolStar,
+    triangle: d3.symbolTriangle,
+    triangle2: d3.symbolTriangle2,
+    wye: d3.symbolWye
+}
 
 //Merges two objects up to two 
 const merge2LevelData = function (oldOptions, newOptions) {
@@ -34,46 +49,6 @@ const value = (obj, data, value) => {
     }
 };
 
-//TODO might not be needed
-const copyMatrix = function(from, to) {
-    to.a = from.a;
-    to.b = from.b;
-    to.c = from.c;
-    to.d = from.d;
-    to.e = from.e;
-    to.f = from.f;
-    return to;
-}
-
-/**
- * Fires the select event for provided entity and select parameter.
- */
-const fireSelectEvent = (entity, select, chartArea) => {
-    const event = new CustomEvent("bar-entity-selected", {
-        detail: {
-            shouldScrollToSelected: false,
-            entities: [{
-                entity: entity,
-                select: select
-            }]
-        },
-        bubbles: true,
-        composed: true,
-        cancelable: true
-    });
-    chartArea.dispatchEvent(event);
-};
-
-const fireLabelPlacedEvent = (eventName, newRequiredMargin, chartArea) => {
-    const event = new CustomEvent(eventName, {
-        detail: newRequiredMargin,
-        bubbles: true,
-        composed: true,
-        cancelable: true
-    });
-    chartArea.dispatchEvent(event);
-}
-
 class ScatterPlot {
 
     constructor(container, options) {
@@ -99,11 +74,13 @@ class ScatterPlot {
                 id: "id",
                 categoryProp: "categoryProp",
                 valueProp: "valueProp",
+                styleProp: "styleProp"
             },
             click: (d, idx) => {},
         };
         this._options = options ? merge2LevelData(this._options, options) : this._options;
         this._data = [];
+        this._renderingHints = [];
 
         //////////////////////Functional private variables///////////////////
         this._actualWidth = this._options.width - this._options.margin.left - this._options.margin.right;
@@ -181,10 +158,6 @@ class ScatterPlot {
             this._actualHeight = 0;
         }
 
-        // Reset visualy selected and activated bars.
-        if (resetState) {
-            this._selectedData = [];
-        }
         // Create new scales acoording to new width and height.
         this._xs = this._xScale();
         this._ys = this._yScale();
@@ -207,7 +180,7 @@ class ScatterPlot {
         this._xAxisLabel.call(this._setXAxisLabelData.bind(this));
         this._yAxisLabel.call(this._setYAxisLabelData.bind(this));
 
-        // Update bars.
+        // Update geometry of data.
         this._drawData();
         //Update zoom behavior
         this._zoom
@@ -223,22 +196,31 @@ class ScatterPlot {
         }
     }
 
-    set options(val) {
+    set options (val) {
         this._options = val ? merge2LevelData(this._options, val) : this._options;
         this.repaint();
     }
 
-    get options() {
+    get options () {
         return this._options;
     }
 
-    set data(data) {
+    set data (data) {
         this._data = data || this._data;
         this.repaint(true);
     }
 
-    get data() {
+    get data () {
         return this._data;
+    }
+
+    set renderingHints (hints) {
+        this._renderingHints = hints || this._renderingHints;
+        this.repaint();
+    }
+
+    get renderingHints () {
+        return this._renderingHints;
     }
 
     _xDomain() {
@@ -301,7 +283,7 @@ class ScatterPlot {
     }
 
     _createDataContainer(clipPathId) {
-        return this._chartArea.append("g").attr("clip-path", "url(#" + clipPathId +")").append("g").attr("class", "bar-container");
+        return this._chartArea.append("g").attr("clip-path", "url(#" + clipPathId +")").append("g").attr("class", "data-container");
     }
 
     _drawXAxes() {
@@ -371,16 +353,8 @@ class ScatterPlot {
             yAxisLabel
                 .attr("x", -this._options.margin.top - this._actualHeight / 2)
                 .attr("y", this._options.margin.left - axisBox.width - 10);
-            this._fireYAxisLabelWidthChanged(yAxisLabel, axisBox);
         } else if (this._actualWidth !== 0 && this._actualHeight !== 0) {
             setTimeout(() => this._setYAxisLabelPosition(yAxisLabel), 100);
-        }
-    }
-
-    _fireYAxisLabelWidthChanged(label, yAxisBox) {
-        const labelBox = label.node().getBBox();
-        if (!label.text() || (labelBox.width !== 0 && labelBox.height !== 0)) {
-            fireLabelPlacedEvent("y-axis-label-positioned", yAxisBox.width + labelBox.height + 20, this._chartArea.node());
         }
     }
 
@@ -396,343 +370,67 @@ class ScatterPlot {
 
     _drawData() {
         const self = this;
-        const updateSelection = self._dataContainer.selectAll(".bar-group").data(this._data);
+        const updateSelection = self._dataContainer.selectAll(".dot").data(this._data);
         const insertSelection = updateSelection.enter();
         const removeSelection = updateSelection.exit();
 
-        //update bar groups
-        updateSelection.call(self._updateBarGroup.bind(self));
-        //insert new bar groups
-        insertSelection.call(self._insertNewBarGroup.bind(self));
-        //removed unnedded bar groups
+        //update data groups
+        updateSelection.call(self._updateData.bind(self));
+        //insert new data groups
+        insertSelection.call(self._insertNewData.bind(self));
+        //removed unnedded data groups
         removeSelection.remove();
     }
 
-    _insertNewBarGroup(selection) {
+    _insertNewData(selection) {
         const self = this;
-        selection.append("g").attr("class", "bar-group").call(self._updateBarGroup.bind(self));
+        selection.append("path").attr("class", "dot").call(self._updateData.bind(self));
     }
     
-    _updateBarGroup(selection) {
-        const self = this;
-        selection.attr("transform", d => "translate(" + this._xs(value(this._options.dataPropertyNames.groupKeyProp, d)) + ",0)");
-        const updateBarSelection = selection.selectAll(".bar").data(d => this._options.dataPropertyNames.valueProps.map((val, idx) => {return {data: d, idx: idx};}));
-        const insertBarSelection = updateBarSelection.enter();
-        const removeBarSelection = updateBarSelection.exit();
-        
-        //update bars
-        updateBarSelection.call(self._updateBar.bind(self));
-        //insert bars
-        insertBarSelection.call(self._insertNewBar.bind(self));
-        //removed unnedded bars
-        removeBarSelection.remove();
-    }
-    
-    _insertNewBar(selection) {
-        const self = this;
-        const newBars = selection.append("rect").attr("class", "bar").on("click", function (d) {
-                if (d3.event.button == 0 && (d3.event.ctrlKey || d3.event.metaKey)) {
-                    const val = value(self._options.dataPropertyNames.valueProps[d.idx], d.data);
-                    const markerIdEnding = self._options.mode === BarMode.GROUPED ?  d.idx : (val >= 0 ? 1 : -1);
-                    const markerId = "#marker_" + value(self._options.dataPropertyNames.id, d.data) + "_" + markerIdEnding;
-                    self._selectEntity(this, self._markerContainer.select(markerId).node(), d, !self._isEntitySelected(d), true);
-                } else {
-                    self._options.click(d.data, d.idx);
-                }
+    _updateData(selection) {
+        selection
+            .attr("transform", d => `translate(${this._xs(value(this._options.valueProp, d))}, ${this._ys(value(this._options.categoryProp, d))})`)
+            .attr("d", (d, i) => {
+                const renderingHints = this._renderingHints[i] || {};
+                return Symbols[renderingHints.shape] || Symbols.circle; //Default shape is circle
             })
-            .call(self._updateBar.bind(self));
-    }
-
-    _updateBar(selection) {
-        selection.attr("id", d => "bar_" + value(this._options.dataPropertyNames.id, d.data) + "_" + d.idx);
-
-        selection.style("fill", d => this._isEntitySelected(d) ? this._options.selectedColour(d.data, d.idx) : this._options.barColour(d.data, d.idx))
-            .attr("selected", d => this._isEntitySelected(d) ? "" : null)
-            .attr("x", d => this._options.mode === BarMode.GROUPED ? this._xs1(d.idx) : 0)
-            .attr("y", d => {
-                let y = 0;
-                if (this._options.mode === BarMode.GROUPED) {
-                    const yValue = value(this._options.dataPropertyNames.valueProps[d.idx], d.data);
-                    if (yValue > 0) {
-                        y = yValue
-                    }
-                } else {
-                    const prevYValues = this._options.dataPropertyNames.valueProps.slice(0, d.idx).map(valueProp => value(valueProp, d.data));
-                    const currYValue = value(this._options.dataPropertyNames.valueProps[d.idx], d.data);
-                    if (currYValue > 0) {
-                        y = prevYValues.filter(val => val > 0).reduce((a, b) => a + b, 0) + currYValue;
-                    } else {
-                        y = prevYValues.filter(val => val < 0).reduce((a, b) => a + b, 0);
-                    }
-                }
-                return this._ys(y);
-            })
-            .attr("height", d => {
-                return Math.abs(this._ys(value(this._options.dataPropertyNames.valueProps[d.idx], d.data)) - this._ys(0));
-            })
-            .attr("width", d => this._xs1.bandwidth())
-            .attr("tooltip-text", d => this._options.tooltip(d.data, d.idx));
-    }
-    
-    _drawLines() {
-        const self = this;
-        const updateSelection = self._lineContainer.selectAll(".line").data(this._options.lines);
-        const insertSelection = updateSelection.enter();
-        const removeSelection = updateSelection.exit();
-
-        //update line paths
-        updateSelection.call(self._updateLines.bind(self));
-        //insert new line paths
-        insertSelection.call(self._insertNewLine.bind(self));
-        //removed unnedded line paths
-        removeSelection.remove();
-    }
-    
-    _insertNewLine(selection) {
-        selection.append("path").attr("class", "line").call(this._updateLines.bind(this));
-    }
-    
-    _updateLines(selection) {
-        const line = d3.line().x(d => d.x).y(d => d.y);
-        selection.style("stroke", d => d.colour).attr("d", d => line(this._generateLineData(d)));
-    }
-    
-    _generateLineData(line) {
-        const lineData = this._data.map(e => {
-            const x = this._xs(value(this._options.dataPropertyNames.groupKeyProp, e)) + this._xs.bandwidth() / 2;
-            const y = this._ys(value(line.property, e));
-            return {x: x, y: y};
-        });
-        if (lineData.length < 2) {
-            const yVal = lineData[0] ? lineData[0].y : 0;
-            lineData.unshift({x: 0, y: yVal});
-            lineData.push({x: this._actualWidth, y: yVal});
-        } else {
-            const deltaX1 = lineData[1].x - lineData[0].x;
-            const k1 = deltaX1 ? (lineData[1].y - lineData[0].y) / deltaX1 : 0;
-            const lastIdx = lineData.length - 1;
-            const deltaX2 = lineData[lastIdx].x - lineData[lastIdx - 1].x
-            const k2 = deltaX2 ? (lineData[lastIdx].y - lineData[lastIdx - 1].y) / deltaX2 : 0;
-            const b1 = lineData[0].y - k1 * lineData[0].x;
-            const b2 = lineData[lastIdx].y - k2 * lineData[lastIdx].x
-            lineData.unshift({x: 0, y: b1});
-            lineData.push({x: this._actualWidth, y: k2 * this._actualWidth + b2});
-        }
-        return lineData;
-    }
-    
-    _drawBarLabels() {
-        const self = this;
-        const newData = [];
-        this._data.forEach(elem => {
-            if (this._options.mode === BarMode.GROUPED) {
-                this._options.dataPropertyNames.valueProps.forEach((val, idx) => {
-                    newData.push({data: elem, idx: idx});
-                });
-            } else {
-                newData.push({data: elem, idx: 1});
-                newData.push({data: elem, idx: -1});
-            }
-        });
-        const updateSelection = self._markerContainer.selectAll(".marker").data(newData);
-        const insertSelection = updateSelection.enter();
-        const removeSelection = updateSelection.exit();
-
-        //update markers
-        updateSelection.call(self._updateMarker.bind(self));
-        //insert new markers
-        insertSelection.call(self._insertNewMarker.bind(self));
-        //remove markers
-        removeSelection.remove();
-    }
-
-    _insertNewMarker(selection) {
-        const self = this;
-        const markerGroup = selection.append("g")
-            .attr("class", "marker");
-        markerGroup.append("text").attr("class", "mark-text").style("text-anchor", "middle");
-        //Observing style and class changes
-        markerGroup.each(function () {
-            //Add to unsclable node in order to prevent zooming
-            self._elemToUnscale.push(this);
-        });
-        markerGroup.call(this._updateMarker.bind(this));
-    }
-
-    _updateMarker(selection) {
-        const self = this;
-        selection.attr("id", d => "marker_" + value(this._options.dataPropertyNames.id, d.data) + "_" + d.idx);
-        selection.attr("transform", d => {
-            const newY = self._calculateNewMarkerY(d);
-            const increment = newY < 0 ? 10 : -10;
-            const translateX = this._xs(value(this._options.dataPropertyNames.groupKeyProp, d.data))
-                                + this._xs1(this._options.mode === BarMode.GROUPED ? d.idx : 0) + this._xs1.bandwidth() / 2;
-            return "translate(" + translateX + ", " + (this._ys(newY) + increment) + ")";
-        }).attr("selected", d => this._isEntityGroupSelected(d) ? "" : null);
-        selection.each(function (d) {
-            let text = d3.select(this).select(".mark-text").style("alignment-baseline", d => {
-                const newY = self._calculateNewMarkerY(d);
-                if (newY < 0) {
-                    return "hanging";
-                }
-                return "auto";
-            }).text(d => self._options.barLabel(d.data, d.idx));
-            d3.select(this).style("display", !!text.text() ? "initial" : "none");
-        });
-    }
-    
-    _isEntityGroupSelected(d) {
-        if (this._options.mode === BarMode.GROUPED) {
-            return this._isEntitySelected(d);
-        } else {
-            let pred;
-            if (d.idx < 0) {
-                pred = val => value(this._options.dataPropertyNames.valueProps[val.idx], val.data) < 0;
-            } else {
-                pred = val => value(this._options.dataPropertyNames.valueProps[val.idx], val.data) >= 0;
-            }
-            return this._options.dataPropertyNames.valueProps.map((valueProp, idx) => {return {data: d.data, idx: idx};}).filter(pred).some(d => this._isEntitySelected(d));
-        }
-    }
-    
-    _calculateNewMarkerY(d) {
-        let newY = 0;
-        if (this._options.mode === BarMode.GROUPED) {
-            newY = value(this._options.dataPropertyNames.valueProps[d.idx], d.data);
-        } else {
-            const newYValues = this._options.dataPropertyNames.valueProps.map(valueProp => value(valueProp, d.data));
-            const predicate = d.idx >= 0 ? val => val > 0 : val => val < 0;
-            newY = newYValues.filter(predicate).reduce((a, b) => a + b, 0);
-        }
-        return newY;
-    }
-
-    _isEntitySelected(entity) {
-        return !!this._selectedEntities.find(selectedEntity => {
-            return value(this._options.dataPropertyNames.id, selectedEntity.data) === value(this._options.dataPropertyNames.id, entity.data) && selectedEntity.idx === entity.idx
-        });
-    }
-    
-    _isAnyEntitySelected (entity) {
-        return this._options.dataPropertyNames.valueProps.some((prop, i) => this._isEntitySelected({data: entity, idx: i}));
-    }
-
-    _selectEntity(bar, marker, entity, select, fireEvent) {
-        if (entity) {
-            const entityIndex = this._selectedEntities.findIndex(selectedEntity => {
-                return value(this._options.dataPropertyNames.id, selectedEntity.data) === value(this._options.dataPropertyNames.id, entity.data)
-                        && selectedEntity.idx === entity.idx;
-            });                                                  
-            if (select) {
-                // add entity to selected if it is not there yet
-                if (entityIndex < 0) {
-                    const wasPreviousSelection = this._isAnyEntitySelected(entity.data)
-                    this._selectedEntities.push(entity);
-                    if (fireEvent && !wasPreviousSelection) {
-                        fireSelectEvent(entity.data, select, this._chartArea.node());
-                    }
-                }
-            } else {
-                // remove entity from selected if it is there
-                if (entityIndex >= 0) {
-                    this._selectedEntities.splice(entityIndex, 1);
-                    if (fireEvent && !this._isAnyEntitySelected(entity.data)) {
-                        fireSelectEvent(entity.data, select, this._chartArea.node());
-                    }
-                }
-            }
-            if (bar && marker) {
-                this._selectBar(bar, marker, entity, select);
-            }
-        }
-    }
-
-    _selectBar(bar, marker, entity, select) {
-        const indexOfBar = this._selectedBars.indexOf(bar);
-        d3.select(bar).style("fill", d => select ? this._options.selectedColour(d.data, d.idx) : this._options.barColour(d.data, d.idx))
-            .attr("selected", select ? "" : null);
-        d3.select(marker).attr("selected", d => select || this._isEntityGroupSelected(d3.select(marker).datum()) ? "" : null);
-
-        if (select) {
-            if (indexOfBar < 0) {
-                this._selectedBars.push(bar);
-            }
-        } else {
-            if (indexOfBar >= 0) {
-                this._selectedBars.splice(indexOfBar, 1);
-            }
-        }
-    }
-
-    _unscale() {
-        const elementsToRemove = [];
-        const m = this._chartArea.node().getTransformToElement(this._markerContainer.node());
-        this._elemToUnscale.forEach(el => {
-            const elementToRemove = this._unscaleElement(el, m);
-            if (elementToRemove) {
-                elementsToRemove.push(el);
-            }
-        });
-        elementsToRemove.forEach(el => {
-            const elIndex = this._elemToUnscale.indexOf(el);
-            if (elIndex >= 0) {
-                this._elemToUnscale.splice(elIndex, 1);
-            }
-        });
-    }
-
-    _unscaleElement(el, m) {
-        const dataValue = this._calculateNewMarkerY(d3.select(el).datum());
-        const translationFromTopOfBar = dataValue < 0 ? -10 : 10;
-        if (el.parentElement) {
-            let xf;
-            if (el.transform.baseVal.length < 2) {
-                // Keep a single transform matrix in the stack for fighting transformations
-                // Be sure to apply this transformation after existing transformations (translate)
-                xf = this._chartArea.node().ownerSVGElement.createSVGTransform();
-                el.transform.baseVal.appendItem(xf);
-            } else {
-                xf = el.transform.baseVal[1];
-            }
-            const copyM = copyMatrix(m, this._chartArea.node().ownerSVGElement.createSVGMatrix());
-            copyM.e = 0; // Ignore (preserve) any translations done up to this point
-            copyM.f = translationFromTopOfBar * (1 - m.d);
-            xf.setMatrix(copyM);
-        } else {
-            return el;
-        }
+            .style("fill", (d, i) => {
+                const renderingHints = this._renderingHints[i] || {};
+                return Symbols[renderingHints.color] || "green"; //Default color is green
+            });
     }
 }
 
-d3.barChart = (container, options, data) => {
-    const barChart = new BarChart(container, options, data);
+d3.scatterPlot = (container, options) => {
+    const scatterPlot = new ScatterPlot(container, options);
 
     const chart = {
-        _chartForDebugging: barChart,
+        _chartForDebugging: scatterPlot,
         options: o => {
             if (o) {
-                barChart.options = o;
+                scatterPlot.options = o;
                 return chart;
             } else {
-                return barChart.options;
+                return scatterPlot.options;
             }
         },
         data: d => {
             if (d) {
-                barChart.data = d;
+                scatterPlot.data = d;
                 return chart;
             } else {
-                return barChart.data;
+                return scatterPlot.data;
             }
         },
-        selectEntity: (entity, select) => {
-            barChart.selectEntity(entity, select);
-            return chart
+        renderingHints: h => {
+            if (h) {
+                scatterPlot.renderingHints = h;
+                return chart;
+            } else {
+                return scatterPlot.renderingHints;
+            }
         },
-        repaint: () => barChart.repaint()
+        repaint: () => scatterPlot.repaint()
     };
     return chart;
 };
-
-d3.barChart.BarMode = BarMode;
-d3.barChart.LabelOrientation = LabelOrientation;
