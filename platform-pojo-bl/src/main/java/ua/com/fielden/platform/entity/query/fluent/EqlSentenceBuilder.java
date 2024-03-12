@@ -25,14 +25,15 @@ import static ua.com.fielden.platform.eql.antlr.tokens.util.SimpleTokens.token;
  * @author TG Team
  */
 final class EqlSentenceBuilder {
-    private final List<Token> tokens = new ArrayList<>();
+    private final List<Token> tokens;
     private final State state;
 
     public EqlSentenceBuilder() {
-        this(new State(null, false, new ValuePreprocessor()));
+        this(new ArrayList<>(0), new State(null, false, new ValuePreprocessor()));
     }
 
-    private EqlSentenceBuilder(final State state) {
+    private EqlSentenceBuilder(final List<Token> tokens, final State state) {
+        this.tokens = tokens;
         this.state = state;
     }
 
@@ -42,14 +43,15 @@ final class EqlSentenceBuilder {
     }
 
     private EqlSentenceBuilder makeCopy() {
-        final EqlSentenceBuilder copy = new EqlSentenceBuilder(state);
-        copy.tokens.addAll(tokens);
-        return copy;
+        final List<Token> newTokens = new ArrayList<>(tokens.size() + 1);
+        newTokens.addAll(tokens);
+        return new EqlSentenceBuilder(newTokens, state);
     }
 
     private EqlSentenceBuilder makeCopy(final State newState) {
-        final EqlSentenceBuilder copy = new EqlSentenceBuilder(newState);
-        copy.tokens.addAll(tokens);
+        final List<Token> newTokens = new ArrayList<>(tokens.size() + 1);
+        newTokens.addAll(tokens);
+        final EqlSentenceBuilder copy = new EqlSentenceBuilder(newTokens, newState);
         return copy;
     }
 
