@@ -26,18 +26,14 @@ import static ua.com.fielden.platform.eql.antlr.tokens.util.SimpleTokens.token;
  */
 final class EqlSentenceBuilder {
     private final List<Token> tokens = new ArrayList<>();
-    private Class<? extends AbstractEntity<?>> mainSourceType;
-    private boolean yieldAll;
-    private final ValuePreprocessor valuePreprocessor;
+    private final State state;
 
     public EqlSentenceBuilder() {
-        valuePreprocessor = new ValuePreprocessor();
+        this(new State(null, false, new ValuePreprocessor()));
     }
 
-    private EqlSentenceBuilder(final ValuePreprocessor valuePreprocessor, final Class<? extends AbstractEntity<?>> mainSourceType, final boolean yieldAll) {
-        this.valuePreprocessor = valuePreprocessor;
-        this.mainSourceType = mainSourceType;
-        this.yieldAll = yieldAll;
+    private EqlSentenceBuilder(final State state) {
+        this.state = state;
     }
 
     @Override
@@ -46,13 +42,25 @@ final class EqlSentenceBuilder {
     }
 
     private EqlSentenceBuilder makeCopy() {
-        final EqlSentenceBuilder copy = new EqlSentenceBuilder(valuePreprocessor, mainSourceType, yieldAll);
+        final EqlSentenceBuilder copy = new EqlSentenceBuilder(state);
+        copy.tokens.addAll(tokens);
+        return copy;
+    }
+
+    private EqlSentenceBuilder makeCopy(final State newState) {
+        final EqlSentenceBuilder copy = new EqlSentenceBuilder(newState);
         copy.tokens.addAll(tokens);
         return copy;
     }
 
     private EqlSentenceBuilder _add(final Token token) {
         final EqlSentenceBuilder copy = makeCopy();
+        copy.tokens.add(token);
+        return copy;
+    }
+
+    private EqlSentenceBuilder _add(final Token token, final State newState) {
+        final EqlSentenceBuilder copy = makeCopy(newState);
         copy.tokens.add(token);
         return copy;
     }
@@ -192,11 +200,11 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder val(final Object value) {
-        return _add(valToken(valuePreprocessor.apply(value)));
+        return _add(valToken(state.valuePreprocessor.apply(value)));
     }
 
     public EqlSentenceBuilder iVal(final Object value) {
-        return _add(iValToken(valuePreprocessor.apply(value)));
+        return _add(iValToken(state.valuePreprocessor.apply(value)));
     }
 
     public EqlSentenceBuilder model(final PrimitiveResultQueryModel model) {
@@ -264,7 +272,7 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder anyOfValues(final Object... values) {
-        return _add(new AnyOfValuesToken(valuePreprocessor.applyMany(values).toList()));
+        return _add(new AnyOfValuesToken(state.valuePreprocessor.applyMany(values).toList()));
     }
 
     public EqlSentenceBuilder anyOfExpressions(final ExpressionModel... expressions) {
@@ -292,7 +300,7 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder allOfValues(final Object... values) {
-        return _add(new AllOfValuesToken(valuePreprocessor.applyMany(values).toList()));
+        return _add(new AllOfValuesToken(state.valuePreprocessor.applyMany(values).toList()));
     }
 
     public EqlSentenceBuilder allOfExpressions(final ExpressionModel... expressions) {
@@ -324,7 +332,7 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder setOfValues(final Object... values) {
-        return _add(new ValuesToken(valuePreprocessor.applyMany(values).toList()));
+        return _add(new ValuesToken(state.valuePreprocessor.applyMany(values).toList()));
     }
 
     // TODO remove?
@@ -557,10 +565,7 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder yieldAll() {
-        final EqlSentenceBuilder copy = makeCopy();
-        copy.tokens.add(token(YIELDALL));
-        copy.yieldAll = true;
-        return copy;
+        return _add(token(YIELDALL), state.withYieldAll(true));
     }
 
     public EqlSentenceBuilder groupBy() {
@@ -576,24 +581,21 @@ final class EqlSentenceBuilder {
     }
 
     public <E extends AbstractEntity<?>> EqlSentenceBuilder from() {
-        this.mainSourceType = EntityAggregates.class;
-        return _add(SelectToken.values());
+        return _add(SelectToken.values(), state.withMainSourceType(EntityAggregates.class));
     }
 
     public <E extends AbstractEntity<?>> EqlSentenceBuilder from(final Class<E> entityType) {
         if (entityType == null) {
             throw new IllegalArgumentException("Missing entity type in query: " + tokens.stream().map(Token::getText).collect(joining(" ")));
         }
-        this.mainSourceType = entityType;
-        return _add(SelectToken.entityType(entityType));
+        return _add(SelectToken.entityType(entityType), state.withMainSourceType(entityType));
     }
 
     public EqlSentenceBuilder from(final AggregatedResultQueryModel... sourceModels) {
         if (sourceModels.length == 0) {
             throw new IllegalArgumentException("No models were specified as a source in the FROM statement!");
         }
-        this.mainSourceType = EntityAggregates.class;
-        return _add(SelectToken.models(List.of(sourceModels)));
+        return _add(SelectToken.models(List.of(sourceModels)), state.withMainSourceType(EntityAggregates.class));
     }
 
     @SafeVarargs
@@ -601,8 +603,7 @@ final class EqlSentenceBuilder {
         if (sourceModels.length == 0) {
             throw new IllegalArgumentException("No models were specified as a source in the FROM statement!");
         }
-        this.mainSourceType = sourceModels[0].getResultType();
-        return _add(SelectToken.models(List.of(sourceModels)));
+        return _add(SelectToken.models(List.of(sourceModels)), state.withMainSourceType(sourceModels[0].getResultType()));
     }
 
     public <E extends AbstractEntity<?>> EqlSentenceBuilder innerJoin(final Class<E> entityType) {
@@ -669,33 +670,50 @@ final class EqlSentenceBuilder {
     }
 
     public ListTokenSource getTokenSource() {
-        return new ListTokenSource(tokens);
+        return new ListTokenSource(unmodifiableList(tokens));
     }
 
     public Class<? extends AbstractEntity<?>> getMainSourceType() {
-        return mainSourceType;
+        return state.mainSourceType;
     }
 
     public boolean isYieldAll() {
-        return yieldAll;
+        return state.yieldAll;
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((mainSourceType == null) ? 0 : mainSourceType.hashCode());
+        result = prime * result + Objects.hashCode(state.mainSourceType);
         result = prime * result + tokens.hashCode();
-        result = prime * result + (yieldAll ? 1231 : 1237);
+        result = prime * result + Boolean.hashCode(state.yieldAll);
         return result;
     }
 
     @Override
     public boolean equals(Object obj) {
         return this == obj || obj instanceof EqlSentenceBuilder that &&
-                Objects.equals(this.mainSourceType, that.mainSourceType) &&
-                Objects.equals(this.yieldAll, that.yieldAll) &&
+                Objects.equals(this.state.mainSourceType, that.state.mainSourceType) &&
+                Objects.equals(this.state.yieldAll, that.state.yieldAll) &&
                 Objects.equals(this.tokens, that.tokens);
+    }
+
+    private record State(Class<? extends AbstractEntity<?>> mainSourceType,
+                         boolean yieldAll,
+                         ValuePreprocessor valuePreprocessor)
+    {
+        public State withMainSourceType(final Class<? extends AbstractEntity<?>> mainSourceType) {
+            return new State(mainSourceType, yieldAll, valuePreprocessor);
+        }
+
+        public State withYieldAll(final boolean yieldAll) {
+            return new State(mainSourceType, yieldAll, valuePreprocessor);
+        }
+
+        public State withValueProcessor(final ValuePreprocessor valuePreprocessor) {
+            return new State(mainSourceType, yieldAll, valuePreprocessor);
+        }
     }
 
 }
