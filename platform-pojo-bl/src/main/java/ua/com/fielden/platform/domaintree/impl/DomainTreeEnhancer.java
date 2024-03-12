@@ -763,7 +763,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         for (final Entry<Class<?>, Set<CalculatedPropertyInfo>> entry : calculatedPropertiesInfo.entrySet()) {
             final List<CalculatedProperty> list = new ArrayList<>();
             for (final CalculatedPropertyInfo cpInfo : entry.getValue()) {
-                list.add(CalculatedProperty.createCorrect(dte.getFactory(), cpInfo.getRoot(), cpInfo.getContextPath(), cpInfo.getCustomPropertyName(), cpInfo.getContextualExpression(), cpInfo.getTitle(), cpInfo.getDesc(), cpInfo.getAttribute(), cpInfo.getOriginationProperty(), cpInfo.getPrecision(), cpInfo.getScale(), dte, true));
+                list.add(CalculatedProperty.createCorrect(dte.getFactory(), cpInfo.root(), cpInfo.contextPath(), cpInfo.customPropertyName(), cpInfo.contextualExpression(), cpInfo.title(), cpInfo.desc(), cpInfo.attribute(), cpInfo.originationProperty(), cpInfo.precision(), cpInfo.scale(), dte, true));
             }
             map.put(entry.getKey(), list);
         }
