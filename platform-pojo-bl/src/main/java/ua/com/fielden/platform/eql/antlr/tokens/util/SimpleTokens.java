@@ -4,33 +4,39 @@ import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.Token;
 import ua.com.fielden.platform.eql.antlr.EQLLexer;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 public final class SimpleTokens {
 
-    private static final Map<Integer, Token> tokens = new ConcurrentHashMap<>();
+    // Use a single Token instance for all tokens of a given type (denoted by an integer).
+    // One consequence is that tokens don't have "position" information, but it is not needed anyway.
+    private static final Token[] tokens = new Token[EQLLexer.VOCABULARY.getMaxTokenType() + 1];
 
     /**
      * Returns a simple, non-parameterised token corresponding to the given type.
      */
     public static Token token(int type) {
         final int maxTokenType = EQLLexer.VOCABULARY.getMaxTokenType();
-        if (type > maxTokenType) {
+        if (type < 0 || type > maxTokenType) {
             throw new IllegalArgumentException(
-                    "Token type %s does not belong to the vocabulary (max. token type = %s)".formatted(
+                    "Token type %s does not belong to the vocabulary (valid range: [0, %s])".formatted(
                             type, maxTokenType));
         }
 
-        return tokens.computeIfAbsent(type, typ -> {
-            String name = EQLLexer.VOCABULARY.getLiteralName(typ);
-            if (name != null) {
-                name = name.replace("'", "");
-            } else {
-                name = EQLLexer.VOCABULARY.getSymbolicName(typ);
-            }
-            return new CommonToken(typ, name != null ? name : Integer.toString(type));
-        });
+        final Token token = tokens[type];
+        if (token != null) {
+            return token;
+        }
+
+        String name = EQLLexer.VOCABULARY.getLiteralName(type);
+        if (name != null) {
+            name = name.replace("'", "");
+        } else {
+            name = EQLLexer.VOCABULARY.getSymbolicName(type);
+        }
+        final Token newToken = new CommonToken(type, name != null ? name : Integer.toString(type));
+
+        tokens[type] = newToken;
+
+        return newToken;
     }
 
     private SimpleTokens() {}
