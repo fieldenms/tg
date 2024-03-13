@@ -164,7 +164,13 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * This method exists for testing purposes only.
      */
     public <T extends AbstractEntity<?>> EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>> generateCentreQueryCriteriaForTesting(final Class<T> root, final ICentreDomainTreeManagerAndEnhancer centreManager) {
-        return generateCentreQueryCriteria(() -> t2(generateCriteriaType(root, centreManager.getFirstTick().checkedProperties(root), centreManager.getEnhancer().getManagedType(root)), root), centreManager);
+        final var managedType = centreManager.getEnhancer().getManagedType(root);
+        final var propsForSelectionCriteria = centreManager.getFirstTick().checkedProperties(root);
+        return generateCentreQueryCriteria(() -> t2(
+                (Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>) GENERATED_CLASSES.computeIfAbsent(
+                        t2(managedType, propsForSelectionCriteria),
+                        key -> generateCriteriaType(root, propsForSelectionCriteria, managedType)
+                ), root), centreManager);
     }
 
     /**
