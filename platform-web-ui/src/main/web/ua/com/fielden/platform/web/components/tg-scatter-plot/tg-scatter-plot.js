@@ -1,6 +1,8 @@
 import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
 
+import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
+
 import {IronResizableBehavior} from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
 import  '/resources/components/tg-scatter-plot/d3-scatter-plot.js';
@@ -87,14 +89,14 @@ export class TgScatterPlot extends mixinBehaviors([IronResizableBehavior], Polym
 
     ready () {
         super.ready();
-        this._chart = d3.barChart(this.$.chart);
+        this._chart = d3.scatterPlot(this.$.chart);
         if (this.data) {
             this._chart.data(this.data);
         }
         if (this.options) {
             this._chart.options(this.options);
         }
-        if (renderingHints) {
+        if (this.renderingHints) {
             this._chart.renderingHints(this.renderingHints);
         }
         this.scopeSubtree(this.$.chart, true);

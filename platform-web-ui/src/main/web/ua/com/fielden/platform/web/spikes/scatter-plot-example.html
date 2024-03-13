@@ -10,6 +10,7 @@
     <script type="module">
         import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
         import '/resources/components/tg-scatter-plot/tg-scatter-plot.js'
+        import '/resources/components/moment-lib.js';
     </script>
     <custom-style>
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning">
@@ -30,75 +31,86 @@
     <script>
         (function () {
             window.addEventListener('WebComponentsReady', function (e) {
-                const app = document.querySelector('dom-bind');
-                
+                const date = function (value) {
+                    return moment(value, "DD/MM/YYYY").toDate();
+                };
 
-                //TODO set options
+                const app = document.querySelector('dom-bind');
+
                 app.$.chart.options = {
-                    mode: mode,
                     dataPropertyNames: {
                         id: d => d.id,
-                        groupKeyProp: d => d.name,
-                        groupDescProp: d => d.name,
-                        valueProps: [d => d.value, d => d.value1, d => d.value2, d => d.value3],
+                        categoryProp: d => d.quality,
+                        valueProp: d => new Date(d.readingDate),
+                        styleProp: d => d.entryType,
                     },
-                    label: "Bar chart example",
-                    xAxis: {label: "Letters"},
-                    yAxis: {label: "Frequency"},
+                    label: "Scatter plot example",
+                    xAxis: {label: "Reading date", range: [date('31/12/2023'), date('12/03/2024')]},
+                    yAxis: {label: "Quality", range: ["Excelent", "Very Good", "Good", "Fair", "Poor"]},
                     margin: {
-                        left: 60,
+                        left: 100,
+                        right: 20,
                         top: 40,
-                        bottom: 50
+                        bottom: 60
                     },
-                    barColour: (d, i) => colors[i],
-                    barLabel: (d, i) => {
-                        if (mode == d3.barChart.BarMode.STACKED) {
-                            const res = [d.value, d.value1, d.value2, d.value3];
-                            const resPos = res.filter(val => val > 0).reduce((a,b) => a + b, 0);
-                            const resNeg = res.filter(val => val < 0).reduce((a,b) => a + b, 0);
-                            if (i > 0) {
-                                if (!resPos) {
-                                    return resNeg ? "" : 0;
-                                }
-                                return resPos.toFixed(2);
-                            } else {
-                                return resNeg ? resNeg.toFixed(2) : "";
-                            }
-                        }
-                        return d["value" + (i ? i : "")];
-                    },
-                    //selectedColour: (d, i) => shadeColor(colors[i], 0.3),
-                    tooltip: (d, i) => "<b>" + d.name + "</b><br><b>" + "value" + (i ? i : "") + "</b><br><i>" + d["value" + (i ? i : "")] + "</i>",
                     click: d => {},
                     
                 };
                 app.$.chart.data = [
-                    {id:0, name: 'A', value: 1, value1: 0.2, value2: 0.1, value3: 0.7},
-                    {id:1, name: 'B', value: 1.4, value1: 1, value2: 2, value3: -0.5},
-                    {id:2, name: 'C', value: 1.2, value1: 0.1, value2: 1, value3: 1.1},
-                    {id:3, name: 'D', value: 1, value1: 2, value2: 3, value3: 1.5},
-                    {id:4, name: 'E', value: 0.5, value1: 0, value2: 0, value3: -0.4},
-                    {id:5, name: 'F', value: 2, value1: 1, value2: 1.1, value3: 1.3},
-                    {id:6, name: 'G', value: 1.1, value1: 1.2, value2: 1.1, value3: 1},
-                    {id:7, name: 'H', value: 0.7, value1: 0.4, value2: 0.7, value3: 1},
-                    {id:8, name: 'I', value: 0.1, value1: -1, value2: 2, value3: -1.4},
-                    {id:9, name: 'J', value: -0.5, value1: 1.1, value2: 1.2, value3: 1.4},
-                    {id:10, name: 'K', value: 0.2, value1: 2, value2: 1.4, value3: -1},
-                    {id:11, name: 'L', value: 0.6, value1: 0.8, value2: -1, value3: 0},
-                    {id:12, name: 'M', value: -1, value1: 1, value2: -1, value3: 1},
-                    {id:13, name: 'N', value: -0.4, value1: 1.2, value2: 2, value3: 1},
-                    {id:14, name: 'O', value: 2, value1: 1.2, value2: 1.5, value3: 2},
-                    {id:15, name: 'P', value: 3, value1: -1, value2: 1.5, value3: 0.3},
-                    {id:16, name: 'Q', value: 2.3, value1: 2.1, value2: 1.1, value3: 0.5},
-                    {id:17, name: 'R', value: 2.1, value1: 1, value2: -1, value3: 0.4},
-                    {id:18, name: 'S', value: 2.7, value1: 0.3, value2: 0.4, value3: -1.2},
-                    {id:19, name: 'T', value: 2, value1: 0.6, value2: 0.1, value3: 0.2},
-                    {id:20, name: 'U', value: 1.2, value1: 0.4, value2: 0.2, value3: -1},
-                    {id:21, name: 'V', value: -0.1, value1: 1.1, value2: 1.5, value3: 2},
-                    {id:22, name: 'W', value: 0, value1: 0, value2: 1.1, value3: 1.6},
-                    {id:23, name: 'X', value: 1, value1: 1.5, value2: 1.3, value3: 2.5},
-                    {id:24, name: 'Y', value: 1.2, value1: 1, value2: -1, value3: 1.2},
-                    {id:25, name: 'Z', value: 1.4, value1: 2.1, value2: -1.3, value3: 0}];
+                    {id:0, quality: 'Excelent', readingDate: date('01/01/2024')},
+                    {id:1, quality: 'Very Good', readingDate: date('01/02/2024')},
+                    {id:2, quality: 'Good', readingDate: date('14/01/2024')},
+                    {id:3, quality: 'Fair', readingDate: date('13/01/2024')},
+                    {id:4, quality: 'Poor', readingDate: date('14/01/2024')},
+                    {id:5, quality: 'Excelent', readingDate: date('02/02/2024')},
+                    {id:6, quality: 'Excelent', readingDate: date('15/02/2024')},
+                    {id:7, quality: 'Good', readingDate: date('14/02/2024')},
+                    {id:8, quality: 'Fair', readingDate: date('01/03/2024')},
+                    {id:9, quality: 'Poor', readingDate: date('02/03/2024')},
+                    {id:10, quality: 'Poor', readingDate: date('05/03/2024')},
+                    {id:11, quality: 'Very Good', readingDate: date('10/03/2024')},
+                    {id:12, quality: 'Excelent', readingDate: date('11/03/2024')},
+                    {id:13, quality: 'Poor', readingDate: date('09/02/2024')},
+                    {id:14, quality: 'Excelent', readingDate: date('03/02/2024')},
+                    {id:15, quality: 'Good', readingDate: date('24/01/2024')},
+                    {id:16, quality: 'Poor', readingDate: date('29/01/2024')},
+                    {id:17, quality: 'Very Good', readingDate: date('01/01/2024')},
+                    {id:18, quality: 'Poor', readingDate: date('10/01/2024')},
+                    {id:19, quality: 'Fair', readingDate: date('11/01/2024')},
+                    {id:20, quality: 'Fair', readingDate: date('12/01/2024')},
+                    {id:21, quality: 'Poor', readingDate: date('15/01/2024')},
+                    {id:22, quality: 'Excelent', readingDate: date('21/02/2024')},
+                    {id:23, quality: 'Excelent', readingDate: date('22/02/2024')},
+                    {id:24, quality: 'Good', readingDate: date('27/02/2024')},
+                    {id:25, quality: 'Good', readingDate: date('01/03/2024')}];
+                
+                app.$.chart.renderingHints = [
+                    {entryType: {color: "green", shape: "cricle"}},              //0
+                    {entryType: {color: "orange", shape: "diamond"}},            //1
+                    {entryType: {color: "red", shape: "square"}},                //2
+                    {entryType: {color: "yellow", shape: "cross"}},              //3
+                    {entryType: {color: "cyan", shape: "wye"}},                  //4
+                    {entryType: {color: "blue", shape: "diamond"}},              //5
+                    {entryType: {color: "maroon", shape: "star"}},               //6
+                    {entryType: {color: "purple", shape: "triangle"}},           //7
+                    {entryType: {color: "olive", shape: "square"}},              //8
+                    {entryType: {color: "magenta", shape: "star"}},              //9
+                    {entryType: {color: "lightblue", shape: "triangle"}},        //10
+                    {entryType: {color: "darkblue", shape: "circle"}},           //11
+                    {entryType: {color: "brown", shape: "cross"}},               //12
+                    {entryType: {color: "gray", shape: "cross"}},                //13
+                    {entryType: {color: "silver", shape: "diamond"}},            //14
+                    {entryType: {color: "aquamarine", shape: "star"}},           //15
+                    {entryType: {color: "pink", shape: "triangle"}},             //16
+                    {entryType: {color: "black", shape: "wye"}},                 //17
+                    {entryType: {color: "#E9967A", shape: "wye"}},               //18
+                    {entryType: {color: "#FFD700", shape: "square"}},            //19
+                    {entryType: {color: "#D8BFD8", shape: "triangle"}},          //20
+                    {entryType: {color: "#F5DEB3", shape: "cross"}},             //21
+                    {entryType: {color: "#BC8F8F", shape: "cricle"}},            //22
+                    {entryType: {color: "#A52A2A", shape: "star"}},              //23
+                    {entryType: {color: "#87CEEB", shape: "wye"}},               //24
+                    {entryType: {color: "#7B68EE", shape: "diamond"}}];          //25
             });
         })();
       

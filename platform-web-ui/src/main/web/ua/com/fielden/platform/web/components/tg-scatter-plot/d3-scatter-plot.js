@@ -5,15 +5,10 @@ import { generateUUID} from '/resources/reflection/tg-polymer-utils.js';
 const Symbols = {
     circle: d3.symbolCircle,
     cross: d3.symbolCross,
-    asterisk: d3.symbolAsterisk,
     diamond: d3.symbolDiamond,
-    diamond2: d3.symbolDiamond2,
-    plus: d3.symbolPlus,
     square: d3.symbolSquare,
-    square2: d3.symbolSquare2,
     star: d3.symbolStar,
     triangle: d3.symbolTriangle,
-    triangle2: d3.symbolTriangle2,
     wye: d3.symbolWye
 }
 
@@ -32,20 +27,11 @@ const mergeData = function (oldData, newData) {
 /**
  * Gets or sets the value for entity if value is undefined the it gets the value ortherwise it sets the value. Also obj might be a function it means that user has provided formatter for value.
  */
-const value = (obj, data, value) => {
+const value = (obj, data) => {
     if (typeof obj === 'function') {
         return obj(data, value);
     } else {
-        if (typeof value === 'undefined') {
-            return data.get(obj.toString());
-        } else {
-            const lastDotIndex = obj.lastIndexOf(".");
-            const rest = lastDotIndex > -1 ? obj.slice(lastDotIndex + 1) : obj;
-            const firstVal = lastDotIndex > -1 ? data.get(obj.slice(0, lastDotIndex)) : data;
-            if (firstVal && rest) {
-                firstVal.set(rest, value);
-            }
-        }
+        return data.get ? data.get(obj.toString()) : data[obj.toString()];
     }
 };
 
@@ -65,10 +51,12 @@ class ScatterPlot {
             },
             label: "",
             xAxis: {
-                label: "" 
+                label: "",
+                range: [0, 1] 
             },
             yAxis: {
-                label: ""
+                label: "",
+                range: [""]
             },
             dataPropertyNames: {
                 id: "id",
@@ -138,7 +126,8 @@ class ScatterPlot {
                 this._currentTransform = d3.event.transform;
                 this._xAxisGroup.call(this._xAxis.scale(this._currentTransform.rescaleX(this._xs)));
                 this._xGridGroup.call(this._xGrid.scale(this._currentTransform.rescaleX(this._xs)));
-                this._dataContainer.attr("transform", "translate(" + this._currentTransform.x + ", 0)scale(" + this._currentTransform.k + ", 1)");
+                this._zoomDataContainer();
+                //this._dataContainer.attr("transform", "translate(" + this._currentTransform.x + ", 0)scale(" + this._currentTransform.k + ", 1)");
             });
         this._chartArea.call(this._zoom).on("dblclick.zoom", null).on("wheel", function() { d3.event.altKey && d3.event.preventDefault(); });
     }
@@ -223,23 +212,12 @@ class ScatterPlot {
         return this._renderingHints;
     }
 
-    _xDomain() {
-        const vals = data.map(d => value(options.dataPropertyNames.valueProp));
-        const minValue = Math.min(...vals);
-        const maxValue = Math.max(...vals);
-        return [minValue === Infinity ? new Date().getMilliseconds() : minValue, maxValue === Infinity ? new Date().getMilliseconds() : maxValue];
-    }
-
-    _yDomain() {
-        return data.map(d => value(options.dataPropertyNames.categoryProp, d));
-    }
-
     _xScale() {
-        return d3.scaleTime().domain(this._xDomain()).range([0, this._actualWidth]);
+        return d3.scaleTime().domain(this._options.xAxis.range).range([0, this._actualWidth]);
     }
 
     _yScale() {
-        return d3.scalePoint().domain(this._yDomain()).range([0, this._actualHeight]).padding(0.1);
+        return d3.scalePoint().domain(this._options.yAxis.range).range([0, this._actualHeight]).padding(0.1);
     }
 
     _createXAxis() {
@@ -389,15 +367,24 @@ class ScatterPlot {
     
     _updateData(selection) {
         selection
-            .attr("transform", d => `translate(${this._xs(value(this._options.valueProp, d))}, ${this._ys(value(this._options.categoryProp, d))})`)
-            .attr("d", (d, i) => {
+            .attr("transform", d => `translate(${this._xs(value(this._options.dataPropertyNames.valueProp, d))}, ${this._ys(value(this._options.dataPropertyNames.categoryProp, d))})`)
+            .attr("d", d3.symbol().type((d, i) => {
                 const renderingHints = this._renderingHints[i] || {};
-                return Symbols[renderingHints.shape] || Symbols.circle; //Default shape is circle
-            })
+                const propRendHints = value(this._options.dataPropertyNames.styleProp, renderingHints) || {};
+                return Symbols[propRendHints.shape] || Symbols.circle; //Default shape is circle
+            }))
             .style("fill", (d, i) => {
                 const renderingHints = this._renderingHints[i] || {};
-                return Symbols[renderingHints.color] || "green"; //Default color is green
+                const propRendHints = value(this._options.dataPropertyNames.styleProp, renderingHints) || {};
+                return propRendHints.color || "green"; //Default color is green
             });
+    }
+
+    _zoomDataContainer () {
+        const rescaledX = this._currentTransform.rescaleX(this._xs);
+        this._dataContainer
+            .selectAll(".dot")
+            .attr("transform", d => `translate(${rescaledX(value(this._options.dataPropertyNames.valueProp, d))}, ${this._ys(value(this._options.dataPropertyNames.categoryProp, d))})`)
     }
 }
 
