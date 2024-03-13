@@ -7,6 +7,9 @@ import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.sundries.Yield1;
 import ua.com.fielden.platform.eql.stage1.sundries.Yields1;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static ua.com.fielden.platform.eql.antlr.EQLParser.*;
 import static ua.com.fielden.platform.eql.stage1.sundries.Yields1.yields;
 
@@ -21,25 +24,36 @@ final class YieldsVisitor extends AbstractEqlVisitor<YieldsVisitor.Result> {
     public static final Result DEFAULT_RESULT = new Result(Yields1.EMPTY_YIELDS, false);
 
     @Override
-    public Result visitYield1(final Yield1Context ctx) {
-        // no need to process the Model context since that information is represented by the resulting type of a fluent API method call chain
-        final var operand = ctx.operand.accept(new YieldOperandVisitor(transformer));
-        return new Result(yields(new Yield1(operand)), false);
+    public Result visitYieldAll(final YieldAllContext ctx) {
+        return new Result(yields(ctx.aliasedYield().stream().map(this::compileAliasedYield).toList()), true);
     }
 
     @Override
-    public Result visitYieldMany(final YieldManyContext ctx) {
+    public Result visitYieldSome(final YieldSomeContext ctx) {
         // no need to process the Model context since that information is represented by the resulting type of a fluent API method call chain
-        final boolean yieldAll = ctx.YIELDALL() != null;
-        return new Result(yields(ctx.aliasedYield().stream().map(this::compileAliasedYield).toList()), yieldAll);
+        return ctx.yieldTail().accept(new EQLBaseVisitor<>() {
+            @Override
+            public Result visitYield1Tail(final Yield1TailContext $) {
+                final var operand = ctx.firstYield.accept(new YieldOperandVisitor(transformer));
+                return new Result(yields(new Yield1(operand)), false);
+            }
+
+            @Override
+            public Result visitYieldManyTail(final YieldManyTailContext tailCtx) {
+                final List<Yield1> yields = new ArrayList<>(1 + tailCtx.restYields.size());
+                yields.add(compileAliasedYield(ctx.firstYield, tailCtx.firstAlias));
+                tailCtx.restYields.stream().map(YieldsVisitor.this::compileAliasedYield).forEach(yields::add);
+                return new Result(new Yields1(yields), false);
+            }
+        });
     }
 
-    private Yield1 compileAliasedYield(final AliasedYieldContext ctx) {
-        final var operand = ctx.operand.accept(new YieldOperandVisitor(transformer));
+    private Yield1 compileAliasedYield(final YieldOperandContext operandCtx, final YieldAliasContext aliasCtx) {
+        final var operand = operandCtx.accept(new YieldOperandVisitor(transformer));
         final String alias;
         final boolean hint;
 
-        final Token token = ctx.yieldAlias().token;
+        final Token token = aliasCtx.token;
         switch (token) {
             case AsToken tok -> {
                 alias = tok.alias;
@@ -53,6 +67,10 @@ final class YieldsVisitor extends AbstractEqlVisitor<YieldsVisitor.Result> {
         }
 
         return new Yield1(operand, alias, hint);
+    }
+
+    private Yield1 compileAliasedYield(final AliasedYieldContext ctx) {
+        return compileAliasedYield(ctx.yieldOperand(), ctx.yieldAlias());
     }
 
 }

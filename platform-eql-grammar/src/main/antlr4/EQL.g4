@@ -196,12 +196,17 @@ groupBy :
 ;
 
 anyYield :
-      YIELD operand=yieldOperand yield1Model # Yield1
-    | YIELDALL? aliasedYield* yieldManyModel # YieldMany
+      YIELDALL aliasedYield* yieldManyModel # YieldAll
+    | YIELD firstYield=yieldOperand yieldTail # YieldSome
+;
+
+yieldTail:
+      yield1Model # Yield1Tail
+    | firstAlias=yieldAlias restYields+=aliasedYield* yieldManyModel # YieldManyTail
 ;
 
 aliasedYield :
-      YIELD operand=yieldOperand alias=yieldAlias
+      YIELD yieldOperand yieldAlias
 ;
 
 yieldOperand :

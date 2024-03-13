@@ -357,19 +357,33 @@ public interface EQLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitGroupBy(EQLParser.GroupByContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code Yield1}
+	 * Visit a parse tree produced by the {@code YieldAll}
 	 * labeled alternative in {@link EQLParser#anyYield}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitYield1(EQLParser.Yield1Context ctx);
+	T visitYieldAll(EQLParser.YieldAllContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code YieldMany}
+	 * Visit a parse tree produced by the {@code YieldSome}
 	 * labeled alternative in {@link EQLParser#anyYield}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitYieldMany(EQLParser.YieldManyContext ctx);
+	T visitYieldSome(EQLParser.YieldSomeContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Yield1Tail}
+	 * labeled alternative in {@link EQLParser#yieldTail}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitYield1Tail(EQLParser.Yield1TailContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code YieldManyTail}
+	 * labeled alternative in {@link EQLParser#yieldTail}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitYieldManyTail(EQLParser.YieldManyTailContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link EQLParser#aliasedYield}.
 	 * @param ctx the parse tree

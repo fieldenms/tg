@@ -381,14 +381,28 @@ public class EQLBaseVisitor<T> extends AbstractParseTreeVisitor<T> implements EQ
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitYield1(EQLParser.Yield1Context ctx) { return visitChildren(ctx); }
+	@Override public T visitYieldAll(EQLParser.YieldAllContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitYieldMany(EQLParser.YieldManyContext ctx) { return visitChildren(ctx); }
+	@Override public T visitYieldSome(EQLParser.YieldSomeContext ctx) { return visitChildren(ctx); }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
+	@Override public T visitYield1Tail(EQLParser.Yield1TailContext ctx) { return visitChildren(ctx); }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
+	@Override public T visitYieldManyTail(EQLParser.YieldManyTailContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
