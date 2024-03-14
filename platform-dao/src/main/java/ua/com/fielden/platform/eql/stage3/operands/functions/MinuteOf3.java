@@ -20,7 +20,7 @@ public class MinuteOf3 extends SingleOperandFunction3 {
         case MSSQL:
             return format("DATEPART(mi, %s)", operand.sql(dbVersion));
         case POSTGRESQL:
-            return format("CAST(EXTRACT(MINUTE FROM %s) AS INT)", operand.sql(dbVersion));
+            return format("CAST(EXTRACT(MINUTE FROM %s \\:\\:timestamp) AS INT)", operand.sql(dbVersion));
         default:
             return super.sql(dbVersion);
         }
@@ -32,9 +32,9 @@ public class MinuteOf3 extends SingleOperandFunction3 {
         final int result = super.hashCode();
         return prime * result + MinuteOf3.class.getName().hashCode();
     }
-    
+
     @Override
     public boolean equals(final Object obj) {
         return this == obj || super.equals(obj) && obj instanceof MinuteOf3;
-    } 
+    }
 }
