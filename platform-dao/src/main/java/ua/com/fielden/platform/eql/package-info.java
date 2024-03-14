@@ -23,7 +23,8 @@
  *   is a BNF instance corresponding to the EQL grammar. This BNF definition should be modified accordingly.
  *   </li>
  *   <li>
- *   The new version of the canonical grammar can be used for generation of:
+ *   The new version of the canonical grammar can be used to generate various artifacts via the {@code GrammarActions} class.
+ *   These artifacts include:
  *   <ol>
  *     <li>HTML page with the contents of the BNF.</li>
  *     <li>ANTLR grammar corresponding to the BNF.</li>
