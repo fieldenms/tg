@@ -4,9 +4,12 @@
 Command that generates ANTLR artifacts (including parser and lexer):
 
 ```
-mvn antlr4:antlr4 -D antlr4.visitor
+mvn antlr4:antlr4
 ```
 
-`antlr4.visitor` option instructs ANTLR to generate a visitor class.
+Generated artifacts should be stored in `platform-pojo-bl:src/main/java/:ua.com.fielden.platform.eql.antlr`.
+If this is not the case, review the plugin configuration in `pom.xml`. Look for the `outputDirectory` parameter.
 
-Refer to the [plugin home page](https://www.antlr.org/api/maven-plugin/latest/usage.html) for details.
+References:
+
+* [ANTLR Maven plugin home page](https://www.antlr.org/api/maven-plugin/latest/usage.html)
