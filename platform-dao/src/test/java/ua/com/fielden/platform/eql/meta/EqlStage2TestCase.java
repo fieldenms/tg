@@ -172,7 +172,7 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static Conditions2 cond(final ICondition2<? extends ICondition3> condition) {
-        return new Conditions2(false, asList(asList(condition)));
+        return Conditions2.conditions(false, asList(asList(condition)));
     }
 
     //    protected static Conditions1 conditions(final ICondition1<?> firstCondition, final CompoundCondition1... otherConditions) {
@@ -220,12 +220,12 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
         for (final ICondition2<?> cond : conditions) {
             list.add(and(cond));
         }
-        return new Conditions2(false, list);
+        return Conditions2.conditions(false, list);
     }
 
     @SafeVarargs
     protected static Conditions2 or(final List<? extends ICondition2<?>>... conditions) {
-        return new Conditions2(false, asList(conditions));
+        return Conditions2.conditions(false, asList(conditions));
     }
 
     protected static ExistencePredicate2 exists(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions) {

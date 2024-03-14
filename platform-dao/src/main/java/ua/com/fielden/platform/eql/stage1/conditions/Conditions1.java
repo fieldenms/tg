@@ -43,8 +43,10 @@ public class Conditions1 implements ICondition1<Conditions2> {
 
     public static Conditions1 conditions(final ICondition1<? extends ICondition2<?>> condition) {
         // can we avoid redundant wrapping?
-        if (condition instanceof Conditions1 conditions1 && !conditions1.negated) {
-            return conditions1;
+        if (condition instanceof Conditions1 conditions1) {
+            return !conditions1.negated
+                    ? conditions1
+                    : new Conditions1(true, conditions1.firstCondition, conditions1.otherConditions);
         }
         return new Conditions1(false, condition, List.of());
     }
@@ -137,7 +139,7 @@ public class Conditions1 implements ICondition1<Conditions2> {
                 .filter(transformedAndGroup -> !transformedAndGroup.isEmpty())
                 .collect(toList());
 
-        return transformed.isEmpty() ? Conditions2.EMPTY_CONDITIONS : new Conditions2(negated, transformed);
+        return Conditions2.conditions(negated, transformed);
     }
 
     @Override
