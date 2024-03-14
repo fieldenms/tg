@@ -3,6 +3,7 @@ package ua.com.fielden.platform.reflection.asm.impl;
 import static org.apache.commons.lang3.StringUtils.capitalize;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
@@ -331,6 +332,60 @@ public class DynamicEntityTypePropertiesAdditionTest {
         final AbstractEntity<String> instance = factory.newByKey(newType, "new");
         assertEquals("Incorrect value of the added property %s.".formatted(npExplicitInit.getName()),
                 value, Finder.getFieldValue(field, instance));
+    }
+
+    @Test
+    public void added_list_property_has_unique_empty_ArrayList_as_value_in_every_instance() throws Exception {
+        final var newPropName = "newPropList";
+        final var newProp = NewProperty.create(newPropName, List.class, "title", "desc", new IsPropertyAnnotation(String.class, "--stub-link-property--").newInstance());
+        final var newType = startModification(DEFAULT_ORIG_TYPE).addProperties(newProp).endModification();
+
+        final var field = Finder.getFieldByName(newType, newProp.getName());
+        assertNotNull(field);
+        final var entity = factory.newByKey(newType, "new1");
+        assertNotNull(entity.get(newPropName));
+        assertEquals(ArrayList.class, entity.get(newPropName).getClass());
+        assertEquals(new ArrayList<>(), entity.get(newPropName));
+
+        final var otherEntityWithSameType = factory.newByKey(newType, "new2");
+        // collection must be unique in different instances, otherwise we are risking with mutability of shared collections, especially in our standard scenario with clear()+addAll() -based setters
+        assertFalse(otherEntityWithSameType.get(newPropName) == entity.get(newPropName)); 
+    }
+
+    @Test
+    public void added_set_property_has_unique_empty_HashSet_as_value_in_every_instance() throws Exception {
+        final var newPropName = "newPropSet";
+        final var newProp = NewProperty.create(newPropName, Set.class, "title", "desc", new IsPropertyAnnotation(String.class, "--stub-link-property--").newInstance());
+        final var newType = startModification(DEFAULT_ORIG_TYPE).addProperties(newProp).endModification();
+
+        final var field = Finder.getFieldByName(newType, newProp.getName());
+        assertNotNull(field);
+        final var entity = factory.newByKey(newType, "new1");
+        assertNotNull(entity.get(newPropName));
+        assertEquals(HashSet.class, entity.get(newPropName).getClass());
+        assertEquals(new HashSet<>(), entity.get(newPropName));
+
+        final var otherEntityWithSameType = factory.newByKey(newType, "new2");
+        // collection must be unique in different instances, otherwise we are risking with mutability of shared collections, especially in our standard scenario with clear()+addAll() -based setters
+        assertFalse(otherEntityWithSameType.get(newPropName) == entity.get(newPropName)); 
+    }
+
+    @Test
+    public void added_concrete_collectional_property_has_unique_empty_concrete_collection_as_value_in_every_instance() throws Exception {
+        final var newPropName = "newPropLinkedHashSet";
+        final var newProp = NewProperty.create(newPropName, LinkedHashSet.class, "title", "desc", new IsPropertyAnnotation(String.class, "--stub-link-property--").newInstance());
+        final var newType = startModification(DEFAULT_ORIG_TYPE).addProperties(newProp).endModification();
+
+        final var field = Finder.getFieldByName(newType, newProp.getName());
+        assertNotNull(field);
+        final var entity = factory.newByKey(newType, "new1");
+        assertNotNull(entity.get(newPropName));
+        assertEquals(LinkedHashSet.class, entity.get(newPropName).getClass());
+        assertEquals(new LinkedHashSet<>(), entity.get(newPropName));
+
+        final var otherEntityWithSameType = factory.newByKey(newType, "new2");
+        // collection must be unique in different instances, otherwise we are risking with mutability of shared collections, especially in our standard scenario with clear()+addAll() -based setters
+        assertFalse(otherEntityWithSameType.get(newPropName) == entity.get(newPropName)); 
     }
 
     @Test

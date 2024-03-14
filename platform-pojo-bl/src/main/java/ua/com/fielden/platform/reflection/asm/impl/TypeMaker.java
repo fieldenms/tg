@@ -1,5 +1,33 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
+import static java.util.stream.Collectors.toCollection;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
+
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
+
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.modifier.Ownership;
 import net.bytebuddy.description.modifier.ParameterManifestation;
@@ -10,11 +38,14 @@ import net.bytebuddy.dynamic.DynamicType.Builder.MethodDefinition.ReceiverTypeDe
 import net.bytebuddy.dynamic.TargetType;
 import net.bytebuddy.dynamic.scaffold.MethodGraph;
 import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
-import net.bytebuddy.implementation.*;
+import net.bytebuddy.implementation.FieldAccessor;
+import net.bytebuddy.implementation.FixedValue;
+import net.bytebuddy.implementation.Implementation;
+import net.bytebuddy.implementation.MethodDelegation;
+import net.bytebuddy.implementation.SuperMethodCall;
 import net.bytebuddy.implementation.bind.annotation.Argument;
 import net.bytebuddy.implementation.bind.annotation.This;
 import net.bytebuddy.pool.TypePool;
-import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.entity.Accessor;
 import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.Generated;
@@ -26,18 +57,6 @@ import ua.com.fielden.platform.reflection.asm.annotation.GeneratedAnnotation;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.exceptions.CollectionalPropertyInitializationException;
 import ua.com.fielden.platform.reflection.asm.exceptions.TypeMakerException;
-
-import java.lang.annotation.*;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Type;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.stream.Collectors;
-
-import static java.util.stream.Collectors.toCollection;
-import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
 
 /**
  * This class provides an API for modifying types at runtime by means of bytecode manipulation.
@@ -88,7 +107,7 @@ public class TypeMaker<T> {
     /**
      * Holds mappings of the form: {@code property name -> initialized value}.
      */
-    private final Map<String, Object> propertyInitializers = new HashMap<>();
+    private final Map<String, Supplier<Object>> propertyInitializers = new HashMap<>();
     /**
      * Storage for names of both added and modified properties.
      */
@@ -184,7 +203,7 @@ public class TypeMaker<T> {
         if (prop.isInitialized()) {
             // it is guaranteed at this point that `prop` hasn't been put into the map previously
             // since properties with duplicate names are not allowed
-            propertyInitializers.put(prop.getName(), prop.getValue());
+            propertyInitializers.put(prop.getName(), () -> prop.getValue());
         }
         else if (collectional) { // automatically initialize collectional properties
             try {
@@ -206,16 +225,25 @@ public class TypeMaker<T> {
      * @return
      * @throws Exception
      */
-    private Object collectionalInitValue(final Class<?> rawType) throws Exception {
+    private Supplier<Object> collectionalInitValue(final Class<?> rawType) {
         if (rawType == Collection.class || rawType == List.class) {
-            return new ArrayList<Object>();
+            return ArrayList::new;
         }
         else if (rawType == Set.class) {
-            return new HashSet<Object>();
+            return HashSet::new;
         }
         else {
             // look for an accessible default constructor
+            otherCollectionalInitValue(rawType); // perform early check
+            return () -> otherCollectionalInitValue(rawType);
+        }
+    }
+
+    private Object otherCollectionalInitValue(final Class<?> rawType) {
+        try {
             return rawType.getConstructor().newInstance();
+        } catch (final Exception ex) {
+            throw new CollectionalPropertyInitializationException("Failed to initialize new collectional property of type %s.".formatted(rawType), ex);
         }
     }
 
@@ -462,20 +490,20 @@ public class TypeMaker<T> {
     }
 
     public static class ConstructorInterceptor {
-        private final Map<String, Object> fieldInitializers = new HashMap<>();
+        private final Map<String, Supplier<Object>> fieldInitializers = new HashMap<>();
 
-        ConstructorInterceptor(final Map<String, Object> fieldInitializers) {
+        ConstructorInterceptor(final Map<String, Supplier<Object>> fieldInitializers) {
             if (fieldInitializers != null) {
                 this.fieldInitializers.putAll(fieldInitializers);
             }
         }
 
         public void intercept(@This final Object instrumentedInstance) throws Exception {
-            for (final Entry<String, Object> nameAndValue : fieldInitializers.entrySet()) {
+            for (final Entry<String, Supplier<Object>> nameAndValue : fieldInitializers.entrySet()) {
                 final Field prop = Finder.getFieldByName(instrumentedInstance.getClass(), nameAndValue.getKey());
                 final boolean accessible = prop.canAccess(instrumentedInstance);
                 prop.setAccessible(true);
-                prop.set(instrumentedInstance, nameAndValue.getValue());
+                prop.set(instrumentedInstance, nameAndValue.getValue().get());
                 prop.setAccessible(accessible);
             }
         }
