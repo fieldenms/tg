@@ -68,8 +68,6 @@ public class AppIndexResource extends AbstractWebResource {
             //  changing Web UI configurations (all configurations should exist in scope of IWebUiConfig.initConfiguration() method).
             webUiConfig.clearConfiguration();
             webUiConfig.initConfiguration();
-            // invalidate a cache with generated types, representing entity centres
-            CriteriaGenerator.invalidateCache();
         }
         return createRepresentation(webResourceLoader, TEXT_HTML, "/app/tg-app-index.html", getReference().getRemainingPart());
     }
