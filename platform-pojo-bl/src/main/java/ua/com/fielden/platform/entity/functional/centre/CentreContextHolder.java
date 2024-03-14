@@ -3,11 +3,7 @@ package ua.com.fielden.platform.entity.functional.centre;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
@@ -30,11 +26,11 @@ public class CentreContextHolder extends AbstractEntity<String> {
 
     @IsProperty(Object.class)
     @Title(value = "Custom object", desc = "Custom object")
-    private final Map<String, Object> customObject = new HashMap<>();
+    private final Map<String, Object> customObject = new LinkedHashMap<>();
 
     @IsProperty(Object.class)
     @Title(value = "Modified properties holder", desc = "Modified properties holder")
-    private final Map<String, Object> modifHolder = new HashMap<>();
+    private final Map<String, Object> modifHolder = new LinkedHashMap<>();
 
     @IsProperty
     @Title(value = "Originally Produced Entity", desc = "The entity (new only) that was produced during master's contextual retrieval and then reused during validation, saving and autocompletion processes as a validation prototype")
@@ -143,4 +139,5 @@ public class CentreContextHolder extends AbstractEntity<String> {
     public Map<String, Object> getCustomObject() {
         return unmodifiableMap(customObject);
     }
+
 }

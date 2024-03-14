@@ -89,11 +89,6 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 
     private final ICompanionObjectFinder coFinder;
 
-    /**
-     * Cache of generated criteria types where key is a pair of [managedType; properties for selection criteria] and value is corresponding generated criteria entity type.
-     */
-    private static final ConcurrentMap<T2<Class<?>, List<String>>, Class<?>> GENERATED_CLASSES = new ConcurrentHashMap<>();
-
     @Inject
     public CriteriaGenerator(final EntityFactory entityFactory, final ICompanionObjectFinder controllerProvider) {
         this.entityFactory = entityFactory;
@@ -149,12 +144,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
             final var root = (Class<T>) centreManager.getRepresentation().rootTypes().iterator().next(); // multiple root types are rather rudimentary (were used in Snappy); single one must exist here
             final var managedType = centreManager.getEnhancer().getManagedType(root);
             final var propsForSelectionCriteria = centreManager.getFirstTick().checkedProperties(root);
-            return t2(
-                (Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>) GENERATED_CLASSES.computeIfAbsent(
-                    t2(managedType, propsForSelectionCriteria),
-                    key -> generateCriteriaType(root, propsForSelectionCriteria, managedType)
-                ), root
-            );
+            return t2(generateCriteriaType(root, propsForSelectionCriteria, managedType), root);
         }, centreManager);
     }
 
@@ -164,7 +154,9 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * This method exists for testing purposes only.
      */
     public <T extends AbstractEntity<?>> EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>> generateCentreQueryCriteriaForTesting(final Class<T> root, final ICentreDomainTreeManagerAndEnhancer centreManager) {
-        return generateCentreQueryCriteria(() -> t2(generateCriteriaType(root, centreManager.getFirstTick().checkedProperties(root), centreManager.getEnhancer().getManagedType(root)), root), centreManager);
+        final var managedType = centreManager.getEnhancer().getManagedType(root);
+        final var propsForSelectionCriteria = centreManager.getFirstTick().checkedProperties(root);
+        return generateCentreQueryCriteria(() -> t2(generateCriteriaType(root, propsForSelectionCriteria, managedType), root), centreManager);
     }
 
     /**
@@ -181,30 +173,24 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         final List<String> properties,
         final Class<?> managedType)
     {
-        final List<NewProperty> newProperties = new ArrayList<>();
-        for (final String propertyName : properties) {
-            if (!isPlaceholder(propertyName)) {
-                newProperties.addAll(generateCriteriaProperties(root, managedType, propertyName));
-            }
-        }
         try {
-            return (Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>)
+            final String newTypeName = generateCriteriaTypeName(CentreEntityQueryCriteriaToEnhance.class, linkedMapOf(t2("properties", properties)), managedType);
+            // it is possible that this transformation already exists, and so we should simply return an existing class
+            final var maybeClass = DynamicEntityClassLoader.getCachedClass(newTypeName);
+            if (maybeClass.isPresent()) {
+                return (Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>) maybeClass.get();
+            }
+            else {
+                final List<NewProperty> newProperties = properties.stream().filter(pn -> !isPlaceholder(pn)).flatMap(pn -> generateCriteriaProperties(root, managedType, pn).stream()).toList();
+                return (Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>)
                     DynamicEntityClassLoader.startModification(CentreEntityQueryCriteriaToEnhance.class)
                     .addProperties(newProperties.toArray(new NewProperty[0]))
-                    .modifyTypeName(generateCriteriaTypeName(CentreEntityQueryCriteriaToEnhance.class, linkedMapOf(t2("properties", properties)), managedType))
+                    .modifyTypeName(newTypeName)
                     .endModification();
+            }
         } catch (final ClassNotFoundException ex) {
             throw new CriteriaGeneratorException(format("Criteria type for [%s] could not be generated.", root.getSimpleName()), ex);
         }
-    }
-
-    /**
-     * Clears/invalidates the cache of generated entity classes, which represent selection criteria entities and are closely related to Web UI configurations.
-     * This method is primarily designed for situations where Web UI configurations need to be re-created and invalidated, such as when running the app in a debug mode
-     * where selection criteria are added/removed from Web UI centre configurations.
-     */
-    public static void invalidateCache() {
-        GENERATED_CLASSES.clear();
     }
 
     /**
