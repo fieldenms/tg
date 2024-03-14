@@ -1,5 +1,46 @@
 package ua.com.fielden.platform.eql.meta;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.EntityRetrievalModel;
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
+import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
+import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
+import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForComponentType;
+import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForUnionType;
+import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
+import ua.com.fielden.platform.eql.stage2.QueryComponents2;
+import ua.com.fielden.platform.eql.stage2.conditions.*;
+import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
+import ua.com.fielden.platform.eql.stage2.operands.Value2;
+import ua.com.fielden.platform.eql.stage2.operands.functions.CountAll2;
+import ua.com.fielden.platform.eql.stage2.queries.ResultQuery2;
+import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
+import ua.com.fielden.platform.eql.stage2.queries.SubQuery2;
+import ua.com.fielden.platform.eql.stage2.queries.SubQueryForExists2;
+import ua.com.fielden.platform.eql.stage2.sources.*;
+import ua.com.fielden.platform.eql.stage2.sundries.OrderBy2;
+import ua.com.fielden.platform.eql.stage2.sundries.OrderBys2;
+import ua.com.fielden.platform.eql.stage2.sundries.Yield2;
+import ua.com.fielden.platform.eql.stage2.sundries.Yields2;
+import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
+import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
+import ua.com.fielden.platform.eql.stage3.sources.ISource3;
+import ua.com.fielden.platform.types.tuples.T2;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
@@ -11,56 +52,6 @@ import static ua.com.fielden.platform.eql.stage2.sundries.OrderBys2.EMPTY_ORDER_
 import static ua.com.fielden.platform.eql.stage2.sundries.Yields2.EMPTY_YIELDS;
 import static ua.com.fielden.platform.eql.stage2.sundries.Yields2.nullYields;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.EntityRetrievalModel;
-import ua.com.fielden.platform.entity.query.exceptions.EqlException;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
-import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
-import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForComponentType;
-import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
-import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForUnionType;
-import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
-import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
-import ua.com.fielden.platform.eql.stage1.operands.Prop1;
-import ua.com.fielden.platform.eql.stage2.QueryComponents2;
-import ua.com.fielden.platform.eql.stage2.conditions.ComparisonPredicate2;
-import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
-import ua.com.fielden.platform.eql.stage2.conditions.ExistencePredicate2;
-import ua.com.fielden.platform.eql.stage2.conditions.ICondition2;
-import ua.com.fielden.platform.eql.stage2.conditions.NullPredicate2;
-import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
-import ua.com.fielden.platform.eql.stage2.operands.Prop2;
-import ua.com.fielden.platform.eql.stage2.operands.functions.CountAll2;
-import ua.com.fielden.platform.eql.stage2.queries.ResultQuery2;
-import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
-import ua.com.fielden.platform.eql.stage2.queries.SubQuery2;
-import ua.com.fielden.platform.eql.stage2.queries.SubQueryForExists2;
-import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
-import ua.com.fielden.platform.eql.stage2.sources.ISource2;
-import ua.com.fielden.platform.eql.stage2.sources.JoinInnerNode2;
-import ua.com.fielden.platform.eql.stage2.sources.JoinLeafNode2;
-import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
-import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnQueries;
-import ua.com.fielden.platform.eql.stage2.sundries.OrderBy2;
-import ua.com.fielden.platform.eql.stage2.sundries.OrderBys2;
-import ua.com.fielden.platform.eql.stage2.sundries.Yield2;
-import ua.com.fielden.platform.eql.stage2.sundries.Yields2;
-import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
-import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
-import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
-import ua.com.fielden.platform.eql.stage3.sources.ISource3;
-import ua.com.fielden.platform.types.tuples.T2;
 
 public abstract class EqlStage2TestCase extends EqlTestCase {
 
@@ -167,8 +158,20 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
         return new Prop2(source, asList(querySourceInfoItems));
     }
 
+    protected static Prop2 prop(final ISource2<? extends ISource3> source, final String name) {
+        return prop(source, pi(source.sourceType(), name));
+    }
+
     protected static Prop2 propWithIsId(final ISource2<? extends ISource3> source, final AbstractQuerySourceItem<?>... querySourceInfoItems) {
         return new Prop2(source, asList(querySourceInfoItems), true);
+    }
+
+    protected static Value2 val(final Object value) {
+        return new Value2(value);
+    }
+
+    protected static Value2 iVal(final Object value) {
+        return new Value2(value, true);
     }
 
     protected static Conditions2 cond(final ICondition2<? extends ICondition3> condition) {
@@ -244,16 +247,12 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
         return new NullPredicate2(operand, true);
     }
 
-    protected static ComparisonPredicate2 eq(final Prop2 op1, final Prop2 op2) {
+    protected static ComparisonPredicate2 eq(final ISingleOperand2<? extends ISingleOperand3> op1, final ISingleOperand2<? extends ISingleOperand3> op2) {
         return new ComparisonPredicate2(op1, EQ, op2);
     }
 
-    protected static ComparisonPredicate2 ne(final Prop2 op1, final Prop2 op2) {
+    protected static ComparisonPredicate2 ne(final ISingleOperand2<? extends ISingleOperand3> op1, final ISingleOperand2<? extends ISingleOperand3> op2) {
         return new ComparisonPredicate2(op1, NE, op2);
-    }
-
-    protected static Prop1 prop(final String name) {
-        return new Prop1(name, false);
     }
 
     protected static Source2BasedOnPersistentType source(final Integer id, final Class<? extends AbstractEntity<?>> sourceType, final String alias) {
