@@ -347,36 +347,53 @@ class ScatterPlot {
     }
 
     _drawData() {
-        const self = this;
-        const updateSelection = self._dataContainer.selectAll(".dot").data(this._data);
+        const rendHints = (i) => {
+            const renderingHints = this._renderingHints[i] || {};
+            const propStyle = value(this._options.dataPropertyNames.styleProp, renderingHints) || {};
+            return propStyle.backgroundStyles || propStyle || {};
+        };
+
+        const dataModel = this._data.map((d, i) => {
+            return {
+                data: d,
+                renderingHints: rendHints(i)
+            }
+        });
+        dataModel.sort((a, b) => {
+            const aZIndex = +a.renderingHints["z-index"] || 0;
+            const bZIndex = +b.renderingHints["z-index"] || 0;
+            return aZIndex - bZIndex;
+        });
+
+        const updateSelection = this._dataContainer.selectAll(".dot").data(dataModel);
         const insertSelection = updateSelection.enter();
         const removeSelection = updateSelection.exit();
 
         //update data groups
-        updateSelection.call(self._updateData.bind(self));
+        updateSelection.call(this._updateData.bind(this));
         //insert new data groups
-        insertSelection.call(self._insertNewData.bind(self));
+        insertSelection.call(this._insertNewData.bind(this));
         //removed unnedded data groups
         removeSelection.remove();
     }
 
     _insertNewData(selection) {
-        const self = this;
-        selection.append("path").attr("class", "dot").call(self._updateData.bind(self));
+        selection.append("path").attr("class", "dot").call(this._updateData.bind(this));
     }
     
     _updateData(selection) {
         selection
-            .attr("transform", d => `translate(${this._xs(value(this._options.dataPropertyNames.valueProp, d))}, ${this._ys(value(this._options.dataPropertyNames.categoryProp, d))})`)
-            .attr("d", d3.symbol().type((d, i) => {
-                const renderingHints = this._renderingHints[i] || {};
-                const propRendHints = value(this._options.dataPropertyNames.styleProp, renderingHints) || {};
-                return Symbols[propRendHints.shape] || Symbols.circle; //Default shape is circle
-            }))
-            .style("fill", (d, i) => {
-                const renderingHints = this._renderingHints[i] || {};
-                const propRendHints = value(this._options.dataPropertyNames.styleProp, renderingHints) || {};
-                return propRendHints.color || "green"; //Default color is green
+            .attr("transform", d => `translate(${this._xs(value(this._options.dataPropertyNames.valueProp, d.data))}, ${this._ys(value(this._options.dataPropertyNames.categoryProp, d.data))})`)
+            .attr("d", d3.symbol().type(d => {
+                    return Symbols[d.renderingHints.shape] || Symbols.circle; //Default shape is circle
+                }).size(d => {
+                    return d.renderingHints.size || 50; //Default size is 50
+                })
+            ).each(function(d) {
+                const dot = d3.select(this);
+                Object.keys(d.renderingHints).forEach(key => {
+                    dot.style(key, d.renderingHints[key]);
+                });
             });
     }
 
@@ -384,7 +401,7 @@ class ScatterPlot {
         const rescaledX = this._currentTransform.rescaleX(this._xs);
         this._dataContainer
             .selectAll(".dot")
-            .attr("transform", d => `translate(${rescaledX(value(this._options.dataPropertyNames.valueProp, d))}, ${this._ys(value(this._options.dataPropertyNames.categoryProp, d))})`)
+            .attr("transform", d => `translate(${rescaledX(value(this._options.dataPropertyNames.valueProp, d.data))}, ${this._ys(value(this._options.dataPropertyNames.categoryProp, d.data))})`)
     }
 }
 
