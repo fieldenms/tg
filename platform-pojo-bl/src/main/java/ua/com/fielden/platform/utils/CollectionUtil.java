@@ -6,6 +6,7 @@ import ua.com.fielden.platform.types.tuples.T2;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -60,6 +61,19 @@ public final class CollectionUtil {
         final Set<T> set = new HashSet<>(xs.length);
         Collections.addAll(set, xs);
         return new CollectionBuilder<>(set);
+    }
+
+    /**
+     * Returns a collection that results from concatenating given collections.
+     * The resulting collection is created by calling the supplied constructor.
+     */
+    @SafeVarargs
+    public static <T, C extends Collection<T>> C concat(final IntFunction<C> constructor, final Collection<? extends T>... collections) {
+        final C result = constructor.apply(Arrays.stream(collections).map(Collection::size).reduce(0, Integer::sum));
+        for (final var collection : collections) {
+            result.addAll(collection);
+        }
+        return result;
     }
 
     @SafeVarargs
