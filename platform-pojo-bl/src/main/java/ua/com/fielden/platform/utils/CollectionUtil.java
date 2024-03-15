@@ -50,6 +50,13 @@ public final class CollectionUtil {
     }
 
     /**
+     * An alternative of {@link List#copyOf(Collection)} that allows the given collection to contain nulls.
+     */
+    public static <T> List<T> listCopy(final Collection<? extends T> collection) {
+        return collection.isEmpty() ? List.of() : unmodifiableList(new ArrayList<>(collection));
+    }
+
+    /**
      * Returns a new list builder initialised with given elements.
      * @param xs  initial contents
      */

@@ -5,9 +5,9 @@ import ua.com.fielden.platform.utils.CollectionUtil;
 import java.util.List;
 import java.util.Objects;
 
-import static java.util.List.copyOf;
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.VALUES;
 import static ua.com.fielden.platform.eql.antlr.tokens.util.TokensFormatter.getInstance;
+import static ua.com.fielden.platform.utils.CollectionUtil.listCopy;
 
 public final class ValuesToken extends AbstractParameterisedEqlToken {
 
@@ -15,7 +15,7 @@ public final class ValuesToken extends AbstractParameterisedEqlToken {
 
     public ValuesToken(final List<Object> values) {
         super(VALUES, "values");
-        this.values = copyOf(values);
+        this.values = listCopy(values);
     }
 
     public String parametersText() {
