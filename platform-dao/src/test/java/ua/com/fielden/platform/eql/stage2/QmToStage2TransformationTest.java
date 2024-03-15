@@ -230,8 +230,8 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
     public void test05() {
         final ResultQuery2 actQry = qryCountAll(select(ORG1).where().exists(select(ORG2).where().prop("parent").eq().extProp("id").model()));
 
-        final Source2BasedOnPersistentType source = source(2, ORG1);
-        final Source2BasedOnPersistentType subQrySource = source(1, ORG2);
+        final Source2BasedOnPersistentType source = source(1, ORG1);
+        final Source2BasedOnPersistentType subQrySource = source(2, ORG2);
 
         final IJoinNode2<? extends IJoinNode3> sources = sources(source);
         final IJoinNode2<? extends IJoinNode3> subQrySources = sources(subQrySource);
@@ -248,9 +248,9 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final EntityResultQueryModel<TgOrgUnit2> subqry = select(ORG2).where().prop("parent").eq().extProp("id").model();
         final ResultQuery2 actQry = qryCountAll(select(ORG1).where().exists(subqry).or().notExists(subqry));
 
-        final Source2BasedOnPersistentType source = source(3, ORG1);
-        final Source2BasedOnPersistentType subQrySource1 = source(1, ORG2);
-        final Source2BasedOnPersistentType subQrySource2 = source(2, ORG2);
+        final Source2BasedOnPersistentType source = source(1, ORG1);
+        final Source2BasedOnPersistentType subQrySource1 = source(2, ORG2);
+        final Source2BasedOnPersistentType subQrySource2 = source(3, ORG2);
 
         final IJoinNode2<? extends IJoinNode3> sources = sources(source);
         final IJoinNode2<? extends IJoinNode3> subQrySources1 = sources(subQrySource1);
@@ -277,11 +277,11 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         model()). //
         model()));
 
-        final Source2BasedOnPersistentType source = source(5, ORG1);
-        final Source2BasedOnPersistentType sub1QrySource = source(4, ORG2);
+        final Source2BasedOnPersistentType source = source(1, ORG1);
+        final Source2BasedOnPersistentType sub1QrySource = source(2, ORG2);
         final Source2BasedOnPersistentType sub2QrySource = source(3, ORG3);
-        final Source2BasedOnPersistentType sub3QrySource = source(2, ORG4);
-        final Source2BasedOnPersistentType sub4QrySource = source(1, ORG5);
+        final Source2BasedOnPersistentType sub3QrySource = source(4, ORG4);
+        final Source2BasedOnPersistentType sub4QrySource = source(5, ORG5);
 
         final IJoinNode2<? extends IJoinNode3> sources = sources(source);
         final IJoinNode2<? extends IJoinNode3> sub1QrySources = sources(sub1QrySource);
@@ -314,11 +314,11 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         model()). //
         model()));
 
-        final Source2BasedOnPersistentType source = source(5, ORG1, "L1");
-        final Source2BasedOnPersistentType sub1QrySource = source(4, ORG2, "L2");
+        final Source2BasedOnPersistentType source = source(1, ORG1, "L1");
+        final Source2BasedOnPersistentType sub1QrySource = source(2, ORG2, "L2");
         final Source2BasedOnPersistentType sub2QrySource = source(3, ORG3, "L3");
-        final Source2BasedOnPersistentType sub3QrySource = source(2, ORG4, "L4");
-        final Source2BasedOnPersistentType sub4QrySource = source(1, ORG5, "L5");
+        final Source2BasedOnPersistentType sub3QrySource = source(4, ORG4, "L4");
+        final Source2BasedOnPersistentType sub4QrySource = source(5, ORG5, "L5");
 
         final IJoinNode2<? extends IJoinNode3> sources = sources(source);
         final IJoinNode2<? extends IJoinNode3> sub1QrySources = sources(sub1QrySource);
@@ -351,11 +351,11 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         model()). //
         model()));
 
-        final Source2BasedOnPersistentType source = source(5, ORG1, "L1");
-        final Source2BasedOnPersistentType sub1QrySource = source(4, ORG2, "L2");
+        final Source2BasedOnPersistentType source = source(1, ORG1, "L1");
+        final Source2BasedOnPersistentType sub1QrySource = source(2, ORG2, "L2");
         final Source2BasedOnPersistentType sub2QrySource = source(3, ORG3, "L3");
-        final Source2BasedOnPersistentType sub3QrySource = source(2, ORG4, "L4");
-        final Source2BasedOnPersistentType sub4QrySource = source(1, ORG5, "L5");
+        final Source2BasedOnPersistentType sub3QrySource = source(4, ORG4, "L4");
+        final Source2BasedOnPersistentType sub4QrySource = source(5, ORG5, "L5");
 
         final IJoinNode2<? extends IJoinNode3> sources = sources(source);
         final IJoinNode2<? extends IJoinNode3> sub1QrySources = sources(sub1QrySource);
@@ -388,11 +388,11 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         model()). //
         model()));
 
-        final Source2BasedOnPersistentType source = source(5, ORG1, "L1");
-        final Source2BasedOnPersistentType sub1QrySource = source(4, ORG2, "L2");
+        final Source2BasedOnPersistentType source = source(1, ORG1, "L1");
+        final Source2BasedOnPersistentType sub1QrySource = source(2, ORG2, "L2");
         final Source2BasedOnPersistentType sub2QrySource = source(3, ORG3, "L3");
-        final Source2BasedOnPersistentType sub3QrySource = source(2, ORG4, "L4");
-        final Source2BasedOnPersistentType sub4QrySource = source(1, ORG5, "L5");
+        final Source2BasedOnPersistentType sub3QrySource = source(4, ORG4, "L4");
+        final Source2BasedOnPersistentType sub4QrySource = source(5, ORG5, "L5");
 
         final IJoinNode2<? extends IJoinNode3> sources = sources(source);
         final IJoinNode2<? extends IJoinNode3> sub1QrySources = sources(sub1QrySource);
@@ -427,8 +427,8 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
     public void test12() {
         final ResultQuery2 actQry = qryCountAll(select(ORG1).where().exists(select(ORG2).where().prop("parent").isNotNull().model()));
 
-        final Source2BasedOnPersistentType source = source(2, ORG1);
-        final Source2BasedOnPersistentType subQrySource = source(1, ORG2);
+        final Source2BasedOnPersistentType source = source(1, ORG1);
+        final Source2BasedOnPersistentType subQrySource = source(2, ORG2);
 
         final IJoinNode2<? extends IJoinNode3> sources = sources(source);
         final IJoinNode2<? extends IJoinNode3> subQrySources = sources(subQrySource);
