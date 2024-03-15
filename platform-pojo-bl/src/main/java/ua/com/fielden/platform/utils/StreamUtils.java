@@ -273,4 +273,12 @@ public class StreamUtils {
         };
     }
 
+    /**
+     * Returns a stream that is the result of concatenating given streams.
+     */
+    @SafeVarargs
+    public static <T> Stream<T> concat(final Stream<? extends T>... streams) {
+        return Stream.of(streams).flatMap(Function.identity());
+    }
+
 }
