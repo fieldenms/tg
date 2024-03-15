@@ -1,22 +1,23 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
-import static java.util.stream.Collectors.toMap;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.reflection.asm.impl.TypeMaker.GET_ORIG_TYPE_METHOD_NAME;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
+import net.bytebuddy.dynamic.loading.InjectionClassLoader;
+import org.apache.logging.log4j.Logger;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.reflection.asm.exceptions.DynamicEntityClassLoaderException;
+import ua.com.fielden.platform.types.tuples.T2;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.logging.log4j.Logger;
-
-import net.bytebuddy.dynamic.loading.InjectionClassLoader;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.reflection.asm.exceptions.DynamicEntityClassLoaderException;
-import ua.com.fielden.platform.types.tuples.T2;
+import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toMap;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.reflection.asm.impl.TypeMaker.GET_ORIG_TYPE_METHOD_NAME;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 /**
  * A class loader for dynamically constructed or modified entity types.
@@ -42,6 +43,16 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
      * The value is a tuple, containing a generated type and the original type, used to produce the generated one.
      */
     private static final ConcurrentMap<String, T2<WeakReference<Class<?>>, Class<?>>> CACHE = new ConcurrentHashMap<>(/*initialCapacity*/ 1000, /*loadFactor*/ 0.75f, /*concurrencyLevel*/50);
+
+    /**
+     * Optionally returns a cached generated class by {@code className}.
+     *
+     * @param className
+     * @return
+     */
+    public static Optional<Class<?>> getCachedClass(final String className) {
+        return ofNullable(CACHE.get(className)).map(t2 -> t2._1.get());
+    }
 
     private DynamicEntityClassLoader(final ClassLoader parent) {
         super(parent, /*sealed*/ false);

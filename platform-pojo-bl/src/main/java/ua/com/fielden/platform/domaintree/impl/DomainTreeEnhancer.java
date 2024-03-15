@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.domaintree.impl;
 
 import static java.lang.String.format;
+import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toCollection;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
@@ -21,6 +22,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -362,7 +367,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         for (final Entry<Class<?>, Map<String, Map<String, IProperty>>> entry : groupedCalculatedProperties.entrySet()) {
             final Class<?> originalRoot = entry.getKey();
             // generate predefined root type name for all calculated properties
-            final String predefinedRootTypeName = generateTypeName(originalRoot, linkedMapOf(t2("calculatedProperties", calculatedPropertiesInfo(calculatedProperties, rootTypes)), t2("customProperties", customProperties)));
+            final String predefinedRootTypeName = generateTypeName(originalRoot, linkedMapOf(t2("calculatedProperties", calculatedPropertiesInfo(calculatedProperties, rootTypes)), t2("customProperties", customPropertiesInfo(customProperties))));
             if (entry.getValue() == null) {
                 originalAndEnhancedRootTypes.put(originalRoot, originalRoot);
             } else {
@@ -717,17 +722,30 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      *
      * @return
      */
-    public static Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedPropertiesInfo(final Map<Class<?>, List<CalculatedProperty>> calculatedProperties, final Set<Class<?>> rootTypes) {
-        final Map<Class<?>, Set<CalculatedPropertyInfo>> map = new LinkedHashMap<>();
+    public static SortedMap<String, SortedSet<CalculatedPropertyInfo>> calculatedPropertiesInfo(final Map<Class<?>, List<CalculatedProperty>> calculatedProperties, final Set<Class<?>> rootTypes) {
+        final SortedMap<String, SortedSet<CalculatedPropertyInfo>> map = new TreeMap<>(); // impose order to prevent different SHA-256 checksums for the same set of properties
         for (final Class<?> root: rootTypes) {
-            map.put(root, new LinkedHashSet<>());
+            map.put(root.getName(), new TreeSet<>());
         }
         for (final Entry<Class<?>, List<CalculatedProperty>> entry : calculatedProperties.entrySet()) {
-            final Set<CalculatedPropertyInfo> set = new HashSet<>();
+            final SortedSet<CalculatedPropertyInfo> set = new TreeSet<>(comparing(CalculatedPropertyInfo::path).thenComparing(CalculatedPropertyInfo::name)); // impose order to prevent different SHA-256 checksums for the same set of properties
             for (final CalculatedProperty cp : entry.getValue()) {
-                set.add(new CalculatedPropertyInfo(cp.getRoot(), cp.getContextPath(), cp.getCustomPropertyName(), cp.getContextualExpression(), cp.getTitle(), cp.getAttribute(), cp.getOriginationProperty(), cp.getDesc(), cp.getPrecision(), cp.getScale()));
+                set.add(new CalculatedPropertyInfo(cp.getRoot(), cp.getContextPath(), cp.getCustomPropertyName(), cp.getContextualExpression(), cp.getTitle(), cp.getAttribute(), cp.getOriginationProperty(), cp.getDesc(), cp.getPrecision(), cp.getScale(), cp.path(), cp.name()));
             }
-            map.put(entry.getKey(), set);
+            map.put(entry.getKey().getName(), set);
+        }
+        return map;
+    }
+
+    /**
+     * Converts current snapshot of {@link #customProperties()} into ordered format.
+     */
+    public static SortedMap<String, SortedSet<CustomProperty>> customPropertiesInfo(final Map<Class<?>, List<CustomProperty>> customProperties) {
+        final SortedMap<String, SortedSet<CustomProperty>> map = new TreeMap<>(); // impose order to prevent different SHA-256 checksums for the same set of properties
+        for (final Entry<Class<?>, List<CustomProperty>> entry : customProperties.entrySet()) {
+            final SortedSet<CustomProperty> set = new TreeSet<>(comparing(CustomProperty::path).thenComparing(CustomProperty::name)); // impose order to prevent different SHA-256 checksums for the same set of properties
+            set.addAll(entry.getValue());
+            map.put(entry.getKey().getName(), set);
         }
         return map;
     }
@@ -745,7 +763,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         for (final Entry<Class<?>, Set<CalculatedPropertyInfo>> entry : calculatedPropertiesInfo.entrySet()) {
             final List<CalculatedProperty> list = new ArrayList<>();
             for (final CalculatedPropertyInfo cpInfo : entry.getValue()) {
-                list.add(CalculatedProperty.createCorrect(dte.getFactory(), cpInfo.getRoot(), cpInfo.getContextPath(), cpInfo.getCustomPropertyName(), cpInfo.getContextualExpression(), cpInfo.getTitle(), cpInfo.getDesc(), cpInfo.getAttribute(), cpInfo.getOriginationProperty(), cpInfo.getPrecision(), cpInfo.getScale(), dte, true));
+                list.add(CalculatedProperty.createCorrect(dte.getFactory(), cpInfo.root(), cpInfo.contextPath(), cpInfo.customPropertyName(), cpInfo.contextualExpression(), cpInfo.title(), cpInfo.desc(), cpInfo.attribute(), cpInfo.originationProperty(), cpInfo.precision(), cpInfo.scale(), dte, true));
             }
             map.put(entry.getKey(), list);
         }
