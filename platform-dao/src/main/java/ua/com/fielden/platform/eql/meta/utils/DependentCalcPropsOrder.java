@@ -1,20 +1,5 @@
 package ua.com.fielden.platform.eql.meta.utils;
 
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.eql.meta.utils.TopologicalSort.sortTopologically;
-import static ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.isHeaderProperty;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.types.tuples.T3.t3;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.eql.antlr.EqlCompilationResult;
 import ua.com.fielden.platform.eql.antlr.EqlCompiler;
@@ -24,7 +9,6 @@ import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForComponentType;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
-import ua.com.fielden.platform.eql.stage0.StandAloneExpressionBuilder;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.Expression1;
 import ua.com.fielden.platform.eql.stage2.operands.Expression2;
@@ -33,6 +17,16 @@ import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage2.sources.enhance.PropChunk;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
+
+import java.util.*;
+import java.util.Map.Entry;
+
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.eql.meta.utils.TopologicalSort.sortTopologically;
+import static ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.isHeaderProperty;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.types.tuples.T3.t3;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 /**
  * Utility class used to determine dependencies between those calculated props of the given entity type that are entities themselves.

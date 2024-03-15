@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.eql.meta.PropType.INTEGER_PROP_TYPE;
-import static ua.com.fielden.platform.eql.stage0.YieldBuilder.ABSENT_ALIAS;
+import static ua.com.fielden.platform.eql.stage1.sundries.Yield1.ABSENT_ALIAS;
 
 import java.util.List;
 

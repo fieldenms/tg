@@ -1,10 +1,5 @@
 package ua.com.fielden.platform.eql.stage1.queries;
 
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_ENTITY;
-import static ua.com.fielden.platform.eql.stage0.YieldBuilder.ABSENT_ALIAS;
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.PropType;
@@ -18,6 +13,11 @@ import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sundries.Yield2;
 import ua.com.fielden.platform.eql.stage2.sundries.Yields2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
+
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_ENTITY;
+import static ua.com.fielden.platform.eql.stage1.sundries.Yield1.ABSENT_ALIAS;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
 /**
  * A structure used for representing queries in WHERE/ON conditions, yielding, grouping, and ordering.

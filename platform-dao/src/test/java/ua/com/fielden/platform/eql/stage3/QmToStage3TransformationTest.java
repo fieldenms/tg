@@ -9,7 +9,7 @@ import static ua.com.fielden.platform.eql.meta.PropType.BIGDECIMAL_PROP_TYPE;
 import static ua.com.fielden.platform.eql.meta.PropType.INTEGER_PROP_TYPE;
 import static ua.com.fielden.platform.eql.meta.PropType.LONG_PROP_TYPE;
 import static ua.com.fielden.platform.eql.meta.PropType.STRING_PROP_TYPE;
-import static ua.com.fielden.platform.eql.stage0.YieldBuilder.ABSENT_ALIAS;
+import static ua.com.fielden.platform.eql.stage1.sundries.Yield1.ABSENT_ALIAS;
 
 import org.junit.Ignore;
 import org.junit.Test;
