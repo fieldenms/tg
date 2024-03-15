@@ -11,6 +11,7 @@ import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 import java.util.*;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.joining;
@@ -258,7 +259,7 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder anyOfProps(final IConvertableToPath... props) {
-        return _add(new AnyOfPropsToken(Arrays.stream(props).map(IConvertableToPath::toPath).toList()));
+        return _add(new AnyOfPropsToken(Arrays.stream(props).map(IConvertableToPath::toPath).collect(toImmutableList())));
     }
 
     public EqlSentenceBuilder anyOfParams(final String... params) {
@@ -286,7 +287,7 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder allOfProps(final IConvertableToPath... props) {
-        return _add(new AllOfPropsToken(Arrays.stream(props).map(IConvertableToPath::toPath).toList()));
+        return _add(new AllOfPropsToken(Arrays.stream(props).map(IConvertableToPath::toPath).collect(toImmutableList())));
     }
 
     public EqlSentenceBuilder allOfParams(final String... params) {
@@ -322,7 +323,7 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder setOfProps(final IConvertableToPath... props) {
-        return _add(new PropsToken(Arrays.stream(props).map(IConvertableToPath::toPath).toList()));
+        return _add(new PropsToken(Arrays.stream(props).map(IConvertableToPath::toPath).collect(toImmutableList())));
     }
 
     public EqlSentenceBuilder setOfParams(final String... params) {
