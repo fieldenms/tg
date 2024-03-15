@@ -11,6 +11,7 @@ import ua.com.fielden.platform.eql.stage2.conditions.ICondition2;
 import java.util.*;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.lang.Math.max;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toSet;
@@ -101,9 +102,14 @@ public class Conditions1 implements ICondition1<Conditions2> {
         return !negated && otherConditions.isEmpty() && ID_EQUALS_EXT_ID_CONDITION.equals(firstCondition);
     }
 
+    private int size() {
+        return otherConditions.size() + (firstCondition == null ? 0 : 1);
+    }
+
     private List<List<ICondition1<? extends ICondition2<?>>>> formDnf() {
-        final List<List<ICondition1<? extends ICondition2<?>>>> dnf = new ArrayList<>();
-        List<ICondition1<? extends ICondition2<?>>> andGroup = new ArrayList<>();
+        final List<List<ICondition1<? extends ICondition2<?>>>> dnf = new ArrayList<>(max(1, size() / 2));
+        final int andGroupEstSize = max(1, size() / 3);
+        List<ICondition1<? extends ICondition2<?>>> andGroup = new ArrayList<>(andGroupEstSize);
 
         if (firstCondition != null) {
             andGroup.add(firstCondition);
@@ -117,7 +123,7 @@ public class Conditions1 implements ICondition1<Conditions2> {
                     dnf.add(andGroup);
                 }
 
-                andGroup = new ArrayList<>();
+                andGroup = new ArrayList<>(andGroupEstSize);
                 andGroup.add(compoundCondition.condition);
             }
         }
