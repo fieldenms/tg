@@ -1050,6 +1050,13 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
                 .isNotNull());
     }
 
+    @Test
+    public void nulls_can_be_used_in_contexts_of_multiple_values() {
+        run(select(TgVehicle.class).where().prop("id").in().values(1, null));
+        run(select(TgVehicle.class).where().prop("id").eq().anyOfValues(1, null));
+        run(select(TgVehicle.class).where().prop("id").eq().allOfValues(1, null));
+    }
+
     @Override
     public boolean saveDataPopulationScriptToFile() {
         return false;
