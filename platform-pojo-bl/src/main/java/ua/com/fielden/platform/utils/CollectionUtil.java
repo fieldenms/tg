@@ -49,6 +49,10 @@ public final class CollectionUtil {
         return unmodifiableList(asList(elements));
     }
 
+    /**
+     * Returns a new list builder initialised with given elements.
+     * @param xs  initial contents
+     */
     @SafeVarargs
     public static <T> CollectionBuilder<List<T>, T> listb(final T... xs) {
         final List<T> list = new ArrayList<>(xs.length);
@@ -56,6 +60,10 @@ public final class CollectionUtil {
         return new CollectionBuilder<>(list);
     }
 
+    /**
+     * Returns a new set builder initialised with given elements.
+     * @param xs  initial contents
+     */
     @SafeVarargs
     public static <T> CollectionBuilder<Set<T>, T> setb(final T... xs) {
         final Set<T> set = new HashSet<>(xs.length);
