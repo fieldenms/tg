@@ -16,11 +16,11 @@ public class Value1 implements ISingleOperand1<Value2> {
     public final Object value;
     public final boolean ignoreNull;
 
-    public Value1(final Object value) {
+    private Value1(final Object value) {
         this(value, false);
     }
 
-    public Value1(final Object value, final boolean ignoreNull) {
+    private Value1(final Object value, final boolean ignoreNull) {
         this.value = value;
         this.ignoreNull = ignoreNull;
     }
@@ -33,7 +33,7 @@ public class Value1 implements ISingleOperand1<Value2> {
     }
 
     public static Value1 value(final Object value) {
-        return value == null ? NULL : new Value1(value, false);
+        return value == null ? NULL : new Value1(value);
     }
 
     public static Value1 nullValue(final boolean ignoreNull) {

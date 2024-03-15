@@ -174,7 +174,7 @@ final class ConditionVisitor extends AbstractEqlVisitor<ICondition1<?>> {
 
     private ISetOperand1<? extends ISetOperand2<?>> compileMembershipOperand(final MembershipOperandContext ctx) {
         return switch (ctx.token) {
-            case ValuesToken tok -> new OperandsBasedSet1(tok.values.stream().map(v -> new Value1(preprocessValue(v))).toList());
+            case ValuesToken tok -> new OperandsBasedSet1(tok.values.stream().map(v -> Value1.value(preprocessValue(v))).toList());
             case PropsToken tok -> new OperandsBasedSet1(tok.props.stream().map(p -> new Prop1(p, false)).toList());
             case ParamsToken tok -> new OperandsBasedSet1(tok.params.stream().flatMap(p -> substParam(p, false)).toList());
             case IParamsToken tok -> new OperandsBasedSet1(tok.params.stream().flatMap(p -> substParam(p, true)).toList());

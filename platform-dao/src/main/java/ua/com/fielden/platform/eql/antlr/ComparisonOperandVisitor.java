@@ -65,11 +65,11 @@ final class ComparisonOperandVisitor extends AbstractEqlVisitor<ComparisonOperan
             }
             case AnyOfValuesToken tok -> {
                 any = true;
-                operands = tok.values.stream().map(v -> new Value1(preprocessValue(v))).toList();
+                operands = tok.values.stream().map(v -> Value1.value(preprocessValue(v))).toList();
             }
             case AllOfValuesToken tok -> {
                 any = false;
-                operands = tok.values.stream().map(v -> new Value1(preprocessValue(v))).toList();
+                operands = tok.values.stream().map(v -> Value1.value(preprocessValue(v))).toList();
             }
             case AnyOfParamsToken tok -> {
                 any = true;

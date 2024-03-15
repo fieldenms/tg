@@ -63,13 +63,13 @@ final class SingleOperandVisitor extends AbstractEqlVisitor<ISingleOperand1<? ex
     @Override
     public ISingleOperand1<? extends ISingleOperand2<?>> visitSingleOperand_Now(final SingleOperand_NowContext ctx) {
         final QueryNowValue qnv = transformer.nowValue;
-        return new Value1(qnv != null ? qnv.get() : null);
+        return Value1.value(qnv != null ? qnv.get() : null);
     }
 
     @Override
     public ISingleOperand1<? extends ISingleOperand2<?>> visitRound(final RoundContext ctx) {
         final int precision = ((ToToken) ctx.to).value;
-        return new RoundTo1(ctx.singleOperand().accept(this), new Value1(precision));
+        return new RoundTo1(ctx.singleOperand().accept(this), Value1.value(precision));
     }
 
     @Override
