@@ -28,8 +28,8 @@ public class ValuePreprocessor {
         if (value == null) {
             return null;
         } else if (value instanceof Collection || value.getClass().isArray()) {
-            final Stream<Object> original = value instanceof Collection
-                    ? ((Collection<Object>) value).stream()
+            final Stream<?> original = value instanceof Collection<?> collection
+                    ? collection.stream()
                     : Arrays.stream((Object[]) value);
             return apply(original).toList();
         } else {
