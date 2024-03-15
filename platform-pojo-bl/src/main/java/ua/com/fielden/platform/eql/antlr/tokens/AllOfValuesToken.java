@@ -7,6 +7,7 @@ import java.util.Objects;
 
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.ALLOFVALUES;
 import static ua.com.fielden.platform.eql.antlr.tokens.util.TokensFormatter.getInstance;
+import static ua.com.fielden.platform.utils.CollectionUtil.listCopy;
 
 public final class AllOfValuesToken extends AbstractParameterisedEqlToken {
 
@@ -14,7 +15,7 @@ public final class AllOfValuesToken extends AbstractParameterisedEqlToken {
 
     public AllOfValuesToken(final List<Object> values) {
         super(ALLOFVALUES, "allOfValues");
-        this.values = values;
+        this.values = listCopy(values);
     }
 
     public String parametersText() {

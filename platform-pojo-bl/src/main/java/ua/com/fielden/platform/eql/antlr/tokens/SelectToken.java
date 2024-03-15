@@ -1,12 +1,12 @@
 package ua.com.fielden.platform.eql.antlr.tokens;
 
+import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 
 import java.util.List;
 import java.util.Objects;
 
-import static java.util.List.copyOf;
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.SELECT;
 import static ua.com.fielden.platform.eql.antlr.tokens.SelectToken.Values.INSTANCE;
@@ -83,7 +83,7 @@ public sealed abstract class SelectToken extends AbstractParameterisedEqlToken {
         public final List<QueryModel<?>> models;
 
         public Models(List<? extends QueryModel<?>> models) {
-            this.models = copyOf(models);
+            this.models = ImmutableList.copyOf(models);
         }
 
         @Override

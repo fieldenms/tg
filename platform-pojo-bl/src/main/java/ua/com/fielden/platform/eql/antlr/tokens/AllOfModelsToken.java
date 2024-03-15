@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.antlr.tokens;
 
+import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 
 import java.util.List;
@@ -15,7 +16,7 @@ public final class AllOfModelsToken extends AbstractParameterisedEqlToken {
 
     public AllOfModelsToken(final List<PrimitiveResultQueryModel> models) {
         super(ALLOFMODELS, "allOfModels");
-        this.models = models;
+        this.models = ImmutableList.copyOf(models);
     }
 
     @Override

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.antlr.tokens;
 
+import com.google.common.collect.ImmutableList;
+
 import java.util.List;
 import java.util.Objects;
 
@@ -13,7 +15,7 @@ public final class AnyOfPropsToken extends AbstractParameterisedEqlToken {
 
     public AnyOfPropsToken(final List<String> props) {
         super(ANYOFPROPS, "anyOfProps");
-        this.props = props;
+        this.props = ImmutableList.copyOf(props);
     }
 
     public String parametersText() {

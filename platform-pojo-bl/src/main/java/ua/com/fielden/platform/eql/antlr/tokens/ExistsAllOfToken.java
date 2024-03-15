@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.antlr.tokens;
 
+import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 
 import java.util.List;
@@ -15,7 +16,7 @@ public final class ExistsAllOfToken extends AbstractParameterisedEqlToken {
 
     public ExistsAllOfToken(final List<? extends QueryModel> models) {
         super(EXISTSALLOF, "existsAllOf");
-        this.models = models;
+        this.models = ImmutableList.copyOf(models);
     }
 
     @Override

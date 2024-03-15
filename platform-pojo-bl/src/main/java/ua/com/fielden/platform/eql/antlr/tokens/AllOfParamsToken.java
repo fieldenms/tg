@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.antlr.tokens;
 
+import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.utils.CollectionUtil;
 
 import java.util.List;
@@ -13,7 +14,7 @@ public final class AllOfParamsToken extends AbstractParameterisedEqlToken {
 
     public AllOfParamsToken(final List<String> params) {
         super(ALLOFPARAMS, "allOfParams");
-        this.params = params;
+        this.params = ImmutableList.copyOf(params);
     }
 
     public String parametersText() {
