@@ -32,6 +32,7 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
  */
 public class DynamicEntityClassLoader extends InjectionClassLoader {
     private static final Logger LOGGER = getLogger(DynamicEntityClassLoader.class);
+    private static final String INF_DEFINED_NEW_TYPE = "Gen: %s; defined new [%s] type.";
     /**
      * A cache of instances of this type of the form: {@code parentClassLoader -> thisInstance}.
      */
@@ -97,6 +98,7 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
         return CACHE.computeIfAbsent(name, key -> {
             // define the class, load it and cache for later reuse
             final Class<?> klass = defineClass(name, bytes, 0, bytes.length);
+            LOGGER.info(INF_DEFINED_NEW_TYPE.formatted(CACHE.size(), klass.getSimpleName()));
             return t2(new WeakReference<>(klass), determineOriginalType(klass));
         })._1.get();
     }
