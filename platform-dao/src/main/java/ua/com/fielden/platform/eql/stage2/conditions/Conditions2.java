@@ -8,10 +8,13 @@ import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 import static java.util.Collections.emptySet;
+import static java.util.stream.Collectors.toSet;
 
 public class Conditions2 implements ICondition2<Conditions3> {
     public static final Conditions2 EMPTY_CONDITIONS = new Conditions2(false, ImmutableList.of());
@@ -72,7 +75,7 @@ public class Conditions2 implements ICondition2<Conditions3> {
         return dnf.stream()
                 .flatMap(List::stream)
                 .flatMap(cond -> cond.collectProps().stream())
-                .collect(Collectors.toSet());
+                .collect(toSet());
     }
 
     @Override
@@ -80,13 +83,7 @@ public class Conditions2 implements ICondition2<Conditions3> {
         if (ignore()) {
             return emptySet();
         } else {
-            final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>();
-            for (final List<? extends ICondition2<?>> conditions : dnf) {
-                for (final ICondition2<?> condition : conditions) {
-                    result.addAll(condition.collectEntityTypes());
-                }
-            }
-            return result;
+            return dnf.stream().flatMap(conds -> conds.stream().flatMap(c -> c.collectEntityTypes().stream())).collect(toSet());
         }
     }
 
