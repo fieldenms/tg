@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.conditions;
 
+import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
@@ -9,9 +10,9 @@ import ua.com.fielden.platform.eql.stage2.conditions.ICondition2;
 
 import java.util.*;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
@@ -28,16 +29,16 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.
  *
  */
 public class Conditions1 implements ICondition1<Conditions2> {
-    public static final Conditions1 EMPTY_CONDITIONS = new Conditions1(false, null, emptyList());
+    public static final Conditions1 EMPTY_CONDITIONS = new Conditions1(false, null, ImmutableList.of());
     private static final ComparisonPredicate1 ID_EQUALS_EXT_ID_CONDITION = new ComparisonPredicate1(new Prop1(ID, false), EQ, new Prop1(ID, true));
 
     public final boolean negated;
     public final ICondition1<? extends ICondition2<?>> firstCondition;
-    private final List<CompoundCondition1> otherConditions = new ArrayList<>();
+    private final List<CompoundCondition1> otherConditions;
 
     public Conditions1(final boolean negated, final ICondition1<? extends ICondition2<?>> firstCondition, final List<CompoundCondition1> otherConditions) {
         this.firstCondition = firstCondition;
-        this.otherConditions.addAll(otherConditions);
+        this.otherConditions = ImmutableList.copyOf(otherConditions);
         this.negated = negated;
     }
 
@@ -48,7 +49,7 @@ public class Conditions1 implements ICondition1<Conditions2> {
                     ? conditions1
                     : new Conditions1(true, conditions1.firstCondition, conditions1.otherConditions);
         }
-        return new Conditions1(false, condition, List.of());
+        return new Conditions1(false, condition, ImmutableList.of());
     }
 
     @SafeVarargs
@@ -64,7 +65,10 @@ public class Conditions1 implements ICondition1<Conditions2> {
             // operator is unnecessary for a single condition
             return conditions(conditions.getFirst());
         }
-        return new Conditions1(false, conditions.getFirst(), conditions.stream().skip(1).map(c -> new CompoundCondition1(operator, c)).toList());
+        return new Conditions1(
+                false,
+                conditions.getFirst(),
+                conditions.stream().skip(1).map(c -> new CompoundCondition1(operator, c)).collect(toImmutableList()));
     }
 
     @SafeVarargs
@@ -135,9 +139,9 @@ public class Conditions1 implements ICondition1<Conditions2> {
                 .map(andGroup ->
                         andGroup.stream().map(andGroupCondition -> andGroupCondition.transform(context))
                                 .filter(andGroupConditionTransformed -> !andGroupConditionTransformed.ignore())
-                                .toList())
+                                .collect(toImmutableList()))
                 .filter(transformedAndGroup -> !transformedAndGroup.isEmpty())
-                .collect(toList());
+                .collect(toImmutableList());
 
         return Conditions2.conditions(negated, transformed);
     }

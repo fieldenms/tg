@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage2.conditions;
 
+import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
@@ -10,13 +11,12 @@ import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 
 public class Conditions2 implements ICondition2<Conditions3> {
-    public static final Conditions2 EMPTY_CONDITIONS = new Conditions2(false, emptyList());
+    public static final Conditions2 EMPTY_CONDITIONS = new Conditions2(false, ImmutableList.of());
 
-    private final List<List<? extends ICondition2<?>>> dnf = new ArrayList<>();
+    private final List<List<? extends ICondition2<?>>> dnf;
     private final boolean negated;
 
     public static Conditions2 conditions(final boolean negated, final List<List<? extends ICondition2<?>>> dnf) {
@@ -32,7 +32,7 @@ public class Conditions2 implements ICondition2<Conditions3> {
     }
 
     public Conditions2(final boolean negated, final List<List<? extends ICondition2<?>>> dnf) {
-        this.dnf.addAll(dnf);
+        this.dnf = ImmutableList.copyOf(dnf);
         this.negated = negated;
     }
 
