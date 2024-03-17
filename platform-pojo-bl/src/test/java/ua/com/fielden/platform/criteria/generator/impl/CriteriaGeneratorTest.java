@@ -660,7 +660,7 @@ public class CriteriaGeneratorTest {
     }
 
     @Test
-    public void concurrent_type_generations_resulting_in_the_same_type_is_supported() throws InterruptedException {
+    public void concurrent_type_generation_resulting_in_the_same_type_is_supported() throws InterruptedException {
         final AtomicInteger numberOfErrors = new AtomicInteger(0); // used to calculate the number of exceptions due to "There is no field delegate$"
         final AtomicInteger numberOfOtherErrors = new AtomicInteger(0); // used to calculate the number of exceptions not due to "There is no field delegate$"
         final Phaser phaser = new Phaser(); // phaser is employed here to start worker threads as simultaneous as possible
