@@ -173,8 +173,8 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         final List<String> properties,
         final Class<?> managedType)
     {
+        final String newTypeName = generateCriteriaTypeName(CentreEntityQueryCriteriaToEnhance.class, linkedMapOf(t2("properties", properties)), managedType);
         try {
-            final String newTypeName = generateCriteriaTypeName(CentreEntityQueryCriteriaToEnhance.class, linkedMapOf(t2("properties", properties)), managedType);
             // it is possible that this transformation already exists, and so we should simply return an existing class
             final var maybeClass = DynamicEntityClassLoader.getCachedClass(newTypeName);
             if (maybeClass.isPresent()) {
@@ -190,6 +190,16 @@ public class CriteriaGenerator implements ICriteriaGenerator {
             }
         } catch (final ClassNotFoundException ex) {
             throw new CriteriaGeneratorException(format("Criteria type for [%s] could not be generated.", root.getSimpleName()), ex);
+        } catch (final Exception ex) {
+            // even in case of an exception, let's try to locate the class with name newTypeName again just in case it was already created concurrently
+            final var maybeClass = DynamicEntityClassLoader.getCachedClass(newTypeName);
+            if (maybeClass.isPresent()) {
+                return (Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>) maybeClass.get();
+            }
+            // and if we could not find the class, then re-throw the exception
+            else {
+                throw ex;
+            }
         }
     }
 

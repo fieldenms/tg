@@ -17,6 +17,7 @@ import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionH
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.collectActivatableNotDirtyProperties;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isNotSpecialActivatableToBeSkipped;
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.DbUtils.nextIdValue;
 import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
@@ -45,6 +46,7 @@ import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.exceptions.EntityAlreadyExists;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
+import ua.com.fielden.platform.dao.exceptions.EntityWasUpdatedOrDeletedConcurrently;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -71,6 +73,8 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 
+import javax.persistence.OptimisticLockException;
+
 /**
  * The default implementation of contract {@link IEntityActuator} to save/update persistent entities.
  * 
@@ -80,6 +84,8 @@ import ua.com.fielden.platform.utils.EntityUtils;
  */
 public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements IEntityActuator<T> {
     public static final String ERR_COULD_NOT_RESOLVE_CONFLICTING_CHANGES = "Could not resolve conflicting changes.";
+    public static final String ERR_OPTIMISTIC_LOCK = "%s [%s] was updated or deleted by another user. Please try saving again.";
+
     private final Supplier<Session> session;
     private final Supplier<String> transactionGuid;
     private final Supplier<DbVersion> dbVersion;
@@ -246,7 +252,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         final List<EntityAggregates> ids = new EntityFetcher(queryExecutionContext).getEntities(from(model).lightweight().model());
         final int count = ids.size();
         if (count == 1 && entity.getId().longValue() != ((Number) ids.get(0).get(AbstractEntity.ID)).longValue()) {
-            throw new EntityAlreadyExists(format("%s [%s] already exists.", TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey(), entity));
+            throw new EntityAlreadyExists(format("%s [%s] already exists.", getEntityTitleAndDesc(entity.getType()).getKey(), entity));
         }
 
         // load the entity directly from the session
@@ -254,7 +260,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         persistedEntity.setIgnoreEditableState(true);
         // check for data staleness and try to resolve the conflict is possible (refer #83)
         if (persistedEntity.getVersion() != null && persistedEntity.getVersion() > entity.getVersion() && !canResolveConflict(entity, persistedEntity)) {
-            throw new EntityCompanionException(format("%s %s [%s] could not be saved.", ERR_COULD_NOT_RESOLVE_CONFLICTING_CHANGES, TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey(), entity));
+            throw new EntityCompanionException(format("%s %s [%s] could not be saved.", ERR_COULD_NOT_RESOLVE_CONFLICTING_CHANGES, getEntityTitleAndDesc(entityType).getKey(), entity));
         }
 
         // reconstruct entity fetch model for future retrieval at the end of the method call
@@ -285,9 +291,18 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         }
 
         // update entity
-        session.get().update(persistedEntity);
-        session.get().flush();
-        session.get().clear();
+        try {
+            session.get().update(persistedEntity);
+            session.get().flush();
+        } catch (final OptimisticLockException ex) {
+            // optimistic locking exception may occur during concurrent saving
+            // let's present a more user-friendly message and log the error
+            final String msg = ERR_OPTIMISTIC_LOCK.formatted(getEntityTitleAndDesc(persistedEntity).getKey(), persistedEntity);
+            logger.error(msg, ex);
+            throw new EntityWasUpdatedOrDeletedConcurrently(msg, ex);
+        } finally {
+            session.get().clear();
+        }
 
         return t2(persistedEntity.getId(), entityFetchOption.map(fetch -> findById.apply(persistedEntity.getId(), fetch)).orElse(persistedEntity));
     }
@@ -379,8 +394,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                     if (!areEqual(entity, persistedValue)) {
                         if (activeProp.getValue()) { // is entity being activated?
                             if (!persistedValue.isActive()) { // if activatable is not active then this is an error
-                                final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey();
-                                final String persistedValueTitle = TitlesDescsGetter.getEntityTitleAndDesc(propNameAndType._2).getKey();
+                                final String entityTitle = getEntityTitleAndDesc(entity.getType()).getKey();
+                                final String persistedValueTitle = getEntityTitleAndDesc(propNameAndType._2).getKey();
                                 throw new EntityCompanionException(format("%s [%s] has a reference to already inactive %s [%s].", entityTitle, entity, persistedValueTitle, persistedValue));
                             } else { // otherwise, increment refCount
                                 session.get().update(persistedValue.incRefCount());
@@ -471,7 +486,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     private T2<Long, T> saveNewEntity(final T entity, final boolean skipRefetching, final Optional<fetch<T>> maybeFetch) {
         // let's make sure that entity is not a duplicate
         if (entityExists.apply(createQueryByKey(dbVersion.get(), entityType, keyType, false, entity.getKey()))) {
-            throw new EntityAlreadyExists(format("%s [%s] already exists.", TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey(), entity));
+            throw new EntityAlreadyExists(format("%s [%s] already exists.", getEntityTitleAndDesc(entity.getType()).getKey(), entity));
         }
 
         // process transactional assignments

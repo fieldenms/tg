@@ -1,17 +1,7 @@
 package ua.com.fielden.platform.ui.config;
 
-import static java.lang.String.format;
-import static ua.com.fielden.platform.utils.EntityUtils.isConflicting;
-
-import java.util.Map;
-import java.util.function.Function;
-
-import javax.persistence.OptimisticLockException;
-
-import org.hibernate.Session;
-
 import com.google.inject.Inject;
-
+import org.hibernate.Session;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
@@ -21,6 +11,13 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.exceptions.EntityCentreExecutionException;
+
+import javax.persistence.OptimisticLockException;
+import java.util.Map;
+import java.util.function.Function;
+
+import static java.lang.String.format;
+import static ua.com.fielden.platform.utils.EntityUtils.isConflicting;
 
 /**
  * DAO implementation of {@link EntityCentreConfigCo}.
@@ -74,13 +71,13 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
      * Implementation details:
      * <p>
      * This method should not manage a transaction scope.
-     * Similarly, method {@link #refetchReapplyAndSaveWithRetry(EntityCentreConfig, int, RuntimeException)} should also not manage a transaction scope.
-     * This is due to a recursive invocation of the same logic inside of method {@link #refetchReapplyAndSaveWithRetry(EntityCentreConfig, int, RuntimeException)}.
+     * Similarly, method {@link #refetchReapplyAndSaveWithRetry(EntityCentreConfig, int, long, RuntimeException)} should also not manage a transaction scope.
+     * This is due to a recursive invocation of the same logic inside of method {@link #refetchReapplyAndSaveWithRetry(EntityCentreConfig, int, long, RuntimeException)}.
      * The problem lies in {@link OptimisticLockException} (or other conflict-based exceptions) which, when actioned, rolls back the current transaction;
-     * This, in turn, makes it impossible to invoke method {@link #refetchReapplyAndSaveWithRetry(EntityCentreConfig, int, RuntimeException)} recursively.
+     * This, in turn, makes it impossible to invoke method {@link #refetchReapplyAndSaveWithRetry(EntityCentreConfig, int, long, RuntimeException)} recursively.
      * What we need here is more granular transaction scoping, which is why we have {@link #quickSave(EntityCentreConfig)} with {@link SessionRequired}. If {@link OptimisticLockException} occurs then
      * only a granular transaction around ({@link #quickSave(EntityCentreConfig)}) is rolled back.
-     * Any subsequent recursive invocation of {@link #refetchReapplyAndSaveWithRetry(EntityCentreConfig, int, RuntimeException)} would create a separate, independent {@link SessionRequired} scope for nested calls to {@link #quickSave(EntityCentreConfig)}.
+     * Any subsequent recursive invocation of {@link #refetchReapplyAndSaveWithRetry(EntityCentreConfig, int, long, RuntimeException)} would create a separate, independent {@link SessionRequired} scope for nested calls to {@link #quickSave(EntityCentreConfig)}.
      */
     // @SessionRequired -- avoid transaction here; refer the javadoc
     @Override

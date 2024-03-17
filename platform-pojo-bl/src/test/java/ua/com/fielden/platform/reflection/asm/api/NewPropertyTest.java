@@ -16,6 +16,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -195,16 +196,16 @@ public class NewPropertyTest {
     
     @Test
     public void initialization_value_can_be_provided() {
-        final NewProperty<Double> np = NewProperty.create("prop", Double.class, "title", "desc").setValue(Double.valueOf(125));
-        final Object value = np.getValue();
-        assertTrue("Property's value should have been initialized.", np.isInitialized());
+        final NewProperty<Double> np = NewProperty.create("prop", Double.class, "title", "desc").setValueSupplier(() -> Double.valueOf(125));
+        final Object value = np.getValueSupplier().get();
+        assertTrue("Property's value should have been initialized.", np.isInitialised());
         assertNotNull("Property's value should have been initialized.", value);
         assertEquals("Incorrect type of property init value.", Double.class, value.getClass());
         assertEquals("Incorrect property init value.", 125d, value);
         
-        final NewProperty<List> npCollectional = npParamList.copy().setValue(new LinkedList<>(List.of("hello", "world")));
-        final Object list = npCollectional.getValue();
-        assertTrue("Collectional property's value should have been initialized.", npCollectional.isInitialized());
+        final NewProperty<List> npCollectional = npParamList.copy().setValueSupplier(() -> new LinkedList<>(List.of("hello", "world")));
+        final Object list = npCollectional.getValueSupplier().get();
+        assertTrue("Collectional property's value should have been initialized.", npCollectional.isInitialised());
         assertNotNull("Collectional property's value should have been initialized.", list);
         assertEquals("Incorrect type of property init value.", LinkedList.class, list.getClass());
         assertEquals("Incorrect property init value.", List.of("hello", "world"), list);
@@ -219,13 +220,13 @@ public class NewPropertyTest {
     }
 
     @Test
-    public void can_be_created_from_Field_and_initalized() {
+    public void can_be_created_from_Field_and_initalised() {
         final Entity instance = factory.newByKey(Entity.class, "new").setFirstProperty(125);
         final Field field = Finder.getFieldByName(Entity.class, "firstProperty");
 
         final NewProperty<?> np;
         try {
-            np = NewProperty.fromField(field, instance);
+            np = NewProperty.fromField(field).setValueSupplierOrThrow(() -> instance.getFirstProperty());
         } catch (NewPropertyException e) {
             fail("Failed to initialize NewProperty constructed from Field: " + e.getMessage());
             return;
@@ -233,7 +234,21 @@ public class NewPropertyTest {
 
         assertNotNull(np);
         assertPropertyEquals(np, field);
-        assertEquals("Incorrect property initialized value.", 125, np.getValue());
+        assertEquals("Incorrect property initialized value.", 125, np.getValueSupplier().get());
+    }
+
+    @Test
+    public void properties_can_be_initialised_with_equal_but_referentially_different_values() {
+        final Field field = Finder.getFieldByName(Entity.class, "entity");
+
+        final Supplier<Entity> initValueSupplier = () -> factory.newByKey(Entity.class, "new");
+        final NewProperty<?> np1 = NewProperty.fromField(field).setValueSupplierOrThrow(initValueSupplier);
+        final NewProperty<?> np2 = NewProperty.fromField(field).setValueSupplierOrThrow(initValueSupplier);
+
+        final Entity np1Value = (Entity) np1.getValueSupplier().get();
+        final Entity np2Value = (Entity) np2.getValueSupplier().get();
+        assertEquals(np1Value, np2Value);
+        assertNotEquals(System.identityHashCode(np1Value), System.identityHashCode(np2Value));
     }
 
     @Test
@@ -243,7 +258,7 @@ public class NewPropertyTest {
         final Field field = Finder.getFieldByName(Entity.class, "firstProperty");
         assertFalse(field.getType().isInstance(value));
 
-        Assert.assertThrows(NewPropertyException.class, () -> NewProperty.fromField(field).setValueOrThrow(value));
+        Assert.assertThrows(NewPropertyException.class, () -> NewProperty.fromField(field).setValueSupplierOrThrow(() -> value));
     }
 
     @Test
