@@ -11,17 +11,17 @@ import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.to;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.isPropertyAnnotationPresent;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.Instant;
+import java.util.*;
+import java.util.concurrent.Phaser;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Test;
 
@@ -44,6 +44,7 @@ import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.TimeOnly;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
@@ -51,6 +52,7 @@ import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.sample.domain.crit_gen.CriteriaGeneratorTestModule;
 import ua.com.fielden.platform.sample.domain.crit_gen.LastLevelEntity;
 import ua.com.fielden.platform.sample.domain.crit_gen.TopLevelEntity;
@@ -656,5 +658,65 @@ public class CriteriaGeneratorTest {
         assertNotNull(toAnnotation);
         assertEquals(IUtcDateTimeType.class, toAnnotation.userType());
     }
-    
+
+    @Test
+    public void concurrent_type_generations_resulting_in_the_same_type_is_supported() throws InterruptedException {
+        final AtomicInteger numberOfErrors = new AtomicInteger(0); // used to calculate the number of exceptions due to "There is no field delegate$"
+        final AtomicInteger numberOfOtherErrors = new AtomicInteger(0); // used to calculate the number of exceptions not due to "There is no field delegate$"
+        final Phaser phaser = new Phaser(); // phaser is employed here to start worker threads as simultaneous as possible
+        phaser.register(); // register the phaser with the current thread
+
+        // create and start worker threads (waiting for the phaser) that would perform identical {@link CriteriaGenerator#generateCriteriaType(Class, List, Class)}
+        // such invocations lead to "There is no field delegate$..." errors.
+        final var workers = new ArrayList<Worker>();
+        for (int index = 1; index < 10; index ++) {
+            final Worker worker = new Worker("Worker with phaser %s".formatted(index), phaser, numberOfErrors, numberOfOtherErrors);
+            worker.start();
+            workers.add(worker);
+        }
+
+        // release the phaser to allow worker threads to do their thing
+        phaser.arriveAndAwaitAdvance();
+        for (var worker : workers) {
+            worker.join();
+        }
+
+        assertEquals("There were errors due to \"There is no field delegate$\".", 0, numberOfErrors.get());
+        assertEquals("There were other errors.", 0, numberOfOtherErrors.get());
+    }
+
+    /**
+     * A helper thread class that performs {@link CriteriaGenerator#generateCriteriaType(Class, List, Class)}.
+     */
+    private static class Worker extends Thread {
+        private final Phaser phaser;
+        private final AtomicInteger numberOfErrors;
+        private final AtomicInteger numberOfOtherErrors;
+
+        public Worker(final String name, final Phaser phaser, final AtomicInteger numberOfErrors, final AtomicInteger numberOfOtherErrors) {
+            this.phaser = phaser;
+            phaser.register();
+            setName(name);
+            this.numberOfErrors = numberOfErrors;
+            this.numberOfOtherErrors = numberOfOtherErrors;
+        }
+
+        @Override
+        public void run() {
+            try {
+                phaser.arriveAndAwaitAdvance();
+                // do actual work here...
+                final String property = "";
+                final Class<?> type = generateCriteriaType(TopLevelEntity.class, asList(property),  TopLevelEntity.class);
+            } catch (final Exception ex) {
+                if (ex.getMessage().startsWith("There is no field delegate$")) {
+                    numberOfErrors.incrementAndGet();
+                }
+                else {
+                    numberOfOtherErrors.incrementAndGet();
+                }
+            }
+        }
+    }
+
 }
