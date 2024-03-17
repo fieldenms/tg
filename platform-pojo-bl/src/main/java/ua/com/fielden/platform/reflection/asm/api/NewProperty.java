@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.StringJoiner;
+import java.util.function.Supplier;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -28,8 +29,10 @@ import ua.com.fielden.platform.reflection.asm.exceptions.NewPropertyException;
  * A convenient abstraction for representing data needed for dynamic construction of properties.
  * 
  * @param <T> The raw type of this property. This type parameter provides a compile-time safe way to initialize property's value using
- * {@link #setValue(Object)}. If the type is unknown and {@code NewProperty<?>} is being used, then 
- * {@link #setValueOrThrow(Object)} can be used to initialize its value.
+ * {@link #setValueSupplier(Supplier)}.
+ * <p>
+ * If the type is unknown and {@code NewProperty<?>} is being used, then
+ * {@link #setValueSupplierOrThrow(Supplier<?>)} can be used to initialize its value.
  * <p>
  * The context of using multiple instances of {@code NewProperty} is expected to be the process of enhancement of the same entity.
  * Hence, the identify for instances of {@code NewProperty} is determined by field {@code name}, which stands for the property name.
@@ -56,12 +59,12 @@ public final class NewProperty<T> {
      * Should never be null after initialization.
      */
     private IsProperty atIsProperty;
-    private T value; // property's initalized value
-    private boolean isInitialized = false;
+    private Supplier<T> valueSupplier; // a supplier for property's initialisation value
+    private boolean initialised;
 
     /**
-     * Constructs a property from the given <code>field</code>. To also initialize its value use {@link #fromField(Field, Object)} instead. 
-     * To initialize the value explicitly use {@link #setValueOrThrow(Object)}.
+     * Constructs a property from {@code field}.
+     * To initialize the value explicitly use {@link #setValueSupplierOrThrow(Supplier<Object>)}.
      * @param field
      * @return
      */
@@ -80,49 +83,21 @@ public final class NewProperty<T> {
     }
 
     /**
-     * Constructs a property from the given <code>field</code> and initializes its value by retrieving the value of 
-     * <code>field</code> from <code>object</code>.
-     * @param field
-     * @param object
-     * @throws NewPropertyException if the property value couldn't be initialized
-     * @return
-     */
-    public static NewProperty<?> fromField(final Field field, final Object object) throws NewPropertyException {
-        final NewProperty<?> np = fromField(field);
-        final Object fieldValue = Finder.getFieldValue(field, object);
-
-        return np.setValueOrThrow(fieldValue);
-    }
-
-    /**
      * Constructs a property from a field with <code>name</code> found in <code>type</code>'s hierarchy.
-     * To also initialize its value use {@link #fromField(Field, Object)} instead.
-     * To initialize the value explicitly use {@link #setValueOrThrow(Object)}.
+     * To initialize the value explicitly use {@link #setValueSupplierOrThrow(Supplier<Object>)}.
+     *
      * @param type
      * @param name
      * @return
      */
     public static NewProperty<?> fromField(final Class<?> type, final String name) {
-        return NewProperty.fromField(Finder.getFieldByName(type, name));
-    }
-
-    /**
-     * Constructs a property from a field with <code>name</code> found in <code>type</code>'s hierarchy.
-     * Initializes its value by retrieving the value of the found field from <code>object</code>.
-     * @param type
-     * @param name
-     * @param object
-     * @throws NewPropertyException if the property value couldn't be initialized
-     * @return
-     */
-    public static NewProperty<?> fromField(final Class<?> type, final String name, final Object object) throws NewPropertyException {
-        return NewProperty.fromField(Finder.getFieldByName(type, name), object);
+        return fromField(Finder.getFieldByName(type, name));
     }
 
     /**
      * A convenient factory method for creating a new property representation with a raw type and type arguments.
      * <p>
-     * Refer to {@link #NewProperty(String, Class, Type[], String, String, Annotation...)} for details.
+     * Refer to {@link #NewProperty(String, Class, List, String, String, Annotation...)} for details.
      * 
      * @param name simple name of the property
      * @param rawType rawType of the property
@@ -232,7 +207,7 @@ public final class NewProperty<T> {
     /**
      * A convenient factory method for creating a new property representation with a parameterized type.
      * <p>
-     * Refer to {@link #NewProperty(String, ParameterizedType, String, String, Annotation...)} for details.
+     * Refer to {@link #NewProperty(String name, Class, List, String, String, Annotation...)} for details.
      *
      * @param name simple name of the property
      * @param type parameterized type of the property
@@ -336,7 +311,7 @@ public final class NewProperty<T> {
      * then it's prioritized over the value of  {@link IsProperty}.
      * The same rules apply to {@link PropertyDescriptor} which also accepts a single type argument.
      * <p>
-     * Refer to {@link #getGenericTypeAsDeclared()} to get a precise representation (which would simply return a raw {@link List}
+     * Refer to {@link #genericTypeAsDeclared()} to get a precise representation (which would simply return a raw {@link List}
      * in the example above).
      * <p>
      * <i>Note:</i> This method tries to determine the correct generic type on every call, so use it sparingly.
@@ -455,48 +430,48 @@ public final class NewProperty<T> {
         return setAnnotations(Arrays.asList(annotations));
     }
     
-    public boolean isInitialized() {
-        return this.isInitialized;
+    public boolean isInitialised() {
+        return this.initialised;
     }
     
     /**
      * Returns the initialized value of this property.
      * @return
      */
-    public T getValue() {
-        return value;
+    public Supplier<T> getValueSupplier() {
+        return valueSupplier;
     }
     
     /**
-     * Sets the initialization value of this property to <code>value</code>.
-     * @param value
+     * Sets a new initialising value supplier.
+     * @param valueSupplier
      * @return this modified instance
      */
-    public NewProperty<T> setValue(final T value) {
-        this.value = value;
-        this.isInitialized = true;
+    public NewProperty<T> setValueSupplier(final Supplier<T> valueSupplier) {
+        this.valueSupplier = valueSupplier;
+        this.initialised = true;
         return this;
     }
-    
+
     /**
-     * Sets the initialization value of this property to <code>value</code>. 
+     * Sets the initialization value of this property to <code>value</code>.
      * <p>
      * If <code>value</code> is not assignment-compatible with this property's type, then an exception is thrown.
-     * @param value
+     * @param valueSupplier
      * @return this modified instance
      * @throws NewPropertyException
      */
     @SuppressWarnings("unchecked")
-    public NewProperty<T> setValueOrThrow(final Object value) {
-        if (!type.isInstance(value)) {
-            throw new NewPropertyException(String.format(
-                    "Couldn't initialize property value: uncompatible types. Property raw type: %s. Value type given: %s.",
-                    type.toString(), value.getClass().toString()));
+    public NewProperty<T> setValueSupplierOrThrow(final Supplier<?> valueSupplier) {
+        final Object value = valueSupplier.get();
+        // if supplier returns null we assume that this is a valid initialisation value
+        if (value != null && !type.isInstance(value)) {
+            throw new NewPropertyException("Couldn't initialise property value due to incompatible types. Property type: %s. Value type: %s.".formatted(type, value.getClass()));
         }
 
-        return setValue((T) value); // this cast is safe
+        return setValueSupplier((Supplier<T>) valueSupplier); // this cast is safe
     }
-    
+
     /**
      * Returns a newly created copy of this instance. However, the annotation instances are not copied, which means that you shouldn't modify them.
      * @return

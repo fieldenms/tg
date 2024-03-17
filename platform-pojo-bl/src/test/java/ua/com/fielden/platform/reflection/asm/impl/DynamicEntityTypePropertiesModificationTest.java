@@ -221,7 +221,7 @@ public class DynamicEntityTypePropertiesModificationTest {
         final Set<NewProperty<?>> newProperties = linkedSetOf(
                 NewProperty.fromField(Entity.class, "firstProperty").changeType(String.class),
                 NewProperty.fromField(Entity.class, "entity").changeType(TopLevelEntity.class),
-                NewProperty.fromField(Entity.class, "observableProperty").setValueOrThrow(123d));
+                NewProperty.fromField(Entity.class, "observableProperty").setValueSupplierOrThrow(() -> 123d));
         final Class<? extends AbstractEntity<?>> newType = startModification(Entity.class)
                 .modifyProperties(newProperties)
                 .endModification();
@@ -243,7 +243,7 @@ public class DynamicEntityTypePropertiesModificationTest {
                 .endModification();
 
         final Set<NewProperty<?>> newProperties =  linkedSetOf(NewProperty.fromField(newType1, "firstProperty").changeType(Double.class),
-                NewProperty.fromField(newType1, "number").setValueOrThrow(123));
+                NewProperty.fromField(newType1, "number").setValueSupplierOrThrow(() -> 123));
         final Class<? extends AbstractEntity<?>> newType2 = startModification(newType1)
                 .modifyProperties(newProperties)
                 .endModification();
@@ -557,17 +557,17 @@ public class DynamicEntityTypePropertiesModificationTest {
     @Test
     public void initialization_value_of_a_property_can_be_modified() throws Exception {
         // 1. modify a simple property
-        final NewProperty<?> np = NewProperty.fromField(EntityBeingEnhanced.class, "prop1").setValueOrThrow("Hello");
+        final NewProperty<?> np = NewProperty.fromField(EntityBeingEnhanced.class, "prop1").setValueSupplierOrThrow(() -> "Hello");
         final Class<? extends EntityBeingEnhanced> modEntityBeingEnhanced = startModification(EntityBeingEnhanced.class)
                 .modifyProperties(np)
                 .endModification();
 
         // instantiate
         final EntityBeingEnhanced instance = assertInstantiation(modEntityBeingEnhanced, factory);
-        assertEquals("Incorrect property initialization value.", np.getValue(), instance.get(np.getName()));
+        assertEquals("Incorrect property initialization value.", np.getValueSupplier().get(), instance.get(np.getName()));
 
         // 2. modify a collectional property
-        final NewProperty<?> npColl = NewProperty.fromField(EntityWithCollectionalPropety.class, "prop1").setValueOrThrow(new TreeSet<>());
+        final NewProperty<?> npColl = NewProperty.fromField(EntityWithCollectionalPropety.class, "prop1").setValueSupplierOrThrow(TreeSet::new);
         final Class<? extends EntityWithCollectionalPropety> modEntityWithCollectionalPropety =
                 startModification(EntityWithCollectionalPropety.class)
                 .modifyProperties(npColl)
@@ -575,7 +575,7 @@ public class DynamicEntityTypePropertiesModificationTest {
 
         // instantiate
         final EntityWithCollectionalPropety instanceColl = assertInstantiation(modEntityWithCollectionalPropety, factory);
-        assertEquals("Incorrect property initialization value.", npColl.getValue(), instanceColl.get(npColl.getName()));
+        assertEquals("Incorrect property initialization value.", npColl.getValueSupplier().get(), instanceColl.get(npColl.getName()));
     }
 
 }

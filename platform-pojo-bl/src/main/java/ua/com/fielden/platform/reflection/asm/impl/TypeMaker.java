@@ -34,6 +34,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toCollection;
@@ -75,6 +76,8 @@ public class TypeMaker<T> {
     private static final Generated GENERATED_ANNOTATION = GeneratedAnnotation.newInstance();
     private static final String CURRENT_BUILDER_IS_NOT_SPECIFIED = "Current builder is not specified.";
     public static final String GET_ORIG_TYPE_METHOD_NAME = "_GET_ORIG_TYPE_METHOD_";
+    private static final String ERR_FAILED_TO_INITIALISE_COLLECTIONAL_PROPERTY = "Failed to initialise new collectional property [%s].";
+    private static final String ERR_FAILED_TO_INITIALISE_CUSTOM_COLLECTIONAL_PROPERTY = "Failed to initialise new collectional property of custom type [%s].";
 
     private final DynamicEntityClassLoader cl;
     private final Class<T> origType;
@@ -86,9 +89,9 @@ public class TypeMaker<T> {
      */
     private final Set<String> origTypeProperties;// = new LinkedHashSet<>();
     /**
-     * Holds mappings of the form: {@code property name -> initialized value}.
+     * Holds mappings of the form: {@code property name -> initialized value supplier}.
      */
-    private final Map<String, Object> propertyInitializers = new HashMap<>();
+    private final Map<String, Supplier<?>> propertyInitializers = new HashMap<>();
     /**
      * Storage for names of both added and modified properties.
      */
@@ -180,42 +183,54 @@ public class TypeMaker<T> {
                                ? List.of()
                                : List.of(GENERATED_ANNOTATION));
 
-        final boolean collectional = prop.isCollectional();
-        if (prop.isInitialized()) {
+        if (prop.isInitialised()) {
             // it is guaranteed at this point that `prop` hasn't been put into the map previously
             // since properties with duplicate names are not allowed
-            propertyInitializers.put(prop.getName(), prop.getValue());
+            propertyInitializers.put(prop.getName(), prop.getValueSupplier());
         }
-        else if (collectional) { // automatically initialize collectional properties
+        else if (prop.isCollectional()) { // automatically initialize collectional properties
             try {
-                propertyInitializers.put(prop.getName(), collectionalInitValue(prop.getRawType()));
+                propertyInitializers.put(prop.getName(), collectionalInitValueSupplier(prop.getRawType()));
             } catch (final Exception ex) {
-                throw new CollectionalPropertyInitializationException("Failed to initialize new collectional property %s.".formatted(prop.toString()), ex);
+                throw new CollectionalPropertyInitializationException(ERR_FAILED_TO_INITIALISE_COLLECTIONAL_PROPERTY.formatted(prop.toString()), ex);
             }
         }
 
         addAccessor(prop.getName(), genericType);
-        addSetter(prop.getName(), genericType, collectional);
+        addSetter(prop.getName(), genericType, prop.isCollectional());
 
         addedPropertiesNames.add(prop.getName());
     }
 
     /**
-     * Determines a fitting value to initialize an instance of collectional type {@code rawType}. 
+     * Returns a fitting value supplier to initialise an instance of collectional type {@code rawType}.
+     *
      * @param rawType
      * @return
      * @throws Exception
      */
-    private Object collectionalInitValue(final Class<?> rawType) throws Exception {
+    private Supplier<Object> collectionalInitValueSupplier(final Class<?> rawType) {
         if (rawType == Collection.class || rawType == List.class) {
-            return new ArrayList<Object>();
+            return ArrayList::new;
         }
         else if (rawType == Set.class) {
-            return new HashSet<Object>();
+            return HashSet::new;
         }
         else {
+            customCollectionalInitValue(rawType); // perform early check for ability to create custom collection at the level of TypeMaker.addProperties(...) to preserve context
+            return () -> customCollectionalInitValue(rawType); // this function will be computed during TypeMaker.endModification() phase
+        }
+    }
+
+    /**
+     * Tries to compute empty default collectional property value for custom {@code rawType} using default parameterless constructor.
+     */
+    private Object customCollectionalInitValue(final Class<?> rawType) {
+        try {
             // look for an accessible default constructor
             return rawType.getConstructor().newInstance();
+        } catch (final Exception ex) {
+            throw new CollectionalPropertyInitializationException(ERR_FAILED_TO_INITIALISE_CUSTOM_COLLECTIONAL_PROPERTY.formatted(rawType), ex);
         }
     }
 
@@ -462,20 +477,20 @@ public class TypeMaker<T> {
     }
 
     public static class ConstructorInterceptor {
-        private final Map<String, Object> fieldInitializers = new HashMap<>();
+        private final Map<String, Supplier<?>> fieldInitializers = new HashMap<>();
 
-        ConstructorInterceptor(final Map<String, Object> fieldInitializers) {
+        ConstructorInterceptor(final Map<String, Supplier<?>> fieldInitializers) {
             if (fieldInitializers != null) {
                 this.fieldInitializers.putAll(fieldInitializers);
             }
         }
 
         public void intercept(@This final Object instrumentedInstance) throws Exception {
-            for (final Entry<String, Object> nameAndValue : fieldInitializers.entrySet()) {
+            for (final Entry<String, Supplier<?>> nameAndValue : fieldInitializers.entrySet()) {
                 final Field prop = Finder.getFieldByName(instrumentedInstance.getClass(), nameAndValue.getKey());
                 final boolean accessible = prop.canAccess(instrumentedInstance);
                 prop.setAccessible(true);
-                prop.set(instrumentedInstance, nameAndValue.getValue());
+                prop.set(instrumentedInstance, nameAndValue.getValue().get()); // supplier should never be null here (see collectionalInitValueSupplier)
                 prop.setAccessible(accessible);
             }
         }
