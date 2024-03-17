@@ -1,53 +1,14 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
-import static org.apache.commons.lang3.StringUtils.capitalize;
-import static org.junit.Assert.*;
-import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
-import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
-import static ua.com.fielden.platform.reflection.Finder.findProperties;
-import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
-import static ua.com.fielden.platform.reflection.Finder.getFieldValue;
-import static ua.com.fielden.platform.reflection.asm.api.test_utils.NewPropertyTestUtils.assertAnnotationsEquals;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertFieldExists;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertGeneratedPropertyCorrectness;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertHasProperties;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.function.Function;
-
+import com.google.inject.Injector;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import com.google.inject.Injector;
-
 import ua.com.fielden.platform.associations.one2many.DetailsEntityForOneToManyAssociation;
 import ua.com.fielden.platform.associations.one2many.MasterEntityWithOneToManyAssociation;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.Entity;
-import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.Generated;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.annotation.factory.BeforeChangeAnnotation;
-import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
-import ua.com.fielden.platform.entity.annotation.factory.DescTitleAnnotation;
-import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
-import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
-import ua.com.fielden.platform.entity.annotation.factory.ParamAnnotation;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.factory.*;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.DateParam;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
@@ -67,6 +28,21 @@ import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.MiscUtilities;
 import ua.com.fielden.platform.utils.Pair;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.*;
+import java.util.function.Function;
+
+import static org.apache.commons.lang3.StringUtils.capitalize;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.reflection.Finder.*;
+import static ua.com.fielden.platform.reflection.asm.api.test_utils.NewPropertyTestUtils.assertAnnotationsEquals;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.*;
 
 /**
  * A test case to ensure correct dynamic modification of entity types by means of adding new properties.
