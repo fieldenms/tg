@@ -1,13 +1,7 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
 import static org.apache.commons.lang3.StringUtils.capitalize;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.reflection.Finder.findProperties;
@@ -321,7 +315,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
     public void added_properties_can_have_explicitly_initialized_value() throws Exception {
         final Double value = 125d;
         final NewProperty<Double> npExplicitInit = NewProperty.create("newPropWithInitializedValue", Double.class, 
-                "title", "desc").setValue(value);
+                "title", "desc").setValueSupplier(() -> value);
 
         final Class<? extends AbstractEntity<String>> newType = startModification(DEFAULT_ORIG_TYPE)
                 .addProperties(npExplicitInit)
@@ -890,4 +884,29 @@ public class DynamicEntityTypePropertiesAdditionTest {
         assertEquals("Incorrect number of real properties found in the generated type.",
                 findRealProperties(TopLevelEntity.class).size() + 2, findRealProperties(newType).size());
     }
+
+    @Test
+    public void added_collectional_properties_can_be_initialised_explicitly_with_equal_but_referentially_different_values() throws Exception {
+        final String npName = "paramListTestProperty";
+        final NewProperty<Set> npParamSet = NewProperty.create(npName, Set.class, List.of(String.class),
+                "Collectional Property", "Collectional Property Description", new IsPropertyAnnotation(String.class).newInstance())
+                .setValueSupplier(() -> new TreeSet<String>());
+
+        final Class<? extends AbstractEntity<String>> newType = startModification(DEFAULT_ORIG_TYPE)
+                .addProperties(npParamSet)
+                .endModification();
+
+        final Field field = Finder.getFieldByName(newType, npParamSet.getName());
+        assertNotNull(field);
+        final AbstractEntity<String> instance1 = factory.newByKey(newType, "new1");
+        final AbstractEntity<String> instance2 = factory.newByKey(newType, "new2");
+        final Set<String> instance1_paramListTestProperty = instance1.get(npName);
+        final Set<String> instance2_paramListTestProperty = instance2.get(npName);
+
+        assertTrue(instance1_paramListTestProperty instanceof TreeSet<String>);
+        assertTrue(instance2_paramListTestProperty instanceof TreeSet<String>);
+        assertEquals(instance1_paramListTestProperty, instance2_paramListTestProperty);
+        assertNotEquals(System.identityHashCode(instance1_paramListTestProperty), System.identityHashCode(instance2_paramListTestProperty));
+    }
+
 }
