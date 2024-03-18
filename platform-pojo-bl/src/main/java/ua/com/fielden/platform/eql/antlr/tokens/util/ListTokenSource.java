@@ -23,6 +23,9 @@ public final class ListTokenSource extends org.antlr.v4.runtime.ListTokenSource 
         super(tokens, sourceName);
     }
 
+    /**
+     * Returns a complete view on tokens provided by this source without advancing the current token position.
+     */
     public List<Token> tokens() {
         return unmodifiableList(tokens);
     }
@@ -34,6 +37,13 @@ public final class ListTokenSource extends org.antlr.v4.runtime.ListTokenSource 
      */
     public ListTokenSource restart() {
         return i == 0 ? this : new ListTokenSource(tokens, getSourceName());
+    }
+
+    /**
+     * Determines whether this source provides the same tokens as the given one.
+     */
+    public boolean equalTokens(final ListTokenSource that) {
+        return tokens().equals(that.tokens());
     }
 
 }
