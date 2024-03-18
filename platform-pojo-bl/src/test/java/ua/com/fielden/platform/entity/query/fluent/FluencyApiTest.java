@@ -1,20 +1,21 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
-import junit.framework.TestCase;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
+import org.junit.Assert;
+import org.junit.Test;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 
 import java.lang.reflect.Method;
 import java.util.*;
 
 import static java.util.stream.Collectors.toSet;
+import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
-public class FluencyApiTest extends TestCase {
+public class FluencyApiTest {
 
 	private static final Set<Method> objectMethods = Set.of(Object.class.getMethods());
-    private static final Set<String> additionalMethodNames =
-		    Arrays.stream(AbstractQueryLink.class.getDeclaredMethods()).map(Method::getName).collect(toSet());;
+	private static final Set<String> additionalMethodNames =
+			Arrays.stream(AbstractQueryLink.class.getDeclaredMethods()).map(Method::getName).collect(toSet());
 
 	private static final String[] functions = new String[] { "round", "now", "caseWhen", "lowerCase", "upperCase", "ifNull",
 			"dateOf", "hourOf", "dayOf", "monthOf", "yearOf", "minuteOf", "secondOf", "count", "concat", "absOf", "addTimeIntervalOf", "dayOfWeekOf" };
@@ -96,9 +97,10 @@ public class FluencyApiTest extends TestCase {
 
 	public static void checkFluency(final Object queryInterface, final String[]... methods) {
 		final String result = compare(getMethods(queryInterface.getClass()), methods);
-		assertNull(result, result);
+		Assert.assertNull(result, result);
 	}
 
+	@Test
 	public void test_IFromAlias() {
 		checkFluency( //
 				select(TgVehicle.class), //
@@ -106,18 +108,21 @@ public class FluencyApiTest extends TestCase {
 	}
 
 	@SuppressWarnings("unchecked")
+	@Test
 	public void test_IFromAlias2() {
 		checkFluency( //
 				select(select(TgVehicle.class).model()), //
 				array(model, modelAsAggregate, modelAsEntity, where, groupBy, yield, yieldAll, as, join, leftJoin));
 	}
 
+	@Test
 	public void test_IFromAlias3() {
 		checkFluency( //
 				select(select(TgVehicle.class).yield().countAll().as("count").modelAsAggregate()), //
 				array(model, modelAsAggregate, modelAsEntity, where, groupBy, yield, yieldAll, as, join, leftJoin));
 	}
 
+	@Test
 	public void test_IWhere0() {
 		checkFluency( //
 				select(TgVehicle.class).where(), //
@@ -126,6 +131,7 @@ public class FluencyApiTest extends TestCase {
 				singleOperatorConditions, functions, anyOfs, allOfs);
 	}
 
+	@Test
 	public void test_IWhere1() {
 		checkFluency( //
 				select(TgVehicle.class).where().begin(), //
@@ -134,6 +140,7 @@ public class FluencyApiTest extends TestCase {
 				singleOperatorConditions, functions, anyOfs, allOfs);
 	}
 
+	@Test
 	public void test_IWhere2() {
 		checkFluency( //
 				select(TgVehicle.class).where().begin().begin(), //
@@ -142,6 +149,7 @@ public class FluencyApiTest extends TestCase {
 				singleOperatorConditions, functions, anyOfs, allOfs);
 	}
 
+	@Test
 	public void test_IWhere3() {
 		checkFluency( //
 				select(TgVehicle.class).where().begin().begin().begin(), //
@@ -149,68 +157,78 @@ public class FluencyApiTest extends TestCase {
 				functions, anyOfs, allOfs);
 	}
 
+	@Test
 	public void test_IFunctionLastArgument_with_ICompleted() {
 		checkFluency( //
 				select(TgVehicle.class).groupBy(), //
 				array(model, prop, extProp, param, iParam, val, iVal, beginExpr, expr), functions);
 	}
 
+	@Test
 	public void test_IFunctionYieldedLastArgument_with_IFirstYieldedItemAlias_with_ISubsequentCompletedAndYielded() {
 		checkFluency( //
 				select(TgVehicle.class).yield(), //
 				array(model, prop, extProp, param, iParam, val, iVal, beginExpr, expr), functions, aggregateFunctions);
 	}
 
+	@Test
 	public void test_IFirstYieldedItemAlias_with_ISubsequentCompletedAndYielded() {
 		checkFluency( //
 				select(TgVehicle.class).yield().prop("prop"), //
 				array(as, asRequired, modelAsEntity, modelAsPrimitive));
 	}
 
+	@Test
 	public void test_IFunctionLastArgument_with_IFirstYieldedItemAlias_with_ISubsequentCompletedAndYielded() {
 		checkFluency( //
 				select(TgVehicle.class).yield().secondOf(), //
 				array(model, prop, extProp, param, iParam, val, iVal, beginExpr, expr), functions);
 	}
 
+	@Test
 	public void test_IFunctionLastArgument_with_IComparisonOperator0() {
 		checkFluency( //
 				select(TgVehicle.class).where().secondOf(), //
 				array(model, prop, extProp, param, iParam, val, iVal, beginExpr, expr), functions);
 	}
 
+	@Test
 	public void test_IYieldExprItem0_with_IFirstYieldedItemAlias_with_ISubsequentCompletedAndYielded() {
 		checkFluency( //
 				select(TgVehicle.class).yield().beginExpr(), //
 				array(model, prop, extProp, param, iParam, val, iVal, beginExpr, expr), functions, aggregateFunctions);
 	}
 
+	@Test
 	public void test_IYieldExprItem1_with_IFirstYieldedItemAlias_with_ISubsequentCompletedAndYielded() {
 		checkFluency( //
 				select(TgVehicle.class).yield().beginExpr().beginExpr(), //
 				array(model, prop, extProp, param, iParam, val, iVal, beginExpr, expr), functions, aggregateFunctions);
 	}
 
+	@Test
 	public void test_IYieldExprItem2_with_IFirstYieldedItemAlias_with_ISubsequentCompletedAndYielded() {
 		checkFluency( //
 				select(TgVehicle.class).yield().beginExpr().beginExpr().beginExpr(), //
 				array(model, prop, extProp, param, iParam, val, iVal, beginExpr, expr), functions, aggregateFunctions);
 	}
 
+	@Test
 	public void test_IYieldExprItem3_with_IFirstYieldedItemAlias_with_ISubsequentCompletedAndYielded() {
 		checkFluency( //
 				select(TgVehicle.class).yield().beginExpr().beginExpr().beginExpr().beginExpr(), //
 				array(model, prop, extProp, param, iParam, val, iVal, expr), functions, aggregateFunctions);
 	}
 
-	public void previously_composed_query_stmt_remains_immutable_when_the_next_query_operator_has_been_added() {
-		final ICompoundCondition0<TgVehicle> qryStmt = select(TgVehicle.class).as("veh").where().prop("veh.model").isNull();
-		final ICompoundCondition0<TgVehicle> equalQryStmt = select(TgVehicle.class).as("veh").where().prop("veh.model").isNull();
+	@Test
+	public void intermediate_query_instances_are_immutable() {
+		final var qryStmt = select(TgVehicle.class).as("veh").where().prop("veh.model").isNull();
+		final var equalQryStmt = select(TgVehicle.class).as("veh").where().prop("veh.model").isNull();
+		assertEquals(qryStmt, equalQryStmt);
 
-		assertTrue(qryStmt.equals(equalQryStmt));
-		
 		equalQryStmt.groupBy().prop("veh.model");
-		
-		assertTrue(qryStmt.equals(equalQryStmt));
+
+		assertEquals(qryStmt, equalQryStmt);
 	}
+
 }
