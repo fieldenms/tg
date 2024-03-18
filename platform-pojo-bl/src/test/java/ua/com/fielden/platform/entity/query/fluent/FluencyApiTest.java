@@ -1,34 +1,20 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import junit.framework.TestCase;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 
+import java.lang.reflect.Method;
+import java.util.*;
+
+import static java.util.stream.Collectors.toSet;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 public class FluencyApiTest extends TestCase {
 
-	private static final List<Method> objectMethods = new ArrayList<>();
-    private static final List<String> additionalMethodNames = new ArrayList<>();
-
-    static {
-        for (final Method method : Object.class.getMethods()) {
-            objectMethods.add(method);
-        }
-        
-        additionalMethodNames.add("toString");
-        additionalMethodNames.add("equals");
-        additionalMethodNames.add("hashCode");
-        additionalMethodNames.add("getTokens");
-        additionalMethodNames.add("setTokens");
-    }
+	private static final Set<Method> objectMethods = Set.of(Object.class.getMethods());
+    private static final Set<String> additionalMethodNames =
+		    Arrays.stream(AbstractQueryLink.class.getDeclaredMethods()).map(Method::getName).collect(toSet());;
 
 	private static final String[] functions = new String[] { "round", "now", "caseWhen", "lowerCase", "upperCase", "ifNull",
 			"dateOf", "hourOf", "dayOf", "monthOf", "yearOf", "minuteOf", "secondOf", "count", "concat", "absOf", "addTimeIntervalOf", "dayOfWeekOf" };
