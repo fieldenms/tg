@@ -40,6 +40,7 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -364,20 +365,11 @@ public class Finder {
         //
         // final Class<?> referenceTypeFromWhichKeyMembersCanBeDetermined = DynamicEntityClassLoader.getOriginalType(type); ?
 
-        final List<Field> cachedKeyMembers = ENTITY_KEY_MEMBERS.getIfPresent(type);
-        return new ArrayList<>(cachedKeyMembers == null ? loadAndCacheKeyMembers(type) : cachedKeyMembers); // new list should be returned, not the same reference
-    }
-
-    /**
-     * Loads key members for <code>type</code> and caches them in global cache.
-     *
-     * @param type
-     * @return
-     */
-    private static final List<Field> loadAndCacheKeyMembers(final Class<? extends AbstractEntity<?>> type) {
-        final List<Field> loadedKeyMembers = Collections.unmodifiableList(loadKeyMembers(type)); // should be immutable
-        ENTITY_KEY_MEMBERS.put(type, loadedKeyMembers);
-        return loadedKeyMembers;
+        try {
+            return new ArrayList<>(ENTITY_KEY_MEMBERS.get(type, () -> Collections.unmodifiableList(loadKeyMembers(type))));
+        } catch (final ExecutionException ex) {
+            throw new ReflectionException("Could not get key members for type [%s]".formatted(type), ex);
+        }
     }
 
     /**
@@ -406,7 +398,7 @@ public class Finder {
             properties.put(order, field);
         }
         final List<Field> keyMembers = new ArrayList<>(properties.values());
-        // if there where no fields annotated with CompositeKeyMember then this
+        // if there are no fields annotated with CompositeKeyMember then this
         // entity uses a non-composite (simple) key.
         if (keyMembers.isEmpty()) {
             keyMembers.add(getFieldByName(type, KEY));

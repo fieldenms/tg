@@ -2,7 +2,6 @@ package ua.com.fielden.platform.entity;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
-import static java.util.Optional.empty;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -15,14 +14,11 @@ import org.junit.Test;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
-import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
@@ -30,7 +26,6 @@ import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgSystem;
 import ua.com.fielden.platform.sample.domain.crit_gen.CriteriaGeneratorTestModule;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
-import ua.com.fielden.platform.ui.menu.sample.MiTgSystem;
 
 public class EntityExistsValidationTest extends AbstractDaoTestCase {
     private final CriteriaGeneratorTestModule module = new CriteriaGeneratorTestModule();
@@ -60,7 +55,7 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
     public void existing_but_inactive_entity_can_be_assigned_to_property_with_default_validation_on_criteria_entity() {
         cdtm.getFirstTick().check(TgSystem.class, "critOnlySingleCategory", true);
         final var cg = injector.getInstance(ICriteriaGenerator.class);
-        final var criteriaEntity = cg.generateCentreQueryCriteria(getUser(), MiTgSystem.class, empty(), cdtm);
+        final var criteriaEntity = cg.generateCentreQueryCriteria(cdtm);
         
         final TgCategory cat2 = co$(TgCategory.class).findByKey("Cat2");
         criteriaEntity.set("tgSystem_critOnlySingleCategory", cat2);
@@ -98,7 +93,7 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
     public void non_existing_entity_can_be_assigned_to_property_with_default_validation_on_criteria_entity() {
         cdtm.getFirstTick().check(TgSystem.class, "critOnlySingleCategory", true);
         final var cg = injector.getInstance(ICriteriaGenerator.class);
-        final var criteriaEntity = cg.generateCentreQueryCriteria(getUser(), MiTgSystem.class, empty(), cdtm);
+        final var criteriaEntity = cg.generateCentreQueryCriteria(cdtm);
         
         final TgCategory cat2 = co$(TgCategory.class).findByKey("Cat2");
         

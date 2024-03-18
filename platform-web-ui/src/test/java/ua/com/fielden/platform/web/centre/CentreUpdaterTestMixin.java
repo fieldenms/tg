@@ -2,7 +2,6 @@ package ua.com.fielden.platform.web.centre;
 
 import static java.util.Optional.empty;
 import static org.junit.Assert.assertEquals;
-import static ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache.CACHE;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.web.centre.CentreDiffSerialiser.CENTRE_DIFF_SERIALISER;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.applyDifferences;
@@ -214,7 +213,7 @@ public class CentreUpdaterTestMixin {
     }
     
     static ICentreDomainTreeManagerAndEnhancer create() {
-        return createDefaultCentreFrom(DSL_CONFIG, FACTORY, centre -> centre, true, TgCentreDiffSerialisation.class, CACHE, MI_TYPE, INJECTOR);
+        return createDefaultCentreFrom(DSL_CONFIG, FACTORY, centre -> centre, true, TgCentreDiffSerialisation.class, MI_TYPE, INJECTOR);
     }
     
     static Map<String, Object> expectedDiffWithValue(final String property, final String category, final Object value) {

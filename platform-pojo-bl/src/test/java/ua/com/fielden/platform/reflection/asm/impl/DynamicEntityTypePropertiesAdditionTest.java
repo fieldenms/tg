@@ -1,58 +1,14 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
-import static org.apache.commons.lang3.StringUtils.capitalize;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
-import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
-import static ua.com.fielden.platform.reflection.Finder.findProperties;
-import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
-import static ua.com.fielden.platform.reflection.Finder.getFieldValue;
-import static ua.com.fielden.platform.reflection.asm.api.test_utils.NewPropertyTestUtils.assertAnnotationsEquals;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertFieldExists;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertGeneratedPropertyCorrectness;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertHasProperties;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.function.Function;
-
+import com.google.inject.Injector;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import com.google.inject.Injector;
-
 import ua.com.fielden.platform.associations.one2many.DetailsEntityForOneToManyAssociation;
 import ua.com.fielden.platform.associations.one2many.MasterEntityWithOneToManyAssociation;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.Entity;
-import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.Generated;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.annotation.factory.BeforeChangeAnnotation;
-import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
-import ua.com.fielden.platform.entity.annotation.factory.DescTitleAnnotation;
-import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
-import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
-import ua.com.fielden.platform.entity.annotation.factory.ParamAnnotation;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.factory.*;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.DateParam;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
@@ -72,6 +28,21 @@ import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.MiscUtilities;
 import ua.com.fielden.platform.utils.Pair;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.*;
+import java.util.function.Function;
+
+import static org.apache.commons.lang3.StringUtils.capitalize;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.reflection.Finder.*;
+import static ua.com.fielden.platform.reflection.asm.api.test_utils.NewPropertyTestUtils.assertAnnotationsEquals;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.*;
 
 /**
  * A test case to ensure correct dynamic modification of entity types by means of adding new properties.
@@ -320,7 +291,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
     public void added_properties_can_have_explicitly_initialized_value() throws Exception {
         final Double value = 125d;
         final NewProperty<Double> npExplicitInit = NewProperty.create("newPropWithInitializedValue", Double.class, 
-                "title", "desc").setValue(value);
+                "title", "desc").setValueSupplier(() -> value);
 
         final Class<? extends AbstractEntity<String>> newType = startModification(DEFAULT_ORIG_TYPE)
                 .addProperties(npExplicitInit)
@@ -331,6 +302,60 @@ public class DynamicEntityTypePropertiesAdditionTest {
         final AbstractEntity<String> instance = factory.newByKey(newType, "new");
         assertEquals("Incorrect value of the added property %s.".formatted(npExplicitInit.getName()),
                 value, Finder.getFieldValue(field, instance));
+    }
+
+    @Test
+    public void added_list_property_has_unique_empty_ArrayList_as_value_in_every_instance() throws Exception {
+        final var newPropName = "newPropList";
+        final var newProp = NewProperty.create(newPropName, List.class, "title", "desc", new IsPropertyAnnotation(String.class, "--stub-link-property--").newInstance());
+        final var newType = startModification(DEFAULT_ORIG_TYPE).addProperties(newProp).endModification();
+
+        final var field = Finder.getFieldByName(newType, newProp.getName());
+        assertNotNull(field);
+        final var entity = factory.newByKey(newType, "new1");
+        assertNotNull(entity.get(newPropName));
+        assertEquals(ArrayList.class, entity.get(newPropName).getClass());
+        assertEquals(new ArrayList<>(), entity.get(newPropName));
+
+        final var otherEntityWithSameType = factory.newByKey(newType, "new2");
+        // collection must be unique in different instances, otherwise we are risking with mutability of shared collections, especially in our standard scenario with clear()+addAll() -based setters
+        assertFalse(otherEntityWithSameType.get(newPropName) == entity.get(newPropName)); 
+    }
+
+    @Test
+    public void added_set_property_has_unique_empty_HashSet_as_value_in_every_instance() throws Exception {
+        final var newPropName = "newPropSet";
+        final var newProp = NewProperty.create(newPropName, Set.class, "title", "desc", new IsPropertyAnnotation(String.class, "--stub-link-property--").newInstance());
+        final var newType = startModification(DEFAULT_ORIG_TYPE).addProperties(newProp).endModification();
+
+        final var field = Finder.getFieldByName(newType, newProp.getName());
+        assertNotNull(field);
+        final var entity = factory.newByKey(newType, "new1");
+        assertNotNull(entity.get(newPropName));
+        assertEquals(HashSet.class, entity.get(newPropName).getClass());
+        assertEquals(new HashSet<>(), entity.get(newPropName));
+
+        final var otherEntityWithSameType = factory.newByKey(newType, "new2");
+        // collection must be unique in different instances, otherwise we are risking with mutability of shared collections, especially in our standard scenario with clear()+addAll() -based setters
+        assertFalse(otherEntityWithSameType.get(newPropName) == entity.get(newPropName)); 
+    }
+
+    @Test
+    public void added_concrete_collectional_property_has_unique_empty_concrete_collection_as_value_in_every_instance() throws Exception {
+        final var newPropName = "newPropLinkedHashSet";
+        final var newProp = NewProperty.create(newPropName, LinkedHashSet.class, "title", "desc", new IsPropertyAnnotation(String.class, "--stub-link-property--").newInstance());
+        final var newType = startModification(DEFAULT_ORIG_TYPE).addProperties(newProp).endModification();
+
+        final var field = Finder.getFieldByName(newType, newProp.getName());
+        assertNotNull(field);
+        final var entity = factory.newByKey(newType, "new1");
+        assertNotNull(entity.get(newPropName));
+        assertEquals(LinkedHashSet.class, entity.get(newPropName).getClass());
+        assertEquals(new LinkedHashSet<>(), entity.get(newPropName));
+
+        final var otherEntityWithSameType = factory.newByKey(newType, "new2");
+        // collection must be unique in different instances, otherwise we are risking with mutability of shared collections, especially in our standard scenario with clear()+addAll() -based setters
+        assertFalse(otherEntityWithSameType.get(newPropName) == entity.get(newPropName)); 
     }
 
     @Test
@@ -835,4 +860,29 @@ public class DynamicEntityTypePropertiesAdditionTest {
         assertEquals("Incorrect number of real properties found in the generated type.",
                 findRealProperties(TopLevelEntity.class).size() + 2, findRealProperties(newType).size());
     }
+
+    @Test
+    public void added_collectional_properties_can_be_initialised_explicitly_with_equal_but_referentially_different_values() throws Exception {
+        final String npName = "paramListTestProperty";
+        final NewProperty<Set> npParamSet = NewProperty.create(npName, Set.class, List.of(String.class),
+                "Collectional Property", "Collectional Property Description", new IsPropertyAnnotation(String.class).newInstance())
+                .setValueSupplier(() -> new TreeSet<String>());
+
+        final Class<? extends AbstractEntity<String>> newType = startModification(DEFAULT_ORIG_TYPE)
+                .addProperties(npParamSet)
+                .endModification();
+
+        final Field field = Finder.getFieldByName(newType, npParamSet.getName());
+        assertNotNull(field);
+        final AbstractEntity<String> instance1 = factory.newByKey(newType, "new1");
+        final AbstractEntity<String> instance2 = factory.newByKey(newType, "new2");
+        final Set<String> instance1_paramListTestProperty = instance1.get(npName);
+        final Set<String> instance2_paramListTestProperty = instance2.get(npName);
+
+        assertTrue(instance1_paramListTestProperty instanceof TreeSet<String>);
+        assertTrue(instance2_paramListTestProperty instanceof TreeSet<String>);
+        assertEquals(instance1_paramListTestProperty, instance2_paramListTestProperty);
+        assertNotEquals(System.identityHashCode(instance1_paramListTestProperty), System.identityHashCode(instance2_paramListTestProperty));
+    }
+
 }

@@ -1,32 +1,5 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
-import static java.util.stream.Collectors.toCollection;
-import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
-
-import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import org.apache.commons.lang3.StringUtils;
-
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.modifier.Ownership;
 import net.bytebuddy.description.modifier.ParameterManifestation;
@@ -37,14 +10,11 @@ import net.bytebuddy.dynamic.DynamicType.Builder.MethodDefinition.ReceiverTypeDe
 import net.bytebuddy.dynamic.TargetType;
 import net.bytebuddy.dynamic.scaffold.MethodGraph;
 import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
-import net.bytebuddy.implementation.FieldAccessor;
-import net.bytebuddy.implementation.FixedValue;
-import net.bytebuddy.implementation.Implementation;
-import net.bytebuddy.implementation.MethodDelegation;
-import net.bytebuddy.implementation.SuperMethodCall;
+import net.bytebuddy.implementation.*;
 import net.bytebuddy.implementation.bind.annotation.Argument;
 import net.bytebuddy.implementation.bind.annotation.This;
 import net.bytebuddy.pool.TypePool;
+import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.entity.Accessor;
 import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.Generated;
@@ -56,6 +26,19 @@ import ua.com.fielden.platform.reflection.asm.annotation.GeneratedAnnotation;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.exceptions.CollectionalPropertyInitializationException;
 import ua.com.fielden.platform.reflection.asm.exceptions.TypeMakerException;
+
+import java.lang.annotation.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toCollection;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
 
 /**
  * This class provides an API for modifying types at runtime by means of bytecode manipulation.
@@ -93,6 +76,8 @@ public class TypeMaker<T> {
     private static final Generated GENERATED_ANNOTATION = GeneratedAnnotation.newInstance();
     private static final String CURRENT_BUILDER_IS_NOT_SPECIFIED = "Current builder is not specified.";
     public static final String GET_ORIG_TYPE_METHOD_NAME = "_GET_ORIG_TYPE_METHOD_";
+    private static final String ERR_FAILED_TO_INITIALISE_COLLECTIONAL_PROPERTY = "Failed to initialise new collectional property [%s].";
+    private static final String ERR_FAILED_TO_INITIALISE_CUSTOM_COLLECTIONAL_PROPERTY = "Failed to initialise new collectional property of custom type [%s].";
 
     private final DynamicEntityClassLoader cl;
     private final Class<T> origType;
@@ -104,9 +89,9 @@ public class TypeMaker<T> {
      */
     private final Set<String> origTypeProperties;// = new LinkedHashSet<>();
     /**
-     * Holds mappings of the form: {@code property name -> initialized value}.
+     * Holds mappings of the form: {@code property name -> initialized value supplier}.
      */
-    private final Map<String, Object> propertyInitializers = new HashMap<>();
+    private final Map<String, Supplier<?>> propertyInitializers = new HashMap<>();
     /**
      * Storage for names of both added and modified properties.
      */
@@ -123,7 +108,6 @@ public class TypeMaker<T> {
     /**
      * Initiates adaptation of the specified by name type. This could be either dynamic or static type (created manually by developer).
      *
-     * @param typeName
      * @return
      * @throws ClassNotFoundException
      */
@@ -199,42 +183,54 @@ public class TypeMaker<T> {
                                ? List.of()
                                : List.of(GENERATED_ANNOTATION));
 
-        final boolean collectional = prop.isCollectional();
-        if (prop.isInitialized()) {
+        if (prop.isInitialised()) {
             // it is guaranteed at this point that `prop` hasn't been put into the map previously
             // since properties with duplicate names are not allowed
-            propertyInitializers.put(prop.getName(), prop.getValue());
+            propertyInitializers.put(prop.getName(), prop.getValueSupplier());
         }
-        else if (collectional) { // automatically initialize collectional properties
+        else if (prop.isCollectional()) { // automatically initialize collectional properties
             try {
-                propertyInitializers.put(prop.getName(), collectionalInitValue(prop.getRawType()));
+                propertyInitializers.put(prop.getName(), collectionalInitValueSupplier(prop.getRawType()));
             } catch (final Exception ex) {
-                throw new CollectionalPropertyInitializationException("Failed to initialize new collectional property %s.".formatted(prop.toString()), ex);
+                throw new CollectionalPropertyInitializationException(ERR_FAILED_TO_INITIALISE_COLLECTIONAL_PROPERTY.formatted(prop.toString()), ex);
             }
         }
 
         addAccessor(prop.getName(), genericType);
-        addSetter(prop.getName(), genericType, collectional);
+        addSetter(prop.getName(), genericType, prop.isCollectional());
 
         addedPropertiesNames.add(prop.getName());
     }
 
     /**
-     * Determines a fitting value to initialize an instance of collectional type {@code rawType}. 
+     * Returns a fitting value supplier to initialise an instance of collectional type {@code rawType}.
+     *
      * @param rawType
      * @return
      * @throws Exception
      */
-    private Object collectionalInitValue(final Class<?> rawType) throws Exception {
+    private Supplier<Object> collectionalInitValueSupplier(final Class<?> rawType) {
         if (rawType == Collection.class || rawType == List.class) {
-            return new ArrayList<Object>();
+            return ArrayList::new;
         }
         else if (rawType == Set.class) {
-            return new HashSet<Object>();
+            return HashSet::new;
         }
         else {
+            customCollectionalInitValue(rawType); // perform early check for ability to create custom collection at the level of TypeMaker.addProperties(...) to preserve context
+            return () -> customCollectionalInitValue(rawType); // this function will be computed during TypeMaker.endModification() phase
+        }
+    }
+
+    /**
+     * Tries to compute empty default collectional property value for custom {@code rawType} using default parameterless constructor.
+     */
+    private Object customCollectionalInitValue(final Class<?> rawType) {
+        try {
             // look for an accessible default constructor
             return rawType.getConstructor().newInstance();
+        } catch (final Exception ex) {
+            throw new CollectionalPropertyInitializationException(ERR_FAILED_TO_INITIALISE_CUSTOM_COLLECTIONAL_PROPERTY.formatted(rawType), ex);
         }
     }
 
@@ -260,8 +256,8 @@ public class TypeMaker<T> {
         }
         else {
             // regular setters:
-            /* 
-             this.${propName} = ${arg};  
+            /*
+             this.${propName} = ${arg};
              return this;
              */
             building1 = building.intercept(FieldAccessor.ofField(propName).setsArgumentAt(0).andThen(FixedValue.self()));
@@ -362,7 +358,7 @@ public class TypeMaker<T> {
      * If {@code propertyReplacements} contains multiple properties with the same name, then only one of these will be considered.
      * <p>
      * Modifying a property with the same name in multiple sequential calls is illegal. That is, a property can be modified only once.
-     * Modifying a property that previously added with {@link #addProperties(List)} is also illegal for the same reasons.
+     * Modifying a property that previously added with {@link #addProperties(Set)} is also illegal for the same reasons.
      *
      * @param propertyReplacements
      * @return this instance to continue building
@@ -399,7 +395,7 @@ public class TypeMaker<T> {
 
     /**
      * Enhances currently modified type by modifying existing properties with the specified ones.
-     * The same rules apply as for {@link #addProperties(List)}.
+     * The same rules apply as for {@link #addProperties(Set)}.
      *
      * @param propertyReplacements
      * @return this instance to continue building
@@ -481,20 +477,20 @@ public class TypeMaker<T> {
     }
 
     public static class ConstructorInterceptor {
-        private final Map<String, Object> fieldInitializers = new HashMap<>();
+        private final Map<String, Supplier<?>> fieldInitializers = new HashMap<>();
 
-        ConstructorInterceptor(final Map<String, Object> fieldInitializers) {
+        ConstructorInterceptor(final Map<String, Supplier<?>> fieldInitializers) {
             if (fieldInitializers != null) {
                 this.fieldInitializers.putAll(fieldInitializers);
             }
         }
 
         public void intercept(@This final Object instrumentedInstance) throws Exception {
-            for (final Entry<String, Object> nameAndValue : fieldInitializers.entrySet()) {
+            for (final Entry<String, Supplier<?>> nameAndValue : fieldInitializers.entrySet()) {
                 final Field prop = Finder.getFieldByName(instrumentedInstance.getClass(), nameAndValue.getKey());
                 final boolean accessible = prop.canAccess(instrumentedInstance);
                 prop.setAccessible(true);
-                prop.set(instrumentedInstance, nameAndValue.getValue());
+                prop.set(instrumentedInstance, nameAndValue.getValue().get()); // supplier should never be null here (see collectionalInitValueSupplier)
                 prop.setAccessible(accessible);
             }
         }
