@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query.model;
 
 import ua.com.fielden.platform.eql.antlr.EQLLexer;
+import ua.com.fielden.platform.eql.antlr.tokens.ValToken;
 import ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource;
 
 /**
@@ -15,10 +16,15 @@ public class ExpressionModel extends AbstractModel {
         super(tokens);
     }
 
-    // TODO rather than use this method, compile as standalone expression and use the result
+    /**
+     * Determines whether this model has a simple form like: {@code expr val(x) end}.
+     */
     public boolean containsSingleValueToken() {
         final var tokens = tokenSource.tokens();
-        return tokens.size() == 1 && tokens.getFirst().getType() == EQLLexer.VAL;
+        // Not the most robust solution but it is simple.
+        // Ideally, the callers of this method would rely on some mechanism of "expression simplification".
+        // TODO Adjust after any change to EQL's grammar that affects this kind of expressions.
+        return tokens.size() == 3 && tokens.get(1) instanceof ValToken;
     }
 
 }
