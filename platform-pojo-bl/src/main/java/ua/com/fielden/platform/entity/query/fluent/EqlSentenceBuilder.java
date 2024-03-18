@@ -107,12 +107,12 @@ final class EqlSentenceBuilder {
         return _add(negated ? new NotExistsToken(model) : new ExistsToken(model));
     }
 
-    public EqlSentenceBuilder existsAnyOf(final boolean negated, final QueryModel... subQueries) {
-        return _add(negated ? new NotExistsAnyOfToken(asList(subQueries)) : new ExistsAnyOfToken(asList(subQueries)));
+    public EqlSentenceBuilder existsAnyOf(final boolean negated, final Collection<? extends QueryModel<?>> subQueries) {
+        return _add(negated ? new NotExistsAnyOfToken(subQueries) : new ExistsAnyOfToken(subQueries));
     }
 
-    public EqlSentenceBuilder existsAllOf(final boolean negated, final QueryModel... subQueries) {
-        return _add(negated ? new NotExistsAllOfToken(asList(subQueries)) : new ExistsAllOfToken(asList(subQueries)));
+    public EqlSentenceBuilder existsAllOf(final boolean negated, final Collection<? extends QueryModel<?>> subQueries) {
+        return _add(negated ? new NotExistsAllOfToken(subQueries) : new ExistsAllOfToken(subQueries));
     }
 
     public EqlSentenceBuilder critCondition(final String propName, final String critPropName) {
@@ -121,8 +121,7 @@ final class EqlSentenceBuilder {
 
     public EqlSentenceBuilder critCondition(
             final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName,
-            final Optional<Object> defaultValue)
-    {
+            final Optional<Object> defaultValue) {
         return _add(new CritConditionToken(collectionQueryStart, propName, critPropName, defaultValue));
     }
 
@@ -254,60 +253,60 @@ final class EqlSentenceBuilder {
         return _add(new AsRequiredToken(yieldAlias));
     }
 
-    public EqlSentenceBuilder anyOfProps(final String... props) {
-        return _add(new AnyOfPropsToken(asList(props)));
+    public EqlSentenceBuilder anyOfProps(final Collection<String> props) {
+        return _add(new AnyOfPropsToken(props));
     }
 
     public EqlSentenceBuilder anyOfProps(final IConvertableToPath... props) {
         return _add(new AnyOfPropsToken(Arrays.stream(props).map(IConvertableToPath::toPath).collect(toImmutableList())));
     }
 
-    public EqlSentenceBuilder anyOfParams(final String... params) {
-        return _add(new AnyOfParamsToken(asList(params)));
+    public EqlSentenceBuilder anyOfParams(final Collection<String> params) {
+        return _add(new AnyOfParamsToken(params));
     }
 
-    public EqlSentenceBuilder anyOfIParams(final String... params) {
-        return _add(new AnyOfIParamsToken(asList(params)));
+    public EqlSentenceBuilder anyOfIParams(final Collection<String> params) {
+        return _add(new AnyOfIParamsToken(params));
     }
 
-    public EqlSentenceBuilder anyOfModels(final PrimitiveResultQueryModel... models) {
-        return _add(new AnyOfModelsToken(asList(models)));
+    public EqlSentenceBuilder anyOfModels(final Collection<? extends PrimitiveResultQueryModel> models) {
+        return _add(new AnyOfModelsToken(models));
     }
 
-    public EqlSentenceBuilder anyOfValues(final Object... values) {
-        return _add(new AnyOfValuesToken(state.valuePreprocessor.applyMany(values).toList()));
+    public EqlSentenceBuilder anyOfValues(final Collection<?> values) {
+        return _add(new AnyOfValuesToken(state.valuePreprocessor.apply(values).toList()));
     }
 
-    public EqlSentenceBuilder anyOfExpressions(final ExpressionModel... expressions) {
-        return _add(new AnyOfExpressionsToken(asList(expressions)));
+    public EqlSentenceBuilder anyOfExpressions(final Collection<? extends ExpressionModel> expressions) {
+        return _add(new AnyOfExpressionsToken(expressions));
     }
 
-    public EqlSentenceBuilder allOfProps(final String... props) {
-        return _add(new AllOfPropsToken(asList(props)));
+    public EqlSentenceBuilder allOfProps(final Collection<String> props) {
+        return _add(new AllOfPropsToken(props));
     }
 
     public EqlSentenceBuilder allOfProps(final IConvertableToPath... props) {
         return _add(new AllOfPropsToken(Arrays.stream(props).map(IConvertableToPath::toPath).collect(toImmutableList())));
     }
 
-    public EqlSentenceBuilder allOfParams(final String... params) {
-        return _add(new AllOfParamsToken(asList(params)));
+    public EqlSentenceBuilder allOfParams(final Collection<String> params) {
+        return _add(new AllOfParamsToken(params));
     }
 
-    public EqlSentenceBuilder allOfIParams(final String... params) {
-        return _add(new AllOfIParamsToken(asList(params)));
+    public EqlSentenceBuilder allOfIParams(final Collection<String> params) {
+        return _add(new AllOfIParamsToken(params));
     }
 
-    public EqlSentenceBuilder allOfModels(final PrimitiveResultQueryModel... models) {
-        return _add(new AllOfModelsToken(asList(models)));
+    public EqlSentenceBuilder allOfModels(final Collection<? extends PrimitiveResultQueryModel> models) {
+        return _add(new AllOfModelsToken(models));
     }
 
-    public EqlSentenceBuilder allOfValues(final Object... values) {
-        return _add(new AllOfValuesToken(state.valuePreprocessor.applyMany(values).toList()));
+    public EqlSentenceBuilder allOfValues(final Collection<?> values) {
+        return _add(new AllOfValuesToken(state.valuePreprocessor.apply(values).toList()));
     }
 
-    public EqlSentenceBuilder allOfExpressions(final ExpressionModel... expressions) {
-        return _add(new AllOfExpressionsToken(asList(expressions)));
+    public EqlSentenceBuilder allOfExpressions(final Collection<? extends ExpressionModel> expressions) {
+        return _add(new AllOfExpressionsToken(expressions));
     }
 
     public EqlSentenceBuilder any(final SingleResultQueryModel subQuery) {
@@ -318,27 +317,30 @@ final class EqlSentenceBuilder {
         return _add(new AllToken(subQuery));
     }
 
-    public EqlSentenceBuilder setOfProps(final String... props) {
-        return _add(new PropsToken(asList(props)));
+    public EqlSentenceBuilder setOfProps(final Collection<String> props) {
+        return _add(new PropsToken(props));
     }
 
     public EqlSentenceBuilder setOfProps(final IConvertableToPath... props) {
         return _add(new PropsToken(Arrays.stream(props).map(IConvertableToPath::toPath).collect(toImmutableList())));
     }
 
-    public EqlSentenceBuilder setOfParams(final String... params) {
-        return _add(new ParamsToken(asList(params)));
+    public EqlSentenceBuilder setOfParams(final Collection<String> params) {
+        return _add(new ParamsToken(params));
     }
 
-    public EqlSentenceBuilder setOfIParams(final String... params) {
-        return _add(new IParamsToken(asList(params)));
+    public EqlSentenceBuilder setOfIParams(final Collection<String> params) {
+        return _add(new IParamsToken(params));
     }
 
-    public EqlSentenceBuilder setOfValues(final Object... values) {
-        return _add(new ValuesToken(state.valuePreprocessor.applyMany(values).toList()));
+    public EqlSentenceBuilder setOfValues(final Collection<?> values) {
+        return _add(new ValuesToken(state.valuePreprocessor.apply(values).toList()));
     }
 
     // TODO remove?
+    /**
+     * <b>Unimplemented</b>
+     */
     public EqlSentenceBuilder setOfExpressions(final ExpressionModel... expressions) {
         throw new UnsupportedOperationException();
     }
@@ -704,8 +706,7 @@ final class EqlSentenceBuilder {
 
     private record State(Class<? extends AbstractEntity<?>> mainSourceType,
                          boolean yieldAll,
-                         ValuePreprocessor valuePreprocessor)
-    {
+                         ValuePreprocessor valuePreprocessor) {
         public State withMainSourceType(final Class<? extends AbstractEntity<?>> mainSourceType) {
             return new State(mainSourceType, yieldAll, valuePreprocessor);
         }
@@ -717,6 +718,7 @@ final class EqlSentenceBuilder {
         public State withValueProcessor(final ValuePreprocessor valuePreprocessor) {
             return new State(mainSourceType, yieldAll, valuePreprocessor);
         }
+
     }
 
 }

@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.antlr.tokens;
 import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -14,7 +15,7 @@ public final class AllOfExpressionsToken extends AbstractParameterisedEqlToken {
 
     public final List<ExpressionModel> models;
 
-    public AllOfExpressionsToken(final List<ExpressionModel> models) {
+    public AllOfExpressionsToken(final Collection<? extends ExpressionModel> models) {
         super(ALLOFEXPRESSIONS, "allOfExpressions");
         this.models = ImmutableList.copyOf(models);
     }

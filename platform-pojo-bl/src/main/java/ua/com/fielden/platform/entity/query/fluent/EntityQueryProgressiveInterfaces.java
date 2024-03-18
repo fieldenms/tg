@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import java.util.Collection;
 import java.util.Date;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -281,11 +282,18 @@ public interface EntityQueryProgressiveInterfaces {
 
 	interface IMultipleOperand<T, ET extends AbstractEntity<?>> //
 			extends ISingleOperand<T, ET> {
+
+		T anyOfProps(final Collection<String> propertyNames);
+
 		T anyOfProps(final String... propertyNames);
 
 		T anyOfProps(final IConvertableToPath... propertyNames);
 
+		T anyOfValues(final Collection<?> values);
+
 		T anyOfValues(final Object... values);
+
+		T anyOfParams(final Collection<String> paramNames);
 
 		T anyOfParams(final String... paramNames);
 
@@ -294,17 +302,29 @@ public interface EntityQueryProgressiveInterfaces {
 		 *
 		 * @return
 		 */
+		T anyOfIParams(final Collection<String> paramNames);
+
 		T anyOfIParams(final String... paramNames);
+
+		T anyOfModels(final Collection<? extends PrimitiveResultQueryModel> models);
 
 		T anyOfModels(final PrimitiveResultQueryModel... models);
 
+		T anyOfExpressions(final Collection<? extends ExpressionModel> Expressions);
+
 		T anyOfExpressions(final ExpressionModel... Expressions);
+
+		T allOfProps(final Collection<String> propertyNames);
 
 		T allOfProps(final String... propertyNames);
 
 		T allOfProps(final IConvertableToPath... propertyNames);
 
+		T allOfValues(final Collection<?> values);
+
 		T allOfValues(final Object... values);
+
+		T allOfParams(final Collection<String> paramNames);
 
 		T allOfParams(final String... paramNames);
 
@@ -313,11 +333,18 @@ public interface EntityQueryProgressiveInterfaces {
 		 *
 		 * @return
 		 */
+		T allOfIParams(final Collection<String> paramNames);
+
 		T allOfIParams(final String... paramNames);
+
+		T allOfModels(final Collection<? extends PrimitiveResultQueryModel> models);
 
 		T allOfModels(final PrimitiveResultQueryModel... models);
 
+		T allOfExpressions(final Collection<? extends ExpressionModel> expressions);
+
 		T allOfExpressions(final ExpressionModel... expressions);
+
 	}
 
 	interface IComparisonOperand<T, ET extends AbstractEntity<?>> //
@@ -333,11 +360,19 @@ public interface EntityQueryProgressiveInterfaces {
 
 		T notExists(final QueryModel<?> subQuery);
 
+		T existsAnyOf(final Collection<? extends QueryModel<?>> subQueries);
+
 		T existsAnyOf(final QueryModel<?>... subQueries);
+
+		T notExistsAnyOf(final Collection<? extends QueryModel<?>> subQueries);
 
 		T notExistsAnyOf(final QueryModel<?>... subQueries);
 
+		T existsAllOf(final Collection<? extends QueryModel<?>> subQueries);
+
 		T existsAllOf(final QueryModel<?>... subQueries);
+
+		T notExistsAllOf(final Collection<? extends QueryModel<?>> subQueries);
 
 		T notExistsAllOf(final QueryModel<?>... subQueries);
 
@@ -408,6 +443,7 @@ public interface EntityQueryProgressiveInterfaces {
 		T condition(final ConditionModel condition);
 
 		T negatedCondition(final ConditionModel condition);
+
 	}
 
 	interface IQuantifiedOperand<T, ET extends AbstractEntity<?>> //
@@ -426,13 +462,21 @@ public interface EntityQueryProgressiveInterfaces {
 	}
 
 	interface IComparisonSetOperand<T> {
+		T values(final Collection<?> values);
+
 		<E extends Object> T values(final E... values);
+
+		T props(final Collection<String> properties);
 
 		T props(final String... properties);
 
 		T props(final IConvertableToPath... properties);
 
+		T params(final Collection<String> paramNames);
+
 		T params(final String... paramNames);
+
+		T iParams(final Collection<String> paramNames);
 
 		T iParams(final String... paramNames);
 
