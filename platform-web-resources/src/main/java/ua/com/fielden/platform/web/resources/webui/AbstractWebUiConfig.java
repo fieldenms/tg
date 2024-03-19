@@ -464,9 +464,23 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         final int size = miTypes.size();
         final String log = format("Creating default configurations for [%s] centres (caching)...", size);
         logger.info(log);
+        int embeddedSize = 0, genSize = 0, embeddedGenSize = 0;
         for (final Class<? extends MiWithConfigurationSupport<?>> miType: miTypes) {
-            getDefaultCentre(miType, this);
+            final var isEmbedded = getEmbeddedCentres().containsKey(miType);
+            if (isEmbedded) {
+                embeddedSize++;
+            }
+            final var centreManager = getDefaultCentre(miType, this); // perform default config creation with heavy calculated properties processing
+            final var rootType = centreManager.getRepresentation().rootTypes().iterator().next();
+            if (!centreManager.getEnhancer().getManagedType(rootType).equals(rootType)) {
+                genSize++;
+                if (isEmbedded) {
+                    embeddedGenSize++;
+                }
+            }
         }
+        logger.info("              all: %s standalone: %s embedded: %s".formatted(size, size - embeddedSize, embeddedSize));
+        logger.info("    generated all: %s standalone: %s embedded: %s".formatted(genSize, genSize - embeddedGenSize, embeddedGenSize));
         logger.info(log + "done");
     }
 
@@ -478,7 +492,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     @Override
     public Map<Class<? extends MiWithConfigurationSupport<?>>, T2<EntityCentre<?>, EntityMaster<? extends AbstractEntity<?>>>> getEmbeddedCentres() {
         if (embeddedCentreMap == null) {
-            final String log = "Calculating embedded centres...";
+            final String log = "    Calculating embedded centres...";
             logger.info(log);
             embeddedCentreMap = new ConcurrentHashMap<>();
             for (final EntityMaster<? extends AbstractEntity<?>> master: getMasters().values()) {
