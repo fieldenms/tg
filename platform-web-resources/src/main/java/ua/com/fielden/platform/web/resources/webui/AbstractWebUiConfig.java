@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.logging.log4j.LogManager;
@@ -460,17 +459,24 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     @Override
     public void createDefaultConfigurationsForAllCentres() {
-        final Set<Class<? extends MiWithConfigurationSupport<?>>> miTypes = getCentres().keySet();
-        final int size = miTypes.size();
-        final String log = format("Creating default configurations for [%s] centres (caching)...", size);
-        logger.info(log);
+        final var miTypes = getCentres().keySet();
+        final var size = miTypes.size();
+        final var logMessage = "Creating default configurations for [%s] centres (caching)...".formatted(size);
+        logger.info(logMessage);
+
+        // preload embedded centres map first
+        getEmbeddedCentres();
+
+        // preload all registered centres (including embedded) using getDefaultCentre(...) method;
         int embeddedSize = 0, genSize = 0, embeddedGenSize = 0;
-        for (final Class<? extends MiWithConfigurationSupport<?>> miType: miTypes) {
-            final var isEmbedded = getEmbeddedCentres().containsKey(miType);
+        for (final var miType: miTypes) {
+            final var isEmbedded = isEmbeddedCentre(miType);
             if (isEmbedded) {
                 embeddedSize++;
             }
-            final var centreManager = getDefaultCentre(miType, this); // perform default config creation with heavy calculated properties processing
+            // perform default config creation with heavy calculated properties processing:
+            //   (use critGenerator.generateCentreQueryCriteria(getDefaultCentre(miType, this))) to generate also criteria entity type)
+            final var centreManager = getDefaultCentre(miType, this);
             final var rootType = centreManager.getRepresentation().rootTypes().iterator().next();
             if (!centreManager.getEnhancer().getManagedType(rootType).equals(rootType)) {
                 genSize++;
@@ -481,7 +487,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         }
         logger.info("              all: %s standalone: %s embedded: %s".formatted(size, size - embeddedSize, embeddedSize));
         logger.info("    generated all: %s standalone: %s embedded: %s".formatted(genSize, genSize - embeddedGenSize, embeddedGenSize));
-        logger.info(log + "done");
+        logger.info(logMessage + "done");
     }
 
     /**

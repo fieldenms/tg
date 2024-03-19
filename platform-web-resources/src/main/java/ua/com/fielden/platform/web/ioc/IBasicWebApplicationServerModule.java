@@ -101,8 +101,6 @@ public interface IBasicWebApplicationServerModule {
         final IWebUiConfig webUiConfig = injector.getInstance(IWebUiConfig.class);
         // trigger caching of DomainTreeEnhancers to avoid heavy computations later
         webUiConfig.createDefaultConfigurationsForAllCentres();
-        // trigger calculation of embedded centres to avoid these computations later
-        webUiConfig.getEmbeddedCentres();
     }
 
     /**
