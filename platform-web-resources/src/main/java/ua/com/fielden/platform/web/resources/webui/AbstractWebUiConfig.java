@@ -84,7 +84,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 public abstract class AbstractWebUiConfig implements IWebUiConfig {
     private final Logger logger = LogManager.getLogger(getClass());
     private static final String ERR_IN_COMPOUND_EMITTER = "Event source compound emitter should have cought this error. Something went wrong in WebUiConfig.";
-    private static final String CREATE_DEFAULT_CONFIG_INFO = "Creating default %s configurations for [%s]-typed centres (caching)...";
+    private static final String CREATE_DEFAULT_CONFIG_INFO = "Creating default configurations for [%s]-typed centres (caching)...";
 
     private final String title;
     private WebUiBuilder webUiBuilder;
@@ -438,20 +438,11 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     @Override
     public void loadCentreGeneratedTypesAndCriteriaTypes(final Class<?> entityType) {
         final var critGenerator = injector.getInstance(ICriteriaGenerator.class);
-        // load all standalone centres for concrete 'entityType' (with their generated types and criteria types)
-        String log = CREATE_DEFAULT_CONFIG_INFO.formatted("standalone", entityType.getSimpleName());
+        // load all centres (standalone and embedded) for concrete 'entityType' (with their generated types and criteria types)
+        final var log = CREATE_DEFAULT_CONFIG_INFO.formatted(entityType.getSimpleName());
         logger.info(log);
         getCentres().entrySet().stream()
             .filter(entry -> entry.getValue().getEntityType().equals(entityType))
-            .map(Entry::getKey)
-            .forEach(miType -> critGenerator.generateCentreQueryCriteria(getDefaultCentre(miType, this)));
-        logger.info(log + "done");
-
-        // load all embedded centres for concrete 'entityType' (with their generated types and criteria types)
-        log = CREATE_DEFAULT_CONFIG_INFO.formatted("embedded", entityType.getSimpleName());
-        logger.info(log);
-        getEmbeddedCentres().entrySet().stream()
-            .filter(entry -> entry.getValue()._1.getEntityType().equals(entityType))
             .map(Entry::getKey)
             .forEach(miType -> critGenerator.generateCentreQueryCriteria(getDefaultCentre(miType, this)));
         logger.info(log + "done");
