@@ -368,6 +368,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
             final Class<?> originalRoot = entry.getKey();
             // generate predefined root type name for all calculated properties
             final String predefinedRootTypeName = generateTypeName(originalRoot, linkedMapOf(t2("calculatedProperties", calculatedPropertiesInfo(calculatedProperties, rootTypes)), t2("customProperties", customPropertiesInfo(customProperties))));
+            final boolean calcOrCustomPropsOnlyInRoot = entry.getValue() != null && entry.getValue().size() == 1 && StringUtils.isEmpty(entry.getValue().entrySet().iterator().next().getKey());
             if (entry.getValue() == null) {
                 originalAndEnhancedRootTypes.put(originalRoot, originalRoot);
             } else {
@@ -398,10 +399,13 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
                         final Class<?> realParentToBeEnhanced = StringUtils.isEmpty(path) ? realRoot : PropertyTypeDeterminator.determinePropertyType(realRoot, path);
                         try {
                             // generate & load new type enhanced by calculated properties
-                            final Class<?> realParentEnhanced = startModification(realParentToBeEnhanced)
-                                    .addProperties(newProperties)
+                            final var typeBuilder = startModification(realParentToBeEnhanced)
+                                    .addProperties(newProperties);
                                     /* TODO .modifySupertypeName(realParentToBeEnhanced.getName()).*/
-                                    .endModification();
+                            if (calcOrCustomPropsOnlyInRoot) {
+                                typeBuilder.modifyTypeName(predefinedRootTypeName);
+                            }
+                            final Class<?> realParentEnhanced = typeBuilder.endModification();
                             // propagate enhanced type to root
                             final Class<?> rootAfterPropagationAndAdditionalByteArrays = propagateEnhancedTypeToRoot(realParentEnhanced, realRoot, path);
                             final Class<?> rootAfterPropagation = rootAfterPropagationAndAdditionalByteArrays;
@@ -415,16 +419,18 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
                     }
                 }
             }
-            try {
-                // modify root type name with predefinedRootTypeName
-                final Class<?> enhancedRoot = originalAndEnhancedRootTypes.get(originalRoot);
-                if (originalRoot != enhancedRoot) { // calculated properties exist -- root type should be enhanced
-                    final Class<?> rootWithPredefinedName = startModification(enhancedRoot).modifyTypeName(predefinedRootTypeName)./* TODO modifySupertypeName(originalRoot.getName()).*/endModification();
-                    originalAndEnhancedRootTypes.put(originalRoot, rootWithPredefinedName);
+            if (!calcOrCustomPropsOnlyInRoot) {
+                try {
+                    // modify root type name with predefinedRootTypeName
+                    final Class<?> enhancedRoot = originalAndEnhancedRootTypes.get(originalRoot);
+                    if (originalRoot != enhancedRoot) { // calculated properties exist -- root type should be enhanced
+                        final Class<?> rootWithPredefinedName = startModification(enhancedRoot).modifyTypeName(predefinedRootTypeName)./* TODO modifySupertypeName(originalRoot.getName()).*/endModification();
+                        originalAndEnhancedRootTypes.put(originalRoot, rootWithPredefinedName);
+                    }
+                } catch (final ClassNotFoundException e) {
+                    LOGGER.error(e);
+                    throw new IllegalStateException(e);
                 }
-            } catch (final ClassNotFoundException e) {
-                LOGGER.error(e);
-                throw new IllegalStateException(e);
             }
         }
         return originalAndEnhancedRootTypes;
