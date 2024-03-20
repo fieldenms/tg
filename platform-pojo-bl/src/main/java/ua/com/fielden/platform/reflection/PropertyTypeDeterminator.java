@@ -144,7 +144,12 @@ public class PropertyTypeDeterminator {
      * @return
      */
     private static Class<?> determineElementClass(final Field field) {
-        final ParameterizedType paramType = (ParameterizedType) field.getGenericType();
+        final ParameterizedType paramType;
+        try {
+            paramType = (ParameterizedType) field.getGenericType();
+        } catch (final ClassCastException classCastEx) {
+            return Object.class;
+        }
         return classFrom(paramType.getActualTypeArguments()[0]);
     }
 
