@@ -46,10 +46,10 @@ public class LikePredicate3 implements ICondition3 {
                 return AbstractFunction3.getConvertToStringSqlForMsSql2005(dbVersion, leftOperand);
             }
             else {
-                throw new EqlStage3ProcessingException("Left operand type [%s] is not supported for operand LIKE for [%s].".formatted(leftOperand.type()));
+                throw new EqlStage3ProcessingException("Left operand type [%s] is not supported for operand LIKE for [%s].".formatted(leftOperand.type(), dbVersion));
             }
         } else {
-            throw new EqlStage3ProcessingException(format("Left operand type [%s] is not supported for operand LIKE.", leftOperand.type()));
+            throw new EqlStage3ProcessingException("Left operand type [%s] is not supported for operand LIKE.".formatted(leftOperand.type()));
         }
     }
 
