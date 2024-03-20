@@ -5,8 +5,11 @@ import ua.com.fielden.platform.types.tuples.T2;
 
 import java.util.*;
 import java.util.function.*;
+import java.util.stream.BaseStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+
+import static java.util.Collections.unmodifiableList;
 
 /**
  * A set of convenient APIs for working with {@link Stream}.
@@ -279,6 +282,57 @@ public class StreamUtils {
     @SafeVarargs
     public static <T> Stream<T> concat(final Stream<? extends T>... streams) {
         return Stream.of(streams).flatMap(Function.identity());
+    }
+
+    /**
+     * Given a collection of streams (rows in a matrix), returns a stream of lists each containing nth elements of the
+     * original streams (matrix columns).
+     * <p>
+     * One caveat is that the resulting stream will be as long as the shortest original stream, which is possible only if
+     * the "input matrix" has "rows" of different length.
+     * <p>
+     * T
+     *
+     * @see #transpose(Collection, Function)
+     * @see #transpose(Collection)
+     */
+    public static <T> Stream<List<T>> transposeBase(final Collection<? extends BaseStream<T, ?>> source) {
+        if (source.isEmpty()) {
+            return Stream.empty();
+        }
+
+        final int n = source.size();
+        final List<? extends Spliterator<T>> spliterators = source.stream().map(BaseStream::spliterator).toList();
+        final long minSize = spliterators.stream().mapToLong(Spliterator::estimateSize).min().orElse(Long.MAX_VALUE);
+        final int characteristics = spliterators.stream().mapToInt(Spliterator::characteristics).reduce(~Spliterator.SORTED, (x, y) -> x & y);
+
+        final var spliterator = new Spliterators.AbstractSpliterator<List<T>>(minSize, characteristics) {
+            @Override
+            public boolean tryAdvance(final Consumer<? super List<T>> consumer) {
+                final List<T> elements = new ArrayList<>(n);
+
+                for (final var spliterator : spliterators) {
+                    final boolean advanced = spliterator.tryAdvance(elements::add);
+                    // shortest end reached
+                    if (!advanced) {
+                        return false;
+                    }
+                }
+
+                consumer.accept(unmodifiableList(elements));
+                return true;
+            }
+        };
+
+        return StreamSupport.stream(spliterator, false);
+    }
+
+    public static <T> Stream<List<T>> transpose(final Collection<? extends Collection<T>> source) {
+        return transpose(source, Collection::stream);
+    }
+
+    public static <T, R> Stream<List<R>> transpose(final Collection<T> source, final Function<? super T, ? extends BaseStream<R, ?>> mapper) {
+        return transposeBase(source.stream().map(mapper).toList());
     }
 
 }

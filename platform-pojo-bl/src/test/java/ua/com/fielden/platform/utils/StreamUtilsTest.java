@@ -256,4 +256,22 @@ public class StreamUtilsTest {
         assertEquals(List.of(), Stream.of("one", 1).mapMulti(typeFilter(List.class)).toList());
     }
 
+    @Test
+    public void transpose_returns_an_mxn_matrix_given_nxm_matrix() {
+        final var matrix = List.of(List.of(1, 2), List.of(3, 4), List.of(5, 6));
+        assertEquals(
+                List.of(List.of(1, 3, 5), List.of(2, 4, 6)),
+                transpose(matrix).toList());
+    }
+
+    @Test
+    public void tranpose_returns_as_many_lists_as_the_length_of_shortest_input_collection() {
+        final var matrix = List.of(List.of(1, 2, 3), List.of(4, 5), List.of(6, 7, 8));
+        assertEquals(
+                List.of(List.of(1, 4, 6), List.of(2, 5, 7)),
+                transpose(matrix).toList());
+
+        assertEquals(List.of(), transpose(List.of()).toList());
+    }
+
 }
