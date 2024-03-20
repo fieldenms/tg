@@ -15,5 +15,5 @@ public interface IScatterPlotCategoryProperty<T extends AbstractEntity<?>> {
      * @param propertyName
      * @return
      */
-    IScatterPlotValueProperty<T> setCategoryProopertyName(String propertyName);
+    IScatterPlotValueProperty<T> setCategoryPropertyName(String propertyName);
 }
