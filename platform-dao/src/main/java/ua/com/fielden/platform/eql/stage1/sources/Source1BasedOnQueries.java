@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.sources;
 
+import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
@@ -16,6 +17,7 @@ import ua.com.fielden.platform.utils.CollectionUtil;
 
 import java.util.*;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.lang.String.format;
 import static java.util.Collections.emptySortedMap;
 import static java.util.stream.Collectors.toList;
@@ -27,7 +29,7 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
     public static final String ERR_CONFLICT_BETWEEN_YIELDED_AND_DECLARED_PROP_TYPE = "There is a problem while trying to determine the type for property [%s] of a query source based on queries with result type [%s].\n"
             + "Declared type is [%s].\nActual yield type is [%s].";
 
-    private final List<SourceQuery1> models = new ArrayList<>();
+    private final List<SourceQuery1> models;
     private final boolean isSyntheticEntity;
 
     /**
@@ -36,7 +38,7 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
     public Source1BasedOnQueries(final List<SourceQuery1> models, final String alias, final Integer id, final Class<? extends AbstractEntity<?>> syntheticEntityType) {
         super(determineSourceType(models, syntheticEntityType), alias, id);
         this.isSyntheticEntity = syntheticEntityType != null;
-        this.models.addAll(models);
+        this.models = ImmutableList.copyOf(models);
     }
 
     private static Class<? extends AbstractEntity<?>> determineSourceType(final List<SourceQuery1> models, final Class<? extends AbstractEntity<?>> syntheticEntityType) {
@@ -58,7 +60,7 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
 
     @Override
     public Source2BasedOnQueries transform(final TransformationContextFromStage1To2 context) {
-        final List<SourceQuery2> transformedQueries = models.stream().map(m -> m.transform(context)).collect(toList());
+        final List<SourceQuery2> transformedQueries = models.stream().map(m -> m.transform(context)).collect(toImmutableList());
         final QuerySourceInfo<?> ei = obtainQuerySourceInfo(context.querySourceInfoProvider, transformedQueries, sourceType(), isSyntheticEntity);
         return new Source2BasedOnQueries(transformedQueries, alias, id, ei, isSyntheticEntity, true, context.isForCalcProp);
     }

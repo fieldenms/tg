@@ -9,16 +9,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.queries.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
 
 public class Source3BasedOnQueries extends AbstractSource3 {
-    private final List<SourceQuery3> models = new ArrayList<>();
+    private final List<SourceQuery3> models;
     
     public Source3BasedOnQueries(final List<SourceQuery3> models, final Integer id, final int sqlId) {
-        super("Q_" + sqlId, id, obtainColumnsFromYields(models.get(0).yields.getYields()));
-        this.models.addAll(models);
+        super("Q_" + sqlId, id, obtainColumnsFromYields(models.getFirst().yields.getYields()));
+        this.models = ImmutableList.copyOf(models);
     }
     
     private static Map<String, String> obtainColumnsFromYields(final Collection<Yield3> yields) {

@@ -8,22 +8,24 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
+import ua.com.fielden.platform.eql.stage2.queries.AbstractQuery2;
 import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
 import ua.com.fielden.platform.eql.stage3.queries.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnQueries;
 
 public class Source2BasedOnQueries extends AbstractSource2 implements ISource2<Source3BasedOnQueries> {
-    private final List<SourceQuery2> models = new ArrayList<>();
+    private final List<SourceQuery2> models;
     public final boolean isSyntheticEntity;
 
     public Source2BasedOnQueries(final List<SourceQuery2> models, final String alias, final Integer id, final QuerySourceInfo<?> querySourceInfo, final boolean isSyntheticEntity, final boolean isExplicit, final boolean isPartOfCalcProp) {
         super(id, alias, querySourceInfo, isExplicit, isPartOfCalcProp);
-        this.models.addAll(models);
+        this.models = ImmutableList.copyOf(models);
         this.isSyntheticEntity = isSyntheticEntity;
     }
 
