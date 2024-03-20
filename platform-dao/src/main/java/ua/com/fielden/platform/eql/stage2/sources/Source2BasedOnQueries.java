@@ -29,7 +29,9 @@ public class Source2BasedOnQueries extends AbstractSource2 implements ISource2<S
 
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
-        return isSyntheticEntity ? Set.of(sourceType()) : models.stream().map(el -> el.collectEntityTypes()).flatMap(Set::stream).collect(toSet());
+        return isSyntheticEntity
+                ? Set.of(sourceType())
+                : models.stream().map(AbstractQuery2::collectEntityTypes).flatMap(Set::stream).collect(toSet());
     }
 
     @Override

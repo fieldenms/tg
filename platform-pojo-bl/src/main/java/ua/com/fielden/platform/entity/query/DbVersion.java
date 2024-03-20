@@ -65,7 +65,7 @@ public enum DbVersion {
 
     /**
      * A flag that provides a way to support generation of aliases as part of SQL statements, which may lead for performance degradation due to slow parsing.
-     * Refer to issue https://github.com/fieldenms/tg/issues/1215 for more details.
+     * Refer to <a href="https://github.com/fieldenms/tg/issues/1215">Issue 1215</a> for more details.
      */
     private static boolean GEN_ALIAS_COMMENTS = false;
 

@@ -13,9 +13,10 @@ import java.util.Date;
 
 /**
  * A data container for property type composition.
- * 
- * @author TG Team
+ * <p>
+ * The <i>null type</i> is represented by Java's {@code null} value.
  *
+ * @author TG Team
  */
 public record PropType(
         Class<?> javaType,
