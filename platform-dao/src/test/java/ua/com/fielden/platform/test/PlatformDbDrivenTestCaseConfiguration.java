@@ -35,6 +35,7 @@ import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
 import ua.com.fielden.platform.migration.LegacyConnectionModule;
+import ua.com.fielden.platform.persistence.HibernateHelpers;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
@@ -122,7 +123,7 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
 
         final ProxyInterceptor interceptor = new ProxyInterceptor();
         try {
-            final DomainMetadata domainMetadata = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), testDomain, DbVersion.H2);
+            final DomainMetadata domainMetadata = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), testDomain, HibernateHelpers.getDialect(DbVersion.H2));
             final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata.eqlDomainMetadata);
             final Configuration cfg = new Configuration();
 

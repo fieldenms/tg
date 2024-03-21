@@ -14,11 +14,14 @@ import org.hibernate.cfg.Configuration;
 
 import com.google.inject.Guice;
 
+import org.hibernate.dialect.Dialect;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
+import ua.com.fielden.platform.persistence.HibernateHelpers;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 
 /**
  * Hibernate configuration factory. All Hibernate specific properties should be passed as {@link Properties} values. The following list of properties is supported:
@@ -89,7 +92,7 @@ public class HibernateConfigurationFactory {
                 defaultHibernateTypes,//
                 Guice.createInjector(new HibernateUserTypesModule()), //
                 applicationEntityTypes, //
-                determineDbVersion(props),
+                getDialect(props),
                 determineEql2(props));
 
         idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata.eqlDomainMetadata);
@@ -102,33 +105,20 @@ public class HibernateConfigurationFactory {
         } catch (final MappingException | UnsupportedEncodingException e) {
             throw new HibernateException("Could not add mappings.", e);
         }
-
     }
 
-    public static DbVersion determineDbVersion(final Properties props) {
-        return determineDbVersion(props.getProperty(DIALECT));
+    private static Dialect getDialect(final Properties props) {
+        final String dialect = props.getProperty(DIALECT, "");
+        if (dialect.isEmpty()) {
+            throw new IllegalStateException("Required property [%s] was not specified.".formatted(DIALECT));
+        }
+
+        return HibernateHelpers.getDialect(dialect);
     }
 
     private static boolean determineEql2(final Properties props) {
         final String prop = props.getProperty("eql2");
         return (prop != null && prop.toLowerCase().equals("true"));
-    }
-
-    public static DbVersion determineDbVersion(final String dialect) {
-        if (isEmpty(dialect)) {
-            throw new IllegalStateException("Hibernate dialect was not provided, but is required");
-        }
-        if (dialect.equals("org.hibernate.dialect.H2Dialect")) {
-            return DbVersion.H2;
-        } else if (dialect.equals("org.hibernate.dialect.PostgreSQLDialect")) {
-            return DbVersion.POSTGRESQL;
-        } else if (dialect.contains("SQLServer")) {
-            return DbVersion.MSSQL;
-        } else if (dialect.equals("org.hibernate.dialect.OracleDialect")) {
-            return DbVersion.ORACLE;
-        }
-
-        throw new IllegalStateException("Could not determine DB version based on the provided Hibernate dialect \"" + dialect + "\".");
     }
 
     public Configuration build() {
