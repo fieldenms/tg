@@ -47,15 +47,7 @@ public final class HibernateHelpers {
      * @throws IllegalArgumentException  if there is no matching {@link DbVersion}
      */
     public static DbVersion getDbVersion(final Dialect dialect) {
-        return switch (dialect) {
-            case H2Dialect $ -> DbVersion.H2;
-            case PostgreSQLDialect $ -> DbVersion.POSTGRESQL;
-            case SQLServerDialect $ -> DbVersion.MSSQL;
-            case OracleDialect $ -> DbVersion.ORACLE;
-            case MySQLDialect $ -> DbVersion.MYSQL;
-            default -> throw new IllegalArgumentException("Could not determine DB version from Hibernate dialect [%s].".formatted(
-                    dialect.getClass().getTypeName()));
-        };
+        return getDbVersion(dialect.getClass());
     }
 
     /**
