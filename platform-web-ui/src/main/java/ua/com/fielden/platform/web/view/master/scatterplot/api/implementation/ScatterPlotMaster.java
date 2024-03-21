@@ -97,19 +97,17 @@ public class ScatterPlotMaster<T extends AbstractEntity<?>> implements IMaster<T
                 + "        valueProp: " + generateValueAccessor(chartBuilder.getEntityType(), chartBuilder.getValuePropertyName()) + ",\n"
                 + "        styleProp: '" + chartBuilder.getStylePropertyName() + "',\n"
                 + "    },\n"
-                + "    tooltip: (d, i) => this._tooltip(d, "
-                            + generateValueAccessor(deck.getEntityType(), deck.getPropertyType(), deck.getGroupKeyProp()) + ", "
-                            + generateValueAccessor(deck.getEntityType(), String.class, deck.getGroupDescProperty()) + ", "
-                            + "self.barOptions[" + deckIndex + "].propertyNames[i], "
-                            + "self.barOptions[" + deckIndex + "].propertyTypes[i], "
-                            + "self.legendItems[" + deckIndex + "][i].title, " + deckIndex + ", i),\n"
-                + "    click: this._click(" + deckIndex + ")\n"
+                + "    tooltip: d => self._tooltip(d, " + generateTooltipProps(chartBuilder.getTooltipProperties()) + "),\n"
+                + "    click: self._click\n"
                 + "}";
 
-        return "self.barOptions = [" + join(chartOptions, ",\n") + "];\n"
+        return "self.options = [" + join(chartOptions, ",\n") + "];\n"
                 + "self.legendItems =[" + join(legendItems, ",\n") + "];\n";
     }
 
+    private String generateTooltipProps(final List<String> tooltipProperties) {
+        return "[" + tooltipProperties.stream().map(prop -> "'" + prop + "'").collect(Collectors.joining(",")) + "]";
+    }
 
     private String generateLegendItem(final Pair<Map<String, String>, String> legendItem) {
         return "{title: '"  + (isEmpty(legendItem.getValue()) ? "" : legendItem.getValue()) + "', style: " + generateLegendStyle(legendItem.getKey()) + "}";

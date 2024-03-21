@@ -140,4 +140,8 @@ public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IS
     public String getStylePropertyName() {
         return stylePropertyName;
     }
+
+    public List<String> getTooltipProperties() {
+        return Collections.unmodifiableList(tooltipPropertyNames);
+    }
 }
