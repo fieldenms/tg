@@ -222,6 +222,13 @@ public class StreamUtils {
     }
 
     /**
+     * Constructs a zipped stream.
+     */
+    public static <X, Y, Z> Stream<Z> zip(final X[] xs, final Y[] ys, final BiFunction<? super X, ? super Y, ? extends Z> combine) {
+        return zip(Arrays.stream(xs), Arrays.stream(ys), combine);
+    }
+
+    /**
      * Performs an action for each pair of elements from given sources. Terminates upon reaching the end of the shorter source.
      */
     public static <X, Y> void zipDo(
