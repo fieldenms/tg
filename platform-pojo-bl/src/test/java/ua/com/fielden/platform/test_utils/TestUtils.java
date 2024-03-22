@@ -1,7 +1,11 @@
 package ua.com.fielden.platform.test_utils;
+
+import org.junit.function.ThrowingRunnable;
+
 import java.util.Optional;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * A collection of general-purpose test utilities.
@@ -35,6 +39,15 @@ public class TestUtils {
     public static <T> T assertPresent(final String message, final Optional<T> opt) {
         assertTrue(message, opt.isPresent());
         return opt.get();
+    }
+
+    public static void assertNotThrows(final ThrowingRunnable runnable) {
+        try {
+            runnable.run();
+        } catch (final Throwable ex) {
+            ex.printStackTrace();
+            fail("No exception was expected: %s".formatted(ex.getMessage()));
+        }
     }
 
 }
