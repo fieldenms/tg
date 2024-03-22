@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.stage3.queries;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.QueryComponents3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
@@ -16,8 +16,8 @@ public class SubQuery3 extends AbstractQuery3 implements ISingleOperand3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion) {
-        return "(" + super.sql(dbVersion) + ")";
+    public String sql(final EqlDomainMetadata metadata) {
+        return "(" + super.sql(metadata) + ")";
     }
     
     @Override

@@ -6,6 +6,7 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 
 public class JoinInnerNode3 implements IJoinNode3 {
@@ -22,13 +23,13 @@ public class JoinInnerNode3 implements IJoinNode3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion) {
-        final String joinConditionsSql = joinConditions.sql(dbVersion);
-        return joinNodeSql(dbVersion, leftNode) + "\n  " + joinType + "\n" + joinNodeSql(dbVersion, rightNode) + (isNotEmpty(joinConditionsSql) ? "  ON " : "") + joinConditionsSql;
+    public String sql(final EqlDomainMetadata metadata) {
+        final String joinConditionsSql = joinConditions.sql(metadata);
+        return joinNodeSql(metadata, leftNode) + "\n  " + joinType + "\n" + joinNodeSql(metadata, rightNode) + (isNotEmpty(joinConditionsSql) ? "  ON " : "") + joinConditionsSql;
     }
     
-    private String joinNodeSql(final DbVersion dbVersion, IJoinNode3 joinNode) {
-        return joinNode.needsParentheses() ? "(" + joinNode.sql(dbVersion) + ")" : joinNode.sql(dbVersion); 
+    private String joinNodeSql(final EqlDomainMetadata metadata, IJoinNode3 joinNode) {
+        return joinNode.needsParentheses() ? "(" + joinNode.sql(metadata) + ")" : joinNode.sql(metadata);
      }
     
     @Override

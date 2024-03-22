@@ -4,8 +4,8 @@ import static java.lang.String.format;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
 public class ComparisonPredicate3 implements ICondition3 {
@@ -20,8 +20,8 @@ public class ComparisonPredicate3 implements ICondition3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion) {
-        return format("%s %s %s", leftOperand.sql(dbVersion), operator, rightOperand.sql(dbVersion));
+    public String sql(final EqlDomainMetadata metadata) {
+        return format("%s %s %s", leftOperand.sql(metadata), operator, rightOperand.sql(metadata));
     }
 
     @Override
@@ -43,11 +43,12 @@ public class ComparisonPredicate3 implements ICondition3 {
         if (!(obj instanceof ComparisonPredicate3)) {
             return false;
         }
-        
+
         final ComparisonPredicate3 other = (ComparisonPredicate3) obj;
-        
+
         return Objects.equals(leftOperand, other.leftOperand) &&
                 Objects.equals(rightOperand, other.rightOperand) &&
                 Objects.equals(operator, other.operator);
-   }
+    }
+
 }

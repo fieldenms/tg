@@ -8,6 +8,7 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.ITypeCast;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
@@ -27,21 +28,21 @@ public class CaseWhen3 extends AbstractFunction3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion) {
+    public String sql(final EqlDomainMetadata metadata) {
         final StringBuffer sb = new StringBuffer();
         sb.append("CASE");
         for (final T2<ICondition3, ISingleOperand3> whenThen : whenThenPairs) {
-            sb.append(format(" WHEN %s THEN %s", whenThen._1.sql(dbVersion), getOperandSql(whenThen._2, dbVersion)));
+            sb.append(format(" WHEN %s THEN %s", whenThen._1.sql(metadata), getOperandSql(whenThen._2, metadata)));
         }
         if (elseOperand != null) {
-            sb.append(format(" ELSE %s", getOperandSql(elseOperand, dbVersion)));
+            sb.append(format(" ELSE %s", getOperandSql(elseOperand, metadata)));
         }
         sb.append(" END");
         return sb.toString();
     }
     
-    private String getOperandSql(final ISingleOperand3 operand, final DbVersion dbVersion) {
-        return typeCast == null ? operand.sql(dbVersion) : typeCast.typecast(operand.sql(dbVersion), dbVersion);
+    private String getOperandSql(final ISingleOperand3 operand, final EqlDomainMetadata metadata) {
+        return typeCast == null ? operand.sql(metadata) : typeCast.typecast(operand.sql(metadata), metadata.dbVersion);
     }
     
     @Override

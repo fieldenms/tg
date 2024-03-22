@@ -1,12 +1,12 @@
 package ua.com.fielden.platform.eql.stage3.sundries;
 
-import static org.apache.commons.lang3.StringUtils.isEmpty;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
+import ua.com.fielden.platform.eql.meta.PropType;
+import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.eql.meta.PropType;
-import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 public class Yield3 {
     public final ISingleOperand3 operand;
@@ -22,8 +22,8 @@ public class Yield3 {
         this.type = type;
     }
 
-    public String sql(final DbVersion dbVersion) {
-        return operand.sql(dbVersion) + (column == null ? "" : " AS " + column);
+    public String sql(final EqlDomainMetadata metadata) {
+        return operand.sql(metadata) + (column == null ? "" : " AS " + column);
     }
     
     @Override

@@ -1,18 +1,13 @@
 package ua.com.fielden.platform.eql.stage3.sources;
 
-import static java.util.stream.Collectors.joining;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-
 import com.google.common.collect.ImmutableList;
-import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.stage3.queries.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
+
+import java.util.*;
+
+import static java.util.stream.Collectors.joining;
 
 public class Source3BasedOnQueries extends AbstractSource3 {
     private final List<SourceQuery3> models;
@@ -31,8 +26,8 @@ public class Source3BasedOnQueries extends AbstractSource3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion) {
-        return "(" + models.stream().map(m -> m.sql(dbVersion)).collect(joining("\n UNION ALL \n")) + ") AS " + sqlAlias;
+    public String sql(final EqlDomainMetadata metadata) {
+        return "(" + models.stream().map(m -> m.sql(metadata)).collect(joining("\n UNION ALL \n")) + ") AS " + sqlAlias;
     }
 
     @Override

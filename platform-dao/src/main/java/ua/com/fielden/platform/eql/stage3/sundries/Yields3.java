@@ -1,15 +1,15 @@
 package ua.com.fielden.platform.eql.stage3.sundries;
 
-import static java.util.Collections.unmodifiableCollection;
-import static java.util.Collections.unmodifiableSortedMap;
-import static java.util.stream.Collectors.joining;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
+import static java.util.Collections.unmodifiableCollection;
+import static java.util.Collections.unmodifiableSortedMap;
+import static java.util.stream.Collectors.joining;
 
 public class Yields3 {
     private final SortedMap<String, Yield3> yieldsMap = new TreeMap<String, Yield3>();
@@ -27,8 +27,8 @@ public class Yields3 {
     public SortedMap<String, Yield3> getYieldsMap() {
         return unmodifiableSortedMap(yieldsMap);
     }
-    public String sql(final DbVersion dbVersion) {
-        return "SELECT\n" + getYields().stream().map(y -> y.sql(dbVersion)).collect(joining(", "));
+    public String sql(final EqlDomainMetadata metadata) {
+        return "SELECT\n" + getYields().stream().map(y -> y.sql(metadata)).collect(joining(", "));
     }
     
     @Override

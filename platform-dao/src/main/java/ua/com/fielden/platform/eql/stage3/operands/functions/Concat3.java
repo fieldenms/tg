@@ -6,7 +6,7 @@ import static java.util.stream.Collectors.joining;
 import java.util.List;
 import java.util.Objects;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
@@ -20,15 +20,15 @@ public class Concat3 extends AbstractFunction3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion) {
-        switch (dbVersion) {
+    public String sql(final EqlDomainMetadata metadata) {
+        switch (metadata.dbVersion) {
         case H2:
         case MSSQL:
-            return format(" (%s)", operands.stream().map(so -> getConvertToStringSql(dbVersion, so)).collect(joining(" + ")));
+            return format(" (%s)", operands.stream().map(so -> getConvertToStringSql(metadata, so)).collect(joining(" + ")));
         case POSTGRESQL:
-            return format(" (%s)", operands.stream().map(so -> getConvertToStringSql(dbVersion, so)).collect(joining(" || ")));
+            return format(" (%s)", operands.stream().map(so -> getConvertToStringSql(metadata, so)).collect(joining(" || ")));
         default:
-            return super.sql(dbVersion);
+            return super.sql(metadata);
         }
     }
     
