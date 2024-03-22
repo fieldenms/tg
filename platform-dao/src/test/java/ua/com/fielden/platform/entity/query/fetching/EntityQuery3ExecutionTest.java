@@ -1,25 +1,7 @@
 package ua.com.fielden.platform.entity.query.fetching;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
-import java.math.BigDecimal;
-import java.util.Currency;
-import java.util.List;
-
 import org.junit.Ignore;
 import org.junit.Test;
-
 import ua.com.fielden.platform.dao.EntityWithTaxMoneyDao;
 import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -31,48 +13,20 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.persistence.types.EntityWithTaxMoney;
-import ua.com.fielden.platform.sample.domain.ITeAverageFuelUsage;
-import ua.com.fielden.platform.sample.domain.ITeVehicle;
-import ua.com.fielden.platform.sample.domain.ITeVehicleFuelUsage;
-import ua.com.fielden.platform.sample.domain.ITeVehicleModel;
-import ua.com.fielden.platform.sample.domain.ITgBogie;
-import ua.com.fielden.platform.sample.domain.ITgEntityWithComplexSummaries;
-import ua.com.fielden.platform.sample.domain.ITgOrgUnit5;
-import ua.com.fielden.platform.sample.domain.ITgVehicle;
-import ua.com.fielden.platform.sample.domain.TeAverageFuelUsage;
-import ua.com.fielden.platform.sample.domain.TeVehicle;
-import ua.com.fielden.platform.sample.domain.TeVehicleFuelUsage;
-import ua.com.fielden.platform.sample.domain.TeVehicleMake;
-import ua.com.fielden.platform.sample.domain.TeVehicleModel;
-import ua.com.fielden.platform.sample.domain.TeWorkOrder;
-import ua.com.fielden.platform.sample.domain.TgAuthor;
-import ua.com.fielden.platform.sample.domain.TgAuthorship;
-import ua.com.fielden.platform.sample.domain.TgBogie;
-import ua.com.fielden.platform.sample.domain.TgBogieLocation;
-import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummaries;
-import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries;
-import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummariesThatActuallyDeclareThoseSummariesCo;
-import ua.com.fielden.platform.sample.domain.TgFuelType;
-import ua.com.fielden.platform.sample.domain.TgFuelUsage;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
-import ua.com.fielden.platform.sample.domain.TgPersonName;
-import ua.com.fielden.platform.sample.domain.TgTimesheet;
-import ua.com.fielden.platform.sample.domain.TgVehicle;
-import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
-import ua.com.fielden.platform.sample.domain.TgVehicleMake;
-import ua.com.fielden.platform.sample.domain.TgVehicleModel;
-import ua.com.fielden.platform.sample.domain.TgWagon;
-import ua.com.fielden.platform.sample.domain.TgWagonSlot;
-import ua.com.fielden.platform.sample.domain.TgWorkshop;
+import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
+
+import java.math.BigDecimal;
+import java.util.Currency;
+import java.util.List;
+
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.test_utils.TestUtils.assertNotThrows;
 
 public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     private final IEntityAggregatesOperations aggregateDao = getInstance(IEntityAggregatesOperations.class);
@@ -1057,6 +1011,64 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         run(select(TgVehicle.class).where().prop("id").eq().allOfValues(1, null));
     }
 
+    /**
+     * @see <a href="https://github.com/fieldenms/tg/issues/2213">Issue #2213</a>
+     */
+    @Test
+    public void union_query_with_nulls_correctly_matches_column_types_01() {
+        // null UNION null UNION not-null
+        final var qNull = select(TgVehicle.class)
+                .yield().val(null /* deliberate null */)
+                .modelAsEntity(TgVehicle.class);
+
+        final var qNotNull = select(TgVehicle.class)
+                .yield().prop("id").modelAsEntity(TgVehicle.class);
+
+        final var qUnion = select(qNull, qNull, qNotNull)
+                .yield().prop("id").modelAsEntity(TgVehicle.class);
+
+        assertNotThrows(() -> co(TgVehicle.class).getAllEntities(from(qUnion).model()));
+    }
+
+    /**
+     * @see <a href="https://github.com/fieldenms/tg/issues/2213">Issue #2213</a>
+     */
+    @Test
+    public void union_query_with_nulls_correctly_matches_column_types_02() {
+        // null UNION (null UNION null) UNION not-null
+        final var qNull = select(TgVehicle.class)
+                .yield().val(null /* deliberate null */)
+                .modelAsEntity(TgVehicle.class);
+
+        final var qNotNull = select(TgVehicle.class)
+                .yield().prop("id").modelAsEntity(TgVehicle.class);
+
+        final var qUnion = select(qNull, select(qNull, qNull).modelAsEntity(TgVehicle.class), qNotNull)
+                .yield().prop("id").modelAsEntity(TgVehicle.class);
+
+        assertNotThrows(() -> co(TgVehicle.class).getAllEntities(from(qUnion).model()));
+    }
+
+    /**
+     * @see <a href="https://github.com/fieldenms/tg/issues/2213">Issue #2213</a>
+     */
+    @Test
+    public void union_query_with_nulls_correctly_matches_column_types_03() {
+        // (null UNION (not-null UNION null)) UNION (null UNION null)
+        final var qNull = select(TgVehicle.class)
+                .yield().val(null /* deliberate null */)
+                .modelAsEntity(TgVehicle.class);
+
+        final var qNotNull = select(TgVehicle.class)
+                .yield().prop("id").modelAsEntity(TgVehicle.class);
+
+        final var qUnion = select(
+                select(qNull, select(qNotNull, qNull).model()).model(),
+                select(qNull, qNull).model())
+                .yield().prop("id").modelAsEntity(TgVehicle.class);
+
+        assertNotThrows(() -> co(TgVehicle.class).getAllEntities(from(qUnion).model()));
+    }
     @Override
     public boolean saveDataPopulationScriptToFile() {
         return false;
