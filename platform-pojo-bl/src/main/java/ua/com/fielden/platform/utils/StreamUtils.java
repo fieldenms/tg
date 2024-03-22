@@ -176,10 +176,10 @@ public class StreamUtils {
      * @param combine
      * @return
      */
-    public static <A, B, Z> Stream<Z> zip(final Stream<? extends A> xs, final Stream<? extends B> ys, final BiFunction<? super A, ? super B, ? extends Z> combine) {
+    public static <X, Y, Z> Stream<Z> zip(final Stream<? extends X> xs, final Stream<? extends Y> ys, final BiFunction<? super X, ? super Y, ? extends Z> combine) {
         Objects.requireNonNull(combine);
-        final Spliterator<? extends A> xsSpliterator = Objects.requireNonNull(xs).spliterator();
-        final Spliterator<? extends B> ysSpliterator = Objects.requireNonNull(ys).spliterator();
+        final Spliterator<? extends X> xsSpliterator = Objects.requireNonNull(xs).spliterator();
+        final Spliterator<? extends Y> ysSpliterator = Objects.requireNonNull(ys).spliterator();
 
         // zipping should loose DISTINCT and SORTED characteristics
         final int characteristics = xsSpliterator.characteristics() & ysSpliterator.characteristics() &
@@ -191,8 +191,8 @@ public class StreamUtils {
                 : -1;
 
         // making new iterators to be used as the basis for a new splitterator
-        final Iterator<A> xsIterator = Spliterators.iterator(xsSpliterator);
-        final Iterator<B> ysIterator = Spliterators.iterator(ysSpliterator);
+        final Iterator<X> xsIterator = Spliterators.iterator(xsSpliterator);
+        final Iterator<Y> ysIterator = Spliterators.iterator(ysSpliterator);
         final Iterator<Z> zsIterator = new Iterator<Z>() {
             @Override
             public boolean hasNext() {
@@ -214,9 +214,9 @@ public class StreamUtils {
     /**
      * Constructs a zipped stream.
      */
-    public static <A, B, Z> Stream<Z> zip(
-            final Collection<? extends A> xs, final Collection<? extends B> ys,
-            final BiFunction<? super A, ? super B, ? extends Z> combine)
+    public static <X, Y, Z> Stream<Z> zip(
+            final Collection<? extends X> xs, final Collection<? extends Y> ys,
+            final BiFunction<? super X, ? super Y, ? extends Z> combine)
     {
         return zip(xs.stream(), ys.stream(), combine);
     }
