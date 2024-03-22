@@ -1,5 +1,37 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.stream.Collectors.toCollection;
+import static ua.com.fielden.platform.cypher.Checksum.sha256;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
+
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
+
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.modifier.Ownership;
 import net.bytebuddy.description.modifier.ParameterManifestation;
@@ -10,11 +42,14 @@ import net.bytebuddy.dynamic.DynamicType.Builder.MethodDefinition.ReceiverTypeDe
 import net.bytebuddy.dynamic.TargetType;
 import net.bytebuddy.dynamic.scaffold.MethodGraph;
 import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
-import net.bytebuddy.implementation.*;
+import net.bytebuddy.implementation.FieldAccessor;
+import net.bytebuddy.implementation.FixedValue;
+import net.bytebuddy.implementation.Implementation;
+import net.bytebuddy.implementation.MethodDelegation;
+import net.bytebuddy.implementation.SuperMethodCall;
 import net.bytebuddy.implementation.bind.annotation.Argument;
 import net.bytebuddy.implementation.bind.annotation.This;
 import net.bytebuddy.pool.TypePool;
-import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.entity.Accessor;
 import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.Generated;
@@ -26,19 +61,7 @@ import ua.com.fielden.platform.reflection.asm.annotation.GeneratedAnnotation;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.exceptions.CollectionalPropertyInitializationException;
 import ua.com.fielden.platform.reflection.asm.exceptions.TypeMakerException;
-
-import java.lang.annotation.*;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Type;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-
-import static java.util.stream.Collectors.toCollection;
-import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
+import ua.com.fielden.platform.types.tuples.T2;
 
 /**
  * This class provides an API for modifying types at runtime by means of bytecode manipulation.
@@ -78,6 +101,8 @@ public class TypeMaker<T> {
     public static final String GET_ORIG_TYPE_METHOD_NAME = "_GET_ORIG_TYPE_METHOD_";
     private static final String ERR_FAILED_TO_INITIALISE_COLLECTIONAL_PROPERTY = "Failed to initialise new collectional property [%s].";
     private static final String ERR_FAILED_TO_INITIALISE_CUSTOM_COLLECTIONAL_PROPERTY = "Failed to initialise new collectional property of custom type [%s].";
+    private static final String CONSTRUCTOR_FIELD_PREFIX = "constructorInterceptor$";
+    private static final String COLLECTIONAL_SETTER_FIELD_PREFIX = "collectionalSetterInterceptor$";
 
     private final DynamicEntityClassLoader cl;
     private final Class<T> origType;
@@ -93,9 +118,9 @@ public class TypeMaker<T> {
      */
     private final Map<String, Supplier<?>> propertyInitializers = new HashMap<>();
     /**
-     * Storage for names of both added and modified properties.
+     * Storage for names of both added and modified properties and corresponding [NewProperty, prop Type] pairs.
      */
-    private final Set<String> addedPropertiesNames = new LinkedHashSet<>();
+    private final Map<String, T2<NewProperty<?>, Type>> addedProperties = new LinkedHashMap<>();
 
     public TypeMaker(final DynamicEntityClassLoader loader, final Class<T> origType) {
         this.cl = loader;
@@ -152,7 +177,7 @@ public class TypeMaker<T> {
         }
 
         properties.stream()
-        .filter(prop -> !addedPropertiesNames.contains(prop.getName()) && 
+        .filter(prop -> !addedProperties.containsKey(prop.getName()) && 
                         !origTypeProperties.contains(prop.getName())) 
         .forEach(this::addProperty);
 
@@ -197,9 +222,9 @@ public class TypeMaker<T> {
         }
 
         addAccessor(prop.getName(), genericType);
-        addSetter(prop.getName(), genericType, prop.isCollectional());
+        // delay addSetter(...) to .endModification() stage
 
-        addedPropertiesNames.add(prop.getName());
+        addedProperties.put(prop.getName(), t2(prop, genericType));
     }
 
     /**
@@ -240,7 +265,7 @@ public class TypeMaker<T> {
                          .intercept(FieldAccessor.ofField(propName));
     }
 
-    private void addSetter(final String propName, final Type propType, final boolean collectional) {
+    private void addSetter(final String propName, final Type propType, final boolean collectional, final String modifiedTypeName) {
         final var building = builder.defineMethod(Mutator.SETTER.startsWith + StringUtils.capitalize(propName), TargetType.DESCRIPTION, Visibility.PUBLIC)
                                     .withParameter(propType, propName, ParameterManifestation.FINAL);
 
@@ -252,7 +277,7 @@ public class TypeMaker<T> {
              this.${propName}.addAll(${arg});
              return this;
              */
-            building1 = building.intercept(MethodDelegation.to(new CollectionalSetterInterceptor(propName)).andThen(FixedValue.self()));
+            building1 = building.intercept(MethodDelegation.to(new CollectionalSetterInterceptor(propName), COLLECTIONAL_SETTER_FIELD_PREFIX + sha256(modifiedTypeName.getBytes(UTF_8)) + propName).andThen(FixedValue.self()));
         }
         else {
             // regular setters:
@@ -382,7 +407,7 @@ public class TypeMaker<T> {
 
         // modifying the same property multiple times is illegal
         final NewProperty<?> illegalNp = propertyReplacements.stream()
-            .filter(prop -> addedPropertiesNames.contains(prop.getName()))
+            .filter(prop -> addedProperties.containsKey(prop.getName()))
             .findAny().orElse(null);
         if (illegalNp != null) {
             throw new TypeMakerException("Property [%s] was already added or modified for this type.".formatted(illegalNp.toString(true)));
@@ -413,10 +438,10 @@ public class TypeMaker<T> {
                 .intercept(FixedValue.value(type));
     }
 
-    private void generateConstructors() {
+    private void generateConstructors(final String modifiedTypeName) {
         final Implementation impl = propertyInitializers.isEmpty() 
                                     ? SuperMethodCall.INSTANCE
-                                    : SuperMethodCall.INSTANCE.andThen(MethodDelegation.to(new ConstructorInterceptor(propertyInitializers)));
+                                    : SuperMethodCall.INSTANCE.andThen(MethodDelegation.to(new ConstructorInterceptor(propertyInitializers), CONSTRUCTOR_FIELD_PREFIX + sha256(modifiedTypeName.getBytes(UTF_8))));
 
         final List<Constructor<?>> visibleConstructors = Arrays.stream(origType.getDeclaredConstructors())
                 .filter(constr -> !Modifier.isPrivate(constr.getModifiers()))
@@ -460,11 +485,15 @@ public class TypeMaker<T> {
             recordOrigType(origType);
         }
 
-        generateConstructors();
-
         if (modifiedName == null) {
             modifyTypeName();
         }
+
+        // delay adding constructors and setters to the stage where 'modifiedName' is already known;
+        // MethodDelegation static fields will be named exactly the same in identical types to facilitate proper concurrent generation
+        // see TypeResolutionStrategy.Passive.initialize method with onLoad(...) invocations after classLoadingStrategy.load(...) may have returned already loaded / cached types from other concurrent thread
+        generateConstructors(modifiedName);
+        addedProperties.values().forEach(propAndType -> addSetter(propAndType._1.getName(), propAndType._2, propAndType._1.isCollectional(), modifiedName));
 
         // provide a TypePool that uses the class loader of the original type
         // if origType is a dynamic one, then this will be DynamicEntityClassLoader, which will be able to locate origType
