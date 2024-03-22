@@ -32,8 +32,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -174,32 +172,15 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         final Class<?> managedType)
     {
         final String newTypeName = generateCriteriaTypeName(CentreEntityQueryCriteriaToEnhance.class, linkedMapOf(t2("properties", properties)), managedType);
+        final List<NewProperty> newProperties = properties.stream().filter(pn -> !isPlaceholder(pn)).flatMap(pn -> generateCriteriaProperties(root, managedType, pn).stream()).toList();
         try {
-            // it is possible that this transformation already exists, and so we should simply return an existing class
-            final var maybeClass = DynamicEntityClassLoader.getCachedClass(newTypeName);
-            if (maybeClass.isPresent()) {
-                return (Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>) maybeClass.get();
-            }
-            else {
-                final List<NewProperty> newProperties = properties.stream().filter(pn -> !isPlaceholder(pn)).flatMap(pn -> generateCriteriaProperties(root, managedType, pn).stream()).toList();
-                return (Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>)
-                    DynamicEntityClassLoader.startModification(CentreEntityQueryCriteriaToEnhance.class)
-                    .addProperties(newProperties.toArray(new NewProperty[0]))
-                    .modifyTypeName(newTypeName)
-                    .endModification();
-            }
+            return (Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>)
+                DynamicEntityClassLoader.startModification(CentreEntityQueryCriteriaToEnhance.class)
+                .addProperties(newProperties.toArray(new NewProperty[0]))
+                .modifyTypeName(newTypeName)
+                .endModification();
         } catch (final ClassNotFoundException ex) {
             throw new CriteriaGeneratorException(format("Criteria type for [%s] could not be generated.", root.getSimpleName()), ex);
-        } catch (final Exception ex) {
-            // even in case of an exception, let's try to locate the class with name newTypeName again just in case it was already created concurrently
-            final var maybeClass = DynamicEntityClassLoader.getCachedClass(newTypeName);
-            if (maybeClass.isPresent()) {
-                return (Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>) maybeClass.get();
-            }
-            // and if we could not find the class, then re-throw the exception
-            else {
-                throw ex;
-            }
         }
     }
 

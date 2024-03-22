@@ -495,14 +495,33 @@ public class TypeMaker<T> {
         generateConstructors(modifiedName);
         addedProperties.values().forEach(propAndType -> addSetter(propAndType._1.getName(), propAndType._2, propAndType._1.isCollectional(), modifiedName));
 
-        // provide a TypePool that uses the class loader of the original type
-        // if origType is a dynamic one, then this will be DynamicEntityClassLoader, which will be able to locate origType
-        return builder.make(TypePool.ClassLoading.of(origType.getClassLoader()))
-                // provide DynamicEntityClassLoader to be injected with the new dynamic type
-                // this allows us to use a single class loader for all dynamically created types,
-                // instead of making ByteBuddy create a separate class loader for each
-                .load(cl)
-                .getLoaded();
+        // it is possible that this transformation already exists, and so we should simply return an existing class
+        final var maybeClass = DynamicEntityClassLoader.getCachedClass(modifiedName);
+        if (maybeClass.isPresent()) {
+            return (Class<? extends T>) maybeClass.get();
+        }
+        else {
+            try {
+                // provide a TypePool that uses the class loader of the original type
+                // if origType is a dynamic one, then this will be DynamicEntityClassLoader, which will be able to locate origType
+                return builder.make(TypePool.ClassLoading.of(origType.getClassLoader()))
+                        // provide DynamicEntityClassLoader to be injected with the new dynamic type
+                        // this allows us to use a single class loader for all dynamically created types,
+                        // instead of making ByteBuddy create a separate class loader for each
+                        .load(cl)
+                        .getLoaded();
+            } catch (final Exception ex) {
+                // even in case of an exception, let's try to locate the class with name modifiedName again just in case it was already created concurrently
+                final var maybeClassAgain = DynamicEntityClassLoader.getCachedClass(modifiedName);
+                if (maybeClassAgain.isPresent()) {
+                    return (Class<? extends T>) maybeClassAgain.get();
+                }
+                // and if we could not find the class, then re-throw the exception
+                else {
+                    throw ex;
+                }
+            }
+        }
     }
 
     public static class ConstructorInterceptor {
