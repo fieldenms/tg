@@ -15,6 +15,8 @@ public interface IResultSetBuilder2Properties<T extends AbstractEntity<?>> exten
 
     /**
      * Adds result-set column for {@code propName}, possibly in "dot-notation" form (e.g. "zone.sector.division").
+     * 
+     * @param presentByDefault -- indicates whether the property will be visible by default in a result-set; if not, user can add the property using AZ (Customise Columns) action
      */
     @Deprecated
     IResultSetBuilder3Ordering<T> addProp(final String propName, final boolean presentByDefault);
@@ -29,6 +31,8 @@ public interface IResultSetBuilder2Properties<T extends AbstractEntity<?>> exten
 
     /**
      * Adds result-set column for {@code propName}, possibly in "dot-notation" form (e.g. Station_.zone().sector().division()).
+     * 
+     * @param presentByDefault -- indicates whether the property will be visible by default in a result-set; if not, user can add the property using AZ (Customise Columns) action
      */
     default IResultSetBuilder3Ordering<T> addProp(final IConvertableToPath propName, final boolean presentByDefault) {
         return addProp(propName.toPath(), presentByDefault);
@@ -43,6 +47,8 @@ public interface IResultSetBuilder2Properties<T extends AbstractEntity<?>> exten
 
     /**
      * Adds editable result-set column for {@code propName}, possibly in "dot-notation" form (e.g. "zone.sector.division").
+     * 
+     * @param presentByDefault -- indicates whether the property will be visible by default in a result-set; if not, user can add the property using AZ (Customise Columns) action
      */
     @Deprecated
     IResultSetBuilderWidgetSelector<T> addEditableProp(final String propName, final boolean presentByDefault);
@@ -57,6 +63,8 @@ public interface IResultSetBuilder2Properties<T extends AbstractEntity<?>> exten
 
     /**
      * Adds editable result-set column for {@code propName}, possibly in "dot-notation" form (e.g. Station_.zone().sector().division()).
+     * 
+     * @param presentByDefault -- indicates whether the property will be visible by default in a result-set; if not, user can add the property using AZ (Customise Columns) action
      */
     default IResultSetBuilderWidgetSelector<T> addEditableProp(final IConvertableToPath propName, final boolean presentByDefault) {
         return addEditableProp(propName.toPath(), presentByDefault);
@@ -69,8 +77,16 @@ public interface IResultSetBuilder2Properties<T extends AbstractEntity<?>> exten
         return addEditableProp(propName.toPath());
     }
 
+    /**
+     * Adds custom result-set column using {@link PropDef} definition.
+     * 
+     * @param presentByDefault -- indicates whether the property will be visible by default in a result-set; if not, user can add the property using AZ (Customise Columns) action
+     */
     IResultSetBuilder4aWidth<T> addProp(final PropDef<?> propDef, final boolean presentByDefault);
 
+    /**
+     * Adds custom result-set column using {@link PropDef} definition.
+     */
     default IResultSetBuilder4aWidth<T> addProp(final PropDef<?> propDef) {
         return addProp(propDef, true);
     }
