@@ -128,6 +128,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
 
     protected Optional<String> propName = empty();
+    protected boolean presentByDefault = true;
     protected Optional<String> tooltipProp = empty();
     protected Optional<PropDef<?>> propDef = empty();
     protected Optional<AbstractWidget> widget = empty();
@@ -141,7 +142,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder3Ordering<T> addProp(final String propName) {
+    public IResultSetBuilder3Ordering<T> addProp(final String propName, final boolean presentByDefault) {
         if (StringUtils.isEmpty(propName)) {
             throw new EntityCentreConfigurationException("Property name should not be null.");
         }
@@ -151,6 +152,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         }
 
         this.propName = of(propName);
+        this.presentByDefault = presentByDefault;
         this.tooltipProp = empty();
         this.propDef = empty();
         this.orderSeq = null;
@@ -159,11 +161,11 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilderWidgetSelector<T> addEditableProp(final String propName) {
+    public IResultSetBuilderWidgetSelector<T> addEditableProp(final String propName, final boolean presentByDefault) {
         if (propName.contains(".")) {
             throw  new EntityCentreConfigurationException(format(ERR_EDITABLE_SUB_PROP_DISALLOWED, propName));
         }
-        this.addProp(propName);
+        this.addProp(propName, presentByDefault);
         this.widget = createWidget(propName);
         return this;
     }
@@ -245,12 +247,13 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder4aWidth<T> addProp(final PropDef<?> propDef) {
+    public IResultSetBuilder4aWidth<T> addProp(final PropDef<?> propDef, final boolean presentByDefault) {
         if (propDef == null) {
             throw new IllegalArgumentException("Custom property should not be null.");
         }
 
         this.propName = empty();
+        this.presentByDefault = presentByDefault;
         this.tooltipProp = empty();
         this.propDef = of(propDef);
         this.orderSeq = null;
@@ -460,15 +463,16 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     private void completePropIfNeeded() {
         // construct and add property to the builder
         if (propName.isPresent()) {
-            final ResultSetProp<T> prop = ResultSetProp.propByName(propName.get(), width, isFlexible, widget, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
+            final ResultSetProp<T> prop = ResultSetProp.propByName(propName.get(), presentByDefault, width, isFlexible, widget, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
             this.builder.addToResultSet(prop);
         } else if (propDef.isPresent()) {
-            final ResultSetProp<T> prop = ResultSetProp.propByDef(propDef.get(), width, isFlexible, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
+            final ResultSetProp<T> prop = ResultSetProp.propByDef(propDef.get(), presentByDefault, width, isFlexible, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
             this.builder.addToResultSet(prop);
         }
 
         // clear things up for the next property to be added if any
         this.propName = empty();
+        this.presentByDefault = true;
         this.tooltipProp = empty();
         this.propDef = empty();
         this.orderSeq = null;

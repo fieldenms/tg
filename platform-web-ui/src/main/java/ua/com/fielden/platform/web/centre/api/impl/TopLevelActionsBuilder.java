@@ -168,13 +168,13 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     }
 
     @Override
-    public IResultSetBuilder3Ordering<T> addProp(final String propName) {
-        return new ResultSetBuilder<>(builder).addProp(propName);
+    public IResultSetBuilder3Ordering<T> addProp(final String propName, final boolean presentByDefault) {
+        return new ResultSetBuilder<>(builder).addProp(propName, presentByDefault);
     }
 
     @Override
-    public IResultSetBuilder4aWidth<T> addProp(final PropDef<?> propDef) {
-        return new ResultSetBuilder<>(builder).addProp(propDef);
+    public IResultSetBuilder4aWidth<T> addProp(final PropDef<?> propDef, final boolean presentByDefault) {
+        return new ResultSetBuilder<>(builder).addProp(propDef, presentByDefault);
     }
 
     @Override
@@ -193,8 +193,8 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     }
 
     @Override
-    public IResultSetBuilderWidgetSelector<T> addEditableProp(final String propName) {
-        return new ResultSetBuilder<>(builder).addEditableProp(propName);
+    public IResultSetBuilderWidgetSelector<T> addEditableProp(final String propName, final boolean presentByDefault) {
+        return new ResultSetBuilder<>(builder).addEditableProp(propName, presentByDefault);
     }
 
     @Override
