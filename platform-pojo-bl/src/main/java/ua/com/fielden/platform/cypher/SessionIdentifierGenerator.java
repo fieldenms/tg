@@ -9,6 +9,7 @@ import java.security.SignatureException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
@@ -22,6 +23,7 @@ import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.joda.time.format.PeriodFormatter;
 import org.joda.time.format.PeriodFormatterBuilder;
+import ua.com.fielden.platform.security.exceptions.SecurityException;
 
 /**
  *
@@ -37,7 +39,13 @@ import org.joda.time.format.PeriodFormatterBuilder;
 public final class SessionIdentifierGenerator {
     private static final String HMAC_SHA256_ALGORITHM = "HmacSHA256";
     private static final Logger LOGGER = getLogger(SessionIdentifierGenerator.class);
-    private final ThreadLocal<SecureRandom> random = ThreadLocal.withInitial(() -> new SecureRandom());
+    private static final ThreadLocal<SecureRandom> random = ThreadLocal.withInitial(() -> {
+        try {
+            return SecureRandom.getInstanceStrong();
+        } catch (final NoSuchAlgorithmException ex) {
+            throw new SecurityException("Could not instantiate SecureRandom.", ex);
+        }
+    });
 
     /**
      * Generates cryptographically random series identifier.
@@ -66,6 +74,13 @@ public final class SessionIdentifierGenerator {
         return new BigInteger(128, random.get()).toString(32);
     }
 
+    /**
+     * Generates cryptographically random UUID.
+     * @return
+     */
+    public UUID genUuid() {
+        return new UUID(random.get().nextLong(), random.get().nextLong());
+    }
     /**
      * Generates a 4096 bit key using the HMAC-SHA256 algorithm.
      *
