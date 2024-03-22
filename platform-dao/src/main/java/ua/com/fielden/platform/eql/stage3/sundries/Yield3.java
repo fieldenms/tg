@@ -47,7 +47,7 @@ public class Yield3 {
         final var sb = new StringBuilder(operandSql.length());
 
         // cast even if expected type equals the declared type (crucial for auto-yields)
-        if (metadata.dbVersion == POSTGRESQL && expectedType != null) {
+        if (metadata.dbVersion == POSTGRESQL && expectedType != NO_EXPECTED_TYPE) {
             sb.append("CAST (");
             sb.append(operandSql);
             sb.append(" AS ");
