@@ -31,6 +31,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.modifier.Ownership;
@@ -101,6 +103,7 @@ public class TypeMaker<T> {
     public static final String GET_ORIG_TYPE_METHOD_NAME = "_GET_ORIG_TYPE_METHOD_";
     private static final String ERR_FAILED_TO_INITIALISE_COLLECTIONAL_PROPERTY = "Failed to initialise new collectional property [%s].";
     private static final String ERR_FAILED_TO_INITIALISE_CUSTOM_COLLECTIONAL_PROPERTY = "Failed to initialise new collectional property of custom type [%s].";
+    private static final String WRN_UNSUCCESSFUL_GENERATION_BUT_ALREADY_PRESENT = "Type [%s] generation was unsuccessful. However, the type is already present in cache and will be used.";
     private static final String CONSTRUCTOR_FIELD_PREFIX = "constructorInterceptor$";
     private static final String COLLECTIONAL_SETTER_FIELD_PREFIX = "collectionalSetterInterceptor$";
 
@@ -108,6 +111,7 @@ public class TypeMaker<T> {
     private final Class<T> origType;
     private DynamicType.Builder<T> builder;
     private String modifiedName;
+    private final Logger logger = LogManager.getLogger(getClass());
 
     /**
      * Enables lazy access to all (declared + inherited) properties of the original type.
@@ -514,6 +518,7 @@ public class TypeMaker<T> {
                 // even in case of an exception, let's try to locate the class with name modifiedName again just in case it was already created concurrently
                 final var maybeClassAgain = DynamicEntityClassLoader.getCachedClass(modifiedName);
                 if (maybeClassAgain.isPresent()) {
+                    logger.warn(WRN_UNSUCCESSFUL_GENERATION_BUT_ALREADY_PRESENT.formatted(modifiedName), ex);
                     return (Class<? extends T>) maybeClassAgain.get();
                 }
                 // and if we could not find the class, then re-throw the exception
