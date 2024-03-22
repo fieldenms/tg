@@ -14,6 +14,7 @@ import java.util.Objects;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
+import static ua.com.fielden.platform.eql.stage3.sundries.Yield3.NO_EXPECTED_TYPE;
 import static ua.com.fielden.platform.utils.StreamUtils.transpose;
 
 /**
@@ -55,7 +56,7 @@ public class Source3BasedOnQueries extends AbstractSource3 {
         // the same column are compatible with the found one
         return transpose(models, q -> q.yields.getYields().stream())
                 // we want the declared type
-                .map(yields -> yields.stream().map(y -> y.type).filter(Objects::nonNull).findFirst().orElse(null))
+                .map(yields -> yields.stream().map(y -> y.type).filter(Objects::nonNull).findFirst().orElse(NO_EXPECTED_TYPE))
                 .toList();
     }
 
