@@ -12,10 +12,15 @@ import java.util.Map;
 import java.util.Objects;
 
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
 import static ua.com.fielden.platform.utils.StreamUtils.transpose;
 
+/**
+ * A query source formed by concatenating results of its underlying queries.
+ */
 public class Source3BasedOnQueries extends AbstractSource3 {
+
     private final List<SourceQuery3> models;
     
     public Source3BasedOnQueries(final List<SourceQuery3> models, final Integer id, final int sqlId) {
@@ -24,11 +29,7 @@ public class Source3BasedOnQueries extends AbstractSource3 {
     }
     
     private static Map<String, String> obtainColumnsFromYields(final Collection<Yield3> yields) {
-        final Map<String, String> result = new HashMap<>();
-        for (final Yield3 entry : yields) {
-            result.put(entry.alias, entry.column);    
-        }
-        return result;
+        return yields.stream().collect(toMap(y -> y.alias, y -> y.column));
     }
 
     @Override
@@ -60,9 +61,9 @@ public class Source3BasedOnQueries extends AbstractSource3 {
 
     @Override
     public String toString() {
-        return "Source3BasedOnQueries of type " + models.get(0).resultType;
+        return "Source3BasedOnQueries of type " + models.getFirst().resultType;
     }
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -89,4 +90,5 @@ public class Source3BasedOnQueries extends AbstractSource3 {
         
         return Objects.equals(models, other.models);
     }
+
 }

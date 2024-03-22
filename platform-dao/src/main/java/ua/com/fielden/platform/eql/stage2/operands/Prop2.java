@@ -58,7 +58,7 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
     }
 
     private static PropType obtainPropType(final List<AbstractQuerySourceItem<?>> path) {
-        final AbstractQuerySourceItem<?> lastElement = path.stream().reduce((first, second) -> second).orElse(null);
+        final AbstractQuerySourceItem<?> lastElement = path.getLast();
         return new PropType(lastElement.javaType(), lastElement.hibType);
     }
 
@@ -89,7 +89,7 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
     }
 
     public AbstractQuerySourceItem<?> lastPart() {
-        return path.get(path.size() - 1);
+        return path.getLast();
     }
 
     /**
