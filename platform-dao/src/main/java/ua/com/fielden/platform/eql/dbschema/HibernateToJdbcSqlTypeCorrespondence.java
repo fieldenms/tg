@@ -8,13 +8,14 @@ import org.hibernate.usertype.UserType;
 import ua.com.fielden.platform.utils.Pair;
 
 import java.sql.Types;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static ua.com.fielden.platform.utils.Pair.pair;
+import static ua.com.fielden.platform.utils.StreamUtils.zip;
 
 /**
  * A utility class to interact with mappings between JDBC SQL types and Hibernate types.
@@ -59,13 +60,9 @@ public final class HibernateToJdbcSqlTypeCorrespondence {
     }
 
     public static List<Pair<String, Integer>> jdbcSqlTypeFor(final CompositeUserType compositeUserType) {
-        final List<Pair<String, Integer>> result = new ArrayList<>();
-
-        for (int index = 0; index < compositeUserType.getPropertyNames().length; index++) {
-            result.add(pair(compositeUserType.getPropertyNames()[index], jdbcSqlTypeFor(compositeUserType.getPropertyTypes()[index])));
-        }
-
-        return result;
+        return zip(Arrays.stream(compositeUserType.getPropertyNames()), Arrays.stream(compositeUserType.getPropertyTypes()),
+                (name, type) -> pair(name, jdbcSqlTypeFor(type)))
+                .toList();
     }
 
     private HibernateToJdbcSqlTypeCorrespondence() {}
