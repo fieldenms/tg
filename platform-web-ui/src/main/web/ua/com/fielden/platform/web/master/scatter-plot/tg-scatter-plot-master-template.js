@@ -28,7 +28,7 @@ const template = html`
         _process-saver-error="[[_processSaverError]]"
         _saver-loading="{{_saverLoading}}">
         <!--START OF GENERATED TG-ENTITY-MASTER DOM CONTENT-->
-        <tg-scatter-plot class="chart-deck" data="[[data]]" options="[[options]]" rendering-hints="[[renderingHints]]" legend="[[legendItems]]"></tg-scatter-plot>
+        <tg-scatter-plot class="chart-deck" chart-data="[[retrievedEntities]]" options="[[options]]" rendering-hints="[[renderingHints]]" legend="[[legendItems]]"></tg-scatter-plot>
         <!--@tg-entity-master-content-->
         <!--END OF GENERATED TG-ENTITY-MASTER DOM CONTENT-->
     </tg-entity-master>`;
@@ -54,13 +54,6 @@ Polymer({
         retrievedEntities: {
             type: Array,
             observer: "_retrievedEntitiesChanged"
-        },
-
-        /**
-         * Chart data will be updated when new entities from entity centre will arrive.
-         */
-        data: {
-            type: Array
         },
 
         /**

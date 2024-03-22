@@ -54,7 +54,13 @@ const template = html`
     <!-- local DOM for your element -->
     <div id="chartContainer">
         <svg id="chart" class="scatter-plot"></svg>
-    </div>`;
+    </div>
+    <template is="dom-repeat" items="[[legendItems]]" on-dom-change="_legendItemsChanged">
+        <div class="legend-item">
+            <svg><path d="[[_calcLegendItemPath(item.style)]]" style$="[[_calcLegendItemStyle(item.style)]]"></svg>
+            <div>[[item.title]]</div>
+        </div>
+    </template>`;
 
 template.setAttribute('strip-whitespace', '');
 
@@ -68,9 +74,9 @@ export class TgScatterPlot extends mixinBehaviors([IronResizableBehavior], Polym
     static get properties() {
         return {
             // Declare properties for the element's public API
-            data: {
+            chartData: {
                 type: Array,
-                observer: "_dataChanged"
+                observer: "_chartDataChanged"
             },
     
             options: {
@@ -81,6 +87,11 @@ export class TgScatterPlot extends mixinBehaviors([IronResizableBehavior], Polym
             renderingHints: {
                 type: Object,
                 observer: "_renderingHintsChanged"
+            },
+
+            legendItems: {
+                type: Array,
+                value: () => []
             },
             
             _chart: Object
@@ -129,7 +140,7 @@ export class TgScatterPlot extends mixinBehaviors([IronResizableBehavior], Polym
         }, time);
     }
 
-    _dataChanged (newData, oldData) {
+    _chartDataChanged (newData, oldData) {
         if (this._chart) {
             this._chart.data(newData);
         }
@@ -159,6 +170,26 @@ export class TgScatterPlot extends mixinBehaviors([IronResizableBehavior], Polym
                 });
             }
         }
+    }
+
+    _legendItemsChanged () {
+        this.notifyResize();
+    }
+
+    _calcLegendStyle (options) {
+        return "margin-left: " + options.margin.left + "px; margin-right: " + options.margin.right + "px;";
+    }
+
+    _calcLegendItemPath (style) {
+        return d3.scatterPlot.shapes[style.shape];
+    } 
+    
+    _calcLegendItemStyle (style) {
+        let styles = "";
+        Object.keys(style).forEach(styleKey => {
+            styles += `${styleKey}: ${style[styleKey]};`;
+        })
+        return styles;
     }
 }
 

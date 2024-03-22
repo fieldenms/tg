@@ -438,3 +438,5 @@ d3.scatterPlot = (container, options) => {
     };
     return chart;
 };
+
+d3.scatterPlot.shapes = Symbols;
