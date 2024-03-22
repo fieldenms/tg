@@ -11,6 +11,7 @@ import java.util.Objects;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
+import static ua.com.fielden.platform.eql.dbschema.HibernateToJdbcSqlTypeCorrespondence.genericSqlTypeName;
 
 public class Yield3 {
 
@@ -83,7 +84,7 @@ public class Yield3 {
             default -> throw new IllegalArgumentException("Unexpected Hibernate type of yielded value: %s".formatted(type.hibType()));
         };
 
-        return metadata.dialect.getCastTypeName(sqlType);
+        return genericSqlTypeName(sqlType, metadata.dialect);
     }
 
     @Override

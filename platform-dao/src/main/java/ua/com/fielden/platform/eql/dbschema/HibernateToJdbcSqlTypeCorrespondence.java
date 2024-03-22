@@ -1,24 +1,50 @@
 package ua.com.fielden.platform.eql.dbschema;
 
-import static ua.com.fielden.platform.utils.Pair.pair;
+import org.hibernate.HibernateException;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.type.Type;
+import org.hibernate.usertype.CompositeUserType;
+import org.hibernate.usertype.UserType;
+import ua.com.fielden.platform.utils.Pair;
 
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-import org.hibernate.type.Type;
-import org.hibernate.usertype.CompositeUserType;
-import org.hibernate.usertype.UserType;
-
-import ua.com.fielden.platform.utils.Pair;
+import static org.apache.commons.lang3.StringUtils.substringBefore;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 /**
- * A utility class to identify JDBC SQL types that correspond to Hibernate types.
+ * A utility class to interact with mappings between JDBC SQL types and Hibernate types.
  * 
  * @author TG Team
- *
  */
-public class HibernateToJdbcSqlTypeCorrespondence {
+public final class HibernateToJdbcSqlTypeCorrespondence {
+
+    /**
+     * Returns the <i>generic</i> name of the database type corresponding to the given type code.
+     * <p>
+     * A generic type name is an unparameterised name. Examples of generic names and their parameterised counterparts:
+     * <ul>
+     *   <li> {@code numeric} -- {@code numeric(10, 2)}
+     *   <li> {@code char} -- {@code char(255)}
+     * </ul>
+     * This method exists to overcome the limitation of Hibernate in providing access only to parameterised names.
+     *
+     * @param sqlType  a type code from {@link Types}
+     * @param dialect  the dialect providing type mappings
+     * @throws HibernateException  if there is no type name associated with the given SQL type
+     */
+    // funnily enough Hibernate itself performs such conversion in certain Dialect implementations
+    public static String genericSqlTypeName(final int sqlType, final Dialect dialect) {
+        final var map = GENERIC_TYPE_NAMES.computeIfAbsent(dialect, $ -> new ConcurrentHashMap<>());
+        return map.computeIfAbsent(sqlType, $ -> substringBefore(dialect.getTypeName(sqlType), '('));
+    }
+    // where
+    private static final Map<Dialect, Map<Integer, String>> GENERIC_TYPE_NAMES = new ConcurrentHashMap<>(1); // expect at most 1 dialect
+
 
     public static int jdbcSqlTypeFor(final Type hibernateType) {
         // NOTE Hibernate doesn't complain about null but that is not documented anywhere
@@ -41,4 +67,7 @@ public class HibernateToJdbcSqlTypeCorrespondence {
 
         return result;
     }
+
+    private HibernateToJdbcSqlTypeCorrespondence() {}
+
 }
