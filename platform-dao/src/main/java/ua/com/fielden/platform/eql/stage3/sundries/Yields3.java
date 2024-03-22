@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage3.sundries;
 
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
+import ua.com.fielden.platform.eql.meta.PropType;
 
 import java.util.Collection;
 import java.util.List;
@@ -10,9 +11,10 @@ import java.util.TreeMap;
 import static java.util.Collections.unmodifiableCollection;
 import static java.util.Collections.unmodifiableSortedMap;
 import static java.util.stream.Collectors.joining;
+import static ua.com.fielden.platform.utils.StreamUtils.zip;
 
 public class Yields3 {
-    private final SortedMap<String, Yield3> yieldsMap = new TreeMap<String, Yield3>();
+    private final SortedMap<String, Yield3> yieldsMap = new TreeMap<>();
 
     public Yields3(final List<Yield3> yields) {
         for (final Yield3 yield : yields) {
@@ -27,10 +29,17 @@ public class Yields3 {
     public SortedMap<String, Yield3> getYieldsMap() {
         return unmodifiableSortedMap(yieldsMap);
     }
+
+    public String sql(final EqlDomainMetadata metadata, final List<PropType> expectedTypes) {
+        return "SELECT\n" +
+                zip(getYields().stream(), expectedTypes.stream(), (y, type) -> y.sql(metadata, type))
+                        .collect(joining(", "));
+    }
+
     public String sql(final EqlDomainMetadata metadata) {
         return "SELECT\n" + getYields().stream().map(y -> y.sql(metadata)).collect(joining(", "));
     }
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;

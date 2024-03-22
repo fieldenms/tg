@@ -1,13 +1,17 @@
 package ua.com.fielden.platform.eql.stage3.queries;
 
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
+import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.QueryComponents3;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 import ua.com.fielden.platform.eql.stage3.sundries.GroupBys3;
 import ua.com.fielden.platform.eql.stage3.sundries.OrderBys3;
+import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 import static ua.com.fielden.platform.entity.query.DbVersion.ORACLE;
@@ -31,8 +35,12 @@ public abstract class AbstractQuery3 {
     }
 
     public String sql(final EqlDomainMetadata metadata) {
+        return sql(metadata, Collections.nCopies(yields.getYields().size(), Yield3.NO_EXPECTED_TYPE));
+    }
+
+    public String sql(final EqlDomainMetadata metadata, final List<PropType> expectedYieldTypes) {
         final StringBuffer sb = new StringBuffer();
-        sb.append(yields.sql(metadata));
+        sb.append(yields.sql(metadata, expectedYieldTypes));
         sb.append(joinRoot != null ? "\nFROM\n" + joinRoot.sql(metadata) : (metadata.dbVersion == ORACLE ? " FROM DUAL " : ""));
         sb.append(whereConditions != null ? "\nWHERE " + whereConditions.sql(metadata) : "");
         sb.append(groups != null ? "\nGROUP BY " + groups.sql(metadata) : "");
