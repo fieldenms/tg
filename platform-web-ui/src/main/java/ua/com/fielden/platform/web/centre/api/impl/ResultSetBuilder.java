@@ -30,6 +30,7 @@ import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
@@ -141,8 +142,27 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.builder = builder;
     }
 
+    @Deprecated
     @Override
-    public IResultSetBuilder3Ordering<T> addProp(final String propName, final boolean presentByDefault) {
+    public IResultSetBuilder3Ordering<T> addProp(final String propName) {
+        return addProp(propName, true);
+    }
+
+    @Override
+    public IResultSetBuilder3Ordering<T> addProp(final IConvertableToPath prop, final boolean presentByDefault) {
+        return addProp(prop.toPath(), presentByDefault);
+    }
+
+    /**
+     * Implementation used by both {@link #addProp(IConvertableToPath, boolean)} and deprecated {@link #addProp(String)}.
+     * <p></p>
+     * TODO Once {@link #addProp(String)} is removed, this implementation needs to be moved to {@link #addProp(IConvertableToPath, boolean)}.
+     *
+     * @param propName
+     * @param presentByDefault
+     * @return
+     */
+    protected IResultSetBuilder3Ordering<T> addProp(final String propName, final boolean presentByDefault) {
         if (StringUtils.isEmpty(propName)) {
             throw new EntityCentreConfigurationException("Property name should not be null.");
         }
@@ -249,7 +269,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @Override
     public IResultSetBuilder4aWidth<T> addProp(final PropDef<?> propDef, final boolean presentByDefault) {
         if (propDef == null) {
-            throw new IllegalArgumentException("Custom property should not be null.");
+            throw new EntityCentreConfigurationException("Custom property should not be null.");
         }
 
         this.propName = empty();
@@ -292,7 +312,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @Override
     public IAlsoProp<T> withAction(final EntityActionConfig actionConfig) {
         if (actionConfig == null) {
-            throw new IllegalArgumentException("Property action configuration should not be null.");
+            throw new EntityCentreConfigurationException("Property action configuration should not be null.");
         }
 
         this.entityActionConfig = of(new EntityMultiActionConfig(SingleActionSelector.class, asList(() -> of(actionConfig))));
