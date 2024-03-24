@@ -30,6 +30,7 @@ import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
@@ -128,6 +129,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
 
     protected Optional<String> propName = empty();
+    protected boolean presentByDefault = true;
     protected Optional<String> tooltipProp = empty();
     protected Optional<PropDef<?>> propDef = empty();
     protected Optional<AbstractWidget> widget = empty();
@@ -140,8 +142,28 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.builder = builder;
     }
 
+    @Deprecated
     @Override
     public IResultSetBuilder3Ordering<T> addProp(final String propName) {
+        return addProp(propName, true);
+    }
+
+    @Override
+    public IResultSetBuilder3Ordering<T> addProp(final IConvertableToPath prop, final boolean presentByDefault) {
+        return addProp(prop.toPath(), presentByDefault);
+    }
+
+    /**
+     * Implementation used by both {@link #addProp(IConvertableToPath, boolean)} and deprecated {@link #addProp(String)}.
+     * <p>
+     * <b>TODO</b> Once {@link #addProp(String)} is removed, this implementation needs to be moved to {@link #addProp(IConvertableToPath, boolean)}.
+     * </p>
+     *
+     * @param propName
+     * @param presentByDefault
+     * @return
+     */
+    protected IResultSetBuilder3Ordering<T> addProp(final String propName, final boolean presentByDefault) {
         if (StringUtils.isEmpty(propName)) {
             throw new EntityCentreConfigurationException("Property name should not be null.");
         }
@@ -151,6 +173,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         }
 
         this.propName = of(propName);
+        this.presentByDefault = presentByDefault;
         this.tooltipProp = empty();
         this.propDef = empty();
         this.orderSeq = null;
@@ -245,12 +268,13 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder4aWidth<T> addProp(final PropDef<?> propDef) {
+    public IResultSetBuilder4aWidth<T> addProp(final PropDef<?> propDef, final boolean presentByDefault) {
         if (propDef == null) {
-            throw new IllegalArgumentException("Custom property should not be null.");
+            throw new EntityCentreConfigurationException("Custom property should not be null.");
         }
 
         this.propName = empty();
+        this.presentByDefault = presentByDefault;
         this.tooltipProp = empty();
         this.propDef = of(propDef);
         this.orderSeq = null;
@@ -289,7 +313,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @Override
     public IAlsoProp<T> withAction(final EntityActionConfig actionConfig) {
         if (actionConfig == null) {
-            throw new IllegalArgumentException("Property action configuration should not be null.");
+            throw new EntityCentreConfigurationException("Property action configuration should not be null.");
         }
 
         this.entityActionConfig = of(new EntityMultiActionConfig(SingleActionSelector.class, asList(() -> of(actionConfig))));
@@ -460,15 +484,16 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     private void completePropIfNeeded() {
         // construct and add property to the builder
         if (propName.isPresent()) {
-            final ResultSetProp<T> prop = ResultSetProp.propByName(propName.get(), width, isFlexible, widget, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
+            final ResultSetProp<T> prop = ResultSetProp.propByName(propName.get(), presentByDefault, width, isFlexible, widget, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
             this.builder.addToResultSet(prop);
         } else if (propDef.isPresent()) {
-            final ResultSetProp<T> prop = ResultSetProp.propByDef(propDef.get(), width, isFlexible, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
+            final ResultSetProp<T> prop = ResultSetProp.propByDef(propDef.get(), presentByDefault, width, isFlexible, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
             this.builder.addToResultSet(prop);
         }
 
         // clear things up for the next property to be added if any
         this.propName = empty();
+        this.presentByDefault = true;
         this.tooltipProp = empty();
         this.propDef = empty();
         this.orderSeq = null;
