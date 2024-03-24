@@ -37,28 +37,11 @@ public interface IResultSetBuilder2Properties<T extends AbstractEntity<?>> exten
 
     /**
      * Adds editable result-set column for {@code propName}, possibly in "dot-notation" form (e.g. "zone.sector.division").
-     * 
-     * @param presentByDefault -- indicates whether the property will be visible by default in a result-set; if not, user can add the property using AZ (Customise Columns) action
+     * <p>
+     * This method is deprecated, use {@link #addEditableProp(IConvertableToPath)} instead.
      */
     @Deprecated
-    IResultSetBuilderWidgetSelector<T> addEditableProp(final String propName, final boolean presentByDefault);
-
-    /**
-     * Adds editable result-set column for {@code propName}, possibly in "dot-notation" form (e.g. "zone.sector.division").
-     */
-    @Deprecated
-    default IResultSetBuilderWidgetSelector<T> addEditableProp(final String propName) {
-        return addEditableProp(propName, true);
-    }
-
-    /**
-     * Adds editable result-set column for {@code propName}, possibly in "dot-notation" form (e.g. Station_.zone().sector().division()).
-     * 
-     * @param presentByDefault -- indicates whether the property will be visible by default in a result-set; if not, user can add the property using AZ (Customise Columns) action
-     */
-    default IResultSetBuilderWidgetSelector<T> addEditableProp(final IConvertableToPath propName, final boolean presentByDefault) {
-        return addEditableProp(propName.toPath(), presentByDefault);
-    }
+    IResultSetBuilderWidgetSelector<T> addEditableProp(final String propName);
 
     /**
      * Adds editable result-set column for {@code propName}, possibly in "dot-notation" form (e.g. Station_.zone().sector().division()).

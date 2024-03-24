@@ -200,8 +200,8 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     }
 
     @Override
-    public IResultSetBuilderWidgetSelector<T> addEditableProp(final String propName, final boolean presentByDefault) {
-        return new ResultSetBuilder<>(builder).addEditableProp(propName, presentByDefault);
+    public IResultSetBuilderWidgetSelector<T> addEditableProp(final String propName) {
+        return new ResultSetBuilder<>(builder).addEditableProp(propName);
     }
 
     @Override

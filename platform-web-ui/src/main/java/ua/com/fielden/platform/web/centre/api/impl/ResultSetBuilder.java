@@ -155,8 +155,9 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     /**
      * Implementation used by both {@link #addProp(IConvertableToPath, boolean)} and deprecated {@link #addProp(String)}.
-     * <p></p>
-     * TODO Once {@link #addProp(String)} is removed, this implementation needs to be moved to {@link #addProp(IConvertableToPath, boolean)}.
+     * <p>
+     * <b>TODO</b> Once {@link #addProp(String)} is removed, this implementation needs to be moved to {@link #addProp(IConvertableToPath, boolean)}.
+     * </p>
      *
      * @param propName
      * @param presentByDefault
@@ -181,11 +182,11 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilderWidgetSelector<T> addEditableProp(final String propName, final boolean presentByDefault) {
+    public IResultSetBuilderWidgetSelector<T> addEditableProp(final String propName) {
         if (propName.contains(".")) {
             throw  new EntityCentreConfigurationException(format(ERR_EDITABLE_SUB_PROP_DISALLOWED, propName));
         }
-        this.addProp(propName, presentByDefault);
+        this.addProp(propName);
         this.widget = createWidget(propName);
         return this;
     }
