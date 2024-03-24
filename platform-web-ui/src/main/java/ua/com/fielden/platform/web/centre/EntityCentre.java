@@ -439,7 +439,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 final String propertyName = derivePropName(property);
                 if (!property.dynamicColBuilderType.isPresent()) {
                     cdtmae.getSecondTick().check(entityType, propertyName, true);
-                    cdtmae.getSecondTick().use(entityType, propertyName, true);
+                    if (property.presentByDefault) {
+                        cdtmae.getSecondTick().use(entityType, propertyName, true);
+                    }
                     cdtmae.getSecondTick().setWidth(entityType, propertyName, property.width);
                     if (growFactors.containsKey(propertyName)) {
                         cdtmae.getSecondTick().setGrowFactor(entityType, propertyName, growFactors.get(propertyName));

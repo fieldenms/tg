@@ -271,6 +271,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
      */
     public static class ResultSetProp<T extends AbstractEntity<?>> {
         public final Optional<String> propName;
+        public final boolean presentByDefault;
         public final Optional<String> tooltipProp;
         public final Optional<PropDef<?>> propDef;
         public final Optional<Class<? extends IDynamicColumnBuilder<T>>> dynamicColBuilderType;
@@ -282,20 +283,21 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
         private Optional<EntityMultiActionConfig> propAction = empty();
 
-         public static <T extends AbstractEntity<?>> ResultSetProp<T> propByName(final String propName, final int width, final boolean isFlexible, final Optional<AbstractWidget> widget, final String tooltipProp, final Optional<EntityMultiActionConfig> propAction) {
-            return new ResultSetProp<>(propName, empty(), empty(), empty(), width, isFlexible, widget, tooltipProp, null, propAction);
+        public static <T extends AbstractEntity<?>> ResultSetProp<T> propByName(final String propName, final boolean presentByDefault, final int width, final boolean isFlexible, final Optional<AbstractWidget> widget, final String tooltipProp, final Optional<EntityMultiActionConfig> propAction) {
+            return new ResultSetProp<>(propName, presentByDefault, empty(), empty(), empty(), width, isFlexible, widget, tooltipProp, null, propAction);
         }
 
-        public static <T extends AbstractEntity<?>> ResultSetProp<T> propByDef(final PropDef<?> propDef, final int width, final boolean isFlexible, final String tooltipProp, final Optional<EntityMultiActionConfig> propAction) {
-            return new ResultSetProp<>(null, empty(), empty(), empty(), width, isFlexible, Optional.empty(), tooltipProp, propDef, propAction);
+        public static <T extends AbstractEntity<?>> ResultSetProp<T> propByDef(final PropDef<?> propDef, final boolean presentByDefault, final int width, final boolean isFlexible, final String tooltipProp, final Optional<EntityMultiActionConfig> propAction) {
+            return new ResultSetProp<>(null, presentByDefault, empty(), empty(), empty(), width, isFlexible, Optional.empty(), tooltipProp, propDef, propAction);
         }
 
         public static <T extends AbstractEntity<?>> ResultSetProp<T> dynamicProps(final String collectionalPropertyName, final Class<? extends IDynamicColumnBuilder<T>> dynamicPropDefinerClass, final BiConsumer<? extends AbstractEntity<?>, Optional<CentreContext<T, ?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
-            return new ResultSetProp<>(collectionalPropertyName, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), 0, false, empty(), null, null, empty());
+            return new ResultSetProp<>(collectionalPropertyName, true, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), 0, false, empty(), null, null, empty());
         }
 
         private ResultSetProp(
                 final String propName,
+                final boolean presentByDefault,
                 final Optional<Class<? extends IDynamicColumnBuilder<T>>> dynColBuilderType,
                 final Optional<CentreContextConfig> contextConfig,
                 final Optional<BiConsumer> entityPreProcessor,
@@ -319,6 +321,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             }
 
             this.propName = Optional.ofNullable(propName);
+            this.presentByDefault = presentByDefault;
             this.width = width;
             this.isFlexible = isFlexible;
             this.widget = widget;
