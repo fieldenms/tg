@@ -6,7 +6,9 @@ import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -25,6 +27,7 @@ import java.util.stream.Collectors;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.join;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.*;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimePortionToDisplay;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimeZone;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
@@ -85,24 +88,39 @@ public class ScatterPlotMaster<T extends AbstractEntity<?>> implements IMaster<T
         });
         //Generate options
         final String chartOptions = "{\n"
-                + "    label: '" + chartBuilder.getTitle() + "',\n"
+                + "    label: '" + getChartTitle(chartBuilder) + "',\n"
                 + "    xAxis: {\n"
-                + "        label: '" + chartBuilder.getXAxisTitle() + "'\n"
+                + "        label: '" + getXAxisTitle(chartBuilder) + "'\n"
                 + "    },\n"
                 + "    yAxis: {\n"
-                + "        label: '" + chartBuilder.getYAxisTitle() + "'\n"
+                + "        label: '" + getYAxisTitle(chartBuilder) + "'\n"
                 + "    },\n"
                 + "    dataPropertyNames: {\n"
-                + "        categoryProp: " + generateValueAccessor(chartBuilder.getEntityType(), chartBuilder.getCategoryPropertyName()) + ",\n"
-                + "        valueProp: " + generateValueAccessor(chartBuilder.getEntityType(), chartBuilder.getValuePropertyName()) + ",\n"
+                + "        categoryProp: " + generateValueAccessor(chartBuilder.getChartEntityType(), chartBuilder.getCategoryPropertyName()) + ",\n"
+                + "        valueProp: " + generateValueAccessor(chartBuilder.getChartEntityType(), chartBuilder.getValuePropertyName()) + ",\n"
                 + "        styleProp: '" + chartBuilder.getStylePropertyName() + "',\n"
                 + "    },\n"
                 + "    tooltip: d => self._tooltip(d, " + generateTooltipProps(chartBuilder.getTooltipProperties()) + "),\n"
                 + "    click: self._click\n"
                 + "}";
 
-        return "self.options = [" + join(chartOptions, ",\n") + "];\n"
+        return "self.options = " + chartOptions + ";\n"
                 + "self.legendItems =[" + join(legendItems, ",\n") + "];\n";
+    }
+
+    private String getYAxisTitle(final ScatterPlotMasterBuilder<T> chartBuilder) {
+        return Optional.ofNullable(chartBuilder.getYAxisTitle())
+                .orElse(getTitleAndDesc(chartBuilder.getCategoryPropertyName(), chartBuilder.getChartEntityType()).getKey());
+    }
+
+    private String getXAxisTitle(final ScatterPlotMasterBuilder<T> chartBuilder) {
+        return Optional.ofNullable(chartBuilder.getXAxisTitle())
+                .orElse(getTitleAndDesc(chartBuilder.getValuePropertyName(), chartBuilder.getChartEntityType()).getKey());
+    }
+
+    private String getChartTitle(final ScatterPlotMasterBuilder<T> chartBuilder) {
+        return Optional.ofNullable(chartBuilder.getTitle())
+                .orElse(getEntityTitleAndDesc(chartBuilder.getChartEntityType()).getKey());
     }
 
     private String generateTooltipProps(final List<String> tooltipProperties) {
@@ -119,7 +137,7 @@ public class ScatterPlotMaster<T extends AbstractEntity<?>> implements IMaster<T
                 .collect(Collectors.joining(",")) + "}";
     }
 
-    private String generateValueAccessor(Class<T> entityType, final String propertyName) {
+    private String generateValueAccessor(Class<? extends AbstractEntity<?>> entityType, final String propertyName) {
         Class<?> propertyType = PropertyTypeDeterminator.determinePropertyType(entityType, propertyName);
         if (Money.class.isAssignableFrom(propertyType)) {
             return "this._moneyPropAccessor('" + propertyName + "')";

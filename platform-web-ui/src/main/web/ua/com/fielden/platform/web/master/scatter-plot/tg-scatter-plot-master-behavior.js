@@ -25,7 +25,6 @@ const getActionTooltip = function (action) {
 const TgScatterPlotMasterBehaviorImpl = {
 
     ready: function () {
-        TgMasterWithChartBehavior.ready();
         this._click = this._click.bind(this);
         this._tooltip = this._tooltip.bind(this);
     },

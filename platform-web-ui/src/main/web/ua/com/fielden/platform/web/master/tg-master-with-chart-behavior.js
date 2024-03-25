@@ -20,7 +20,7 @@ const TgMasterWithChartBehaviorImpl = {
         return function (entity, value) {
             if (!value) {
                 const splitedType = dateType.split(':');
-                return _millisDateRepresentation(entity.get(propertyName), splitedType[1] || null, splitedType[2] || null);
+                return _momentTz(entity.get(propertyName), splitedType[1] || null, splitedType[2] || null).toDate();
             }
         }
     },

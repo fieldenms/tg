@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.view.master.scatterplot.api.implementation;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
@@ -14,10 +15,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IScatterPlotMasterBuilder<T>, IScatterPlotCategoryProperty<T>, IScatterPlotValueProperty<T>, IScatterPlotTitle<T>, IScatterPlotStyleProperty<T> {
+public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IScatterPlotMasterBuilder<T>, IScatterPlotEntityType<T>, IScatterPlotCategoryProperty<T>, IScatterPlotValueProperty<T>, IScatterPlotTitle<T>, IScatterPlotStyleProperty<T> {
 
     private Class<T> entityType;
     private boolean saveOnActivation = false;
+    private Class<? extends AbstractEntity<?>> chartEntityType;
     private String categoryPropertyName;
     private String valuePropertyName;
     private String stylePropertyName;
@@ -30,27 +32,27 @@ public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IS
 
 
     @Override
-    public IScatterPlotCategoryProperty<T> forEntity(final Class<T> entityType) {
+    public IScatterPlotEntityType<T> forEntity(final Class<T> entityType) {
         this.entityType = entityType;
         return this;
     }
 
     @Override
-    public IScatterPlotCategoryProperty<T> forEntityWithSaveOnActivation(final Class<T> entityType) {
+    public IScatterPlotEntityType<T> forEntityWithSaveOnActivation(final Class<T> entityType) {
         this.entityType = entityType;
         this.saveOnActivation = true;
         return this;
     }
 
     @Override
-    public IScatterPlotValueProperty<T> setCategoryPropertyName(final String propertyName) {
-        this.categoryPropertyName = propertyName;
+    public IScatterPlotValueProperty<T> setCategoryPropertyName(final IConvertableToPath propertyName) {
+        this.categoryPropertyName = propertyName.toPath();
         return this;
     }
 
     @Override
-    public IScatterPlotStyleProperty<T> setValuePropertyName(final String propertyName) {
-        this.valuePropertyName = valuePropertyName;
+    public IScatterPlotStyleProperty<T> setValuePropertyName(final IConvertableToPath propertyName) {
+        this.valuePropertyName = propertyName.toPath();
         return this;
     }
 
@@ -62,7 +64,7 @@ public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IS
 
     @Override
     public IMaster<T> done() {
-        return null;
+        return new ScatterPlotMaster<>(this);
     }
 
     @Override
@@ -132,8 +134,8 @@ public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IS
     }
 
     @Override
-    public IScatterPlotTitle<T> setStylePropertyName(final String propertyName) {
-        this.stylePropertyName = propertyName;
+    public IScatterPlotTitle<T> setStylePropertyName(final IConvertableToPath propertyName) {
+        this.stylePropertyName = propertyName.toPath();
         return this;
     }
 
@@ -143,5 +145,15 @@ public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IS
 
     public List<String> getTooltipProperties() {
         return Collections.unmodifiableList(tooltipPropertyNames);
+    }
+
+    @Override
+    public IScatterPlotCategoryProperty<T> setChartEntityType(final Class<? extends AbstractEntity<?>> entityType) {
+        this.chartEntityType = entityType;
+        return this;
+    }
+
+    public Class<? extends AbstractEntity<?>> getChartEntityType() {
+        return chartEntityType;
     }
 }

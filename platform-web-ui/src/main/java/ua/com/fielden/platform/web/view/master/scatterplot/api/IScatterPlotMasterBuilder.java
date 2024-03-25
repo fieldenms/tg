@@ -15,7 +15,7 @@ public interface IScatterPlotMasterBuilder<T extends AbstractEntity<?>> {
      * @param entityType
      * @return
      */
-    IScatterPlotCategoryProperty<T> forEntity(Class<T> entityType);
+    IScatterPlotEntityType<T> forEntity(Class<T> entityType);
 
     /**
      * Start scatter plot configuration for specified entity type. Also, this scatter plot master get saved when opened.
@@ -23,5 +23,5 @@ public interface IScatterPlotMasterBuilder<T extends AbstractEntity<?>> {
      * @param entityType
      * @return
      */
-    IScatterPlotCategoryProperty<T> forEntityWithSaveOnActivation(Class<T> entityType);
+    IScatterPlotEntityType<T> forEntityWithSaveOnActivation(Class<T> entityType);
 }

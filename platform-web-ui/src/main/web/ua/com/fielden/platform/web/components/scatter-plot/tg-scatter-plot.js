@@ -5,7 +5,7 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 
 import {IronResizableBehavior} from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
-import  '/resources/components/tg-scatter-plot/d3-scatter-plot.js';
+import  '/resources/components/scatter-plot/d3-scatter-plot.js';
 
 const template = html`
     <style>

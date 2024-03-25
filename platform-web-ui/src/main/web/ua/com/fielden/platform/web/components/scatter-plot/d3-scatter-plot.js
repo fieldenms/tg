@@ -29,7 +29,7 @@ const mergeData = function (oldData, newData) {
  */
 const value = (obj, data) => {
     if (typeof obj === 'function') {
-        return obj(data, value);
+        return obj(data);
     } else {
         return data.get ? data.get(obj.toString()) : data[obj.toString()];
     }

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.view.master.scatterplot.api;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 /**
  * Set the property name that should be used to retrieve styles for dot on scatter plot
@@ -15,5 +16,5 @@ public interface IScatterPlotStyleProperty<T extends AbstractEntity<?>> {
      * @param propertyName
      * @return
      */
-    IScatterPlotTitle<T> setStylePropertyName(String propertyName);
+    IScatterPlotTitle<T> setStylePropertyName(IConvertableToPath propertyName);
 }

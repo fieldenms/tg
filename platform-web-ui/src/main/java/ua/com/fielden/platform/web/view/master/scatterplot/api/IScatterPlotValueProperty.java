@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.view.master.scatterplot.api;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 /**
  * Contract to specify property name which value should be used on x-axis of scatter plot.
@@ -15,5 +16,5 @@ public interface IScatterPlotValueProperty<T extends AbstractEntity<?>> {
      * @param propertyName
      * @return
      */
-    IScatterPlotStyleProperty<T> setValuePropertyName (String propertyName);
+    IScatterPlotStyleProperty<T> setValuePropertyName (IConvertableToPath propertyName);
 }
