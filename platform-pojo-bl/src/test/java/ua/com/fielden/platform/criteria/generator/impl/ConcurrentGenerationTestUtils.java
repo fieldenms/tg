@@ -26,7 +26,7 @@ public class ConcurrentGenerationTestUtils {
         final Phaser phaser = new Phaser(); // phaser is employed here to start worker threads as simultaneous as possible
         phaser.register(); // register the phaser with the current thread
 
-        // create and start worker threads (waiting for the phaser) that would perform identical {@link CriteriaGenerator#generateCriteriaType(Class, List, Class)}
+        // create and start worker threads (waiting for the phaser) that would perform identical type generation logic
         // such invocations lead to "There is no field delegate$..." errors.
         final var workers = new ArrayList<W>();
         for (int index = 1; index < 10; index ++) {
