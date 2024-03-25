@@ -76,7 +76,11 @@ public class PostgresqlDbCreator extends DbCreator {
                         // and:
                         //     SELECT * FROM 'TABLE_NAME';
                         // The source for this stored procedure can be found in tgpsa-dao/src/main/resources/sql/create_insert_statement.sql
-                        try (final PreparedStatement ps = conn.prepareStatement(format("select create_insert_statement(tableoid, %s) from %s", table, table))) {
+
+                        // Must pass mytable.* to create_insert_statement: if table "mytable" has column named "mytable",
+                        // then "mytable" will refer to the column, not the table.
+                        try (final PreparedStatement ps = conn.prepareStatement(
+                                format("select create_insert_statement(tableoid, %1$s.*) from %1$s", table))) {
                             try (final ResultSet rs = ps.executeQuery()) {
                                 while (rs.next()) {
                                     inserts.add(rs.getString(1));
