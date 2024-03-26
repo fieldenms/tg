@@ -21,7 +21,9 @@ public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IS
     private boolean saveOnActivation = false;
     private Class<? extends AbstractEntity<?>> chartEntityType;
     private String categoryPropertyName;
+    private IScatterPlotRangeConfig categoryPropRangeSource;
     private String valuePropertyName;
+    private IScatterPlotRangeConfig valuePropRangeSource;
     private String stylePropertyName;
     private String title;
     private String xAxisTitle;
@@ -45,14 +47,16 @@ public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IS
     }
 
     @Override
-    public IScatterPlotValueProperty<T> setCategoryPropertyName(final IConvertableToPath propertyName) {
+    public IScatterPlotValueProperty<T> configCategoryProperty(final IConvertableToPath propertyName, IScatterPlotRangeConfig rangeConfig) {
         this.categoryPropertyName = propertyName.toPath();
+        this.categoryPropRangeSource = rangeConfig;
         return this;
     }
 
     @Override
-    public IScatterPlotStyleProperty<T> setValuePropertyName(final IConvertableToPath propertyName) {
+    public IScatterPlotStyleProperty<T> configValueProperty(final IConvertableToPath propertyName, IScatterPlotRangeConfig rangeConfig) {
         this.valuePropertyName = propertyName.toPath();
+        this.valuePropRangeSource = rangeConfig;
         return this;
     }
 
@@ -155,5 +159,13 @@ public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IS
 
     public Class<? extends AbstractEntity<?>> getChartEntityType() {
         return chartEntityType;
+    }
+
+    public IScatterPlotRangeConfig getCategroyRangeConfig() {
+        return categoryPropRangeSource;
+    }
+
+    public IScatterPlotRangeConfig getValueRangeConfig() {
+        return valuePropRangeSource;
     }
 }

@@ -10,6 +10,8 @@ import  '/resources/components/scatter-plot/d3-scatter-plot.js';
 const template = html`
     <style>
         :host {
+            width: 100%;
+            height: 100%;
             @apply --layout-vertical;
         }
         [hidden] {

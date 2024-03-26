@@ -22,11 +22,61 @@ const getActionTooltip = function (action) {
     return shortDesc + longDesc;
 }
 
+const getDataRange = function (data, prop) {
+    if (data && prop) {
+        const values = data.map(e => e.get(prop));
+        return [Math.min(...values), Math.max(...values)];
+    }
+    return [];
+}
+
+const getMasterEntityRange = function (entity, prop) {
+    const newEntity = entity ? entity['@@origin'] : null;
+    if (newEntity && prop) {
+        return newEntity.get(prop);
+    }
+    return [];
+}
+
 const TgScatterPlotMasterBehaviorImpl = {
+
+    properties: {
+        categoryRangeSource : {
+            type: String,
+            value: ""
+        },
+        
+        valueRangeSource: {
+            type: String,
+            value: ""
+        }
+    },
 
     ready: function () {
         this._click = this._click.bind(this);
         this._tooltip = this._tooltip.bind(this);
+        this._getCategoryRange = this._getCategoryRange.bind(this);
+        this._getValueRange = this._getValueRange.bind(this);
+    },
+
+    _getCategoryRange: function () {
+        return this._getRange(this.categoryRangeSource);
+    },
+
+    _getValueRange: function () {
+        return this._getRange(this.valueRangeSource);
+    },
+
+    _getRange: function (sourceProperty) {
+        if (sourceProperty) {
+            const source = sourceProperty.split(":");
+            if (source[0] && source[0] == "data") {
+                return getDataRange(this.retrievedEntities, source[1]);
+            } else if (source[0] && source[0] == "masterEntity") {
+                return getMasterEntityRange(this._currBindingEntity, source[1]);
+            }
+        }
+        return [];
     },
 
     _click: function (entity, idx) {

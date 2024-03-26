@@ -4,17 +4,17 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 /**
- * Contract to specify property name which value should be used on x-axis of scatter plot.
+ * Contract to specify property name and axis range configuration that should be used to configure continuous axis of scatter plot (usually x-axis).
  *
  * @param <T>
  */
 public interface IScatterPlotValueProperty<T extends AbstractEntity<?>> {
 
     /**
-     * Specifies the property name of entity type which value should be used to as domain values for x-axis of scatter plot.
+     * Assigns property name (x-axis) and configuration of it's range
      *
      * @param propertyName
      * @return
      */
-    IScatterPlotStyleProperty<T> setValuePropertyName (IConvertableToPath propertyName);
+    IScatterPlotStyleProperty<T> configValueProperty (IConvertableToPath propertyName, IScatterPlotRangeConfig rangeConfig);
 }

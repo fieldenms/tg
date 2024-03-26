@@ -1,5 +1,5 @@
 import '/resources/components/d3-lib.js';
-import { generateUUID} from '/resources/reflection/tg-polymer-utils.js';
+import { generateUUID } from '/resources/reflection/tg-polymer-utils.js';
 
 //Symbols enum
 const Symbols = {
@@ -35,6 +35,13 @@ const value = (obj, data) => {
     }
 };
 
+const getRange = function (rangeValue) {
+    if (typeof rangeValue === 'function') {
+        return rangeValue();
+    }
+    return rangeValue;
+};
+
 class ScatterPlot {
 
     constructor(container, options) {
@@ -52,11 +59,11 @@ class ScatterPlot {
             label: "",
             xAxis: {
                 label: "",
-                range: [0, 1] 
+                range: []
             },
             yAxis: {
                 label: "",
-                range: [""]
+                range: []
             },
             dataPropertyNames: {
                 id: "id",
@@ -64,7 +71,7 @@ class ScatterPlot {
                 valueProp: "valueProp",
                 styleProp: "styleProp"
             },
-            click: (d, idx) => {},
+            click: (d, idx) => { },
         };
         this._options = options ? merge2LevelData(this._options, options) : this._options;
         this._data = [];
@@ -73,7 +80,7 @@ class ScatterPlot {
         //////////////////////Functional private variables///////////////////
         this._actualWidth = this._options.width - this._options.margin.left - this._options.margin.right;
         this._actualHeight = this._options.height - this._options.margin.bottom - this._options.margin.top;
-        
+
         //Holds the current transform 
         this._currentTransform = d3.zoomIdentity;
         // Holds the list of elements those can't be scaled and is used after current transforamation changed to unscale these elements.
@@ -114,7 +121,7 @@ class ScatterPlot {
 
         //Now draw data with dots
         this._drawData();
-        
+
         this._zoom = d3.zoom()
             .scaleExtent([1, 10])
             .translateExtent([[0, 0], [this._actualWidth, 0]])
@@ -129,7 +136,7 @@ class ScatterPlot {
                 this._zoomDataContainer();
                 //this._dataContainer.attr("transform", "translate(" + this._currentTransform.x + ", 0)scale(" + this._currentTransform.k + ", 1)");
             });
-        this._chartArea.call(this._zoom).on("dblclick.zoom", null).on("wheel", function() { d3.event.altKey && d3.event.preventDefault(); });
+        this._chartArea.call(this._zoom).on("dblclick.zoom", null).on("wheel", function () { d3.event.altKey && d3.event.preventDefault(); });
     }
 
     repaint(resetState) {
@@ -163,7 +170,7 @@ class ScatterPlot {
         this._yGridGroup.call(this._yGrid.tickSize(-this._actualWidth).scale(this._ys));
         this._xAxisGroup.attr("transform", "translate(0," + this._actualHeight + ")").call(this._xAxis.scale(this._currentTransform.rescaleX(this._xs)));
         this._yAxisGroup.call(this._yAxis.scale(this._ys));
-        
+
         // Update chart and axis captioins
         this._chartLabel.call(this._setChartLabelData.bind(this));
         this._xAxisLabel.call(this._setXAxisLabelData.bind(this));
@@ -185,39 +192,44 @@ class ScatterPlot {
         }
     }
 
-    set options (val) {
+    set options(val) {
         this._options = val ? merge2LevelData(this._options, val) : this._options;
         this.repaint();
     }
 
-    get options () {
+    get options() {
         return this._options;
     }
 
-    set data (data) {
+    set data(data) {
         this._data = data || this._data;
         this.repaint(true);
     }
 
-    get data () {
+    get data() {
         return this._data;
     }
 
-    set renderingHints (hints) {
+    set renderingHints(hints) {
         this._renderingHints = hints || this._renderingHints;
         this.repaint();
     }
 
-    get renderingHints () {
+    get renderingHints() {
         return this._renderingHints;
     }
 
     _xScale() {
-        return d3.scaleTime().domain(this._options.xAxis.range).range([0, this._actualWidth]);
+        const range = getRange(this._options.xAxis.range);
+        if (range.length > 0) {
+            range[0] = d3.timeDay.offset(range[0], -1);
+            range[1] = d3.timeDay.offset(range[1], 1);
+        }
+        return d3.scaleTime().domain(range).range([0, this._actualWidth]);
     }
 
     _yScale() {
-        return d3.scalePoint().domain(this._options.yAxis.range).range([0, this._actualHeight]).padding(0.1);
+        return d3.scalePoint().domain(getRange(this._options.yAxis.range)).range([0, this._actualHeight]).padding(0.1);
     }
 
     _createXAxis() {
@@ -261,14 +273,14 @@ class ScatterPlot {
     }
 
     _createDataContainer(clipPathId) {
-        return this._chartArea.append("g").attr("clip-path", "url(#" + clipPathId +")").append("g").attr("class", "data-container");
+        return this._chartArea.append("g").attr("clip-path", "url(#" + clipPathId + ")").append("g").attr("class", "data-container");
     }
 
     _drawXAxes() {
         return this._chartArea.append("g").attr("class", "axis x-axis")
             .attr("transform", "translate(0," + this._actualHeight + ")").call(this._xAxis);
     }
-    
+
     _drawYAxes() {
         return this._chartArea.append("g").attr("class", "axis y-axis").call(this._yAxis);
     }
@@ -300,13 +312,13 @@ class ScatterPlot {
             setTimeout(() => this._setXAxisLabelPosition(xAxisLabel), 100);
         }
     }
-    
+
     _adjustBottomMargin(label, xAxisBox) {
-            const labelBox = label.node().getBBox();
-            if ((!label.text() || (labelBox.width !== 0 && labelBox.height !== 0)) && this._options.margin.bottom !== xAxisBox.height + labelBox.height + 20) {
-                this.options = {margin: {bottom: xAxisBox.height + labelBox.height + 20}};
-            }
+        const labelBox = label.node().getBBox();
+        if ((!label.text() || (labelBox.width !== 0 && labelBox.height !== 0)) && this._options.margin.bottom !== xAxisBox.height + labelBox.height + 20) {
+            this.options = { margin: { bottom: xAxisBox.height + labelBox.height + 20 } };
         }
+    }
 
     _setXAxisLabelData(xAxisLabel) {
         xAxisLabel.text(this._options.xAxis.label).call(this._setXAxisLabelPosition.bind(this));
@@ -320,11 +332,11 @@ class ScatterPlot {
             .style("alignment-baseline", "hanging")
             .call(this._setXAxisLabelData.bind(this));
     }
-    
+
     _setYAxisLabelData(yAxisLabel) {
         yAxisLabel.text(this._options.yAxis.label).call(this._setYAxisLabelPosition.bind(this));
     }
-    
+
     _setYAxisLabelPosition(yAxisLabel) {
         const axisBox = this._yAxisGroup.node().getBBox();
         if (axisBox.width !== 0 && axisBox.height !== 0) {
@@ -347,49 +359,51 @@ class ScatterPlot {
     }
 
     _drawData() {
-        const rendHints = (i) => {
-            const renderingHints = this._renderingHints[i] || {};
-            const propStyle = value(this._options.dataPropertyNames.styleProp, renderingHints) || {};
-            return propStyle.backgroundStyles || propStyle || {};
-        };
+        if (this._xs.domain() && this._xs.domain().length > 0 && this._ys.domain() && this._ys.domain().length > 0) {
+            const rendHints = (i) => {
+                const renderingHints = this._renderingHints[i] || {};
+                const propStyle = value(this._options.dataPropertyNames.styleProp, renderingHints) || {};
+                return propStyle.backgroundStyles || propStyle || {};
+            };
 
-        const dataModel = this._data.map((d, i) => {
-            return {
-                data: d,
-                renderingHints: rendHints(i)
-            }
-        });
-        dataModel.sort((a, b) => {
-            const aZIndex = +a.renderingHints["z-index"] || 0;
-            const bZIndex = +b.renderingHints["z-index"] || 0;
-            return aZIndex - bZIndex;
-        });
+            const dataModel = this._data.map((d, i) => {
+                return {
+                    data: d,
+                    renderingHints: rendHints(i)
+                }
+            });
+            dataModel.sort((a, b) => {
+                const aZIndex = +a.renderingHints["z-index"] || 0;
+                const bZIndex = +b.renderingHints["z-index"] || 0;
+                return aZIndex - bZIndex;
+            });
 
-        const updateSelection = this._dataContainer.selectAll(".dot").data(dataModel);
-        const insertSelection = updateSelection.enter();
-        const removeSelection = updateSelection.exit();
+            const updateSelection = this._dataContainer.selectAll(".dot").data(dataModel);
+            const insertSelection = updateSelection.enter();
+            const removeSelection = updateSelection.exit();
 
-        //update data groups
-        updateSelection.call(this._updateData.bind(this));
-        //insert new data groups
-        insertSelection.call(this._insertNewData.bind(this));
-        //removed unnedded data groups
-        removeSelection.remove();
+            //update data groups
+            updateSelection.call(this._updateData.bind(this));
+            //insert new data groups
+            insertSelection.call(this._insertNewData.bind(this));
+            //removed unnedded data groups
+            removeSelection.remove();
+        }
     }
 
     _insertNewData(selection) {
         selection.append("path").attr("class", "dot").call(this._updateData.bind(this));
     }
-    
+
     _updateData(selection) {
         selection
             .attr("transform", d => `translate(${this._xs(value(this._options.dataPropertyNames.valueProp, d.data))}, ${this._ys(value(this._options.dataPropertyNames.categoryProp, d.data))})`)
             .attr("d", d3.symbol().type(d => {
-                    return Symbols[d.renderingHints.shape] || Symbols.circle; //Default shape is circle
-                }).size(d => {
-                    return d.renderingHints.size || 50; //Default size is 50
-                })
-            ).each(function(d) {
+                return Symbols[d.renderingHints.shape] || Symbols.circle; //Default shape is circle
+            }).size(d => {
+                return d.renderingHints.size || 50; //Default size is 50
+            })
+            ).each(function (d) {
                 const dot = d3.select(this);
                 Object.keys(d.renderingHints).forEach(key => {
                     dot.style(key, d.renderingHints[key]);
@@ -397,7 +411,7 @@ class ScatterPlot {
             });
     }
 
-    _zoomDataContainer () {
+    _zoomDataContainer() {
         const rescaledX = this._currentTransform.rescaleX(this._xs);
         this._dataContainer
             .selectAll(".dot")

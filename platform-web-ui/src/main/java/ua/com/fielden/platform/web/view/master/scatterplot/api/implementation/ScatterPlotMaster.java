@@ -54,7 +54,8 @@ public class ScatterPlotMaster<T extends AbstractEntity<?>> implements IMaster<T
                 .replace("<!--@tg-entity-master-content-->", actions.getValue().toString())
                 .replace("//generatedPrimaryActions", actions.getKey())
                 .replace("//@ready-callback", readyCallback(scatterPlotMasterBuilder))
-                .replace("@prefDim", "null").replace("@noUiValue", "false")
+                .replace("@prefDim", "null")
+                .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", String.valueOf(scatterPlotMasterBuilder.shouldSaveOnActivation()));
 
         renderable = new IRenderable() {
@@ -88,12 +89,20 @@ public class ScatterPlotMaster<T extends AbstractEntity<?>> implements IMaster<T
         });
         //Generate options
         final String chartOptions = "{\n"
+                +"     margin: {\n" +
+                "          left: 100,\n" +
+                "          right: 20,\n" +
+                "          top: 40,\n" +
+                "          bottom: 60\n" +
+                "      },"
                 + "    label: '" + getChartTitle(chartBuilder) + "',\n"
                 + "    xAxis: {\n"
-                + "        label: '" + getXAxisTitle(chartBuilder) + "'\n"
+                + "        label: '" + getXAxisTitle(chartBuilder) + "',\n"
+                + "        range: self._getValueRange\n"
                 + "    },\n"
                 + "    yAxis: {\n"
-                + "        label: '" + getYAxisTitle(chartBuilder) + "'\n"
+                + "        label: '" + getYAxisTitle(chartBuilder) + "',\n"
+                + "        range: self._getCategoryRange\n"
                 + "    },\n"
                 + "    dataPropertyNames: {\n"
                 + "        categoryProp: " + generateValueAccessor(chartBuilder.getChartEntityType(), chartBuilder.getCategoryPropertyName()) + ",\n"
@@ -105,7 +114,9 @@ public class ScatterPlotMaster<T extends AbstractEntity<?>> implements IMaster<T
                 + "}";
 
         return "self.options = " + chartOptions + ";\n"
-                + "self.legendItems =[" + join(legendItems, ",\n") + "];\n";
+                + "self.legendItems =[" + join(legendItems, ",\n") + "];\n"
+                + "self.categoryRangeSource = '" + chartBuilder.getCategroyRangeConfig().getSource() + "';\n"
+                + "self.valueRangeSource = '" + chartBuilder.getValueRangeConfig().getSource() + "';\n";
     }
 
     private String getYAxisTitle(final ScatterPlotMasterBuilder<T> chartBuilder) {

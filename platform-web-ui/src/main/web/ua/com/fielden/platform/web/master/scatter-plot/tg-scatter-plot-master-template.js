@@ -28,7 +28,7 @@ const template = html`
         _process-saver-error="[[_processSaverError]]"
         _saver-loading="{{_saverLoading}}">
         <!--START OF GENERATED TG-ENTITY-MASTER DOM CONTENT-->
-        <tg-scatter-plot class="chart-deck" chart-data="[[retrievedEntities]]" options="[[options]]" rendering-hints="[[renderingHints]]" legend="[[legendItems]]"></tg-scatter-plot>
+        <tg-scatter-plot id="chart" class="chart-deck" chart-data="[[retrievedEntities]]" options="[[options]]" rendering-hints="[[renderingHints]]" legend="[[legendItems]]"></tg-scatter-plot>
         <!--@tg-entity-master-content-->
         <!--END OF GENERATED TG-ENTITY-MASTER DOM CONTENT-->
     </tg-entity-master>`;
@@ -40,14 +40,7 @@ Polymer({
     is: 'tg-@entity_type-master',
 
     properties: {
-
-        /**
-         * The entity that comes from insertion point and holds the information to update y-axis domain.
-         */
-        entity: {
-            type: Object,
-            observer: "_entityChanged"
-        },
+        
         /**
          * The entities retrieved when running centre that has this insertion point's element. It will be used to update x-axis domain and chart data.
          */
@@ -68,8 +61,10 @@ Polymer({
          */
         renderingHints: {
             type: Object
-        },
+        }
     },
+
+    observers: ["_chartEntityChanged(_currBindingEntity)"],
     
     behaviors: [TgScatterPlotMasterBehavior],
     
@@ -91,7 +86,6 @@ Polymer({
         //END OF GENERATED JS LOGIC
         
         //@master-is-ready-custom-code
-        
     },// end of ready
     
     attached: function () {
@@ -115,6 +109,10 @@ Polymer({
         
         //@master-has-been-attached-custom-code
         
+    },
+
+    _chartEntityChanged: function (_currBindingEntity) {
+        this.$.chart.repaint();
     },
     
     /**
