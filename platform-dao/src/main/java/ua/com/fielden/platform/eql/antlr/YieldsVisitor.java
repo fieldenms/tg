@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.antlr;
 
 import org.antlr.v4.runtime.Token;
+import ua.com.fielden.platform.eql.antlr.exceptions.EqlSyntaxException;
 import ua.com.fielden.platform.eql.antlr.tokens.AsRequiredToken;
 import ua.com.fielden.platform.eql.antlr.tokens.AsToken;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
@@ -63,7 +64,7 @@ final class YieldsVisitor extends AbstractEqlVisitor<YieldsVisitor.Result> {
                 alias = tok.alias;
                 hint = true;
             }
-            default -> throw new EqlParseException("Unexpected token: %s".formatted(token));
+            default -> throw new EqlSyntaxException("Unexpected token: %s".formatted(token));
         }
 
         return new Yield1(operand, alias, hint);

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.antlr;
 
 import org.antlr.v4.runtime.Token;
+import ua.com.fielden.platform.eql.antlr.exceptions.EqlSyntaxException;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
@@ -83,8 +84,8 @@ abstract class AbstractEqlVisitor<T> extends EQLBaseVisitor<T> {
     }
 
     // a generic return type is needed to be able to use this method in switch expressions
-    protected static <T> T unexpectedToken(final Token token) throws EqlParseException {
-        throw new EqlParseException("Unexpected token: %s".formatted(token.getText()));
+    protected static <T> T unexpectedToken(final Token token) throws EqlSyntaxException {
+        throw new EqlSyntaxException("Unexpected token: %s".formatted(token.getText()));
     }
 
 }
