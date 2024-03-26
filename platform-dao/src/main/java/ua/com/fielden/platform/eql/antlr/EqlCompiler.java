@@ -5,6 +5,7 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
+import ua.com.fielden.platform.eql.antlr.exceptions.EqlCompilationException;
 import ua.com.fielden.platform.eql.antlr.tokens.PropToken;
 import ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource;
 import ua.com.fielden.platform.eql.antlr.tokens.util.TokensFormatter;
@@ -114,21 +115,21 @@ public final class EqlCompiler {
      * @param tokenSource  source of tokens representing the expression to compile
      * @return  compilation result
      */
-    public EqlCompilationResult compile(final ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource tokenSource) {
+    public EqlCompilationResult compile(final ListTokenSource tokenSource) {
         final var tokenStream = new CommonTokenStream(tokenSource);
         final var parser = new EQLParser(tokenStream);
 
         parser.addErrorListener(new ThrowingErrorListener(tokenSource));
 
         // parsing stage, results in a complete parse tree
-        final var tree = parser.start();
+        final StartContext tree = parser.start();
 
         // compilation stage
         final var visitor = new Visitor();
         try {
-            return tree.accept(visitor);
+            return visitor.visitStart(tree);
         } catch (final Exception e) {
-            throw new EqlStage0ProcessingException(
+            throw new EqlCompilationException(
                     """
                     Failed to compile an EQL expression.
                     Expression: %s
@@ -153,7 +154,7 @@ public final class EqlCompiler {
         if (resultType.isInstance(result)) {
             return (T) result;
         }
-        throw new RuntimeException("Expected EQL expression of type %s but was: %s".formatted(
+        throw new EqlCompilationException("Expected EQL expression of type %s but was: %s".formatted(
                 resultType.getSimpleName(), result.getClass().getSimpleName()));
     }
 
