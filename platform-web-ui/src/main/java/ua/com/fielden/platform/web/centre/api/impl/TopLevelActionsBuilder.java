@@ -8,6 +8,7 @@ import java.util.function.BiConsumer;
 import org.apache.commons.lang3.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -167,14 +168,20 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
         return new ResultSetBuilder<>(builder).setHeight(height);
     }
 
+    @Deprecated
     @Override
     public IResultSetBuilder3Ordering<T> addProp(final String propName) {
-        return new ResultSetBuilder<>(builder).addProp(propName);
+        return new ResultSetBuilder<>(builder).addProp(propName, true);
     }
 
     @Override
-    public IResultSetBuilder4aWidth<T> addProp(final PropDef<?> propDef) {
-        return new ResultSetBuilder<>(builder).addProp(propDef);
+    public IResultSetBuilder3Ordering<T> addProp(final IConvertableToPath prop, final boolean presentByDefault) {
+        return new ResultSetBuilder<>(builder).addProp(prop.toPath(), presentByDefault);
+    }
+
+    @Override
+    public IResultSetBuilder4aWidth<T> addProp(final PropDef<?> propDef, final boolean presentByDefault) {
+        return new ResultSetBuilder<>(builder).addProp(propDef, presentByDefault);
     }
 
     @Override
