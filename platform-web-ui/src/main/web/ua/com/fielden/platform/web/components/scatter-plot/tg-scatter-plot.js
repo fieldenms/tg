@@ -36,6 +36,8 @@ const template = html`
             stroke: #e3e3e3;
         }
         .dot {
+            stroke: black;
+            stroke-width: 1px;
             fill: steelblue;
             vector-effect: non-scaling-stroke;
         }

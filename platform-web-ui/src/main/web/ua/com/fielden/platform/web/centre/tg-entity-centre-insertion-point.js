@@ -246,6 +246,24 @@ Polymer({
             observer: '_updateElementWithAllRetrievedEntities',
             notify: true
         },
+
+        /**
+         * Rendering hints of the data page retrieved by centre on run or refresh 
+         */
+        renderingHints: {
+            type: Array,
+            observer: '_updateElementWithRenderingHints',
+            notify: true
+        },
+
+        /**
+         * Rendering hints of all data set retrieved by entity centre. (It is the same as rendering hints in case if centre wasn't configured with retrieveAll option, otherwise it contains rendering  hints of all data set from all pages).
+         */
+        allRenderingHints: {
+            type: Array,
+            observer: '_updateElementWithAllRenderingHints',
+            notify: true
+        },
         /**
          * Summary entity retrieved when running centre that has this insertion point.
          */
@@ -391,9 +409,21 @@ Polymer({
         }
     },
 
+    _updateElementWithAllRenderingHints: function (newValue, oldValue) {
+        if (this._element) {
+            this._element.allRenderingHints = newValue;
+        }
+    },
+
     _updateElementWithRetrievedEntities: function (newValue, oldValue) {
         if (this._element) {
             this._element.retrievedEntities = newValue;
+        }
+    },
+
+    _updateElementWithRenderingHints: function (newValue, oldValue) {
+        if (this._element) {
+            this._element.renderingHints = newValue;
         }
     },
 
@@ -456,6 +486,14 @@ Polymer({
                         self.allRetrievedEntities = this.allRetrievedEntities;
                     });
                     self._element.allRetrievedEntities = self.allRetrievedEntities;
+                    self._element.addEventListener('rendering-hints-changed', function (e) {
+                        self.renderingHints = this.renderingHints;
+                    });
+                    self._element.renderingHints = self.renderingHints;
+                    self._element.addEventListener('all-rendering-hints-changed', function (ev) {
+                        self.allRenderingHints = this.allRenderingHints;
+                    });
+                    self._element.allRenderingHints =self.allRenderingHints;
                     self._element.addEventListener('retrieved-totals-changed', function (ev) {
                         self.retrievedTotals = this.retrievedTotals;
                     });

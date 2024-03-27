@@ -339,6 +339,22 @@ const TgEntityMasterBehaviorImpl = {
             type: Array,
             notify: true
         },
+
+        /**
+         * Rendering hints of the data page retrieved by centre on run or refresh 
+         */
+        renderingHints: {
+            type: Array,
+            notify: true
+        },
+
+        /**
+         * Rendering hints of all data set retrieved by entity centre. (It is the same as rendering hints in case if centre wasn't configured with retrieveAll option, otherwise it contains rendering  hints of all data set from all pages).
+         */
+        allRenderingHints: {
+            type: Array,
+            notify: true
+        },
         /**
          * Summary entity retrieved when running centre that has this insertion point.
          */
