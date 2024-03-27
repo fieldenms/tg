@@ -29,7 +29,13 @@ import ua.com.fielden.platform.eql.stage3.sources.ISource3;
  * A structure used for representing queries in the FROM/JOIN statements.
  * Technically these queries are sub queries from SQL point of view, but the nomenclature of the Sub-Query is reserved for sub queries in other parts (i.e., not FROM/JOIN).
  * <p>
- * The specificity of this structure pertains to the fact that in case of no explicit yields or {@code yieldAll}, yields are derived from the main source of the query. No fetch models affect this.
+ * Yield processing is subject to the following rules:
+ * <ul>
+ *   <li> In case of no explicit yields or {@code yieldAll}, yields are derived from the main source of the query. No fetch models affect this.
+ *   <li> In case of a single unaliased yield when the query result is an entity type, alias ID is used.
+ * </ul>
+ *
+ * @author TG Team
  */
 public class SourceQuery1 extends AbstractQuery1 implements ITransformableFromStage1To2<SourceQuery2> {
 

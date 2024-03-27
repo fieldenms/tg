@@ -34,8 +34,13 @@ import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 /**
  * A structure used for representing the most outer query that is used to actually execute to get some data out.
  * <p>
- * The most important fact about yields in this structure is that fetch models are used for auto-yielding in case of no explicit yields or {@code yieldAll}.
+ * Yield processing is subject to the following rules:
+ * <ul>
+ *   <li> In case of no explicit yields or {@code yieldAll}, fetch models are used for auto-yielding.
+ *   <li> In case of a single unaliased yield when the query result is an entity type, alias ID is used.
+ * </ul>
  *
+ * @author TG Team
  */
 public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromStage1To2<ResultQuery2> {
 

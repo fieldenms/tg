@@ -20,13 +20,22 @@ import static ua.com.fielden.platform.eql.stage1.sundries.Yield1.ABSENT_ALIAS;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
 /**
- * A structure used for representing queries in WHERE/ON conditions, yielding, grouping, and ordering.
+ * Represents a query used in the role of an operand.
+ * <p>
+ * Examples:
+ * {@snippet :
+ * prop("id").eq().allOfModels(subQuery1, subQuery2)
+ * val(1).in().model(subQuery)
+ * where().model(subQuery).isNotNull();
+ * }
+ * <p>
  * The only exception is the EXISTS statement, which is represented by {@link SubQueryForExists1}.
  * <p>
  * The specificity of this structure pertains to the processing of yields.
- * In case of no explicit yields, it is expected that query result is entity (i.e., contains ID), which can be auto-yielded.
- * Otherwise the exception is thrown.
+ * In case of no explicit yields, it is expected that the query result is an entity (i.e., contains ID), which can be auto-yielded.
+ * Otherwise, an exception is thrown.
  *
+ * @author TG Team
  */
 public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuery2> {
 

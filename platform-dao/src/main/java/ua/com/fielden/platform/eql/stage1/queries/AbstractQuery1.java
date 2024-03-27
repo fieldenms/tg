@@ -52,7 +52,7 @@ import static ua.com.fielden.platform.eql.stage2.conditions.Conditions2.conditio
  * There are four kinds of structures for representing queries depending on its usage:
  * <ol>
  *  <li> Result query {@link ResultQuery1} - the most outer query that is used to actually execute to get some data out.
- *  <li> Source query (@link SourceQuery1} - a query that is a source for another query (i.e., select from (select ..)).
+ *  <li> Source query {@link SourceQuery1} - a query that is a source for another query (i.e., select from (select ..)).
  *  <li> Sub query {@link SubQuery1} - queries that are not used as source queries, but are used in WHERE/ON conditions, yielding, grouping, and ordering.
  *  <li> Exists sub query {@link SubQueryForExists1} - is a kind of Sub queries that don't require the yield portion, which effectively means they are used for EXISTS predicate only.
  * </ol>
