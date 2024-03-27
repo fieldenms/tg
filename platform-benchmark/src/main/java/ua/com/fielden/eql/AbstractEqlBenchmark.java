@@ -2,6 +2,7 @@ package ua.com.fielden.eql;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import org.hibernate.Hibernate;
 import org.hibernate.type.YesNoType;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.infra.Blackhole;
@@ -13,6 +14,7 @@ import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.meta.SimpleUserFilter;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
+import ua.com.fielden.platform.persistence.HibernateHelpers;
 import ua.com.fielden.platform.persistence.types.*;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
@@ -324,7 +326,7 @@ public abstract class AbstractEqlBenchmark {
         hibTypeDefaults.put(Colour.class, ColourType.class);
         hibTypeDefaults.put(Hyperlink.class, HyperlinkType.class);
 
-        DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, injector, PlatformTestDomainTypes.entityTypes, H2);
+        DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, injector, PlatformTestDomainTypes.entityTypes, HibernateHelpers.getDialect(H2));
         DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
     }
 
