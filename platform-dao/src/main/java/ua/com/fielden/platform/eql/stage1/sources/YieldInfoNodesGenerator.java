@@ -1,18 +1,5 @@
 package ua.com.fielden.platform.eql.stage1.sources;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyMap;
-import static java.util.stream.Collectors.toList;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
@@ -21,30 +8,36 @@ import ua.com.fielden.platform.eql.stage2.operands.AbstractSingleOperand2;
 import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.sundries.Yield2;
 
+import java.util.*;
+import java.util.Map.Entry;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyMap;
+import static java.util.stream.Collectors.toSet;
+
 public class YieldInfoNodesGenerator {
 
     private YieldInfoNodesGenerator() {}
 
     public static Collection<YieldInfoNode> generate(final List<SourceQuery2> models) {
-        final List<YieldInfoTail> yieldsInfo = new ArrayList<>();
-        for (final YieldInfo yield : generateYieldInfos(models)) {
-            yieldsInfo.add(new YieldInfoTail(asList(yield.name().split("\\.")), yield.propType(), yield.nonnullable()));
-        }
+        final List<YieldInfoTail> yieldsInfo = generateYieldInfos(models).stream()
+                .map(yield -> new YieldInfoTail(asList(yield.name().split("\\.")), yield.propType(), yield.nonnullable()))
+                .toList();
 
         return group(yieldsInfo).values();
     }
 
     private static List<YieldInfo> generateYieldInfos(final List<SourceQuery2> models) {
         if (models.size() == 1) {
-            return models.get(0).yields.getYields().stream().map(yield -> new YieldInfo(yield.alias, yield.operand.type(), determineNonnullability(new YieldAndConditions(yield, models.get(0).whereConditions)))).collect(toList());
+            return models.getFirst().yields.getYields().stream()
+                    .map(yield -> new YieldInfo(yield.alias, yield.operand.type(), determineNonnullability(new YieldAndConditions(yield, models.getFirst().whereConditions))))
+                    .toList();
         } else {
-            final List<YieldInfo> result = new ArrayList<>();
             final Map<String, List<YieldAndConditions>> yieldMatrix = generateYieldMatrixFromQueryModels(models);
             validateYieldsMatrix(yieldMatrix, models.size());
-            for (final Entry<String, List<YieldAndConditions>> yieldEntry : yieldMatrix.entrySet()) {
-                result.add(new YieldInfo(yieldEntry.getKey(), determinePropType(yieldEntry.getValue()), determineNonnullability(yieldEntry.getValue())));
-            }
-            return result;
+            return yieldMatrix.entrySet().stream()
+                    .map(yieldEntry -> new YieldInfo(yieldEntry.getKey(), determinePropType(yieldEntry.getValue()), determineNonnullability(yieldEntry.getValue())))
+                    .toList();
         }
     }
 
@@ -62,12 +55,10 @@ public class YieldInfoNodesGenerator {
     }
 
     private static PropType determinePropType(final List<YieldAndConditions> yieldVariants) {
-        final Set<PropType> propTypes = new HashSet<>();
-        for (final YieldAndConditions yieldVariant : yieldVariants) {
-            if (yieldVariant.yield.operand.type() != null) {
-                propTypes.add(yieldVariant.yield.operand.type());
-            }
-        }
+        final Set<PropType> propTypes = yieldVariants.stream()
+                .map(yv -> yv.yield.operand.type())
+                .filter(Objects::nonNull)
+                .collect(toSet());
 
         if (propTypes.isEmpty()) {
             return null;
