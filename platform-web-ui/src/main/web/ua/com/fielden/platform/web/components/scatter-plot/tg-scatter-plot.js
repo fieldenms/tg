@@ -39,6 +39,7 @@ const template = html`
             stroke: black;
             stroke-width: 1px;
             fill: steelblue;
+            cursor: pointer;
             vector-effect: non-scaling-stroke;
         }
         .chart-label,

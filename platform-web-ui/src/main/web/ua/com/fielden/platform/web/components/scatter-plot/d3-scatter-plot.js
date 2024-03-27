@@ -392,7 +392,11 @@ class ScatterPlot {
     }
 
     _insertNewData(selection) {
-        selection.append("path").attr("class", "dot").call(this._updateData.bind(this));
+        selection.append("path").attr("class", "dot").on("click", d => {
+            if (d3.event.button === 0 ) {
+                this._options.click(d.data, d.idx);
+            }
+        }).call(this._updateData.bind(this));
     }
 
     _updateData(selection) {
