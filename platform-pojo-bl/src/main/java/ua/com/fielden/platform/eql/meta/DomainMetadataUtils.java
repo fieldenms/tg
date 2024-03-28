@@ -72,7 +72,9 @@ public class DomainMetadataUtils {
                 return (ExpressionModel) exprField.get(null);
             }
         } catch (final Exception e) {
-            throw new EqlMetadataGenerationException(format("Can't extract hard-coded expression model for prop [%s] due to: [%s]", calculatedPropfield.getName(), e.getMessage()));
+            throw new EqlMetadataGenerationException(
+                    format("Can't extract hard-coded expression model for prop [%s] due to: [%s]", calculatedPropfield.getName(), e.getMessage()),
+                    e);
         }
     }
 

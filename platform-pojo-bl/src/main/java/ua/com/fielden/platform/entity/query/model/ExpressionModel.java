@@ -1,9 +1,8 @@
 package ua.com.fielden.platform.entity.query.model;
 
-import java.util.List;
-
-import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
-import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.eql.antlr.EQLLexer;
+import ua.com.fielden.platform.eql.antlr.tokens.ValToken;
+import ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource;
 
 /**
  * Represents a computational model for expressions, which can be used together with entity query API.
@@ -13,14 +12,19 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class ExpressionModel extends AbstractModel {
 
-    protected ExpressionModel() {
-    }
-
-    public ExpressionModel(final List<Pair<TokenCategory, Object>> tokens) {
+    public ExpressionModel(final ListTokenSource tokens) {
         super(tokens);
     }
 
+    /**
+     * Determines whether this model has a simple form like: {@code expr val(x) end}.
+     */
     public boolean containsSingleValueToken() {
-        return getTokens().size() == 1 && getTokens().get(0).getKey() == TokenCategory.VAL;
+        final var tokens = tokenSource.tokens();
+        // Not the most robust solution but it is simple.
+        // Ideally, the callers of this method would rely on some mechanism of "expression simplification".
+        // TODO Adjust after any change to EQL's grammar that affects this kind of expressions.
+        return tokens.size() == 3 && tokens.get(1) instanceof ValToken;
     }
+
 }

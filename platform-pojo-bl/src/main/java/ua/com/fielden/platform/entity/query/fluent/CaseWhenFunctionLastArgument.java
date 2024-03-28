@@ -10,22 +10,22 @@ abstract class CaseWhenFunctionLastArgument<T, ET extends AbstractEntity<?>> //
 		extends ExprOperand<ICaseWhenFunctionEnd<T>, IExprOperand0<ICaseWhenFunctionEnd<T>, ET>, ET> //
 		implements ICaseWhenFunctionLastArgument<T, ET> {
 
-    protected CaseWhenFunctionLastArgument(final Tokens tokens) {
-        super(tokens);
-    }
-    
-	protected abstract T nextForCaseWhenFunctionLastArgument(final Tokens tokens);
+	protected CaseWhenFunctionLastArgument(final EqlSentenceBuilder builder) {
+		super(builder);
+	}
+
+	protected abstract T nextForCaseWhenFunctionLastArgument(final EqlSentenceBuilder builder);
 
 	@Override
-	protected IExprOperand0<ICaseWhenFunctionEnd<T>, ET> nextForExprOperand(final Tokens tokens) {
-		return new ExprOperand0<ICaseWhenFunctionEnd<T>, ET>(tokens) {
+	protected IExprOperand0<ICaseWhenFunctionEnd<T>, ET> nextForExprOperand(final EqlSentenceBuilder builder) {
+		return new ExprOperand0<ICaseWhenFunctionEnd<T>, ET>(builder) {
 			@Override
-			protected ICaseWhenFunctionEnd<T> nextForExprOperand0(final Tokens tokens) {
-				return new CaseWhenFunctionEnd<T>(tokens) {
+			protected ICaseWhenFunctionEnd<T> nextForExprOperand0(final EqlSentenceBuilder builder) {
+				return new CaseWhenFunctionEnd<T>(builder) {
 
 					@Override
-					protected T nextForCaseWhenFunctionEnd(final Tokens tokens) {
-						return CaseWhenFunctionLastArgument.this.nextForCaseWhenFunctionLastArgument(tokens);
+					protected T nextForCaseWhenFunctionEnd(final EqlSentenceBuilder builder) {
+						return CaseWhenFunctionLastArgument.this.nextForCaseWhenFunctionLastArgument(builder);
 					}
 
 				};
@@ -35,14 +35,15 @@ abstract class CaseWhenFunctionLastArgument<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
-	protected ICaseWhenFunctionWhen<T, ET> nextForSingleOperand(final Tokens tokens) {
-		return new CaseWhenFunctionWhen<T, ET>(tokens) {
+	protected ICaseWhenFunctionWhen<T, ET> nextForSingleOperand(final EqlSentenceBuilder builder) {
+		return new CaseWhenFunctionWhen<T, ET>(builder) {
 
 			@Override
-			protected T nextForCaseWhenFunctionEnd(final Tokens tokens) {
-				return CaseWhenFunctionLastArgument.this.nextForCaseWhenFunctionLastArgument(tokens);
+			protected T nextForCaseWhenFunctionEnd(final EqlSentenceBuilder builder) {
+				return CaseWhenFunctionLastArgument.this.nextForCaseWhenFunctionLastArgument(builder);
 			}
 
 		};
 	}
+
 }

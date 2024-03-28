@@ -6,20 +6,21 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionOperand;
 
 public final class StandAloneConditionOperand<ET extends AbstractEntity<?>> //
-		extends WhereWithoutNesting<IStandAloneConditionComparisonOperator<ET>, IStandAloneConditionCompoundCondition<ET>, ET> //
-		implements IStandAloneConditionOperand<ET> {
+        extends WhereWithoutNesting<IStandAloneConditionComparisonOperator<ET>, IStandAloneConditionCompoundCondition<ET>, ET> //
+        implements IStandAloneConditionOperand<ET> {
 
-    public StandAloneConditionOperand(final Tokens tokens) {
-        super(tokens);
+    public StandAloneConditionOperand(final EqlSentenceBuilder builder) {
+        super(builder);
     }
-    
-	@Override
-	protected IStandAloneConditionCompoundCondition<ET> nextForConditionalOperand(final Tokens tokens) {
-		return new StandAloneConditionCompoundCondition<ET>(tokens);
-	}
 
-	@Override
-	protected IStandAloneConditionComparisonOperator<ET> nextForSingleOperand(final Tokens tokens) {
-		return new StandAloneConditionComparisonOperator<ET>(tokens);
-	}
+    @Override
+    protected IStandAloneConditionCompoundCondition<ET> nextForConditionalOperand(final EqlSentenceBuilder builder) {
+        return new StandAloneConditionCompoundCondition<ET>(builder);
+    }
+
+    @Override
+    protected IStandAloneConditionComparisonOperator<ET> nextForSingleOperand(final EqlSentenceBuilder builder) {
+        return new StandAloneConditionComparisonOperator<ET>(builder);
+    }
+
 }

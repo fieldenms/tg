@@ -5,24 +5,25 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionCompoundCondition1;
 
 abstract class FunctionComparisonOperator1<T, ET extends AbstractEntity<?>> //
-		extends ComparisonOperator<IFunctionCompoundCondition1<T, ET>, ET> //
-		implements IFunctionComparisonOperator1<T, ET> {
+        extends ComparisonOperator<IFunctionCompoundCondition1<T, ET>, ET> //
+        implements IFunctionComparisonOperator1<T, ET> {
 
-    protected FunctionComparisonOperator1(final Tokens tokens) {
-        super(tokens);
+    protected FunctionComparisonOperator1(final EqlSentenceBuilder builder) {
+        super(builder);
     }
-    
-	protected abstract T nextForFunctionComparisonOperator1(final Tokens tokens);
 
-	@Override
-	protected IFunctionCompoundCondition1<T, ET> nextForComparisonOperator(final Tokens tokens) {
-		return new FunctionCompoundCondition1<T, ET>(tokens) {
+    protected abstract T nextForFunctionComparisonOperator1(final EqlSentenceBuilder builder);
 
-			@Override
-			protected T nextForFunctionCompoundCondition1(final Tokens tokens) {
-				return FunctionComparisonOperator1.this.nextForFunctionComparisonOperator1(tokens);
-			}
+    @Override
+    protected IFunctionCompoundCondition1<T, ET> nextForComparisonOperator(final EqlSentenceBuilder builder) {
+        return new FunctionCompoundCondition1<T, ET>(builder) {
 
-		};
-	}
+            @Override
+            protected T nextForFunctionCompoundCondition1(final EqlSentenceBuilder builder) {
+                return FunctionComparisonOperator1.this.nextForFunctionComparisonOperator1(builder);
+            }
+
+        };
+    }
+
 }
