@@ -28,7 +28,7 @@ const template = html`
         _process-saver-error="[[_processSaverError]]"
         _saver-loading="{{_saverLoading}}">
         <!--START OF GENERATED TG-ENTITY-MASTER DOM CONTENT-->
-        <tg-scatter-plot id="chart" class="chart-deck" chart-data="[[retrievedEntities]]" options="[[options]]" rendering-hints="[[renderingHints]]" legend="[[legendItems]]"></tg-scatter-plot>
+        <tg-scatter-plot id="chart" class="chart-deck" chart-data="[[retrievedEntities]]" options="[[options]]" rendering-hints="[[renderingHints]]" legend-items="[[legendItems]]"></tg-scatter-plot>
         <!--@tg-entity-master-content-->
         <!--END OF GENERATED TG-ENTITY-MASTER DOM CONTENT-->
     </tg-entity-master>`;

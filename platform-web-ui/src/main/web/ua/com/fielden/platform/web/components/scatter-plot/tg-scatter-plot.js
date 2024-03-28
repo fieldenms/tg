@@ -39,8 +39,11 @@ const template = html`
             stroke: black;
             stroke-width: 1px;
             fill: steelblue;
-            cursor: pointer;
             vector-effect: non-scaling-stroke;
+        }
+        .dot:not(.legend-path):hover {
+            stroke: white;
+            cursor: pointer;
         }
         .chart-label,
         .x-axis-label,
@@ -54,18 +57,42 @@ const template = html`
         .chart-label {
             font-weight: bold;
         }
+        .legend-panel {
+            /* margin-top: 8px;
+            margin-bottom: 25px; */
+            @apply --layout-horizontal;
+            @apply --layout-center-justified;
+            @apply --layout-wrap;
+        }
+        .legend-item {
+            font-size: smaller;
+            margin-right: 16px;
+            @apply --layout-horizontal;
+            @apply --layout-center;
+        }
+        .legend-shape {
+            width: 30px;
+            height: 30px;
+            margin-right: 8px;
+            @apply --layout-center-center;
+        }
+        .legend-path {
+            transform: translate(15px, 15px);
+        }
     </style>
 
     <!-- local DOM for your element -->
     <div id="chartContainer">
         <svg id="chart" class="scatter-plot"></svg>
     </div>
-    <template is="dom-repeat" items="[[legendItems]]" on-dom-change="_legendItemsChanged">
-        <div class="legend-item">
-            <svg><path d="[[_calcLegendItemPath(item.style)]]" style$="[[_calcLegendItemStyle(item.style)]]"></svg>
-            <div>[[item.title]]</div>
-        </div>
-    </template>`;
+    <div id="legend" class="legend-panel" style$="[[_calcLegendStyle(_chartStyles)]]">
+        <template is="dom-repeat" items="[[legendItems]]" on-dom-change="_legendItemsChanged">
+            <div class="legend-item">
+                <svg class="legend-shape"><path class="dot legend-path" d$="[[_calcLegendItemPath(item.style)]]" style$="[[_calcLegendItemStyle(item.style)]]"></svg>
+                <div>[[item.title]]</div>
+            </div>
+        </template>
+    </div>`;
 
 template.setAttribute('strip-whitespace', '');
 
@@ -186,7 +213,7 @@ export class TgScatterPlot extends mixinBehaviors([IronResizableBehavior], Polym
     }
 
     _calcLegendItemPath (style) {
-        return d3.scatterPlot.shapes[style.shape];
+        return d3.symbol().type(d3.scatterPlot.shapes[style.shape]).size(style.size)();
     } 
     
     _calcLegendItemStyle (style) {
