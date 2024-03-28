@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.view.master.scatterplot.api;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 /**
  * A contract for configuring tooltip on scatter plot
@@ -15,5 +16,5 @@ public interface IScatterPlotTooltip<T extends AbstractEntity<?>> extends IScatt
      * @param propertyName
      * @return
      */
-    IScatterPlotTooltip<T> addPropertyToTooltip(String propertyName);
+    IScatterPlotTooltip<T> addPropertyToTooltip(IConvertableToPath propertyName);
 }

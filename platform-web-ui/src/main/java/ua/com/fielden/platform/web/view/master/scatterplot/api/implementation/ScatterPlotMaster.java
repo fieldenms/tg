@@ -6,6 +6,7 @@ import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
@@ -134,8 +135,8 @@ public class ScatterPlotMaster<T extends AbstractEntity<?>> implements IMaster<T
                 .orElse(getEntityTitleAndDesc(chartBuilder.getChartEntityType()).getKey());
     }
 
-    private String generateTooltipProps(final List<String> tooltipProperties) {
-        return "[" + tooltipProperties.stream().map(prop -> "'" + prop + "'").collect(Collectors.joining(",")) + "]";
+    private String generateTooltipProps(final List<IConvertableToPath> tooltipProperties) {
+        return "[" + tooltipProperties.stream().map(prop -> "'" + prop.toPath() + "'").collect(Collectors.joining(",")) + "]";
     }
 
     private String generateLegendItem(final Pair<Map<String, String>, String> legendItem) {

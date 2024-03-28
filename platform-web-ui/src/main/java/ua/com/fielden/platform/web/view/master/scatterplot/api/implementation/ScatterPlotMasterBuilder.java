@@ -29,7 +29,7 @@ public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IS
     private String xAxisTitle;
     private String yAxisTitle;
     private EntityActionConfig action;
-    private final List<String> tooltipPropertyNames = new ArrayList<>();
+    private final List<IConvertableToPath> tooltipPropertyNames = new ArrayList<>();
     private final List<Pair<Map<String, String>, String>> legendItems = new ArrayList<>();
 
 
@@ -84,7 +84,7 @@ public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IS
     }
 
     @Override
-    public IScatterPlotTooltip<T> addPropertyToTooltip(final String propertyName) {
+    public IScatterPlotTooltip<T> addPropertyToTooltip(final IConvertableToPath propertyName) {
         this.tooltipPropertyNames.add(propertyName);
         return this;
     }
@@ -147,7 +147,7 @@ public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IS
         return stylePropertyName;
     }
 
-    public List<String> getTooltipProperties() {
+    public List<IConvertableToPath> getTooltipProperties() {
         return Collections.unmodifiableList(tooltipPropertyNames);
     }
 

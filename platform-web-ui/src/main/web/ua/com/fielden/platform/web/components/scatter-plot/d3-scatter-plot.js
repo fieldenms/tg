@@ -71,7 +71,8 @@ class ScatterPlot {
                 valueProp: "valueProp",
                 styleProp: "styleProp"
             },
-            click: (d, idx) => { },
+            tooltip: (d) => {return ""},
+            click: (d) => { },
         };
         this._options = options ? merge2LevelData(this._options, options) : this._options;
         this._data = [];
@@ -394,7 +395,7 @@ class ScatterPlot {
     _insertNewData(selection) {
         selection.append("path").attr("class", "dot").on("click", d => {
             if (d3.event.button === 0 ) {
-                this._options.click(d.data, d.idx);
+                this._options.click(d.data);
             }
         }).call(this._updateData.bind(this));
     }
@@ -402,6 +403,7 @@ class ScatterPlot {
     _updateData(selection) {
         selection
             .attr("transform", d => `translate(${this._xs(value(this._options.dataPropertyNames.valueProp, d.data))}, ${this._ys(value(this._options.dataPropertyNames.categoryProp, d.data))})`)
+            .attr("tooltip-text", d => this._options.tooltip(d.data))
             .attr("d", d3.symbol().type(d => {
                 return Symbols[d.renderingHints.shape] || Symbols.circle; //Default shape is circle
             }).size(d => {

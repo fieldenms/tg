@@ -1,10 +1,11 @@
 import { TgMasterWithChartBehavior} from '/resources/master/tg-master-with-chart-behavior.js';
+import { TgAppConfig } from '/app/tg-app-config.js';
 
 const getTooltipValueForEntity = function (entity) {
-    const keyValue = value.toString();
+    const keyValue = entity.toString();
     let desc = null;
     try {
-        desc = value.get("desc");
+        desc = entity.get("desc");
     } catch (ex) {
         desc = "";
     }
@@ -53,6 +54,7 @@ const TgScatterPlotMasterBehaviorImpl = {
     },
 
     ready: function () {
+        this._appConfig = new TgAppConfig();
         this._click = this._click.bind(this);
         this._tooltip = this._tooltip.bind(this);
         this._getCategoryRange = this._getCategoryRange.bind(this);
@@ -94,13 +96,15 @@ const TgScatterPlotMasterBehaviorImpl = {
             let value = entity.get(prop);
             if (this._reflector().isEntity(value)) {
                 value = getTooltipValueForEntity(value);
+            } else {
+                value = this._reflector().tg_toString(value, entity.constructor.prototype.type.call(entity), prop, { display: true, locale: this._appConfig.locale });
             }
-            if (title) {
-                res += `<tr><td>${title}</td><td>${value}</td></tr>`;
+            if (title && value) {
+                res += `<tr><td valign="top" style="padding-right:10px;">${title}:</td><td>${value}</td></tr>`;
             }
         });
         if (this.actions && this.actions[0]) {
-            res += `<tr><td>With action</td><td>${getActionTooltip(this.actions[0])}</td></tr>`
+            res += `<tr><td valign="top" style="padding-right:10px;">With action:</td><td>${getActionTooltip(this.actions[0])}</td></tr>`
         }
         return res ? `<table>${res}</table>` : "";
     }
