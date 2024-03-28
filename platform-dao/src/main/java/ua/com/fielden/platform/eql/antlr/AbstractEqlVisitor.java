@@ -16,17 +16,12 @@ import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.Y;
 import static ua.com.fielden.platform.eql.stage1.operands.Value1.nullValue;
 import static ua.com.fielden.platform.eql.stage1.operands.Value1.value;
 
-abstract class AbstractEqlVisitor<T> extends EQLBaseVisitor<T> {
+abstract class AbstractEqlVisitor<T> extends StrictEQLBaseVisitor<T> {
 
     protected final QueryModelToStage1Transformer transformer;
 
     AbstractEqlVisitor(QueryModelToStage1Transformer transformer) {
         this.transformer = transformer;
-    }
-
-    @Override
-    protected T defaultResult() {
-        throw new UnsupportedOperationException();
     }
 
     protected Object getParamValue(final String paramName) {

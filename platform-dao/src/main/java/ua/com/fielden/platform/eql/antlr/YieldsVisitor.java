@@ -32,7 +32,7 @@ final class YieldsVisitor extends AbstractEqlVisitor<YieldsVisitor.Result> {
     @Override
     public Result visitYieldSome(final YieldSomeContext ctx) {
         // no need to process the Model context since that information is represented by the resulting type of a fluent API method call chain
-        return ctx.yieldTail().accept(new EQLBaseVisitor<>() {
+        return ctx.yieldTail().accept(new StrictEQLBaseVisitor<>() {
             @Override
             public Result visitYield1Tail(final Yield1TailContext $) {
                 final var operand = ctx.firstYield.accept(new YieldOperandVisitor(transformer));
