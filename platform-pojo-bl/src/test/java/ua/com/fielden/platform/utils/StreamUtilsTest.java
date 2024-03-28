@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.junit.Test;
@@ -272,6 +273,40 @@ public class StreamUtilsTest {
                 transpose(matrix).toList());
 
         assertEquals(List.of(), transpose(List.of()).toList());
+    }
+
+    @Test
+    public void isSingleElementStream_returns_true_for_streams_with_one_element() {
+        assertTrue(isSingleElementStream(Stream.of("x")));
+        assertTrue(isSingleElementStream(IntStream.of(5)));
+    }
+
+    @Test
+    public void isSingleElementStream_returns_false_for_an_empty_stream() {
+        assertFalse(isSingleElementStream(Stream.of()));
+    }
+
+    @Test
+    public void isSingleElementStream_returns_false_for_a_stream_with_multiple_elements() {
+        assertFalse(isSingleElementStream(Stream.of("a", "b")));
+        assertFalse(isSingleElementStream(Stream.of("a", "b").parallel()));
+    }
+
+    @Test
+    public void isMultiElementStream_returns_false_for_streams_with_one_element() {
+        assertFalse(isMultiElementStream(Stream.of("x")));
+        assertFalse(isMultiElementStream(IntStream.of(5)));
+    }
+
+    @Test
+    public void isMultiElementStream_returns_false_for_an_empty_stream() {
+        assertFalse(isMultiElementStream(Stream.of()));
+    }
+
+    @Test
+    public void isMultiElementStream_returns_true_for_a_stream_with_multiple_elements() {
+        assertTrue(isMultiElementStream(Stream.of("a", "b")));
+        assertTrue(isMultiElementStream(Stream.of("a", "b").parallel()));
     }
 
 }

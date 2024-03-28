@@ -342,4 +342,34 @@ public class StreamUtils {
         return transposeBase(source.stream().map(mapper).toList());
     }
 
+    /**
+     * Tests whether a stream contains a single element.
+     * This is a terminal operation on the stream.
+     */
+    public static boolean isSingleElementStream(final BaseStream<?, ?> stream) {
+        final var it = stream.iterator();
+        int i = 0;
+        while (i < 2 && it.hasNext()) {
+            it.next();
+            i += 1;
+        }
+
+        return i == 1;
+    }
+
+    /**
+     * Tests whether a stream contains more than one element.
+     * This is a terminal operation on the stream.
+     */
+    public static boolean isMultiElementStream(final BaseStream<?, ?> stream) {
+        final var it = stream.iterator();
+        int i = 0;
+        while (i < 2 && it.hasNext()) {
+            it.next();
+            i += 1;
+        }
+
+        return i > 1;
+    }
+
 }
