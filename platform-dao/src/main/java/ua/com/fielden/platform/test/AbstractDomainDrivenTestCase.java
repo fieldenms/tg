@@ -50,7 +50,10 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     private static Function<Class<?>, Object> instantiator;
 
     private static final DateTimeFormatter jodaFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
-    private static final DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static final DateFormat DATE_TIME_FORMAT_WITHOUT_SECONDS = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+    private static final DateFormat DATE_TIME_FORMAT_WITHOUT_MILLIS = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static final DateFormat DATE_TIME_FORMAT_WITH_MILLIS = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+    private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
 
     private Session session;
@@ -132,10 +135,38 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
 
     }
 
+    /**
+     * Converts string representation {@code dateTime} to an instance of {@link Date}.
+     * Supported formats:
+     * <ul>
+     *     <li>yyyy-MM-dd</li>
+     *     <li>yyyy-MM-dd HH:mm</li>
+     *     <li>yyyy-MM-dd HH:mm:ss</li>
+     *     <li>yyyy-MM-dd HH:mm:ss.SSS</li>
+     * </ul>
+     *
+     * @param dateTime
+     * @return
+     */
     @Override
     public final Date date(final String dateTime) {
         try {
-            return formatter.parse(dateTime);
+            // has millis part?
+            if (dateTime.indexOf('.') > 0) {
+                return DATE_TIME_FORMAT_WITH_MILLIS.parse(dateTime);
+            }
+            // has time part without seconds?
+            else if (dateTime.lastIndexOf(":") == 13) {
+                return DATE_TIME_FORMAT_WITHOUT_SECONDS.parse(dateTime);
+            }
+            // has time part without millis?
+            else if (dateTime.indexOf(":") > 0) {
+                return DATE_TIME_FORMAT_WITHOUT_MILLIS.parse(dateTime);
+            }
+            // otherwise, assume date without the time part
+            else {
+                return DATE_FORMAT.parse(dateTime);
+            }
         } catch (ParseException e) {
             throw new DomainDriventTestException(format("Could not parse value [%s].", dateTime));
         }

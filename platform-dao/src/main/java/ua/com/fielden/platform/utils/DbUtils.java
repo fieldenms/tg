@@ -79,7 +79,7 @@ public class DbUtils {
     
     /**
      * Drops and creates the specified sequence with new initial value <code>startWithValue</code>.
-     * The specified sequence must exists before using this function.
+     * The specified sequence must exist before using this function.
      * 
      * @param seqName
      * @param startWithValue
