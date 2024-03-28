@@ -176,7 +176,7 @@ public class StreamUtils {
      * @param combine
      * @return
      */
-    public static <X, Y, Z> Stream<Z> zip(final Stream<? extends X> xs, final Stream<? extends Y> ys, final BiFunction<? super X, ? super Y, ? extends Z> combine) {
+    public static <X, Y, Z> Stream<Z> zip(final BaseStream<? extends X, ?> xs, final BaseStream<? extends Y, ?> ys, final BiFunction<? super X, ? super Y, ? extends Z> combine) {
         Objects.requireNonNull(combine);
         final Spliterator<? extends X> xsSpliterator = Objects.requireNonNull(xs).spliterator();
         final Spliterator<? extends Y> ysSpliterator = Objects.requireNonNull(ys).spliterator();
