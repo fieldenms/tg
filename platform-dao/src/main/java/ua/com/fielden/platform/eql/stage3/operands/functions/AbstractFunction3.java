@@ -96,7 +96,7 @@ public abstract class AbstractFunction3 extends AbstractSingleOperand3 {
                     opSql, opSql,
                     opSql, opSql, opSql,
                     opSql);
-        } else if (operand.type() != null && String.class.equals(operand.type())) {
+        } else if (operand.type() != null && String.class.equals(operand.type().javaType())) {
             return operand.sql(metadata);
         } else {
             return "CAST(" + operand.sql(metadata) + " AS VARCHAR(255))";
