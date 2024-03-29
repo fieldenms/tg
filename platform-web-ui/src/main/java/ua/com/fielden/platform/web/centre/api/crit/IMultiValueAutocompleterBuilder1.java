@@ -1,14 +1,14 @@
 package ua.com.fielden.platform.web.centre.api.crit;
 
-import static ua.com.fielden.platform.utils.Pair.pair;
-
-import java.util.stream.Stream;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.IMultiStringDefaultValueAssigner;
+
+import java.util.stream.Stream;
+
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 /**
  *

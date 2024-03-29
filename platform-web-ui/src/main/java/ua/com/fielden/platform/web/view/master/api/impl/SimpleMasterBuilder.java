@@ -182,11 +182,11 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     }
 
     @Override
-    public IWidgetSelector<T> addProp(final String propName) {
+    public IWidgetSelector<T> addProp(final CharSequence propName) {
         widgets.stream().filter(widget -> widget.propertyName.equals(propName)).findFirst().ifPresent(widget -> {
             throw new EntityMasterConfigurationException(format(ERR_WIDGET_IS_ALREADY_PRESENT, propName, this.entityType.getSimpleName()));
         });
-        final WidgetSelector<T> widget = new WidgetSelector<>(this, propName, new WithMatcherCallback());
+        final WidgetSelector<T> widget = new WidgetSelector<>(this, propName.toString(), new WithMatcherCallback());
         widgets.add(widget);
         return widget;
     }

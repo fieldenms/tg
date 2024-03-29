@@ -20,7 +20,6 @@ import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity_centre.review.criteria.DynamicColumnForExport;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -51,22 +50,9 @@ public class DynamicColumnBuilder<T extends AbstractEntity<?>> implements IDynam
 
     /**
      * This is the entry to the Dynamic Column Builder API.
-     * @param type
-     * @param collectionalPropertyName
-     * @return
      */
-    public static <M extends AbstractEntity<?>> IDynamicColumnBuilderGroupProp forProperty(final Class<M> type, final String collectionalPropertyName) {
-        return new DynamicColumnBuilder<M>(type, collectionalPropertyName);
-    }
-
-    /**
-     * This is the entry to the Dynamic Column Builder API.
-     * @param type
-     * @param collectionalPropertyName
-     * @return
-     */
-    public static <M extends AbstractEntity<?>> IDynamicColumnBuilderGroupProp forProperty(final Class<M> type, final IConvertableToPath collectionalPropertyName) {
-        return forProperty(type, collectionalPropertyName.toPath());
+    public static <M extends AbstractEntity<?>> IDynamicColumnBuilderGroupProp forProperty(final Class<M> type, final CharSequence collectionalPropertyName) {
+        return new DynamicColumnBuilder<M>(type, collectionalPropertyName.toString());
     }
 
     private DynamicColumnBuilder(final Class<T> type, final String collectionalPropertyName) {
@@ -107,20 +93,20 @@ public class DynamicColumnBuilder<T extends AbstractEntity<?>> implements IDynam
     }
 
     @Override
-    public IDynamicColumnBuilderAddProp withTooltipProp(final String tooltipProp) {
-        this.tooltipProp = Optional.of(tooltipProp);
+    public IDynamicColumnBuilderAddProp withTooltipProp(final CharSequence tooltipProp) {
+        this.tooltipProp = Optional.of(tooltipProp.toString());
         return this;
     }
 
     @Override
-    public IDynamicColumnBuilderWithTooltipProp withDisplayProp(final String displayProp) {
-        this.displayProp = displayProp;
+    public IDynamicColumnBuilderWithTooltipProp withDisplayProp(final CharSequence displayProp) {
+        this.displayProp = displayProp.toString();
         return this;
     }
 
     @Override
-    public IDynamicColumnBuilderDisplayProp withGroupProp(final String groupProp) {
-        this.groupProp = groupProp;
+    public IDynamicColumnBuilderDisplayProp withGroupProp(final CharSequence groupProp) {
+        this.groupProp = groupProp.toString();
         return this;
     }
 

@@ -1,5 +1,13 @@
 package ua.com.fielden.platform.entity;
 
+import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
+import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
+import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.web.centre.CentreContext;
+
+import java.util.*;
+import java.util.function.BiFunction;
+
 import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toCollection;
@@ -9,20 +17,6 @@ import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoad
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.traversePropPath;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.BiFunction;
-
-import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
-import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
-import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
  * This interface represents an API for context decomposition in order to access its components such as master entity, selected entities and more.
@@ -207,25 +201,12 @@ public interface IContextDecomposer {
     /**
      * Returns <code>true</code> if the chosen property equals to the specified non-null value, <code>false</code> otherwise.
      * Passing <code>null</code> throws an exception.
-     * 
-     * @param value
-     * @return
      */
-    default boolean chosenPropertyEqualsTo(final String value) {
+    default boolean chosenPropertyEqualsTo(final CharSequence value) {
         if (value == null) {
             throw new EntityProducingException("Chosen property should not be compared to null.");
         }
         return value.equals(chosenProperty());
-    }
-
-    /**
-     * The same as {@link #chosenPropertyEqualsTo(String)}, but accepting an argument of type {@link IConvertableToPath}.
-     *
-     * @param path
-     * @return
-     */
-    default boolean chosenPropertyEqualsTo(final IConvertableToPath path) {
-        return chosenPropertyEqualsTo(path.toPath());
     }
 
     /**
