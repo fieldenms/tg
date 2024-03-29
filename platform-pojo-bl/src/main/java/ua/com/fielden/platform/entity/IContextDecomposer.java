@@ -206,7 +206,7 @@ public interface IContextDecomposer {
         if (value == null) {
             throw new EntityProducingException("Chosen property should not be compared to null.");
         }
-        return value.equals(chosenProperty());
+        return value.toString().equals(chosenProperty());
     }
 
     /**

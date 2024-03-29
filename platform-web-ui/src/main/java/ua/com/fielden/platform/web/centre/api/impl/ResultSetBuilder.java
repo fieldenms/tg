@@ -277,7 +277,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     @Override
     public IWithSummary<T> withTooltip(final CharSequence propertyName) {
-        this.tooltipProp = Optional.ofNullable(propertyName.toString());
+        this.tooltipProp = Optional.ofNullable(propertyName).map(CharSequence::toString);
         return this;
     }
 

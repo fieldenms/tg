@@ -105,7 +105,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
             return propertyProviders.containsKey(firstAndRest.getKey())
                     && providerForFirstLevel(firstAndRest.getKey()).shouldFetch(firstAndRest.getValue());
         } else {
-            return propertyProviders.containsKey(dotNotationProperty);
+            return propertyProviders.containsKey(dotNotationProperty.toString());
         }
     }
 
