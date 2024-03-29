@@ -18,22 +18,24 @@ import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 public interface ICriteriaTestUtils {
 
     <T extends AbstractEntity<?>> EnhancedCentreEntityQueryCriteria mockSelectionCrit(final Class<T> root);
+    void mockSelectionCritBindCentreManager(final EnhancedCentreEntityQueryCriteria mockSelectionCrit, final ICentreDomainTreeManagerAndEnhancer centreManager);
     <T> T getInstance(final Class<T> type);
 
     default <T extends AbstractEntity<?>> CentreContextHolder createCentreContextHolderFor(final Class<T> root) {
         return new CentreContextHolder().setCustomObject(mapOf(t2(TYPE_KEY, root)));
     }
 
-    default <T extends AbstractEntity<?>> CentreDomainTreeManagerAndEnhancer createCentreManagerFor(final Class<T> root) {
-        final var centreManager = new CentreDomainTreeManagerAndEnhancer(getInstance(EntityFactory.class), setOf(root));
+    default <T extends AbstractEntity<?>> ICentreDomainTreeManagerAndEnhancer createCentreManagerFor(final Class<T> root) {
+        final ICentreDomainTreeManagerAndEnhancer centreManager = new CentreDomainTreeManagerAndEnhancer(getInstance(EntityFactory.class), setOf(root));
         ((CriteriaRestorerForTestingPurposes) getInstance(ICriteriaEntityRestorer.class)).addCentre(root, centreManager);
         return centreManager;
     }
 
     default <T extends AbstractEntity<?>> EnhancedCentreEntityQueryCriteria mockSelectionCrit(final Class<T> root, final Consumer<ICentreDomainTreeManagerAndEnhancer> enhanceCentreManager) {
         final var mockedSelectionCrit = mockSelectionCrit(root);
-        final var cdtme = createCentreManagerFor(root);
-        enhanceCentreManager.accept(cdtme);
+        final var centreManager = createCentreManagerFor(root);
+        enhanceCentreManager.accept(centreManager);
+        mockSelectionCritBindCentreManager(mockedSelectionCrit, centreManager);
         return mockedSelectionCrit;
     }
 
