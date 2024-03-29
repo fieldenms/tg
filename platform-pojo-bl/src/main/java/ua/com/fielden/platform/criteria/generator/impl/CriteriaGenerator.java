@@ -147,17 +147,6 @@ public class CriteriaGenerator implements ICriteriaGenerator {
     }
 
     /**
-     * Generates Entity Centre criteria entity type with from/to, is/isNot properties; sets the values from {@code centreManager} configuration.
-     * <p>
-     * This method exists for testing purposes only.
-     */
-    public <T extends AbstractEntity<?>> EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>> generateCentreQueryCriteriaForTesting(final Class<T> root, final ICentreDomainTreeManagerAndEnhancer centreManager) {
-        final var managedType = centreManager.getEnhancer().getManagedType(root);
-        final var propsForSelectionCriteria = centreManager.getFirstTick().checkedProperties(root);
-        return generateCentreQueryCriteria(() -> t2(generateCriteriaType(root, propsForSelectionCriteria, managedType), root), centreManager);
-    }
-
-    /**
      * Generates criteria entity type for the specified <code>properties</code> subset and <code>managedType</code>.
      * 
      * @param root -- root type from which <code>managedType</code> has been derived (calculated props added)
