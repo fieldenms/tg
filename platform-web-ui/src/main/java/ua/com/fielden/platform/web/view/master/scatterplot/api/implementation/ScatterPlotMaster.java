@@ -25,6 +25,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.join;
@@ -55,6 +56,8 @@ public class ScatterPlotMaster<T extends AbstractEntity<?>> implements IMaster<T
                 .replace("<!--@tg-entity-master-content-->", actions.getValue().toString())
                 .replace("//generatedPrimaryActions", actions.getKey())
                 .replace("//@ready-callback", readyCallback(scatterPlotMasterBuilder))
+                .replace("@margin", format("%spx %spx %spx %spx;", scatterPlotMasterBuilder.getTopMargin(), scatterPlotMasterBuilder.getRightMargin(),
+                        scatterPlotMasterBuilder.getBottomMargin(), scatterPlotMasterBuilder.getLeftMargin()))
                 .replace("@prefDim", "null")
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", String.valueOf(scatterPlotMasterBuilder.shouldSaveOnActivation()));
@@ -90,12 +93,6 @@ public class ScatterPlotMaster<T extends AbstractEntity<?>> implements IMaster<T
         });
         //Generate options
         final String chartOptions = "{\n"
-                +"     margin: {\n" +
-                "          left: 100,\n" +
-                "          right: 20,\n" +
-                "          top: 40,\n" +
-                "          bottom: 60\n" +
-                "      },"
                 + "    label: '" + getChartTitle(chartBuilder) + "',\n"
                 + "    xAxis: {\n"
                 + "        label: '" + getXAxisTitle(chartBuilder) + "',\n"

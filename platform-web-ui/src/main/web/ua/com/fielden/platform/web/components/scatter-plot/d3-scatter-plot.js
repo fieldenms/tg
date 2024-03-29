@@ -51,9 +51,9 @@ class ScatterPlot {
             width: 35,
             height: 85,
             margin: {
-                top: 40,
-                right: 35,
-                bottom: 45,
+                top: 0,
+                right: 0,
+                bottom: 0,
                 left: 0
             },
             label: "",
@@ -286,20 +286,28 @@ class ScatterPlot {
         return this._chartArea.append("g").attr("class", "axis y-axis").call(this._yAxis);
     }
 
-
-    _setChartLabelData(chartLabel) {
-        chartLabel.text(this._options.label)
-            .attr("x", this._options.margin.left + this._actualWidth / 2)
-            .attr("y", this._options.margin.top - 10);
-    }
-
     _drawChartLabel(container) {
-        return d3.select(container)
+        const lable = d3.select(container)
             .append("text")
             .attr("class", "chart-label")
             .style("text-anchor", "middle")
-            .style("alignment-baseline", "baseline")
-            .call(this._setChartLabelData.bind(this));
+            .style("alignment-baseline", "baseline");
+        setTimeout(() => lable.call(this._setChartLabelData.bind(this)), 1);
+        return lable;
+    }
+
+    _setChartLabelData(chartLable) {
+        chartLable.text(this._options.label)
+            .attr("x", this._options.margin.left + this._actualWidth / 2)
+            .attr("y", this._options.margin.top - 10);
+        this._adjustTopMargin(chartLable);
+    }
+
+    _adjustTopMargin(label) {
+        const labelBox = label.node().getBBox();
+        if ((!label.text() || (labelBox.width !== 0 && labelBox.height !== 0)) && this._options.margin.top < labelBox.height + 20) {
+            this.options = { margin: { top: labelBox.height + 20 } };
+        }
     }
 
     _setXAxisLabelPosition(xAxisLabel) {
@@ -316,7 +324,7 @@ class ScatterPlot {
 
     _adjustBottomMargin(label, xAxisBox) {
         const labelBox = label.node().getBBox();
-        if ((!label.text() || (labelBox.width !== 0 && labelBox.height !== 0)) && this._options.margin.bottom !== xAxisBox.height + labelBox.height + 20) {
+        if ((!label.text() || (labelBox.width !== 0 && labelBox.height !== 0)) && this._options.margin.bottom < xAxisBox.height + labelBox.height + 20) {
             this.options = { margin: { bottom: xAxisBox.height + labelBox.height + 20 } };
         }
     }
@@ -326,12 +334,13 @@ class ScatterPlot {
     }
 
     _drawXAxisLabel(container) {
-        return d3.select(container)
+        const lable = d3.select(container)
             .append("text")
             .attr("class", "x-axis-label")
             .style("text-anchor", "middle")
-            .style("alignment-baseline", "hanging")
-            .call(this._setXAxisLabelData.bind(this));
+            .style("alignment-baseline", "hanging");
+        setTimeout(() => lable.call(this._setXAxisLabelData.bind(this)), 1);
+        return lable;
     }
 
     _setYAxisLabelData(yAxisLabel) {
@@ -344,19 +353,28 @@ class ScatterPlot {
             yAxisLabel
                 .attr("x", -this._options.margin.top - this._actualHeight / 2)
                 .attr("y", this._options.margin.left - axisBox.width - 10);
+            this._adjustLeftMargin(yAxisLabel, axisBox);
         } else if (this._actualWidth !== 0 && this._actualHeight !== 0) {
             setTimeout(() => this._setYAxisLabelPosition(yAxisLabel), 100);
         }
     }
 
+    _adjustLeftMargin(label, yAxisBox) {
+        const labelBox = label.node().getBBox();
+        if ((!label.text() || (labelBox.width !== 0 && labelBox.height !== 0)) && this._options.margin.left < yAxisBox.width + labelBox.height + 20) {
+            this.options = { margin: { left: yAxisBox.width + labelBox.height + 20 } };
+        }
+    }
+
     _drawYAxisLabel(container) {
-        return d3.select(container)
+        const lable = d3.select(container)
             .append("text")
             .attr("class", "y-axis-label")
             .style("text-anchor", "middle")
             .style("alignment-baseline", "baseline")
-            .call(this._setYAxisLabelData.bind(this))
             .attr("transform", "rotate(-90)");
+        setTimeout(() => lable.call(this._setYAxisLabelData.bind(this)), 1);
+        return lable;
     }
 
     _drawData() {

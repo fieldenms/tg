@@ -7,7 +7,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  * @param <T>
  */
-public interface IScatterPlotYAxisTitle<T extends AbstractEntity<?>> extends IScatterPlotTooltip<T> {
+public interface IScatterPlotYAxisTitle<T extends AbstractEntity<?>> extends IScatterPlotTopMargin<T> {
 
     /**
      * Sets the title of y-axis
@@ -15,5 +15,5 @@ public interface IScatterPlotYAxisTitle<T extends AbstractEntity<?>> extends ISc
      * @param title
      * @return
      */
-    IScatterPlotTooltip<T> withYAxisTitle(String title);
+    IScatterPlotTopMargin<T> withYAxisTitle(String title);
 }

@@ -14,6 +14,11 @@ import '/resources/components/scatter-plot/tg-scatter-plot.js';
 const template = html`
     <style include="tg-entity-master-styles"></style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    <style>
+        #chart {
+            padding: @margin;
+        }
+    </style>
     <tg-entity-master
         id="masterDom"
         entity-type="[[entityType]]" 

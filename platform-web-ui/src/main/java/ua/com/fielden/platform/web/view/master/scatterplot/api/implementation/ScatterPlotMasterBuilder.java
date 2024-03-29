@@ -28,6 +28,10 @@ public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IS
     private String title;
     private String xAxisTitle;
     private String yAxisTitle;
+    private int topMargin = 0;
+    private int leftMargin = 0;
+    private int bottomMargin = 0;
+    private int rightMargin = 0;
     private EntityActionConfig action;
     private final List<IConvertableToPath> tooltipPropertyNames = new ArrayList<>();
     private final List<Pair<Map<String, String>, String>> legendItems = new ArrayList<>();
@@ -96,7 +100,7 @@ public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IS
     }
 
     @Override
-    public IScatterPlotTooltip<T> withYAxisTitle(final String title) {
+    public IScatterPlotTopMargin<T> withYAxisTitle(final String title) {
         this.yAxisTitle = title;
         return this;
     }
@@ -167,5 +171,45 @@ public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IS
 
     public IScatterPlotRangeConfig getValueRangeConfig() {
         return valuePropRangeSource;
+    }
+
+    @Override
+    public IScatterPlotRightMargin<T> bottomMargin(final int margin) {
+        this.bottomMargin =  margin;
+        return this;
+    }
+
+    @Override
+    public IScatterPlotBottomMargin<T> leftMargin(final int margin) {
+        this.leftMargin = margin;
+        return this;
+    }
+
+    @Override
+    public IScatterPlotTooltip<T> rightMargin(final int margin) {
+        this.rightMargin = margin;
+        return this;
+    }
+
+    @Override
+    public IScatterPlotLeftMargin<T> topMargin(final int margin) {
+        this.topMargin = margin;
+        return this;
+    }
+
+    public int getTopMargin() {
+        return topMargin;
+    }
+
+    public int getLeftMargin() {
+        return leftMargin;
+    }
+
+    public int getBottomMargin() {
+        return bottomMargin;
+    }
+
+    public int getRightMargin() {
+        return rightMargin;
     }
 }
