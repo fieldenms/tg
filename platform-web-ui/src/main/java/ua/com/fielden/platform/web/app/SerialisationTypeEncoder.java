@@ -23,7 +23,7 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
     private static final Logger LOGGER = getLogger(SerialisationTypeEncoder.class);
     private static final String ERR_DECODED_ENTITY_TYPE_MUST_BE_PRESENT = "Decoded entity type %s must be present after forced loading.";
     private static final String ERR_CLIENT_APP_IS_OUTDATED = "The client application is outdated. Please reload and try again.";
-    private static final String ERR_DECODED_TYPE_WAS_ALREADY_REGISTERED = "Somehow decoded entity type %s was already registered in TgJackson.";
+    private static final String ERR_DECODED_TYPE_WAS_ALREADY_REGISTERED = "Somehow decoded generated entity type %s was registered in TgJackson's type table. Only ungenerated types should be there."; // see EntityTypeInfoGetter.register for more details
 
     private TgJackson tgJackson;
     private EntityTypeInfoGetter entityTypeInfoGetter;
@@ -61,7 +61,7 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
                     throw new SerialisationTypeEncoderException(ERR_CLIENT_APP_IS_OUTDATED);
                 }
                 if (entityTypeInfoGetter.get(decodedEntityType.getName()) != null) {
-                    throw new SerialisationTypeEncoderException(ERR_DECODED_TYPE_WAS_ALREADY_REGISTERED.formatted(decodedEntityType.getName()));
+                    LOGGER.warn(ERR_DECODED_TYPE_WAS_ALREADY_REGISTERED.formatted(decodedEntityType.getName()));
                 }
                 tgJackson.registerNewEntityType((Class<AbstractEntity<?>>) decodedEntityType);
             }
