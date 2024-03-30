@@ -28,10 +28,6 @@ import ua.com.fielden.platform.master.MasterInfo;
 @KeyTitle(value = "Entity Type Name", desc = "Entity Type Name description")
 @CompanionObject(IEntityType.class)
 public class EntityType extends AbstractEntity<String> {
-    @IsProperty
-    @Title(value = "Identifier", desc = "Identifier of the type in context of other types for serialisation")
-    private String _identifier;
-
     @IsProperty(String.class)
     @Title(value = "Composite Keys", desc = "Composite key property names")
     private final List<String> _compositeKeyNames = new ArrayList<>();
@@ -228,15 +224,5 @@ public class EntityType extends AbstractEntity<String> {
 
     public List<String> get_compositeKeyNames() {
         return Collections.unmodifiableList(_compositeKeyNames);
-    }
-
-    @Observable
-    public EntityType set_identifier(final String _identifier) {
-        this._identifier = _identifier;
-        return this;
-    }
-
-    public String get_identifier() {
-        return _identifier;
     }
 }

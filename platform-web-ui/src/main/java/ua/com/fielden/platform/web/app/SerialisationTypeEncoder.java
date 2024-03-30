@@ -35,16 +35,9 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
     }
     
     @Override
-    public <T extends AbstractEntity<?>> String encode(final Class<T> entityType) {
-        return entityType.getName();
-    }
-    
-    @Override
-    public <T extends AbstractEntity<?>> Class<T> decode(final String entityTypeId) {
-        final boolean isGenerated = entityTypeId.contains(APPENDIX);
+    public <T extends AbstractEntity<?>> Class<T> decode(final String entityTypeName) {
+        final boolean isGenerated = entityTypeName.contains(APPENDIX);
         Class<T> decodedEntityType = null;
-        
-        final String entityTypeName = entityTypeId;
         if (isGenerated) {
             try {
                 decodedEntityType = (Class<T>) findClass(entityTypeName);
