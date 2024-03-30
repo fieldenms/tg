@@ -34,7 +34,7 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
     private static final Logger LOGGER = getLogger(DynamicEntityClassLoader.class);
     private static final String MSG_DEFINED_NEW_TYPE = "Gen: %s; defined new [%s] type.";
     /**
-     * A cache of instances of this type of the form: {@code parentClassLoader -> thisInstance}.
+     * Singleton instance of this {@link DynamicEntityClassLoader}.
      */
     private static final DynamicEntityClassLoader instance = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
 
@@ -43,7 +43,7 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
      * The key values are the full names of the generated types, which is used as a convenience to get the generated type by name.
      * The value is a tuple, containing a generated type and the original type, used to produce the generated one.
      */
-    private static final ConcurrentMap<String, T2<WeakReference<Class<?>>, Class<?>>> CACHE = new ConcurrentHashMap<>(/*initialCapacity*/ 1000, /*loadFactor*/ 0.75f, /*concurrencyLevel*/50);
+    private static final ConcurrentMap<String, T2<Class<?>, Class<?>>> CACHE = new ConcurrentHashMap<>(/*initialCapacity*/ 1000, /*loadFactor*/ 0.75f, /*concurrencyLevel*/50);
 
     /**
      * Optionally returns a cached generated class by {@code className}.
@@ -52,7 +52,7 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
      * @return
      */
     public static Optional<Class<?>> getCachedClass(final String className) {
-        return ofNullable(CACHE.get(className)).map(t2 -> t2._1.get());
+        return ofNullable(CACHE.get(className)).map(t2 -> t2._1);
     }
 
     private DynamicEntityClassLoader(final ClassLoader parent) {
@@ -60,24 +60,9 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
     }
 
     /**
-     * Runs a cleanup routine on the cache of generated classes, registered by the dynamic class loader.
-     * 
-     * @return a total number of generated classes current cached.
+     * Returns a total number of generated classes currently cached.
      */
-    public static long cleanUp() {
-        int count = 0;
-        for (final var entry : CACHE.entrySet()) {
-            try {
-                final var t3 = entry.getValue();
-                if (t3 == null || t3._1.get() == null) {
-                    CACHE.remove(entry.getKey());
-                    count++;
-                }
-            } catch (final Exception ex) {
-                LOGGER.error("Error occurred during cache cleanup.", ex);
-            }
-        }
-        LOGGER.info("Cache size [%s]. Evicted [%s] entries from cache.".formatted(CACHE.size(), count));
+    public static long size() {
         return CACHE.size();
     }
 
@@ -99,8 +84,8 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
             // define the class, load it and cache for later reuse
             final Class<?> klass = defineClass(name, bytes, 0, bytes.length);
             LOGGER.debug(MSG_DEFINED_NEW_TYPE.formatted(CACHE.size(), klass.getSimpleName()));
-            return t2(new WeakReference<>(klass), determineOriginalType(klass));
-        })._1.get();
+            return t2(klass, determineOriginalType(klass));
+        })._1;
     }
 
     /**
@@ -149,9 +134,9 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
      */
     @SuppressWarnings("unchecked")
     public static <T extends AbstractEntity<?>> Class<T> getOriginalType(final Class<?> type) {
-        final var t3 = CACHE.get(type.getName());
-        if (t3 != null) {
-            return (Class<T>) t3._2;
+        final var t2 = CACHE.get(type.getName());
+        if (t2 != null) {
+            return (Class<T>) t2._2;
         } else {
             return (Class<T>) type;
         }

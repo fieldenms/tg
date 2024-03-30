@@ -45,9 +45,9 @@ public class GetOriginalTypeStressTest {
         LOGGER.info("Starting the load test...");
         final Supplier<Class<? extends AbstractEntity<String>>> fun = () -> {
             try {
-                return (Class<? extends AbstractEntity<String>>) startModification(Entity.class)
+                return startModification(Entity.class)
                         .modifyTypeName(DynamicTypeNamingService.nextTypeName(Entity.class.getName())).endModification();
-            } catch (ClassNotFoundException e) {
+            } catch (final ClassNotFoundException e) {
                 e.printStackTrace();
                 return null;
             }
@@ -62,7 +62,7 @@ public class GetOriginalTypeStressTest {
                 .map(v -> exec.scheduleWithFixedDelay(new AccessOriginalType(fun.get()), ThreadLocalRandom.current().nextInt(3, 10), ThreadLocalRandom.current().nextInt(2, 10), TimeUnit.MILLISECONDS))
                 .collect(toList());
 
-        final ScheduledFuture<?> cleaner = exec.scheduleWithFixedDelay(() -> DynamicEntityClassLoader.cleanUp(), limitThreadsInPool, 2, TimeUnit.SECONDS);
+        final ScheduledFuture<?> logger = exec.scheduleWithFixedDelay(() -> LOGGER.info("Cache size [%s].".formatted(DynamicEntityClassLoader.size())), limitThreadsInPool, 2, TimeUnit.SECONDS);
 
         // put the main thread to sleep for the duration of the stress test
         final var testDurationInMillis = 1000*60*5;
@@ -75,7 +75,7 @@ public class GetOriginalTypeStressTest {
             future.cancel(true);
             LOGGER.info("shutdown %s".formatted(++count));
         }
-        cleaner.cancel(true);
+        logger.cancel(true);
         exec.shutdown();
         LOGGER.info("Completed the test.");
         System.exit(0);
