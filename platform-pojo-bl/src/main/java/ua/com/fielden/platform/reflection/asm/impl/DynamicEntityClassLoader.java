@@ -6,7 +6,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.asm.exceptions.DynamicEntityClassLoaderException;
 import ua.com.fielden.platform.types.tuples.T2;
 
-import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Optional;
