@@ -7,6 +7,7 @@ import java.util.List;
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.utils.StreamUtils;
 import ua.com.fielden.platform.web.view.master.api.helpers.IPropertySelector;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.widgets.IAutocompleterConfig;
@@ -54,10 +55,10 @@ public class EntityAutocompletionConfig<T extends AbstractEntity<?>>
 
     @SafeVarargs
     @Override
-    public final IAutocompleterConfig2<T> withProps(final Pair<String, Boolean> propNameAndLightOption, final Pair<String, Boolean>... morePropNameAndLightOption) {
-        final List<Pair<String, Boolean>> pairs = new ArrayList<>();
-        pairs.add(propNameAndLightOption);
-        pairs.addAll(Arrays.asList(morePropNameAndLightOption));
+    public final IAutocompleterConfig2<T> withProps(final Pair<? extends CharSequence, Boolean> propNameAndLightOption, final Pair<? extends CharSequence, Boolean>... morePropNameAndLightOption) {
+        final var pairs = StreamUtils.of(propNameAndLightOption, morePropNameAndLightOption)
+                .map(pair -> pair.mapKey(CharSequence::toString))
+                .toList();
         widget().setAdditionalProps(pairs);
         return this;
     }
