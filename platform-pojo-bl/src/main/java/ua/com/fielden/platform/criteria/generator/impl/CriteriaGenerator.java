@@ -305,16 +305,16 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         final IAddToCriteriaTickManager ftm = criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
         CriteriaReflector.getCriteriaProperties(criteriaEntity.getType()).stream().map(propertyField -> {
             final String critPropName = getAnnotation(propertyField, CriteriaProperty.class).propertyName();
-            return t2(propertyField, getAnnotation(propertyField, SecondParam.class) == null ? ftm.getValue(root, critPropName) : ftm.getValue2(root, critPropName));
-        }).collect(toList()).forEach(fieldAndVal -> { // there is a need to collect all results BEFORE forEach processing due to mutable nature of 'getValue*' methods
-            final Field field = fieldAndVal._1;
+            return t2(propertyField.getName(), getAnnotation(propertyField, SecondParam.class) == null ? ftm.getValue(root, critPropName) : ftm.getValue2(root, critPropName)); // collect values for criteria properties in centreManager
+        }).collect(toList()).forEach(nameAndVal -> { // there is a need to collect all values BEFORE forEach processing and only then perform 'criteriaEntity.getProperty(name).setValue(....)'; this is to avoid ftm.setValue(...) calls through SynchroniseCriteriaWithModelHandler ACE handler during value collecting process, which may affect unrelated properties
+            final var name = nameAndVal._1;
             try {
                 // LOGGER.error(format("\tsynchroniseWithModel prop [%s] setting... val = [%s]", field.getName(), fieldAndVal._2));
                 // need to enforce the setting to ensure invocation of SynchroniseCriteriaWithModelHandler; this will ensure application of editable / required (and other) attributes and integrity of property dependencies
-                criteriaEntity.getProperty(field.getName()).setValue(fieldAndVal._2, true);
+                criteriaEntity.getProperty(name).setValue(nameAndVal._2, true);
                 // LOGGER.error("\tsynchroniseWithModel. valResult = " + criteriaEntity.getProperty(field.getName()).getFirstFailure());
             } catch (final Exception ex) {
-                LOGGER.warn(format("\tCould not assign crit value to [%s] in root [%s].", field.getName(), root.getName()));
+                LOGGER.warn(format("\tCould not assign crit value to [%s] in root [%s].", name, root.getName()));
             } 
             // finally { LOGGER.error(format("\tsynchroniseWithModel prop [%s] setting...done", field.getName())); }
         });
