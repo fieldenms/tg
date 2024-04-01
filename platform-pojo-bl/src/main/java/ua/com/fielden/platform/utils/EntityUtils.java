@@ -1129,12 +1129,7 @@ public class EntityUtils {
     }
 
     /**
-     * The same as {@link #copy(AbstractEntity, AbstractEntity, String...)}, but with a set of {@link IConvertableToPath} as the last argument.
-     *
-     * @param fromEntity
-     * @param toEntity
-     * @param skipProperties
-     * @param <T>
+     * @see #copy(AbstractEntity, AbstractEntity, String...)
      */
     public static <T extends AbstractEntity> void copy(final AbstractEntity<?> fromEntity, final T toEntity, final Set<? extends CharSequence> skipProperties) {
         copy(fromEntity, toEntity, skipProperties.stream().map(CharSequence::toString).toList().toArray(new String[]{}));
