@@ -65,7 +65,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
      * {@link FetchCategory#KEY_AND_DESC}, {@link FetchCategory#ID_AND_VERSION} and {@link FetchCategory#NONE}.
      * <p>
      * Important: please note that {@link FetchCategory#KEY_AND_DESC} (see EntityRetrievalModel.includeKeyAndDescOnly) and {@link FetchCategory#ID_AND_VERSION} (see EntityRetrievalModel.includeIdAndVersionOnly)
-     * categories include many more properties then their names state. Please, use {@link FetchCategory#NONE} in combination with methods {@link #with(String, IFetchProvider)} if more granular approach is needed.
+     * categories include many more properties then their names state. Please, use {@link FetchCategory#NONE} in combination with methods {@link IFetchProvider#with(CharSequence, IFetchProvider)} if more granular approach is needed.
      */
     final FetchCategory fetchCategory;
     private final boolean instrumented;
@@ -98,14 +98,14 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
     }
 
     @Override
-    public boolean shouldFetch(final String dotNotationProperty) {
-        validate(dotNotationProperty);
+    public boolean shouldFetch(final CharSequence dotNotationProperty) {
+        validate(dotNotationProperty.toString());
         if (PropertyTypeDeterminator.isDotNotation(dotNotationProperty)) {
             final Pair<String, String> firstAndRest = PropertyTypeDeterminator.firstAndRest(dotNotationProperty);
             return propertyProviders.containsKey(firstAndRest.getKey())
                     && providerForFirstLevel(firstAndRest.getKey()).shouldFetch(firstAndRest.getValue());
         } else {
-            return propertyProviders.containsKey(dotNotationProperty);
+            return propertyProviders.containsKey(dotNotationProperty.toString());
         }
     }
 
@@ -124,12 +124,12 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
     }
 
     @Override
-    public <M extends AbstractEntity<?>> IFetchProvider<M> fetchFor(final String dotNotationProperty) throws IllegalArgumentException, IllegalStateException {
-        validateEntityTyped(dotNotationProperty);
+    public <M extends AbstractEntity<?>> IFetchProvider<M> fetchFor(final CharSequence dotNotationProperty) throws IllegalArgumentException, IllegalStateException {
+        validateEntityTyped(dotNotationProperty.toString());
         if (!shouldFetch(dotNotationProperty)) {
             throw new IllegalStateException(String.format("The property [%s] was not declared as 'fetching' property in this entity [%s] fetch provider (please extend it).", dotNotationProperty, entityType.getSimpleName()));
         }
-        return (FetchProvider<M>) providerForAllLevels(dotNotationProperty);
+        return (FetchProvider<M>) providerForAllLevels(dotNotationProperty.toString());
     }
 
     /**
@@ -190,41 +190,41 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
     }
 
     @Override
-    public IFetchProvider<T> with(final String dotNotationProperty, final String... otherDotNotationProperties) {
+    public IFetchProvider<T> with(final CharSequence dotNotationProperty, final CharSequence... otherDotNotationProperties) {
         final FetchProvider<T> copy = this.copy();
-        copy.enhanceWith(dotNotationProperty);
-        for (final String prop : otherDotNotationProperties) {
-            copy.enhanceWith(prop);
+        copy.enhanceWith(dotNotationProperty.toString());
+        for (final CharSequence prop : otherDotNotationProperties) {
+            copy.enhanceWith(prop.toString());
         }
         return copy;
     }
 
     @Override
-    public IFetchProvider<T> with(final Set<String> dotNotationProperties) {
+    public IFetchProvider<T> with(final Set<? extends CharSequence> dotNotationProperties) {
         final FetchProvider<T> copy = this.copy();
-        for (final String prop : dotNotationProperties) {
-            copy.enhanceWith(prop);
+        for (final CharSequence prop : dotNotationProperties) {
+            copy.enhanceWith(prop.toString());
         }
         return copy;
     }
 
     @Override
-    public IFetchProvider<T> without(final String dotNotationProperty, final String... otherDotNotationProperties) {
+    public IFetchProvider<T> without(final CharSequence dotNotationProperty, final CharSequence... otherDotNotationProperties) {
         final FetchProvider<T> copy = this.copy();
-        copy.removeIfExists(dotNotationProperty);
-        for (final String prop : otherDotNotationProperties) {
-            copy.removeIfExists(prop);
+        copy.removeIfExists(dotNotationProperty.toString());
+        for (final CharSequence prop : otherDotNotationProperties) {
+            copy.removeIfExists(prop.toString());
         }
         return copy;
     }
 
     @Override
-    public <M extends AbstractEntity<?>> IFetchProvider<T> with(final String dotNotationProperty, final IFetchProvider<M> propertyFetchProvider) {
+    public <M extends AbstractEntity<?>> IFetchProvider<T> with(final CharSequence dotNotationProperty, final IFetchProvider<M> propertyFetchProvider) {
         if (propertyFetchProvider == null) {
             throw new IllegalArgumentException(String.format("Please provide non-null property fetch provider for property [%s] for type [%s]. Or use method 'with(dotNotationProperty)' for default property provider.", dotNotationProperty, entityType.getSimpleName()));
         }
         final FetchProvider<T> copy = this.copy(fetchCategory, instrumented);
-        copy.enhanceWith(dotNotationProperty, (FetchProvider<AbstractEntity<?>>) propertyFetchProvider);
+        copy.enhanceWith(dotNotationProperty.toString(), (FetchProvider<AbstractEntity<?>>) propertyFetchProvider);
         return copy;
     }
 
@@ -400,11 +400,11 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
      * Creates default fetch provider for entity-typed property with {@code propertyType} type.
      * <p>
      * In most cases, {@link FetchProvider} is used in a way where some properties are added using constructs without explicit indication of property's own fetch provider.
-     * This means that methods {@link #with(String, String...)} and {@link #with(Set)} are used and method {@link #with(String, IFetchProvider)} is not used.
+     * This means that methods {@link IFetchProvider#with(CharSequence, CharSequence...)} and {@link IFetchProvider#with(Set)} are used and method {@link IFetchProvider#with(CharSequence, IFetchProvider)} is not used.
      * <p>
      * This situation requires some reasonable defaults for fetch category.
      * For most cases we use {@link FetchCategory#KEY_AND_DESC} to fetch all the necessary information. However, there is possibility
-     * to provide leaner child: just use explicit {@link #with(String, IFetchProvider)} method.
+     * to provide leaner child: just use explicit {@link IFetchProvider#with(CharSequence, IFetchProvider)} method.
      *
      * @param propertyType
      */
@@ -582,13 +582,13 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
      * @return
      */
     @Override
-    public FetchProvider<T> addPropWithKeys(final String dotNotationProperty, final boolean withDesc) {
-        enhanceWith(dotNotationProperty, NONE); // ensure that property is added with NONE default fetch category on dot-notation pathway
-        return addKeysTo(dotNotationProperty, withDesc);
+    public FetchProvider<T> addPropWithKeys(final CharSequence dotNotationProperty, final boolean withDesc) {
+        enhanceWith(dotNotationProperty.toString(), NONE); // ensure that property is added with NONE default fetch category on dot-notation pathway
+        return addKeysTo(dotNotationProperty.toString(), withDesc);
     }
 
     /**
-     * Internal recursive implementation of {@link #addPropWithKeys(String, boolean)} method resembling correct propagation of <code>withDesc</code> parameter further down dot-notated pathway
+     * Internal recursive implementation of {@link IFetchProvider#addPropWithKeys(CharSequence, boolean)} method resembling correct propagation of <code>withDesc</code> parameter further down dot-notated pathway
      * and stopping this propagation on originally specified <code>dotNotationProperty</code> leaf.
      *
      * @param dotNotationProperty

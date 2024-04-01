@@ -7,6 +7,7 @@ import java.util.List;
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.utils.StreamUtils;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetAutocompleterConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetAutocompleterConfigAdditionalProps;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetAutocompleterWithMatcher;
@@ -43,10 +44,10 @@ public class ResultSetAutocompleterConfig<T extends AbstractEntity<?>> extends R
 
     @SuppressWarnings("unchecked")
     @Override
-    public IResultSetBuilder3Ordering<T> withProps(final Pair<String, Boolean> propNameAndLightOption, final Pair<String, Boolean>... morePropNameAndLightOption) {
-        final List<Pair<String, Boolean>> pairs = new ArrayList<>();
-        pairs.add(propNameAndLightOption);
-        pairs.addAll(Arrays.asList(morePropNameAndLightOption));
+    public IResultSetBuilder3Ordering<T> withProps(final Pair<? extends CharSequence, Boolean> propNameAndLightOption, final Pair<? extends CharSequence, Boolean>... morePropNameAndLightOption) {
+        final var pairs = StreamUtils.of(propNameAndLightOption, morePropNameAndLightOption)
+                .map(pair -> pair.mapKey(CharSequence::toString))
+                .toList();
         widget.setAdditionalProps(pairs);
         return this;
     }

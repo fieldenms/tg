@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.antlr.tokens;
 import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -12,9 +13,9 @@ import static ua.com.fielden.platform.eql.antlr.tokens.util.TokensFormatter.getI
 
 public final class NotExistsAnyOfToken extends AbstractParameterisedEqlToken {
 
-    public final List<? extends QueryModel> models;
+    public final List<? extends QueryModel<?>> models;
 
-    public NotExistsAnyOfToken(final List<? extends QueryModel> models) {
+    public NotExistsAnyOfToken(final Collection<? extends QueryModel<?>> models) {
         super(NOTEXISTSANYOF, "notExistsAnyOf");
         this.models = ImmutableList.copyOf(models);
     }

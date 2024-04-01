@@ -45,7 +45,7 @@ public class ChartSeries<T extends AbstractEntity<?>> implements IChartDeckerWit
     }
 
     @Override
-    public IChartDeckerWithSeriesColour<T> withSeries(final String propertyName) {
+    public IChartDeckerWithSeriesColour<T> withSeries(final CharSequence propertyName) {
         return chartDeck.withSeries(propertyName);
     }
 
@@ -70,7 +70,7 @@ public class ChartSeries<T extends AbstractEntity<?>> implements IChartDeckerWit
     }
 
     @Override
-    public IChartDeckerLineColour<T> withLine(final String propertyName) {
+    public IChartDeckerLineColour<T> withLine(final CharSequence propertyName) {
         return chartDeck.withLine(propertyName);
     }
 

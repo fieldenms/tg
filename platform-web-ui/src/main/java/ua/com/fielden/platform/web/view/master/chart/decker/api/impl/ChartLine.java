@@ -22,7 +22,7 @@ public class ChartLine<T extends AbstractEntity<?>> implements IChartDeckerLineC
     }
 
     @Override
-    public IChartDeckerLineColour<T> withLine(final String propertyName) {
+    public IChartDeckerLineColour<T> withLine(final CharSequence propertyName) {
         return this.chartDeck.withLine(propertyName);
     }
 

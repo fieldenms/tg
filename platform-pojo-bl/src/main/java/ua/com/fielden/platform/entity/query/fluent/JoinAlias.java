@@ -11,7 +11,7 @@ final class JoinAlias<ET extends AbstractEntity<?>> extends JoinOn<ET> implement
     }
 
     @Override
-    public IJoinCondition<ET> as(final String alias) {
+    public IJoinCondition<ET> as(final CharSequence alias) {
         return new JoinOn<ET>(builder.joinAlias(alias));
     }
 

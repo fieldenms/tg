@@ -11,7 +11,6 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISingleOperand;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 		extends AbstractQueryLink //
@@ -59,7 +58,7 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
-	public T prop(final String propertyName) {
+	public T prop(final CharSequence propertyName) {
 		return nextForSingleOperand(builder.prop(propertyName));
 	}
 
@@ -69,23 +68,13 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
-	public T prop(final IConvertableToPath propertyName) {
-		return prop(propertyName.toPath());
-	}
-
-	@Override
-	public T extProp(final String propertyName) {
+	public T extProp(final CharSequence propertyName) {
 		return nextForSingleOperand(builder.extProp(propertyName));
 	}
 
 	@Override
 	public T extProp(final Enum propertyName) {
 		return extProp(propertyName.toString());
-	}
-
-	@Override
-	public T extProp(final IConvertableToPath propertyName) {
-		return extProp(propertyName.toPath());
 	}
 
 	@Override

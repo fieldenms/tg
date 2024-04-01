@@ -37,12 +37,12 @@ public class ValuePreprocessor {
         }
     }
 
-    public Stream<Object> applyMany(final Object... values) {
-        return apply(Arrays.stream(values));
-    }
-
     public Stream<Object> apply(final Stream<?> values) {
         return values.map(this::convertValue);
+    }
+
+    public Stream<Object> apply(final Collection<?> values) {
+        return apply(values.stream());
     }
 
     /** Ensures that values of special types such as {@link Class} or {@link PropertyDescriptor} are converted to String. */

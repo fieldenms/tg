@@ -475,7 +475,7 @@ public class Finder {
      *            -- dot-notation field/method definition (e.g. "prop1.prop2", "prop1.method2()", "method1().prop2", "method1().method2()")
      * @return
      */
-    public static Field findFieldByName(final Class<?> type, final String dotNotationExp) {
+    public static Field findFieldByName(final Class<?> type, final CharSequence dotNotationExp) {
         return findFieldByNameWithOwningType(type, dotNotationExp)._2;
     }
 
@@ -487,10 +487,10 @@ public class Finder {
      * @param dotNotationExpr
      * @return
      */
-    public static T2<Class<?>, Field> findFieldByNameWithOwningType(final Class<?> type, final String dotNotationExpr) {
+    public static T2<Class<?>, Field> findFieldByNameWithOwningType(final Class<?> type, final CharSequence dotNotationExpr) {
         // check if passed "dotNotationExpr" is correct:
         PropertyTypeDeterminator.determinePropertyType(type, dotNotationExpr);
-        if (dotNotationExpr.endsWith("()")) {
+        if (dotNotationExpr.toString().endsWith("()")) {
             throw new MethodFoundException("Illegal situation : a method was found from the dot-notation expression == [" + dotNotationExpr + "]");
         }
         final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(type, dotNotationExpr);

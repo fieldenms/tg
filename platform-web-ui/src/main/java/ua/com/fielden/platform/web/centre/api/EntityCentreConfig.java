@@ -291,8 +291,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             return new ResultSetProp<>(null, presentByDefault, empty(), empty(), empty(), width, isFlexible, Optional.empty(), tooltipProp, propDef, propAction);
         }
 
-        public static <T extends AbstractEntity<?>> ResultSetProp<T> dynamicProps(final String collectionalPropertyName, final Class<? extends IDynamicColumnBuilder<T>> dynamicPropDefinerClass, final BiConsumer<? extends AbstractEntity<?>, Optional<CentreContext<T, ?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
-            return new ResultSetProp<>(collectionalPropertyName, true, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), 0, false, empty(), null, null, empty());
+        public static <T extends AbstractEntity<?>> ResultSetProp<T> dynamicProps(final CharSequence collectionalPropertyName, final Class<? extends IDynamicColumnBuilder<T>> dynamicPropDefinerClass, final BiConsumer<? extends AbstractEntity<?>, Optional<CentreContext<T, ?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
+            return new ResultSetProp<>(collectionalPropertyName.toString(), true, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), 0, false, empty(), null, null, empty());
         }
 
         private ResultSetProp(
