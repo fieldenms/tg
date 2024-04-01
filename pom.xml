@@ -80,6 +80,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <junit.version>4.13.2</junit.version>
         <posgresql.version>42.7.2</posgresql.version>
+        <javapoet.version>1.13.0</javapoet.version>
     </properties>
 
     <modules>
