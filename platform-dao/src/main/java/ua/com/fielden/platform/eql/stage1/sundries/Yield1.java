@@ -8,7 +8,7 @@ import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.sundries.Yield2;
 
 public class Yield1 {
-    public static String ABSENT_ALIAS = ""; // Used for the cases where yield requires no alias (sub-query with single yield).
+    public static final String ABSENT_ALIAS = ""; // Used for the cases where yield requires no alias (sub-query with single yield).
 
     public final ISingleOperand1<? extends ISingleOperand2<?>> operand;
     public final String alias;

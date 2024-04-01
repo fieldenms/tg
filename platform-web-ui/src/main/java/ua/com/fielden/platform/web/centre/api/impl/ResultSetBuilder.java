@@ -30,7 +30,6 @@ import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
@@ -142,37 +141,31 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.builder = builder;
     }
 
-    @Deprecated
     @Override
-    public IResultSetBuilder3Ordering<T> addProp(final String propName) {
+    public IResultSetBuilder3Ordering<T> addProp(final CharSequence propName) {
         return addProp(propName, true);
     }
 
-    @Override
-    public IResultSetBuilder3Ordering<T> addProp(final IConvertableToPath prop, final boolean presentByDefault) {
-        return addProp(prop.toPath(), presentByDefault);
-    }
-
     /**
-     * Implementation used by both {@link #addProp(IConvertableToPath, boolean)} and deprecated {@link #addProp(String)}.
+     * Implementation used by both {@link IResultSetBuilder2Properties#addProp(CharSequence, boolean)} and deprecated {@link IResultSetBuilder2Properties#addProp(CharSequence)}.
      * <p>
-     * <b>TODO</b> Once {@link #addProp(String)} is removed, this implementation needs to be moved to {@link #addProp(IConvertableToPath, boolean)}.
+     * <b>TODO</b> Once {@link IResultSetBuilder2Properties#addProp(CharSequence)} is removed, this implementation needs to be moved to {@link IResultSetBuilder2Properties#addProp(CharSequence, boolean)}.
      * </p>
      *
      * @param propName
      * @param presentByDefault
      * @return
      */
-    protected IResultSetBuilder3Ordering<T> addProp(final String propName, final boolean presentByDefault) {
+    public IResultSetBuilder3Ordering<T> addProp(final CharSequence propName, final boolean presentByDefault) {
         if (StringUtils.isEmpty(propName)) {
             throw new EntityCentreConfigurationException("Property name should not be null.");
         }
 
-        if (!"this".equals(propName) && !EntityUtils.isProperty(this.builder.getEntityType(), propName)) {
+        if (!"this".contentEquals(propName) && !EntityUtils.isProperty(this.builder.getEntityType(), propName)) {
             throw new EntityCentreConfigurationException(format("Provided value [%s] is not a valid property expression for entity [%s]", propName, builder.getEntityType().getSimpleName()));
         }
 
-        this.propName = of(propName);
+        this.propName = of(propName.toString());
         this.presentByDefault = presentByDefault;
         this.tooltipProp = empty();
         this.propDef = empty();
@@ -182,12 +175,12 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilderWidgetSelector<T> addEditableProp(final String propName) {
-        if (propName.contains(".")) {
+    public IResultSetBuilderWidgetSelector<T> addEditableProp(final CharSequence propName) {
+        if (propName.toString().contains(".")) {
             throw  new EntityCentreConfigurationException(format(ERR_EDITABLE_SUB_PROP_DISALLOWED, propName));
         }
         this.addProp(propName);
-        this.widget = createWidget(propName);
+        this.widget = createWidget(propName.toString());
         return this;
     }
 
@@ -224,7 +217,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public <M extends AbstractEntity<?>> IResultSetBuilderDynamicPropsAction<T> addProps(final String propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<M, Optional<CentreContext<T, ?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
+    public <M extends AbstractEntity<?>> IResultSetBuilderDynamicPropsAction<T> addProps(final CharSequence propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<M, Optional<CentreContext<T, ?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
         final ResultSetProp<T> prop = dynamicProps(propName, dynColBuilderType, entityPreProcessor, contextConfig);
         this.builder.addToResultSet(prop);
         return new ResultSetDynamicPropertyBuilder<>(this, prop);
@@ -283,8 +276,8 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IWithSummary<T> withTooltip(final String propertyName) {
-        this.tooltipProp = Optional.ofNullable(propertyName);
+    public IWithSummary<T> withTooltip(final CharSequence propertyName) {
+        this.tooltipProp = Optional.ofNullable(propertyName).map(CharSequence::toString);
         return this;
     }
 

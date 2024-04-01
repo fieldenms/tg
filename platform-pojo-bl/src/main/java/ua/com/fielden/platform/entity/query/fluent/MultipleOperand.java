@@ -4,7 +4,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IMultipleOperand;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 import java.util.Collection;
 
@@ -19,16 +18,12 @@ abstract class MultipleOperand<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
-	public T anyOfProps(final Collection<String> propertyNames) {
+	public T anyOfProps(final Collection<? extends CharSequence> propertyNames) {
 		return nextForSingleOperand(builder.anyOfProps(propertyNames));
 	}
 
-	public T anyOfProps(final String... propertyNames) {
-		return anyOfProps(asList(propertyNames));
-	}
-
-	@Override
-	public T anyOfProps(final IConvertableToPath... propertyNames) {
+    @Override
+	public T anyOfProps(final CharSequence... propertyNames) {
 		return nextForSingleOperand(builder.anyOfProps(propertyNames));
 	}
 
@@ -78,15 +73,12 @@ abstract class MultipleOperand<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
-	public T allOfProps(final Collection<String> propertyNames) {
+	public T allOfProps(final Collection<? extends CharSequence> propertyNames) {
 		return nextForSingleOperand(builder.allOfProps(propertyNames));
 	}
 
-	public T allOfProps(final String... propertyNames) {
-		return allOfProps(asList(propertyNames));
-	}
-
-	public T allOfProps(final IConvertableToPath... propertyNames) {
+	@Override
+	public T allOfProps(final CharSequence... propertyNames) {
 		return nextForSingleOperand(builder.allOfProps(propertyNames));
 	}
 

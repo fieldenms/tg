@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.antlr;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
+import ua.com.fielden.platform.eql.antlr.exceptions.EqlSyntaxException;
 import ua.com.fielden.platform.eql.antlr.tokens.AsToken;
 import ua.com.fielden.platform.eql.antlr.tokens.JoinToken;
 import ua.com.fielden.platform.eql.antlr.tokens.LeftJoinToken;
@@ -114,7 +115,7 @@ final class SelectVisitor extends AbstractEqlVisitor<EqlCompilationResult.Select
                 type = JoinType.IJ;
                 node = new JoinLeafNode1(compileModelsSource(tok.models, maybeAlias));
             }
-            default -> throw new EqlParseException("Unexpected token: %s".formatted(ctx.token.getText()));
+            default -> throw new EqlSyntaxException("Unexpected token: %s".formatted(ctx.token.getText()));
         }
 
         return continuation.apply(type, node);

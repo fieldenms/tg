@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.antlr;
 
 import org.antlr.v4.runtime.Token;
+import ua.com.fielden.platform.eql.antlr.exceptions.EqlSyntaxException;
 import ua.com.fielden.platform.eql.antlr.tokens.AsRequiredToken;
 import ua.com.fielden.platform.eql.antlr.tokens.AsToken;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
@@ -31,7 +32,7 @@ final class YieldsVisitor extends AbstractEqlVisitor<YieldsVisitor.Result> {
     @Override
     public Result visitYieldSome(final YieldSomeContext ctx) {
         // no need to process the Model context since that information is represented by the resulting type of a fluent API method call chain
-        return ctx.yieldTail().accept(new EQLBaseVisitor<>() {
+        return ctx.yieldTail().accept(new StrictEQLBaseVisitor<>() {
             @Override
             public Result visitYield1Tail(final Yield1TailContext $) {
                 final var operand = ctx.firstYield.accept(new YieldOperandVisitor(transformer));
@@ -63,7 +64,7 @@ final class YieldsVisitor extends AbstractEqlVisitor<YieldsVisitor.Result> {
                 alias = tok.alias;
                 hint = true;
             }
-            default -> throw new EqlParseException("Unexpected token: %s".formatted(token));
+            default -> throw new EqlSyntaxException("Unexpected token: %s".formatted(token));
         }
 
         return new Yield1(operand, alias, hint);

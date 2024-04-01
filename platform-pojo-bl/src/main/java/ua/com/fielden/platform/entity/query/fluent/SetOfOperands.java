@@ -4,7 +4,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonSetOperand;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -34,15 +33,11 @@ abstract class SetOfOperands<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
-	public T props(final Collection<String> properties) {
+	public T props(final Collection<? extends CharSequence> properties) {
 		return nextForSingleOperand(builder.setOfProps(properties));
 	}
 
-	public T props(final String... properties) {
-		return props(asList(properties));
-	}
-
-	public T props(final IConvertableToPath... properties) {
+	public T props(final CharSequence... properties) {
 		return nextForSingleOperand(builder.setOfProps(properties));
 	}
 

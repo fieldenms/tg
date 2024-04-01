@@ -12,7 +12,6 @@ import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 /**
  * Class for collecting all interfaces, which are part of Entity Query
@@ -149,7 +148,7 @@ public interface EntityQueryProgressiveInterfaces {
 		 *
 		 * @return
 		 */
-		T prop(final String propertyName);
+		T prop(final CharSequence propertyName);
 
 		/**
 		 * Property.
@@ -158,14 +157,12 @@ public interface EntityQueryProgressiveInterfaces {
 		 */
 		T prop(final Enum<?> propertyName);
 
-		T prop(final IConvertableToPath propertyName);
-
 		/**
 		 * External property (property from master query(ies).
 		 *
 		 * @return
 		 */
-		T extProp(final String propertyName);
+		T extProp(final CharSequence propertyName);
 
 		/**
 		 * External property (property from master query(ies).
@@ -173,8 +170,6 @@ public interface EntityQueryProgressiveInterfaces {
 		 * @return
 		 */
 		T extProp(final Enum<?> propertyName);
-
-		T extProp(final IConvertableToPath propertyName);
 
 		/**
 		 * Value.
@@ -283,11 +278,9 @@ public interface EntityQueryProgressiveInterfaces {
 	interface IMultipleOperand<T, ET extends AbstractEntity<?>> //
 			extends ISingleOperand<T, ET> {
 
-		T anyOfProps(final Collection<String> propertyNames);
+		T anyOfProps(final Collection<? extends CharSequence> propertyNames);
 
-		T anyOfProps(final String... propertyNames);
-
-		T anyOfProps(final IConvertableToPath... propertyNames);
+		T anyOfProps(final CharSequence... propertyNames);
 
 		T anyOfValues(final Collection<?> values);
 
@@ -314,11 +307,9 @@ public interface EntityQueryProgressiveInterfaces {
 
 		T anyOfExpressions(final ExpressionModel... Expressions);
 
-		T allOfProps(final Collection<String> propertyNames);
+		T allOfProps(final CharSequence... propertyNames);
 
-		T allOfProps(final String... propertyNames);
-
-		T allOfProps(final IConvertableToPath... propertyNames);
+		T allOfProps(final Collection<? extends CharSequence> propertyNames);
 
 		T allOfValues(final Collection<?> values);
 
@@ -385,17 +376,9 @@ public interface EntityQueryProgressiveInterfaces {
          * @param critPropName
          * @return
          */
-        T critCondition(final String propName, final String critPropName);
+        T critCondition(final CharSequence propName, final CharSequence critPropName);
 
-        /**
-         * The same as {@link #critCondition(String, String)}, but with {@link IConvertableToPath} parameters.
-         * @param prop
-         * @param critProp
-         * @return
-         */
-        T critCondition(final IConvertableToPath prop, final IConvertableToPath critProp);
-
-        /**
+		/**
          * Applies value of crit-only property {@code critPropName} (including mnemonics) to persistent collectional property {@code propName} represented by collection in
          * {@code collectionQueryStart} and enhances this query with generated appropriate condition model (as per {@link ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder#buildAtomicCondition(ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty, String)}
          * logic).
@@ -420,10 +403,10 @@ public interface EntityQueryProgressiveInterfaces {
          * @param critPropName
          * @return
          */
-        T critCondition(final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName);
+        T critCondition(final ICompoundCondition0<?> collectionQueryStart, final CharSequence propName, final CharSequence critPropName);
 
         /**
-         * The same as {@link #critCondition(ICompoundCondition0, String, String)}, but with a default value for the criterion.
+         * The same as {@link #critCondition(ICompoundCondition0, CharSequence, CharSequence)}, but with a default value for the criterion.
          * This value would be used only if the criterion is empty (i.e., no value and no mnemonic).
          * <p>
          * There are 3 primary types that get recognised for {@code defaultValue}:
@@ -438,7 +421,7 @@ public interface EntityQueryProgressiveInterfaces {
          * @param defaultValue
          * @return
          */
-        T critCondition(final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName, final Object defaultValue);
+        T critCondition(final ICompoundCondition0<?> collectionQueryStart, final CharSequence propName, final CharSequence critPropName, final Object defaultValue);
 
 		T condition(final ConditionModel condition);
 
@@ -466,11 +449,9 @@ public interface EntityQueryProgressiveInterfaces {
 
 		<E extends Object> T values(final E... values);
 
-		T props(final Collection<String> properties);
+		T props(final CharSequence... properties);
 
-		T props(final String... properties);
-
-		T props(final IConvertableToPath... properties);
+		T props(final Collection<? extends CharSequence> properties);
 
 		T params(final Collection<String> paramNames);
 
@@ -603,17 +584,13 @@ public interface EntityQueryProgressiveInterfaces {
 	}
 
 	interface IFirstYieldedItemAlias<T> {
-		T as(final String alias);
+		T as(final CharSequence alias);
 
 		T as(final Enum<?> alias);
 
-		T as(final IConvertableToPath alias);
-
-		T asRequired(final String alias);
+		T asRequired(final CharSequence alias);
 
 		T asRequired(final Enum<?> alias);
-
-		T asRequired(final IConvertableToPath alias);
 
 		<E extends AbstractEntity<?>> EntityResultQueryModel<E> modelAsEntity(final Class<E> entityType);
 
@@ -621,17 +598,13 @@ public interface EntityQueryProgressiveInterfaces {
 	}
 
 	interface ISubsequentYieldedItemAlias<T> /* extends ICompletedAndYielded */ {
-		T as(final String alias);
+		T as(final CharSequence alias);
 
 		T as(final Enum<?> alias);
 
-		T as(final IConvertableToPath alias);
-
-		T asRequired(final String alias);
+		T asRequired(final CharSequence alias);
 
 		T asRequired(final Enum<?> alias);
-
-		T asRequired(final IConvertableToPath alias);
 	}
 
 	interface IArithmeticalOperator<T> {
@@ -673,12 +646,12 @@ public interface EntityQueryProgressiveInterfaces {
 
 	interface IJoinAlias<ET extends AbstractEntity<?>> //
 			extends IJoinCondition<ET> {
-		IJoinCondition<ET> as(final String alias);
+		IJoinCondition<ET> as(final CharSequence alias);
 	}
 
 	interface IFromAlias<ET extends AbstractEntity<?>> //
 			extends IJoin<ET> {
-		IJoin<ET> as(final String alias);
+		IJoin<ET> as(final CharSequence alias);
 	}
 
     interface IFromNone<ET extends AbstractEntity<?>> //
@@ -1096,7 +1069,7 @@ public interface EntityQueryProgressiveInterfaces {
 	interface IOrderingItem //
 			extends
 			IExprOperand<ISingleOperandOrderable, IExprOperand0<ISingleOperandOrderable, AbstractEntity<?>>, AbstractEntity<?>> {
-		ISingleOperandOrderable yield(final String yieldAlias);
+		ISingleOperandOrderable yield(final CharSequence yieldAlias);
 		IOrderingItemCloseable order(final OrderingModel model);
 	}
 }

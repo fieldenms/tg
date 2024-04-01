@@ -7,7 +7,6 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.*;
 import ua.com.fielden.platform.eql.antlr.tokens.*;
 import ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 import java.util.*;
 
@@ -68,6 +67,10 @@ final class EqlSentenceBuilder {
         return copy;
     }
 
+    private static List<String> asStrings(final Collection<? extends CharSequence> charSequences) {
+        return charSequences.stream().map(CharSequence::toString).collect(toImmutableList());
+    }
+
     // -----------------------------------------------------------------------------------------------------------------
     // BUILDING METHODS
 
@@ -115,14 +118,15 @@ final class EqlSentenceBuilder {
         return _add(negated ? new NotExistsAllOfToken(subQueries) : new ExistsAllOfToken(subQueries));
     }
 
-    public EqlSentenceBuilder critCondition(final String propName, final String critPropName) {
-        return _add(new CritConditionToken(propName, critPropName));
+    public EqlSentenceBuilder critCondition(final CharSequence propName, final CharSequence critPropName) {
+        return _add(new CritConditionToken(propName.toString(), critPropName.toString()));
     }
 
     public EqlSentenceBuilder critCondition(
-            final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName,
-            final Optional<Object> defaultValue) {
-        return _add(new CritConditionToken(collectionQueryStart, propName, critPropName, defaultValue));
+            final ICompoundCondition0<?> collectionQueryStart, final CharSequence propName, final CharSequence critPropName,
+            final Optional<Object> defaultValue)
+    {
+        return _add(new CritConditionToken(collectionQueryStart, propName.toString(), critPropName.toString(), defaultValue));
     }
 
     public EqlSentenceBuilder isNull(final boolean negated) {
@@ -189,16 +193,16 @@ final class EqlSentenceBuilder {
         return _add(negated ? token(NOTIN) : token(IN));
     }
 
-    public EqlSentenceBuilder yield(final String yieldName) {
-        return _add(new YieldToken(yieldName));
+    public EqlSentenceBuilder yield(final CharSequence yieldName) {
+        return _add(new YieldToken(yieldName.toString()));
     }
 
-    public EqlSentenceBuilder prop(final String propName) {
-        return _add(new PropToken(propName));
+    public EqlSentenceBuilder prop(final CharSequence propName) {
+        return _add(new PropToken(propName.toString()));
     }
 
-    public EqlSentenceBuilder extProp(final String propName) {
-        return _add(new ExtPropToken(propName));
+    public EqlSentenceBuilder extProp(final CharSequence propName) {
+        return _add(new ExtPropToken(propName.toString()));
     }
 
     public EqlSentenceBuilder val(final Object value) {
@@ -245,20 +249,20 @@ final class EqlSentenceBuilder {
         return _add(new NegatedConditionToken(conditionModel));
     }
 
-    public EqlSentenceBuilder as(final String yieldAlias) {
-        return _add(new AsToken(yieldAlias));
+    public EqlSentenceBuilder as(final CharSequence yieldAlias) {
+        return _add(new AsToken(yieldAlias.toString()));
     }
 
-    public EqlSentenceBuilder asRequired(final String yieldAlias) {
-        return _add(new AsRequiredToken(yieldAlias));
+    public EqlSentenceBuilder asRequired(final CharSequence yieldAlias) {
+        return _add(new AsRequiredToken(yieldAlias.toString()));
     }
 
-    public EqlSentenceBuilder anyOfProps(final Collection<String> props) {
-        return _add(new AnyOfPropsToken(props));
+    public EqlSentenceBuilder anyOfProps(final Collection<? extends CharSequence> props) {
+        return _add(new AnyOfPropsToken(asStrings(props)));
     }
 
-    public EqlSentenceBuilder anyOfProps(final IConvertableToPath... props) {
-        return _add(new AnyOfPropsToken(Arrays.stream(props).map(IConvertableToPath::toPath).collect(toImmutableList())));
+    public EqlSentenceBuilder anyOfProps(final CharSequence... props) {
+        return anyOfProps(asList(props));
     }
 
     public EqlSentenceBuilder anyOfParams(final Collection<String> params) {
@@ -281,12 +285,12 @@ final class EqlSentenceBuilder {
         return _add(new AnyOfExpressionsToken(expressions));
     }
 
-    public EqlSentenceBuilder allOfProps(final Collection<String> props) {
-        return _add(new AllOfPropsToken(props));
+    public EqlSentenceBuilder allOfProps(final Collection<? extends CharSequence> props) {
+        return _add(new AllOfPropsToken(asStrings(props)));
     }
 
-    public EqlSentenceBuilder allOfProps(final IConvertableToPath... props) {
-        return _add(new AllOfPropsToken(Arrays.stream(props).map(IConvertableToPath::toPath).collect(toImmutableList())));
+    public EqlSentenceBuilder allOfProps(final CharSequence... props) {
+        return allOfProps(asList(props));
     }
 
     public EqlSentenceBuilder allOfParams(final Collection<String> params) {
@@ -317,12 +321,12 @@ final class EqlSentenceBuilder {
         return _add(new AllToken(subQuery));
     }
 
-    public EqlSentenceBuilder setOfProps(final Collection<String> props) {
-        return _add(new PropsToken(props));
+    public EqlSentenceBuilder setOfProps(final Collection<? extends CharSequence> props) {
+        return _add(new PropsToken(asStrings(props)));
     }
 
-    public EqlSentenceBuilder setOfProps(final IConvertableToPath... props) {
-        return _add(new PropsToken(Arrays.stream(props).map(IConvertableToPath::toPath).collect(toImmutableList())));
+    public EqlSentenceBuilder setOfProps(final CharSequence... props) {
+        return setOfProps(asList(props));
     }
 
     public EqlSentenceBuilder setOfParams(final Collection<String> params) {
@@ -581,8 +585,8 @@ final class EqlSentenceBuilder {
         return _add(token(ORDERBY));
     }
 
-    public EqlSentenceBuilder joinAlias(final String alias) {
-        return _add(new AsToken(alias));
+    public EqlSentenceBuilder joinAlias(final CharSequence alias) {
+        return _add(new AsToken(alias.toString()));
     }
 
     public <E extends AbstractEntity<?>> EqlSentenceBuilder from() {
