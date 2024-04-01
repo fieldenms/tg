@@ -56,8 +56,6 @@ public class ScatterPlotMaster<T extends AbstractEntity<?>> implements IMaster<T
                 .replace("<!--@tg-entity-master-content-->", actions.getValue().toString())
                 .replace("//generatedPrimaryActions", actions.getKey())
                 .replace("//@ready-callback", readyCallback(scatterPlotMasterBuilder))
-                .replace("@margin", format("%spx %spx %spx %spx;", scatterPlotMasterBuilder.getTopMargin(), scatterPlotMasterBuilder.getRightMargin(),
-                        scatterPlotMasterBuilder.getBottomMargin(), scatterPlotMasterBuilder.getLeftMargin()))
                 .replace("@prefDim", "null")
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", String.valueOf(scatterPlotMasterBuilder.shouldSaveOnActivation()));
@@ -114,7 +112,9 @@ public class ScatterPlotMaster<T extends AbstractEntity<?>> implements IMaster<T
         return "self.options = " + chartOptions + ";\n"
                 + "self.legendItems =[" + join(legendItems, ",\n") + "];\n"
                 + "self.categoryRangeSource = '" + chartBuilder.getCategroyRangeConfig().getSource() + "';\n"
-                + "self.valueRangeSource = '" + chartBuilder.getValueRangeConfig().getSource() + "';\n";
+                + "self.valueRangeSource = '" + chartBuilder.getValueRangeConfig().getSource() + "';\n"
+                + format("self.margins = {top: %s, right: %s, bottom: %s, left: %s};\n", chartBuilder.getTopMargin(), chartBuilder.getRightMargin(),
+                        chartBuilder.getBottomMargin(), chartBuilder.getLeftMargin());
     }
 
     private String getYAxisTitle(final ScatterPlotMasterBuilder<T> chartBuilder) {

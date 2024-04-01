@@ -234,7 +234,10 @@ class ScatterPlot {
     }
 
     _createXAxis() {
-        return d3.axisBottom(this._xs);
+        const formatMinute = d3.timeFormat("%H:%M");
+        const formatDay = d3.timeFormat("%d/%m/%Y");
+        const formatTime = date => (d3.timeDay(date) < date ? formatMinute : formatDay)(date);
+        return d3.axisBottom(this._xs).tickFormat(formatTime);
     }
 
     _createXGrid() {
@@ -305,8 +308,8 @@ class ScatterPlot {
 
     _adjustTopMargin(label) {
         const labelBox = label.node().getBBox();
-        if ((!label.text() || (labelBox.width !== 0 && labelBox.height !== 0)) && this._options.margin.top < labelBox.height + 20) {
-            this.options = { margin: { top: labelBox.height + 20 } };
+        if ((!label.text() || (labelBox.width !== 0 && labelBox.height !== 0)) && this._options.margin.top < (labelBox.height + (labelBox.height ? 10 : 0))) {
+            this.options = { margin: { top: (labelBox.height ? labelBox.height + 10 : 0)} };
         }
     }
 
@@ -324,8 +327,8 @@ class ScatterPlot {
 
     _adjustBottomMargin(label, xAxisBox) {
         const labelBox = label.node().getBBox();
-        if ((!label.text() || (labelBox.width !== 0 && labelBox.height !== 0)) && this._options.margin.bottom < xAxisBox.height + labelBox.height + 20) {
-            this.options = { margin: { bottom: xAxisBox.height + labelBox.height + 20 } };
+        if ((!label.text() || (labelBox.width !== 0 && labelBox.height !== 0)) && this._options.margin.bottom < xAxisBox.height + labelBox.height + (labelBox.height ? 10 : 0)) {
+            this.options = { margin: { bottom: xAxisBox.height + labelBox.height + (labelBox.height ? 10 : 0) } };
         }
     }
 
@@ -361,9 +364,20 @@ class ScatterPlot {
 
     _adjustLeftMargin(label, yAxisBox) {
         const labelBox = label.node().getBBox();
-        if ((!label.text() || (labelBox.width !== 0 && labelBox.height !== 0)) && this._options.margin.left < yAxisBox.width + labelBox.height + 20) {
-            this.options = { margin: { left: yAxisBox.width + labelBox.height + 20 } };
+        if ((!label.text() || (labelBox.width !== 0 && labelBox.height !== 0)) && this._options.margin.left < yAxisBox.width + labelBox.height + (labelBox.height ? 10 : 0)) {
+            this.options = { margin: { left: yAxisBox.width + labelBox.height + (labelBox.height ? 10 : 0) } };
+            this._fireLeftMarginChanged(this.options.margin.left);
         }
+    }
+
+    _fireLeftMarginChanged(leftMargin) {
+        const event = new CustomEvent('scatter-plot-left-margin-changed', {
+            detail: leftMargin,
+            bubbles: true,
+            composed: true,
+            cancelable: true
+        });
+        this._chartArea.node().dispatchEvent(event);
     }
 
     _drawYAxisLabel(container) {

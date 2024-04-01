@@ -14,11 +14,6 @@ import '/resources/components/scatter-plot/tg-scatter-plot.js';
 const template = html`
     <style include="tg-entity-master-styles"></style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    <style>
-        #chart {
-            padding: @margin;
-        }
-    </style>
     <tg-entity-master
         id="masterDom"
         entity-type="[[entityType]]" 
@@ -33,7 +28,7 @@ const template = html`
         _process-saver-error="[[_processSaverError]]"
         _saver-loading="{{_saverLoading}}">
         <!--START OF GENERATED TG-ENTITY-MASTER DOM CONTENT-->
-        <tg-scatter-plot id="chart" class="chart-deck" chart-data="[[retrievedEntities]]" options="[[options]]" rendering-hints="[[renderingHints]]" legend-items="[[legendItems]]"></tg-scatter-plot>
+        <tg-scatter-plot id="chart" class="chart-deck" chart-data="[[retrievedEntities]]" options="[[options]]" rendering-hints="[[renderingHints]]" legend-items="[[legendItems]]" margins="[[margins]]"></tg-scatter-plot>
         <!--@tg-entity-master-content-->
         <!--END OF GENERATED TG-ENTITY-MASTER DOM CONTENT-->
     </tg-entity-master>`;
@@ -65,6 +60,10 @@ Polymer({
          * Rendering hints for chart
          */
         renderingHints: {
+            type: Object
+        },
+
+        margins: {
             type: Object
         }
     },

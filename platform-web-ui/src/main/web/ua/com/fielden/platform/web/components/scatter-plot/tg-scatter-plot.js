@@ -85,7 +85,7 @@ const template = html`
     <div id="chartContainer">
         <svg id="chart" class="scatter-plot"></svg>
     </div>
-    <div id="legend" class="legend-panel" style$="[[_calcLegendStyle(_chartStyles)]]">
+    <div id="legend" class="legend-panel" style$="[[_calcLegendStyle(_chartStyles, margins)]]">
         <template is="dom-repeat" items="[[legendItems]]" on-dom-change="_legendItemsChanged">
             <div class="legend-item">
                 <svg class="legend-shape"><path class="dot legend-path" d$="[[_calcLegendItemPath(item.style)]]" style$="[[_calcLegendItemStyle(item.style)]]"></svg>
@@ -125,10 +125,21 @@ export class TgScatterPlot extends mixinBehaviors([IronResizableBehavior], Polym
                 type: Array,
                 value: () => []
             },
+
+            margins: {
+                type: Object,
+                value: () => {return {top: 0, right: 0, bottom: 0, left: 0}}
+            },
             
             _chart: Object
         };
     }
+
+    static get observers() {
+        return [
+          "_stylesChaged(options, margins)"
+        ]
+      }
 
     ready () {
         super.ready();
@@ -143,6 +154,7 @@ export class TgScatterPlot extends mixinBehaviors([IronResizableBehavior], Polym
             this._chart.renderingHints(this.renderingHints);
         }
         this.scopeSubtree(this.$.chart, true);
+        this.$.chart.addEventListener("scatter-plot-left-margin-changed", e => this._stylesChaged(this._chart.options(), this.margins));
         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
     }
 
@@ -208,8 +220,17 @@ export class TgScatterPlot extends mixinBehaviors([IronResizableBehavior], Polym
         this.notifyResize();
     }
 
-    _calcLegendStyle (options) {
-        return "margin-left: " + options.margin.left + "px; margin-right: " + options.margin.right + "px;";
+    _stylesChaged (options, margins) {
+        if (options && options.margin && margins) {
+            this.$.chartContainer.style.marginTop = `${margins.top || 0}px`;
+            this.$.chartContainer.style.marginLeft = `${margins.left || 0}px`;
+            this.$.chartContainer.style.marginRight = `${margins.right || 0}px`;
+            this.$.legend.style.marginLeft = `${options.margin.left + (margins && margins.left ? margins.left : 0)}px`;
+            this.$.legend.style.marginRight = `${options.margin.right + (margins && margins.right ? margins.right : 0)}px`;
+            this.$.legend.style.marginBottom = `${margins && margins.bottom ? margins.bottom : 0}px`;
+            this.$.legend.style.marginTop = `10px`;
+            this.notifyResize();
+        }
     }
 
     _calcLegendItemPath (style) {
