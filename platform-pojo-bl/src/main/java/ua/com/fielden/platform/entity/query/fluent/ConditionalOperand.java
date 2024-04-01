@@ -5,7 +5,6 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 
 import java.util.List;
-import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
@@ -16,7 +15,6 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISingleConditionOperator;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
-import ua.com.fielden.platform.types.tuples.T2;
 
 abstract class ConditionalOperand<T1 extends IComparisonOperator<T2, ET>, T2 extends ILogicalOperator<?>, ET extends AbstractEntity<?>> //
         extends ExpConditionalOperand<T1, ET> //
@@ -70,7 +68,7 @@ abstract class ConditionalOperand<T1 extends IComparisonOperator<T2, ET>, T2 ext
      * {@inheritDoc}
      */
     @Override
-    public T2 critCondition(final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName) {
+    public T2 critCondition(final ICompoundCondition0<?> collectionQueryStart, final CharSequence propName, final CharSequence critPropName) {
         return nextForConditionalOperand(builder.critCondition(collectionQueryStart, propName, critPropName, empty()));
     }
 
@@ -78,7 +76,7 @@ abstract class ConditionalOperand<T1 extends IComparisonOperator<T2, ET>, T2 ext
      * {@inheritDoc}
      */
     @Override
-    public T2 critCondition(final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName, final Object defaultValue) {
+    public T2 critCondition(final ICompoundCondition0<?> collectionQueryStart, final CharSequence propName, final CharSequence critPropName, final Object defaultValue) {
         if (!(defaultValue instanceof List) && !(defaultValue instanceof String) && !(defaultValue instanceof ua.com.fielden.platform.types.tuples.T2)) {
             throw new EqlException(format("Argument [defaultValue] for property [%s] in a [critCondition] call should either be a list of strings, a string, or a tuple (T2).", propName));
         }

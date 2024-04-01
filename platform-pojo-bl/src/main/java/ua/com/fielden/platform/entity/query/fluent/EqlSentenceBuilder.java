@@ -123,10 +123,10 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder critCondition(
-            final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName,
+            final ICompoundCondition0<?> collectionQueryStart, final CharSequence propName, final CharSequence critPropName,
             final Optional<Object> defaultValue)
     {
-        return _add(new CritConditionToken(collectionQueryStart, propName, critPropName, defaultValue));
+        return _add(new CritConditionToken(collectionQueryStart, propName.toString(), critPropName.toString(), defaultValue));
     }
 
     public EqlSentenceBuilder isNull(final boolean negated) {
@@ -570,8 +570,8 @@ final class EqlSentenceBuilder {
         return _add(token(ORDERBY));
     }
 
-    public EqlSentenceBuilder joinAlias(final String alias) {
-        return _add(new AsToken(alias));
+    public EqlSentenceBuilder joinAlias(final CharSequence alias) {
+        return _add(new AsToken(alias.toString()));
     }
 
     public <E extends AbstractEntity<?>> EqlSentenceBuilder from() {
