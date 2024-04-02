@@ -8,6 +8,8 @@ import java.util.Map;
  * Contract to specify legend for scatter plot
  *
  * @param <T>
+ *
+ * @author TG Team
  */
 public interface IScatterPlotLegend <T extends AbstractEntity<?>> extends IScatterPlotAction<T> {
 

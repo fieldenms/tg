@@ -15,6 +15,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Implements the scatter plot configuration API.
+ *
+ * @param <T>
+ *
+ * @author TG Team
+ */
 public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IScatterPlotMasterBuilder<T>, IScatterPlotEntityType<T>, IScatterPlotCategoryProperty<T>, IScatterPlotValueProperty<T>, IScatterPlotTitle<T>, IScatterPlotStyleProperty<T> {
 
     private Class<T> entityType;

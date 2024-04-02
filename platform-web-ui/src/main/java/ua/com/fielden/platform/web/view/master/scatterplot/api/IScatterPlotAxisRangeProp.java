@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.web.view.master.scatterplot.api;
 
 /**
- * A contract to specify property name for source of axis range.
+ * A contract to specify property name of data source for axis range.
+ *
+ * @author TG Team
  */
 public interface IScatterPlotAxisRangeProp {
 

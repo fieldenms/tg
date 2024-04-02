@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.web.view.master.scatterplot.api;
 
 /**
- * A contract that returns the string representation of data range source and property name
+ * A contract that returns the string representation the source of data range and property name
+ *
+ * @author TG Team
  */
 public interface IScatterPlotRangeConfig {
 

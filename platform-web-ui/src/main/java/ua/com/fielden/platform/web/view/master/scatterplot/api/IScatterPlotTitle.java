@@ -6,11 +6,13 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  * Allows developer to specify scatter plot title.
  *
  * @param <T>
+ *
+ * @author TG Team
  */
 public interface IScatterPlotTitle<T extends AbstractEntity<?>> extends IScatterPlotXAxisTitle<T>{
 
     /**
-     * Assigns the title of scatter plot
+     * Assigns the title of scatter plot.
      *
      * @param title
      * @return

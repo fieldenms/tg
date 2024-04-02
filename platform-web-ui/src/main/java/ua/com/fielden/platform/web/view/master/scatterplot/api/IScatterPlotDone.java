@@ -7,6 +7,8 @@ import ua.com.fielden.platform.web.view.master.api.IMaster;
  * Contract to identify the end of scatter plot configuration.
  *
  * @param <T>
+ *
+ * @author TG Team
  */
 public interface IScatterPlotDone<T extends AbstractEntity<?>> {
 

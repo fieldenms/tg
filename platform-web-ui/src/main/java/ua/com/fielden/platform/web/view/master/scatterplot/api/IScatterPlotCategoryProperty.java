@@ -7,6 +7,8 @@ import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
  * Contract to specify property name and axis range configuration that will be used to configure category axis of scatter plot
  *
  * @param <T>
+ *
+ * @author TG Team
  */
 public interface IScatterPlotCategoryProperty<T extends AbstractEntity<?>> {
 
