@@ -92,8 +92,8 @@ const TgScatterPlotMasterBehaviorImpl = {
     _tooltip: function (entity, tooltipProps) {
         let res = ""; 
         tooltipProps.forEach(prop => {
-            const title = entity.type().prop(prop).title();
-            let value = entity.get(prop);
+            const title = prop === 'this' ? entity.type().entityTitle() : entity.type().prop(prop).title();
+            let value = prop === 'this' ? entity : entity.get(prop);
             if (this._reflector().isEntity(value)) {
                 value = getTooltipValueForEntity(value);
             } else {

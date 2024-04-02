@@ -17,4 +17,6 @@ public interface IScatterPlotStyleProperty<T extends AbstractEntity<?>> {
      * @return
      */
     IScatterPlotTitle<T> setStylePropertyName(IConvertableToPath propertyName);
+
+    IScatterPlotTitle<T> setStylePropertyName(String propertyName);
 }

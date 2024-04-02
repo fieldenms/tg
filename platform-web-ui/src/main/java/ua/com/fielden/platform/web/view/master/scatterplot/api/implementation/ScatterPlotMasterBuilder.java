@@ -143,7 +143,12 @@ public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IS
 
     @Override
     public IScatterPlotTitle<T> setStylePropertyName(final IConvertableToPath propertyName) {
-        this.stylePropertyName = propertyName.toPath();
+        return setStylePropertyName(propertyName.toPath());
+    }
+
+    @Override
+    public IScatterPlotTitle<T> setStylePropertyName(final String propertyName) {
+        this.stylePropertyName = propertyName;
         return this;
     }
 
