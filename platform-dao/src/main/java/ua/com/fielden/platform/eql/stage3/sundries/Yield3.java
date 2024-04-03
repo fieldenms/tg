@@ -47,7 +47,8 @@ public class Yield3 {
         final String operandSql = operand.sql(metadata);
         final var sb = new StringBuilder(operandSql.length());
 
-        // cast even if expected type equals the declared type (crucial for auto-yields)
+        // cast even if the expected type is the same as this type to cover the auto-yield case where a yielded null
+        // can be represented as Prop3 "id" with type Long
         if (metadata.dbVersion == POSTGRESQL && expectedType != NO_EXPECTED_TYPE) {
             sb.append("CAST (");
             sb.append(operandSql);
