@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage3.conditions;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.eql.meta.PropType.NULL_TYPE;
 
 import java.util.Date;
 import java.util.Objects;
@@ -33,11 +34,11 @@ public class LikePredicate3 implements ICondition3 {
     }
 
     private String leftOperandWithTypecastingSql(final EqlDomainMetadata metadata) {
-        if (leftOperand.type() != null && Integer.class == leftOperand.type().javaType()) {
+        if (Integer.class == leftOperand.type().javaType()) {
             return format("CAST(%s AS VARCHAR(11))", leftOperand.sql(metadata));
-        } else if (leftOperand.type() == null || String.class == leftOperand.type().javaType()) {
+        } else if (leftOperand.type().isNull() || String.class == leftOperand.type().javaType()) {
             return leftOperand.sql(metadata);
-        } else if (leftOperand.type() != null && Date.class == leftOperand.type().javaType()) {
+        } else if (Date.class == leftOperand.type().javaType()) {
             if (DbVersion.POSTGRESQL == metadata.dbVersion) {
                 return AbstractFunction3.getConvertToStringSqlForPostgresql(metadata, leftOperand);
             } else if (DbVersion.MSSQL == metadata.dbVersion) {

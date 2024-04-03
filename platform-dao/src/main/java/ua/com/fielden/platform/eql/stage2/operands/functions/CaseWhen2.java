@@ -37,12 +37,12 @@ public class CaseWhen2 extends AbstractFunction2<CaseWhen3> {
 
     private static Set<PropType> extractTypes(final List<T2<ICondition2<? extends ICondition3>, ISingleOperand2<? extends ISingleOperand3>>> whenThenPairs, final ISingleOperand2<? extends ISingleOperand3> elseOperand) {
         final Set<PropType> types = new HashSet<>();
-        if (elseOperand != null && elseOperand.type() != null) {
+        if (elseOperand != null && elseOperand.type().isNotNull()) {
             types.add(elseOperand.type());    
         }
         
         for (final T2<ICondition2<? extends ICondition3>, ISingleOperand2<? extends ISingleOperand3>> item : whenThenPairs) {
-            if (item._2.type() != null) {
+            if (item._2.type().isNotNull()) {
                 types.add(item._2.type());
             }
         }

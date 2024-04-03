@@ -14,6 +14,7 @@ import java.util.Map.Entry;
 
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.*;
+import static ua.com.fielden.platform.eql.meta.PropType.NULL_TYPE;
 
 public class YieldInfoNodesGenerator {
 
@@ -64,10 +65,10 @@ public class YieldInfoNodesGenerator {
     private static PropType determinePropType(final List<YieldAndConditions> yieldVariants) {
         final Set<PropType> propTypes = yieldVariants.stream()
                 .map(yv -> yv.yield.operand.type())
-                .filter(Objects::nonNull)
+                .filter(PropType::isNotNull)
                 .collect(toSet());
 
-        return propTypes.isEmpty() ? null : AbstractSingleOperand2.getTypeHighestPrecedence(propTypes);
+        return propTypes.isEmpty() ? NULL_TYPE : AbstractSingleOperand2.getTypeHighestPrecedence(propTypes);
     }
 
     private static Map<String, List<YieldAndConditions>> generateYieldsMatrix(final List<SourceQuery2> models) {

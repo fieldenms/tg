@@ -6,6 +6,7 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.eql.meta.PropType.LONG_PROP_TYPE;
+import static ua.com.fielden.platform.eql.meta.PropType.propType;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
 import java.util.List;
@@ -59,7 +60,7 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
 
     private static PropType obtainPropType(final List<AbstractQuerySourceItem<?>> path) {
         final AbstractQuerySourceItem<?> lastElement = path.getLast();
-        return new PropType(lastElement.javaType(), lastElement.hibType);
+        return propType(lastElement.javaType(), lastElement.hibType);
     }
 
     @Override

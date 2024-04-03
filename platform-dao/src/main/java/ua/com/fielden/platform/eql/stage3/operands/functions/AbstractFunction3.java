@@ -38,9 +38,9 @@ public abstract class AbstractFunction3 extends AbstractSingleOperand3 {
     }
 
     private String getConvertToStringSqlForOracle(final EqlDomainMetadata metadata, final ISingleOperand3 operand) {
-        if (operand.type() != null && Date.class.equals(operand.type().javaType())) {
+        if (Date.class.equals(operand.type().javaType())) {
             return "TO_CHAR(" + operand.sql(metadata) + ", 'YYYY-MM-dd hh24:mm:ss')";
-        } else if (operand.type() != null && String.class.equals(operand.type().javaType())) {
+        } else if (String.class.equals(operand.type().javaType())) {
             return operand.sql(metadata);
         } else {
             return "CAST(" + operand.sql(metadata) + " AS VARCHAR2(255))";
@@ -48,9 +48,9 @@ public abstract class AbstractFunction3 extends AbstractSingleOperand3 {
     }
 
     private String getConvertToStringSqlForH2(final EqlDomainMetadata metadata, final ISingleOperand3 operand) {
-        if (operand.type() != null && Date.class.equals(operand.type().javaType())) {
+        if (Date.class.equals(operand.type().javaType())) {
             return "FORMATDATETIME(" + operand.sql(metadata) + ", 'YYYY-MM-dd hh:mm:ss')";
-        } else if (operand.type() != null && String.class.equals(operand.type().javaType())) {
+        } else if (String.class.equals(operand.type().javaType())) {
             return operand.sql(metadata);
         } else {
             return "CAST(" + operand.sql(metadata) + " AS VARCHAR(255))";
@@ -58,7 +58,7 @@ public abstract class AbstractFunction3 extends AbstractSingleOperand3 {
     }
 
     public static String getConvertToStringSqlForMsSql2005(final EqlDomainMetadata metadata, final ISingleOperand3 operand) {
-        if (operand.type() != null && Date.class.equals(operand.type().javaType())) {
+        if (Date.class.equals(operand.type().javaType())) {
             // TODO The date/time format should be read from IDates, once this contract is extended to support domain-specific data formats.
             //      However, there needs to be a database-specific translation between formats.
             final var opSql = operand.sql(metadata);
@@ -73,7 +73,7 @@ public abstract class AbstractFunction3 extends AbstractSingleOperand3 {
                     opSql, opSql, opSql,
                     opSql, opSql,
                     opSql);
-        } else if (operand.type() != null && String.class.equals(operand.type().javaType())) {
+        } else if (String.class.equals(operand.type().javaType())) {
             return operand.sql(metadata);
         } else {
             return "CAST(" + operand.sql(metadata) + " AS VARCHAR(255))";
@@ -81,7 +81,7 @@ public abstract class AbstractFunction3 extends AbstractSingleOperand3 {
     }
 
     public static String getConvertToStringSqlForPostgresql(final EqlDomainMetadata metadata, final ISingleOperand3 operand) {
-        if (operand.type() != null && Date.class.equals(operand.type().javaType())) {
+        if (Date.class.equals(operand.type().javaType())) {
             // TODO The date/time format should be read from IDates, once this contract is extended to support domain-specific data formats.
             //      However, there needs to be a database-specific translation between formats.
             final var opSql = operand.sql(metadata);
@@ -96,7 +96,7 @@ public abstract class AbstractFunction3 extends AbstractSingleOperand3 {
                     opSql, opSql,
                     opSql, opSql, opSql,
                     opSql);
-        } else if (operand.type() != null && String.class.equals(operand.type().javaType())) {
+        } else if (String.class.equals(operand.type().javaType())) {
             return operand.sql(metadata);
         } else {
             return "CAST(" + operand.sql(metadata) + " AS VARCHAR(255))";

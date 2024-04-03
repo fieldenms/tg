@@ -52,11 +52,10 @@ public class Source3BasedOnQueries extends AbstractSource3 {
      * It is also assumed that the underlying queries are equal in the number of yielded values.
      */
     private List<PropType> expectedYieldTypes() {
-        // in each column of the result set find the first non-NULL type; this assumes that all other non-NULL types in
-        // the same column are compatible with the found one
+        // in each column of the result set find the first value with non-NULL type; assume that all values in the same
+        // column are compatible with each other in terms of their types
         return transpose(models, q -> q.yields.getYields().stream())
-                // we want the declared type
-                .map(yields -> yields.stream().map(y -> y.type).filter(Objects::nonNull).findFirst().orElse(NO_EXPECTED_TYPE))
+                .map(yields -> yields.stream().map(y -> y.type).filter(PropType::isNotNull).findFirst().orElse(NO_EXPECTED_TYPE))
                 .toList();
     }
 

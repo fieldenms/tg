@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
+import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
@@ -23,6 +24,7 @@ import static java.util.Collections.emptySortedMap;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_ENTITY;
+import static ua.com.fielden.platform.eql.meta.PropType.NULL_TYPE;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries> {
@@ -74,7 +76,7 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
             if (declaredProp != null) {
                 // The only thing that has to be taken from declared is its structure (in case of UE or complex value)
                 if (declaredProp instanceof QuerySourceItemForEntityType<?> declaredEntityTypeQuerySourceInfoItem) { // here we assume that yield is of ET (this will help to handle the case of yielding ID, which currently is just long only.
-                    if (yield.propType() == null ||
+                    if (yield.propType().isNull() ||
                         yield.propType().javaType() == declaredEntityTypeQuerySourceInfoItem.javaType() ||
                         yield.propType().javaType() == Long.class
                     ) {
@@ -93,9 +95,9 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
                 }
             } else {
                 // adding not declared props
-                createdProps.put(yield.name(), yield.propType() != null && isEntityType(yield.propType().javaType())
+                createdProps.put(yield.name(), yield.propType().isNotNull() && isEntityType(yield.propType().javaType())
                         ? new QuerySourceItemForEntityType<>(yield.name(), querySourceInfoProvider.getModelledQuerySourceInfo((Class<? extends AbstractEntity<?>>) yield.propType().javaType()), H_ENTITY, yield.nonnullable())
-                        : new QuerySourceItemForPrimType<>(yield.name(), yield.propType() != null ? yield.propType().javaType() : null, yield.propType() != null ? yield.propType().hibType() : null));
+                        : new QuerySourceItemForPrimType<>(yield.name(), yield.propType().isNotNull() ? yield.propType().javaType() : null, yield.propType().isNotNull() ? yield.propType().hibType() : null));
             }
         }
 

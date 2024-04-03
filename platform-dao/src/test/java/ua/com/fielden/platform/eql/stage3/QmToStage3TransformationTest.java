@@ -5,10 +5,7 @@ import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.eql.meta.PropType.BIGDECIMAL_PROP_TYPE;
-import static ua.com.fielden.platform.eql.meta.PropType.INTEGER_PROP_TYPE;
-import static ua.com.fielden.platform.eql.meta.PropType.LONG_PROP_TYPE;
-import static ua.com.fielden.platform.eql.meta.PropType.STRING_PROP_TYPE;
+import static ua.com.fielden.platform.eql.meta.PropType.*;
 import static ua.com.fielden.platform.eql.stage1.sundries.Yield1.ABSENT_ALIAS;
 
 import org.junit.Ignore;
@@ -106,7 +103,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable source = source(MODEL, 1);
 
         final Yield3 modelYield = yieldId(source, "model");
-        final Yield3 makeYield = yieldProp("make", source, "make", new PropType(MAKE, H_LONG));
+        final Yield3 makeYield = yieldProp("make", source, "make", propType(MAKE, H_LONG));
         final Yields3 yields = yields(modelYield, makeYield);
 
         final ResultQuery3 expQry = qry(sources(source), yields);
@@ -269,7 +266,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
 
         final Conditions3 subQryConditions = cond(eq(idProp(veh), entityProp("vehicle", wo, VEHICLE)));
 
-        final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleEntity("make", model, MAKE)), new PropType(MAKE, H_LONG));
+        final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleEntity("make", model, MAKE)), propType(MAKE, H_LONG));
 
         final IJoinNode3 sources =
                 lj(
@@ -300,7 +297,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
 
         final Conditions3 subQryConditions = cond(eq(idProp(veh), entityProp("vehicle", wo, VEHICLE)));
 
-        final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleEntity("make", model, MAKE)), new PropType(MAKE, H_LONG));
+        final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleEntity("make", model, MAKE)), propType(MAKE, H_LONG));
 
         final IJoinNode3 sources = sources(wo);
         final Conditions3 conditions = or(isNotNull(expSubQry));

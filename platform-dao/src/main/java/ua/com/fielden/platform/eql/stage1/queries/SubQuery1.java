@@ -16,6 +16,7 @@ import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_ENTITY;
+import static ua.com.fielden.platform.eql.meta.PropType.propType;
 import static ua.com.fielden.platform.eql.stage1.sundries.Yield1.ABSENT_ALIAS;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
@@ -60,7 +61,7 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
     private static PropType enhance(final Class<?> resultType, final Yields2 yields) {
         return resultType == null
                ? yields.getYields().iterator().next().operand.type() // the case of modelAsPrimitive() no ResultType provided
-               : new PropType(resultType, H_ENTITY); // the case of modelAsEntity(..)
+               : propType(resultType, H_ENTITY); // the case of modelAsEntity(..)
     }
 
     private boolean isRefetchOnlyQuery() {
