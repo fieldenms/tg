@@ -23,12 +23,11 @@ public class Yield3 {
     public final String column;
 
     /**
-     * The type declared at the model level.
+     * The expected type of this yield.
      * <ul>
-     *   <li>for non-calculated properties -- the same as the type of {@link #operand}
-     *   <li>for calculated -- the type of {@link #operand} will be inferred from the actual expression and may differ
-     *       from the declared one.
-     *   <li>for other operands -- should be equal to the type of {@link #operand}
+     *   <li>for calculated properties -- the type declared at the model level; the type of {@link #operand} will be
+     *       inferred from the actual expression and may be different.
+     *   <li>for other operands -- equal to the type of {@link #operand}.
      * </ul>
      */
     public final PropType type;
