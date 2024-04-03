@@ -3,7 +3,10 @@ package ua.com.fielden.platform.entity.functional.centre;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
@@ -50,7 +53,7 @@ public class CentreContextHolder extends AbstractEntity<String> {
 
     @IsProperty(CentreContextHolder.class)
     @Title(value = "Related contexts", desc = "Contexts relate to this one")
-    private Map<String, CentreContextHolder> relatedContexts = new LinkedHashMap<>();
+    private final Map<String, CentreContextHolder> relatedContexts = new LinkedHashMap<>();
 
     @IsProperty
     @Title(value = "Parent Centre Context", desc = "The context of the centre that owns this view as a insertion point")
@@ -119,7 +122,7 @@ public class CentreContextHolder extends AbstractEntity<String> {
     }
 
     @Observable
-    protected CentreContextHolder setModifHolder(final Map<String, Object> modifHolder) {
+    public CentreContextHolder setModifHolder(final Map<String, Object> modifHolder) {
         this.modifHolder.clear();
         this.modifHolder.putAll(modifHolder);
         return this;
@@ -130,7 +133,7 @@ public class CentreContextHolder extends AbstractEntity<String> {
     }
 
     @Observable
-    protected CentreContextHolder setCustomObject(final Map<String, Object> customObject) {
+    public CentreContextHolder setCustomObject(final Map<String, Object> customObject) {
         this.customObject.clear();
         this.customObject.putAll(customObject);
         return this;

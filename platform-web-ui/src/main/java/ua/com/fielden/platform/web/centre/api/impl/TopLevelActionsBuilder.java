@@ -171,14 +171,20 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
         return new ResultSetBuilder<>(builder).setHeight(height);
     }
 
+    @Deprecated
     @Override
     public IResultSetBuilder3Ordering<T> addProp(final String propName) {
-        return new ResultSetBuilder<>(builder).addProp(propName);
+        return new ResultSetBuilder<>(builder).addProp(propName, true);
     }
 
     @Override
-    public IResultSetBuilder4aWidth<T> addProp(final PropDef<?> propDef) {
-        return new ResultSetBuilder<>(builder).addProp(propDef);
+    public IResultSetBuilder3Ordering<T> addProp(final IConvertableToPath prop, final boolean presentByDefault) {
+        return new ResultSetBuilder<>(builder).addProp(prop.toPath(), presentByDefault);
+    }
+
+    @Override
+    public IResultSetBuilder4aWidth<T> addProp(final PropDef<?> propDef, final boolean presentByDefault) {
+        return new ResultSetBuilder<>(builder).addProp(propDef, presentByDefault);
     }
 
     @Override

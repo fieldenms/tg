@@ -14,20 +14,33 @@ import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 public interface IResultSetBuilder2Properties<T extends AbstractEntity<?>> extends IResultSetBuilderDynamicProps<T>{
 
     /**
-     * Adds result-set column for {@code propName}, possibly in "dot-notation" form (e.g. "zone.sector.division").
+     * Adds {@code propName} to an Entity Centre result set. Supports a dot-notation form (e.g., "zone.sector.division").
+     * <p>
+     * This method is deprecated, use {@link #addProp(IConvertableToPath)} instead.
      */
+    @Deprecated
     IResultSetBuilder3Ordering<T> addProp(final String propName);
 
     /**
-     * Adds result-set column for {@code propName}, possibly in "dot-notation" form (e.g. Station_.zone().sector().division()).
+     * Adds {@code prop} to an Entity Centre result set. Supports a dot-notation form (e.g., Station_.zone().sector().division()).
      */
-    default IResultSetBuilder3Ordering<T> addProp(final IConvertableToPath propName) {
-        return addProp(propName.toPath());
+    default IResultSetBuilder3Ordering<T> addProp(final IConvertableToPath prop) {
+        return addProp(prop, true);
     }
 
     /**
-     * Adds editable result-set column for {@code propName}, possibly in "dot-notation" form (e.g. "zone.sector.division").
+     * Adds property {@code prop} to an Entity Centre result set.
+     * 
+     * @param presentByDefault -- indicates whether the property should be present in the result set by default; users can add/remove the property using AZ (Customise Columns) action
      */
+    IResultSetBuilder3Ordering<T> addProp(final IConvertableToPath prop, final boolean presentByDefault);
+
+    /**
+     * Adds editable result-set column for {@code propName}, possibly in "dot-notation" form (e.g. "zone.sector.division").
+     * <p>
+     * This method is deprecated, use {@link #addEditableProp(IConvertableToPath)} instead.
+     */
+    @Deprecated
     IResultSetBuilderWidgetSelector<T> addEditableProp(final String propName);
 
     /**
@@ -37,6 +50,18 @@ public interface IResultSetBuilder2Properties<T extends AbstractEntity<?>> exten
         return addEditableProp(propName.toPath());
     }
 
-    IResultSetBuilder4aWidth<T> addProp(final PropDef<?> propDef);
+    /**
+     * Adds a custom column to an Entity Centre result set, using {@link PropDef} definition.
+     * 
+     * @param presentByDefault -- indicates whether the property should be present in the result set by default; users can add/remove the property using AZ (Customise Columns) action.
+     */
+    IResultSetBuilder4aWidth<T> addProp(final PropDef<?> propDef, final boolean presentByDefault);
+
+    /**
+     * Adds custom result-set column using {@link PropDef} definition.
+     */
+    default IResultSetBuilder4aWidth<T> addProp(final PropDef<?> propDef) {
+        return addProp(propDef, true);
+    }
 
 }
