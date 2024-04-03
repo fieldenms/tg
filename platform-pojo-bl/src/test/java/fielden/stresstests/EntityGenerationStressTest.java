@@ -69,7 +69,7 @@ public class EntityGenerationStressTest {
                         .addProperties(np1, np2)
                         .modifyTypeName(DynamicTypeNamingService.nextTypeName(Entity.class.getName()))
                         .endModification();
-            } catch (final ClassNotFoundException ex) {
+            } catch (final Exception ex) {
                 LOGGER.error("Could not generate entity.", ex);
                 return null;
             }

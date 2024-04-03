@@ -140,14 +140,14 @@ public class DynamicEntityTypeGenerationTest {
     public void startModification_method_must_be_used_as_the_API_entry_point() {
         assertThrows("An exception should have been thrown due to omitted startModification call.",
                 TypeMakerException.class, () -> {
-                    final TypeMaker<Entity> tp = new TypeMaker<Entity>(null, Entity.class);
+                    final TypeMaker<Entity> tp = new TypeMaker<Entity>(null);
                     tp.addProperties(NewProperty.create("newTestProp", String.class, "Title", "Desc"))
                         .endModification();
                 });
 
         assertThrows("An exception should have been thrown due to omitted startModification call.",
                 TypeMakerException.class, () -> {
-                    final TypeMaker<Entity> tp = new TypeMaker<Entity>(null, Entity.class);
+                    final TypeMaker<Entity> tp = new TypeMaker<Entity>(null);
                     tp.endModification();
                 });
     }

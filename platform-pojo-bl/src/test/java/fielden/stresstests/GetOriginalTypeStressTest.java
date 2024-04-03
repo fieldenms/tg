@@ -47,7 +47,7 @@ public class GetOriginalTypeStressTest {
             try {
                 return startModification(Entity.class)
                         .modifyTypeName(DynamicTypeNamingService.nextTypeName(Entity.class.getName())).endModification();
-            } catch (final ClassNotFoundException e) {
+            } catch (final Exception e) {
                 e.printStackTrace();
                 return null;
             }

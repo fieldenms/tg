@@ -1,22 +1,25 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
-import net.bytebuddy.dynamic.loading.InjectionClassLoader;
-import org.apache.logging.log4j.Logger;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.reflection.asm.exceptions.DynamicEntityClassLoaderException;
-import ua.com.fielden.platform.types.tuples.T2;
+import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toMap;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
+import static ua.com.fielden.platform.reflection.asm.impl.TypeMaker.GET_ORIG_TYPE_METHOD_NAME;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Function;
 
-import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toMap;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.reflection.asm.impl.TypeMaker.GET_ORIG_TYPE_METHOD_NAME;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
+import org.apache.logging.log4j.Logger;
+
+import net.bytebuddy.dynamic.loading.InjectionClassLoader;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.reflection.asm.exceptions.DynamicEntityClassLoaderException;
+import ua.com.fielden.platform.types.tuples.T2;
 
 /**
  * A class loader for dynamically constructed or modified entity types.
@@ -69,7 +72,7 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
      * {@inheritDoc}
      */
     @Override
-    protected Map<String, Class<?>> doDefineClasses(final Map<String, byte[]> typeDefinitions) throws ClassNotFoundException {
+    protected Map<String, Class<?>> doDefineClasses(final Map<String, byte[]> typeDefinitions) {
         return typeDefinitions.entrySet().stream()
                 .collect(toMap(Map.Entry::getKey, entry -> doDefineClass(entry.getKey(), entry.getValue())));
     }
@@ -103,10 +106,41 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
      *
      * @param origType
      * @return
-     * @throws ClassNotFoundException
      */
-    public static <T> TypeMaker<T> startModification(final Class<T> origType) throws ClassNotFoundException {
-        return new TypeMaker<T>(instance, origType).startModification();
+    public static <T> TypeMaker<T> startModification(final Class<T> origType) {
+        return new TypeMaker<T>(instance).startModification(origType);
+    }
+
+    /**
+     * Returns already modified type with {@code typeName} full class name, if there is one.
+     * Otherwise generates that type using {@code modifyType} function (typeMaker -> typeMaker).
+     * <p>
+     * Typical usage:<br><br>
+     * {@code modifiedClass(newTypeName, typeMaker -> typeMaker.startModification(Entity.class).addProperties(...).modifyProperties(...).addClassAnnotations(...))}<br><br>
+     * Please note that {@code modifyTypeName(newTypeName)} call is not needed in {@code modifyType} function -- {@code newTypeName} will be assigned automatically.
+     * 
+     * @param typeName
+     * @param modifyType
+     * @return
+     */
+    @SuppressWarnings({ "rawtypes" })
+    public static Class modifiedClass(final String typeName, final Function<TypeMaker, TypeMaker> modifyType) {
+        return getCachedClass(typeName).orElseGet(() -> modifyType.apply(new TypeMaker(instance).modifyTypeName(typeName)).endModification());
+    }
+
+    /**
+     * Generates modified type from {@code origType} using {@code modifyType} function (typeMaker -> typeMaker).
+     * <p>
+     * Typical usage:<br><br>
+     * {@code modifiedClass(origType, typeMaker -> typeMaker.addProperties(...).modifyProperties(...).addClassAnnotations(...))}<br><br>
+     * Please note that {@code modifyTypeName(newTypeName)} call may not be used in {@code modifyType} function -- {@link DynamicTypeNamingService#nextTypeName(String)} will be assigned automatically.
+     * 
+     * @param typeName
+     * @param modifyType
+     * @return
+     */
+    public static <T> Class<? extends T> modifiedClass(final Class<T> origType, final Function<TypeMaker<T>, TypeMaker<T>> modifyType) {
+        return modifyType.apply(new TypeMaker<T>(instance).startModification(origType)).endModification();
     }
 
     /**

@@ -3,6 +3,8 @@ package ua.com.fielden.platform.reflection.asm.impl;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toCollection;
 import static ua.com.fielden.platform.cypher.Checksum.sha256;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getCachedClass;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
 
@@ -108,7 +110,7 @@ public class TypeMaker<T> {
     private static final String COLLECTIONAL_SETTER_FIELD_PREFIX = "collectionalSetterInterceptor$";
 
     private final DynamicEntityClassLoader cl;
-    private final Class<T> origType;
+    private Class<T> origType;
     private DynamicType.Builder<T> builder;
     private String modifiedName;
     private final Logger logger = LogManager.getLogger(getClass());
@@ -116,7 +118,7 @@ public class TypeMaker<T> {
     /**
      * Enables lazy access to all (declared + inherited) properties of the original type.
      */
-    private final Set<String> origTypeProperties;// = new LinkedHashSet<>();
+    private Set<String> origTypeProperties;
     /**
      * Holds mappings of the form: {@code property name -> initialized value supplier}.
      */
@@ -126,24 +128,21 @@ public class TypeMaker<T> {
      */
     private final Map<String, T2<NewProperty<?>, Type>> addedProperties = new LinkedHashMap<>();
 
-    public TypeMaker(final DynamicEntityClassLoader loader, final Class<T> origType) {
+    public TypeMaker(final DynamicEntityClassLoader loader) {
         this.cl = loader;
+    }
+
+    /**
+     * Initiates adaptation of the specified {@code origType}. This could be either dynamic or static type (created manually by developer).
+     */
+    public TypeMaker<T> startModification(final Class<T> origType) {
+        if (skipAdaptation(origType.getName())) {
+            throw new TypeMakerException("Java system classes should not be enhanced.");
+        }
         this.origType = origType;
         this.origTypeProperties = Finder.streamProperties(origType, IsProperty.class)
                                         .map(Field::getName)
                                         .collect(toCollection(LinkedHashSet::new));
-    }
-
-    /**
-     * Initiates adaptation of the specified by name type. This could be either dynamic or static type (created manually by developer).
-     *
-     * @return
-     * @throws ClassNotFoundException
-     */
-    public TypeMaker<T> startModification() throws ClassNotFoundException {
-        if (skipAdaptation(origType.getName())) {
-            throw new TypeMakerException("Java system classes should not be enhanced.");
-        }
         // no need for looking up the specified type in cache,
         // which was useful before, since ASM operates on byte[] directly
 
@@ -171,7 +170,7 @@ public class TypeMaker<T> {
      * @param properties to be added
      * @return this instance to continue building
      */
-    public TypeMaker<T> addProperties(final Set<NewProperty<?>> properties) {
+    public TypeMaker<T> addProperties(final Set<NewProperty> properties) {
         if (builder == null) {
             throw new TypeMakerException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
         }
@@ -198,7 +197,7 @@ public class TypeMaker<T> {
      * @param properties properties to be added
      * @return this instance to continue building
      */
-    public TypeMaker<T> addProperties(final NewProperty<?>... properties) {
+    public TypeMaker<T> addProperties(final NewProperty... properties) {
         return addProperties(linkedSetOf(properties));
     }
 
@@ -367,18 +366,8 @@ public class TypeMaker<T> {
         if (StringUtils.isBlank(newTypeName)) {
             throw new TypeMakerException("New type name cannot be blank.");
         }
-        if (builder == null) {
-            throw new TypeMakerException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
-        }
-        builder = builder.name(newTypeName);
         modifiedName = newTypeName;
         return this;
-    }
-
-    private String modifyTypeName() {
-        final String newName = DynamicTypeNamingService.nextTypeName(origType.getName());
-        modifyTypeName(newName);
-        return newName;
     }
 
     /**
@@ -490,8 +479,9 @@ public class TypeMaker<T> {
         }
 
         if (modifiedName == null) {
-            modifyTypeName();
+            modifyTypeName(nextTypeName(origType.getName()));
         }
+        builder = builder.name(modifiedName);
 
         // delay adding constructors and setters to the stage where 'modifiedName' is already known;
         // MethodDelegation static fields will be named exactly the same in identical types to facilitate proper concurrent generation

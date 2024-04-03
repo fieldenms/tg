@@ -5,7 +5,7 @@ import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toCollection;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.modifiedClass;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.generateTypeName;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
@@ -13,21 +13,12 @@ import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.SortedSet;
-import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
@@ -70,6 +61,17 @@ import ua.com.fielden.platform.utils.EntityUtils;
  */
 public final class DomainTreeEnhancer extends AbstractDomainTree implements IDomainTreeEnhancer {
     private static final Logger LOGGER = getLogger(DomainTreeEnhancer.class);
+    private static final String ERR_TYPE_COULD_NOT_BE_GENERATED = "Type for [%s] could not be generated.";
+    private static final String ERR_COULD_NOT_PROPAGATE_ENHANCED_TYPE_TO_ROOT = "Enhanced type [%s] could not be propagated to [%s] root along path [%s].";
+    private static final String ERR_COULD_NOT_MODIFY_ROOT_TYPE_NAME = "Root type [%s] name could not be modified to [%s].";
+    /**
+     * Type diff object's key for calculated properties, used in generated type naming.
+     */
+    private static final String CALCULATED_PROPERTIES = "calculatedProperties";
+    /**
+     * Type diff object's key for custom properties, used in generated type naming.
+     */
+    private static final String CUSTOM_PROPERTIES = "customProperties";
 
     /**
      * Cache of {@link DomainTreeEnhancer}s with keys as [rootTypes; calcProps; customProps].
@@ -367,7 +369,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         for (final Entry<Class<?>, Map<String, Map<String, IProperty>>> entry : groupedCalculatedProperties.entrySet()) {
             final Class<?> originalRoot = entry.getKey();
             // generate predefined root type name for all calculated properties
-            final String predefinedRootTypeName = generateTypeName(originalRoot, linkedMapOf(t2("calculatedProperties", calculatedPropertiesInfo(calculatedProperties, rootTypes)), t2("customProperties", customPropertiesInfo(customProperties))));
+            final String predefinedRootTypeName = generateTypeName(originalRoot, linkedMapOf(t2(CALCULATED_PROPERTIES, calculatedPropertiesInfo(calculatedProperties, rootTypes)), t2(CUSTOM_PROPERTIES, customPropertiesInfo(customProperties))));
             final boolean calcOrCustomPropsOnlyInRoot = entry.getValue() != null && entry.getValue().size() == 1 && StringUtils.isEmpty(entry.getValue().entrySet().iterator().next().getKey());
             if (entry.getValue() == null) {
                 originalAndEnhancedRootTypes.put(originalRoot, originalRoot);
@@ -375,61 +377,59 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
                 for (final Entry<String, Map<String, IProperty>> placeAndProps : entry.getValue().entrySet()) {
                     final Map<String, IProperty> props = placeAndProps.getValue();
                     if (props != null && !props.isEmpty()) {
+                        final Supplier<Set<NewProperty>> createNewProperties = () -> {
+                            return props.entrySet().stream().map(nameWithProp -> {
+                                final IProperty iProp = nameWithProp.getValue();
+                                if (iProp instanceof final CalculatedProperty prop) {
+                                    final String originationProperty = prop.getOriginationProperty() == null ? "" : prop.getOriginationProperty();
+                                    final Annotation calcAnnotation = new CalculatedAnnotation().contextualExpression(prop.getContextualExpression()).rootTypeName(predefinedRootTypeName).contextPath(prop.getContextPath()).origination(originationProperty).attribute(prop.getAttribute()).category(prop.category()).newInstance();
+                                    final IsProperty isPropAnnot = prop.getPrecision() != null && prop.getScale() != null ? new IsPropertyAnnotation(prop.getPrecision(), prop.getScale()).newInstance() : NewProperty.DEFAULT_IS_PROPERTY_ANNOTATION;
+                                    return new NewProperty(nameWithProp.getKey(), prop.resultType(), prop.getTitle(), prop.getDesc(), isPropAnnot, calcAnnotation);
+                                } else { // this should be CustomProperty!
+                                    final CustomProperty prop = (CustomProperty) iProp;
+                                    return new NewProperty(nameWithProp.getKey(), prop.resultType(), prop.getTitle(), prop.getDesc(), new CustomPropAnnotation().newInstance());
+                                }
+                            }).collect(toCollection(LinkedHashSet::new));
+                        };
                         final Class<?> realRoot = originalAndEnhancedRootTypes.get(originalRoot);
                         // a path to calculated properties
                         final String path = placeAndProps.getKey();
 
-                        final NewProperty[] newProperties = new NewProperty[props.size()];
-                        int i = 0;
-                        for (final Entry<String, IProperty> nameWithProp : props.entrySet()) {
-                            final IProperty iProp = nameWithProp.getValue();
-                            if (iProp instanceof final CalculatedProperty prop) {
-                                final String originationProperty = prop.getOriginationProperty() == null ? "" : prop.getOriginationProperty();
-                                final Annotation calcAnnotation = new CalculatedAnnotation().contextualExpression(prop.getContextualExpression()).rootTypeName(predefinedRootTypeName).contextPath(prop.getContextPath()).origination(originationProperty).attribute(prop.getAttribute()).category(prop.category()).newInstance();
-                                final IsProperty isPropAnnot = prop.getPrecision() != null && prop.getScale() != null ? new IsPropertyAnnotation(prop.getPrecision(), prop.getScale()).newInstance() : NewProperty.DEFAULT_IS_PROPERTY_ANNOTATION;
-                                newProperties[i++] = new NewProperty(nameWithProp.getKey(), prop.resultType(), prop.getTitle(), prop.getDesc(),
-                                                                     isPropAnnot,
-                                                                     calcAnnotation);
-                            } else { // this should be CustomProperty!
-                                final CustomProperty prop = (CustomProperty) iProp;
-                                newProperties[i++] = new NewProperty(nameWithProp.getKey(), prop.resultType(), prop.getTitle(), prop.getDesc(), new CustomPropAnnotation().newInstance());
-                            }
-                        }
                         // determine a "real" parent type:
                         final Class<?> realParentToBeEnhanced = StringUtils.isEmpty(path) ? realRoot : PropertyTypeDeterminator.determinePropertyType(realRoot, path);
+                        final Class<?> realParentEnhanced;
                         try {
                             // generate & load new type enhanced by calculated properties
-                            final var typeBuilder = startModification(realParentToBeEnhanced)
-                                    .addProperties(newProperties);
-                                    /* TODO .modifySupertypeName(realParentToBeEnhanced.getName()).*/
                             if (calcOrCustomPropsOnlyInRoot) {
-                                typeBuilder.modifyTypeName(predefinedRootTypeName);
+                                realParentEnhanced = modifiedClass(predefinedRootTypeName, typeMaker -> typeMaker.startModification(realParentToBeEnhanced).addProperties(createNewProperties.get())); /* TODO .modifySupertypeName(realParentToBeEnhanced.getName()).*/
+                            } else {
+                                realParentEnhanced = modifiedClass(realParentToBeEnhanced, typeMaker -> typeMaker.addProperties(createNewProperties.get())); /* TODO .modifySupertypeName(realParentToBeEnhanced.getName()).*/
                             }
-                            final Class<?> realParentEnhanced = typeBuilder.endModification();
-                            // propagate enhanced type to root
-                            final Class<?> rootAfterPropagationAndAdditionalByteArrays = propagateEnhancedTypeToRoot(realParentEnhanced, realRoot, path);
-                            final Class<?> rootAfterPropagation = rootAfterPropagationAndAdditionalByteArrays;
-                            // insert new byte arrays into beginning (the first item is an array of root type)
-                            // replace relevant root type in cache
-                            originalAndEnhancedRootTypes.put(originalRoot, rootAfterPropagation);
-                        } catch (final ClassNotFoundException e) {
-                            LOGGER.error(e);
-                            throw new IllegalStateException(e);
+                        } catch (final Exception ex) {
+                            final var typeGenEx = new DomainTreeException(ERR_TYPE_COULD_NOT_BE_GENERATED.formatted(realParentToBeEnhanced.getSimpleName()), ex);
+                            LOGGER.error(typeGenEx);
+                            throw typeGenEx;
                         }
+                        // propagate enhanced type to root
+                        final Class<?> rootAfterPropagation = propagateEnhancedTypeToRoot(realParentEnhanced, realRoot, path);
+                        // replace relevant root type in cache
+                        originalAndEnhancedRootTypes.put(originalRoot, rootAfterPropagation);
                     }
                 }
             }
             if (!calcOrCustomPropsOnlyInRoot) {
-                try {
-                    // modify root type name with predefinedRootTypeName
-                    final Class<?> enhancedRoot = originalAndEnhancedRootTypes.get(originalRoot);
-                    if (originalRoot != enhancedRoot) { // calculated properties exist -- root type should be enhanced
-                        final Class<?> rootWithPredefinedName = startModification(enhancedRoot).modifyTypeName(predefinedRootTypeName)./* TODO modifySupertypeName(originalRoot.getName()).*/endModification();
-                        originalAndEnhancedRootTypes.put(originalRoot, rootWithPredefinedName);
+                final Class<?> enhancedRoot = originalAndEnhancedRootTypes.get(originalRoot);
+                // modify root type name with predefinedRootTypeName
+                if (originalRoot != enhancedRoot) { // calculated properties exist -- root type should be enhanced
+                    final Class<?> rootWithPredefinedName;
+                    try {
+                        rootWithPredefinedName = modifiedClass(predefinedRootTypeName, typeMaker -> typeMaker.startModification(enhancedRoot)); /* TODO modifySupertypeName(originalRoot.getName()).*/
+                    } catch (final Exception ex) {
+                        final var typeGenEx = new DomainTreeException(ERR_COULD_NOT_MODIFY_ROOT_TYPE_NAME.formatted(enhancedRoot.getSimpleName(), predefinedRootTypeName), ex);
+                        LOGGER.error(typeGenEx);
+                        throw typeGenEx;
                     }
-                } catch (final ClassNotFoundException e) {
-                    LOGGER.error(e);
-                    throw new IllegalStateException(e);
+                    originalAndEnhancedRootTypes.put(originalRoot, rootWithPredefinedName);
                 }
             }
         }
@@ -459,15 +459,13 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
             final NewProperty<?> propertyToBeModified = !isCollectional
                                                         ? NewProperty.fromField(field).changeType(enhancedType)
                                                         : NewProperty.fromField(field).setTypeArguments(enhancedType);
-            final Class<?> nextEnhancedType = startModification(typeToAdapt)
-                    .modifyProperties(propertyToBeModified)
-                    /* TODO .modifySupertypeName(nameOfTheTypeToAdapt).*/
-                    .endModification();
+            final Class<?> nextEnhancedType = modifiedClass(typeToAdapt, typeMaker -> typeMaker.modifyProperties(propertyToBeModified)); /* TODO .modifySupertypeName(nameOfTheTypeToAdapt).*/
             final String nextProp = PropertyTypeDeterminator.isDotNotation(path) ? PropertyTypeDeterminator.penultAndLast(path).getKey() : "";
             return propagateEnhancedTypeToRoot(nextEnhancedType, root, nextProp);
-        } catch (final ClassNotFoundException e) {
-            LOGGER.error(e);
-            throw new DomainTreeException("Could not propagate enahced type to root.", e);
+        } catch (final Exception ex) {
+            final var typeGenEx = new DomainTreeException(ERR_COULD_NOT_PROPAGATE_ENHANCED_TYPE_TO_ROOT.formatted(enhancedType.getSimpleName(), root.getSimpleName(), path), ex);
+            LOGGER.error(typeGenEx);
+            throw typeGenEx;
         }
     }
 
