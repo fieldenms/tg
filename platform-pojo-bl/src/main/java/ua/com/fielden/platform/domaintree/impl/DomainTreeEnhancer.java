@@ -732,9 +732,14 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
             map.put(root.getName(), new TreeSet<>());
         }
         for (final Entry<Class<?>, List<CalculatedProperty>> entry : calculatedProperties.entrySet()) {
-            final SortedSet<CalculatedPropertyInfo> set = new TreeSet<>(comparing(CalculatedPropertyInfo::path).thenComparing(CalculatedPropertyInfo::name)); // impose order to prevent different SHA-256 checksums for the same set of properties
+            final SortedSet<CalculatedPropertyInfo> set = new TreeSet<>( // impose order to prevent different SHA-256 checksums for the same set of properties
+                comparing(CalculatedPropertyInfo::contextPath) // in most cases this property defines the path where calculated property will be placed
+                .thenComparing(CalculatedPropertyInfo::customPropertyName) // in most cases this property defines the actual name of calculated property
+                .thenComparing(CalculatedPropertyInfo::contextualExpression) // expression may influence the path, where calculated property will be placed (in future; currently it does not) 
+                .thenComparing(CalculatedPropertyInfo::title) // title may define actual name of calculated property without customPropertyName (in future; currently it does not)
+            );
             for (final CalculatedProperty cp : entry.getValue()) {
-                set.add(new CalculatedPropertyInfo(cp.getRoot(), cp.getContextPath(), cp.getCustomPropertyName(), cp.getContextualExpression(), cp.getTitle(), cp.getAttribute(), cp.getOriginationProperty(), cp.getDesc(), cp.getPrecision(), cp.getScale(), cp.path(), cp.name()));
+                set.add(new CalculatedPropertyInfo(cp.getRoot(), cp.getContextPath(), cp.getCustomPropertyName(), cp.getContextualExpression(), cp.getTitle(), cp.getAttribute(), cp.getOriginationProperty(), cp.getDesc(), cp.getPrecision(), cp.getScale()));
             }
             map.put(entry.getKey().getName(), set);
         }
