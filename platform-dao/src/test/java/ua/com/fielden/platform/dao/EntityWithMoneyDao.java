@@ -60,4 +60,8 @@ public class EntityWithMoneyDao extends CommonEntityDao<EntityWithMoney> impleme
         return result;
     }
 
+    // @SessionRequired -- deliberately not annotated
+    public EntityWithMoney superSave(final EntityWithMoney entity) {
+        return super.save(entity);
+    }
 }
