@@ -272,8 +272,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     /**
      * Creates a map of [original -> original] for provided <code>rootTypes</code>.
      *
-     * @param rootTypes
-     * @return
+     * @return a modifiable map
      */
     private static Map<Class<?>, Class<?>> createOriginalAndEnhancedRootTypes(final Set<Class<?>> rootTypes) {
         final Map<Class<?>, Class<?>> originalAndEnhancedRootTypes = new LinkedHashMap<>();
@@ -347,12 +346,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     /**
      * Fully generates a new hierarchy of "originalAndEnhancedRootTypes" that conform to "calculatedProperties".
      * <p>
-     * Note, that if no calculated properties specified for some rootType -- a marker calc property will be used to ensure that the resultant rootType will be enhanced.
-     *
-     * @param rootTypes
-     * @param calculatedProperties
-     * @param customProperties
-     * @return
+     * If no calculated properties are specified for some rootType, a marker calculated property will be used to ensure that the resultant rootType will be enhanced.
      */
     protected static Map<Class<?>, Class<?>> generateHierarchy(final Set<Class<?>> rootTypes, final Map<Class<?>, List<CalculatedProperty>> calculatedProperties, final Map<Class<?>, List<CustomProperty>> customProperties) {
         // single classLoader instance is needed for single "apply" transaction

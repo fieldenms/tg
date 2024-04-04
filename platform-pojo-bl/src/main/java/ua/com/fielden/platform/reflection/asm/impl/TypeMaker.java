@@ -70,8 +70,8 @@ import ua.com.fielden.platform.types.tuples.T2;
 /**
  * This class provides an API for modifying types at runtime by means of bytecode manipulation.
  * <p>
- * To use this API start with {@link #startModification()}, then perform any other modifications, and end with {@link #endModification()}
- * which loads the modified type and returns a corresponding {@link Class}.
+ * To use this API start with {@link #startModification(Class)}, then perform any other modifications, and end with
+ * {@link #endModification()} which loads the modified type and returns the corresponding {@link Class}.
  * <p>
  * <i>Notes on implicit modifications performed by the API:</i>
  * <ul>
@@ -124,7 +124,11 @@ public class TypeMaker<T> {
      */
     private final Map<String, Supplier<?>> propertyInitializers = new HashMap<>();
     /**
-     * Storage for names of both added and modified properties and corresponding [NewProperty, prop Type] pairs.
+     * Storage for both added and modified properties.
+     * <p>
+     * Form: {@code { name = (property, type) }}
+     * <p>
+     * Type is stored to avoid recomputation (see {@link NewProperty#genericType()}).
      */
     private final Map<String, T2<NewProperty<?>, Type>> addedProperties = new LinkedHashMap<>();
 
@@ -511,7 +515,6 @@ public class TypeMaker<T> {
                     logger.warn(WRN_UNSUCCESSFUL_GENERATION_BUT_ALREADY_PRESENT.formatted(modifiedName), ex);
                     return (Class<? extends T>) maybeClassAgain.get();
                 }
-                // and if we could not find the class, then re-throw the exception
                 else {
                     throw ex;
                 }

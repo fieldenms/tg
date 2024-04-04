@@ -21,19 +21,27 @@ import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter;
 
 public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
     private static final Logger LOGGER = getLogger(SerialisationTypeEncoder.class);
-    private static final String ERR_DECODED_ENTITY_TYPE_MUST_BE_PRESENT = "Decoded entity type %s must be present after forced loading.";
-    private static final String ERR_CLIENT_APP_IS_OUTDATED = "The client application is outdated. Please reload and try again.";
-    private static final String ERR_DECODED_TYPE_WAS_ALREADY_REGISTERED = "Somehow decoded generated entity type %s was registered in TgJackson's type table. Only ungenerated types should be there."; // see EntityTypeInfoGetter.register for more details
+
+    // @formatter:off
+    private static final String
+        ERR_DECODED_ENTITY_TYPE_MUST_BE_PRESENT =
+        "Decoded entity type %s must be present after forced loading.",
+        ERR_CLIENT_APP_IS_OUTDATED =
+        "The client application is outdated. Please reload and try again.",
+        // see EntityTypeInfoGetter.register for more details
+        ERR_DECODED_TYPE_WAS_ALREADY_REGISTERED =
+        "Somehow decoded generated entity type %s was registered in TgJackson's type table. Only ungenerated types should be there.";
+    // @formatter:on
 
     private TgJackson tgJackson;
     private EntityTypeInfoGetter entityTypeInfoGetter;
     private final IWebUiConfig webUiConfig;
-    
+
     @Inject
     public SerialisationTypeEncoder(final IWebUiConfig webUiConfig) {
         this.webUiConfig = webUiConfig;
     }
-    
+
     @Override
     public <T extends AbstractEntity<?>> Class<T> decode(final String entityTypeName) {
         final boolean isGenerated = entityTypeName.contains(APPENDIX);
@@ -68,15 +76,15 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
         } else {
             decodedEntityType = (Class<T>) findClass(entityTypeName);
         }
-        
+
         return decodedEntityType;
     }
-    
+
     @Override
     public ISerialisationTypeEncoder setTgJackson(final ISerialiserEngine tgJackson) {
         this.tgJackson = (TgJackson) tgJackson;
         this.entityTypeInfoGetter = this.tgJackson.getEntityTypeInfoGetter();
         return this;
     }
-    
+
 }

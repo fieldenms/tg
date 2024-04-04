@@ -304,8 +304,11 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         final IAddToCriteriaTickManager ftm = criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
         CriteriaReflector.getCriteriaProperties(criteriaEntity.getType()).stream().map(propertyField -> {
             final String critPropName = getAnnotation(propertyField, CriteriaProperty.class).propertyName();
-            return t2(propertyField.getName(), getAnnotation(propertyField, SecondParam.class) == null ? ftm.getValue(root, critPropName) : ftm.getValue2(root, critPropName)); // collect values for criteria properties in centreManager
-        }).collect(toList()).forEach(nameAndVal -> { // there is a need to collect all values BEFORE forEach processing and only then perform 'criteriaEntity.getProperty(name).setValue(....)'; this is to avoid ftm.setValue(...) calls through SynchroniseCriteriaWithModelHandler ACE handler during value collecting process, which may affect unrelated properties
+            // collect values for criteria properties in centreManager
+            return t2(propertyField.getName(), getAnnotation(propertyField, SecondParam.class) == null ? ftm.getValue(root, critPropName) : ftm.getValue2(root, critPropName));
+            // we must collect all values BEFORE forEach that uses criteriaEntity.getProperty(name).setValue(....)
+            // to avoid ftm.setValue(...) calls through SynchroniseCriteriaWithModelHandler ACE handler while collecting values, which may affect unrelated properties
+        }).toList().forEach(nameAndVal -> {
             final var name = nameAndVal._1;
             try {
                 // LOGGER.error(format("\tsynchroniseWithModel prop [%s] setting... val = [%s]", field.getName(), fieldAndVal._2));
