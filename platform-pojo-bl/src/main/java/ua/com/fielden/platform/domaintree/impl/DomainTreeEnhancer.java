@@ -284,51 +284,43 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     }
 
     /**
-     * Groups calc props into the map by its domain paths.
+     * Groups properties by their domain paths.
+     * In the returned map, a type may be mapped to a {@code null} value if it's not associated with any of the given properties.
      *
-     * @param calculatedProperties
-     * @return
+     * @param calculatedProperties  a map of the form {@code { type = calculatedProperties }}
+     * @param customProperties  a map of the form {@code { type = custom properties }}
+     * @param rootTypes  types owning the given properties (may also include types that aren't present in any properties map)
+     *
+     * @return a map of the form {@code { type = { propertyPath = { propertyName = property } } }}
      */
-    private static Map<Class<?>, Map<String, Map<String, IProperty>>> groupByPaths(final Map<Class<?>, List<CalculatedProperty>> calculatedProperties, final Map<Class<?>, List<CustomProperty>> customProperties, final Set<Class<?>> rootTypes) {
+    private static Map<Class<?>, Map<String, Map<String, IProperty>>> groupByPaths(
+            final Map<Class<?>, List<CalculatedProperty>> calculatedProperties,
+            final Map<Class<?>, List<CustomProperty>> customProperties,
+            final Set<Class<?>> rootTypes)
+    {
         final Map<Class<?>, Map<String, Map<String, IProperty>>> grouped = new LinkedHashMap<>();
-        for (final Entry<Class<?>, List<CalculatedProperty>> entry : calculatedProperties.entrySet()) {
-            final Class<?> root = entry.getKey();
-            final List<CalculatedProperty> props = entry.getValue();
+        calculatedProperties.forEach((root, props) -> {
             if (props != null && !props.isEmpty()) {
-                if (!grouped.containsKey(root)) {
-                    grouped.put(root, new LinkedHashMap<String, Map<String, IProperty>>());
-                }
+                final var paths = grouped.computeIfAbsent(root, $ -> new LinkedHashMap<>());
                 for (final CalculatedProperty prop : props) {
-                    final String path = prop.path();
-                    if (!grouped.get(root).containsKey(path)) {
-                        grouped.get(root).put(path, new LinkedHashMap<String, IProperty>());
-                    }
-                    grouped.get(root).get(path).put(prop.name(), prop);
+                    final var names = paths.computeIfAbsent(prop.path(), $ -> new LinkedHashMap<>());
+                    names.put(prop.name(), prop);
                 }
             } else {
                 grouped.put(root, null);
             }
-        }
-        for (final Entry<Class<?>, List<CustomProperty>> entry : customProperties.entrySet()) {
-            final Class<?> root = entry.getKey();
-            final List<CustomProperty> props = entry.getValue();
+        });
+        customProperties.forEach((root, props) -> {
             if (props != null && !props.isEmpty()) {
-                if (grouped.get(root) == null) {
-                    grouped.put(root, new LinkedHashMap<String, Map<String, IProperty>>());
-                }
+                final var paths = grouped.computeIfAbsent(root, $ -> new LinkedHashMap<>());
                 for (final CustomProperty prop : props) {
-                    final String path = prop.path();
-                    if (!grouped.get(root).containsKey(path)) {
-                        grouped.get(root).put(path, new LinkedHashMap<String, IProperty>());
-                    }
-                    grouped.get(root).get(path).put(prop.name(), prop);
+                    final var names = paths.computeIfAbsent(prop.path(), $ -> new LinkedHashMap<>());
+                    names.put(prop.name(), prop);
                 }
-            } else {
-                if (!grouped.containsKey(root)) {
-                    grouped.put(root, null);
-                }
+            } else if (!grouped.containsKey(root)) {
+                grouped.put(root, null);
             }
-        }
+        });
         // add the types, not enhanced with any calc prop
         for (final Class<?> originalRoot : rootTypes) {
             if (!grouped.containsKey(originalRoot)) {
