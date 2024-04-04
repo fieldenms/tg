@@ -1345,7 +1345,13 @@ const TgEntityMasterBehaviorImpl = {
                 }
             }
         }));
-    }
+    },
+
+    confirm: function (message, buttons) {
+        if (this.$ && this.$.masterDom && this.$.masterDom.confirm) {
+            return this.$.masterDom.confirm(message, buttons);
+        }
+    },
 };
 
 export const TgEntityMasterBehavior = [
