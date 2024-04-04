@@ -2,6 +2,8 @@ package ua.com.fielden.platform.domaintree.impl;
 
 import static java.lang.String.format;
 import static java.util.Comparator.comparing;
+import static java.util.Comparator.naturalOrder;
+import static java.util.Comparator.nullsFirst;
 import static java.util.stream.Collectors.toCollection;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
@@ -734,7 +736,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         for (final Entry<Class<?>, List<CalculatedProperty>> entry : calculatedProperties.entrySet()) {
             final SortedSet<CalculatedPropertyInfo> set = new TreeSet<>( // impose order to prevent different SHA-256 checksums for the same set of properties
                 comparing(CalculatedPropertyInfo::contextPath) // in most cases this property defines the path where calculated property will be placed
-                .thenComparing(CalculatedPropertyInfo::customPropertyName) // in most cases this property defines the actual name of calculated property
+                .thenComparing(CalculatedPropertyInfo::customPropertyName, nullsFirst(naturalOrder())) // in most cases this property defines the actual name of calculated property
                 .thenComparing(CalculatedPropertyInfo::contextualExpression) // expression may influence the path, where calculated property will be placed (in future; currently it does not) 
                 .thenComparing(CalculatedPropertyInfo::title) // title may define actual name of calculated property without customPropertyName (in future; currently it does not)
             );
