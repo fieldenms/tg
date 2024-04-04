@@ -6,5 +6,5 @@ import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 
 @ImplementedBy(EntityWithMoneyDao.class)
 public interface IEntityWithMoney extends IEntityDao<EntityWithMoney> {
-
+    EntityWithMoney superSave(final EntityWithMoney entity);
 }
