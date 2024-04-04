@@ -292,10 +292,16 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return skipRefetching ? left(result._1) : right(result._2);
     }
 
+    /**
+     * Returns an open session, if present. Otherwise, throws {@link EntityCompanionException} exception.
+     * @return
+     */
     @Override
     public Session getSession() {
         if (session == null) {
             throw new EntityCompanionException("Session is missing, most likely, due to missing @SessionRequired annotation.");
+        } else if (!session.isOpen()) {
+            throw new EntityCompanionException("Session is closed, most likely, due to missing @SessionRequired annotation.");
         }
         return session;
     }
