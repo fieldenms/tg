@@ -1069,6 +1069,42 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
 
         assertNotThrows(() -> co(TgVehicle.class).getAllEntities(from(qUnion).model()));
     }
+    @Test
+    public void nulls_can_be_compared_to_nonNulls_in_join_conditions() {
+        // @formatter:off
+        final var query =
+                select(select().yield().val(null).as("a1").modelAsAggregate())
+                 .join(select().yield().val(1).as("b1").modelAsAggregate())
+                 .on().prop("a1").eq().prop("b1")
+                 .modelAsAggregate();
+        // @formatter:on
+        final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(query).model());
+    }
+
+    @Test
+    public void nulls_can_be_compared_to_nulls_in_join_conditions() {
+        // @formatter:off
+        final var query =
+                select(select().yield().val(null).as("a1").modelAsAggregate())
+                        .join(select().yield().val(null).as("b1").modelAsAggregate())
+                        .on().prop("a1").eq().prop("b1")
+                        .modelAsAggregate();
+        // @formatter:on
+        final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(query).model());
+    }
+
+    @Test
+    public void nonNulls_can_be_compared_to_nonNulls_in_join_conditions() {
+        // @formatter:off
+        final var query =
+                select(select().yield().val(1).as("a1").modelAsAggregate())
+                        .join(select().yield().val(5).as("b1").modelAsAggregate())
+                        .on().prop("a1").eq().prop("b1")
+                        .modelAsAggregate();
+        // @formatter:on
+        final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(query).model());
+    }
+
     @Override
     public boolean saveDataPopulationScriptToFile() {
         return false;
