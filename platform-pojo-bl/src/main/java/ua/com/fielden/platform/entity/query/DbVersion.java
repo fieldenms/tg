@@ -86,6 +86,16 @@ public enum DbVersion {
     }
 
     /**
+     * Constructs an SQL expression representing a type cast.
+     *
+     * @param expression  SQL expression to cast
+     * @param type  name of the SQL type which the expression is cast to
+     */
+    public String castSql(final String expression, final String type) {
+        return "CAST (%s AS %s)".formatted(expression, type);
+    }
+
+    /**
      * Returns a {@code LIKE} term with its left and right operands, all processed with case sensitivity in mind.
      *
      * @param leftOperand

@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.eql.stage3.sundries;
 
-import org.hibernate.type.Type;
-import org.hibernate.usertype.UserType;
-import ua.com.fielden.platform.eql.dbschema.HibernateToJdbcSqlTypeCorrespondence;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
@@ -11,7 +8,7 @@ import java.util.Objects;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
-import static ua.com.fielden.platform.eql.dbschema.HibernateToJdbcSqlTypeCorrespondence.genericSqlTypeName;
+import static ua.com.fielden.platform.eql.dbschema.HibernateToJdbcSqlTypeCorrespondence.sqlCastTypeName;
 import static ua.com.fielden.platform.eql.meta.PropType.propType;
 import static ua.com.fielden.platform.persistence.types.PlaceholderType.newPlaceholderType;
 
@@ -51,13 +48,8 @@ public class Yield3 {
         // can be represented as Prop3 "id" with type Long.
         // Expected type should never be the null type but let's be vigilant.
         if (metadata.dbVersion == POSTGRESQL && expectedType != NO_EXPECTED_TYPE && expectedType.isNotNull()) {
-            sb.append("CAST (");
-            sb.append(operandSql);
-            sb.append(" AS ");
-            sb.append(sqlCastTypeName(expectedType, metadata));
-            sb.append(')');
-        }
-        else {
+            sb.append(POSTGRESQL.castSql(operandSql, sqlCastTypeName(expectedType.hibType(), metadata.dialect)));
+        } else {
             sb.append(operandSql);
         }
 
@@ -78,16 +70,6 @@ public class Yield3 {
 
     public String sql(final EqlDomainMetadata metadata) {
         return sql(metadata, NO_EXPECTED_TYPE);
-    }
-
-    private static String sqlCastTypeName(final PropType type, final EqlDomainMetadata metadata) {
-        final int sqlType = switch (type.hibType()) {
-            case Type t -> HibernateToJdbcSqlTypeCorrespondence.jdbcSqlTypeFor(t);
-            case UserType t -> HibernateToJdbcSqlTypeCorrespondence.jdbcSqlTypeFor(t);
-            default -> throw new IllegalArgumentException("Unexpected Hibernate type of yielded value: %s".formatted(type.hibType()));
-        };
-
-        return genericSqlTypeName(sqlType, metadata.dialect);
     }
 
     @Override

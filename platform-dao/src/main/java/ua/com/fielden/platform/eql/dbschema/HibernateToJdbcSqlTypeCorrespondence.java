@@ -5,6 +5,9 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.type.Type;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
+import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
+import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.utils.Pair;
 
 import java.sql.Types;
@@ -46,6 +49,20 @@ public final class HibernateToJdbcSqlTypeCorrespondence {
     // where
     private static final Map<Dialect, Map<Integer, String>> GENERIC_TYPE_NAMES = new ConcurrentHashMap<>(1); // expect at most 1 dialect
 
+    /**
+     * Infers the name of a Hibernate type to use in a {@code CAST} SQL expression.
+     *
+     * @param dialect  the SQL dialect to use to resolve the SQL type
+     */
+    public static String sqlCastTypeName(final Object hibernateType, final Dialect dialect) {
+        final int sqlType = switch (hibernateType) {
+            case Type t -> jdbcSqlTypeFor(t);
+            case UserType t -> jdbcSqlTypeFor(t);
+            default -> throw new IllegalArgumentException("Unexpected Hibernate type: %s".formatted(hibernateType));
+        };
+
+        return genericSqlTypeName(sqlType, dialect);
+    }
 
     public static int jdbcSqlTypeFor(final Type hibernateType) {
         // NOTE Hibernate doesn't complain about null but that is not documented anywhere
