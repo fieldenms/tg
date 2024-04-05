@@ -76,6 +76,15 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     private static final String CUSTOM_PROPERTIES = "customProperties";
 
     /**
+     * Comparator for {@link CalculatedPropertyInfo} instances to impose order in type diff object during SHA-256 calculation.
+     */
+    private static final Comparator<CalculatedPropertyInfo> CALCULATED_PROPERTY_INFO_COMPARATOR =
+        comparing(CalculatedPropertyInfo::contextPath) // in most cases this property defines the path where calculated property will be placed
+        .thenComparing(CalculatedPropertyInfo::customPropertyName, nullsFirst(naturalOrder())) // in most cases this property defines the actual name of calculated property
+        .thenComparing(CalculatedPropertyInfo::contextualExpression) // expression may influence the path, where calculated property will be placed (in future; currently it does not)
+        .thenComparing(CalculatedPropertyInfo::title); // title may define actual name of calculated property without customPropertyName (in future; currently it does not)
+
+    /**
      * Cache of {@link DomainTreeEnhancer}s with keys as [rootTypes; calcProps; customProps].
      * <p>
      * The main purpose of this accidental (by means of complexity) cache is to reduce heavy calculated properties re-computation and to 
@@ -716,14 +725,9 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         // impose order to ensure equal SHA-256 checksums for the same set of properties
         final SortedMap<String, SortedSet<CalculatedPropertyInfo>> map = new TreeMap<>();
 
-        final Comparator<CalculatedPropertyInfo> propComparator = comparing(CalculatedPropertyInfo::contextPath) // in most cases this property defines the path where calculated property will be placed
-                .thenComparing(CalculatedPropertyInfo::customPropertyName, nullsFirst(naturalOrder())) // in most cases this property defines the actual name of calculated property
-                .thenComparing(CalculatedPropertyInfo::contextualExpression) // expression may influence the path, where calculated property will be placed (in future; currently it does not)
-                .thenComparing(CalculatedPropertyInfo::title); // title may define actual name of calculated property without customPropertyName (in future; currently it does not)
-
         for (final Entry<Class<?>, List<CalculatedProperty>> entry : calculatedProperties.entrySet()) {
             // impose order to ensure equal SHA-256 checksum for the same set of properties
-            final SortedSet<CalculatedPropertyInfo> set = new TreeSet<>(propComparator);
+            final SortedSet<CalculatedPropertyInfo> set = new TreeSet<>(CALCULATED_PROPERTY_INFO_COMPARATOR);
             for (final CalculatedProperty cp : entry.getValue()) {
                 set.add(new CalculatedPropertyInfo(cp.getRoot(), cp.getContextPath(), cp.getCustomPropertyName(), cp.getContextualExpression(), cp.getTitle(), cp.getAttribute(), cp.getOriginationProperty(), cp.getDesc(), cp.getPrecision(), cp.getScale()));
             }
@@ -731,7 +735,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         }
 
         for (final Class<?> root: rootTypes) {
-            map.computeIfAbsent(root.getName(), $ -> new TreeSet<>(propComparator));
+            map.computeIfAbsent(root.getName(), $ -> new TreeSet<>(CALCULATED_PROPERTY_INFO_COMPARATOR));
         }
 
         return map;
