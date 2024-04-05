@@ -5,7 +5,6 @@ import java.util.Date;
 import java.util.Objects;
 
 import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.*;
-import static ua.com.fielden.platform.persistence.types.PlaceholderType.PLACEHOLDER_TYPE;
 
 /**
  * A data container for property type composition.

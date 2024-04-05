@@ -20,9 +20,25 @@ import java.util.Map;
  */
 public final class PlaceholderType implements Type {
 
-    public static final Type PLACEHOLDER_TYPE = new PlaceholderType();
+    private final String name;
 
-    private PlaceholderType() {}
+    private PlaceholderType(final String name) {
+        this.name = name;
+    }
+
+    public static PlaceholderType newPlaceholderType(final String name) {
+        return new PlaceholderType(name);
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public String toString() {
+        return name;
+    }
 
     @Override
     public boolean isAssociationType() {
@@ -141,11 +157,6 @@ public final class PlaceholderType implements Type {
 
     @Override
     public String toLoggableString(final Object value, final SessionFactoryImplementor factory) throws HibernateException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getName() {
         throw new UnsupportedOperationException();
     }
 

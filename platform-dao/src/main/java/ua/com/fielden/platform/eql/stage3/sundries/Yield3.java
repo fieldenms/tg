@@ -13,7 +13,7 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
 import static ua.com.fielden.platform.eql.dbschema.HibernateToJdbcSqlTypeCorrespondence.genericSqlTypeName;
 import static ua.com.fielden.platform.eql.meta.PropType.propType;
-import static ua.com.fielden.platform.persistence.types.PlaceholderType.PLACEHOLDER_TYPE;
+import static ua.com.fielden.platform.persistence.types.PlaceholderType.newPlaceholderType;
 
 public class Yield3 {
 
@@ -73,7 +73,7 @@ public class Yield3 {
      *
      * @see #sql(EqlDomainMetadata, PropType)
      */
-    public static final PropType NO_EXPECTED_TYPE = propType(String.class, PLACEHOLDER_TYPE);
+    public static final PropType NO_EXPECTED_TYPE = propType(String.class, newPlaceholderType("no_expected_type"));
 
     public String sql(final EqlDomainMetadata metadata) {
         return sql(metadata, NO_EXPECTED_TYPE);
