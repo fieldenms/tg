@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.meta;
 
+import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Objects;
@@ -32,19 +33,19 @@ public final class PropType {
         return new PropType(javaType, hibType);
     }
 
-    private final Class<?> javaType;
-    private final Object hibType;
+    private final @Nullable Class<?> javaType;
+    private final @Nullable Object hibType;
 
-    public PropType(final Class<?> javaType, final Object hibType) {
+    private PropType(final Class<?> javaType, final Object hibType) {
         this.javaType = javaType;
         this.hibType = hibType;
     }
 
-    public Class<?> javaType() {
+    public @Nullable Class<?> javaType() {
         return javaType;
     }
 
-    public Object hibType() {
+    public @Nullable Object hibType() {
         return hibType;
     }
 
@@ -69,9 +70,7 @@ public final class PropType {
 
     @Override
     public String toString() {
-        return "PropType[" +
-                "javaType=" + javaType + ", " +
-                "hibType=" + hibType + ']';
+        return "PropType(Java=%s, Hibernate=%s)".formatted(javaType == null ? "null" : javaType.getTypeName(), hibType);
     }
 
 }

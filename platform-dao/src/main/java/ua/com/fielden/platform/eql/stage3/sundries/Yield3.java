@@ -113,4 +113,10 @@ public class Yield3 {
         
         return Objects.equals(operand, other.operand) && Objects.equals(alias, other.alias) && Objects.equals(type, other.type);
     }
+
+    @Override
+    public String toString() {
+        return "Yield3(alias=%s, column=%s, type=%s, operand=%s)".formatted(alias, column, type, operand);
+    }
+
 }
