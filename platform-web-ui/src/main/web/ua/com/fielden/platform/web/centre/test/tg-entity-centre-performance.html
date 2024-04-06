@@ -14,7 +14,6 @@
 </head>
 
 <body>
-    <tg-reflector id="reflector"></tg-reflector>
     <test-fixture id="CentreFixture">
         <template>
             <tg-MiTgPersistentEntityWithProperties1-centre id="centre" uuid="TEST_CENTRE"></tg-MiTgPersistentEntityWithProperties1-centre>
@@ -23,16 +22,14 @@
 
 <script type="module">
 
-    import '/app/tg-reflector.js';
     import '/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties1';
     import { persistConfidenceInterval } from '/resources/reflection/tg-test-utils.js';
 
     suite('entity centre', function() {
-        let centre, reflector, noOfIterations;
+        let centre, noOfIterations;
 
         setup(function() {
             centre = fixture('CentreFixture');
-            reflector = document.querySelector('#reflector');
             noOfIterations = 100;
         });
 
