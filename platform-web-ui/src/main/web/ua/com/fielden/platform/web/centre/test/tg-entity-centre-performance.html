@@ -23,7 +23,7 @@
 <script type="module">
 
     import '/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties1';
-    import { persistConfidenceInterval } from '/resources/reflection/tg-test-utils.js';
+    import { persistConfidenceInterval, createTestingConfig, removeTestingConfig } from '/resources/reflection/tg-test-utils.js';
 
     suite('entity centre', function() {
         let centre, noOfIterations;
@@ -31,48 +31,6 @@
         setup(function() {
             centre = fixture('CentreFixture');
             noOfIterations = 100;
-        });
-
-        const createTestingConfig = () => new Promise((resolve, reject) => {
-            // own save-as configuration is needed for load tests that use SAVE button -- not to invoke additional master when calculating saving time
-            const newConfigAction = centre.$.dom.$.selectionView.shadowRoot.querySelector('tg-ui-action[element-name="tg-CentreConfigNewAction-master"]');
-            const newConfigActionPostActionSuccess = newConfigAction.postActionSuccess;
-            newConfigAction.postActionSuccess = (potentiallySavedOrNewEntity, self, master) => {
-                newConfigActionPostActionSuccess(potentiallySavedOrNewEntity, self, master);
-                const saveAction = centre.$.dom.$.saveAction;
-                saveAction._masterReferenceForTestingChanged = function (master) {
-                    const titleEditor = master.$.editor_4_title;
-                    titleEditor._editingValue = 'load-tests-configuration';
-                    titleEditor.commit();
-                    master.shadowRoot.querySelector('tg-action[role="save"]')._asyncRun();
-                    saveAction._masterReferenceForTestingChanged = () => {};
-                };
-                const saveActionPostActionSuccess = saveAction.postActionSuccess;
-                saveAction.postActionSuccess = (potentiallySavedOrNewEntity, self, master) => {
-                    saveActionPostActionSuccess(potentiallySavedOrNewEntity, self, master);
-                    saveAction.postActionSuccess = saveActionPostActionSuccess;
-                    resolve('Ok');
-                };
-                saveAction._run();
-                newConfigAction.postActionSuccess = newConfigActionPostActionSuccess;
-            };
-            newConfigAction._run();
-        });
-
-        const removeTestingConfig = () => new Promise((resolve, reject) => {
-            const deleteConfigAction = centre.$.dom.$.selectionView.shadowRoot.querySelector('tg-ui-action[element-name="tg-CentreConfigDeleteAction-master"]');
-            const deleteConfigActionPreAction = deleteConfigAction.preAction;
-            deleteConfigAction.preAction = action => {
-                deleteConfigAction.preAction = deleteConfigActionPreAction;
-                return Promise.resolve(true);
-            };
-            const deleteConfigActionPostActionSuccess = deleteConfigAction.postActionSuccess;
-            deleteConfigAction.postActionSuccess = (potentiallySavedOrNewEntity, self, master) => {
-                deleteConfigActionPostActionSuccess(potentiallySavedOrNewEntity, self, master);
-                deleteConfigAction.postActionSuccess = deleteConfigActionPostActionSuccess;
-                resolve('Ok');
-            };
-            deleteConfigAction._run();
         });
 
         test('subsequent validations measuring', function (done) {
@@ -85,7 +43,7 @@
             };
 
             centre.postRetrieved = function (entity, bindingEntity, customObject) {
-                createTestingConfig().then(() => {
+                createTestingConfig(centre).then(() => {
                     const editor = _leftEditor('booleanProp');
                     start = new Date().getTime();
                     editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
@@ -104,7 +62,7 @@
                     if (count >= noOfIterations) {
                         persistConfidenceInterval('centre', 'validate', data);
                         centre.$.selection_criteria._validationPromiseChanged = function () {};
-                        removeTestingConfig().then(() => done());
+                        removeTestingConfig(centre).then(() => done());
                     } else {
                         const editor = _leftEditor('booleanProp');
                         start = new Date().getTime();
@@ -129,7 +87,7 @@
             };
 
             centre.postRetrieved = function (entity, bindingEntity, customObject) {
-                createTestingConfig().then(() => {
+                createTestingConfig(centre).then(() => {
                     const editor = _leftEditor('booleanProp');
                     editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
                     editor.commit();
@@ -153,7 +111,7 @@
                       if (count >= noOfIterations) {
                           persistConfidenceInterval('centre', 'save', data);
                           centre.$.selection_criteria._validationPromiseChanged = function () {};
-                          removeTestingConfig().then(() => done());
+                          removeTestingConfig(centre).then(() => done());
                       } else {
                           const editor = _leftEditor('booleanProp');
                           editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
@@ -183,7 +141,7 @@
             const centrePostRetrieved = centre.postRetrieved;
             centre.postRetrieved = function (entity, bindingEntity, customObject) {
                 centre.postRetrieved = centrePostRetrieved;
-                createTestingConfig().then(() => {
+                createTestingConfig(centre).then(() => {
                     const editor = _leftEditor('booleanProp');
                     editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
                     editor.commit();
@@ -204,7 +162,7 @@
                         if (count >= noOfIterations) {
                             persistConfidenceInterval('centre', 'discard', data);
                             centre.$.selection_criteria._validationPromiseChanged = function () {};
-                            removeTestingConfig().then(() => done());
+                            removeTestingConfig(centre).then(() => done());
                         } else {
                             const editor = _leftEditor('booleanProp');
                             editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
@@ -235,7 +193,7 @@
 
                     if (count >= noOfIterations) {
                         persistConfidenceInterval('centre', 'run', data);
-                        removeTestingConfig().then(() => done());
+                        removeTestingConfig(centre).then(() => done());
                     } else {
                         start = new Date().getTime();
                         centre.run().then(_createPostRunFunction(), function (error) {
@@ -246,7 +204,7 @@
             };
 
             centre.postRetrieved = function (entity, bindingEntity, customObject) {
-                createTestingConfig().then(() => {
+                createTestingConfig(centre).then(() => {
                     start = new Date().getTime();
                     centre.run().then(_createPostRunFunction(), function (error) {
                         console.error("Running was rejected with error: " + error);

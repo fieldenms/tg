@@ -27,3 +27,51 @@ export function persistConfidenceInterval(categoryName, functionName, data) {
         '[' + calcConfidenceInterval(data).map(x => x.toFixed(1).padStart(6, '_')).join('; ') + ']'
     );
 };
+
+/**
+ * Returns promise for creating testing Entity Centre configuration for load tests.
+ */
+export const createTestingConfig = (centre) => new Promise((resolve, reject) => {
+    // own save-as configuration is needed for load tests that use SAVE button -- not to invoke additional master when calculating saving time
+    const newConfigAction = centre.$.dom.$.selectionView.shadowRoot.querySelector('tg-ui-action[element-name="tg-CentreConfigNewAction-master"]');
+    const newConfigActionPostActionSuccess = newConfigAction.postActionSuccess;
+    newConfigAction.postActionSuccess = (potentiallySavedOrNewEntity, self, master) => {
+        newConfigActionPostActionSuccess(potentiallySavedOrNewEntity, self, master);
+        const saveAction = centre.$.dom.$.saveAction;
+        saveAction._masterReferenceForTestingChanged = function (master) {
+            const titleEditor = master.$.editor_4_title;
+            titleEditor._editingValue = 'load-tests-configuration';
+            titleEditor.commit();
+            master.shadowRoot.querySelector('tg-action[role="save"]')._asyncRun();
+            saveAction._masterReferenceForTestingChanged = () => {};
+        };
+        const saveActionPostActionSuccess = saveAction.postActionSuccess;
+        saveAction.postActionSuccess = (potentiallySavedOrNewEntity, self, master) => {
+            saveActionPostActionSuccess(potentiallySavedOrNewEntity, self, master);
+            saveAction.postActionSuccess = saveActionPostActionSuccess;
+            resolve('Ok');
+        };
+        saveAction._run();
+        newConfigAction.postActionSuccess = newConfigActionPostActionSuccess;
+    };
+    newConfigAction._run();
+});
+
+/**
+ * Returns promise for removing testing Entity Centre configuration for load tests.
+ */
+export const removeTestingConfig = (centre) => new Promise((resolve, reject) => {
+    const deleteConfigAction = centre.$.dom.$.selectionView.shadowRoot.querySelector('tg-ui-action[element-name="tg-CentreConfigDeleteAction-master"]');
+    const deleteConfigActionPreAction = deleteConfigAction.preAction;
+    deleteConfigAction.preAction = action => {
+        deleteConfigAction.preAction = deleteConfigActionPreAction;
+        return Promise.resolve(true);
+    };
+    const deleteConfigActionPostActionSuccess = deleteConfigAction.postActionSuccess;
+    deleteConfigAction.postActionSuccess = (potentiallySavedOrNewEntity, self, master) => {
+        deleteConfigActionPostActionSuccess(potentiallySavedOrNewEntity, self, master);
+        deleteConfigAction.postActionSuccess = deleteConfigActionPostActionSuccess;
+        resolve('Ok');
+    };
+    deleteConfigAction._run();
+});
