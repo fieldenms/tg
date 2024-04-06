@@ -398,9 +398,9 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
                         try {
                             // generate & load new type enhanced by calculated properties
                             if (calcOrCustomPropsOnlyInRoot) {
-                                realParentEnhanced = modifiedClass(predefinedRootTypeName, typeMaker -> typeMaker.startModification(realParentToBeEnhanced).addProperties(createNewProperties.get())); /* TODO .modifySupertypeName(realParentToBeEnhanced.getName()).*/
+                                realParentEnhanced = modifiedClass(predefinedRootTypeName, typeMaker -> typeMaker.startModification(realParentToBeEnhanced).addProperties(createNewProperties.get()));
                             } else {
-                                realParentEnhanced = modifiedClass(realParentToBeEnhanced, typeMaker -> typeMaker.addProperties(createNewProperties.get())); /* TODO .modifySupertypeName(realParentToBeEnhanced.getName()).*/
+                                realParentEnhanced = modifiedClass(realParentToBeEnhanced, typeMaker -> typeMaker.addProperties(createNewProperties.get()));
                             }
                         } catch (final Exception ex) {
                             final var typeGenEx = new DomainTreeException(ERR_TYPE_COULD_NOT_BE_GENERATED.formatted(realParentToBeEnhanced.getSimpleName()), ex);
@@ -420,7 +420,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
                 if (originalRoot != enhancedRoot) { // calculated properties exist -- root type should be enhanced
                     final Class<?> rootWithPredefinedName;
                     try {
-                        rootWithPredefinedName = modifiedClass(predefinedRootTypeName, typeMaker -> typeMaker.startModification(enhancedRoot)); /* TODO modifySupertypeName(originalRoot.getName()).*/
+                        rootWithPredefinedName = modifiedClass(predefinedRootTypeName, typeMaker -> typeMaker.startModification(enhancedRoot));
                     } catch (final Exception ex) {
                         final var typeGenEx = new DomainTreeException(ERR_COULD_NOT_MODIFY_ROOT_TYPE_NAME.formatted(enhancedRoot.getSimpleName(), predefinedRootTypeName), ex);
                         LOGGER.error(typeGenEx);
@@ -456,7 +456,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
             final NewProperty<?> propertyToBeModified = !isCollectional
                                                         ? NewProperty.fromField(field).changeType(enhancedType)
                                                         : NewProperty.fromField(field).setTypeArguments(enhancedType);
-            final Class<?> nextEnhancedType = modifiedClass(typeToAdapt, typeMaker -> typeMaker.modifyProperties(propertyToBeModified)); /* TODO .modifySupertypeName(nameOfTheTypeToAdapt).*/
+            final Class<?> nextEnhancedType = modifiedClass(typeToAdapt, typeMaker -> typeMaker.modifyProperties(propertyToBeModified));
             final String nextProp = PropertyTypeDeterminator.isDotNotation(path) ? PropertyTypeDeterminator.penultAndLast(path).getKey() : "";
             return propagateEnhancedTypeToRoot(nextEnhancedType, root, nextProp);
         } catch (final Exception ex) {
