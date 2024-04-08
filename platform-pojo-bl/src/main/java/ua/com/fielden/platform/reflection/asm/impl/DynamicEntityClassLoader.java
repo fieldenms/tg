@@ -113,19 +113,20 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
 
     /**
      * Returns already modified type with {@code typeName} full class name, if there is one.
-     * Otherwise generates that type using {@code modifyType} function (typeMaker -> typeMaker).
+     * Otherwise generates that type from {@code origType} using {@code modifyType} function (typeMaker -> typeMaker).
      * <p>
      * Typical usage:<br><br>
-     * {@code modifiedClass(newTypeName, typeMaker -> typeMaker.startModification(Entity.class).addProperties(...).modifyProperties(...).addClassAnnotations(...))}<br><br>
+     * {@code modifiedClass(newTypeName, Entity.class, typeMaker -> typeMaker.addProperties(...).modifyProperties(...).addClassAnnotations(...))}<br><br>
      * Please note that {@code modifyTypeName(newTypeName)} call is not needed in {@code modifyType} function -- {@code newTypeName} will be assigned automatically.
+     * Also {@code startModification(origType)} call is not needed.
      * 
      * @param typeName
      * @param modifyType
      * @return
      */
-    @SuppressWarnings({ "rawtypes" })
-    public static Class modifiedClass(final String typeName, final Function<TypeMaker, TypeMaker> modifyType) {
-        return getCachedClass(typeName).orElseGet(() -> modifyType.apply(new TypeMaker(instance).modifyTypeName(typeName)).endModification());
+    @SuppressWarnings({ "unchecked" })
+    public static <T> Class<? extends T> modifiedClass(final String typeName, final Class<T> origType, final Function<TypeMaker<T>, TypeMaker<T>> modifyType) {
+        return (Class<T>) getCachedClass(typeName).orElseGet(() -> modifyType.apply(new TypeMaker<T>(instance).startModification(origType).modifyTypeName(typeName)).endModification());
     }
 
     /**

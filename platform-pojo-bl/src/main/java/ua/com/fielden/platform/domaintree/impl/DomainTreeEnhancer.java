@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.naturalOrder;
 import static java.util.Comparator.nullsFirst;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toCollection;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
@@ -19,6 +20,7 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -398,7 +400,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
                         try {
                             // generate & load new type enhanced by calculated properties
                             if (calcOrCustomPropsOnlyInRoot) {
-                                realParentEnhanced = modifiedClass(predefinedRootTypeName, typeMaker -> typeMaker.startModification(realParentToBeEnhanced).addProperties(createNewProperties.get()));
+                                realParentEnhanced = modifiedClass(predefinedRootTypeName, realParentToBeEnhanced, typeMaker -> typeMaker.addProperties(createNewProperties.get()));
                             } else {
                                 realParentEnhanced = modifiedClass(realParentToBeEnhanced, typeMaker -> typeMaker.addProperties(createNewProperties.get()));
                             }
@@ -420,7 +422,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
                 if (originalRoot != enhancedRoot) { // calculated properties exist -- root type should be enhanced
                     final Class<?> rootWithPredefinedName;
                     try {
-                        rootWithPredefinedName = modifiedClass(predefinedRootTypeName, typeMaker -> typeMaker.startModification(enhancedRoot));
+                        rootWithPredefinedName = modifiedClass(predefinedRootTypeName, enhancedRoot, identity());
                     } catch (final Exception ex) {
                         final var typeGenEx = new DomainTreeException(ERR_COULD_NOT_MODIFY_ROOT_TYPE_NAME.formatted(enhancedRoot.getSimpleName(), predefinedRootTypeName), ex);
                         LOGGER.error(typeGenEx);

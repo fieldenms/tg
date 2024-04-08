@@ -157,8 +157,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         final String newTypeName = generateCriteriaTypeName(CentreEntityQueryCriteriaToEnhance.class, linkedMapOf(t2(PROPERTIES, properties)), managedType);
         try {
             return (Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>)
-                modifiedClass(newTypeName, typeMaker -> typeMaker
-                    .startModification(CentreEntityQueryCriteriaToEnhance.class)
+                modifiedClass(newTypeName, CentreEntityQueryCriteriaToEnhance.class, typeMaker -> typeMaker
                     .addProperties(properties.stream()
                         .filter(pn -> !isPlaceholder(pn))
                         .flatMap(pn -> generateCriteriaProperties(root, managedType, pn).stream())
