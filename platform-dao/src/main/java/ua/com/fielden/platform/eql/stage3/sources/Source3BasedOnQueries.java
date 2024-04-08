@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.eql.stage3.sources;
 
 import com.google.common.collect.ImmutableList;
+import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.queries.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
+import ua.com.fielden.platform.utils.StreamUtils;
 
 import java.util.Collection;
 import java.util.List;
@@ -15,6 +17,7 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
 import static ua.com.fielden.platform.eql.stage3.sundries.Yield3.NO_EXPECTED_TYPE;
+import static ua.com.fielden.platform.utils.StreamUtils.enumerated;
 import static ua.com.fielden.platform.utils.StreamUtils.transpose;
 
 /**
@@ -25,8 +28,21 @@ public class Source3BasedOnQueries extends AbstractSource3 {
     private final List<SourceQuery3> models;
     
     public Source3BasedOnQueries(final List<SourceQuery3> models, final Integer id, final int sqlId) {
-        super("Q_" + sqlId, id, obtainColumnsFromYields(models.getFirst().yields.getYields()));
+        super("Q_" + sqlId, id, obtainColumnsFromYields(validateModels(models).getFirst().yields.getYields()));
         this.models = ImmutableList.copyOf(models);
+    }
+
+    private static List<SourceQuery3> validateModels(final List<SourceQuery3> models) {
+        // number of yields is valid only if either there are no yields or all models have the same number of yields
+        final Boolean isValidNumberOfYields = StreamUtils.areAllEqual(models.stream().mapToInt(m -> m.yields.size())).orElse(true);
+        if (!isValidNumberOfYields) {
+            throw new EqlStage3ProcessingException("""
+                    Queries whose results are concatenated must have the same number of yields. Queries:
+                    %s""".formatted(
+                    enumerated(models.stream(), 1, (i, model) -> "%s. %s".formatted(i, model)).collect(joining("\n"))));
+        }
+
+        return models;
     }
     
     private static Map<String, String> obtainColumnsFromYields(final Collection<Yield3> yields) {

@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.eql.stage3.sundries;
 
+import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PropType;
+import ua.com.fielden.platform.utils.CollectionUtil;
 
 import java.util.Collection;
 import java.util.List;
@@ -14,12 +16,17 @@ import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.utils.StreamUtils.zip;
 
 public class Yields3 {
+
     private final SortedMap<String, Yield3> yieldsMap = new TreeMap<>();
 
     public Yields3(final List<Yield3> yields) {
         for (final Yield3 yield : yields) {
             yieldsMap.put(yield.alias, yield);
         }
+    }
+
+    public int size() {
+        return yieldsMap.size();
     }
     
     public Collection<Yield3> getYields() {
@@ -31,6 +38,15 @@ public class Yields3 {
     }
 
     public String sql(final EqlDomainMetadata metadata, final List<PropType> expectedTypes) {
+        if (expectedTypes.size() != yieldsMap.size()) {
+            throw new EqlStage3ProcessingException("""
+                    Mismatch between number of yields and their expected types.
+                    Yields: %s [%s]
+                    Types : %s [%s].""".formatted(
+                    yieldsMap.size(), CollectionUtil.toString(yieldsMap.values(), ", "),
+                    expectedTypes.size(), CollectionUtil.toString(expectedTypes, ", ")));
+        }
+
         return "SELECT\n" +
                 zip(getYields().stream(), expectedTypes.stream(), (y, type) -> y.sql(metadata, type))
                         .collect(joining(", "));
