@@ -105,12 +105,13 @@ public class TypeMaker<T> {
     public static final String GET_ORIG_TYPE_METHOD_NAME = "_GET_ORIG_TYPE_METHOD_";
     private static final String ERR_FAILED_TO_INITIALISE_COLLECTIONAL_PROPERTY = "Failed to initialise new collectional property [%s].";
     private static final String ERR_FAILED_TO_INITIALISE_CUSTOM_COLLECTIONAL_PROPERTY = "Failed to initialise new collectional property of custom type [%s].";
+    private static final String ERR_JAVA_SYSTEM_CLASS_SHOULD_NOT_BE_ENHANCED = "Java system class [%s] should not be enhanced.";
     private static final String WRN_UNSUCCESSFUL_GENERATION_BUT_ALREADY_PRESENT = "Type [%s] generation was unsuccessful. However, the type is already present in cache and will be used.";
     private static final String CONSTRUCTOR_FIELD_PREFIX = "constructorInterceptor$";
     private static final String COLLECTIONAL_SETTER_FIELD_PREFIX = "collectionalSetterInterceptor$";
 
     private final DynamicEntityClassLoader cl;
-    private Class<T> origType;
+    private final Class<T> origType;
     private DynamicType.Builder<T> builder;
     private String modifiedName;
     private final Logger logger = LogManager.getLogger(getClass());
@@ -118,7 +119,7 @@ public class TypeMaker<T> {
     /**
      * Enables lazy access to all (declared + inherited) properties of the original type.
      */
-    private Set<String> origTypeProperties;
+    private final Set<String> origTypeProperties;
     /**
      * Holds mappings of the form: {@code property name -> initialized value supplier}.
      */
@@ -132,21 +133,21 @@ public class TypeMaker<T> {
      */
     private final Map<String, T2<NewProperty<?>, Type>> addedProperties = new LinkedHashMap<>();
 
-    public TypeMaker(final DynamicEntityClassLoader loader) {
+    public TypeMaker(final DynamicEntityClassLoader loader, final Class<T> origType) {
         this.cl = loader;
-    }
-
-    /**
-     * Initiates adaptation of the specified {@code origType}. This could be either dynamic or static type (created manually by developer).
-     */
-    public TypeMaker<T> startModification(final Class<T> origType) {
         if (skipAdaptation(origType.getName())) {
-            throw new TypeMakerException("Java system classes should not be enhanced.");
+            throw new TypeMakerException(ERR_JAVA_SYSTEM_CLASS_SHOULD_NOT_BE_ENHANCED.formatted(origType.getName()));
         }
         this.origType = origType;
         this.origTypeProperties = Finder.streamProperties(origType, IsProperty.class)
                                         .map(Field::getName)
                                         .collect(toCollection(LinkedHashSet::new));
+    }
+
+    /**
+     * Initiates adaptation of the specified {@code origType}. This could be either dynamic or static type (created manually by developer).
+     */
+    public TypeMaker<T> startModification() {
         // no need for looking up the specified type in cache,
         // which was useful before, since ASM operates on byte[] directly
 

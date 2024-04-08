@@ -108,7 +108,7 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
      * @return
      */
     public static <T> TypeMaker<T> startModification(final Class<T> origType) {
-        return new TypeMaker<T>(instance).startModification(origType);
+        return new TypeMaker<T>(instance, origType).startModification();
     }
 
     /**
@@ -126,7 +126,7 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
      */
     @SuppressWarnings({ "unchecked" })
     public static <T> Class<? extends T> modifiedClass(final String typeName, final Class<T> origType, final Function<TypeMaker<T>, TypeMaker<T>> modifyType) {
-        return (Class<T>) getCachedClass(typeName).orElseGet(() -> modifyType.apply(new TypeMaker<T>(instance).startModification(origType).modifyTypeName(typeName)).endModification());
+        return (Class<T>) getCachedClass(typeName).orElseGet(() -> modifyType.apply(new TypeMaker<T>(instance, origType).startModification().modifyTypeName(typeName)).endModification());
     }
 
     /**
@@ -141,7 +141,7 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
      * @return
      */
     public static <T> Class<? extends T> modifiedClass(final Class<T> origType, final Function<TypeMaker<T>, TypeMaker<T>> modifyType) {
-        return modifyType.apply(new TypeMaker<T>(instance).startModification(origType)).endModification();
+        return modifyType.apply(new TypeMaker<T>(instance, origType).startModification()).endModification();
     }
 
     /**
