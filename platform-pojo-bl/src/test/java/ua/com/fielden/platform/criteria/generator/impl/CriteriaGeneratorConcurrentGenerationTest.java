@@ -6,7 +6,6 @@ import static ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator.
 
 import java.util.List;
 import java.util.concurrent.Phaser;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Test;
 
@@ -23,13 +22,13 @@ public class CriteriaGeneratorConcurrentGenerationTest {
 
     @Test
     public void concurrent_type_generation_resulting_in_the_same_type_is_supported() throws InterruptedException {
-        performConcurrentTypeGenerationTest(index -> phaser -> numberOfErrors -> numberOfOtherErrors -> new Worker("Worker with phaser %s".formatted(index), phaser, numberOfErrors, numberOfOtherErrors));
+        performConcurrentTypeGenerationTest((index, phaser) -> new Worker("Worker with phaser %s".formatted(index), phaser));
     }
 
     private static class Worker extends AbstractWorkerForTypeGenerationTests {
 
-        public Worker(final String name, final Phaser phaser, final AtomicInteger numberOfErrors, final AtomicInteger numberOfOtherErrors) {
-            super(name, phaser, numberOfErrors, numberOfOtherErrors);
+        public Worker(final String name, final Phaser phaser) {
+            super(name, phaser);
         }
 
         @Override
