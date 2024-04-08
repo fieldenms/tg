@@ -14,6 +14,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
+import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.utils.EntityUtils.fetch;
 import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
 
@@ -226,8 +227,8 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
                 assertEquals(en, entityOptional.get());
             });
         }
-    }    
-    
+    }
+
     @Test
     public void finding_non_existing_entity_by_key_with_fetch_produces_consistent_result_for_non_optional_and_optional_versions() {
         final EntityWithMoneyDao co = co$(EntityWithMoney.class);
@@ -257,7 +258,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
             });
         }
     }
-    
+
     @Test
     public void finding_non_existing_composite_entity_by_key_with_fetch_produces_consistent_result_for_non_optional_and_optional_versions() {
         final EntityWithDynamicCompositeKeyDao co = co$(EntityWithDynamicCompositeKey.class);
@@ -310,7 +311,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
         try (final Stream<EntityWithMoney> stream = co.stream(from(select(EntityWithMoney.class).model()).model())) {
             stream.forEach(entity -> {
                 final QueryExecutionModel<EntityWithMoney, EntityResultQueryModel<EntityWithMoney>> qem = from(select(EntityWithMoney.class).where().prop("key").eq().val(entity.getKey()).model()).model();
-                
+
                 final EntityWithMoney en = co.getEntity(qem);
                 assertNotNull(en);
 
@@ -352,11 +353,11 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
         final EntityWithMoney keyMember = co(EntityWithMoney.class).findByKey("KEY1");
         final EntityWithSingleMemberDynamicCompositeKeyDao co = co(EntityWithSingleMemberDynamicCompositeKey.class);
         final EntityWithSingleMemberDynamicCompositeKey entity = save(co.new_().setKeyMemember(keyMember));
-        
+
         final EntityWithSingleMemberDynamicCompositeKey foundByKey = co.findByKey(keyMember);
         assertNotNull(foundByKey);
         assertEquals(entity, foundByKey);
-        
+
         final EntityWithSingleMemberDynamicCompositeKey entityFoundByString = co.findByKey(entity.toString());
         assertNotNull(entityFoundByString);
         assertEquals(entity, entityFoundByString);
@@ -371,7 +372,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
         final EntityWithDynamicCompositeKey foundByKey = co.findByKey(requiredKeyMember, optionalKeyMember);
         assertNotNull(foundByKey);
-        
+
         final EntityWithDynamicCompositeKey foundByKeyAsString = co.findByKey(foundByKey.toString());
         assertNotNull(foundByKeyAsString);
         assertEquals(foundByKey, foundByKeyAsString);
@@ -878,9 +879,9 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
         assertFalse(entity.isValid().isSuccessful());
         assertFalse(entity.getProperty("requiredCritOnly").isValid());
-        
+
         assertTrue(entity.isValid(validateWithoutCritOnly).isSuccessful());
-        
+
         co.save(entity);
     }
 
@@ -899,6 +900,48 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
         final EntityWithDynamicCompositeKey entityByKey = co.getEntity(from(qByKey).with(fetch).model());
         assertNotNull(entityByKey);
         assertEquals(entityByKeyAsString, entityByKey);
+    }
+
+    /**
+     * This test demonstrates that inherited methods, which are intercepted when invoked directly, do not get intercepted when invoked via a {@code super} call in one of the methods, defined in a subtype.
+     * <p>
+     * Such behaviour of the AOP in general and the one included as part of Guice in particular, is very natural - instrumentation does not happen for inherited methods, invoked on a {@code super} instance, which cannot itself be instrumented.
+     * </p>
+     * This specific test covers the case where no session was yet associated with a companion object.
+     */
+    @Test
+    public void super_saving_new_instance_invoked_from_a_method_without_SessionRequired_is_not_intercepted_and_fails_due_not_missing_or_invalid_session() {
+        final var co = getInstance(IEntityWithMoney.class);
+        final var entity = co.new_();
+        entity.setKey("new value");
+        try {
+            ((ISessionEnabled)co).setSession(null); // remove session manually - methods intercepted due to @SessionRequired would initialise a new session
+            co.superSave(entity); // invokes super.save(), which should fail due to missing session as the super call is not intercepted to create a new session
+            failure("Invocation of superSave should have failed due to missing @SesionRequired");
+        } catch(final EntityCompanionException ex) {
+            // no session was yet associated with the companion instance, hence the "missing session" error
+            assertEquals("Session is missing, most likely, due to missing @SessionRequired annotation.", ex.getMessage());
+        }
+    }
+
+    /**
+     * This test is similar to {@link #super_saving_new_instance_invoked_from_a_method_without_SessionRequired_is_not_intercepted_and_fails_due_not_missing_or_invalid_session},
+     * covering the case where a session was already associated with a companion object, but an attempt to use that session is made subsequently by a {@code super.save} call.
+     */
+    @Test
+    public void super_saving_modified_instance_invoked_from_a_method_without_SessionRequired_is_not_intercepted_and_fails_due_not_missing_or_invalid_session() {
+        final var co = getInstance(IEntityWithMoney.class);
+        final var entity = co.new_();
+        entity.setKey("new value");
+        final var savedEntity = co.save(entity);
+        try {
+            savedEntity.setKey("new value 1"); // modify before save to actually attempt saving
+            co.superSave(savedEntity); // invokes super.save(), which should fail due to missing session as the super call is not intercepted to create a new session
+            failure("Invocation of superSave should have failed due to missing @SesionRequired");
+        } catch(final EntityCompanionException ex) {
+            // previously associated session was already closed when an attempt to use is made
+            assertEquals("Session is closed, most likely, due to missing @SessionRequired annotation.", ex.getMessage());
+        }
     }
 
     @Override
