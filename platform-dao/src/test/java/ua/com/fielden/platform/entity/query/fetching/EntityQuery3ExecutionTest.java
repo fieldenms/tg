@@ -27,6 +27,7 @@ import java.util.List;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertNotThrows;
+import static ua.com.fielden.platform.test_utils.TestUtils.assertThrows;
 
 public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     private final IEntityAggregatesOperations aggregateDao = getInstance(IEntityAggregatesOperations.class);
@@ -1103,6 +1104,15 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
                         .modelAsAggregate();
         // @formatter:on
         final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(query).model());
+    }
+
+    @Test
+    public void union_of_queries_with_different_numbers_of_yields_fails() {
+        final var q1 = select().yield().val(200).as("x").modelAsAggregate();
+        final var q2 = select().yield().val(100).as("x").yield().val(300).as("y").modelAsAggregate();
+        final var union = select(q1, q2).yieldAll().modelAsAggregate();
+
+        assertThrows(() -> co(EntityAggregates.class).getAllEntities(from(union).model()));
     }
 
     @Override

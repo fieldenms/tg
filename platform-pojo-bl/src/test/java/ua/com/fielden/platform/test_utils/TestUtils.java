@@ -68,4 +68,14 @@ public final class TestUtils {
         }
     }
 
+    public static void assertThrows(final ThrowingRunnable runnable) {
+        try {
+            runnable.run();
+        } catch (final Throwable $) {
+            return;
+        }
+
+        fail("Expected an exception to be thrown but nothing was thrown.");
+    }
+
 }
