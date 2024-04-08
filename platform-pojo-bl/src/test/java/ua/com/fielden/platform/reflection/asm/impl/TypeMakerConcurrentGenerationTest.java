@@ -1,10 +1,6 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
-import static java.lang.System.identityHashCode;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static ua.com.fielden.platform.criteria.generator.impl.ConcurrentGenerationTestUtils.performConcurrentTypeGenerationTest;
 import static ua.com.fielden.platform.reflection.asm.api.NewProperty.create;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getCachedClass;
@@ -14,7 +10,6 @@ import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Phaser;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Test;
 
@@ -52,14 +47,14 @@ public class TypeMakerConcurrentGenerationTest {
         // check collectional property initialisation (TypeMaker.ConstructorInterceptor):
         assertNotNull(genEntity.get("newTestProp"));
         assertEquals(new ArrayList<>(), genEntity.get("newTestProp"));
-        final var propValCode = identityHashCode(genEntity.get("newTestProp"));
-        assertNotEquals(identityHashCode(entityFactory.newEntity((Class<AbstractEntity>) genTypeOpt.get()).get("newTestProp")), propValCode); // hash codes for different entities must be different
+        final var propVal = genEntity.get("newTestProp");
+        assertNotSame(entityFactory.newEntity((Class<AbstractEntity>) genTypeOpt.get()).get("newTestProp"), propVal); // references for different entities must be different
 
         // check collectional property setting (TypeMaker.CollectionalSetterInterceptor):
         genEntity.set("newTestProp", listOf("item"));
         assertNotNull(genEntity.get("newTestProp"));
         assertEquals(listOf("item"), genEntity.get("newTestProp"));
-        assertEquals(propValCode, identityHashCode(genEntity.get("newTestProp"))); // hash code must be the same -- the same list is used for collectional properties
+        assertSame(propVal, genEntity.get("newTestProp")); // reference must be the same -- the same list is used for collectional properties
     }
 
     private static class Worker extends AbstractWorkerForTypeGenerationTests {
