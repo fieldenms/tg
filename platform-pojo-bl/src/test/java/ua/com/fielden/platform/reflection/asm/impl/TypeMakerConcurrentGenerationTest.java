@@ -45,14 +45,12 @@ public class TypeMakerConcurrentGenerationTest {
         final var genEntity = entityFactory.newEntity((Class<AbstractEntity>) genTypeOpt.get());
 
         // check collectional property initialisation (TypeMaker.ConstructorInterceptor):
-        assertNotNull(genEntity.get("newTestProp"));
         assertEquals(new ArrayList<>(), genEntity.get("newTestProp"));
         final var propVal = genEntity.get("newTestProp");
         assertNotSame(entityFactory.newEntity((Class<AbstractEntity>) genTypeOpt.get()).get("newTestProp"), propVal); // references for different entities must be different
 
         // check collectional property setting (TypeMaker.CollectionalSetterInterceptor):
         genEntity.set("newTestProp", listOf("item"));
-        assertNotNull(genEntity.get("newTestProp"));
         assertEquals(listOf("item"), genEntity.get("newTestProp"));
         assertSame(propVal, genEntity.get("newTestProp")); // reference must be the same -- the same list is used for collectional properties
     }
