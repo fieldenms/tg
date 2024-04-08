@@ -333,4 +333,21 @@ public class StreamUtilsTest {
         assertOptEquals(false, areAllEqual(IntStream.of(m, m, n)));
     }
 
+    @Test
+    public void enumerated_constructs_a_stream_that_starts_from_the_given_number() {
+        List<String> result = enumerated(Stream.of("a", "b"), 97, (i, value) -> i + ":" + value).toList();
+        assertEquals(List.of("97:a", "98:b"), result);
+    }
+
+    @Test
+    public void enumerated_constructs_a_stream_that_starts_from_0_by_default() {
+        List<String> result = enumerated(Stream.of("a", "b"), (i, value) -> i + ":" + value).toList();
+        assertEquals(List.of("0:a", "1:b"), result);
+    }
+
+    @Test
+    public void enumerated_constructs_an_empty_stream_given_an_empty_stream() {
+        assertTrue(enumerated(Stream.of(), (i, v) -> "").toList().isEmpty());
+    }
+
 }
