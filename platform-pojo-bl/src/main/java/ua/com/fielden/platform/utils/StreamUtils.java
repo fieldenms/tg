@@ -293,13 +293,13 @@ public class StreamUtils {
     }
 
     /**
-     * Given a collection of streams (rows in a matrix), returns a stream of lists each containing nth elements of the
-     * original streams (matrix columns).
+     * Given a collection of streams, returns a stream of lists where each list is formed by consuming the next element
+     * from each input stream.
+     * This operation can be thought of as matrix transposition where the input streams are rows and the output lists are columns.
      * <p>
-     * One caveat is that the resulting stream will be as long as the shortest original stream, which is possible only if
+     * One caveat is that the resulting stream will be as long as the shortest input stream, which is possible only if
      * the "input matrix" has "rows" of different length.
      * <p>
-     * T
      *
      * @see #transpose(Collection, Function)
      * @see #transpose(Collection)
@@ -335,10 +335,16 @@ public class StreamUtils {
         return StreamSupport.stream(spliterator, false);
     }
 
+    /**
+     * @see #transposeBase(Collection)
+     */
     public static <T> Stream<List<T>> transpose(final Collection<? extends Collection<T>> source) {
         return transpose(source, Collection::stream);
     }
 
+    /**
+     * @see #transposeBase(Collection)
+     */
     public static <T, R> Stream<List<R>> transpose(final Collection<T> source, final Function<? super T, ? extends BaseStream<R, ?>> mapper) {
         return transposeBase(source.stream().map(mapper).toList());
     }

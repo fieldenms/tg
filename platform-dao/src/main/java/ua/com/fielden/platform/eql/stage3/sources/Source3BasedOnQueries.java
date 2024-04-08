@@ -71,7 +71,7 @@ public class Source3BasedOnQueries extends AbstractSource3 {
         // in each column of the result set find the first value with non-NULL type; assume that all values in the same
         // column are compatible with each other in terms of their types
         return transpose(models, q -> q.yields.getYields().stream())
-                .map(yields -> yields.stream().map(y -> y.type).filter(PropType::isNotNull).findFirst().orElse(NO_EXPECTED_TYPE))
+                .map(column -> column.stream().map(y -> y.type).filter(PropType::isNotNull).findFirst().orElse(NO_EXPECTED_TYPE))
                 .toList();
     }
 
