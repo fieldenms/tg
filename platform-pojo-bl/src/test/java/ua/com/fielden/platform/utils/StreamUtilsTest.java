@@ -6,6 +6,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.test_utils.TestUtils.assertOptEquals;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.utils.StreamUtils.*;
@@ -19,6 +20,7 @@ import java.util.stream.Stream;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.test_utils.TestUtils;
 import ua.com.fielden.platform.types.tuples.T2;
 
 public class StreamUtilsTest {
@@ -307,6 +309,28 @@ public class StreamUtilsTest {
     public void isMultiElementStream_returns_true_for_a_stream_with_multiple_elements() {
         assertTrue(isMultiElementStream(Stream.of("a", "b")));
         assertTrue(isMultiElementStream(Stream.of("a", "b").parallel()));
+    }
+
+    @Test
+    public void areAllEqual_returns_an_empty_optional_for_an_empty_stream() {
+        assertTrue(areAllEqual(IntStream.of()).isEmpty());
+    }
+
+    @Test
+    public void areAllEqual_returns_true_for_a_stream_of_the_same_integer() {
+        final int n = 764932;
+        assertOptEquals(true, areAllEqual(IntStream.of(n)));
+        assertOptEquals(true, areAllEqual(IntStream.of(n, n)));
+        assertOptEquals(true, areAllEqual(IntStream.of(n, n, n)));
+    }
+
+    @Test
+    public void areAllEqual_returns_false_for_a_stream_of_different_integers() {
+        final int n = 764932;
+        final int m = 43279;
+        assertOptEquals(false, areAllEqual(IntStream.of(n, m)));
+        assertOptEquals(false, areAllEqual(IntStream.of(m, n, m + 1)));
+        assertOptEquals(false, areAllEqual(IntStream.of(m, m, n)));
     }
 
 }

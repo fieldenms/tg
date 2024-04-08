@@ -6,6 +6,7 @@ import ua.com.fielden.platform.types.tuples.T2;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.BaseStream;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -371,5 +372,30 @@ public class StreamUtils {
 
         return i > 1;
     }
+
+    /**
+     * Tests whether all integers in a stream are equal. If the stream is empty, returns an empty optional.
+     * <p>
+     * This method is more efficient than the usage of {@link IntStream#distinct()} because the implementation of the latter
+     * uses boxing.
+     */
+    public static Optional<Boolean> areAllEqual(final IntStream stream) {
+        final PrimitiveIterator.OfInt it = stream.iterator();
+        if (!it.hasNext()) {
+            return Optional.empty();
+        }
+
+        final int n = it.next();
+        while (it.hasNext()) {
+            if (n != it.next()) {
+                return OPTIONAL_FALSE;
+            }
+        }
+
+        return OPTIONAL_TRUE;
+    }
+    // where
+    private static final Optional<Boolean> OPTIONAL_FALSE = Optional.of(Boolean.FALSE);
+    private static final Optional<Boolean> OPTIONAL_TRUE = Optional.of(Boolean.TRUE);
 
 }
