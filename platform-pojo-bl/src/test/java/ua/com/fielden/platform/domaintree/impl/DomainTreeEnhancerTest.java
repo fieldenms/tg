@@ -317,6 +317,24 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
         fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "octuple");
     }
 
+    @Test
+    public void custom_property_with_unparameterised_list_type_can_be_added() {
+        final Set<Class<?>> rootTypes = new HashSet<>();
+        rootTypes.add(EnhancingMasterEntity.class);
+        final IDomainTreeEnhancer dm = new DomainTreeEnhancer(factory(), rootTypes);
+
+        // check the snapshot of domain
+        fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "customProp");
+
+        // modify domain
+        dm.addCustomProperty(EnhancingMasterEntity.class, "", "customProp", "Custom Prop", "Custom Prop Desc", List.class, IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dm.apply();
+
+        // check the snapshot of domain
+        customFieldExistsInSinglePlaceAndItWORKS(dm.getManagedType(EnhancingMasterEntity.class), "customProp", List.class, "Custom Prop", "Custom Prop Desc");
+    }
+
+
     private static void checkFirstLevelEnhancements(final IDomainTreeEnhancer dm) {
         // modify domain
         dm.addCustomProperty(EnhancingMasterEntity.class, "", "customProp", "Custom Prop", "Custom Prop Desc", Integer.class, IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);

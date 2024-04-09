@@ -10,10 +10,10 @@
     <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
     <script src="/resources/filesaver/FileSaver.min.js"></script>
     <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
+
 </head>
 
 <body>
-    <tg-reflector id="reflector"></tg-reflector>
     <test-fixture id="CentreFixture">
         <template>
             <tg-MiTgPersistentEntityWithProperties1-centre id="centre" uuid="TEST_CENTRE"></tg-MiTgPersistentEntityWithProperties1-centre>
@@ -22,39 +22,15 @@
 
 <script type="module">
 
-    import '/app/tg-reflector.js';
-	import '/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties1';
+    import '/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties1';
+    import { persistConfidenceInterval, createTestingConfig, removeTestingConfig } from '/resources/reflection/tg-test-utils.js';
 
     suite('entity centre', function() {
-        let centre, reflector, noOfIterations, _calcConfidenceInterval;
+        let centre, noOfIterations;
 
         setup(function() {
             centre = fixture('CentreFixture');
-            reflector = document.querySelector('#reflector');
             noOfIterations = 100;
-            _calcConfidenceInterval = function (data) {
-                const n = data.length;
-                let sum = 0;
-                for (let index = 0; index < n; index++) {
-                    sum += data[index];
-                }
-                const x_ = sum * 1.0 / n; // "mean"
-
-                sum = 0;
-                for (let index = 0; index < n; index++) {
-                    const diff = data[index] - x_;
-                    sum += diff * diff;
-                }
-                sum = sum / n;
-                const sigma = Math.sqrt(sum); // standard deviation
-
-                // The value of z(alfa / 2) is taken from z-table for confidence level of 95%, for example from here (http://www.statisticshowto.com/tables/z-table/).
-                // alfa = 0.95, alfa / 2 = 0.475, find that value inside the table and check intersections: 1.9 and 0.6 => z := 1.96
-                const z = 1.96;
-                const deltaX = z * (sigma / Math.sqrt(n));
-
-                return [+((x_ - deltaX).toFixed(1)), +((x_ + deltaX).toFixed(1))];
-            };
         });
 
         test('subsequent validations measuring', function (done) {
@@ -67,11 +43,12 @@
             };
 
             centre.postRetrieved = function (entity, bindingEntity, customObject) {
-                const editor = _leftEditor('booleanProp');
-
-                start = new Date().getTime();
-                editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
-                editor.commit();
+                createTestingConfig(centre).then(() => {
+                    const editor = _leftEditor('booleanProp');
+                    start = new Date().getTime();
+                    editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
+                    editor.commit();
+                });
             };
 
             centre.$.selection_criteria._validationPromiseChanged = function (newValidationPromise, oldValidationPromise) {
@@ -83,11 +60,11 @@
                     console.debug('Validated in ', time, ' millis (no ', count, ').');
 
                     if (count >= noOfIterations) {
-                        console.debug('Validated in [c1; c2] = ', _calcConfidenceInterval(data));
-                        setTimeout(done, 2000); // done();
+                        persistConfidenceInterval('centre', 'validate', data);
+                        centre.$.selection_criteria._validationPromiseChanged = function () {};
+                        removeTestingConfig(centre).then(() => done());
                     } else {
                         const editor = _leftEditor('booleanProp');
-
                         start = new Date().getTime();
                         editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
                         editor.commit();
@@ -110,18 +87,21 @@
             };
 
             centre.postRetrieved = function (entity, bindingEntity, customObject) {
-                const editor = _leftEditor('booleanProp');
-                editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
-                editor.commit();
+                createTestingConfig(centre).then(() => {
+                    const editor = _leftEditor('booleanProp');
+                    editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
+                    editor.commit();
+                });
             };
 
             centre.$.selection_criteria._validationPromiseChanged = function (newValidationPromise, oldValidationPromise) {
                 // console.debug('_validationPromiseChanged:', newValidationPromise, oldValidationPromise);
                 newValidationPromise.then(function(value) {
                     start = new Date().getTime();
+
                     // provide an alternative postActionSuccess before running the save action
                     const saveAction = centre.$.dom.$.saveAction;
-                    saveAction.postActionSuccess = function(potentiallySavedOrNewEntity, self) {
+                    saveAction.postActionSuccess = function (potentiallySavedOrNewEntity, self) {
                       count++;
 
                       const time = new Date().getTime() - start;
@@ -129,8 +109,9 @@
                       console.debug('Saved in ', time, ' millis (no ', count, ').');
 
                       if (count >= noOfIterations) {
-                          console.debug('Saved in [c1; c2] = ', _calcConfidenceInterval(data));
-                          setTimeout(done, 2000); // done();
+                          persistConfidenceInterval('centre', 'save', data);
+                          centre.$.selection_criteria._validationPromiseChanged = function () {};
+                          removeTestingConfig(centre).then(() => done());
                       } else {
                           const editor = _leftEditor('booleanProp');
                           editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
@@ -157,10 +138,14 @@
                 return centre.$.selection_criteria.$['editor_4_tgPersistentEntityWithProperties_' + name + '_is'];
             };
 
+            const centrePostRetrieved = centre.postRetrieved;
             centre.postRetrieved = function (entity, bindingEntity, customObject) {
-                const editor = _leftEditor('booleanProp');
-                editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
-                editor.commit();
+                centre.postRetrieved = centrePostRetrieved;
+                createTestingConfig(centre).then(() => {
+                    const editor = _leftEditor('booleanProp');
+                    editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
+                    editor.commit();
+                });
             };
 
             centre.$.selection_criteria._validationPromiseChanged = function (newValidationPromise, oldValidationPromise) {
@@ -175,8 +160,9 @@
                         console.debug('Discarded in ', time, ' millis (no ', count, ').');
 
                         if (count >= noOfIterations) {
-                            console.debug('Discarded in [c1; c2] = ', _calcConfidenceInterval(data));
-                            setTimeout(done, 2000); // done();
+                            persistConfidenceInterval('centre', 'discard', data);
+                            centre.$.selection_criteria._validationPromiseChanged = function () {};
+                            removeTestingConfig(centre).then(() => done());
                         } else {
                             const editor = _leftEditor('booleanProp');
                             editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
@@ -206,8 +192,8 @@
                     console.debug('Running in ', time, ' millis (no ', count, ').');
 
                     if (count >= noOfIterations) {
-                        console.debug('Running in [c1; c2] = ', _calcConfidenceInterval(data));
-                        setTimeout(done, 2000); // done();
+                        persistConfidenceInterval('centre', 'run', data);
+                        removeTestingConfig(centre).then(() => done());
                     } else {
                         start = new Date().getTime();
                         centre.run().then(_createPostRunFunction(), function (error) {
@@ -218,12 +204,13 @@
             };
 
             centre.postRetrieved = function (entity, bindingEntity, customObject) {
-                start = new Date().getTime();
-                centre.run().then(_createPostRunFunction(), function (error) {
-                    console.error("Running was rejected with error: " + error);
+                createTestingConfig(centre).then(() => {
+                    start = new Date().getTime();
+                    centre.run().then(_createPostRunFunction(), function (error) {
+                        console.error("Running was rejected with error: " + error);
+                    });
                 });
             };
-
             centre.retrieve();
         });
 	});
