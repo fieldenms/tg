@@ -1149,6 +1149,30 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
                 select(sourceQuery).where().prop("myNull").like().val("abc").or().val(null).like().val("abc").model()));
     }
 
+    @Test
+    public void caseWhen_returning_only_nulls_can_be_used_in_comparison_with_a_nonNull_and_nonString() {
+        final var sourceQuery = select().yield().val(55).as("n").modelAsAggregate();
+        final var query = select(sourceQuery).where()
+                // endAs* must be used, end() is illegal when there are only nulls
+                .prop("n").eq().caseWhen().val(1).isNotNull().then().val(null).endAsInt()
+                .model();
+
+        final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(query).model());
+        assertTrue(entities.isEmpty());
+    }
+
+    @Test
+    public void caseWhen_returning_a_null_and_a_nonNull_can_be_used_in_comparison_with_a_nonNull() {
+        final BigDecimal n = new BigDecimal("1487432.56788765");
+        final var sourceQuery = select().yield().val(n).as("n").modelAsAggregate();
+        final var query = select(sourceQuery).where()
+                .prop("n").eq().caseWhen().val(1).isNotNull().then().val(n).end()
+                .model();
+
+        final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(query).model());
+        assertEquals(List.of(n), entities.stream().map(ent -> ent.get("n")).toList());
+    }
+
     @Override
     public boolean saveDataPopulationScriptToFile() {
         return false;
