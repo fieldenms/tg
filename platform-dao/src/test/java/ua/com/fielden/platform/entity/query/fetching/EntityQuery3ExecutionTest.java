@@ -1115,6 +1115,40 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         assertThrows(() -> co(EntityAggregates.class).getAllEntities(from(union).model()));
     }
 
+    @Test
+    public void like_is_applicable_to_nonString_values() {
+        final var sourceQuery = select()
+                .yield().val(55).as("myInt")
+                .yield().val(new BigDecimal("33.3")).as("myBigDecimal")
+                .yield().val(date("1936-05-31 11:00:00")).as("myDate")
+                .modelAsAggregate();
+
+        final var co = co(EntityAggregates.class);
+        assertTrue(co.exists(select(sourceQuery).where()
+                .prop("myInt").like().val("5%").and().prop("myInt").notLike().val("abc")
+                .and()
+                .prop("myInt").iLike().val("5%").and().prop("myInt").notILike().val("abc")
+                .model()));
+        assertTrue(co.exists(select(sourceQuery).where()
+                .prop("myBigDecimal").like().val("33%").and().prop("myBigDecimal").notLike().val("abc")
+                .and()
+                .prop("myBigDecimal").iLike().val("33%").and().prop("myBigDecimal").notILike().val("abc")
+                .model()));
+        // NOTE assume dd/MM/YYYY date format
+        assertTrue(co.exists(select(sourceQuery).where()
+                .prop("myDate").like().val("%31/05%").and().prop("myDate").notLike().val("abc")
+                .and()
+                .prop("myDate").iLike().val("%31/05%").and().prop("myDate").notILike().val("abc")
+                .model()));
+    }
+
+    @Test
+    public void like_is_applicable_to_null_values() {
+        final var sourceQuery = select().yield().val(null).as("myNull").modelAsAggregate();
+        assertFalse(co(EntityAggregates.class).exists(
+                select(sourceQuery).where().prop("myNull").like().val("abc").or().val(null).like().val("abc").model()));
+    }
+
     @Override
     public boolean saveDataPopulationScriptToFile() {
         return false;
