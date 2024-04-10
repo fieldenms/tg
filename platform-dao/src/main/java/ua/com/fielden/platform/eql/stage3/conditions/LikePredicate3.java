@@ -1,15 +1,11 @@
 package ua.com.fielden.platform.eql.stage3.conditions;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.LikeOptions;
-import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
-import java.util.Date;
 import java.util.Objects;
 
-import static java.lang.String.format;
 import static ua.com.fielden.platform.eql.stage3.utils.OperandToSqlAsString.operandToSqlAsString;
 
 public class LikePredicate3 implements ICondition3 {
@@ -25,29 +21,7 @@ public class LikePredicate3 implements ICondition3 {
 
     @Override
     public String sql(final EqlDomainMetadata metadata) {
-        return metadata.dbVersion.likeSql(options.negated, leftOperandSql(metadata), rightOperand.sql(metadata), options.caseInsensitive);
-    }
-
-    private String leftOperandSql(final EqlDomainMetadata metadata) {
-        return options.withCast ? leftOperandWithTypecastingSql(metadata) : leftOperand.sql(metadata);
-    }
-
-    private String leftOperandWithTypecastingSql(final EqlDomainMetadata metadata) {
-        if (Integer.class == leftOperand.type().javaType()) {
-            return format("CAST(%s AS VARCHAR(11))", leftOperand.sql(metadata));
-        } else if (leftOperand.type().isNull() || String.class == leftOperand.type().javaType()) {
-            return leftOperand.sql(metadata);
-        } else if (Date.class == leftOperand.type().javaType()) {
-            if (DbVersion.POSTGRESQL == metadata.dbVersion) {
-                return operandToSqlAsString(metadata, leftOperand);
-            } else if (DbVersion.MSSQL == metadata.dbVersion) {
-                return operandToSqlAsString(metadata, leftOperand);
-            } else {
-                throw new EqlStage3ProcessingException("Left operand type [%s] is not supported for operand LIKE for [%s].".formatted(leftOperand.type(), metadata));
-            }
-        } else {
-            throw new EqlStage3ProcessingException("Left operand type [%s] is not supported for operand LIKE.".formatted(leftOperand.type()));
-        }
+        return metadata.dbVersion.likeSql(options.negated, operandToSqlAsString(metadata, leftOperand), rightOperand.sql(metadata), options.caseInsensitive);
     }
 
     @Override
