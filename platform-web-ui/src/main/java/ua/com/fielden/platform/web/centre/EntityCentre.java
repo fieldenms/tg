@@ -390,7 +390,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                         CalculatedPropertyAttribute.NO_ATTR,
                         "".equals(originationProperty) ? "SELF" : originationProperty, summaryProp.desc,
                         summaryProp.precision,
-                        summaryProp.scale, null, null));
+                        summaryProp.scale));
             }
         }
 

@@ -117,9 +117,9 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
     public void streams_that_are_used_outside_an_existing_db_session_are_responsible_for_its_closing() {
         final EntityWithMoneyDao co = co$(EntityWithMoney.class);
         try (final Stream<EntityWithMoney> stream = co.stream(from(select(EntityWithMoney.class).model()).model())) {
-            assertTrue("Session should still be open.", co.getSession().isOpen());
+            assertTrue("Session should still be open.", co.getSessionUnsafe().isOpen());
         }
-        assertFalse("Session should already be closed", co.getSession().isOpen());
+        assertFalse("Session should already be closed", co.getSessionUnsafe().isOpen());
     }
 
     @Test
@@ -128,11 +128,11 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
         final Stream<EntityWithMoney> dataStream = co.stream(from(select(EntityWithMoney.class).model()).model());
         final Stream<Money> moneyStream = dataStream.map(e -> e.getMoney());
         
-        assertTrue("Session should still be open.", co.getSession().isOpen());
+        assertTrue("Session should still be open.", co.getSessionUnsafe().isOpen());
         
         moneyStream.close();
         
-        assertFalse("Session should already be closed", co.getSession().isOpen());
+        assertFalse("Session should already be closed", co.getSessionUnsafe().isOpen());
     }
 
     @Test
@@ -140,13 +140,13 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
         final EntityWithMoneyDao co = co$(EntityWithMoney.class);
         final Stream<EntityWithMoney> dataStream = co.stream(from(select(EntityWithMoney.class).model()).model());
         
-        assertTrue("Session should still be open.", co.getSession().isOpen());
+        assertTrue("Session should still be open.", co.getSessionUnsafe().isOpen());
         dataStream.count();
-        assertTrue("Session should still be open.", co.getSession().isOpen());
+        assertTrue("Session should still be open.", co.getSessionUnsafe().isOpen());
         
         dataStream.close();
         
-        assertFalse("Session should already be closed", co.getSession().isOpen());
+        assertFalse("Session should already be closed", co.getSessionUnsafe().isOpen());
     }
 
     @Test
@@ -156,14 +156,14 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
         final Map<Boolean, List<EntityWithMoney>> partition;
         try (final Stream<EntityWithMoney> dataStream = co.stream(from(select(EntityWithMoney.class).model()).model());) {
             partition = dataStream.collect(Collectors.partitioningBy(e -> e.getMoney().getAmount().doubleValue() >= 30));
-            assertTrue("Session should still be open.", co.getSession().isOpen());
+            assertTrue("Session should still be open.", co.getSessionUnsafe().isOpen());
         }
         
         assertEquals(2, partition.size());
         assertEquals(3, partition.get(true).size());
         assertEquals(1, partition.get(false).size());
         
-        assertFalse("Session should already be closed", co.getSession().isOpen());
+        assertFalse("Session should already be closed", co.getSessionUnsafe().isOpen());
     }
 
     @Test
@@ -176,7 +176,7 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
         final long result = co.streamProcessingWithinTransaction(query);
         
         assertEquals(co$(EntityWithMoney.class).count(query) * 2, result);
-        assertFalse("Session should already be closed", co.getSession().isOpen());
+        assertFalse("Session should already be closed", co.getSessionUnsafe().isOpen());
     }
 
     @Test
@@ -205,7 +205,7 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
         
         final List<EntityAggregates> values;
         try (final Stream<EntityAggregates> stream = co(EntityAggregates.class).stream(from(qry).with(orderByDesc).model(), 1)) {
-            values = stream.collect(toList());
+            values = stream.toList();
         }
         assertEquals(2, values.size());
         assertEquals("desc X", values.get(0).get("distinctDesc"));
