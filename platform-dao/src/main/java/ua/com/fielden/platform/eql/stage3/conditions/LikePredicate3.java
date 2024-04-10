@@ -1,17 +1,16 @@
 package ua.com.fielden.platform.eql.stage3.conditions;
 
-import static java.lang.String.format;
-import static ua.com.fielden.platform.eql.meta.PropType.NULL_TYPE;
-
-import java.util.Date;
-import java.util.Objects;
-
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.LikeOptions;
 import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
-import ua.com.fielden.platform.eql.stage3.operands.functions.AbstractFunction3;
+
+import java.util.Date;
+import java.util.Objects;
+
+import static java.lang.String.format;
+import static ua.com.fielden.platform.eql.stage3.utils.OperandToSqlAsString.operandToSqlAsString;
 
 public class LikePredicate3 implements ICondition3 {
     public final ISingleOperand3 leftOperand;
@@ -40,9 +39,9 @@ public class LikePredicate3 implements ICondition3 {
             return leftOperand.sql(metadata);
         } else if (Date.class == leftOperand.type().javaType()) {
             if (DbVersion.POSTGRESQL == metadata.dbVersion) {
-                return AbstractFunction3.getConvertToStringSqlForPostgresql(metadata, leftOperand);
+                return operandToSqlAsString(metadata, leftOperand);
             } else if (DbVersion.MSSQL == metadata.dbVersion) {
-                return AbstractFunction3.getConvertToStringSqlForMsSql2005(metadata, leftOperand);
+                return operandToSqlAsString(metadata, leftOperand);
             } else {
                 throw new EqlStage3ProcessingException("Left operand type [%s] is not supported for operand LIKE for [%s].".formatted(leftOperand.type(), metadata));
             }

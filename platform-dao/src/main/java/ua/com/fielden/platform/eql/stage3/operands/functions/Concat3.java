@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage3.operands.functions;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
+import static ua.com.fielden.platform.eql.stage3.utils.OperandToSqlAsString.operandToSqlAsString;
 
 import java.util.List;
 import java.util.Objects;
@@ -9,6 +10,7 @@ import java.util.Objects;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.eql.stage3.utils.OperandToSqlAsString;
 
 public class Concat3 extends AbstractFunction3 {
 
@@ -24,9 +26,9 @@ public class Concat3 extends AbstractFunction3 {
         switch (metadata.dbVersion) {
         case H2:
         case MSSQL:
-            return format(" (%s)", operands.stream().map(so -> getConvertToStringSql(metadata, so)).collect(joining(" + ")));
+            return format(" (%s)", operands.stream().map(so -> operandToSqlAsString(metadata, so)).collect(joining(" + ")));
         case POSTGRESQL:
-            return format(" (%s)", operands.stream().map(so -> getConvertToStringSql(metadata, so)).collect(joining(" || ")));
+            return format(" (%s)", operands.stream().map(so -> operandToSqlAsString(metadata, so)).collect(joining(" || ")));
         default:
             return super.sql(metadata);
         }

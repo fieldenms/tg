@@ -1,10 +1,11 @@
 package ua.com.fielden.platform.eql.stage3.operands.functions;
 
-import static java.lang.String.format;
-
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+
+import static java.lang.String.format;
+import static ua.com.fielden.platform.eql.stage3.utils.OperandToSqlAsString.operandToSqlAsString;
 
 public class LowerCaseOf3 extends SingleOperandFunction3 {
 
@@ -14,7 +15,7 @@ public class LowerCaseOf3 extends SingleOperandFunction3 {
 
     @Override
     public String sql(final EqlDomainMetadata metadata) {
-        return format("LOWER(%s)", getConvertToStringSql(metadata, operand));
+        return format("LOWER(%s)", operandToSqlAsString(metadata, operand));
     }
 
     @Override
