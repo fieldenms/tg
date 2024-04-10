@@ -58,7 +58,7 @@ public final class HibernateToJdbcSqlTypeCorrespondence {
         final int sqlType = switch (hibernateType) {
             case Type t -> jdbcSqlTypeFor(t);
             case UserType t -> jdbcSqlTypeFor(t);
-            default -> throw new IllegalArgumentException("Unexpected Hibernate type: %s".formatted(hibernateType));
+            case null, default -> throw new IllegalArgumentException("Unexpected Hibernate type: %s".formatted(hibernateType));
         };
 
         return genericSqlTypeName(sqlType, dialect);
