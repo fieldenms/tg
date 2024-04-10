@@ -61,19 +61,11 @@ import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
 /**
- * This is a most common Hibernate-based implementation of the {@link IEntityDao}.
- * <p>
- * It should not be used directly -- more preferred way is to inherit it for implementation of a more specific DAO.
- * <p>
- * Property <code>session</code> is used to allocation session whenever is appropriate -- all data access methods should use this session. It is envisaged that the real class usage
- * will include Guice method intercepter that would assign session instance dynamically before executing calls to methods annotated with {@link SessionRequired}.
+ * This is a base class for db-aware implementations of entity companions.
  *
  * @author TG Team
  *
- * @param <T>
- *            -- entity type
- * @param <K>
- *            -- entitie's key type
+ * @param <T> entity type
  */
 public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends AbstractEntityReader<T> implements IEntityDao<T>, ISessionEnabled, ICanReadUninstrumented {
 
@@ -118,7 +110,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * The default constructor, which looks for annotation {@link EntityType} to identify the entity type automatically.
      * An exception is thrown if the annotation is missing.
      *
-     * @param entityType
+     * @param filter
      */
     protected CommonEntityDao(final IFilter filter) {
         final EntityType annotation = AnnotationReflector.getAnnotation(getClass(), EntityType.class);
@@ -175,7 +167,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     /**
      * A separate setter is used in order to avoid enforcement of providing mapping generator as one of constructor parameter in descendant classes.
      *
-     * @param mappingExtractor
+     * @param domainMetadata
      */
     @Inject
     protected void setDomainMetadata(final DomainMetadata domainMetadata) {
@@ -209,7 +201,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     /**
-     * By default all DAO computations are considered indefinite. Thus returning <code>null</code> as the result.
+     * By default, all DAO computations are considered indefinite. Thus returning empty result.
      */
     @Override
     public Optional<Integer> progress() {
@@ -292,11 +284,26 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return skipRefetching ? left(result._1) : right(result._2);
     }
 
+    /**
+     * Returns an open session, if present. Otherwise, throws {@link EntityCompanionException} exception.
+     * @return
+     */
     @Override
     public Session getSession() {
         if (session == null) {
             throw new EntityCompanionException("Session is missing, most likely, due to missing @SessionRequired annotation.");
+        } else if (!session.isOpen()) {
+            throw new EntityCompanionException("Session is closed, most likely, due to missing @SessionRequired annotation.");
         }
+        return session;
+    }
+
+    /**
+     * Returns a session instances without any checks. It is intended mainly for testing purposes to ensure correct session state after various db operations.
+     *
+     * @return
+     */
+    public Session getSessionUnsafe() {
         return session;
     }
 
@@ -521,7 +528,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     ////////////////////////////////////////////////////////////
 
     /**
-     * A convenient default implementation for entity deletion, which should be used by overriding method {@link #delete(Long)}.
+     * A convenient default implementation for entity deletion, which should be used when overriding method {@link #delete(T)}.
      *
      * @param entity
      */
