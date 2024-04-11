@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.test_utils;
 
+import org.junit.Assert;
 import org.junit.function.ThrowingRunnable;
 
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static org.junit.Assert.*;
 
@@ -76,6 +78,16 @@ public final class TestUtils {
         }
 
         fail("Expected an exception to be thrown but nothing was thrown.");
+    }
+
+    /**
+     * Like {@link Assert#assertThrows(Class, ThrowingRunnable)} but allows futher processing of the thrown exception.
+     */
+    public static <T extends Throwable> void assertThrows(
+            final ThrowingRunnable runnable, final Class<T> throwableType, final Consumer<? super T> action)
+    {
+        final T throwable = Assert.assertThrows(throwableType, runnable);
+        action.accept(throwable);
     }
 
 }

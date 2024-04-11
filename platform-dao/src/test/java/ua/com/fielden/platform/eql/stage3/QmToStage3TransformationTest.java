@@ -1,18 +1,21 @@
 package ua.com.fielden.platform.eql.stage3;
 
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.eql.meta.PropType.*;
 import static ua.com.fielden.platform.eql.stage1.sundries.Yield1.ABSENT_ALIAS;
+import static ua.com.fielden.platform.test_utils.TestUtils.assertThrows;
 
 import org.junit.Ignore;
 import org.junit.Test;
 
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
+import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 import ua.com.fielden.platform.eql.meta.EqlStage3TestCase;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
@@ -31,6 +34,7 @@ import ua.com.fielden.platform.sample.domain.TeVehicleModel;
 import ua.com.fielden.platform.sample.domain.TeWorkOrder;
 import ua.com.fielden.platform.sample.domain.TgSynBogie;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
+import ua.com.fielden.platform.test_utils.TestUtils;
 
 public class QmToStage3TransformationTest extends EqlStage3TestCase {
 
@@ -892,4 +896,18 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
 
         assertEquals(expQry, actQry);
     }
+
+    @Test
+    public void caseWhen_returning_only_nulls_cannot_use_plain_end() {
+        final var query = select()
+                .yield().caseWhen().val(1).isNotNull().then().val(null).end().as("x")
+                .modelAsAggregate();
+
+        assertThrows(() -> qry(query), EqlException.class, ex -> {
+            assertEquals(
+                    "Illegal 'caseWhen' expression: at least one returned value must be non-null or a type cast must be specified.",
+                    ex.getMessage());
+        });
+    }
+
  }
