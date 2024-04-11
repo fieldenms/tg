@@ -26,8 +26,8 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
-import static ua.com.fielden.platform.test_utils.TestUtils.assertNotThrows;
-import static ua.com.fielden.platform.test_utils.TestUtils.assertThrows;
+import static ua.com.fielden.platform.test_utils.CollectionTestUtils.assertEqualByContents;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
 public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     private final IEntityAggregatesOperations aggregateDao = getInstance(IEntityAggregatesOperations.class);
@@ -1018,17 +1018,23 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     @Test
     public void union_query_with_nulls_correctly_matches_column_types_01() {
         // null UNION null UNION not-null
-        final var qNull = select(TgVehicle.class)
-                .yield().val(null /* deliberate null */)
-                .modelAsEntity(TgVehicle.class);
+        final var qNull = select()
+                .yield().val(null).as("a")
+                .yield().val(5).as("b")
+                .modelAsAggregate();
 
-        final var qNotNull = select(TgVehicle.class)
-                .yield().prop("id").modelAsEntity(TgVehicle.class);
+        final var qNotNull = select()
+                .yield().val(10).as("a")
+                .yield().val(20).as("b")
+                .modelAsAggregate();
 
         final var qUnion = select(qNull, qNull, qNotNull)
-                .yield().prop("id").modelAsEntity(TgVehicle.class);
+                .yieldAll().modelAsAggregate();
 
-        assertNotThrows(() -> co(TgVehicle.class).getAllEntities(from(qUnion).model()));
+        final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(qUnion).model());
+        assertEqualByContents(
+                List.of(listOf(null, 5), listOf(null, 5), listOf(10, 20)),
+                entities.stream().map(ent -> listOf(ent.get("a"), ent.get("b"))).toList());
     }
 
     /**
@@ -1037,17 +1043,23 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     @Test
     public void union_query_with_nulls_correctly_matches_column_types_02() {
         // null UNION (null UNION null) UNION not-null
-        final var qNull = select(TgVehicle.class)
-                .yield().val(null /* deliberate null */)
-                .modelAsEntity(TgVehicle.class);
+        final var qNull = select()
+                .yield().val(null).as("a")
+                .yield().val(5).as("b")
+                .modelAsAggregate();
 
-        final var qNotNull = select(TgVehicle.class)
-                .yield().prop("id").modelAsEntity(TgVehicle.class);
+        final var qNotNull = select()
+                .yield().val(10).as("a")
+                .yield().val(20).as("b")
+                .modelAsAggregate();
 
-        final var qUnion = select(qNull, select(qNull, qNull).modelAsEntity(TgVehicle.class), qNotNull)
-                .yield().prop("id").modelAsEntity(TgVehicle.class);
+        final var qUnion = select(qNull, select(qNull, qNull).modelAsAggregate(), qNotNull)
+                .yieldAll().modelAsAggregate();
 
-        assertNotThrows(() -> co(TgVehicle.class).getAllEntities(from(qUnion).model()));
+        final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(qUnion).model());
+        assertEqualByContents(
+                List.of(listOf(null, 5), listOf(null, 5), listOf(null, 5), listOf(10, 20)),
+                entities.stream().map(ent -> listOf(ent.get("a"), ent.get("b"))).toList());
     }
 
     /**
@@ -1056,20 +1068,28 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     @Test
     public void union_query_with_nulls_correctly_matches_column_types_03() {
         // (null UNION (not-null UNION null)) UNION (null UNION null)
-        final var qNull = select(TgVehicle.class)
-                .yield().val(null /* deliberate null */)
-                .modelAsEntity(TgVehicle.class);
+        final var qNull = select()
+                .yield().val(null).as("a")
+                .yield().val(5).as("b")
+                .modelAsAggregate();
 
-        final var qNotNull = select(TgVehicle.class)
-                .yield().prop("id").modelAsEntity(TgVehicle.class);
+        final var qNotNull = select()
+                .yield().val(10).as("a")
+                .yield().val(20).as("b")
+                .modelAsAggregate();
 
         final var qUnion = select(
-                select(qNull, select(qNotNull, qNull).model()).model(),
-                select(qNull, qNull).model())
-                .yield().prop("id").modelAsEntity(TgVehicle.class);
+                select(qNull, select(qNotNull, qNull).modelAsAggregate()).modelAsAggregate(),
+                select(qNull, qNull).modelAsAggregate())
+                .yieldAll().modelAsAggregate();
 
-        assertNotThrows(() -> co(TgVehicle.class).getAllEntities(from(qUnion).model()));
+        final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(qUnion).model());
+        final List<?> qNullResult = listOf(null, 5);
+        assertEqualByContents(
+                List.of(qNullResult, listOf(10, 20), qNullResult, qNullResult, qNullResult),
+                entities.stream().map(ent -> listOf(ent.get("a"), ent.get("b"))).toList());
     }
+    
     @Test
     public void nulls_can_be_compared_to_nonNulls_in_join_conditions() {
         // @formatter:off
@@ -1079,7 +1099,9 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
                  .on().prop("a1").eq().prop("b1")
                  .modelAsAggregate();
         // @formatter:on
+
         final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(query).model());
+        assertTrue(entities.isEmpty());
     }
 
     @Test
@@ -1087,11 +1109,13 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         // @formatter:off
         final var query =
                 select(select().yield().val(null).as("a1").modelAsAggregate())
-                        .join(select().yield().val(null).as("b1").modelAsAggregate())
-                        .on().prop("a1").eq().prop("b1")
-                        .modelAsAggregate();
+                 .join(select().yield().val(null).as("b1").modelAsAggregate())
+                 .on().prop("a1").eq().prop("b1")
+                 .modelAsAggregate();
         // @formatter:on
-        final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(query).model());
+
+        co(EntityAggregates.class).getAllEntities(from(query).model());
+        // don't assert anything about the result set because the boolean result of (NULL = NULL) may vary across SQL implementations
     }
 
     @Test
@@ -1099,11 +1123,13 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         // @formatter:off
         final var query =
                 select(select().yield().val(1).as("a1").modelAsAggregate())
-                        .join(select().yield().val(5).as("b1").modelAsAggregate())
-                        .on().prop("a1").eq().prop("b1")
-                        .modelAsAggregate();
+                 .join(select().yield().val(5).as("b1").modelAsAggregate())
+                 .on().prop("a1").eq().prop("b1")
+                 .modelAsAggregate();
         // @formatter:on
+
         final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(query).model());
+        assertTrue(entities.isEmpty());
     }
 
     @Test
