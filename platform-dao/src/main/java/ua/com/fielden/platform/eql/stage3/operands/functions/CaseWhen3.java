@@ -6,6 +6,7 @@ import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.eql.stage3.utils.TypeCastToSql;
 import ua.com.fielden.platform.types.tuples.T2;
 
 import java.util.ArrayList;
@@ -14,6 +15,7 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.eql.stage3.utils.TypeCastToSql.typeCastToSql;
 
 public class CaseWhen3 extends AbstractFunction3 {
 
@@ -44,7 +46,7 @@ public class CaseWhen3 extends AbstractFunction3 {
     }
     
     private String getOperandSql(final ISingleOperand3 operand, final EqlDomainMetadata metadata) {
-        return typeCast == null ? operand.sql(metadata) : typeCast.typecast(operand.sql(metadata), metadata.dbVersion);
+        return typeCast == null ? operand.sql(metadata) : typeCastToSql(operand.sql(metadata), typeCast, metadata);
     }
 
     private void validateSelf() {
