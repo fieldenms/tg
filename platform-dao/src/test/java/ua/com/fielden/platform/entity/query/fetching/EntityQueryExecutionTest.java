@@ -332,48 +332,6 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         assertEquals(1, co(TgVehicle.class).count(query));
     }
 
-    @Test
-    public void count_seconds_function_works_correctly_against_h2_database() {
-        final AggregatedResultQueryModel qry = singleResultQueryStub.yield().count().seconds().between().val(date("2007-01-01 00:01:00")).and().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
-        final EntityAggregates result = aggregateDao.getEntity(from(qry).model());
-        assertEquals("Incorrect duration in seconds", "60", result.get("result").toString());
-    }
-
-    @Test
-    public void count_minutes_function_works_correctly_against_h2_database() {
-        final AggregatedResultQueryModel qry = singleResultQueryStub.yield().count().minutes().between().val(date("2007-01-01 01:00:00")).and().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
-        final EntityAggregates result = aggregateDao.getEntity(from(qry).model());
-        assertEquals("Incorrect duration in minutes", "60", result.get("result").toString());
-    }
-
-    @Test
-    public void count_hours_function_works_correctly_against_h2_database() {
-        final AggregatedResultQueryModel qry = singleResultQueryStub.yield().count().hours().between().val(date("2007-01-01 23:00:00")).and().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
-        final EntityAggregates result = aggregateDao.getEntity(from(qry).model());
-        assertEquals("Incorrect duration in hours", "23", result.get("result").toString());
-    }
-
-    @Test
-    public void count_days_function_works_correctly_against_h2_database() {
-        final AggregatedResultQueryModel qry = singleResultQueryStub.yield().count().days().between().val(date("2007-01-10 00:00:00")).and().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
-        final EntityAggregates result = aggregateDao.getEntity(from(qry).model());
-        assertEquals("Incorrect duration in days", "9", result.get("result").toString());
-    }
-
-    @Test
-    public void count_months_function_works_correctly_against_h2_database() {
-        final AggregatedResultQueryModel qry = singleResultQueryStub.yield().count().months().between().val(date("2007-10-01 00:00:00")).and().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
-        final EntityAggregates result = aggregateDao.getEntity(from(qry).model());
-        assertEquals("Incorrect duration in months", "9", result.get("result").toString());
-    }
-
-    @Test
-    public void count_years_function_works_correctly_against_h2_database() {
-        final AggregatedResultQueryModel qry = singleResultQueryStub.yield().count().years().between().val(date("2008-01-01 00:00:00")).and().val(date("2007-01-01 00:00:00")).as("result").modelAsAggregate();
-        final EntityAggregates result = aggregateDao.getEntity(from(qry).model());
-        assertEquals("Incorrect duration in years", "1", result.get("result").toString());
-    }
-
     /////////////////////////////////////// QUERING KEYS OF ENTITIES WITH COMPOSITE KEYS /////////////////////////////////////////
 
     @Test

@@ -7,10 +7,10 @@ import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.creat
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreSavingInfoHolder;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -18,7 +18,6 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Post;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -52,7 +51,6 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Abstr
     private final RestServerUtil restUtil;
     private final ICriteriaGenerator critGenerator;
     private final ICompanionObjectFinder companionFinder;
-    private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
     private final IUserProvider userProvider;
     private final ICentreConfigSharingModel sharingModel;
@@ -64,7 +62,6 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Abstr
             final RestServerUtil restUtil,
             final ICriteriaGenerator critGenerator,
             final ICompanionObjectFinder companionFinder,
-            final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final IUserProvider userProvider,
             final IDeviceProvider deviceProvider,
@@ -80,7 +77,6 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Abstr
         this.restUtil = restUtil;
         this.critGenerator = critGenerator;
         this.companionFinder = companionFinder;
-        this.domainTreeEnhancerCache = domainTreeEnhancerCache;
         this.webUiConfig = webUiConfig;
         this.userProvider = userProvider;
         this.sharingModel = sharingModel;
@@ -102,7 +98,7 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Abstr
             final MainMenuItemCo mmiCompanion = companionFinder.find(MainMenuItem.class);
             final IUser userCompanion = companionFinder.find(User.class);
 
-            final T applied = restoreEntityFrom(false, savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, user, critGenerator, 0, device(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+            final T applied = restoreEntityFrom(false, savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, user, critGenerator, 0, device(), eccCompanion, mmiCompanion, userCompanion, sharingModel);
 
             logger.debug("ENTITY_VALIDATION_RESOURCE: validate finished.");
             final Result result = restUtil.singleEntityResult(applied);

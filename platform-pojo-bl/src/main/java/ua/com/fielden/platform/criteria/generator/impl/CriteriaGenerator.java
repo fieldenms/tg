@@ -2,15 +2,12 @@ package ua.com.fielden.platform.criteria.generator.impl;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.from;
-import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.getCriteriaTitleAndDesc;
-import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.is;
-import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.not;
-import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.to;
+import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.*;
 import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.applySnapshot;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
@@ -22,26 +19,24 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotati
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotationOptionally;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.modifiedClass;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.generateCriteriaTypeName;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.types.tuples.T3.t3;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.time.Duration;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.logging.log4j.Logger;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.criteria.enhanced.CentreEntityQueryCriteriaToEnhance;
@@ -53,19 +48,9 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddTo
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
-import ua.com.fielden.platform.entity.annotation.DateOnly;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.PersistentType;
-import ua.com.fielden.platform.entity.annotation.TimeOnly;
-import ua.com.fielden.platform.entity.annotation.factory.AfterChangeAnnotation;
-import ua.com.fielden.platform.entity.annotation.factory.CriteriaPropertyAnnotation;
-import ua.com.fielden.platform.entity.annotation.factory.EntityTypeAnnotation;
-import ua.com.fielden.platform.entity.annotation.factory.FirstParamAnnotation;
-import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
-import ua.com.fielden.platform.entity.annotation.factory.SecondParamAnnotation;
-import ua.com.fielden.platform.entity.annotation.factory.SkipEntityExistsValidationAnnotation;
+import ua.com.fielden.platform.entity.annotation.factory.*;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -73,14 +58,7 @@ import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntit
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.types.tuples.T3;
-import ua.com.fielden.platform.ui.menu.MiType;
-import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
-import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.ui.menu.SaveAsNameAnnotation;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -91,16 +69,17 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class CriteriaGenerator implements ICriteriaGenerator {
-    private static final String ERR_CRIT_TYPE_GEN_CENTRE_MANAGER_MISSING = "Criteria type for [%s; %s; %s] config identifier could not be generated -- centreManager must not be null.";
-    private static final String ERR_CRIT_TYPE_GEN_WITH_EMPTY_KEY_PART = "Criteria type for [%s; %s; %s] config identifier could not be generated -- all parts must not be null.";
-    private static final String ERR_CRIT_TYPE_GEN = "Criteria type for [%s; %s; %s] config identifier could not be generated.";
+    private static final String ERR_CRIT_TYPE_GEN_CENTRE_MANAGER_MISSING = "Criteria type could not be generated for empty centreManager.";
+    private static final String ERR_CRIT_TYPE_COULD_NOT_BE_GENERATED = "Criteria type for [%s] could not be generated.";
     private static final Logger LOGGER = getLogger(CriteriaGenerator.class);
+    /**
+     * Type diff object's key for selected criteria properties, used in generated criteria type naming.
+     */
+    private static final String PROPERTIES = "properties";
 
     private final EntityFactory entityFactory;
 
     private final ICompanionObjectFinder coFinder;
-
-    private static final Cache<T3<User, Class<? extends MiWithConfigurationSupport<?>>, Optional<String>>, Class<?>> GENERATED_CLASSES = CacheBuilder.newBuilder().expireAfterAccess(Duration.ofMinutes(5)).maximumSize(2000).concurrencyLevel(50).initialCapacity(500).build();;
 
     @Inject
     public CriteriaGenerator(final EntityFactory entityFactory, final ICompanionObjectFinder controllerProvider) {
@@ -147,95 +126,49 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         }
     }
 
+    @SuppressWarnings({ "unchecked" })
     @Override
-    public <T extends AbstractEntity<?>> EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>> generateCentreQueryCriteria(
-        final User user,
-        final Class<? extends MiWithConfigurationSupport<?>> miType,
-        final Optional<String> saveAsName,
-        final ICentreDomainTreeManagerAndEnhancer centreManager
-    ) {
+    public <T extends AbstractEntity<?>> EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>> generateCentreQueryCriteria(final ICentreDomainTreeManagerAndEnhancer centreManager) {
         return generateCentreQueryCriteria(() -> {
-            if (user == null || miType == null || saveAsName == null) {
-                throw new CriteriaGeneratorException(ERR_CRIT_TYPE_GEN_WITH_EMPTY_KEY_PART.formatted(user, miType, saveAsName));
-            }
             if (centreManager == null) {
-                throw new CriteriaGeneratorException(ERR_CRIT_TYPE_GEN_CENTRE_MANAGER_MISSING.formatted(user, miType, saveAsName));
+                throw new CriteriaGeneratorException(ERR_CRIT_TYPE_GEN_CENTRE_MANAGER_MISSING);
             }
-
-            final Class<T> root = (Class<T>) getEntityType(miType);
-            final T3<User, Class<? extends MiWithConfigurationSupport<?>>, Optional<String>> configKey = t3(user, miType, saveAsName);
-            final Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>> queryCriteriaClass;
-            try {
-                queryCriteriaClass = (Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>) GENERATED_CLASSES.get(configKey, () -> {
-                    final MiType miTypeAnnotation = new MiTypeAnnotation().newInstance(miType);
-                    final Annotation [] customAnnotations = saveAsName.map(name -> new Annotation[] {miTypeAnnotation, new SaveAsNameAnnotation().newInstance(name)}).orElseGet(() -> new Annotation[] {miTypeAnnotation});
-                    return generateCriteriaType(root, centreManager.getFirstTick().checkedProperties(root), centreManager.getEnhancer().getManagedType(root), customAnnotations);
-                });
-            } catch (final ExecutionException ex) {
-                throw new CriteriaGeneratorException(ERR_CRIT_TYPE_GEN.formatted(user, miType, saveAsName), ex);
-            }
-            
-            return t2(queryCriteriaClass, root);
+            final var root = (Class<T>) centreManager.getRepresentation().rootTypes().iterator().next(); // multiple root types are rather rudimentary (were used in Snappy); single one must exist here
+            final var managedType = centreManager.getEnhancer().getManagedType(root);
+            final var propsForSelectionCriteria = centreManager.getFirstTick().checkedProperties(root);
+            return t2(generateCriteriaType(root, propsForSelectionCriteria, managedType), root);
         }, centreManager);
     }
 
-    /**
-     * Generates Entity Centre criteria entity type with from/to, is/isNot properties; sets the values from {@code centreManager} configuration.
-     * <p>
-     * This method exists for testing purposes only.
-     */
-    public <T extends AbstractEntity<?>> EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>> generateCentreQueryCriteriaForTesting(final Class<T> root, final ICentreDomainTreeManagerAndEnhancer centreManager) {
-        return generateCentreQueryCriteria(() -> t2(generateCriteriaType(root, centreManager.getFirstTick().checkedProperties(root), centreManager.getEnhancer().getManagedType(root)), root), centreManager);
-    }
     /**
      * Generates criteria entity type for the specified <code>properties</code> subset and <code>managedType</code>.
      * 
      * @param root -- root type from which <code>managedType</code> has been derived (calculated props added)
      * @param properties
      * @param managedType
-     * @param customAnnotations -- custom annotations for generated criteria type
      * @return
      */
     @SuppressWarnings({ "unchecked" })
-    static <CDTME extends ICentreDomainTreeManagerAndEnhancer, T extends AbstractEntity<?>> Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>> generateCriteriaType(
+    static <T extends AbstractEntity<?>> Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>> generateCriteriaType(
         final Class<T> root,
         final List<String> properties,
-        final Class<?> managedType,
-        final Annotation... customAnnotations)
+        final Class<?> managedType)
     {
-        final List<NewProperty> newProperties = new ArrayList<>();
-        for (final String propertyName : properties) {
-            if (!isPlaceholder(propertyName)) {
-                newProperties.addAll(generateCriteriaProperties(root, managedType, propertyName));
-            }
-        }
+        final String newTypeName = generateCriteriaTypeName(CentreEntityQueryCriteriaToEnhance.class, linkedMapOf(t2(PROPERTIES, properties)), managedType);
         try {
-            return (Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>>)
-                    DynamicEntityClassLoader.startModification(CentreEntityQueryCriteriaToEnhance.class)
-                    .addClassAnnotations(customAnnotations)
-                    .addProperties(newProperties.toArray(new NewProperty[0]))
-                    .endModification();
-        } catch (final ClassNotFoundException ex) {
-            throw new CriteriaGeneratorException(format("Criteria type for [%s] could not be generated.", root.getSimpleName()), ex);
+            return (Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>)
+                modifiedClass(newTypeName, CentreEntityQueryCriteriaToEnhance.class, typeMaker -> typeMaker
+                    .addProperties(properties.stream()
+                        .filter(pn -> !isPlaceholder(pn))
+                        .flatMap(pn -> generateCriteriaProperties(root, managedType, pn).stream())
+                        .collect(toCollection(LinkedHashSet::new))
+                    )
+                );
+        } catch (final Exception ex) {
+            final var critGenEx = new CriteriaGeneratorException(ERR_CRIT_TYPE_COULD_NOT_BE_GENERATED.formatted(root.getSimpleName()), ex);
+            LOGGER.error(critGenEx.getMessage(), critGenEx);
+            throw critGenEx;
         }
-    }
-
-    /**
-     * Clears/invalidates the cache of generated entity classes, which represent selection criteria entities and are closely related to Web UI configurations.
-     * This method is primarily designed for situations where Web UI configurations need to be re-created and invalidated, such as when running the app in a debug mode
-     * where selection criteria are added/removed from Web UI centre configurations.
-     */
-    public static void invalidateCache() {
-        GENERATED_CLASSES.invalidateAll();
-    }
-
-    /**
-     * A convenient method to kick-in a cleanup of the cache with generated entity classes.
-     * This method is intended to be used in a cleanup service to create an opportunity for performing the cache maintenance operations.
-     */
-    public static long cleanUp() {
-        GENERATED_CLASSES.cleanUp();
-        return GENERATED_CLASSES.size();
     }
 
     /**
@@ -370,16 +303,19 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         final IAddToCriteriaTickManager ftm = criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
         CriteriaReflector.getCriteriaProperties(criteriaEntity.getType()).stream().map(propertyField -> {
             final String critPropName = getAnnotation(propertyField, CriteriaProperty.class).propertyName();
-            return t2(propertyField, getAnnotation(propertyField, SecondParam.class) == null ? ftm.getValue(root, critPropName) : ftm.getValue2(root, critPropName));
-        }).collect(toList()).forEach(fieldAndVal -> { // there is a need to collect all results BEFORE forEach processing due to mutable nature of 'getValue*' methods
-            final Field field = fieldAndVal._1;
+            // collect values for criteria properties in centreManager
+            return t2(propertyField.getName(), getAnnotation(propertyField, SecondParam.class) == null ? ftm.getValue(root, critPropName) : ftm.getValue2(root, critPropName));
+            // we must collect all values BEFORE forEach that uses criteriaEntity.getProperty(name).setValue(....)
+            // to avoid ftm.setValue(...) calls through SynchroniseCriteriaWithModelHandler ACE handler while collecting values, which may affect unrelated properties
+        }).toList().forEach(nameAndVal -> {
+            final var name = nameAndVal._1;
             try {
                 // LOGGER.error(format("\tsynchroniseWithModel prop [%s] setting... val = [%s]", field.getName(), fieldAndVal._2));
                 // need to enforce the setting to ensure invocation of SynchroniseCriteriaWithModelHandler; this will ensure application of editable / required (and other) attributes and integrity of property dependencies
-                criteriaEntity.getProperty(field.getName()).setValue(fieldAndVal._2, true);
+                criteriaEntity.getProperty(name).setValue(nameAndVal._2, true);
                 // LOGGER.error("\tsynchroniseWithModel. valResult = " + criteriaEntity.getProperty(field.getName()).getFirstFailure());
             } catch (final Exception ex) {
-                LOGGER.warn(format("\tCould not assign crit value to [%s] in root [%s].", field.getName(), root.getName()));
+                LOGGER.warn(format("\tCould not assign crit value to [%s] in root [%s].", name, root.getName()));
             } 
             // finally { LOGGER.error(format("\tsynchroniseWithModel prop [%s] setting...done", field.getName())); }
         });

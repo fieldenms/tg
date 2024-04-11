@@ -1133,7 +1133,19 @@ public class EntityUtils {
     }
 
     /**
-     * The most generic and most straightforward function to copy properties from instance <code>fromEntity</code> to <code>toEntity</code>.
+     * The same as {@link #copy(AbstractEntity, AbstractEntity, String...)}, but with a set of {@link IConvertableToPath} as the last argument.
+     *
+     * @param fromEntity
+     * @param toEntity
+     * @param skipProperties
+     * @param <T>
+     */
+    public static <T extends AbstractEntity> void copy(final AbstractEntity<?> fromEntity, final T toEntity, final Set<? extends IConvertableToPath> skipProperties) {
+        copy(fromEntity, toEntity, skipProperties.stream().map(IConvertableToPath::toPath).toList().toArray(new String[]{}));
+    }
+
+    /**
+     * The most generic and most straightforward function to copy properties from instance {@code fromEntity} to {@code toEntity}, with the ability to skip the specified properties from being copied.
      *
      * @param fromEntity
      * @param toEntity
@@ -1163,7 +1175,7 @@ public class EntityUtils {
                     try {
                         toEntity.set(propName, fromEntity.get(propName));
                     } catch (final Exception e) {
-                        logger.trace(format("Setter for property %s did not succeed during coping.", propName), e);
+                        logger.trace(format("Setter for property %s did not succeed during copying.", propName), e);
                     }
                 }
             });

@@ -8,11 +8,11 @@ import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
  * @author TG Team
  *
  */
-public interface IDynamicColumnBuilderWithTooltipProp extends IDynamicColumnBuilderAddProp, IDynamicColumnBuilderDone{
+public interface IDynamicColumnBuilderWithTooltipProp extends IDynamicColumnBuilderAddPropWithDone{
 
-    IDynamicColumnBuilderAddProp withTooltipProp(final String tooltipProp);
+    IDynamicColumnBuilderAddPropWithDone withTooltipProp(final String tooltipProp);
 
-    default IDynamicColumnBuilderAddProp withTooltipProp(final IConvertableToPath tooltipProp) {
+    default IDynamicColumnBuilderAddPropWithDone withTooltipProp(final IConvertableToPath tooltipProp) {
         return withTooltipProp(tooltipProp.toPath());
     }
 

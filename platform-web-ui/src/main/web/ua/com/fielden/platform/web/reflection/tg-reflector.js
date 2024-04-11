@@ -763,14 +763,6 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
     EntityType.prototype.constructor = EntityType;
 
     /**
-     * Returns the identifier for the entity type.
-     *
-     */
-    EntityType.prototype.identifier = function () {
-        return this._identifier;
-    }
-
-    /**
      * Returns full Java class name for the entity type.
      *
      */
@@ -1456,7 +1448,7 @@ export const TgReflector = Polymer({
         var EntityType = this._getEntityTypePrototype();
         var registeredType = new EntityType(newType);
         _typeTable[registeredType.fullClassName()] = registeredType;
-        console.log("Registering new entity type with identifier ", registeredType.identifier(), registeredType);
+        console.log("Registering new entity type ", registeredType);
         return registeredType;
     },
 

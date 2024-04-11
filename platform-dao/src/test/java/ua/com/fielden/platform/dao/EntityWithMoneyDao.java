@@ -9,6 +9,7 @@ import org.hibernate.Session;
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -45,9 +46,9 @@ public class EntityWithMoneyDao extends CommonEntityDao<EntityWithMoney> impleme
 
     @SessionRequired
     public Pair<Session, Session> getSessionWithDelay(final long sleep) throws Exception {
-        final Session ses = getSession();
+        final Session ses = getSessionUnsafe();
         Thread.sleep(sleep);
-        return new Pair<Session, Session>(ses, getSession());
+        return new Pair<Session, Session>(ses, getSessionUnsafe());
     }
     
     @SessionRequired
@@ -60,4 +61,8 @@ public class EntityWithMoneyDao extends CommonEntityDao<EntityWithMoney> impleme
         return result;
     }
 
+    // @SessionRequired -- deliberately not annotated
+    public EntityWithMoney superSave(final EntityWithMoney entity) {
+        return super.save(entity);
+    }
 }

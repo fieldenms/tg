@@ -1,14 +1,18 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
 import static ua.com.fielden.platform.reflection.asm.impl.TypeMaker.GET_ORIG_TYPE_METHOD_NAME;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
-import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.function.Function;
 
 import org.apache.logging.log4j.Logger;
 
@@ -30,70 +34,60 @@ import ua.com.fielden.platform.types.tuples.T2;
  */
 public class DynamicEntityClassLoader extends InjectionClassLoader {
     private static final Logger LOGGER = getLogger(DynamicEntityClassLoader.class);
+    private static final String MSG_DEFINED_NEW_TYPE = "Gen: %s; defined new [%s] type.";
     /**
-     * A cache of instances of this type of the form: {@code parentClassLoader -> thisInstance}.
+     * Singleton instance of this {@link DynamicEntityClassLoader}.
      */
     private static final DynamicEntityClassLoader instance = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
 
     /**
      * A cache of generated types.
-     * The key values are the simple names of the generated types, which is used as a convenience to get the generated type by name.
+     * The key values are the full names of the generated types, which is used as a convenience to get the generated type by name.
      * The value is a tuple, containing a generated type and the original type, used to produce the generated one.
      */
-    private static final ConcurrentHashMap<String, T2<WeakReference<Class<?>>, Class<?>>> cache = new ConcurrentHashMap<>(/*initialCapacity*/ 1000, /*loadFactor*/ 0.75f, /*concurrencyLevel*/50);  
+    private static final ConcurrentMap<String, T2<Class<?>, Class<?>>> CACHE = new ConcurrentHashMap<>(/*initialCapacity*/ 1000, /*loadFactor*/ 0.75f, /*concurrencyLevel*/50);
+
+    /**
+     * Optionally returns a cached generated class by {@code className}.
+     *
+     * @param className
+     * @return
+     */
+    public static Optional<Class<?>> getCachedClass(final String className) {
+        return ofNullable(CACHE.get(className)).map(t2 -> t2._1);
+    }
 
     private DynamicEntityClassLoader(final ClassLoader parent) {
         super(parent, /*sealed*/ false);
     }
 
     /**
-     * Runs a cleanup routine on the cache of generated classes, registered by the dynamic class loader.
-     * 
-     * @return a total number of generated classes current cached.
+     * Returns a total number of generated classes currently cached.
      */
-    public static long cleanUp() {
-        int count = 0;
-        for (final var entry : cache.entrySet()) {
-            try {
-                final var t3 = entry.getValue();
-                if (t3 == null || t3._1.get() == null) {
-                    cache.remove(entry.getKey());
-                    count++;
-                }
-            } catch (final Exception ex) {
-                LOGGER.error("Error occurred during cache cleanup.", ex);
-            }
-        }
-        LOGGER.info("Cache size [%s]. Evicted [%s] entries from cache.".formatted(cache.size(), count));
-        return cache.size();
-    }
-
-    /**
-     * Creates a new cache entry for the generated type.
-     * <p>
-     * The mapping has the following form: {@code [genTypeSimpleName : (genType, origType)]}.
-     * If an entry for the given type already exists, it will be overwritten.
-     *
-     * @param typePair
-     */
-    private static void cacheClass(final Class<?> genType) {
-        cache.put(genType.getSimpleName(), t2(new WeakReference<>(genType), determineOriginalType(genType)));
+    public static long size() {
+        return CACHE.size();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected Map<String, Class<?>> doDefineClasses(final Map<String, byte[]> typeDefinitions) throws ClassNotFoundException {
+    protected Map<String, Class<?>> doDefineClasses(final Map<String, byte[]> typeDefinitions) {
         return typeDefinitions.entrySet().stream()
                 .collect(toMap(Map.Entry::getKey, entry -> doDefineClass(entry.getKey(), entry.getValue())));
     }
 
+    /**
+     * Returns already loaded class with {@code name}, if present.
+     * Otherwise, performs {@link #defineClass(String, byte[])} and caches entry in form {@code [genTypeName : (genType, origType)]}.
+     */
     private Class<?> doDefineClass(final String name, final byte[] bytes) {
-        // define the class, load it and cache for later reuse
-        final Class klass = defineClass(name, bytes, 0, bytes.length);
-        cacheClass(klass);
-        return klass;
+        return CACHE.computeIfAbsent(name, key -> {
+            // define the class, load it and cache for later reuse
+            final Class<?> klass = defineClass(name, bytes, 0, bytes.length);
+            LOGGER.debug(MSG_DEFINED_NEW_TYPE.formatted(CACHE.size(), klass.getSimpleName()));
+            return t2(klass, determineOriginalType(klass));
+        })._1;
     }
 
     /**
@@ -112,10 +106,42 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
      *
      * @param origType
      * @return
-     * @throws ClassNotFoundException
      */
-    public static <T> TypeMaker<T> startModification(final Class<T> origType) throws ClassNotFoundException {
+    public static <T> TypeMaker<T> startModification(final Class<T> origType) {
         return new TypeMaker<T>(instance, origType).startModification();
+    }
+
+    /**
+     * Returns already modified type with {@code typeName} full class name, if there is one.
+     * Otherwise generates that type from {@code origType} using {@code modifyType} function (typeMaker -> typeMaker).
+     * <p>
+     * Typical usage:<br><br>
+     * {@code modifiedClass(newTypeName, Entity.class, typeMaker -> typeMaker.addProperties(...).modifyProperties(...).addClassAnnotations(...))}<br><br>
+     * Please note that {@code modifyTypeName(newTypeName)} call is not needed in {@code modifyType} function -- {@code newTypeName} will be assigned automatically.
+     * Also {@code startModification(origType)} call is not needed.
+     * 
+     * @param typeName
+     * @param modifyType
+     * @return
+     */
+    @SuppressWarnings({ "unchecked" })
+    public static <T> Class<? extends T> modifiedClass(final String typeName, final Class<T> origType, final Function<TypeMaker<T>, TypeMaker<T>> modifyType) {
+        return (Class<T>) getCachedClass(typeName).orElseGet(() -> modifyType.apply(new TypeMaker<T>(instance, origType).startModification().modifyTypeName(typeName)).endModification());
+    }
+
+    /**
+     * Generates modified type from {@code origType} using {@code modifyType} function (typeMaker -> typeMaker).
+     * <p>
+     * Typical usage:<br><br>
+     * {@code modifiedClass(origType, typeMaker -> typeMaker.addProperties(...).modifyProperties(...).addClassAnnotations(...))}<br><br>
+     * Please note that {@code modifyTypeName(newTypeName)} call may not be used in {@code modifyType} function -- {@link DynamicTypeNamingService#nextTypeName(String)} will be assigned automatically.
+     * 
+     * @param typeName
+     * @param modifyType
+     * @return
+     */
+    public static <T> Class<? extends T> modifiedClass(final Class<T> origType, final Function<TypeMaker<T>, TypeMaker<T>> modifyType) {
+        return modifyType.apply(new TypeMaker<T>(instance, origType).startModification()).endModification();
     }
 
     /**
@@ -142,9 +168,9 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
      */
     @SuppressWarnings("unchecked")
     public static <T extends AbstractEntity<?>> Class<T> getOriginalType(final Class<?> type) {
-        final var t3 = cache.get(type.getSimpleName());
-        if (t3 != null) {
-            return (Class<T>) t3._2;
+        final var t2 = CACHE.get(type.getName());
+        if (t2 != null) {
+            return (Class<T>) t2._2;
         } else {
             return (Class<T>) type;
         }

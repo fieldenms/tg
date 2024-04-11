@@ -8,10 +8,7 @@ import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.IDynamicColumnConfig;
-import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderDone;
-import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderWidth;
-import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderWithDesc;
-import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderWithTitle;
+import ua.com.fielden.platform.web.centre.api.dynamic_columns.*;
 
 public class DynamicColumn<T extends AbstractEntity<?>> implements IDynamicColumnBuilderWithTitle, IDynamicColumnBuilderWithDesc {
     public static final String DYN_COL_GROUP_PROP_VALUE = "keyPropValue";
@@ -53,14 +50,14 @@ public class DynamicColumn<T extends AbstractEntity<?>> implements IDynamicColum
     }
 
     @Override
-    public IDynamicColumnBuilderDone width(final int width) {
+    public IDynamicColumnBuilderAddPropWithDone width(final int width) {
         this.width = width;
         this.growFactor = 0;
         return this;
     }
 
     @Override
-    public IDynamicColumnBuilderDone minWidth(final int minWidth) {
+    public IDynamicColumnBuilderAddPropWithDone minWidth(final int minWidth) {
         this.minWidth = minWidth > this.width ? this.width: minWidth;
         return this;
     }

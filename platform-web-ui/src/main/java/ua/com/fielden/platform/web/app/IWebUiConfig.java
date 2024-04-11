@@ -142,6 +142,11 @@ public interface IWebUiConfig extends IMenuRetriever {
     Map<Class<? extends MiWithConfigurationSupport<?>>, T2<EntityCentre<?>, EntityMaster<? extends AbstractEntity<?>>>> getEmbeddedCentres();
 
     /**
+     * Loads all standalone / embedded default centres for concrete 'entityType' (with their generated types and criteria types).
+     */
+    void loadCentreGeneratedTypesAndCriteriaTypes(final Class<?> entityType);
+
+    /**
      * Determines whether the centre, represented by {@code miType}, is embedded.
      *
      * @param miType

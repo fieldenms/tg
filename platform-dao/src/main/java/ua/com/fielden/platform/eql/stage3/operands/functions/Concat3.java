@@ -24,7 +24,7 @@ public class Concat3 extends AbstractFunction3 {
         switch (dbVersion) {
         case H2:
         case MSSQL:
-            return format("CONCAT (%s)", operands.stream().map(so -> getConvertToStringSql(dbVersion, so)).collect(joining(", ")));
+            return format(" (%s)", operands.stream().map(so -> getConvertToStringSql(dbVersion, so)).collect(joining(" + ")));
         case POSTGRESQL:
             return format(" (%s)", operands.stream().map(so -> getConvertToStringSql(dbVersion, so)).collect(joining(" || ")));
         default:

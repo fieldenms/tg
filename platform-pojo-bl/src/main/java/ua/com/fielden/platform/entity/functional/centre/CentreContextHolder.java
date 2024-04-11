@@ -4,7 +4,6 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,11 +29,11 @@ public class CentreContextHolder extends AbstractEntity<String> {
 
     @IsProperty(Object.class)
     @Title(value = "Custom object", desc = "Custom object")
-    private final Map<String, Object> customObject = new HashMap<>();
+    private final Map<String, Object> customObject = new LinkedHashMap<>();
 
     @IsProperty(Object.class)
     @Title(value = "Modified properties holder", desc = "Modified properties holder")
-    private final Map<String, Object> modifHolder = new HashMap<>();
+    private final Map<String, Object> modifHolder = new LinkedHashMap<>();
 
     @IsProperty
     @Title(value = "Originally Produced Entity", desc = "The entity (new only) that was produced during master's contextual retrieval and then reused during validation, saving and autocompletion processes as a validation prototype")
@@ -54,7 +53,7 @@ public class CentreContextHolder extends AbstractEntity<String> {
 
     @IsProperty(CentreContextHolder.class)
     @Title(value = "Related contexts", desc = "Contexts relate to this one")
-    private Map<String, CentreContextHolder> relatedContexts = new LinkedHashMap<>();
+    private final Map<String, CentreContextHolder> relatedContexts = new LinkedHashMap<>();
 
     @IsProperty
     @Title(value = "Parent Centre Context", desc = "The context of the centre that owns this view as a insertion point")
@@ -123,7 +122,7 @@ public class CentreContextHolder extends AbstractEntity<String> {
     }
 
     @Observable
-    protected CentreContextHolder setModifHolder(final Map<String, Object> modifHolder) {
+    public CentreContextHolder setModifHolder(final Map<String, Object> modifHolder) {
         this.modifHolder.clear();
         this.modifHolder.putAll(modifHolder);
         return this;
@@ -134,7 +133,7 @@ public class CentreContextHolder extends AbstractEntity<String> {
     }
 
     @Observable
-    protected CentreContextHolder setCustomObject(final Map<String, Object> customObject) {
+    public CentreContextHolder setCustomObject(final Map<String, Object> customObject) {
         this.customObject.clear();
         this.customObject.putAll(customObject);
         return this;
@@ -143,4 +142,5 @@ public class CentreContextHolder extends AbstractEntity<String> {
     public Map<String, Object> getCustomObject() {
         return unmodifiableMap(customObject);
     }
+
 }
