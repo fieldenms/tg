@@ -12,7 +12,5 @@ public record CalculatedPropertyInfo (
         String originationProperty,
         String desc,
         Integer precision,
-        Integer scale,
-        String path,
-        String name) {
+        Integer scale) {
 }

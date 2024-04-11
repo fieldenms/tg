@@ -8,19 +8,13 @@ import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
 
     @Override
-    public <T extends AbstractEntity<?>> String encode(final Class<T> entityType) {
-        return entityType.getName();
-    }
-
-    @Override
-    public <T extends AbstractEntity<?>> Class<T> decode(final String entityTypeId) {
-        final String entityTypeName = entityTypeId;
-        final Class<T> decodedEntityType = (Class<T>) ClassesRetriever.findClass(entityTypeName);
-        return decodedEntityType;
+    public <T extends AbstractEntity<?>> Class<T> decode(final String entityTypeName) {
+        return (Class<T>) ClassesRetriever.findClass(entityTypeName);
     }
 
     @Override
     public ISerialisationTypeEncoder setTgJackson(final ISerialiserEngine tgJackson) {
         return this;
     }
+
 }
