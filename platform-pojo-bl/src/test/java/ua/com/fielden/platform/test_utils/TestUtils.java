@@ -70,16 +70,6 @@ public final class TestUtils {
         }
     }
 
-    public static void assertThrows(final ThrowingRunnable runnable) {
-        try {
-            runnable.run();
-        } catch (final Throwable $) {
-            return;
-        }
-
-        fail("Expected an exception to be thrown but nothing was thrown.");
-    }
-
     /**
      * Like {@link Assert#assertThrows(Class, ThrowingRunnable)} but allows futher processing of the thrown exception.
      */

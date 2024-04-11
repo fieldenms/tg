@@ -4,6 +4,7 @@ package ua.com.fielden.platform.eql.stage3;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.eql.meta.PropType.*;
 import static ua.com.fielden.platform.eql.stage1.sundries.Yield1.ABSENT_ALIAS;
@@ -12,6 +13,7 @@ import static ua.com.fielden.platform.test_utils.TestUtils.assertThrows;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
@@ -907,6 +909,19 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
             assertEquals(
                     "Illegal 'caseWhen' expression: at least one returned value must be non-null or a type cast must be specified.",
                     ex.getMessage());
+        });
+    }
+
+    @Test
+    public void union_of_queries_with_different_numbers_of_yields_fails() {
+        final var q1 = select().yield().val(200).as("x").modelAsAggregate();
+        final var q2 = select().yield().val(100).as("x").yield().val(300).as("y").modelAsAggregate();
+        final var union = select(q1, q2).yieldAll().modelAsAggregate();
+
+        assertThrows(() -> qry(union), EqlException.class, ex -> {
+            assertNotNull(ex.getMessage());
+            assertTrue(ex.getMessage().startsWith("Queries whose results are concatenated must have the same number of yields.")
+                    || ex.getMessage().startsWith("Incorrect models used as query source - their result types are different!"));
         });
     }
 
