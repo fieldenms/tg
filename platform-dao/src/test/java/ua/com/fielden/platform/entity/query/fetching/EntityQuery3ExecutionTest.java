@@ -1101,7 +1101,7 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         // @formatter:on
 
         final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(query).model());
-        assertTrue(entities.isEmpty());
+        assertEquals(List.of(), entities);
     }
 
     @Test
@@ -1129,7 +1129,7 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         // @formatter:on
 
         final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(query).model());
-        assertTrue(entities.isEmpty());
+        assertEquals(List.of(), entities);
     }
 
     @Test
@@ -1175,7 +1175,7 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
                 .model();
 
         final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(query).model());
-        assertTrue(entities.isEmpty());
+        assertEquals(List.of(), entities);
     }
 
     @Test
