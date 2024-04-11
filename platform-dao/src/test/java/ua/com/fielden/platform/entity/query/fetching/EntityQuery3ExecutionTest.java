@@ -1190,6 +1190,88 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         assertEquals(List.of(n), entities.stream().map(ent -> ent.get("n")).toList());
     }
 
+    @Test
+    public void caseWhen_endAsInt_returns_integer_values() {
+        final Integer n = 15;
+        final var sourceQuery = select().yield().val(n).as("n").modelAsAggregate();
+        final var query = select(sourceQuery).where()
+                .prop("n").eq().caseWhen().val(1).isNotNull().then().val(n.toString()).endAsInt()
+                .yieldAll()
+                .modelAsAggregate();
+
+        final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(query).model());
+        assertEqualByContents(
+                List.of(n),
+                entities.stream().map(ent -> ent.get("n")).toList());
+    }
+
+    @Test
+    public void caseWhen_endAsDecimal_returns_decimal_value() {
+        final BigDecimal n = new BigDecimal("123.456789");
+        final var sourceQuery = select().yield().val(n).as("n").modelAsAggregate();
+        final var query = select(sourceQuery).where()
+                .prop("n").eq().caseWhen().val(1).isNotNull().then().val(n.toString()).endAsDecimal(n.precision(), n.scale())
+                .yieldAll()
+                .modelAsAggregate();
+
+        final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(query).model());
+        assertEqualByContents(
+                List.of(n),
+                entities.stream().map(ent -> ent.get("n")).toList());
+    }
+
+    @Test
+    public void caseWhen_endAsDecimal_returns_decimal_value_when_all_values_are_null() {
+        final BigDecimal n = new BigDecimal("123.456789");
+        final var sourceQuery = select().yield().val(n).as("n").modelAsAggregate();
+        final var query = select(sourceQuery).where()
+                .prop("n").eq().caseWhen().val(1).isNotNull().then().val(null).otherwise().val(null).endAsDecimal(n.precision(), n.scale())
+                .yieldAll()
+                .modelAsAggregate();
+
+        final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(query).model());
+        assertEquals(List.of(), entities);
+    }
+
+    @Test
+    public void caseWhen_endAsString_returns_string_value() {
+        final String n = "15";
+        final var sourceQuery = select().yield().val(n).as("n").modelAsAggregate();
+        final var query = select(sourceQuery).where()
+                .prop("n").eq().caseWhen().val(1).isNotNull().then().val(15).endAsStr(16)
+                .yieldAll()
+                .modelAsAggregate();
+
+        final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(query).model());
+        assertEqualByContents(
+                List.of(n),
+                entities.stream().map(ent -> ent.get("n")).toList());
+    }
+
+    @Test
+    public void caseWhen_endAsString_returns_string_value_when_all_values_are_null() {
+        final var sourceQuery = select().yield().val("15").as("n").modelAsAggregate();
+        final var query = select(sourceQuery).where()
+                .prop("n").eq().caseWhen().val(1).isNotNull().then().val(null).otherwise().val(null).endAsStr(16)
+                .yieldAll()
+                .modelAsAggregate();
+
+        final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(query).model());
+        assertEquals(List.of(), entities);
+    }
+
+    @Test
+    public void caseWhen_endAsBool_returns_boolean_value_when_all_values_are_null() {
+        final var sourceQuery = select().yield().val("word").as("x").modelAsAggregate();
+        final var query = select(sourceQuery).where()
+                .prop("x").eq().caseWhen().val(1).isNotNull().then().val(null).otherwise().val(null).endAsBool()
+                .yieldAll()
+                .modelAsAggregate();
+
+        final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(query).model());
+        assertEquals(List.of(), entities);
+    }
+
     @Override
     public boolean saveDataPopulationScriptToFile() {
         return false;
