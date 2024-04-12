@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
@@ -22,6 +23,7 @@ import ua.com.fielden.platform.entity.query.metadata.PropertyCategory;
 import ua.com.fielden.platform.entity.query.metadata.PropertyColumn;
 import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
+import ua.com.fielden.platform.persistence.HibernateHelpers;
 import ua.com.fielden.platform.persistence.types.ColourType;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.persistence.types.HyperlinkType;
@@ -94,7 +96,7 @@ public class BaseEntQueryTCase1 {
         DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, 
                 Guice.createInjector(new HibernateUserTypesModule()), 
                 entityTypes, 
-                H2);
+                HibernateHelpers.getDialect(H2));
         
         DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
     }

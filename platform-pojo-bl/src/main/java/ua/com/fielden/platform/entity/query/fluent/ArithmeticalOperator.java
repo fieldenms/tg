@@ -6,34 +6,35 @@ abstract class ArithmeticalOperator<T> //
 		extends AbstractQueryLink //
 		implements IArithmeticalOperator<T> {
 
-    protected ArithmeticalOperator(final Tokens tokens) {
-        super(tokens);
-    }
-    
-	protected abstract T nextForArithmeticalOperator(final Tokens tokens);
+	protected ArithmeticalOperator(final EqlSentenceBuilder builder) {
+		super(builder);
+	}
+
+	protected abstract T nextForArithmeticalOperator(final EqlSentenceBuilder builder);
 
 	@Override
 	public T add() {
-		return nextForArithmeticalOperator(getTokens().add());
+		return nextForArithmeticalOperator(builder.add());
 	}
 
 	@Override
 	public T sub() {
-		return nextForArithmeticalOperator(getTokens().subtract());
+		return nextForArithmeticalOperator(builder.subtract());
 	}
 
 	@Override
 	public T mult() {
-		return nextForArithmeticalOperator(getTokens().multiply());
+		return nextForArithmeticalOperator(builder.multiply());
 	}
 
 	@Override
 	public T div() {
-		return nextForArithmeticalOperator(getTokens().divide());
+		return nextForArithmeticalOperator(builder.divide());
 	}
 
 	@Override
 	public T mod() {
-		return nextForArithmeticalOperator(getTokens().modulo());
+		return nextForArithmeticalOperator(builder.modulo());
 	}
+
 }

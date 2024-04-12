@@ -5,29 +5,30 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionLastArgument;
 
 abstract class FunctionLastArgument<T, ET extends AbstractEntity<?>> //
-		extends ExprOperand<T, IExprOperand0<T, ET>, ET> //
-		implements IFunctionLastArgument<T, ET> {
+        extends ExprOperand<T, IExprOperand0<T, ET>, ET> //
+        implements IFunctionLastArgument<T, ET> {
 
-    protected FunctionLastArgument(final Tokens tokens) {
-        super(tokens);
+    protected FunctionLastArgument(final EqlSentenceBuilder builder) {
+        super(builder);
     }
-    
-	protected abstract T nextForFunctionLastArgument(final Tokens tokens);
 
-	@Override
-	protected IExprOperand0<T, ET> nextForExprOperand(final Tokens tokens) {
-		return new ExprOperand0<T, ET>(tokens) {
+    protected abstract T nextForFunctionLastArgument(final EqlSentenceBuilder builder);
 
-			@Override
-			protected T nextForExprOperand0(final Tokens tokens) {
-				return FunctionLastArgument.this.nextForFunctionLastArgument(tokens);
-			}
+    @Override
+    protected IExprOperand0<T, ET> nextForExprOperand(final EqlSentenceBuilder builder) {
+        return new ExprOperand0<T, ET>(builder) {
 
-		};
-	}
+            @Override
+            protected T nextForExprOperand0(final EqlSentenceBuilder builder) {
+                return FunctionLastArgument.this.nextForFunctionLastArgument(builder);
+            }
 
-	@Override
-	protected T nextForSingleOperand(final Tokens tokens) {
-		return nextForFunctionLastArgument(tokens);
-	}
+        };
+    }
+
+    @Override
+    protected T nextForSingleOperand(final EqlSentenceBuilder builder) {
+        return nextForFunctionLastArgument(builder);
+    }
+
 }

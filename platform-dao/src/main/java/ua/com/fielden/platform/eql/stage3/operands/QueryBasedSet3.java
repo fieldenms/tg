@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.stage3.operands;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.stage3.queries.SubQuery3;
 
 public class QueryBasedSet3 implements ISetOperand3 {
@@ -13,8 +13,8 @@ public class QueryBasedSet3 implements ISetOperand3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion) {
-        return "(" + model.sql(dbVersion) + ")";
+    public String sql(final EqlDomainMetadata metadata) {
+        return "(" + model.sql(metadata) + ")";
     }
 
     @Override

@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.stage3.sources;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.EqlTable;
 
 public class Source3BasedOnTable extends AbstractSource3 {
@@ -14,7 +14,7 @@ public class Source3BasedOnTable extends AbstractSource3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion) {
+    public String sql(final EqlDomainMetadata metadata) {
         return tableName + " AS " + sqlAlias;
     }
 

@@ -1,14 +1,5 @@
 package ua.com.fielden.platform.eql.stage2.operands.functions;
 
-import static ua.com.fielden.platform.eql.meta.PropType.STRING_PROP_TYPE;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.ITypeCast;
 import ua.com.fielden.platform.eql.meta.PropType;
@@ -21,6 +12,10 @@ import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.functions.CaseWhen3;
 import ua.com.fielden.platform.types.tuples.T2;
+
+import java.util.*;
+
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 public class CaseWhen2 extends AbstractFunction2<CaseWhen3> {
 
@@ -37,21 +32,13 @@ public class CaseWhen2 extends AbstractFunction2<CaseWhen3> {
 
     private static Set<PropType> extractTypes(final List<T2<ICondition2<? extends ICondition3>, ISingleOperand2<? extends ISingleOperand3>>> whenThenPairs, final ISingleOperand2<? extends ISingleOperand3> elseOperand) {
         final Set<PropType> types = new HashSet<>();
-        if (elseOperand != null && elseOperand.type() != null) {
+
+        if (elseOperand != null) {
             types.add(elseOperand.type());    
         }
-        
-        for (final T2<ICondition2<? extends ICondition3>, ISingleOperand2<? extends ISingleOperand3>> item : whenThenPairs) {
-            if (item._2.type() != null) {
-                types.add(item._2.type());
-            }
-        }
-        
-        if (types.isEmpty()) {
-           types.add(STRING_PROP_TYPE); // Needed to handle EQL2-legacy workarounds correctly (e.g. caseWhen(...).then().val(null).otherwise().val(null).endAsStr() ..). In EQL3 there is no need to use caseWhen -- just val(null), which will be translated to the SQL NULL literal.
-           // TODO remove once transition to EQL3 is over.
-        }
-        
+
+        whenThenPairs.stream().map(pair -> pair._2.type()).forEach(types::add);
+
         return types;
     }
 

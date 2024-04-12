@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.stage3.conditions;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.stage3.queries.SubQueryForExists3;
 
 public class ExistencePredicate3 implements ICondition3 {
@@ -15,8 +15,8 @@ public class ExistencePredicate3 implements ICondition3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion) {
-        return (negated ? "NOT" : "") + " EXISTS (" + subQuery.sql(dbVersion) + ")";
+    public String sql(final EqlDomainMetadata metadata) {
+        return (negated ? "NOT" : "") + " EXISTS (" + subQuery.sql(metadata) + ")";
     }
 
     @Override
@@ -33,13 +33,14 @@ public class ExistencePredicate3 implements ICondition3 {
         if (this == obj) {
             return true;
         }
-     
+
         if (!(obj instanceof ExistencePredicate3)) {
             return false;
         }
-        
+
         final ExistencePredicate3 other = (ExistencePredicate3) obj;
-        
+
         return (negated == other.negated) && Objects.equals(subQuery, other.subQuery);
     }
+
 }

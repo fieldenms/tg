@@ -60,9 +60,7 @@ public class HibernateMappingsGenerator {
         }
         sb.append("</hibernate-mapping>");
 
-        final String result = sb.toString();
-        LOGGER.debug("\n\n" + result + "\n\n");
-        return result;
+        return sb.toString();
     }
 
     private static String generateEntityIdMapping(final String name, final String columnName, final String hibTypeName, final DbVersion dbVersion) {

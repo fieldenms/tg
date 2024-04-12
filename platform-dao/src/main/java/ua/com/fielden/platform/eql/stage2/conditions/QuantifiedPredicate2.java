@@ -1,20 +1,22 @@
 package ua.com.fielden.platform.eql.stage2.conditions;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.enums.Quantifier;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
+import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.queries.SubQuery2;
-import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.conditions.QuantifiedPredicate3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.queries.SubQuery3;
+
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+
+import static ua.com.fielden.platform.utils.CollectionUtil.concat;
 
 public class QuantifiedPredicate2 implements ICondition2<QuantifiedPredicate3> {
     public final ISingleOperand2<? extends ISingleOperand3> leftOperand;
@@ -52,10 +54,7 @@ public class QuantifiedPredicate2 implements ICondition2<QuantifiedPredicate3> {
 
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
-        final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>();
-        result.addAll(leftOperand.collectEntityTypes());
-        result.addAll(rightOperand.collectEntityTypes());
-        return result;
+        return concat(HashSet::new, leftOperand.collectEntityTypes(), rightOperand.collectEntityTypes());
     }
 
     @Override

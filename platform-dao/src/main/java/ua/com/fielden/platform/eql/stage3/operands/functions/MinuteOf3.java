@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.stage3.operands.functions;
 
 import static java.lang.String.format;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
@@ -13,16 +13,16 @@ public class MinuteOf3 extends SingleOperandFunction3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion) {
-        switch (dbVersion) {
+    public String sql(final EqlDomainMetadata metadata) {
+        switch (metadata.dbVersion) {
         case H2:
-            return format("MINUTE(%s)", operand.sql(dbVersion));
+            return format("MINUTE(%s)", operand.sql(metadata));
         case MSSQL:
-            return format("DATEPART(mi, %s)", operand.sql(dbVersion));
+            return format("DATEPART(mi, %s)", operand.sql(metadata));
         case POSTGRESQL:
-            return format("CAST(EXTRACT(MINUTE FROM %s \\:\\:timestamp) AS INT)", operand.sql(dbVersion));
+            return format("CAST(EXTRACT(MINUTE FROM %s \\:\\:timestamp) AS INT)", operand.sql(metadata));
         default:
-            return super.sql(dbVersion);
+            return super.sql(metadata);
         }
     }
 

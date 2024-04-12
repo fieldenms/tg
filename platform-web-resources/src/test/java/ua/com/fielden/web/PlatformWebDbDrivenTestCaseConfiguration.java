@@ -26,6 +26,7 @@ import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
+import ua.com.fielden.platform.persistence.HibernateHelpers;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
@@ -91,7 +92,7 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
             domainTypes.add(AcknowledgeWarnings.class);
             domainTypes.add(PropertyWarning.class);
             domainTypes.add(Attachment.class);
-            final DomainMetadata domainMetadata = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), domainTypes, DbVersion.H2);
+            final DomainMetadata domainMetadata = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), domainTypes, HibernateHelpers.getDialect(DbVersion.H2));
             final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata.eqlDomainMetadata);
 
             try {

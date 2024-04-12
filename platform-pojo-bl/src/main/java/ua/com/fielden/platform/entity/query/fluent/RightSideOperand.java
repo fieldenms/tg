@@ -8,17 +8,18 @@ abstract class RightSideOperand<T, ET extends AbstractEntity<?>> //
 		extends MultipleOperand<T, ET> //
 		implements IQuantifiedOperand<T, ET> {
 
-    protected RightSideOperand(final Tokens tokens) {
-        super(tokens);
-    }
-    
+	protected RightSideOperand(final EqlSentenceBuilder builder) {
+		super(builder);
+	}
+
 	@Override
 	public T any(final SingleResultQueryModel subQuery) {
-		return nextForSingleOperand(getTokens().any(subQuery));
+		return nextForSingleOperand(builder.any(subQuery));
 	}
 
 	@Override
 	public T all(final SingleResultQueryModel subQuery) {
-		return nextForSingleOperand(getTokens().all(subQuery));
+		return nextForSingleOperand(builder.all(subQuery));
 	}
+
 }

@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.YesNoType;
@@ -24,6 +25,7 @@ import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
+import ua.com.fielden.platform.persistence.HibernateHelpers;
 import ua.com.fielden.platform.persistence.types.ColourType;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.persistence.types.HyperlinkType;
@@ -103,8 +105,8 @@ public abstract class EqlTestCase {
         
         DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, 
                 injector, 
-                PlatformTestDomainTypes.entityTypes, 
-                H2);
+                PlatformTestDomainTypes.entityTypes,
+                HibernateHelpers.getDialect(H2));
         DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
     }
     

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 
 public class OrderBys3 {
     private final List<OrderBy3> models;
@@ -19,8 +20,8 @@ public class OrderBys3 {
         return unmodifiableList(models);
     }
 
-    public String sql(final DbVersion dbVersion) {
-        return models.stream().map(y -> y.sql(dbVersion)).collect(joining(", "));
+    public String sql(final EqlDomainMetadata metadata) {
+        return models.stream().map(o -> o.sql(metadata)).collect(joining(", "));
     }
 
     @Override
@@ -36,13 +37,14 @@ public class OrderBys3 {
         if (this == obj) {
             return true;
         }
-    
+
         if (!(obj instanceof OrderBys3)) {
             return false;
         }
-        
+
         final OrderBys3 other = (OrderBys3) obj;
-        
+
         return Objects.equals(models, other.models);
     }
+
 }

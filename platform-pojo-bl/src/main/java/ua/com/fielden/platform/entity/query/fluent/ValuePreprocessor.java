@@ -1,20 +1,17 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.stream.Stream;
+
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /**
  * This class is responsible for pre-processing of values passed as parameters to EQL queries (this covers both {@code .val()} and {@code .param()}).
@@ -24,19 +21,28 @@ import ua.com.fielden.platform.types.Money;
  */
 public class ValuePreprocessor {
 
+    /**
+     * @return  either a list of converted values or a single converted value
+     */
     public Object apply(final Object value) {
         if (value == null) {
             return null;
         } else if (value instanceof Collection || value.getClass().isArray()) {
-            final List<Object> result = new ArrayList<Object>();
-            final Collection<Object> original = value instanceof Collection ? (Collection<Object>) value : Arrays.asList((Object[]) value);
-            for (final Object object : original) {
-                result.add(convertValue(object));
-            }
-            return result;
+            final Stream<?> original = value instanceof Collection<?> collection
+                    ? collection.stream()
+                    : Arrays.stream((Object[]) value);
+            return apply(original).toList();
         } else {
             return convertValue(value);
         }
+    }
+
+    public Stream<Object> applyMany(final Object... values) {
+        return apply(Arrays.stream(values));
+    }
+
+    public Stream<Object> apply(final Stream<?> values) {
+        return values.map(this::convertValue);
     }
 
     /** Ensures that values of special types such as {@link Class} or {@link PropertyDescriptor} are converted to String. */

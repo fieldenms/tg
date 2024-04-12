@@ -5,29 +5,35 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IYieldExprOperationOrEnd0;
 
 abstract class YieldExprOperationOrEnd0<T, ET extends AbstractEntity<?>> //
-		extends ExprOperationOrEnd<IYieldExprItem0<T, ET>, T, ET> //
-		implements IYieldExprOperationOrEnd0<T, ET> {
+        extends ExprOperationOrEnd<IYieldExprItem0<T, ET>, T, ET> //
+        implements IYieldExprOperationOrEnd0<T, ET> {
 
-    protected YieldExprOperationOrEnd0(final Tokens tokens) {
-        super(tokens);
+    protected YieldExprOperationOrEnd0(final EqlSentenceBuilder builder) {
+        super(builder);
     }
-    
-	protected abstract T nextForYieldExprOperationOrEnd0(final Tokens tokens);
 
-	@Override
-	protected T nextForExprOperationOrEnd(final Tokens tokens) {
-		return nextForYieldExprOperationOrEnd0(tokens);
-	}
+    protected abstract T nextForYieldExprOperationOrEnd0(final EqlSentenceBuilder builder);
 
-	@Override
-	protected IYieldExprItem0<T, ET> nextForArithmeticalOperator(final Tokens tokens) {
-		return new YieldExprItem0<T, ET>(tokens) {
+    @Override
+    protected T nextForExprOperationOrEnd(final EqlSentenceBuilder builder) {
+        return nextForYieldExprOperationOrEnd0(builder);
+    }
 
-			@Override
-			protected T nextForYieldExprItem0(final Tokens tokens) {
-				return YieldExprOperationOrEnd0.this.nextForYieldExprOperationOrEnd0(tokens);
-			}
+    @Override
+    protected IYieldExprItem0<T, ET> nextForArithmeticalOperator(final EqlSentenceBuilder builder) {
+        return new YieldExprItem0<T, ET>(builder) {
 
-		};
-	}
+            @Override
+            protected T nextForYieldExprItem0(final EqlSentenceBuilder builder) {
+                return YieldExprOperationOrEnd0.this.nextForYieldExprOperationOrEnd0(builder);
+            }
+
+        };
+    }
+
+    @Override
+    public T endExpr() {
+        return nextForExprOperationOrEnd(builder.endYieldExpression());
+    }
+
 }

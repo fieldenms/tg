@@ -3,6 +3,8 @@ package ua.com.fielden.platform.eql.stage2.operands;
 import static java.util.Collections.emptySet;
 import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.N;
 import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.Y;
+import static ua.com.fielden.platform.eql.meta.PropType.NULL_TYPE;
+import static ua.com.fielden.platform.eql.meta.PropType.propType;
 import static ua.com.fielden.platform.eql.retrieval.EntityResultTreeBuilder.hibTypeFromJavaType;
 
 import java.util.Objects;
@@ -43,7 +45,7 @@ public class Value2 implements ISingleOperand2<Value3> {
 
     @Override
     public PropType type() {
-        return value == null ? null : new PropType(value.getClass(), hibTypeFromJavaType(value.getClass())); // TODO provide proper hibType once value original (not converted) will be taken into account.
+        return value == null ? NULL_TYPE : propType(value.getClass(), hibTypeFromJavaType(value.getClass())); // TODO provide proper hibType once value original (not converted) will be taken into account.
     }
 
     @Override

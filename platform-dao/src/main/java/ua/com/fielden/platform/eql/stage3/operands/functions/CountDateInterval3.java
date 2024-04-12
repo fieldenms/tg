@@ -4,9 +4,9 @@ import static java.lang.String.format;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit;
 import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
@@ -20,10 +20,10 @@ public class CountDateInterval3 extends TwoOperandsFunction3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion) {
-        final String op1Sql = operand1.sql(dbVersion);
-        final String op2Sql = operand2.sql(dbVersion);
-        switch (dbVersion) {
+    public String sql(final EqlDomainMetadata metadata) {
+        final String op1Sql = operand1.sql(metadata);
+        final String op2Sql = operand2.sql(metadata);
+        switch (metadata.dbVersion) {
         case H2:
             return sqlForH2(op1Sql, op2Sql);
         case MSSQL:
@@ -31,7 +31,7 @@ public class CountDateInterval3 extends TwoOperandsFunction3 {
         case POSTGRESQL:
             return sqlForPostgres(op1Sql, op2Sql);
         default:
-            return super.sql(dbVersion);
+            return super.sql(metadata);
         }
     }
 

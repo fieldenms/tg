@@ -65,7 +65,7 @@ public enum DbVersion {
 
     /**
      * A flag that provides a way to support generation of aliases as part of SQL statements, which may lead for performance degradation due to slow parsing.
-     * Refer to issue https://github.com/fieldenms/tg/issues/1215 for more details.
+     * Refer to <a href="https://github.com/fieldenms/tg/issues/1215">Issue 1215</a> for more details.
      */
     private static boolean GEN_ALIAS_COMMENTS = false;
 
@@ -83,6 +83,16 @@ public enum DbVersion {
         } catch (final Exception ex) {
             throw asRuntime(ex);
         }
+    }
+
+    /**
+     * Constructs an SQL expression representing a type cast.
+     *
+     * @param expression  SQL expression to cast
+     * @param type  name of the SQL type which the expression is cast to
+     */
+    public String castSql(final String expression, final String type) {
+        return "CAST (%s AS %s)".formatted(expression, type);
     }
 
     /**

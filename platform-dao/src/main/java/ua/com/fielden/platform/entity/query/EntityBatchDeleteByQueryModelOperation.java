@@ -36,7 +36,7 @@ public class EntityBatchDeleteByQueryModelOperation {
         final String tableName = eqlDomainMetadata.entityMetadataHolder.getTableForEntityType(model.getResultType()).name();
         final TransformationResultFromStage2To3<ResultQuery3> s2tr = transform(new QueryProcessingModel(finalModel, null, null, paramValues, true), null, null, executionContext.dates(), eqlDomainMetadata);
         final ResultQuery3 entQuery3 = s2tr.item;
-        final String selectionSql = entQuery3.sql(eqlDomainMetadata.dbVersion);
+        final String selectionSql = entQuery3.sql(eqlDomainMetadata);
         final String deletionSql = produceDeletionSql(selectionSql, tableName, eqlDomainMetadata.dbVersion);
         return new DeletionModel(deletionSql, s2tr.updatedContext.getSqlParamValues());
     }

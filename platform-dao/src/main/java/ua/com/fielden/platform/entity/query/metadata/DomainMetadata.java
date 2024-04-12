@@ -64,7 +64,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.Logger;
-import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.*;
 import org.hibernate.type.BooleanType;
 import org.hibernate.type.TrueFalseType;
 import org.hibernate.type.Type;
@@ -96,6 +96,7 @@ import ua.com.fielden.platform.eql.meta.EntityCategory;
 import ua.com.fielden.platform.eql.meta.EntityTypeInfo;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.EntityTypeInfo.EntityTypeInfoPair;
+import ua.com.fielden.platform.persistence.HibernateHelpers;
 import ua.com.fielden.platform.utils.StreamUtils;
 
 public class DomainMetadata {
@@ -135,21 +136,21 @@ public class DomainMetadata {
             final Map<Class, Class> hibTypesDefaults, //
             final Injector hibTypesInjector, //
             final List<Class<? extends AbstractEntity<?>>> entityTypes, //
-            final DbVersion dbVersion) {
-        this(hibTypesDefaults, hibTypesInjector, entityTypes, dbVersion, false);
+            final Dialect dialect) {
+        this(hibTypesDefaults, hibTypesInjector, entityTypes, dialect, false);
     }
     
     public DomainMetadata(//
             final Map<Class, Class> hibTypesDefaults, //
             final Injector hibTypesInjector, //
             final List<Class<? extends AbstractEntity<?>>> entityTypes, //
-            final DbVersion dbVersion,
+            final Dialect dialect,
             final boolean eql2) {
-        this.dbVersion = dbVersion;
+        this.dbVersion = HibernateHelpers.getDbVersion(dialect);
         this.eql2 = eql2;
         
         if (eql2) {
-            System.out.println("*** EQL2 mode is on! ***");
+            LOGGER.info("*** EQL2 mode is on! ***");
         }
 
         this.hibTypesDefaults = new ConcurrentHashMap<>(entityTypes.size());
@@ -190,7 +191,7 @@ public class DomainMetadata {
 
         this.hibTypesInjector = hibTypesInjector;
         
-        this.eqlDomainMetadata = eql2 ? null : new EqlDomainMetadata(htd, hibTypesInjector, entityTypes, dbVersion);
+        this.eqlDomainMetadata = eql2 ? null : new EqlDomainMetadata(htd, hibTypesInjector, entityTypes, dialect);
 
         // the following operations are a bit heave and benefit from parallel processing
         entityTypes.parallelStream().forEach(entityType -> {
@@ -216,8 +217,7 @@ public class DomainMetadata {
             }
         });
     }
-    
-    
+
     /**
      * Generates DDL statements for creating tables, primary keys, indices and foreign keys for all persistent entity types, which includes domain entities and auxiliary platform entities.
      * 

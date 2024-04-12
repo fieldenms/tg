@@ -135,7 +135,7 @@ public class EqlEntityMetadataGenerator {
                 try {
                     this.hibTypesDefaults.put(entry.getKey(), entry.getValue().getDeclaredField("INSTANCE").get(null));//.newInstance());
                 } catch (final Exception e) {
-                    throw new EqlMetadataGenerationException("Couldn't generate instantiate hibernate type [" + entry.getValue() + "] due to: " + e);
+                    throw new EqlMetadataGenerationException("Couldn't instantiate hibernate type [" + entry.getValue() + "] due to: " + e);
                 }
             }
         }
