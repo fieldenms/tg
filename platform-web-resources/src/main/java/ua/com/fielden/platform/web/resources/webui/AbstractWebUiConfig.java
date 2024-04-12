@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.logging.log4j.LogManager;
@@ -85,7 +84,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 public abstract class AbstractWebUiConfig implements IWebUiConfig {
     private final Logger logger = LogManager.getLogger(getClass());
     private static final String ERR_IN_COMPOUND_EMITTER = "Event source compound emitter should have cought this error. Something went wrong in WebUiConfig.";
-    private static final String CREATE_DEFAULT_CONFIG_INFO = "Creating default %s configurations for [%s]-typed centres (caching)...";
+    private static final String CREATE_DEFAULT_CONFIG_INFO = "Creating default configurations for [%s]-typed centres (caching)...";
 
     private final String title;
     private WebUiBuilder webUiBuilder;
@@ -439,20 +438,11 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     @Override
     public void loadCentreGeneratedTypesAndCriteriaTypes(final Class<?> entityType) {
         final var critGenerator = injector.getInstance(ICriteriaGenerator.class);
-        // load all standalone centres for concrete 'entityType' (with their generated types and criteria types)
-        String log = CREATE_DEFAULT_CONFIG_INFO.formatted("standalone", entityType.getSimpleName());
+        // load all centres (standalone and embedded) for concrete 'entityType' (with their generated types and criteria types)
+        final var log = CREATE_DEFAULT_CONFIG_INFO.formatted(entityType.getSimpleName());
         logger.info(log);
         getCentres().entrySet().stream()
             .filter(entry -> entry.getValue().getEntityType().equals(entityType))
-            .map(Entry::getKey)
-            .forEach(miType -> critGenerator.generateCentreQueryCriteria(getDefaultCentre(miType, this)));
-        logger.info(log + "done");
-
-        // load all embedded centres for concrete 'entityType' (with their generated types and criteria types)
-        log = CREATE_DEFAULT_CONFIG_INFO.formatted("embedded", entityType.getSimpleName());
-        logger.info(log);
-        getEmbeddedCentres().entrySet().stream()
-            .filter(entry -> entry.getValue()._1.getEntityType().equals(entityType))
             .map(Entry::getKey)
             .forEach(miType -> critGenerator.generateCentreQueryCriteria(getDefaultCentre(miType, this)));
         logger.info(log + "done");
@@ -460,14 +450,35 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     @Override
     public void createDefaultConfigurationsForAllCentres() {
-        final Set<Class<? extends MiWithConfigurationSupport<?>>> miTypes = getCentres().keySet();
-        final int size = miTypes.size();
-        final String log = format("Creating default configurations for [%s] centres (caching)...", size);
-        logger.info(log);
-        for (final Class<? extends MiWithConfigurationSupport<?>> miType: miTypes) {
-            getDefaultCentre(miType, this);
+        final var miTypes = getCentres().keySet();
+        final var size = miTypes.size();
+        final var logMessage = "Creating default configurations for [%s] centres (caching)...".formatted(size);
+        logger.info(logMessage);
+
+        // preload embedded centres map first
+        getEmbeddedCentres();
+
+        // preload all registered centres (including embedded) using getDefaultCentre(...) method;
+        int embeddedSize = 0, genSize = 0, embeddedGenSize = 0;
+        for (final var miType: miTypes) {
+            final var isEmbedded = isEmbeddedCentre(miType);
+            if (isEmbedded) {
+                embeddedSize++;
+            }
+            // perform default config creation with heavy calculated properties processing:
+            //   (use critGenerator.generateCentreQueryCriteria(getDefaultCentre(miType, this))) to generate also criteria entity type)
+            final var centreManager = getDefaultCentre(miType, this);
+            final var rootType = centreManager.getRepresentation().rootTypes().iterator().next();
+            if (!centreManager.getEnhancer().getManagedType(rootType).equals(rootType)) {
+                genSize++;
+                if (isEmbedded) {
+                    embeddedGenSize++;
+                }
+            }
         }
-        logger.info(log + "done");
+        logger.info("              all: %s standalone: %s embedded: %s".formatted(size, size - embeddedSize, embeddedSize));
+        logger.info("    generated all: %s standalone: %s embedded: %s".formatted(genSize, genSize - embeddedGenSize, embeddedGenSize));
+        logger.info(logMessage + "done");
     }
 
     /**
@@ -478,7 +489,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     @Override
     public Map<Class<? extends MiWithConfigurationSupport<?>>, T2<EntityCentre<?>, EntityMaster<? extends AbstractEntity<?>>>> getEmbeddedCentres() {
         if (embeddedCentreMap == null) {
-            final String log = "Calculating embedded centres...";
+            final String log = "    Calculating embedded centres...";
             logger.info(log);
             embeddedCentreMap = new ConcurrentHashMap<>();
             for (final EntityMaster<? extends AbstractEntity<?>> master: getMasters().values()) {

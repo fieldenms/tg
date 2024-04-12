@@ -145,11 +145,11 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                     device(),
                     webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel
                 );
-                criteriaType = (Class<M>) enhancedCentreEntityQueryCriteria.getClass();
+                criteriaType = (Class<M>) enhancedCentreEntityQueryCriteria.getType();
             } else {
                 criteriaEntity = (M) createCriteriaEntityWithoutConflicts(modifHolder, companionFinder, critGenerator, miType, saveAsName, user, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
                 enhancedCentreEntityQueryCriteria = criteriaEntity;
-                criteriaType = (Class<M>) criteriaEntity.getClass();
+                criteriaType = (Class<M>) criteriaEntity.getType();
             }
 
             // TODO criteriaType is necessary to be used for 1) value matcher creation 2) providing value matcher fetch model
