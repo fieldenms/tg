@@ -109,7 +109,10 @@ public class ScatterPlotMaster<T extends AbstractEntity<?>> implements IMaster<T
                 + "    click: self._click\n"
                 + "}";
 
-        return "self.options = " + chartOptions + ";\n"
+        return "self.uuid = self.centreUuid;\n"
+                + "self.classList.remove('canLeave');\n"
+                + "self._focusFirstInput = function () {};\n"
+                + "self.options = " + chartOptions + ";\n"
                 + "self.legendItems =[" + join(legendItems, ",\n") + "];\n"
                 + "self.categoryRangeSource = '" + chartBuilder.getCategroyRangeConfig().getSource() + "';\n"
                 + "self.valueRangeSource = '" + chartBuilder.getValueRangeConfig().getSource() + "';\n"
