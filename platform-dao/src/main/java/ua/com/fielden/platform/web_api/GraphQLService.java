@@ -133,6 +133,8 @@ public class GraphQLService implements IWebApi {
             logger.info("\tBuilding field visibility...");
             codeRegistryBuilder.fieldVisibility(new FieldVisibility(authorisationModel, domainTypes, securityTokenProvider));
 
+            codeRegistryBuilder.defaultDataFetcher(env -> TgPropertyDataFetcher.fetching(env.getFieldDefinition().getName()));
+
             logger.info("\tBuilding schema...");
             schema = newSchema()
                 .codeRegistry(codeRegistryBuilder.build())
