@@ -1,11 +1,13 @@
 package ua.com.fielden.platform.sample.domain;
 
+import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.file_reports.WorkbookExporter.convertToByteArray;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.google.inject.Inject;
 
@@ -16,6 +18,7 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
+import ua.com.fielden.platform.web.interfaces.IUriGenerator;
 
 /**
  * DAO implementation for companion object {@link IExportAction}.
@@ -27,13 +30,16 @@ import ua.com.fielden.platform.file_reports.WorkbookExporter;
 public class ExportActionDao extends CommonEntityDao<ExportAction> implements IExportAction {
 
     private final ITgPersistentEntityWithProperties co;
+    private final IUriGenerator uriGenerator;
 
     @Inject
     public ExportActionDao(
             final ITgPersistentEntityWithProperties co,
-            final IFilter filter) {
+            final IFilter filter,
+            final IUriGenerator uriGenerator) {
         super(filter);
         this.co = co;
+        this.uriGenerator = uriGenerator;
     }
 
     @Override
@@ -47,7 +53,7 @@ public class ExportActionDao extends CommonEntityDao<ExportAction> implements IE
         try {
             entity.setFileName("export-of-TgPersistentEntityWithProperties.xlsx");
             entity.setMime("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-            final byte[] data = convertToByteArray(WorkbookExporter.export(entitiesToExport.stream(), new String[] {"key", "desc"}, new String[] {"key", "desc"}));
+            final byte[] data = convertToByteArray(WorkbookExporter.export(entitiesToExport.stream(), new String[] {"key", "desc"}, new String[] {"key", "desc"}, ofNullable(uriGenerator)));
             entity.setData(data);
         } catch (final Exception e) {
             e.printStackTrace();

@@ -59,6 +59,7 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.web.interfaces.IUriGenerator;
 
 /**
  * This is a base class for db-aware implementations of entity companions.
@@ -342,7 +343,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Override
     @SessionRequired
     public byte[] export(final QueryExecutionModel<T, ?> query, final String[] propertyNames, final String[] propertyTitles) throws IOException {
-        return WorkbookExporter.convertToGZipByteArray(WorkbookExporter.export(stream(query), propertyNames, propertyTitles));
+        return WorkbookExporter.convertToGZipByteArray(WorkbookExporter.export(stream(query), propertyNames, propertyTitles, empty()));
     }
 
     public DomainMetadata getDomainMetadata() {

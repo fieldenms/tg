@@ -21,8 +21,10 @@ import ua.com.fielden.platform.web.app.SerialisationTypeEncoder;
 import ua.com.fielden.platform.web.app.ThreadLocalDeviceProvider;
 import ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionSelector;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
+import ua.com.fielden.platform.web.interfaces.IUriGenerator;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.test.server.TgTestWebApplicationServerModule;
+import ua.com.fielden.platform.web.uri.UriGenerator;
 import ua.com.fielden.platform.web.utils.CriteriaEntityRestorer;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
@@ -53,6 +55,9 @@ public interface IBasicWebApplicationServerModule {
         // bind IWebApp instance with defined masters / centres and other DSL-defined configuration
         bindType(IWebUiConfig.class).toInstance(webApp);
         bindType(IMenuRetriever.class).toInstance(webApp);
+
+        //bind URI generator
+        bindType(IUriGenerator.class).to(UriGenerator.class).in(Scopes.SINGLETON);
 
         // bind IWebResourceLoader to its implementation as singleton
         bindType(IWebResourceLoader.class).to(WebResourceLoader.class).in(Scopes.SINGLETON);

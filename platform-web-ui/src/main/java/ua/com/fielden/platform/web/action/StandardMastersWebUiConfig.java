@@ -1,10 +1,7 @@
 package ua.com.fielden.platform.web.action;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.entity.EntityExportAction.PROP_EXPORT_ALL;
-import static ua.com.fielden.platform.entity.EntityExportAction.PROP_EXPORT_SELECTED;
-import static ua.com.fielden.platform.entity.EntityExportAction.PROP_EXPORT_TOP;
-import static ua.com.fielden.platform.entity.EntityExportAction.PROP_NUMBER;
+import static ua.com.fielden.platform.entity.EntityExportAction.*;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.MOBILE;
@@ -88,7 +85,8 @@ public class StandardMastersWebUiConfig {
                 cell(cell(CELL_LAYOUT))
                .cell(cell(CELL_LAYOUT))
                .cell(cell(CELL_LAYOUT))
-               .cell(cell(CELL_LAYOUT), layout().withStyle("padding-left", "32px").end()),
+               .cell(cell(CELL_LAYOUT), layout().withStyle("padding-left", "32px").end())
+               .cell(cell(CELL_LAYOUT)),
                layout().withStyle("padding", "20px").end()).toString();
 
         final String MASTER_ACTION_LAYOUT_SPECIFICATION = "'horizontal', 'padding: 10px', 'wrap', 'justify-content: center'";
@@ -98,7 +96,8 @@ public class StandardMastersWebUiConfig {
                 .addProp(PROP_EXPORT_ALL).asCheckbox().also()
                 .addProp(PROP_EXPORT_SELECTED).asCheckbox().also()
                 .addProp(PROP_EXPORT_TOP).asCheckbox().also()
-                .addProp(PROP_NUMBER).asInteger()
+                .addProp(PROP_NUMBER).asInteger().also()
+                .addProp(WITH_HYPERLINKS).asCheckbox()
                 .also()
                 .addAction(MasterActions.REFRESH)
                 /*      */.shortDesc("CANCEL")
@@ -110,7 +109,7 @@ public class StandardMastersWebUiConfig {
                 .setLayoutFor(DESKTOP, Optional.empty(), layout)
                 .setLayoutFor(TABLET, Optional.empty(), layout)
                 .setLayoutFor(MOBILE, Optional.empty(), layout)
-                .withDimensions(mkDim(420, 380, Unit.PX))
+                .withDimensions(mkDim(420, 428, Unit.PX))
                 .done();
 
         return new EntityMaster<>(EntityExportAction.class, EntityExportActionProducer.class, masterConfig, injector);

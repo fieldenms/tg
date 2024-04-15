@@ -21,12 +21,8 @@ import java.util.stream.Stream;
 import java.util.zip.Deflater;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.ss.usermodel.BorderStyle;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.Font;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.common.usermodel.HyperlinkType;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.joda.time.DateTime;
@@ -39,6 +35,7 @@ import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.interfaces.IUriGenerator;
 
 /**
  * A set of utility methods for exporting data into MS Excel.
@@ -54,14 +51,14 @@ public class WorkbookExporter {
 
     private WorkbookExporter() {}
 
-    public static <M extends AbstractEntity<?>> SXSSFWorkbook export(final List<Stream<M>> entities, final List<Pair<String[], String[]>> propTitles, final List<List<List<DynamicColumnForExport>>> dynamicProperties, final List<String> sheetTitles) {
+    public static <M extends AbstractEntity<?>> SXSSFWorkbook export(final List<Stream<M>> entities, final List<Pair<String[], String[]>> propTitles, final List<List<List<DynamicColumnForExport>>> dynamicProperties, final List<String> sheetTitles, final Optional<IUriGenerator> uriGenerator) {
         final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData = new ArrayList<>();
         if (entities.size() == propTitles.size() && entities.size() == dynamicProperties.size()) {
             for (int sheetIdx = 0; sheetIdx < entities.size(); sheetIdx++) {
                 sheetsData.add(export(entities.get(sheetIdx), propTitles.get(sheetIdx).getKey(), propTitles.get(sheetIdx).getValue(), dynamicProperties.get(sheetIdx), sheetTitles.get(sheetIdx)));
             }
         }
-        return export(sheetsData);
+        return export(sheetsData, uriGenerator);
     }
 
     private static <M extends AbstractEntity<?>> DataForWorkbookSheet<M> export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles, final List<List<DynamicColumnForExport>> dynamicProperties, final String sheetTitle) {
@@ -83,7 +80,7 @@ public class WorkbookExporter {
         return new DataForWorkbookSheet<>(sheetTitle, entities, propNamesAndTitles, collectionalProps);
     }
 
-    public static <M extends AbstractEntity<?>> SXSSFWorkbook export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles) {
+    public static <M extends AbstractEntity<?>> SXSSFWorkbook export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles, final Optional<IUriGenerator> uriGenerator) {
         final List<T2<String, String>> propNamesAndTitles = new ArrayList<>();
         for (int index = 0; index < propertyNames.length && index < propertyTitles.length; index++) {
             propNamesAndTitles.add(t2(propertyNames[index], propertyTitles[index]));
@@ -92,7 +89,7 @@ public class WorkbookExporter {
         final DataForWorkbookSheet<M> dataForWorkbookSheet = new DataForWorkbookSheet<>(DEFAULT_SHEET_TITLE, entities, propNamesAndTitles, new LinkedHashMap<>());
         final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData = new ArrayList<>();
         sheetsData.add(dataForWorkbookSheet);
-        return export(sheetsData);
+        return export(sheetsData, uriGenerator);
     }
 
     /**
@@ -132,15 +129,15 @@ public class WorkbookExporter {
         }
     }
 
-    public static SXSSFWorkbook export(final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData) {
+    public static SXSSFWorkbook export(final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData, final Optional<IUriGenerator> uriGenerator) {
         final SXSSFWorkbook wb = new SXSSFWorkbook(SXSSF_WINDOW_SIZE);
         for (final DataForWorkbookSheet<? extends AbstractEntity<?>> sheetData : sheetsData) {
-            addSheetWithData(wb, sheetData);
+            addSheetWithData(wb, sheetData, uriGenerator);
         }
         return wb;
     }
 
-    private static <M extends AbstractEntity<?>> void addSheetWithData(final SXSSFWorkbook wb, final DataForWorkbookSheet<M> sheetData) {
+    private static <M extends AbstractEntity<?>> void addSheetWithData(final SXSSFWorkbook wb, final DataForWorkbookSheet<M> sheetData, final Optional<IUriGenerator> uriGenerator) {
         final SXSSFSheet sheet = wb.createSheet(sheetData.getSheetTitle());
         // Create a header row.
         final Row headerRow = sheet.createRow(0);
@@ -191,7 +188,7 @@ public class WorkbookExporter {
 
         final AtomicInteger index = new AtomicInteger(0);
         final Map<String, String> shortCollectionalProps = new HashMap<>();
-        sheetData.getEntities().forEach(entity -> addRow(index, entity, sheetData, sheet, shortCollectionalProps, dateCellStyle, integerCellStyle, decimalCellStyle, moneyCellStyle, dataCellStyle));
+        sheetData.getEntities().forEach(entity -> addRow(index, entity, sheetData, wb, uriGenerator, sheet, shortCollectionalProps, dateCellStyle, integerCellStyle, decimalCellStyle, moneyCellStyle, dataCellStyle));
 
         // adjusting columns widths
         for (int propIndex = 0; propIndex < sheetData.getPropNames().size(); propIndex++) {
@@ -206,6 +203,8 @@ public class WorkbookExporter {
             final AtomicInteger index,
             final M entity,
             final DataForWorkbookSheet<M> sheetData,
+            final SXSSFWorkbook wb,
+            final Optional<IUriGenerator> uriGenerator,
             final Sheet sheet,
             final Map<String, String> shortCollectionalProps,
             final CellStyle dateCellStyle,
@@ -225,7 +224,17 @@ public class WorkbookExporter {
             // need to try to do the best job with types
             if (shortCollectionalProps.containsKey(propertyName)) {
                 cell.setCellValue(join(createShortColection((Collection<AbstractEntity<?>>) value, shortCollectionalProps.get(propertyName)), ", "));
-            } else if (value instanceof Date) {
+            } else if (value != null && EntityUtils.isEntityType(value.getClass())) {
+                AbstractEntity<?> entityValue = (AbstractEntity<?>)value;
+                cell.setCellValue(value.toString());
+                uriGenerator.ifPresent(g -> {
+                    g.generateUri(entityValue).ifPresent(uri ->{
+                        Hyperlink link = wb.getCreationHelper().createHyperlink(HyperlinkType.URL);
+                        link.setAddress(uri);
+                        cell.setHyperlink(link);
+                    });
+                });
+            }else if (value instanceof Date) {
                 cell.setCellValue((Date) value);
                 cell.setCellStyle(dateCellStyle);
             } else if (value instanceof DateTime) {

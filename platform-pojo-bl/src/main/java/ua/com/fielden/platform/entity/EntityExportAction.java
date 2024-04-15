@@ -7,12 +7,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
@@ -33,6 +28,7 @@ public class EntityExportAction extends AbstractFunEntityForDataExport<NoKey> {
     public static final String PROP_EXPORT_TOP = "exportTop";
     public static final String PROP_EXPORT_SELECTED = "exportSelected";
     public static final String PROP_NUMBER = "number";
+    public static final String WITH_HYPERLINKS = "exportWithHyperlinks";
     public static final Set<String> EXPORT_OPTION_PROPERTIES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(PROP_EXPORT_ALL, PROP_EXPORT_TOP, PROP_EXPORT_SELECTED)));
     
     @IsProperty
@@ -56,7 +52,11 @@ public class EntityExportAction extends AbstractFunEntityForDataExport<NoKey> {
     @Title(value = "Export selected?", desc = "Export selected entities")
     @AfterChange(ExportActionHandler.class)
     private boolean exportSelected;
-    
+
+    @IsProperty
+    @Title(value = "Export with hyperlinks?", desc = "Exports entity properties with hyperlinks to thier entity master")
+    private boolean exportWithHyperlinks;
+
     @IsProperty
     @Title("Context Holder")
     private CentreContextHolder centreContextHolder;
@@ -73,6 +73,16 @@ public class EntityExportAction extends AbstractFunEntityForDataExport<NoKey> {
     protected EntityExportAction setSelectedEntityIds(final Set<Long> selectedEntityIds) {
         this.selectedEntityIds.clear();
         this.selectedEntityIds.addAll(selectedEntityIds);
+        return this;
+    }
+
+    public boolean getExportWithHyperlinks() {
+        return exportWithHyperlinks;
+    }
+
+    @Observable
+    public EntityExportAction setExportWithHyperlinks(final boolean exportWithHyperlinks) {
+        this.exportWithHyperlinks = exportWithHyperlinks;
         return this;
     }
 
