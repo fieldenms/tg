@@ -16,12 +16,21 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static org.apache.tika.utils.StringUtils.isEmpty;
 
+/**
+ * Implementation of {@link IUriGenerator}
+ */
 public class UriGenerator implements IUriGenerator {
 
     private final IWebUiConfig webUiConfig;
     private final String appUri;
     private final MasterInfoProvider masterInfoProvider;
 
+    /**
+     * Creates new {@link IUriGenerator} instance based on application Uri, and it's web-UI configuration.
+     *
+     * @param webUiConfig
+     * @param appUri
+     */
     @Inject
     public UriGenerator(final IWebUiConfig webUiConfig, @AppUri String appUri) {
         this.webUiConfig = webUiConfig;
