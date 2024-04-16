@@ -225,11 +225,11 @@ public class WorkbookExporter {
             if (shortCollectionalProps.containsKey(propertyName)) {
                 cell.setCellValue(join(createShortColection((Collection<AbstractEntity<?>>) value, shortCollectionalProps.get(propertyName)), ", "));
             } else if (value != null && EntityUtils.isEntityType(value.getClass())) {
-                AbstractEntity<?> entityValue = (AbstractEntity<?>)value;
+                final AbstractEntity<?> entityValue = (AbstractEntity<?>)value;
                 cell.setCellValue(value.toString());
                 uriGenerator.ifPresent(g -> {
                     g.generateUri(entityValue).ifPresent(uri ->{
-                        Hyperlink link = wb.getCreationHelper().createHyperlink(HyperlinkType.URL);
+                        final Hyperlink link = wb.getCreationHelper().createHyperlink(HyperlinkType.URL);
                         link.setAddress(uri);
                         cell.setHyperlink(link);
                     });

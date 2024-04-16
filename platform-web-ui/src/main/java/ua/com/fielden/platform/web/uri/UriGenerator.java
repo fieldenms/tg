@@ -38,7 +38,7 @@ public class UriGenerator implements IUriGenerator {
         this.masterInfoProvider = new MasterInfoProvider(webUiConfig);
     }
     public <T extends AbstractEntity<?>> Optional<String> generateUri(final T entity) {
-        MasterInfo masterInfo = masterInfoProvider.getMasterInfo(entity.getType());
+        final MasterInfo masterInfo = masterInfoProvider.getMasterInfo(entity.getType());
         if (masterInfo != null) {
             final AbstractEntity<?> relativeEntityValue = isEmpty(masterInfo.getRelativePropertyName()) ? entity : entity.get(masterInfo.getRelativePropertyName());
             return of(format("%s/#/master/%s/%s", appUri, masterInfo.getRootEntityType().getName(), relativeEntityValue.getId()));
