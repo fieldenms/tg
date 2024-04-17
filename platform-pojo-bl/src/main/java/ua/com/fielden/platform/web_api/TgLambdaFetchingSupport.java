@@ -43,6 +43,7 @@ public class TgLambdaFetchingSupport {
                 final Function<Object, Object> getterFunction = mkCallFunction(sourceClass, candidateMethod.getName(), candidateMethod.getReturnType());
                 return Optional.of(getterFunction);
             } catch (final Throwable ignore) {
+                // TODO investigate why proxied by ByteBuddy types can't make MethodHandle lambdas
                 System.out.println(ignore);
                 //
                 // if we cant make a dynamic lambda here, then we give up and let the old property fetching code do its thing
@@ -97,8 +98,8 @@ public class TgLambdaFetchingSupport {
     }
 
     private static Method findBestBooleanGetter(final List<Method> methods) {
-        // we prefer isX() over getX() if both happen to be present
-        final Optional<Method> isMethod = methods.stream().filter(method -> method.getName().startsWith("is")).findFirst();
+        // we prefer getX() /* TG change, was "isX()" */ over isX() /* TG change, was "getX()" */ if both happen to be present
+        final Optional<Method> isMethod = methods.stream().filter(method -> method.getName().startsWith("get" /* TG change, was "is" */)).findFirst();
         return isMethod.orElse(methods.get(0));
     }
 

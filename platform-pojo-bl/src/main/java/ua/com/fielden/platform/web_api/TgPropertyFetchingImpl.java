@@ -204,9 +204,9 @@ public class TgPropertyFetchingImpl {
     private Object getPropertyViaGetterMethod(final Object object, final String propertyName, final GraphQLType graphQLType, final MethodFinder methodFinder, final Supplier<Object> singleArgumentValue) throws NoSuchMethodException {
         if (isBooleanProperty(graphQLType)) {
             try {
-                return getPropertyViaGetterUsingPrefix(object, propertyName, "is", methodFinder, singleArgumentValue);
+                return getPropertyViaGetterUsingPrefix(object, propertyName, "get" /* TG change, was "is" */, methodFinder, singleArgumentValue);
             } catch (final NoSuchMethodException e) {
-                return getPropertyViaGetterUsingPrefix(object, propertyName, "get", methodFinder, singleArgumentValue);
+                return getPropertyViaGetterUsingPrefix(object, propertyName, "is" /* TG change, was "get" */, methodFinder, singleArgumentValue);
             }
         } else {
             return getPropertyViaGetterUsingPrefix(object, propertyName, "get", methodFinder, singleArgumentValue);
