@@ -4,7 +4,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 /**
- * Set the property name or key that should be used to retrieve styles for scatter plot dots
+ * A contract to specify a property name or a key that should be used to associate styles for rendering values on a scatter plot (shapes, their size, colours, etc.).
  *
  * @param <T>
  *
@@ -13,7 +13,7 @@ import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 public interface IScatterPlotStyleProperty<T extends AbstractEntity<?>> {
 
     /**
-     * Assigns the property name that is used to retrieve styles for scatter plot dots.
+     * Assigns a property name that is used to retrieve styles for scatter plot values.
      *
      * @param propertyName
      * @return
@@ -21,10 +21,10 @@ public interface IScatterPlotStyleProperty<T extends AbstractEntity<?>> {
     IScatterPlotTitle<T> setStylePropertyName(IConvertableToPath propertyName);
 
     /**
-     * Assigns the key that is used to retrieve styles for scatter plot dots.
+     * Assigns a key that is used to retrieve styles for scatter plot values.
      *
-     * @param propertyName
+     * @param key
      * @return
      */
-    IScatterPlotTitle<T> setStylePropertyName(String propertyName);
+    IScatterPlotTitle<T> setStyleKey(String key);
 }

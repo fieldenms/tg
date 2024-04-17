@@ -17,5 +17,5 @@ public interface IScatterPlotEntityType<T extends AbstractEntity<?>> {
      * @param entityType
      * @return
      */
-    IScatterPlotCategoryProperty<T> setChartEntityType (Class<? extends AbstractEntity<?>> entityType);
+    IScatterPlotRangeProperty<T> setChartEntityType (Class<? extends AbstractEntity<?>> entityType);
 }

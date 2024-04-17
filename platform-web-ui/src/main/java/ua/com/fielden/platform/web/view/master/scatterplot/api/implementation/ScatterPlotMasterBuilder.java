@@ -5,9 +5,6 @@ import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
-import ua.com.fielden.platform.web.view.master.chart.decker.api.*;
-import ua.com.fielden.platform.web.view.master.chart.decker.api.impl.ChartDeck;
-import ua.com.fielden.platform.web.view.master.chart.decker.api.impl.ChartDeckerMaster;
 import ua.com.fielden.platform.web.view.master.scatterplot.api.*;
 
 import java.util.ArrayList;
@@ -16,21 +13,21 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Implements the scatter plot configuration API.
+ * An implementation of the scatter plot configuration API.
  *
  * @param <T>
  *
  * @author TG Team
  */
-public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IScatterPlotMasterBuilder<T>, IScatterPlotEntityType<T>, IScatterPlotCategoryProperty<T>, IScatterPlotValueProperty<T>, IScatterPlotTitle<T>, IScatterPlotStyleProperty<T> {
+public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IScatterPlotMasterBuilder<T>, IScatterPlotEntityType<T>, IScatterPlotRangeProperty<T>, IScatterPlotDomainProperty<T>, IScatterPlotTitle<T>, IScatterPlotStyleProperty<T> {
 
     private Class<T> entityType;
     private boolean saveOnActivation = false;
     private Class<? extends AbstractEntity<?>> chartEntityType;
     private String categoryPropertyName;
-    private IScatterPlotRangeConfig categoryPropRangeSource;
+    private IScatterPlotAxisBoundaryConfig categoryPropRangeSource;
     private String valuePropertyName;
-    private IScatterPlotRangeConfig valuePropRangeSource;
+    private IScatterPlotAxisBoundaryConfig valuePropRangeSource;
     private String stylePropertyName;
     private String title;
     private String xAxisTitle;
@@ -58,16 +55,16 @@ public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IS
     }
 
     @Override
-    public IScatterPlotValueProperty<T> configCategoryProperty(final IConvertableToPath propertyName, IScatterPlotRangeConfig rangeConfig) {
+    public IScatterPlotDomainProperty<T> configRangeProperty(final IConvertableToPath propertyName, IScatterPlotAxisBoundaryConfig rangeConfig) {
         this.categoryPropertyName = propertyName.toPath();
         this.categoryPropRangeSource = rangeConfig;
         return this;
     }
 
     @Override
-    public IScatterPlotStyleProperty<T> configValueProperty(final IConvertableToPath propertyName, IScatterPlotRangeConfig rangeConfig) {
+    public IScatterPlotStyleProperty<T> configDomainProperty(final IConvertableToPath propertyName, IScatterPlotAxisBoundaryConfig axisBoundaryConfig) {
         this.valuePropertyName = propertyName.toPath();
-        this.valuePropRangeSource = rangeConfig;
+        this.valuePropRangeSource = axisBoundaryConfig;
         return this;
     }
 
@@ -150,12 +147,12 @@ public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IS
 
     @Override
     public IScatterPlotTitle<T> setStylePropertyName(final IConvertableToPath propertyName) {
-        return setStylePropertyName(propertyName.toPath());
+        return setStyleKey(propertyName.toPath());
     }
 
     @Override
-    public IScatterPlotTitle<T> setStylePropertyName(final String propertyName) {
-        this.stylePropertyName = propertyName;
+    public IScatterPlotTitle<T> setStyleKey(final String key) {
+        this.stylePropertyName = key;
         return this;
     }
 
@@ -168,7 +165,7 @@ public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IS
     }
 
     @Override
-    public IScatterPlotCategoryProperty<T> setChartEntityType(final Class<? extends AbstractEntity<?>> entityType) {
+    public IScatterPlotRangeProperty<T> setChartEntityType(final Class<? extends AbstractEntity<?>> entityType) {
         this.chartEntityType = entityType;
         return this;
     }
@@ -177,11 +174,11 @@ public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IS
         return chartEntityType;
     }
 
-    public IScatterPlotRangeConfig getCategroyRangeConfig() {
+    public IScatterPlotAxisBoundaryConfig getCategroyRangeConfig() {
         return categoryPropRangeSource;
     }
 
-    public IScatterPlotRangeConfig getValueRangeConfig() {
+    public IScatterPlotAxisBoundaryConfig getValueRangeConfig() {
         return valuePropRangeSource;
     }
 
@@ -224,4 +221,5 @@ public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IS
     public int getRightMargin() {
         return rightMargin;
     }
+
 }
