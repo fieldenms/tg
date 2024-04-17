@@ -3,7 +3,7 @@ package ua.com.fielden.platform.web.view.master.scatterplot.api;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 /**
- * A contract to configure scatter plot/
+ * A contract to start a configuration for a scatter plot.
  *
  * @param <T>
  *
@@ -12,7 +12,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 public interface IScatterPlotMasterBuilder<T extends AbstractEntity<?>> {
 
     /**
-     * Start scatter plot configuration for specified master entity type
+     * Start a scatter plot configuration for a specified master entity type.
      *
      * @param entityType
      * @return
@@ -20,7 +20,9 @@ public interface IScatterPlotMasterBuilder<T extends AbstractEntity<?>> {
     IScatterPlotEntityType<T> forEntity(Class<T> entityType);
 
     /**
-     * Start scatter plot configuration for specified master entity type. Also, this scatter plot master get saved when opened.
+     * Start a scatter plot configuration for a specified master entity type that gets executed/saved upon opening.
+     * This execution/saving is useful if one needs to do some computation before the data can be rendered.
+     * For example, to compute the values for the range axis (OY), which currently only supports categorical values.
      *
      * @param entityType
      * @return

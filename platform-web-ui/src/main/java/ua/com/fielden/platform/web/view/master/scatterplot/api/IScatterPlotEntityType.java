@@ -3,7 +3,7 @@ package ua.com.fielden.platform.web.view.master.scatterplot.api;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 /**
- * Contract to specify the type of entities displayed on scatter plot.
+ * A contract to specify a type of entities that are displayed on a scatter plot.
  *
  * @param <T>
  *
@@ -12,10 +12,11 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 public interface IScatterPlotEntityType<T extends AbstractEntity<?>> {
 
     /**
-     * Specifies the type of entities displayed on scatter plot.
+     * Specifies a type of entities displayed on a scatter plot.
      *
      * @param entityType
      * @return
      */
-    IScatterPlotRangeProperty<T> setChartEntityType (Class<? extends AbstractEntity<?>> entityType);
+    IScatterPlotRangeProperty<T> setChartEntityType(Class<? extends AbstractEntity<?>> entityType);
+
 }

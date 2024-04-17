@@ -4,7 +4,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 
 /**
- * Contract to identify the end of scatter plot configuration.
+ * A contract to complete a scatter plot configuration.
  *
  * @param <T>
  *
@@ -13,9 +13,10 @@ import ua.com.fielden.platform.web.view.master.api.IMaster;
 public interface IScatterPlotDone<T extends AbstractEntity<?>> {
 
     /**
-     * Indicates the end of scatter plot configuration.
+     * Indicates the end of a scatter plot configuration.
      *
      * @return
      */
     IMaster<T> done();
+
 }
