@@ -221,7 +221,7 @@ class ScatterPlot {
     }
 
     _xScale() {
-        const range = getRange(this._options.xAxis.range);
+        const range = getRange(this._options.xAxis.range).slice();
         if (this._actualWidth > 0 && range.length > 0) {
             const days = d3.timeDay.count(range[0], range[1]);
             const daysIn40px = 40 /*margins for axis 40px*/ * days/this._actualWidth;

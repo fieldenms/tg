@@ -45,8 +45,8 @@
                         styleProp: d => d.entryType,
                     },
                     label: "Scatter plot example",
-                    xAxis: {label: "Reading date", range: [date('31/12/2023'), date('12/03/2024')]},
-                    yAxis: {label: "Quality", range: ["Excelent", "Very Good", "Good", "Fair", "Poor"]},
+                    xAxis: {label: "Reading date", range: () => [date('31/12/2023'), date('12/03/2024')]},
+                    yAxis: {label: "Quality", range: () => ["Excelent", "Very Good", "Good", "Fair", "Poor"]},
                     margin: {
                         left: 100,
                         right: 20,
