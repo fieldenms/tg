@@ -50,14 +50,14 @@ Polymer({
         },
 
         /**
-         * Chart options. will be updated each time when entity or retrievedEntities get updated.
+         * Chart options, which are updated each time an entity or retrievedEntities are updated.
          */
         options: {
             type: Object
         },
 
         /**
-         * Rendering hints for chart
+         * Rendering hints for the chart.
          */
         renderingHints: {
             type: Object

@@ -493,7 +493,7 @@ Polymer({
                     self._element.addEventListener('all-rendering-hints-changed', function (ev) {
                         self.allRenderingHints = this.allRenderingHints;
                     });
-                    self._element.allRenderingHints =self.allRenderingHints;
+                    self._element.allRenderingHints = self.allRenderingHints;
                     self._element.addEventListener('retrieved-totals-changed', function (ev) {
                         self.retrievedTotals = this.retrievedTotals;
                     });
