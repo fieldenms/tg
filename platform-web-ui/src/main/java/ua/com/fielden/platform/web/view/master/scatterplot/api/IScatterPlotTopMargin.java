@@ -3,7 +3,7 @@ package ua.com.fielden.platform.web.view.master.scatterplot.api;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 /**
- * Contract for assigning top margin of scatter plot
+ * A contract for specifying the top margin of a scatter plot.
  *
  * @param <T>
  *
@@ -11,11 +11,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  */
 public interface IScatterPlotTopMargin<T extends AbstractEntity<?>> extends IScatterPlotLeftMargin<T>{
 
-    /**
-     * Assigns the top margin of scatter plot.
-     *
-     * @param margin
-     * @return
-     */
-    IScatterPlotLeftMargin<T> topMargin(int margin);
+    IScatterPlotLeftMargin<T> topMargin(int px);
+
 }

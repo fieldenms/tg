@@ -183,26 +183,26 @@ public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IS
     }
 
     @Override
-    public IScatterPlotRightMargin<T> bottomMargin(final int margin) {
-        this.bottomMargin =  margin;
+    public IScatterPlotRightMargin<T> bottomMargin(final int px) {
+        this.bottomMargin = px;
         return this;
     }
 
     @Override
-    public IScatterPlotBottomMargin<T> leftMargin(final int margin) {
-        this.leftMargin = margin;
+    public IScatterPlotBottomMargin<T> leftMargin(final int px) {
+        this.leftMargin = px;
         return this;
     }
 
     @Override
-    public IScatterPlotTooltip<T> rightMargin(final int margin) {
-        this.rightMargin = margin;
+    public IScatterPlotTooltip<T> rightMargin(final int px) {
+        this.rightMargin = px;
         return this;
     }
 
     @Override
-    public IScatterPlotLeftMargin<T> topMargin(final int margin) {
-        this.topMargin = margin;
+    public IScatterPlotLeftMargin<T> topMargin(final int px) {
+        this.topMargin = px;
         return this;
     }
 

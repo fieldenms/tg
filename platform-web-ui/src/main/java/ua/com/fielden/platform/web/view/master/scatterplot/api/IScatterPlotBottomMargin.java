@@ -3,7 +3,7 @@ package ua.com.fielden.platform.web.view.master.scatterplot.api;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 /**
- * Contract for assigning bottom margin of scatter plot
+ * A contract for specifying the bottom margin of a scatter plot.
  *
  * @param <T>
  *
@@ -11,11 +11,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  */
 public interface IScatterPlotBottomMargin<T extends AbstractEntity<?>> extends IScatterPlotRightMargin<T> {
 
-    /**
-     * Assigns the bottom margin of scatter plot.
-     *
-     * @param margin
-     * @return
-     */
-    IScatterPlotRightMargin<T> bottomMargin(int margin);
+    IScatterPlotRightMargin<T> bottomMargin(int px);
+
 }

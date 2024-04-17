@@ -3,7 +3,7 @@ package ua.com.fielden.platform.web.view.master.scatterplot.api;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 /**
- * Contract for assigning right margin of scatter plot
+ * A contract for specifying the right margin of a scatter plot.
  *
  * @param <T>
  *
@@ -11,11 +11,5 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  */
 public interface IScatterPlotRightMargin<T extends AbstractEntity<?>> extends IScatterPlotTooltip<T> {
 
-    /**
-     * Assigns the right margin of scatter plot.
-     *
-     * @param margin
-     * @return
-     */
-    IScatterPlotTooltip<T> rightMargin(int margin);
+    IScatterPlotTooltip<T> rightMargin(int px);
 }

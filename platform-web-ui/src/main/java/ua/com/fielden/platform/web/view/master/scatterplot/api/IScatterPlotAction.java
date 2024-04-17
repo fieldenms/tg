@@ -4,18 +4,20 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 
 /**
- * Contract for assigning action to scatter plot on double-click event
+ * A contract for specifying a tap/double-click action for data points in a scatter plot.
+ *
  * @param <T>
  *
  * @author TG Team
  */
-public interface IScatterPlotAction<T extends AbstractEntity<?>> extends IScatterPlotDone<T>{
+public interface IScatterPlotAction<T extends AbstractEntity<?>> extends IScatterPlotDone<T> {
 
     /**
-     * Assigns action to scatter plot.
+     * Assigns an action for a scatter plot.
      *
      * @param action
      * @return
      */
     IScatterPlotDone<T> withAction(EntityActionConfig action);
+
 }
