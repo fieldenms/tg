@@ -8,13 +8,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import fielden.test_app.close_leave.OpenTgCloseLeaveExampleMasterAction;
-import fielden.test_app.close_leave.TgCloseLeaveExample;
-import fielden.test_app.close_leave.TgCloseLeaveExampleDetail;
-import fielden.test_app.close_leave.TgCloseLeaveExampleDetailUnpersisted;
-import fielden.test_app.close_leave.TgCloseLeaveExampleMaster_OpenDetailUnpersisted_MenuItem;
-import fielden.test_app.close_leave.TgCloseLeaveExampleMaster_OpenDetail_MenuItem;
-import fielden.test_app.close_leave.TgCloseLeaveExampleMaster_OpenMain_MenuItem;
+import fielden.test_app.close_leave.*;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -150,6 +144,11 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgWebApiEntity.class);
         add(TgWebApiEntitySyntheticSingle.class);
         add(TgWebApiEntitySyntheticMulti.class);
+        add(TgWebApiEntityWithBooleanPropWithIsAndGetGetters.class);
+        add(TgWebApiEntityWithBooleanPropWithIsGetterAndRecordLikeAccessor.class);
+        add(TgWebApiEntityWithBooleanPropWithGetGetterAndRecordLikeAccessor.class);
+        add(TgWebApiEntityWithBooleanPropWithRecordLikeAccessorOnly.class);
+        add(TgWebApiEntityWithGetGetterAndRecordLikeAccessor.class);
 
         add(TgUnionHolder.class);
         add(TgUnion.class);

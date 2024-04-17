@@ -109,9 +109,16 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(TeNamedValuesVectorCo.class).to(TeNamedValuesVectorDao.class);
         bind(TeProductPriceCo.class).to(TeProductPriceDao.class);
         bind(ITeVehicle.class).to(TeVehicleDao.class);
+
         bind(ITgWebApiEntity.class).to(TgWebApiEntityDao.class);
         bind(ITgWebApiEntitySyntheticSingle.class).to(TgWebApiEntitySyntheticSingleDao.class);
         bind(ITgWebApiEntitySyntheticMulti.class).to(TgWebApiEntitySyntheticMultiDao.class);
+        bind(TgWebApiEntityWithBooleanPropWithIsAndGetGettersCo.class).to(TgWebApiEntityWithBooleanPropWithIsAndGetGettersDao.class);
+        bind(TgWebApiEntityWithBooleanPropWithIsGetterAndRecordLikeAccessorCo.class).to(TgWebApiEntityWithBooleanPropWithIsGetterAndRecordLikeAccessorDao.class);
+        bind(TgWebApiEntityWithBooleanPropWithGetGetterAndRecordLikeAccessorCo.class).to(TgWebApiEntityWithBooleanPropWithGetGetterAndRecordLikeAccessorDao.class);
+        bind(TgWebApiEntityWithBooleanPropWithRecordLikeAccessorOnlyCo.class).to(TgWebApiEntityWithBooleanPropWithRecordLikeAccessorOnlyDao.class);
+        bind(TgWebApiEntityWithGetGetterAndRecordLikeAccessorCo.class).to(TgWebApiEntityWithGetGetterAndRecordLikeAccessorDao.class);
+
         bind(ITgCompoundEntity.class).to(TgCompoundEntityDao.class);
         bind(ITgCompoundEntityDetail.class).to(TgCompoundEntityDetailDao.class);
         bind(ITgCompoundEntityChild.class).to(TgCompoundEntityChildDao.class);
