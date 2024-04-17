@@ -16,6 +16,7 @@ public interface IScatterPlotRangeProperty<T extends AbstractEntity<?>> {
      * Assigns a range property name (y-axis values) and a configuration of its boundary.
      *
      * @param propertyName
+     * @param rangeConfig
      * @return
      */
     IScatterPlotDomainProperty<T> configRangeProperty(IConvertableToPath propertyName, IScatterPlotAxisBoundaryConfig rangeConfig);

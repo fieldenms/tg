@@ -86,7 +86,7 @@ public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IS
     }
 
     @Override
-    public IScatterPlotXAxisTitle<T> withTitle(final String title) {
+    public IScatterPlotRangeAxisTitle<T> withTitle(final String title) {
         this.title = title;
         return this;
     }
@@ -98,13 +98,13 @@ public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IS
     }
 
     @Override
-    public IScatterPlotYAxisTitle<T> withXAxisTitle(final String title) {
+    public IScatterPlotTopMargin<T> withDomainAxisTitle(final String title) {
         this.xAxisTitle = title;
         return this;
     }
 
     @Override
-    public IScatterPlotTopMargin<T> withYAxisTitle(final String title) {
+    public IScatterPlotRangeAxisTitle<T> withRangeAxisTitle(final String title) {
         this.yAxisTitle = title;
         return this;
     }

@@ -3,19 +3,14 @@ package ua.com.fielden.platform.web.view.master.scatterplot.api;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 /**
- * Allows developer to specify scatter plot title.
+ * A contract to specify a scatter plot title. A scatter plot title is optional, it can be empty or omitted completely.
  *
  * @param <T>
  *
  * @author TG Team
  */
-public interface IScatterPlotTitle<T extends AbstractEntity<?>> extends IScatterPlotXAxisTitle<T>{
+public interface IScatterPlotTitle<T extends AbstractEntity<?>> extends IScatterPlotRangeAxisTitle<T> {
 
-    /**
-     * Assigns the title of scatter plot.
-     *
-     * @param title
-     * @return
-     */
-    IScatterPlotXAxisTitle<T> withTitle (String title);
+    IScatterPlotRangeAxisTitle<T> withTitle(String title);
+
 }
