@@ -31,7 +31,7 @@ public class TgWebApiEntityWithGetGetterAndRecordLikeAccessor extends AbstractTg
     }
 
     /**
-     * Alternative record-like accessor for {@code String}-typed property. Returns wrong, twice concatenated, value.
+     * Alternative record-like accessor for {@code String}-typed property. Returns wrong, twice concatenated, value for testing purposes.
      */
     public String prop() {
         return getProp() + getProp();
