@@ -223,6 +223,12 @@ const TgEntityCentreBehaviorImpl = {
             type: Array,
             observer: '_retrievedEntitiesChanged'
         },
+
+        renderingHints: {
+            type: Array,
+            observer: '_renderingHintsChanged'
+        },
+
         /**
          * The selection criteria entity that can be binded to insertion point
          */
@@ -710,13 +716,13 @@ const TgEntityCentreBehaviorImpl = {
     _setPageData: function (startIdx, endIdx) {
         if (typeof startIdx === 'undefined') {
             this.retrievedEntities = this.allFilteredEntities;
-            this.$.egi.renderingHints = this.allFilteredRenderingHints;
+            this.renderingHints = this.allFilteredRenderingHints;
             this.$.egi.primaryActionIndices = this.allFilteredPrimaryActionIndices;
             this.$.egi.secondaryActionIndices = this.allFilteredSecondaryActionIndices;
             this.$.egi.propertyActionIndices = this.allFilteredPropertyActionIndices;
         } else {
             this.retrievedEntities = this.allFilteredEntities.slice(startIdx, endIdx);
-            this.$.egi.renderingHints = this.allFilteredRenderingHints.slice(startIdx, endIdx);
+            this.renderingHints = this.allFilteredRenderingHints.slice(startIdx, endIdx);
             this.$.egi.primaryActionIndices = this.allFilteredPrimaryActionIndices.slice(startIdx, endIdx);
             this.$.egi.secondaryActionIndices = this.allFilteredSecondaryActionIndices.slice(startIdx, endIdx);
             this.$.egi.propertyActionIndices = this.allFilteredPropertyActionIndices.slice(startIdx, endIdx);
@@ -735,6 +741,10 @@ const TgEntityCentreBehaviorImpl = {
 
     _retrievedEntitiesChanged: function (retrievedEntities, oldValue) {
         this.$.egi.entities = retrievedEntities;
+    },
+
+    _renderingHintsChanged: function (renderingHints, oldValue) {
+        this.$.egi.renderingHints = renderingHints;
     },
 
     _retrievedTotalsChanged: function (retrievedTotals, oldValue) {

@@ -339,6 +339,24 @@ const TgEntityMasterBehaviorImpl = {
             type: Array,
             notify: true
         },
+
+        /**
+         * Rendering hints for a data page retrieved by an entity centre on run or refresh.
+         */
+        renderingHints: {
+            type: Array,
+            notify: true
+        },
+
+        /**
+         * All rendering hints a data page retrieved by an entity centre.
+         * It is the same as rendering hints in cases where centre wasn't configured with retrieveAll option, otherwise it contains rendering hints for the data from all data pages.
+         */
+        allRenderingHints: {
+            type: Array,
+            notify: true
+        },
+
         /**
          * Summary entity retrieved when running centre that has this insertion point.
          */
@@ -348,7 +366,7 @@ const TgEntityMasterBehaviorImpl = {
         },
 
         /**
-         * Last egi selection changes to bind into insertion point.
+         * The latest EGI selection changes to bind into an insertion point.
          */
         centreSelection: {
             type: Object,
