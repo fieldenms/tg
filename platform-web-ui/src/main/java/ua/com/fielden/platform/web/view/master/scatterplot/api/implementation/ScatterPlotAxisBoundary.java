@@ -6,7 +6,8 @@ import ua.com.fielden.platform.web.view.master.scatterplot.api.IScatterPlotAxisB
 import ua.com.fielden.platform.web.view.master.scatterplot.api.IScatterPlotAxisBoundaryProp;
 
 /**
- * Represents a scatter plot axis configuration: a data source and a property name in the data source that is used to configure the boundaries of values for an axis.
+ * Implementation for the scatter plot axis configuration API.
+ * A scatter plot axis configuration consists of a data source and a property name in that data source, which is used to specify the boundary of values for an axis.
  *
  * @author TG Team
  */
@@ -39,7 +40,6 @@ public class ScatterPlotAxisBoundary implements IScatterPlotAxisBoundaryConfig, 
     private ScatterPlotAxisBoundary(String source) {
         this.source = source;
     }
-
 
     @Override
     public String getSource() {

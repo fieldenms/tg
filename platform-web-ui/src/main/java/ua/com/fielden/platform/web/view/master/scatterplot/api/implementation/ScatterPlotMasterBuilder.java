@@ -40,13 +40,6 @@ public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IS
     private final List<IConvertableToPath> tooltipPropertyNames = new ArrayList<>();
     private final List<Pair<Map<String, String>, String>> legendItems = new ArrayList<>();
 
-
-    @Override
-    public IScatterPlotEntityType<T> forEntity(final Class<T> entityType) {
-        this.entityType = entityType;
-        return this;
-    }
-
     @Override
     public IScatterPlotEntityType<T> forEntityWithSaveOnActivation(final Class<T> entityType) {
         this.entityType = entityType;
@@ -129,12 +122,12 @@ public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IS
         return title;
     }
 
-    public String getXAxisTitle() {
-        return xAxisTitle;
+    public String getRangeAxisTitle() {
+        return yAxisTitle;
     }
 
-    public String getYAxisTitle() {
-        return yAxisTitle;
+    public String getDomainAxisTitle() {
+        return xAxisTitle;
     }
 
     public String getCategoryPropertyName() {

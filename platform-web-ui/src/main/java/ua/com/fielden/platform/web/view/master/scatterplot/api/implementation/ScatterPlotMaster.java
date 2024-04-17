@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.web.view.master.scatterplot.api.implementation;
 
-import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
@@ -121,12 +120,12 @@ public class ScatterPlotMaster<T extends AbstractEntity<?>> implements IMaster<T
     }
 
     private String getYAxisTitle(final ScatterPlotMasterBuilder<T> chartBuilder) {
-        return ofNullable(chartBuilder.getYAxisTitle())
+        return ofNullable(chartBuilder.getRangeAxisTitle())
                 .orElse(getTitleAndDesc(chartBuilder.getCategoryPropertyName(), chartBuilder.getChartEntityType()).getKey());
     }
 
     private String getXAxisTitle(final ScatterPlotMasterBuilder<T> chartBuilder) {
-        return ofNullable(chartBuilder.getXAxisTitle())
+        return ofNullable(chartBuilder.getDomainAxisTitle())
                 .orElse(getTitleAndDesc(chartBuilder.getValuePropertyName(), chartBuilder.getChartEntityType()).getKey());
     }
 
