@@ -222,9 +222,12 @@ class ScatterPlot {
 
     _xScale() {
         const range = getRange(this._options.xAxis.range);
-        if (range.length > 0) {
-            range[0] = d3.timeDay.offset(range[0], -1);
-            range[1] = d3.timeDay.offset(range[1], 1);
+        if (this._actualWidth > 0 && range.length > 0) {
+            const days = d3.timeDay.count(range[0], range[1]);
+            const daysIn40px = 40 /*margins for axis 40px*/ * days/this._actualWidth;
+            const dayIncrement = daysIn40px < 1 ? 1 : daysIn40px; 
+            range[0] = d3.timeDay.offset(range[0], -dayIncrement);
+            range[1] = d3.timeDay.offset(range[1], dayIncrement);
         }
         return d3.scaleTime().domain(range).range([0, this._actualWidth]);
     }
@@ -453,7 +456,7 @@ class ScatterPlot {
         const rescaledX = this._currentTransform.rescaleX(this._xs);
         this._dataContainer
             .selectAll(".dot")
-            .attr("transform", d => `translate(${rescaledX(value(this._options.dataPropertyNames.valueProp, d.data))}, ${this._ys(value(this._options.dataPropertyNames.categoryProp, d.data))})`)
+            .attr("transform", d => `translate(${rescaledX(value(this._options.dataPropertyNames.valueProp, d.data)) || 0}, ${this._ys(value(this._options.dataPropertyNames.categoryProp, d.data)) || 0})`)
     }
 }
 
