@@ -139,11 +139,6 @@ public class ScatterPlotMasterBuilder<T extends AbstractEntity<?>> implements IS
     }
 
     @Override
-    public IScatterPlotTitle<T> setStylePropertyName(final IConvertableToPath propertyName) {
-        return setStyleKey(propertyName.toPath());
-    }
-
-    @Override
     public IScatterPlotTitle<T> setStyleKey(final String key) {
         this.stylePropertyName = key;
         return this;
