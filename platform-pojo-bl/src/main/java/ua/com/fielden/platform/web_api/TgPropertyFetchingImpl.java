@@ -130,13 +130,6 @@ public class TgPropertyFetchingImpl {
         }
 
         //
-        // try by record like name - object.propertyName()
-        try {
-            final MethodFinder methodFinder = (rootClass, methodName) -> findRecordMethod(cacheKey, rootClass, methodName);
-            return getPropertyViaRecordMethod(object, propertyName, methodFinder, singleArgumentValue);
-        } catch (final NoSuchMethodException ignored) {
-        }
-        //
         // try by public getters name -  object.getPropertyName()
         try {
             final MethodFinder methodFinder = (rootClass, methodName) -> findPubliclyAccessibleMethod(cacheKey, rootClass, methodName, dfeInUse, false);
@@ -159,6 +152,13 @@ public class TgPropertyFetchingImpl {
         try {
             final MethodFinder methodFinder = (aClass, methodName) -> findViaSetAccessible(cacheKey, aClass, methodName, dfeInUse);
             return getPropertyViaGetterMethod(object, propertyName, graphQLType, methodFinder, singleArgumentValue);
+        } catch (final NoSuchMethodException ignored) {
+        }
+        //
+        // try by record like name - object.propertyName() /* TG change, this lookup was made first before 'is/get' pojo-like getters */
+        try {
+            final MethodFinder methodFinder = (rootClass, methodName) -> findRecordMethod(cacheKey, rootClass, methodName);
+            return getPropertyViaRecordMethod(object, propertyName, methodFinder, singleArgumentValue);
         } catch (final NoSuchMethodException ignored) {
         }
         //

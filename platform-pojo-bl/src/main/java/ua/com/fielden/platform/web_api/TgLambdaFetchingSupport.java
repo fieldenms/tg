@@ -59,15 +59,7 @@ public class TgLambdaFetchingSupport {
 
 
     private static Method getCandidateMethod(final Class<?> sourceClass, final String propertyName) {
-        // property() methods first
-        final Predicate<Method> recordLikePredicate = method -> isRecordLike(method) && propertyName.equals(decapitalize(method.getName()));
-        final List<Method> recordLikeMethods = findMethodsForProperty(sourceClass,
-                recordLikePredicate);
-        if (!recordLikeMethods.isEmpty()) {
-            return recordLikeMethods.get(0);
-        }
-
-        // getProperty() POJO methods next
+        // getProperty() POJO methods first /* TG change, was "next" */
         final Predicate<Method> getterPredicate = method -> isGetterNamed(method) && propertyName.equals(mkPropertyNameGetter(method));
         final List<Method> allGetterMethods = findMethodsForProperty(sourceClass,
                 getterPredicate);
@@ -80,6 +72,14 @@ public class TgLambdaFetchingSupport {
                 method = findBestBooleanGetter(pojoGetterMethods);
             }
             return checkForSingleParameterPeer(method, allGetterMethods);
+        }
+
+        // property() methods next /* TG change, was "first" */
+        final Predicate<Method> recordLikePredicate = method -> isRecordLike(method) && propertyName.equals(decapitalize(method.getName()));
+        final List<Method> recordLikeMethods = findMethodsForProperty(sourceClass,
+                recordLikePredicate);
+        if (!recordLikeMethods.isEmpty()) {
+            return recordLikeMethods.get(0);
         }
         return null;
     }
