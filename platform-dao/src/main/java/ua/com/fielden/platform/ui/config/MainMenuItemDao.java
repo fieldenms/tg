@@ -1,24 +1,22 @@
 package ua.com.fielden.platform.ui.config;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAndInstrument;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
-import java.util.List;
-import java.util.Map;
-
-import org.hibernate.exception.ConstraintViolationException;
-
 import com.google.inject.Inject;
-
+import org.apache.logging.log4j.Logger;
+import org.hibernate.exception.ConstraintViolationException;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.dao.exceptions.EntityDeletionException;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.ui.config.MainMenuItemCo;
-import ua.com.fielden.platform.ui.config.MainMenuItem;
+
+import java.util.List;
+import java.util.Map;
+
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.companion.DeleteOperations.ERR_DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES;
+import static ua.com.fielden.platform.companion.DeleteOperations.ERR_DELETION_WAS_UNSUCCESSFUL_DUE_TO_OTHER_REASONS;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 
 /**
  * DAO implementation of {@link MainMenuItemCo}.
@@ -28,6 +26,9 @@ import ua.com.fielden.platform.ui.config.MainMenuItem;
  */
 @EntityType(MainMenuItem.class)
 public class MainMenuItemDao extends CommonEntityDao<MainMenuItem> implements MainMenuItemCo {
+
+    private static final Logger LOGGER = getLogger(MainMenuItemDao.class);
+
     @Inject
     protected MainMenuItemDao(final IFilter filter) {
         super(filter);
@@ -56,11 +57,16 @@ public class MainMenuItemDao extends CommonEntityDao<MainMenuItem> implements Ma
             }
             try {
                 getSession().createQuery("delete " + getEntityType().getName()).executeUpdate();
-            } catch (final ConstraintViolationException e) {
-                throw new Result(new IllegalStateException("This entity could not be deleted due to existing dependencies."));
+            } catch (final javax.persistence.PersistenceException ex) {
+                final var msg = ex.getCause() instanceof ConstraintViolationException
+                        ? ERR_DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES
+                        : ERR_DELETION_WAS_UNSUCCESSFUL_DUE_TO_OTHER_REASONS.formatted(ex.getMessage());
+                LOGGER.error(msg, ex);
+                throw new EntityDeletionException(msg, ex.getCause());
             }
         } else {
             defaultDelete(model, paramValues);
         }
     }
+
 }
