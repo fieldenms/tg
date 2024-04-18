@@ -1,9 +1,15 @@
 package ua.com.fielden.platform.eql.stage3.conditions;
 
-import java.util.Objects;
-
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.eql.stage3.operands.Value3;
+
+import java.util.Date;
+import java.util.Objects;
+
+import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
+import static ua.com.fielden.platform.eql.dbschema.HibernateToJdbcSqlTypeCorrespondence.sqlCastTypeName;
+import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_DATETIME;
 
 public class NullPredicate3 implements ICondition3 {
     public final ISingleOperand3 operand;
@@ -16,7 +22,19 @@ public class NullPredicate3 implements ICondition3 {
 
     @Override
     public String sql(final EqlDomainMetadata metadata) {
-        return operand.sql(metadata) + " IS " + (negated ? "NOT" : "") + " NULL";
+        final String operandSql = operand.sql(metadata);
+
+        final String exprSql;
+        /* PostgreSQL can't always infer the type of date literals, requires an explicit cast.
+         * Check for Date assignability to cover all possible values (e.g., java.sql.Timestamp). */
+        if (metadata.dbVersion == POSTGRESQL && operand instanceof Value3 && operand.type().isNotNull() && Date.class.isAssignableFrom(operand.type().javaType())) {
+            // hibType of operand is not reliable, may be null, so just use a standard datetime type which should suffice for the purpose of IS NULL
+            exprSql = POSTGRESQL.castSql(operandSql, sqlCastTypeName(H_DATETIME, metadata.dialect));
+        } else {
+            exprSql = operandSql;
+        }
+
+        return exprSql + " IS " + (negated ? "NOT" : "") + " NULL";
     }
 
     @Override
