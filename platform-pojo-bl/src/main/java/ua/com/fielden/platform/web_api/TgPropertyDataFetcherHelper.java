@@ -15,29 +15,30 @@ import graphql.schema.GraphQLType;
 public class TgPropertyDataFetcherHelper {
 
     private static final TgPropertyFetchingImpl impl = new TgPropertyFetchingImpl(DataFetchingEnvironment.class);
+    private static final Supplier<Object> ALWAYS_NULL = () -> null;
 
-    public static Object getPropertyValue(final String propertyName, final Object object, final GraphQLType graphQLType) {
-        return impl.getPropertyValue(propertyName, object, graphQLType, false, () -> null);
+    public static Object getPropertyValue(String propertyName, Object object, GraphQLType graphQLType) {
+        return impl.getPropertyValue(propertyName, object, graphQLType, false, ALWAYS_NULL);
     }
 
-    public static Object getPropertyValue(final String propertyName, final Object object, final GraphQLType graphQLType, final Supplier<DataFetchingEnvironment> environment) {
-        return impl.getPropertyValue(propertyName, object, graphQLType, true, environment::get);
+    public static Object getPropertyValue(String propertyName, Object object, GraphQLType graphQLType, Supplier<DataFetchingEnvironment> environment) {
+        return impl.getPropertyValue(propertyName, object, graphQLType, true, environment);
     }
 
     public static void clearReflectionCache() {
         impl.clearReflectionCache();
     }
 
-    public static boolean setUseSetAccessible(final boolean flag) {
+    public static boolean setUseSetAccessible(boolean flag) {
         return impl.setUseSetAccessible(flag);
     }
 
     @VisibleForTesting
-    public static boolean setUseLambdaFactory(final boolean flag) {
+    public static boolean setUseLambdaFactory(boolean flag) {
         return impl.setUseLambdaFactory(flag);
     }
 
-    public static boolean setUseNegativeCache(final boolean flag) {
+    public static boolean setUseNegativeCache(boolean flag) {
         return impl.setUseNegativeCache(flag);
     }
 }
