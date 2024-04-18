@@ -42,7 +42,7 @@ const template = html`
             vector-effect: non-scaling-stroke;
         }
         .dot:not(.legend-path):hover {
-            stroke: white;
+            filter: brightness(150%) !important;
             cursor: pointer;
         }
         .chart-label,
