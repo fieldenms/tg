@@ -1272,6 +1272,35 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         assertEquals(List.of(), entities);
     }
 
+    @Test
+    public void Date_val_can_be_used_in_isNull_expression_01() {
+        final var query = select()
+                .yield().caseWhen().val(date("2024-04-18 14:10:00")).isNull().then().val("is").otherwise().val("isnt").end().as("s")
+                .modelAsAggregate();
+
+        final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(query).model());
+        assertEqualByContents(
+                List.of("isnt"),
+                entities.stream().map(ent -> ent.get("s")).toList());
+    }
+
+    @Test
+    public void Date_val_can_be_used_in_isNull_expression_02() {
+        // tricky case, fetchedDate will have type java.sql.Timestamp, a subtype of java.util.Date
+        final var fetchedDate = co(EntityAggregates.class).getEntity(
+                        from(select().yield().val(date("2024-04-18 14:10:00")).as("myDate").modelAsAggregate()).model())
+                .get("myDate");
+        final var query = select()
+                .yield().caseWhen().val(fetchedDate).isNull().then().val("is").otherwise().val("isnt").end().as("s")
+                .modelAsAggregate();
+
+        final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(query).model());
+        assertEqualByContents(
+                List.of("isnt"),
+                entities.stream().map(ent -> ent.get("s")).toList());
+    }
+
+
     @Override
     public boolean saveDataPopulationScriptToFile() {
         return false;
