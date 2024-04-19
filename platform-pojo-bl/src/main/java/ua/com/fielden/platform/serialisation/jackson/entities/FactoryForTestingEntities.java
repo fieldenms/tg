@@ -29,7 +29,6 @@ import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.utils.DefinersExecutor;
 import ua.com.fielden.platform.web.utils.PropertyConflict;
 
@@ -305,31 +304,17 @@ public class FactoryForTestingEntities {
         return finalise(entity);
     }
 
-    public T2<AbstractEntity<?>, Class<AbstractEntity<?>>> createUninstrumentedGeneratedEntity(final boolean proxiedType, final Class entityType, final Class miType) {
-        final Class<AbstractEntity<?>> entityTypeGenerated;
-        try {
-            entityTypeGenerated = (Class<AbstractEntity<?>>)
-                    startModification(entityType)
-                    .modifyTypeName(nextTypeName(entityType.getName()))
-                    .addClassAnnotations(new MiTypeAnnotation().newInstance(miType))
-                .endModification();
-        } catch (final ClassNotFoundException e) {
-            throw Result.failure(e);
-        }
+    public T2<AbstractEntity<?>, Class<AbstractEntity<?>>> createUninstrumentedGeneratedEntity(final boolean proxiedType, final Class entityType) {
+        final Class<AbstractEntity<?>> entityTypeGenerated = startModification(entityType)
+            .modifyTypeName(nextTypeName(entityType.getName()))
+            .endModification();
         return T2.t2(createUninstrumentedPersistedEntity(proxiedType ? (Class<AbstractEntity<?>>) EntityProxyContainer.proxy(entityTypeGenerated, "prop") : entityTypeGenerated, 1L, "key", "description"), entityTypeGenerated);
     }
 
-    public T2<AbstractEntity<?>, Class<AbstractEntity<?>>> createInstrumentedGeneratedEntity(final boolean proxiedType, final Class entityType, final Class miType) {
-        final Class<AbstractEntity<?>> entityTypeGenerated;
-        try {
-            entityTypeGenerated = (Class<AbstractEntity<?>>)
-                    startModification(entityType)
-                    .modifyTypeName(nextTypeName(entityType.getName()))
-                    .addClassAnnotations(new MiTypeAnnotation().newInstance(miType))
-                .endModification();
-        } catch (final ClassNotFoundException e) {
-            throw Result.failure(e);
-        }
+    public T2<AbstractEntity<?>, Class<AbstractEntity<?>>> createInstrumentedGeneratedEntity(final boolean proxiedType, final Class entityType) {
+        final Class<AbstractEntity<?>> entityTypeGenerated = startModification(entityType)
+            .modifyTypeName(nextTypeName(entityType.getName()))
+            .endModification();
         return T2.t2(createPersistedEntity(proxiedType ? (Class<AbstractEntity<?>>) EntityProxyContainer.proxy(entityTypeGenerated, "prop") : entityTypeGenerated, 1L, "key", "description"), entityTypeGenerated);
     }
 

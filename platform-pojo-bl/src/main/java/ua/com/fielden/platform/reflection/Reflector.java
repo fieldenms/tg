@@ -3,6 +3,7 @@ package ua.com.fielden.platform.reflection;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.annotation.Annotation;
@@ -47,7 +48,7 @@ public final class Reflector {
     /**
      * A maximum cache size for caching reflection related information.
      */
-    public static final int MAXIMUM_CACHE_SIZE = 32000;
+    public static final int MAXIMUM_CACHE_SIZE = 10_000;
     /**
      * A cache for {@link Method} instances.
      */
@@ -141,11 +142,7 @@ public final class Reflector {
         final String methodKey = format("%s(%s)", methodName, Stream.of(arguments).map(Class::getName).collect(joining(", ")));
         final Cache<String, Method> methodOrException;
         try {
-            methodOrException = METHOD_CACHE.get(klass, () -> { 
-                final Cache<String, Method> newTypeCache = CacheBuilder.newBuilder().weakValues().build();
-                METHOD_CACHE.put(klass, newTypeCache);
-                return newTypeCache;
-            });
+            methodOrException = METHOD_CACHE.get(klass, () -> CacheBuilder.newBuilder().weakValues().build());
         } catch (final ExecutionException ex) {
             throw new ReflectionException(format("Could not find method [%s] for type [%s].", methodKey, klass), ex);
         }
@@ -573,4 +570,5 @@ public final class Reflector {
             throw new ReflectionException("Could not assign value to a static field.", ex);
         }
     }
+
 }

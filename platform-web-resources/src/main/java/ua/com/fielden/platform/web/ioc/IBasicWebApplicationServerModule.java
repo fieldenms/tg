@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.ioc;
 
+import static ua.com.fielden.platform.basic.config.Workflows.deployment;
+import static ua.com.fielden.platform.basic.config.Workflows.vulcanizing;
 import static ua.com.fielden.platform.reflection.CompanionObjectAutobinder.bindCo;
 import static ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionSelector.INSTANCE;
 
@@ -99,10 +101,11 @@ public interface IBasicWebApplicationServerModule {
     default void initWebApp(final Injector injector) {
         initWebAppWithoutCaching(injector);
         final IWebUiConfig webUiConfig = injector.getInstance(IWebUiConfig.class);
-        // trigger caching of DomainTreeEnhancers to avoid heavy computations later
-        webUiConfig.createDefaultConfigurationsForAllCentres();
-        // trigger calculation of embedded centres to avoid these computations later
-        webUiConfig.getEmbeddedCentres();
+
+        if (deployment == webUiConfig.workflow() || vulcanizing == webUiConfig.workflow()) {
+            // let's preload heavy Entity Centre configurations in deployment mode and during vulcanisation to trigger caching of DomainTreeEnhancers to avoid heavy computations later
+            webUiConfig.createDefaultConfigurationsForAllCentres();
+        }
     }
 
     /**

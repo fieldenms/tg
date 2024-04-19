@@ -69,7 +69,7 @@ public class EntityGenerationStressTest {
                         .addProperties(np1, np2)
                         .modifyTypeName(DynamicTypeNamingService.nextTypeName(Entity.class.getName()))
                         .endModification();
-            } catch (final ClassNotFoundException ex) {
+            } catch (final Exception ex) {
                 LOGGER.error("Could not generate entity.", ex);
                 return null;
             }
@@ -89,7 +89,7 @@ public class EntityGenerationStressTest {
                                 /* generation delay */ current().nextInt(minGenDelay, maxGenDelay), timeUnit))
                 .collect(toList());
 
-        final ScheduledFuture<?> cleaner = exec.scheduleWithFixedDelay(() -> DynamicEntityClassLoader.cleanUp(), limitThreadsInPool, 2, TimeUnit.SECONDS);
+        final ScheduledFuture<?> logger = exec.scheduleWithFixedDelay(() -> LOGGER.info("Cache size [%s].".formatted(DynamicEntityClassLoader.size())), limitThreadsInPool, 2, TimeUnit.SECONDS);
 
         // put the main thread to sleep for the duration of the stress test
         final var testDurationInMillis = 1000*60*1;
@@ -102,7 +102,7 @@ public class EntityGenerationStressTest {
             future.cancel(true);
             LOGGER.info("shutdown %s".formatted(++count));
         }
-        cleaner.cancel(true);
+        logger.cancel(true);
         exec.shutdown();
         LOGGER.info("Completed the test.");
         System.exit(0);
