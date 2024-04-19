@@ -104,21 +104,16 @@ public class DateTimeJavaTypeDescriptor extends AbstractTypeDescriptor<Date> {
 	
 	@Override
 	public <X> Date wrap(final X value, final WrapperOptions options) {
-		if ( value == null ) {
-			return null;
-		}
-		if ( Date.class.isInstance( value ) ) {
-			return (Date) value;
-		}
-
-		if ( Long.class.isInstance( value ) ) {
-			return new Date( (Long) value );
-		}
-
-		if ( Calendar.class.isInstance( value ) ) {
-			return new Date( ( (Calendar) value ).getTimeInMillis() );
-		}
-
-		throw unknownWrap( value.getClass() );
+		return switch (value) {
+			case null -> null;
+			/* we don't want Timestamp as it would make it cumbersome to check for java.util.Date values elsewhere;
+			 * it would require doing Date.class.isAssignableFrom(value) instead of Date.class == value.getClass(),
+			 * and Map<Class, ...> wouldn't work at all */
+			case Timestamp ts -> new Date(ts.getTime());
+			case Date date -> date;
+			case Long n -> new Date(n);
+			case Calendar cal -> new Date(cal.getTimeInMillis());
+			default -> throw unknownUnwrap(value.getClass());
+		};
 	}
 }
