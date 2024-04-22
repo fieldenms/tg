@@ -2,6 +2,7 @@ package ua.com.fielden.platform.types;
 
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
+import ua.com.fielden.platform.persistence.types.UtcDateTimeType;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
 import ua.com.fielden.platform.sample.domain.TgPersonName;
@@ -17,10 +18,13 @@ import java.util.function.Supplier;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertPresent;
 
-public class UtcDateTimePersistanceTestCase extends AbstractDaoTestCase {
+/**
+ * A test case covering the usage of {@link UtcDateTimeType} in queries (persistence, retrieval).
+ */
+public class UtcDateTimeQueryingTestCase extends AbstractDaoTestCase {
 
     private final TimeZone UTC = TimeZone.getTimeZone("UTC");
     private final DateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -99,6 +103,25 @@ public class UtcDateTimePersistanceTestCase extends AbstractDaoTestCase {
                 assertNotEquals(myDate, fetcher.get().getDateProp());
             });
         });
+    }
+
+    @Test
+    public void Date_val_yielded_as_UTC_datetime_property_is_offset_from_fetched_val_by_default_timezone() {
+        withTimeZone(TimeZone.getTimeZone(ZoneId.of("+06")), () -> {
+            // 14:10 in +06 gets saved as 14:10 in UTC which is 20:10 in +06
+            final Date myDate = date("2024-04-18 14:10:00");
+            final var query = select().yield().val(myDate).as("datePropUtc").modelAsEntity(TgEntityWithTimeZoneDates.class);
+            final TgEntityWithTimeZoneDates entity = co(TgEntityWithTimeZoneDates.class).getEntity(from(query).model());
+            assertEquals(date("2024-04-18 20:10:00"), entity.getDatePropUtc());
+        });
+    }
+
+    @Test
+    public void Date_val_yielded_as_datetime_property_is_equal_to_the_fetched_val() {
+        final Date myDate = date("2024-04-18 14:10:00");
+        final var query = select().yield().val(myDate).as("dateProp").modelAsEntity(TgEntityWithTimeZoneDates.class);
+        final TgEntityWithTimeZoneDates entity = co(TgEntityWithTimeZoneDates.class).getEntity(from(query).model());
+        assertEquals(myDate, entity.getDateProp());
     }
 
     // ============================================================
