@@ -1286,7 +1286,7 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
 
     @Test
     public void Date_val_can_be_used_in_isNull_expression_02() {
-        // tricky case, fetchedDate will have type java.sql.Timestamp, a subtype of java.util.Date
+        // tricky case, Date val is fetched instead of being constructed ad-hoc
         final var fetchedDate = co(EntityAggregates.class).getEntity(
                         from(select().yield().val(date("2024-04-18 14:10:00")).as("myDate").modelAsAggregate()).model())
                 .get("myDate");
@@ -1299,7 +1299,6 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
                 List.of("isnt"),
                 entities.stream().map(ent -> ent.get("s")).toList());
     }
-
 
     @Override
     public boolean saveDataPopulationScriptToFile() {
