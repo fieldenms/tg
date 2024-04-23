@@ -174,15 +174,15 @@ public final class CanonicalEqlGrammar {
             to(val.with(OBJ)).or(iVal.with(OBJ)).
 
         derive(Param).
-            to(param.with(STR)).or(param.with(ENUM)).
-            or(iParam.with(STR)).or(iParam.with(ENUM)).
+            to(param.with(CS)).or(param.with(ENUM)).
+            or(iParam.with(CS)).or(iParam.with(ENUM)).
 
         derive(MultiOperand).
             to(anyOfProps.rest(CS)).
             or(allOfProps.rest(CS)).
             or(anyOfValues.rest(OBJ)).or(allOfValues.rest(OBJ)).
-            or(anyOfParams.rest(STR)).or(anyOfIParams.rest(STR)).
-            or(allOfParams.rest(STR)).or(allOfIParams.rest(STR)).
+            or(anyOfParams.rest(CS)).or(anyOfIParams.rest(CS)).
+            or(allOfParams.rest(CS)).or(allOfIParams.rest(CS)).
             or(anyOfModels.rest(PrimitiveResultQueryModel.class)).
             or(allOfModels.rest(PrimitiveResultQueryModel.class)).
             or(anyOfExpressions.rest(ExpressionModel.class)).
@@ -194,7 +194,7 @@ public final class CanonicalEqlGrammar {
         derive(MembershipOperand).
             to(values.rest(OBJ)).
             or(props.rest(CS)).
-            or(params.rest(STR)).or(iParams.rest(STR)).
+            or(params.rest(CS)).or(iParams.rest(CS)).
             or(model.with(SingleResultQueryModel.class)).
 
         derive(SingleConditionPredicate).

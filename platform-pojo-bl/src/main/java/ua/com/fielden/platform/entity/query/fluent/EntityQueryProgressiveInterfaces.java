@@ -184,7 +184,7 @@ public interface EntityQueryProgressiveInterfaces {
 		 */
 		T iVal(final Object value);
 
-		T param(final String paramName);
+		T param(final CharSequence paramName);
 
 		T param(final Enum<?> paramName);
 
@@ -193,7 +193,7 @@ public interface EntityQueryProgressiveInterfaces {
 		 *
 		 * @return
 		 */
-		T iParam(final String paramName);
+		T iParam(final CharSequence paramName);
 
 		/**
 		 * Ignore parameter -- ignore condition with this operator if null is passed as an argument.
@@ -280,14 +280,14 @@ public interface EntityQueryProgressiveInterfaces {
 
 		T anyOfValues(final Object... values);
 
-		T anyOfParams(final String... paramNames);
+		T anyOfParams(final CharSequence... paramNames);
 
 		/**
 		 * Shortcut for the group of OR-ed iParam(..) calls.
 		 *
 		 * @return
 		 */
-		T anyOfIParams(final String... paramNames);
+		T anyOfIParams(final CharSequence... paramNames);
 
 		T anyOfModels(final PrimitiveResultQueryModel... models);
 
@@ -297,14 +297,14 @@ public interface EntityQueryProgressiveInterfaces {
 
 		T allOfValues(final Object... values);
 
-		T allOfParams(final String... paramNames);
+		T allOfParams(final CharSequence... paramNames);
 
 		/**
 		 * Shortcut for the group of AND-ed iParam(..) calls.
 		 *
 		 * @return
 		 */
-		T allOfIParams(final String... paramNames);
+		T allOfIParams(final CharSequence... paramNames);
 
 		T allOfModels(final PrimitiveResultQueryModel... models);
 
@@ -413,9 +413,9 @@ public interface EntityQueryProgressiveInterfaces {
 
 		T props(final CharSequence... properties);
 
-		T params(final String... paramNames);
+		T params(final CharSequence... paramNames);
 
-		T iParams(final String... paramNames);
+		T iParams(final CharSequence... paramNames);
 
 		T model(final SingleResultQueryModel<?> model);
 		// beginSet();

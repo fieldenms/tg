@@ -24,12 +24,12 @@ abstract class MultipleOperand<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
-	public T anyOfParams(final String... paramNames) {
+	public T anyOfParams(final CharSequence... paramNames) {
 		return nextForSingleOperand(builder.anyOfParams(paramNames));
 	}
 
 	@Override
-	public T anyOfIParams(final String... paramNames) {
+	public T anyOfIParams(final CharSequence... paramNames) {
 		return nextForSingleOperand(builder.anyOfIParams(paramNames));
 	}
 
@@ -54,12 +54,12 @@ abstract class MultipleOperand<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
-	public T allOfParams(final String... paramNames) {
+	public T allOfParams(final CharSequence... paramNames) {
 		return nextForSingleOperand(builder.allOfParams(paramNames));
 	}
 
 	@Override
-	public T allOfIParams(final String... paramNames) {
+	public T allOfIParams(final CharSequence... paramNames) {
 		return nextForSingleOperand(builder.allOfIParams(paramNames));
 	}
 

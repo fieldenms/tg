@@ -38,7 +38,7 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
-	public T param(final String paramName) {
+	public T param(final CharSequence paramName) {
 		return nextForSingleOperand(builder.param(paramName));
 	}
 
@@ -48,7 +48,7 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
-	public T iParam(final String paramName) {
+	public T iParam(final CharSequence paramName) {
 		return nextForSingleOperand(builder.iParam(paramName));
 	}
 

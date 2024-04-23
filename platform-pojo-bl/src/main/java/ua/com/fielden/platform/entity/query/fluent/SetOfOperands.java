@@ -28,12 +28,12 @@ abstract class SetOfOperands<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
-	public T params(final String... paramNames) {
+	public T params(final CharSequence... paramNames) {
 		return nextForSingleOperand(builder.setOfParams(paramNames));
 	}
 
 	@Override
-	public T iParams(final String... paramNames) {
+	public T iParams(final CharSequence... paramNames) {
 		return nextForSingleOperand(builder.setOfIParams(paramNames));
 	}
 
