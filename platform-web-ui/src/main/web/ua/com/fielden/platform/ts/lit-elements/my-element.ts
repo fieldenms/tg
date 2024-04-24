@@ -6,6 +6,8 @@
 
 import {LitElement, html, css} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
+// @ts-ignore
+import { TgReflector } from '/app/tg-reflector.js';
 
 /**
  * An example element.
@@ -36,6 +38,12 @@ export class MyElement extends LitElement {
    */
   @property({type: Number})
   count = 0;
+
+  constructor() {
+    super();
+    const reflector = new TgReflector();
+    reflector.getType("test");
+  }
 
   override render() {
     return html`

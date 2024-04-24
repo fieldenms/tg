@@ -11,6 +11,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+// @ts-ignore
+import { TgReflector } from '/app/tg-reflector.js';
 /**
  * An example element.
  *
@@ -20,7 +22,7 @@ import { customElement, property } from 'lit/decorators.js';
  */
 let MyElement = class MyElement extends LitElement {
     constructor() {
-        super(...arguments);
+        super();
         /**
          * The name to say "Hello" to.
          */
@@ -29,6 +31,8 @@ let MyElement = class MyElement extends LitElement {
          * The number of times the button has been clicked.
          */
         this.count = 0;
+        const reflector = new TgReflector();
+        reflector.getType("test");
     }
     render() {
         return html `
