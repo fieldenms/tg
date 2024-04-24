@@ -92,7 +92,7 @@ public final class CollectionUtil {
      * @param <K>
      * @param <V>
      */
-    public static <K,V> Map<K, V> merge(@Nonnull final Map<K, V> map1, final Map<K, V> ... otherMaps) {
+    public static <K,V> Map<K, V> merge(@Nonnull final Map<K, V> map1, final Map<? extends K, ? extends V> ... otherMaps) {
         final Map<K, V> result;
         // get the class of map1 and use it to instantiate the resultant map
         if (map1 == null) {

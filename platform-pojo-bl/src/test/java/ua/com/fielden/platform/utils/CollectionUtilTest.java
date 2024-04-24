@@ -4,7 +4,9 @@ import static org.junit.Assert.*;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.*;
 
+import java.math.BigDecimal;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.Test;
@@ -231,7 +233,7 @@ public class CollectionUtilTest {
         map1.put(1, "a");
         map1.put(2, "b");
         final var map2 = new HashMap<Integer, String>();
-        map2.put(1, "a");
+        map2.put(1, "c");
         map2.put(3, "c");
         final var map3 = new LinkedHashMap<Integer, String>();
         map3.put(4, "d");
@@ -247,6 +249,32 @@ public class CollectionUtilTest {
         assertNotSame(map1, result);
         assertEquals(expectedResult.getClass(), result.getClass());
         assertEquals(expectedResult, result);
+    }
+
+    public void merge_supports_maps_with_keys_and_values_of_compatible_types() {
+        final var map1 = new HashMap<Number, CharSequence>();
+        map1.put(1, "a");
+        map1.put(2, "b");
+        final var map2 = new HashMap<Integer, String>();
+        map2.put(1, "c");
+        map2.put(3, "d");
+        final var map3 = new HashMap<BigDecimal, StringBuffer>();
+        map3.put(BigDecimal.valueOf(2), new StringBuffer("e"));
+        map3.put(BigDecimal.valueOf(3), new StringBuffer("f"));
+
+        final var expectedResult = new HashMap<Number, CharSequence>();
+        expectedResult.putAll(map1);
+        expectedResult.putAll(map2);
+        expectedResult.putAll(map3);
+
+        final var result = merge(map1, map2, map3);
+        assertNotNull(result);
+        assertNotSame(map1, result);
+        assertEquals(expectedResult.getClass(), result.getClass());
+        assertEquals(expectedResult, result);
+        assertEquals(5, result.size());
+        final String values = result.values().stream().sorted().collect(Collectors.joining(","));
+        assertEquals("b,c,d,e,f", values);
     }
 
 }
