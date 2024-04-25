@@ -30,7 +30,6 @@ import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.security.AbstractWebResourceGuard;
-import ua.com.fielden.platform.web.test.IWebDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.web.test.WebBasedTestCase;
 
 /**
@@ -44,7 +43,7 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
     private final UserSessionDao coSession = (UserSessionDao) co$(UserSession.class);
     private final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
     private final WebResourceGuardTestWebApplication webApp = getInstance(WebResourceGuardTestWebApplication.class);
-    private final String baseUri = format("http://localhost:%s/v1", IWebDrivenTestCaseConfiguration.PORT);
+    private final String baseUri = format("http://localhost:%s/v1", WebBasedTestCase.PORT);
     private final Client client = new Client(Protocol.HTTP);
     private IUser coUser = co$(User.class);
 
