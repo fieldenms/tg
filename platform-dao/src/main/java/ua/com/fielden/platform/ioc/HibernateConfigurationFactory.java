@@ -102,10 +102,7 @@ public class HibernateConfigurationFactory {
 
         // TODO use delarative style
         // Register our custom type mapping so that Hibernate uses it during the binding of query parameters.
-        // Required only for PostgreSQL (see https://github.com/fieldenms/tg/issues/2235)
-        if (domainMetadata.dbVersion == DbVersion.POSTGRESQL) {
-            cfg.registerTypeContributor(((typeContributions, $) -> typeContributions.contributeType(DateTimeType.INSTANCE)));
-        }
+        cfg.registerTypeContributor(((typeContributions, $) -> typeContributions.contributeType(DateTimeType.INSTANCE)));
 
         try {
             cfg.addInputStream(new ByteArrayInputStream(generatedMappings.getBytes("UTF8")));
