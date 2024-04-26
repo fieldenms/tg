@@ -71,16 +71,6 @@ public abstract class TransactionalModule extends EntityModule {
         interceptor.setFactory(factory);
     }
 
-    public TransactionalModule(final SessionFactory sessionFactory, final DomainMetadata domainMetadata, final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
-        interceptor = null;
-        hibernateUtil = null;
-        applicationEntityTypes = null;
-
-        this.sessionFactory = sessionFactory;
-        this.domainMetadata = domainMetadata;
-        this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
-    }
-
     @Override
     protected void configure() {
         super.configure();
