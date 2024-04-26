@@ -1,24 +1,21 @@
 package ua.com.fielden.platform.entity;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import org.junit.Ignore;
+import org.junit.Test;
+import ua.com.fielden.platform.sample.domain.TgCategory;
+import ua.com.fielden.platform.sample.domain.TgSystem;
+import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import org.junit.Ignore;
-import org.junit.Test;
-
-import ua.com.fielden.platform.sample.domain.TgCategory;
-import ua.com.fielden.platform.sample.domain.TgSystem;
-import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 public class DeletingActivatableEntitiesTest extends AbstractDaoTestCase {
 
@@ -227,7 +224,6 @@ public class DeletingActivatableEntitiesTest extends AbstractDaoTestCase {
 
             for (int index = 0; index < NO_OF_CREATED_ACTIVE_DEPENDENCIES; index++) {
                 save(new_(TgSystem.class, "NEW_SYS_" + index).setActive(true).setFirstCategory(cat));
-                System.out.println("CREATED... " + co$(TgCategory.class).findByKey(cat.getKey()).getRefCount());
                 try {
                     Thread.sleep(rnd1.nextInt(10));
                 } catch (Exception e) {
@@ -249,7 +245,6 @@ public class DeletingActivatableEntitiesTest extends AbstractDaoTestCase {
                 }
                 
                 co$(TgSystem.class).delete(sys);
-                System.out.println(msg + " ... DELETED... " + co$(TgCategory.class).findByKey(cat.getKey()).getRefCount());
             }
         });
         
