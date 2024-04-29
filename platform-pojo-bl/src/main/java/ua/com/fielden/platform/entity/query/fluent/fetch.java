@@ -24,6 +24,11 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
+/**
+ * Represents an entity graph that describes the shape of an entity to be fetched.
+ *
+ * @param <T> entity type
+ */
 public class fetch<T extends AbstractEntity<?>> {
     public static final String MSG_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES = "Mismatch between actual type [%s] of property [%s] in entity type [%s] and its fetch model type [%s]!";
 

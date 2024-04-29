@@ -5,6 +5,11 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 
+/**
+ * Internal representation of {@link ua.com.fielden.platform.entity.query.fluent.fetch}, enriched with metadata.
+ *
+ * @param <T> entity type
+ */
 public interface IRetrievalModel<T extends AbstractEntity<?>> {
     Class<T> getEntityType();
 
