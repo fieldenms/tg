@@ -106,7 +106,7 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
             // Hibernate StaleStateException/StaleObjectStateException can occur in PersistentEntitySaver.saveModifiedEntity during session flushing ('session.get().flush();').
             // It is always wrapped into javax.persistence.OptimisticLockException by Hibernate (+LockAcquisitionException in modern TG); see ExceptionConverterImpl.wrapStaleStateException for more details.
             // Exactly the same strategy should be used for Hibernate-based conflicts as for TG-based ones.
-            // We catch all exceptions including EntityCompanionException, [PersistenceException, ConstraintViolationException, SQLServerException], EntityAlreadyExists, ObjectNotFoundException caused by saving conflicts.
+            // We catch all exceptions including EntityCompanionException, [PersistenceException, ConstraintViolationException, SQLServerException], EntityDeletionException, EntityAlreadyExists, ObjectNotFoundException caused by saving conflicts.
             // If the exception is not legit (non-conflict-nature), then it will be rethrown after several retries.
             if (!inOuterSessionScope) {
                 return refetchReapplyAndSaveWithRetry(entity, 1 /* first retry */, 300 /* initial delay in millis */, ex); // repeat the procedure of 'conflict-aware' saving in cases of subsequent conflicts
