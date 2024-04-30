@@ -656,5 +656,5 @@ public class CriteriaGeneratorTest {
         assertNotNull(toAnnotation);
         assertEquals(IUtcDateTimeType.class, toAnnotation.userType());
     }
-    
+
 }

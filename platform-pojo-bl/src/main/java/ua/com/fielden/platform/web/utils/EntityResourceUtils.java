@@ -21,6 +21,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.getPropertyDescriptors;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.decodeOriginalTypeFromCriteriaType;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
@@ -957,7 +958,7 @@ public class EntityResourceUtils {
      * @return
      */
     public static Class<? extends AbstractEntity<?>> getOriginalType(final Class<? extends AbstractEntity<?>> criteriaType) {
-        return (Class<? extends AbstractEntity<?>>) ClassesRetriever.findClass(decodeOriginalTypeFromCriteriaType(criteriaType.getName()));
+        return (Class<? extends AbstractEntity<?>>) ClassesRetriever.findClass(decodeOriginalTypeFromCriteriaType(stripIfNeeded(criteriaType).getName()));
     }
 
     /**
