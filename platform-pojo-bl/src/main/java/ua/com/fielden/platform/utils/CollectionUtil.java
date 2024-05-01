@@ -22,6 +22,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
@@ -62,6 +63,10 @@ public final class CollectionUtil {
     @SafeVarargs
     public static <T> List<T> unmodifiableListOf(final T ... elements) {
         return unmodifiableList(asList(elements));
+    }
+
+    public static <T> List<T> listCopy(final Collection<? extends T> elements) {
+        return ImmutableList.copyOf(elements);
     }
 
     @SafeVarargs

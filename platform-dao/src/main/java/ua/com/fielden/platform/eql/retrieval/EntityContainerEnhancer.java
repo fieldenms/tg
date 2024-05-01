@@ -1,37 +1,31 @@
 package ua.com.fielden.platform.eql.retrieval;
 
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedSet;
-
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
-import ua.com.fielden.platform.entity.query.CollectionContainer;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.EntityContainer;
-import ua.com.fielden.platform.entity.query.EntityRetrievalModel;
-import ua.com.fielden.platform.entity.query.IRetrievalModel;
-import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
-import ua.com.fielden.platform.entity.query.QueryProcessingModel;
+import ua.com.fielden.platform.entity.query.*;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
 
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.stream.StreamSupport;
+
+import static com.google.common.collect.Iterables.partition;
+import static java.util.Spliterator.NONNULL;
+import static java.util.Spliterators.spliterator;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
+
+    private static final Integer BATCH_SIZE = 990;
+
     private final EntityContainerFetcher fetcher;
     private final DomainMetadataAnalyser domainMetadataAnalyser;
     private final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
@@ -185,10 +179,10 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
             // Constructing model for retrieving property instances based on the provided fetch model and list of instances ids
             final List<EntityContainer<T>> retrievedPropertyInstances = getRetrievedPropertyInstances(entities, propertyName);
             // IMPORTANT: it is assumed that EntityContainer can contain either only id or all props at once. Such assumption relied on fact that once join to property has been made all its columns had been yielded automatically.
-            final List<EntityContainer<T>> enhancedPropInstances = (retrievedPropertyInstances.size() == 0) ? //
-            getDataInBatches(new ArrayList<Long>(propertyValuesIds.keySet()), fetchModel, paramValues)
-                    : //
-                    new EntityContainerEnhancer<T>(fetcher, domainMetadataAnalyser, idOnlyProxiedEntityTypeCache).enhance(retrievedPropertyInstances, fetchModel, paramValues);
+            final List<EntityContainer<T>> enhancedPropInstances = retrievedPropertyInstances.isEmpty()
+                    ? getDataInBatches(propertyValuesIds.keySet(), ID, fetchModel, paramValues)
+                    :  new EntityContainerEnhancer<T>(fetcher, domainMetadataAnalyser, idOnlyProxiedEntityTypeCache)
+                            .enhance(retrievedPropertyInstances, fetchModel, paramValues);
 
             // Replacing in entities the proxies of properties with properly enhanced property instances.
             for (final EntityContainer<? extends AbstractEntity<?>> enhancedPropInstance : enhancedPropInstances) {
@@ -206,18 +200,22 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
         return entities;
     }
 
+    /**
+     * @param entities  containers to enhance
+     * @param propertyName  name of the property to enhance
+     * @param fetchModel  fetch model for the property
+     */
     private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhanceProperty(final List<EntityContainer<E>> entities, final String propertyName, final EntityRetrievalModel<T> fetchModel, final Map<String, Object> paramValues) {
         // Obtaining map between property id and list of entities where this property occurs
         final Map<Long, List<EntityContainer<E>>> propertyValuesIds = getEntityPropertyIds(entities, propertyName);
 
-        if (propertyValuesIds.size() > 0) {
+        if (!propertyValuesIds.isEmpty()) {
             // Constructing model for retrieving property instances based on the provided fetch model and list of instances ids
             final List<EntityContainer<T>> retrievedPropertyInstances = getRetrievedPropertyInstances(entities, propertyName);
             // IMPORTANT: it is assumed that EntityContainer can contain either only id or all props at once. Such assumption relied on fact that once join to property has been made all its columns had been yielded automatically.
-            final List<EntityContainer<T>> enhancedPropInstances = (retrievedPropertyInstances.size() == 0) ? //
-            getDataInBatches(new ArrayList<Long>(propertyValuesIds.keySet()), fetchModel, paramValues)
-                    : //
-                    new EntityContainerEnhancer<T>(fetcher, domainMetadataAnalyser, idOnlyProxiedEntityTypeCache).enhance(retrievedPropertyInstances, fetchModel, paramValues);
+            final List<EntityContainer<T>> enhancedPropInstances = retrievedPropertyInstances.isEmpty()
+                    ? getDataInBatches(propertyValuesIds.keySet(), ID, fetchModel, paramValues)
+                    : new EntityContainerEnhancer<T>(fetcher, domainMetadataAnalyser, idOnlyProxiedEntityTypeCache).enhance(retrievedPropertyInstances, fetchModel, paramValues);
 
             // Replacing in entities the proxies of properties with properly enhanced property instances.
             for (final EntityContainer<? extends AbstractEntity<?>> enhancedPropInstance : enhancedPropInstances) {
@@ -231,38 +229,13 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
         return entities;
     }
 
-    private <T extends AbstractEntity<?>> List<EntityContainer<T>> getDataInBatches(final List<Long> ids, final EntityRetrievalModel<T> fetchModel, final Map<String, Object> paramValues) {
-        final List<EntityContainer<T>> result = new ArrayList<EntityContainer<T>>();
-        final Long[] allParentIds = new ArrayList<Long>(ids).toArray(new Long[] {});
-
-        final Integer batchSize = 990;
-        Integer from = 0;
-        Integer to = batchSize;
-        boolean endReached = false;
-        while (!endReached) {
-            if (to >= allParentIds.length) {
-                endReached = true;
-                to = allParentIds.length;
-            }
-            final Long[] batch = Arrays.copyOfRange(allParentIds, from, to);
-            final EntityResultQueryModel<T> currTypePropertyModel = select(fetchModel.getEntityType()).where().prop(AbstractEntity.ID).in().values(batch).model();
-            final QueryProcessingModel<T, ?> qpm = new QueryProcessingModel<>(currTypePropertyModel, null, fetchModel, paramValues/*emptyMap()*/, false);
-            final List<EntityContainer<T>> properties = fetcher.listAndEnhanceContainers(qpm, null, null);
-            result.addAll(properties);
-            from = to;
-            to = to + batchSize;
-        }
-
-        return result;
-    }
-
     private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhanceCollectional(final List<EntityContainer<E>> entitiesToBeEnhanced, final String propertyName, final Class propType, final String parentPropName, final EntityRetrievalModel<T> fetchModel, final Map<String, Object> paramValues) {
         // collect parental ids
         final Map<Long, EntityContainer<E>> parentIds = new HashMap<Long, EntityContainer<E>>();
         for (final EntityContainer<E> parentEntity : entitiesToBeEnhanced) {
             parentIds.put(parentEntity.getId(), parentEntity);
         }
-        final List<EntityContainer<T>> properties = getCollectionalDataInBatches(parentIds.keySet(), parentPropName, fetchModel, paramValues);
+        final List<EntityContainer<T>> properties = getDataInBatches(parentIds.keySet(), parentPropName, fetchModel, paramValues);
 
         // group retrieved collections by parents
         final Map<Long, List<EntityContainer<T>>> results = new HashMap<Long, List<EntityContainer<T>>>();
@@ -290,30 +263,26 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
         return entitiesToBeEnhanced;
     }
 
-    private <T extends AbstractEntity<?>> List<EntityContainer<T>> getCollectionalDataInBatches(final Set<Long> parentIds, final String parentPropName, final EntityRetrievalModel<T> fetchModel, final Map<String, Object> paramValues) {
-        final List<EntityContainer<T>> result = new ArrayList<EntityContainer<T>>();
-        final String idProp = parentPropName;
-        final Long[] allParentIds = new ArrayList<Long>(parentIds).toArray(new Long[] {});
-
-        final Integer batchSize = 990;
-        Integer from = 0;
-        Integer to = batchSize;
-        boolean endReached = false;
-        while (!endReached) {
-            if (to >= allParentIds.length) {
-                endReached = true;
-                to = allParentIds.length;
-            }
-            final Long[] batch = Arrays.copyOfRange(allParentIds, from, to);
-            final EntityResultQueryModel<T> currTypePropertyModel = select(fetchModel.getEntityType()).where().prop(idProp).in().values(batch).model();
-            final QueryProcessingModel<T, ?> qpm = new QueryProcessingModel<>(currTypePropertyModel, null, fetchModel, paramValues, false);
-            final List<EntityContainer<T>> properties = fetcher.listAndEnhanceContainers(qpm, null, null);
-            result.addAll(properties);
-            // TODO need to optimise -- WagonClass in WagonClassCompatibility is re-retrieved, while already available
-            from = to;
-            to = to + batchSize;
-        }
-
-        return result;
+    /**
+     * Retrieves and enhances entity containers that match given entity IDs.
+     * The type of retrieved entities is derived from the fetch model.
+     *
+     * @param idProp  name of the property against which IDs should be matched
+     * @param fetchModel  fetch model to apply during retrieval
+     */
+    private <T extends AbstractEntity<?>> List<EntityContainer<T>> getDataInBatches(
+            final Collection<Long> ids, final String idProp, final EntityRetrievalModel<T> fetchModel, final Map<String, Object> paramValues)
+    {
+        // TODO need to optimise -- WagonClass in WagonClassCompatibility is re-retrieved, while already available
+        // this ceremony with spliterators is needed to accept any Collection
+        return StreamSupport.stream(spliterator(partition(ids, BATCH_SIZE).iterator(), BATCH_SIZE, NONNULL), false)
+                // TODO remove once Collections are supported by EQL fluent API
+                .map(batch -> batch.toArray(Long[]::new))
+                .flatMap(batch -> {
+                    final var model = select(fetchModel.getEntityType()).where().prop(idProp).in().values(batch).model();
+                    final var qpm = new QueryProcessingModel<>(model, null, fetchModel, paramValues, false);
+                    return fetcher.streamAndEnhanceContainers(qpm, Optional.empty()).flatMap(Collection::stream);
+                }).toList();
     }
+
 }
