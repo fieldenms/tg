@@ -6,7 +6,13 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.sample.domain.EntityOne;
 
+/**
+ * Incorrectly defined union entity, which has property of non-entity types.
+ *
+ * @author TG Team
+ */
 public class UnionEntityWithKindOneError extends AbstractUnionEntity {
+
     @IsProperty
     @Title(value = "Correct property", desc = "Desc")
     private EntityOne entity;
