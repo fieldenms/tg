@@ -36,8 +36,7 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.DbUtils;
 
 /**
- * This is a base class for all test cases in TG based applications. Each application module should provide file <b>src/test/resources/test.properties</b> with property
- * <code>config-domain</code> assigned an application specific class implementing contract {@link IDomainDrivenTestCaseConfiguration}.
+ * This is a base class for all test cases in TG based applications.
  *
  * @author TG Team
  *
