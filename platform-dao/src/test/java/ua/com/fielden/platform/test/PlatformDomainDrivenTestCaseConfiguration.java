@@ -24,9 +24,6 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
     private final Injector injector;
     private final PlatformTestServerModule hibernateModule;
 
-    /**
-     * Required for dynamic instantiation by {@link DbDrivenTestCase}
-     */
     public PlatformDomainDrivenTestCaseConfiguration(final Properties hbc) {
         // instantiate all the factories and Hibernate utility
         try {
