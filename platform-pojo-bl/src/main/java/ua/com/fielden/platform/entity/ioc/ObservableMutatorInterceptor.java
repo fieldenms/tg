@@ -1,16 +1,8 @@
 package ua.com.fielden.platform.entity.ioc;
 
-import static java.lang.String.format;
-import static org.apache.logging.log4j.LogManager.getLogger;
-
-import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.Optional;
-
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.logging.log4j.Logger;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.Mutator;
@@ -21,6 +13,13 @@ import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+
+import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.Optional;
+
+import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 
 /**
  *
@@ -255,7 +254,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
      * </ul>
      * <p>
      * Additionally, in case where the target entity is of type {@link AbstractUnionEntity} and its setter executes successfully then a union rule is enforced by invoking
-     * {@link AbstractUnionEntity#ensureUnion(String, AbstractEntity)}.
+     * {@link AbstractUnionEntity#ensureUnion(String)}.
      *
      * @param entity
      * @param propertyName
@@ -367,13 +366,13 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
      * Determines correct newValue and oldValue. {@link Pair} is used to return a pair of values where the key represents newValue and the value represents oldValue.
      *
      * @param entity
-     * @param metaProperty
+     * @param propertyName
      * @param newValue
      * @param mutator
      * @return
      * @throws Exception
      */
-    private Pair<Object, Object> determineNewAndOldValues(final AbstractEntity<?> entity, final String propertyName, final Object newValue, final Method mutator) throws Exception {
+    private Pair<Object, Object> determineNewAndOldValues(final AbstractEntity<?> entity, final String propertyName, final Object newValue, final Method mutator) {
         // setter?
         if (Mutator.SETTER == Mutator.getValueByMethod(mutator)) { // this covers both simple and collectional properties
             return new Pair<>(newValue, entity.get(propertyName));
