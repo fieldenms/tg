@@ -25,8 +25,9 @@ import static ua.com.fielden.platform.error.Result.successful;
  * <p>
  * There are 2 configuration parameters:
  * <ul>
- *     <li>{@code persistedOnly} - {@code true} by default, indicating that authorisation of property modifications is applicable to persisted properties only; {@code false} would be most suitable for action entities.</li>
  *     <li>{@code securityToken} - a security token class checked for access.</li>
+ *     <li>{@code persistedOnly} - {@code true} by default, indicating that authorisation of property modifications is applicable to persisted entities only;
+ *                                 {@code false} would be most suitable for action entities or where situations where default values are permissible, but their change requires special permissions.</li>
  * </ul>
  *
  * @author TG Team
@@ -46,23 +47,27 @@ public class AuthorisationValidator extends AbstractBeforeChangeEventHandler<Obj
 
     @Override
     public Result handle(final MetaProperty<Object> mp, final Object newValue, final Set<Annotation> mutatorAnnotations) {
+        // If securityToken is null then should restrict access and report misconfiguration (this would be an implementation error).
         if (securityToken == null) {
             return failure(ERR_MISSING_AUTH_TOKEN);
         }
 
-        // if property validation happens in a context of another authorisation scope, then we simply skip authorisation and return success.
+        // If property validation happens in a context of another authorisation scope, then we simply skip authorisation and return success.
         if (authModel.isStarted()) {
             return successful();
         }
-
-        final AbstractEntity<?> entity = mp.getEntity();
-
-        // authorisation is required only if the value is different to the original and the entity if either persisted or the persistedOnly requirement is false
-        if ((entity.isPersisted() || !persistedOnly) && !EntityUtils.equalsEx(newValue, mp.getOriginalValue())) {
-            return authModel.authorise(securityToken);
+        // Property authorisation should be performed only if it is requested outside another authorisation scope.
+        // There is no need to manage authorisation scope by indicating its start in this case (i.e., no need to authModel.start()), as there can be no subsequent nested authorisation scopes.
+        // Property authorisation starts and finishes within the scope of this method.
+        else {
+            final AbstractEntity<?> entity = mp.getEntity();
+            // Authorisation is required only if the entity is either persisted or the persistedOnly requirement is false, and the newValue is different to the original property value.
+            if ((entity.isPersisted() || !persistedOnly) && !EntityUtils.equalsEx(newValue, mp.getOriginalValue())) {
+                return authModel.authorise(securityToken);
+            }
+            // Otherwise, return success.
+            return successful();
         }
-        // otherwise, return success
-        return successful();
     }
 
 }
