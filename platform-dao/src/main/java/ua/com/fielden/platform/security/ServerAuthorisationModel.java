@@ -37,9 +37,9 @@ public class ServerAuthorisationModel extends AbstractAuthorisationModel {
     @Override
     public Result authorise(final Class<? extends ISecurityToken> token) {
         final var currUser = userProvider.getUser();
-        final var autorised = VIRTUAL_USER.matches(currUser) ||
-                              controller.canAccess(currUser, token);
-        if (autorised) {
+        final var authorised = VIRTUAL_USER.matches(currUser) ||
+                               controller.canAccess(currUser, token);
+        if (authorised) {
             return successful();
         } else {
             final var msg = "Permission denied due to token [%s] restriction.".formatted(shortDesc(token));
