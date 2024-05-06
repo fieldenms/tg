@@ -6,7 +6,6 @@ import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.Mutator;
-import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.StubValidator;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
@@ -23,17 +22,13 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 
 /**
  *
- * This is a method intercepter used for property validation and firing property change events. It automates creation of entity properties that need to provide change notification
- * to registered listeners.
- *
- * This intercepter should be injected only for setters annotated with {@link Observable} covering both simple and indexed properties.
- *
+ * This is a method interceptor controls property mutation by executing pre-conditions (aka validators) and post-conditions (aka definers).
  *
  * @author TG Team
  *
  */
 public class ObservableMutatorInterceptor implements MethodInterceptor {
-    private final Logger logger = getLogger(this.getClass());
+    private static final Logger LOGGER = getLogger(ObservableMutatorInterceptor.class);
 
     /**
      * Strictly this method should be used for proceeding with the original mutator call!
@@ -43,7 +38,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
      * @throws Throwable
      */
     private Object proceed(final MethodInvocation mi, final Optional<MetaProperty<?>> op) throws Throwable {
-        final Object result = mi.proceed();
+            final Object result = mi.proceed();
         if (op.isPresent()) {
             op.get().setAssigned(true);
         }
@@ -60,14 +55,14 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
         final Method method = invocation.getMethod();
         if (!Mutator.isMutator(method)) {
             final String msg = format("Method %s is not a valid mutator and thus can not be observed.", method.getName());
-            logger.error(msg);
+            LOGGER.error(msg);
             throw new IllegalStateException(msg);
         }
         // get the entity on which mutator is invoked
         final AbstractEntity<?> entity = (AbstractEntity<?>) invocation.getThis();
         //logger.debug(format("Method is invoked on entity of type %s.", entity.getType().getName()));
         final String propertyName = Mutator.deducePropertyNameFromMutator(method);
-        final String fullPropertyName = entity.getType().getName() + "." + propertyName;
+        //final String fullPropertyName = entity.getType().getName() + "." + propertyName;
         //logger.debug(format("Property name is \"%s\".", fullPropertyName));
         final Optional<MetaProperty<?>> op = entity.getPropertyOptionally(propertyName);
         // check if entity is not in the initialisation mode during which no property validation should be performed
@@ -80,7 +75,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
         // check if entity can be modified at all
         final Result editableResult = entity.isEditable();
         if (!entity.isIgnoreEditableState() && !editableResult.isSuccessful()) {
-            logger.warn(format("Entity [%s] is not editable and none of its properties should be modified.", entity));
+            LOGGER.warn(format("Entity [%s] is not editable and none of its properties should be modified.", entity));
             throw editableResult;
         }
         // proceed with property processing
@@ -94,15 +89,15 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
         // perform validation and possibly setting of the passed in value
         //logger.debug(format("Checking if validation is needed for [%s]...", fullPropertyName));
         if (// enforcement happens in case of dependent properties
-        property.isEnforceMutator() ||
-        // or it could be an error recovery (forces validation + setter + necessarily firePropertyChange(!) )
-                !wasValid ||
-                // or it could be validation + setter + firePropertyChange(see "processMutatorForCollectionalProperty" method) for a collectional property
-                property.isCollectional() ||
-                // or the new value is null and the property is required -- need to trigger validation in such cases even if the current prop value is null
-                newValue == null && property.isRequired() ||
-                // or this is a genuine attempt to set a new property value
-                !EntityUtils.equalsEx(currValue, newValue)) {
+            property.isEnforceMutator() ||
+            // or it could be an error recovery (forces validation + setter + necessarily firePropertyChange(!) )
+            !wasValid ||
+            // or it could be validation + setter + firePropertyChange(see "processMutatorForCollectionalProperty" method) for a collectional property
+            property.isCollectional() ||
+            // or the new value is null and the property is required -- need to trigger validation in such cases even if the current prop value is null
+            newValue == null && property.isRequired() ||
+            // or this is a genuine attempt to set a new property value
+            !EntityUtils.equalsEx(currValue, newValue)) {
             ////////////////////////////////////////////////////
             ///////////////// validation ///////////////////////
             ////////////////////////////////////////////////////
@@ -131,7 +126,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
                 return processMutatorForCollectionalProperty(entity, propertyName, invocation, propertyWasValidAndNotEnforced(property, wasValid), newAndOldValues);
             }
             final String errorMsg = format("Method %s.%s is not recognised neither as a simple nor collectional mutator.", entity.getType().getName(), method.getName());
-            logger.error(errorMsg);
+            LOGGER.error(errorMsg);
             throw new IllegalStateException(errorMsg);
         } else { // here the attempt of setting the same value was performed for the "valid" "simple" property
             //logger.debug(format("Validation for property \"%s\" is not needed and nor further processing is required (mutator is not invoked).", fullPropertyName));
@@ -183,7 +178,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
             }
         } catch (final Throwable e) {
             // if unhandled exception throws -> take it to the next level.
-            logger.error("Unhandled exception while processing simple property \"" + fullPropertyName + "\".", e);
+            LOGGER.error("Unhandled exception while processing simple property \"" + fullPropertyName + "\".", e);
             throw e;
         } finally {
             //logger.debug("Finished processing simple property \"" + fullPropertyName + "\".");
@@ -238,7 +233,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
             }
         } catch (final Throwable e) {
             // if unhandled exception throws -> take it to the next level.
-            logger.error("Unhandled exception while processing collectional property \"" + fullPropertyName + "\".", e);
+            LOGGER.error("Unhandled exception while processing collectional property \"" + fullPropertyName + "\".", e);
             throw e;
         } finally {
             //logger.debug("Finished processing collectional property \"" + fullPropertyName + "\".");
