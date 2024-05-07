@@ -7,15 +7,11 @@ import ua.com.fielden.platform.entity.meta.impl.AbstractBeforeChangeEventHandler
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.ISecurityToken;
-import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import java.lang.annotation.Annotation;
-import java.math.BigDecimal;
 import java.util.Set;
 
-import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 
@@ -36,8 +32,12 @@ import static ua.com.fielden.platform.error.Result.successful;
 public class AuthorisationValidator extends AbstractBeforeChangeEventHandler<Object> {
     public static final String ERR_MISSING_AUTH_TOKEN = "Restricted access. No security token was configured for authorisation.";
 
+    public static final String PARAM_PERSISTED_ONLY = "persistedOnly";
+    public static final String PARAM_SECURITY_TOKEN = "securityToken";
+
     protected boolean persistedOnly = true;
     protected Class<? extends ISecurityToken> securityToken;
+
     private final IAuthorisationModel authModel;
 
     @Inject
