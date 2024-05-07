@@ -1,17 +1,15 @@
 package ua.com.fielden.platform.utils;
 
-import static org.junit.Assert.*;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.CollectionUtil.*;
+import org.junit.Test;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import org.junit.Test;
-
-import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.test_utils.CollectionTestUtils.assertEqualByContents;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.*;
 
 public class CollectionUtilTest {
 
@@ -251,6 +249,7 @@ public class CollectionUtilTest {
         assertEquals(expectedResult, result);
     }
 
+    @Test
     public void merge_supports_maps_with_keys_and_values_of_compatible_types() {
         final var map1 = new HashMap<Number, CharSequence>();
         map1.put(1, "a");
@@ -273,8 +272,7 @@ public class CollectionUtilTest {
         assertEquals(expectedResult.getClass(), result.getClass());
         assertEquals(expectedResult, result);
         assertEquals(5, result.size());
-        final String values = result.values().stream().sorted().collect(Collectors.joining(","));
-        assertEquals("b,c,d,e,f", values);
+        assertEqualByContents(List.of("b","c","d","e","f"), result.values().stream().map(Object::toString).toList());
     }
 
 }
