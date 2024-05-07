@@ -2,12 +2,15 @@ package ua.com.fielden.platform.utils;
 
 import org.junit.Test;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
+import ua.com.fielden.platform.test_utils.TestUtils;
 
 import java.math.BigDecimal;
 import java.util.*;
 
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.test_utils.CollectionTestUtils.assertEqualByContents;
+import static ua.com.fielden.platform.test_utils.TestUtils.assertEmpty;
+import static ua.com.fielden.platform.test_utils.TestUtils.assertOptEquals;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.*;
 
@@ -273,6 +276,32 @@ public class CollectionUtilTest {
         assertEquals(expectedResult, result);
         assertEquals(5, result.size());
         assertEqualByContents(List.of("b","c","d","e","f"), result.values().stream().map(Object::toString).toList());
+    }
+
+    @Test
+    public void first_returns_empty_optional_for_empty_collections() {
+        assertTrue(first(List.of()).isEmpty());
+        assertTrue(first(Set.of()).isEmpty());
+    }
+
+    @Test
+    public void first_returns_optional_of_the_first_element_for_nonempty_collections() {
+        assertOptEquals("a", first(List.of("a", "b")));
+        assertOptEquals("a", first(Set.of("a")));
+    }
+
+    @Test
+    public void first_throws_if_first_element_of_collection_is_null() {
+        final var list = new ArrayList<>();
+        list.add(null);
+        assertThrows(InvalidArgumentException.class, () -> first(list));
+    }
+
+    @Test
+    public void firstNullable_returns_an_empty_optional_if_first_element_of_collection_is_null() {
+        final var list = new ArrayList<>();
+        list.add(null);
+        assertEmpty(firstNullable(list));
     }
 
 }

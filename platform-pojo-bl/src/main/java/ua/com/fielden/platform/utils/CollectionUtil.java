@@ -4,20 +4,10 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableSet;
+import static java.util.Objects.requireNonNull;
 
 import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -214,6 +204,42 @@ public final class CollectionUtil {
         }
 
         return Optional.empty();
+    }
+
+    /**
+     * If a collection is not empty, returns its first element, which must not be null.
+     *
+     * @throws InvalidArgumentException  if the first element is null
+     * @see #firstNullable(Collection)
+     */
+    public static <E> Optional<E> first(final Collection<E> xs) {
+        if (xs.isEmpty()) {
+            return Optional.empty();
+        }
+
+        // creating a new iterator bears a cost, try to avoid it
+        final E elt = xs instanceof SequencedCollection<E> seq ? seq.getFirst() : xs.iterator().next();
+        if (elt == null) {
+            throw new InvalidArgumentException("Collection's first element must not be null.");
+        }
+
+        return Optional.of(elt);
+    }
+
+    /**
+     * If a collection is not empty, returns its first element.
+     * If the first element is null, an empty optional is returned.
+     *
+     * @see #firstNullable(Collection)
+     */
+    public static <E> Optional<E> firstNullable(final Collection<E> xs) {
+        if (xs.isEmpty()) {
+            return Optional.empty();
+        }
+
+        // creating a new iterator bears a cost, try to avoid it
+        final E elt = xs instanceof SequencedCollection<E> seq ? seq.getFirst() : xs.iterator().next();
+        return Optional.ofNullable(elt);
     }
 
 }
