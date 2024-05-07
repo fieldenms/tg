@@ -26,6 +26,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.utils.CollectionUtil.first;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /**
@@ -63,46 +64,52 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
      */
     @Override
     protected Yields2 enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
-        if (yields.getYields().isEmpty() || yieldAll) {
-            final boolean isNotTopFetch = fetchModel != null && !fetchModel.topLevel();
-            final boolean fetchOnlyTotals = fetchModel != null && fetchModel.containsOnlyTotals();
-            final boolean synResulType = isSyntheticEntityType(resultType);
-            final var enhancedYields = mainSource.querySourceInfo().getProps().values().stream()
-                    // FIXME condition for {@code id} should be removed once default fetch strategies are adjusted
-                    // to recognise presence of {@code id} in synthetic entities.
-                    .filter(prop1 -> fetchModel == null || fetchModel.containsProp(prop1.name)
-                                    || (!fetchOnlyTotals && ID.equals(prop1.name) && synResulType))
-                    // prop -> stream of prop path components
-                    .flatMap(prop1 -> {
-                        final var prop1FetchModel = fetchModel == null ? null : fetchModel.getRetrievalModels().get(prop1.name);
-                        if (isNotTopFetch && prop1FetchModel != null && prop1 instanceof QuerySourceItemForEntityType<?> entityProp1) {
-                            // yielding subproperties
-                            return entityProp1.querySourceInfo.getProps().values().stream()
-                                    .filter(prop2 -> prop1FetchModel.containsProp(prop2.name))
-                                    .flatMap(prop2 -> streamSubProps(prop2)
-                                            .map(optProp3 -> Stream.concat(Stream.of(prop1, prop2), optProp3.stream())));
-                        } else {
-                            return streamSubProps(prop1).map(optProp2 -> StreamUtils.prepend(prop1, optProp2.stream()));
-                        }
-                    })
-                    .map(Stream::toList)
-                    .map(props -> new Yield2(new Prop2(mainSource, props),
-                                             props.stream().map(i -> i.name).collect(joining(".")),
-                                             false))
-                    .toList();
+        return first(yields.getYields())
+                .filter($ -> !yieldAll)
+                .map(fstYield -> enhanceNonEmptyAndNotYieldAll(fstYield, yields, mainSource))
+                .orElseGet(() -> enhanceAll(mainSource));
+    }
 
-            return new Yields2(enhancedYields);
-        }
-
-        final Yield2 firstYield = yields.getYields().iterator().next();
-        if (yields.getYields().size() == 1 && !yieldAll && isEmpty(firstYield.alias) && isPersistedEntityType(resultType)) {
-            return new Yields2(List.of(new Yield2(firstYield.operand, ID, firstYield.hasNonnullableHint)));
+    private Yields2 enhanceNonEmptyAndNotYieldAll(final Yield2 fstYield, final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
+        if (yields.getYields().size() == 1 && isEmpty(fstYield.alias) && isPersistedEntityType(resultType)) {
+            return new Yields2(List.of(new Yield2(fstYield.operand, ID, fstYield.hasNonnullableHint)));
         }
 
         // TODO need to remove the explicit yields, not contained in the fetch model to be consistent with EQL2.
         // This more of a desire to guarantee that columns in the SELECT statement are not wider than the fetch model specifies.
 
         return yields;
+    }
+
+    private Yields2 enhanceAll(final ISource2<? extends ISource3> mainSource) {
+        final boolean isNotTopFetch = fetchModel != null && !fetchModel.topLevel();
+        final boolean fetchOnlyTotals = fetchModel != null && fetchModel.containsOnlyTotals();
+        final boolean synResulType = isSyntheticEntityType(resultType);
+        final var enhancedYields = mainSource.querySourceInfo().getProps().values().stream()
+                // FIXME condition for {@code id} should be removed once default fetch strategies are adjusted
+                // to recognise presence of {@code id} in synthetic entities.
+                .filter(prop1 -> fetchModel == null || fetchModel.containsProp(prop1.name)
+                                 || (!fetchOnlyTotals && ID.equals(prop1.name) && synResulType))
+                // prop -> stream of prop path components
+                .flatMap(prop1 -> {
+                    final var prop1FetchModel = fetchModel == null ? null : fetchModel.getRetrievalModels().get(prop1.name);
+                    if (isNotTopFetch && prop1FetchModel != null && prop1 instanceof QuerySourceItemForEntityType<?> entityProp1) {
+                        // yielding subproperties
+                        return entityProp1.querySourceInfo.getProps().values().stream()
+                                .filter(prop2 -> prop1FetchModel.containsProp(prop2.name))
+                                .flatMap(prop2 -> streamSubProps(prop2)
+                                        .map(optProp3 -> Stream.concat(Stream.of(prop1, prop2), optProp3.stream())));
+                    } else {
+                        return streamSubProps(prop1).map(optProp2 -> StreamUtils.prepend(prop1, optProp2.stream()));
+                    }
+                })
+                .map(Stream::toList)
+                .map(props -> new Yield2(new Prop2(mainSource, props),
+                                         props.stream().map(i -> i.name).collect(joining(".")),
+                                         false))
+                .toList();
+
+        return new Yields2(enhancedYields);
     }
 
     private Stream<Optional<AbstractQuerySourceItem<?>>> streamSubProps(AbstractQuerySourceItem<?> prop1) {
