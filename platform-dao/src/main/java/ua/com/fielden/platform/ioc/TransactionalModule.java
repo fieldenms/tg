@@ -41,9 +41,9 @@ public abstract class TransactionalModule extends EntityModule {
      * Creates transactional module, which holds references to instances of {@link SessionFactory} and {@link DomainMetadata}. All descending classes needs to provide those two
      * parameters.
      *
-     * @param sessionFactory
-     * @param mappingExtractor
-     * @throws Exception
+     * @param props
+     * @param defaultHibernateTypes
+     * @param applicationEntityTypes
      */
     public TransactionalModule(
             final Properties props, 

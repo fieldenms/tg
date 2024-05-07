@@ -18,18 +18,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
-import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
-import ua.com.fielden.platform.entity.annotation.mutator.ClassParam;
-import ua.com.fielden.platform.entity.annotation.mutator.DateParam;
-import ua.com.fielden.platform.entity.annotation.mutator.DateTimeParam;
-import ua.com.fielden.platform.entity.annotation.mutator.DblParam;
-import ua.com.fielden.platform.entity.annotation.mutator.EnumParam;
-import ua.com.fielden.platform.entity.annotation.mutator.Handler;
-import ua.com.fielden.platform.entity.annotation.mutator.IntParam;
-import ua.com.fielden.platform.entity.annotation.mutator.MoneyParam;
-import ua.com.fielden.platform.entity.annotation.mutator.PropParam;
-import ua.com.fielden.platform.entity.annotation.mutator.StrParam;
+import ua.com.fielden.platform.entity.annotation.mutator.*;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.exceptions.PropertyBceOrAceDefinitionException;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
@@ -187,11 +176,13 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
             initIntegerHandlerParameters(entity, hd.integer(), handler);
             initDoubleHandlerParameters(entity, hd.dbl(), handler);
             initStringHandlerParameters(entity, hd.str(), handler);
+            initBooleanHandlerParameters(entity, hd.bool(), handler);
             initPropHandlerParameters(entity, hd.prop(), handler);
             initDateHandlerParameters(entity, hd.date(), handler);
             initDateTimeHandlerParameters(entity, hd.date_time(), handler);
             initMoneyHandlerParameters(entity, hd.money(), handler);
             initEnumHandlerParameters(entity, hd.enumeration(), handler);
+
 
             handlers[index] = handler;
         }
@@ -211,7 +202,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
      * Initialises non-ordinary handler parameters as provided in {@link Handler#non_ordinary()}.
      *
      * @param entity
-     * @param hd
+     * @param params
      * @param handler
      */
     private void initNonOrdinaryHandlerParameters(final AbstractEntity<?> entity, final ClassParam[] params, final Object handler) {
@@ -239,7 +230,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
      * Initialises handler parameters of type Class as provided in {@link Handler#clazz()}.
      *
      * @param entity
-     * @param hd
+     * @param params
      * @param handler
      */
     private void initClassHandlerParameters(final AbstractEntity<?> entity, final ClassParam[] params, final Object handler) {
@@ -266,7 +257,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
      * Initialises integer handler parameters as provided in {@link Handler#integer()}.
      *
      * @param entity
-     * @param hd
+     * @param params
      * @param handler
      */
     private void initIntegerHandlerParameters(final AbstractEntity<?> entity, final IntParam[] params, final Object handler) {
@@ -285,7 +276,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
      * Initialises double handler parameters as provided in {@link Handler#dbl()}.
      *
      * @param entity
-     * @param hd
+     * @param params
      * @param handler
      */
     private void initDoubleHandlerParameters(final AbstractEntity<?> entity, final DblParam[] params, final Object handler) {
@@ -304,7 +295,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
      * Initialises {@link String} handler parameters as provided in {@link Handler#str()}.
      *
      * @param entity
-     * @param hd
+     * @param params
      * @param handler
      */
     private void initStringHandlerParameters(final AbstractEntity<?> entity, final StrParam[] params, final Object handler) {
@@ -320,10 +311,29 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     }
 
     /**
+     * Initialises {@link boolean} handler parameters as provided in {@link Handler#bool()}.
+     *
+     * @param entity
+     * @param params
+     * @param handler
+     */
+    private void initBooleanHandlerParameters(final AbstractEntity<?> entity, final BooleanParam[] params, final Object handler) {
+        for (final BooleanParam param : params) {
+            final Field paramField = Finder.getFieldByName(handler.getClass(), param.name());
+            paramField.setAccessible(true);
+            try {
+                paramField.set(handler, param.value());
+            } catch (final Exception ex) {
+                throw new PropertyBceOrAceDefinitionException("Could not initialise parameter " + param.name() + "@" + handler.getClass().getName(), ex);
+            }
+        }
+    }
+
+    /**
      * Initialises {@code property-driven} handler parameters as provided in {@link Handler#prop()}.
      *
      * @param entity
-     * @param hd
+     * @param params
      * @param handler
      */
     private void initPropHandlerParameters(final AbstractEntity<?> entity, final PropParam[] params, final Object handler) {
@@ -347,7 +357,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
      * Initialises {@link Date} handler parameters as provided in {@link Handler#date()}.
      *
      * @param entity
-     * @param hd
+     * @param params
      * @param handler
      */
     private void initDateHandlerParameters(final AbstractEntity<?> entity, final DateParam[] params, final Object handler) {
@@ -366,7 +376,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
      * Initialises {@link DateTime} handler parameters as provided in {@link Handler#date_time()}.
      *
      * @param entity
-     * @param hd
+     * @param params
      * @param handler
      */
     private void initDateTimeHandlerParameters(final AbstractEntity<?> entity, final DateTimeParam[] params, final Object handler) {
@@ -385,7 +395,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
      * Initialises {@link Money} handler parameters as provided in {@link Handler#money()}.
      *
      * @param entity
-     * @param hd
+     * @param params
      * @param handler
      */
     private void initMoneyHandlerParameters(final AbstractEntity<?> entity, final MoneyParam[] params, final Object handler) {
@@ -404,7 +414,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
      * Initialises enumeration handler parameters as provided in {@link Handler#enumeration()}.
      *
      * @param entity
-     * @param hd
+     * @param params
      * @param handler
      */
     private <T extends Enum<T>> void initEnumHandlerParameters(final AbstractEntity<?> entity, final EnumParam[] params, final Object handler) {
