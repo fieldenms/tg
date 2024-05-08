@@ -3,6 +3,7 @@ package ua.com.fielden.platform.reflection;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
@@ -14,6 +15,7 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.Reflector.MAXIMUM_CACHE_SIZE;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.first;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
@@ -42,6 +44,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
@@ -838,30 +841,16 @@ public class Finder {
      * @return
      */
     public static Set<String> findCommonProperties(final List<Class<? extends AbstractEntity<?>>> entityTypes) {
-        final List<List<Field>> propertiesSet = new ArrayList<>();
-        for (int classIndex = 0; classIndex < entityTypes.size(); classIndex++) {
-            final List<Field> fields = new ArrayList<>();
-            for (final Field propertyField : findRealProperties(entityTypes.get(classIndex))) {
-                fields.add(propertyField);
-            }
-            propertiesSet.add(fields);
-        }
-        final Set<String> commonProperties = new LinkedHashSet<>();
-        if (propertiesSet.size() > 0) {
-            for (final Field property : propertiesSet.get(0)) {
-                boolean common = true;
-                for (int setIndex = 1; setIndex < propertiesSet.size(); setIndex++) {
-                    if (!isPropertyPresent(property, entityTypes.get(0), propertiesSet.get(setIndex), entityTypes.get(setIndex))) {
-                        common = false;
-                        break;
-                    }
-                }
-                if (common) {
-                    commonProperties.add(property.getName());
-                }
-            }
-        }
-        return commonProperties;
+        // (EntityType, Properties)
+        final var pairs = entityTypes.stream().map(t -> t2(t, findRealProperties(t))).toList();
+
+        return first(pairs).map(fstPair -> {
+                    final var restPairs = pairs.subList(1, pairs.size());
+                    final var fstType = fstPair._1;
+                    return fstPair._2.stream()
+                            .filter(prop -> restPairs.stream().allMatch(pair -> isPropertyPresent(prop, fstType, pair._2, pair._1)));
+                }).orElseGet(Stream::of)
+                .map(Field::getName).collect(toSet());
     }
 
     /**
