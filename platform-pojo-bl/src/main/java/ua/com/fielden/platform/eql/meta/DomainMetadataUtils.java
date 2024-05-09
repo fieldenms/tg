@@ -101,7 +101,20 @@ public class DomainMetadataUtils {
         }
         return result;
     }
-    
+
+    /**
+     * Given a list of union properties and the current property from that list, constructs a query that yields {@code id}
+     * under the selected property's name, and {@code null} under names of other properties.
+     *
+     * {@snippet :
+     * ["a", "b", "c"], "b"
+     * ->
+     * select(B).yield().val(null).as("a")
+     *          .yield().prop("id").as("b")
+     *          .yield().val(null).as("c")
+     * }
+     * where {@code B} is the type of property {@code "b"}.
+     */
     private static <PT extends AbstractEntity<?>> ISubsequentCompletedAndYielded<PT> generateModelForUnionEntityProperty(final List<Field> unionProps, final Field currProp) {
         final IFromAlias<PT> startWith = select((Class<PT>) currProp.getType());
         final Field firstUnionProp = unionProps.get(0);
