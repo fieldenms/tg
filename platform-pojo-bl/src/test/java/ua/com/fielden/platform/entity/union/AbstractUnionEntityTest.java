@@ -86,8 +86,10 @@ public class AbstractUnionEntityTest {
 
     @Test
     public void commonProperties_identifies_all_common_properties_amongst_union_properties() {
-        final Set<String> list = AbstractUnionEntity.commonProperties(UnionEntity.class);
-        assertEquals("Incorrect number of common properties.", 2, list.size());
+        final Set<String> commonProps = AbstractUnionEntity.commonProperties(UnionEntity.class);
+        assertEquals("Incorrect number of common properties.", 2, commonProps.size());
+        assertTrue(commonProps.contains("desc"));
+        assertTrue(commonProps.contains("stringProperty"));
     }
 
     @Test
