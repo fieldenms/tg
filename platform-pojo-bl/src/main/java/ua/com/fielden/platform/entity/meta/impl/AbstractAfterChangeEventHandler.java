@@ -6,6 +6,7 @@ import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
+import ua.com.fielden.platform.utils.IDates;
 
 /**
  * A convenient base class for implementing {@link IAfterChangeEventHandler} that would benefit from easy access to various companion objects as entity readers.
@@ -19,6 +20,8 @@ public abstract class AbstractAfterChangeEventHandler<T> implements IAfterChange
 
     @Inject
     private ICompanionObjectFinder coFinder;
+    @Inject
+    private IDates dates;
     
     @Override
     public <R extends IEntityReader<E>, E extends AbstractEntity<?>> R co(final Class<E> type) {
@@ -27,6 +30,13 @@ public abstract class AbstractAfterChangeEventHandler<T> implements IAfterChange
         }
         
         return coFinder.findAsReader(type, true);
+    }
+
+    public IDates dates() {
+        if (dates == null) {
+            throw new BceOrAceInitException("IDates has not been instantiated.");
+        }
+        return dates;
     }
 
 }

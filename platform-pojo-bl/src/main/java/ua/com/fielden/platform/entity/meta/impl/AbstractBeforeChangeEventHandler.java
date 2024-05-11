@@ -6,6 +6,7 @@ import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
+import ua.com.fielden.platform.utils.IDates;
 
 /**
  * A convenient base class for implementing {@link IBeforeChangeEventHandler} that would benefit from easy access to various companion objects.
@@ -19,7 +20,9 @@ public abstract class AbstractBeforeChangeEventHandler<T> implements IBeforeChan
 
     @Inject
     private ICompanionObjectFinder coFinder;
-    
+    @Inject
+    private IDates dates;
+
     @Override
     public <R extends IEntityReader<E>, E extends AbstractEntity<?>> R co(final Class<E> type) {
         if (coFinder == null) {
@@ -29,5 +32,11 @@ public abstract class AbstractBeforeChangeEventHandler<T> implements IBeforeChan
         return coFinder.findAsReader(type, true);
     }
 
+    public IDates dates() {
+        if (dates == null) {
+            throw new BceOrAceInitException("IDates has not been instantiated.");
+        }
+        return dates;
+    }
     
 }
