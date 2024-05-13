@@ -17,6 +17,7 @@ const additionalTemplate = html`
             overflow: hidden;
             --iron-autogrow-textarea: {
                 font-weight: 500;
+                padding: 0;
             };
             @apply --layout-flex;
         }
@@ -24,6 +25,7 @@ const additionalTemplate = html`
             --iron-autogrow-textarea: {
                 font-weight: 500;
                 text-transform: uppercase;
+                padding: 0;
             };
         }
         paper-input-container {
