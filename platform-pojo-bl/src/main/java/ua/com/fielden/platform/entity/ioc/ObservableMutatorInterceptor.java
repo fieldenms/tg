@@ -38,7 +38,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
      * @throws Throwable
      */
     private Object proceed(final MethodInvocation mi, final Optional<MetaProperty<?>> op) throws Throwable {
-            final Object result = mi.proceed();
+        final Object result = mi.proceed();
         if (op.isPresent()) {
             op.get().setAssigned(true);
         }
