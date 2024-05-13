@@ -1,11 +1,5 @@
 package ua.com.fielden.platform.error;
 
-import static java.lang.String.format;
-import static java.util.Objects.requireNonNull;
-import static java.util.regex.Pattern.quote;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
-
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
@@ -14,12 +8,18 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
+import static java.util.regex.Pattern.quote;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+
 /**
- * Represents a result (an error or success) of some custom logic. That could been the result of some validation or application of some other business rules.
+ * Represents a result (an error or success) of some custom logic. That could be a result of some validation or application of some other business rules.
  * <p>
- * Result is considered successful if no exception was specified.
+ * Result is considered successful if no exception {@code ex} was specified.
  * <p>
- * Result it self is an exception, and thus can not only be returned as a method result, but also thrown if appropriate.
+ * Result itself is an exception, and thus can not only be returned as a method result, but also thrown if appropriate.
  *
  * @author TG Team
  *
@@ -300,7 +300,6 @@ public class Result extends RuntimeException {
      * A convenient method to get an instance associated with a successful result or throw an exception otherwise.
      * This method is analogous to {@link Optional#orElseThrow(Supplier)}.
      *
-     * @param expectedType
      * @return
      */
     public <T> T getInstanceOrElseThrow() {
@@ -335,7 +334,7 @@ public class Result extends RuntimeException {
     }
 
     /**
-     * A convenient method that returns the passed in <code>ex</code> if it is of type {@link Result}, or wraps it into a <code>failure</code> of type {@link Result}.
+     * A convenient method that returns the passed in {@code ex} if it is of type {@link Result}, or wraps it into a {@code failure} of type {@link Result}.
      *
      * @param ex
      * @return
@@ -345,7 +344,7 @@ public class Result extends RuntimeException {
     }
 
     /**
-     * A convenient method to throw a runtime exception that is obtained by passing <code>ex</code> into {@link asRuntime}.
+     * A convenient method to throw a runtime exception that is obtained by passing {@code ex} into {@link #asRuntime(Exception)}.
      *
      * @param ex
      */
