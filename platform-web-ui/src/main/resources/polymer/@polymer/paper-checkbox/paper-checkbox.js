@@ -169,17 +169,11 @@ const template = html`<style>
   /* disabled state */
 
   :host([disabled]) #checkbox {
-    opacity: 0.5;
     border-color: var(--paper-checkbox-unchecked-color, var(--primary-text-color));
   }
 
   :host([disabled][checked]) #checkbox {
     background-color: var(--paper-checkbox-unchecked-color, var(--primary-text-color));
-    opacity: 0.5;
-  }
-
-  :host([disabled]) #checkboxLabel  {
-    opacity: 0.65;
   }
 
   /* invalid state */
