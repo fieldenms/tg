@@ -235,6 +235,18 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
     }
 
     /**
+     * Returns the name of a union property of type {@code propType}, declared in union entity of type {@code unionEntityType}.
+     * An empty result is returned if no matching property could be found.
+     *
+     * @param unionEntityType
+     * @param propType
+     * @return
+     */
+    public static Optional<String> unionPropertyNameByType(@Nonnull final Class<? extends AbstractUnionEntity> unionEntityType, @Nonnull final Class<? extends AbstractEntity<?>> propType) {
+        return streamRealProperties(unionEntityType).filter(field -> field.getType().equals(propType)).findFirst().map(Field::getName);
+    }
+
+    /**
      * Returns getter and setter method names for all common properties.
      *
      * @param type

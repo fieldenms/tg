@@ -3,8 +3,6 @@ package ua.com.fielden.platform.entity.union;
 import com.google.inject.Injector;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.entity.Entity;
-import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
@@ -73,7 +71,7 @@ public class AbstractUnionEntityTest {
         final var unionEntity = factory.newEntity(UnionEntity.class);
         final var isValidResult = unionEntity.isValid();
         assertFalse(isValidResult.isSuccessful());
-        final var expectedError = format(ERR_REQUIRED, getTitleAndDesc(KEY, UnionEntity.class).getKey(), getEntityTitleAndDesc(UnionEntity.class).getKey());
+        final var expectedError = ERR_REQUIRED.formatted(getTitleAndDesc(KEY, UnionEntity.class).getKey(), getEntityTitleAndDesc(UnionEntity.class).getKey());
         assertEquals(expectedError, isValidResult.getMessage());
     }
 
@@ -283,6 +281,19 @@ public class AbstractUnionEntityTest {
         } catch (final EntityException ex) {
             assertEquals("None of the union properties match type [EntityThree].", ex.getMessage());
         }
+    }
+
+    @Test
+    public void unionPropertyNameByType_can_find_union_property_by_type() {
+        final var maybePropName = AbstractUnionEntity.unionPropertyNameByType(UnionEntity.class, EntityOne.class);
+        assertTrue(maybePropName.isPresent());
+        assertEquals("propertyOne", maybePropName.get());
+    }
+
+    @Test
+    public void unionPropertyNameByType_returns_empty_result_if_no_matching_property_could_be_found() {
+        final var maybePropName = AbstractUnionEntity.unionPropertyNameByType(UnionEntity.class, EntityThree.class);
+        assertTrue(maybePropName.isEmpty());
     }
 
 }
