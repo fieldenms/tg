@@ -59,7 +59,14 @@ const additionalTemplate = html`
             --paper-checkbox-label-color: #FFA000;
         }
 
-        #decorator[is-invalid]:not(.warning) paper-checkbox {
+        #decorator[is-invalid].informative paper-checkbox {
+            --paper-checkbox-unchecked-color: #8E24AA;
+            --paper-checkbox-checked-color: #8E24AA;
+            --paper-checkbox-checked-ink-color: #8E24AA;
+            --paper-checkbox-label-color: #8E24AA;
+        }
+
+        #decorator[is-invalid]:not(.warning):not(.informative) paper-checkbox {
             --paper-checkbox-unchecked-color: var(--google-red-500);
             --paper-checkbox-checked-color: var(--google-red-500);
             --paper-checkbox-checked-ink-color: var(--google-red-500);
