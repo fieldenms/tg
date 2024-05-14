@@ -9,6 +9,10 @@ import java.util.Optional;
  */
 public interface IDomainMetadata {
 
+    PropertyMetadataUtils propertyMetadataUtils();
+
+    EntityMetadataUtils entityMetadataUtils();
+
     Optional<TypeMetadata> forType(Class<?> javaType);
 
     TypeMetadata.Entity<?> forEntity(Class<? extends AbstractEntity<?>> entityType);
