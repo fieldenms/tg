@@ -2,6 +2,8 @@ package ua.com.fielden.platform.meta;
 
 import java.util.Optional;
 
+import static java.lang.Boolean.FALSE;
+
 /**
  * Represents property metadata.
  * <p>
@@ -41,6 +43,14 @@ public interface PropertyMetadata<N extends PropertyNature>
     <V> Optional<V> get(Key<V, N> key);
 
     <V> Optional<V> get(AnyKey<V> key);
+
+    default boolean is(Key<Boolean, N> key) {
+        return get(key).orElse(FALSE);
+    }
+
+    default boolean is(AnyKey<Boolean> key) {
+        return get(key).orElse(FALSE);
+    }
 
     @Override
     default int compareTo(final PropertyMetadata<?> that) {
