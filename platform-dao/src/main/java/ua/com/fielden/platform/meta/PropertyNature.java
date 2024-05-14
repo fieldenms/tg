@@ -10,6 +10,22 @@ public sealed interface PropertyNature {
     Persistent PERSISTENT = new Persistent();
     Calculated CALCULATED = new Calculated();
 
+    default boolean isCritOnly() {
+        return this instanceof CritOnly;
+    }
+
+    default boolean isTransient() {
+        return this instanceof Transient;
+    }
+
+    default boolean isPersistent() {
+        return this instanceof Persistent;
+    }
+
+    default boolean isCalculated() {
+        return this instanceof Calculated;
+    }
+
     /**
      * Essential data associated with properties of a certain nature.
      * <p>

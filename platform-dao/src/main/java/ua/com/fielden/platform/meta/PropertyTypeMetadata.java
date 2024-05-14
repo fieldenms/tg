@@ -16,6 +16,30 @@ import java.math.BigDecimal;
  */
 public sealed interface PropertyTypeMetadata {
 
+    default boolean isPrimitive() {
+        return this instanceof Primitive;
+    }
+
+    default boolean isEntity() {
+        return this instanceof Entity;
+    }
+
+    default boolean isCollectional() {
+        return this instanceof Collectional;
+    }
+
+    default boolean isComposite() {
+        return this instanceof Composite;
+    }
+
+    default boolean isCompositeKey() {
+        return this instanceof CompositeKey;
+    }
+
+    default boolean isOther() {
+        return this instanceof Other;
+    }
+
     /**
      * Type of primitive properties.
      * <p>
