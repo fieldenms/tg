@@ -2,8 +2,11 @@ package ua.com.fielden.platform.meta;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.types.Money;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
 
 /**
@@ -15,6 +18,8 @@ import java.math.BigDecimal;
  * correspond to any {@link TypeMetadata}. For example, types of collectional properties or primitive types such as {@link String}.
  */
 public sealed interface PropertyTypeMetadata {
+
+    Type javaType();
 
     default boolean isPrimitive() {
         return this instanceof Primitive;
@@ -48,6 +53,7 @@ public sealed interface PropertyTypeMetadata {
      * Has no corresponding {@link TypeMetadata}.
      */
     non-sealed interface Primitive extends PropertyTypeMetadata {
+        @Override
         Class<?> javaType();
     }
 
@@ -57,6 +63,7 @@ public sealed interface PropertyTypeMetadata {
      * Corresponds to {@link TypeMetadata.Entity}.
      */
     non-sealed interface Entity extends PropertyTypeMetadata {
+        @Override
         Class<? extends AbstractEntity<?>> javaType();
     }
 
@@ -71,6 +78,11 @@ public sealed interface PropertyTypeMetadata {
         PropertyTypeMetadata elementType();
 
         String linkProp();
+
+        @Override
+        default ParameterizedType javaType() {
+            return Reflector.newParameterizedType(collectionType(), elementType().javaType());
+        }
     }
 
     /**
@@ -86,6 +98,7 @@ public sealed interface PropertyTypeMetadata {
 
     /**
      * Type of a composite key property, i.e., property named "key" defined in an entity whose key type is {@link DynamicEntityKey}.
+     * Such a property is implicitly calculated as concatenation of all composite key members and its Java type is {@link String}.
      * <p>
      * Has no corresponding {@link TypeMetadata}.
      */
@@ -93,13 +106,18 @@ public sealed interface PropertyTypeMetadata {
 
     final class CompositeKey implements PropertyTypeMetadata {
         private CompositeKey() {}
+
+        @Override
+        public Class<String> javaType() {
+            return String.class;
+        }
     }
 
     /**
      * Type of other, yet unclassified property types.
      */
     non-sealed interface Other extends PropertyTypeMetadata {
-        Class<?> javaType();
+        Type javaType();
     }
 
 }
