@@ -43,6 +43,33 @@ public sealed interface TypeMetadata {
 
         <R> R match(EntityMetadataVisitor<R> visitor);
 
+        // ****************************************
+        // * Convenient methods as an alternative to a visitor with a single clause
+
+        default Optional<Entity<EntityNature.Union>> asUnion() {
+            return nature() instanceof EntityNature.Union
+                    ? Optional.of((Entity<EntityNature.Union>) this)
+                    : Optional.empty();
+        }
+
+        default Optional<Entity<EntityNature.Persistent>> asPersistent() {
+            return nature() instanceof EntityNature.Persistent
+                    ? Optional.of((Entity<EntityNature.Persistent>) this)
+                    : Optional.empty();
+        }
+
+        default Optional<Entity<EntityNature.Synthetic>> asSynthetic() {
+            return nature() instanceof EntityNature.Synthetic
+                    ? Optional.of((Entity<EntityNature.Synthetic>) this)
+                    : Optional.empty();
+        }
+
+        default Optional<Entity<EntityNature.Other>> asOther() {
+            return nature() instanceof EntityNature.Other
+                    ? Optional.of((Entity<EntityNature.Other>) this)
+                    : Optional.empty();
+        }
+
     }
 
     /**

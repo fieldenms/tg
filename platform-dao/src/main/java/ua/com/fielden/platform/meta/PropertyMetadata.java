@@ -47,6 +47,33 @@ public interface PropertyMetadata<N extends PropertyNature>
         return name().compareTo(that.name());
     }
 
+    // ****************************************
+    // * Convenient methods as an alternative to a visitor with a single clause
+
+    default Optional<PropertyMetadata<PropertyNature.Persistent>> asPersistent() {
+        return nature() instanceof PropertyNature.Persistent
+                ? Optional.of((PropertyMetadata<PropertyNature.Persistent>) this)
+                : Optional.empty();
+    }
+
+    default Optional<PropertyMetadata<PropertyNature.Calculated>> asCalculated() {
+        return nature() instanceof PropertyNature.Calculated
+                ? Optional.of((PropertyMetadata<PropertyNature.Calculated>) this)
+                : Optional.empty();
+    }
+
+    default Optional<PropertyMetadata<PropertyNature.Transient>> asTransient() {
+        return nature() instanceof PropertyNature.Transient
+                ? Optional.of((PropertyMetadata<PropertyNature.Transient>) this)
+                : Optional.empty();
+    }
+
+    default Optional<PropertyMetadata<PropertyNature.CritOnly>> asCritOnly() {
+        return nature() instanceof PropertyNature.CritOnly
+                ? Optional.of((PropertyMetadata<PropertyNature.CritOnly>) this)
+                : Optional.empty();
+    }
+
     interface Key<V, N extends PropertyNature> extends IKey {}
 
     interface AnyKey<V> extends IKey {}
