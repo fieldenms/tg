@@ -1,46 +1,36 @@
 package ua.com.fielden.platform.eql.retrieval;
 
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedSet;
-
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
-import ua.com.fielden.platform.entity.query.CollectionContainer;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.EntityContainer;
-import ua.com.fielden.platform.entity.query.EntityRetrievalModel;
-import ua.com.fielden.platform.entity.query.IRetrievalModel;
-import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
-import ua.com.fielden.platform.entity.query.QueryProcessingModel;
+import ua.com.fielden.platform.entity.query.*;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
-import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.meta.PropertyMetadataUtils;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
 
+import java.lang.reflect.Field;
+import java.util.*;
+
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
     private final EntityContainerFetcher fetcher;
-    private final DomainMetadataAnalyser domainMetadataAnalyser;
+    private final IDomainMetadata domainMetadata;
+    private final PropertyMetadataUtils propMetadataUtils;
     private final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
     private static final Logger logger = getLogger(EntityContainerEnhancer.class);
 
     protected EntityContainerEnhancer(final EntityContainerFetcher fetcher, final DomainMetadataAnalyser domainMetadataAnalyser, final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
         this.fetcher = fetcher;
-        this.domainMetadataAnalyser = domainMetadataAnalyser;
         this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
+        this.domainMetadata = null; // TODO
+        this.propMetadataUtils = null; // TODO
     }
 
     /**
@@ -66,35 +56,31 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
                 assignIdOnlyProxiedResultTypeToIdOnlyEntityProperty(entities, propName, propFetchModel.getEntityType());
             } else {
                 if (fetchModel.getEntityType() != EntityAggregates.class) {
-                    final PropertyMetadata ppi = domainMetadataAnalyser.getPropPersistenceInfoExplicitly(fetchModel.getEntityType(), propName);
-                    //System.out.println("*** ENHANCING entity [" + fetchModel.getEntityType().getSimpleName() + "] property [" + propName +"] with fetch: " + propFetchModel + " ppi = " + ppi.getType());
-
-                    if (ppi == null || ppi.isCollection()) {
-                        // TODO replace with EntityTree metadata (wrt collectional properties retrieval)
-                        final List<Field> collProps = EntityUtils.getCollectionalProperties(fetchModel.getEntityType());
-                        for (final Field field : collProps) {
-                            if (field.getName().equals(propName)) {
-                                //final String linkPropName = field.getAnnotation(IsProperty.class).linkProperty();
-                                final String linkPropName = Finder.findLinkProperty(fetchModel.getEntityType(), propName);
-                                enhanceCollectional(entities, propName, field.getType(), linkPropName, propFetchModel, paramValues);
-                            }
-                        }
-                    } else {
-                        if (ppi.isUnionEntity()) {
-                            enhanceProperty(entities, propName, propFetchModel, paramValues);
-                        } else {
-                            try {
-                                final String linkPropName = Finder.findLinkProperty(fetchModel.getEntityType(), propName);
-                                enhancePropertyWithLinkToParent(entities, propName, propFetchModel, linkPropName, paramValues);
-                            } catch (final Exception e) {
-                                if (ppi.isEntityOfPersistedType() || ppi.isOne2OneId()) {
-                                    enhanceProperty(entities, propName, propFetchModel, paramValues);
-                                } else {
-                                    // logger.debug(format("Property [%s] of type [%s] can't be fetched with model: %s.", propName, fetchModel.getEntityType(), entry.getValue()));
-                                }
-                            }
-                        }
-                    }
+                    // @formatter:off
+                    domainMetadata.forProperty(fetchModel.getEntityType(), propName)
+                        .ifPresentOrElse(pm -> {
+                             if (pm.type().isCollectional()) {
+                                 enhanceCollectional(entities, fetchModel, paramValues, propName, propFetchModel);
+                             }
+                             if (propMetadataUtils.isPropEntityType(pm.type(), em -> em.nature().isUnion())) {
+                                 enhanceProperty(entities, propName, propFetchModel, paramValues);
+                             }
+                             else {
+                                 try {
+                                     final String linkPropName = Finder.findLinkProperty(fetchModel.getEntityType(), propName);
+                                     enhancePropertyWithLinkToParent(entities, propName, propFetchModel, linkPropName, paramValues);
+                                 } catch (final Exception e) {
+                                     if (propMetadataUtils.isPropEntityType(pm.type(), em -> em.nature().isPersistent() || EntityUtils.isOneToOne(em.javaType()))) {
+                                         enhanceProperty(entities, propName, propFetchModel, paramValues);
+                                     } else {
+                                         // logger.debug(format("Property [%s] of type [%s] can't be fetched with model: %s.", propName, fetchModel.getEntityType(), entry.getValue()));
+                                     }
+                                 }
+                             }
+                         },
+                         // TODO Why is absence of property metadata a valid condition? Platform tests show no such occurences
+                         () -> enhanceCollectional(entities, fetchModel, paramValues, propName, propFetchModel));
+                    // @formatter:on
                 } else {
                     enhanceProperty(entities, propName, propFetchModel, paramValues);
                 }
@@ -105,6 +91,18 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
         assignInstrumentationSetting(entities, fetchModel);
 
         return entities;
+    }
+
+    private void enhanceCollectional(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel, final Map<String, Object> paramValues, final String propName, final EntityRetrievalModel<? extends AbstractEntity<?>> propFetchModel) {
+        // TODO replace with EntityTree metadata (wrt collectional properties retrieval)
+        final List<Field> collProps = EntityUtils.getCollectionalProperties(fetchModel.getEntityType());
+        for (final Field field : collProps) {
+            if (field.getName().equals(propName)) {
+                //final String linkPropName = field.getAnnotation(IsProperty.class).linkProperty();
+                final String linkPropName = Finder.findLinkProperty(fetchModel.getEntityType(), propName);
+                enhanceCollectional(entities, propName, field.getType(), linkPropName, propFetchModel, paramValues);
+            }
+        }
     }
 
     private void assignInstrumentationSetting(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel) {
@@ -188,7 +186,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
             final List<EntityContainer<T>> enhancedPropInstances = (retrievedPropertyInstances.size() == 0) ? //
             getDataInBatches(new ArrayList<Long>(propertyValuesIds.keySet()), fetchModel, paramValues)
                     : //
-                    new EntityContainerEnhancer<T>(fetcher, domainMetadataAnalyser, idOnlyProxiedEntityTypeCache).enhance(retrievedPropertyInstances, fetchModel, paramValues);
+                    new EntityContainerEnhancer<T>(fetcher, null, idOnlyProxiedEntityTypeCache).enhance(retrievedPropertyInstances, fetchModel, paramValues);
 
             // Replacing in entities the proxies of properties with properly enhanced property instances.
             for (final EntityContainer<? extends AbstractEntity<?>> enhancedPropInstance : enhancedPropInstances) {
@@ -217,7 +215,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
             final List<EntityContainer<T>> enhancedPropInstances = (retrievedPropertyInstances.size() == 0) ? //
             getDataInBatches(new ArrayList<Long>(propertyValuesIds.keySet()), fetchModel, paramValues)
                     : //
-                    new EntityContainerEnhancer<T>(fetcher, domainMetadataAnalyser, idOnlyProxiedEntityTypeCache).enhance(retrievedPropertyInstances, fetchModel, paramValues);
+                    new EntityContainerEnhancer<T>(fetcher, null, idOnlyProxiedEntityTypeCache).enhance(retrievedPropertyInstances, fetchModel, paramValues);
 
             // Replacing in entities the proxies of properties with properly enhanced property instances.
             for (final EntityContainer<? extends AbstractEntity<?>> enhancedPropInstance : enhancedPropInstances) {

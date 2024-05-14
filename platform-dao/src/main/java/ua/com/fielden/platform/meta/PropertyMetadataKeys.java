@@ -3,6 +3,7 @@ package ua.com.fielden.platform.meta;
 public final class PropertyMetadataKeys {
 
     public static final PropertyMetadata.AnyKey<Boolean> REQUIRED = mkAnyKey();
+    public static final PropertyMetadata.AnyKey<Boolean> KEY_MEMBER = mkAnyKey();
 
     private PropertyMetadataKeys() {}
 
