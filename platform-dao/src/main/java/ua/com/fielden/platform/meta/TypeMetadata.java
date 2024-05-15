@@ -16,6 +16,14 @@ public sealed interface TypeMetadata permits EntityMetadata, TypeMetadata.Compos
      */
     Type javaType();
 
+    default Optional<EntityMetadata> asEntity() {
+        return this instanceof EntityMetadata em ? Optional.of(em) : Optional.empty();
+    }
+
+    default Optional<Composite> asComposite() {
+        return this instanceof Composite ctm ? Optional.of(ctm) : Optional.empty();
+    }
+
     /**
      * Represents composite type metadata.
      * <p>
