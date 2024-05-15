@@ -206,7 +206,7 @@ public class ReflectorTest {
     @Test
     public void handler_annotation_has_correct_number_of_params() {
         final List<String> params = Reflector.annotataionParams(Handler.class);
-        assertEquals("Unexpected number of annotation parameters.", 11, params.size());
+        assertEquals("Unexpected number of annotation parameters.", 12, params.size());
         assertTrue(params.contains("value"));
         assertTrue(params.contains("non_ordinary"));
         assertTrue(params.contains("clazz"));
@@ -218,6 +218,7 @@ public class ReflectorTest {
         assertTrue(params.contains("date_time"));
         assertTrue(params.contains("money"));
         assertTrue(params.contains("enumeration"));
+        assertTrue(params.contains("bool"));
     }
 
     @Test
