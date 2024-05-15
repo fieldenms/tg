@@ -80,7 +80,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     }
 
     private void populateProxies() {
-        for (final PropertyMetadata<?> pm : entityMetadata.properties()) {
+        for (final PropertyMetadata pm : entityMetadata.properties()) {
             // FIXME the following condition needs to be revisited as part of EQL 3 implementation
             final String name = pm.name();
             if (!ID.equals(name) &&
@@ -194,7 +194,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     }
 
     private void with(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
-        final PropertyMetadata<?> pm = domainMetadata.forProperty(getEntityType(), propName)
+        final PropertyMetadata pm = domainMetadata.forProperty(getEntityType(), propName)
                 .orElseThrow(() -> new EqlException("Property [%s] not found in [%s].".formatted(propName, getEntityType())));
 
         if (pm.type().javaType() != fetchModel.getEntityType()) {
@@ -222,26 +222,17 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     @Override
     public boolean containsOnlyTotals() {
         return getPrimProps().stream()
-                .allMatch(prop -> entityMetadata.property(prop).map(pm -> pm.match(containsOnlyTotals_Visitor)).orElse(FALSE));
+                .allMatch(prop -> entityMetadata.property(prop)
+                        .flatMap(PropertyMetadata::asCalculated)
+                        .map(pm -> pm.data().forTotals())
+                        .orElse(FALSE));
     }
-    // where
-    private static final PropertyMetadataVisitor<Boolean> containsOnlyTotals_Visitor = new PropertyMetadataVisitor<>() {
-        @Override
-        public Boolean calculated(final PropertyMetadata<PropertyNature.Calculated> metadata, final PropertyNature.Calculated.Data natureData) {
-            return natureData.forTotals();
-        }
 
-        @Override
-        public Boolean otherwise(final PropertyMetadata<?> metadata) {
-            return false;
-        }
-    };
-
-    private boolean isPure(final PropertyMetadata<?> pm) {
+    private boolean isPure(final PropertyMetadata pm) {
         return entityMetadata.nature().isPersistent() && pm.nature().isTransient();
     }
 
-    private Optional<String> getSinglePropertyOfCompositeUserType(final PropertyMetadata<?> pm) {
+    private Optional<String> getSinglePropertyOfCompositeUserType(final PropertyMetadata pm) {
         if (pm.hibType() instanceof ICompositeUserTypeInstantiate hibUserType) {
             final String[] propNames = hibUserType.getPropertyNames();
             if (propNames.length == 1) {

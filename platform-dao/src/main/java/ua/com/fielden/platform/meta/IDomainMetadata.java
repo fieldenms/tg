@@ -39,7 +39,9 @@ public interface IDomainMetadata {
      *   <li>a property with the given name cannot be found in the given type's metadata
      *   <li>the given type is not part of the domain, hence there is no metadata associated with it
      * </ul>
+     *
+     * @param propPath  property path (dot-notation supported)
      */
-    Optional<PropertyMetadata<?>> forProperty(Class<?> enclosingType, String propName);
+    Optional<PropertyMetadata> forProperty(Class<?> enclosingType, CharSequence propPath);
 
 }

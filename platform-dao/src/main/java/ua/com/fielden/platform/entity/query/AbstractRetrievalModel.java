@@ -107,7 +107,7 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> implem
         return sb.toString();
     }
 
-    protected Optional<PropertyMetadata<?>> getPropMetadata(final String propName) {
+    protected Optional<PropertyMetadata> getPropMetadata(final String propName) {
         final var optPm = domainMetadata.forProperty(getEntityType(), propName);
         if (optPm.isEmpty()) {
             // allow only IDs and VERSIONs to have missing PropertyMetadata; this is sometimes useful for pure synthetic entities that yield these props
@@ -120,7 +120,7 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> implem
     }
 
     protected void without(final String propName) {
-        final Optional<PropertyMetadata<?>> optPm = getPropMetadata(propName);
+        final Optional<PropertyMetadata> optPm = getPropMetadata(propName);
 
         if (optPm.map(pm -> pm.type().isEntity()).orElse(FALSE)) {
             final Object removalResult = entityProps.remove(propName);

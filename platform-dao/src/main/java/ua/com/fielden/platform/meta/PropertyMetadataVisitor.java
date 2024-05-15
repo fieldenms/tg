@@ -2,23 +2,21 @@ package ua.com.fielden.platform.meta;
 
 public interface PropertyMetadataVisitor<R> {
 
-    R otherwise(PropertyMetadata<?> metadata);
+    R otherwise(PropertyMetadata metadata);
 
-    default R persistent(PropertyMetadata<PropertyNature.Persistent> metadata,
-                         PropertyNature.Persistent.Data natureData) {
+    default R persistent(PropertyMetadata.Persistent metadata) {
         return otherwise(metadata);
     }
 
-    default R calculated(PropertyMetadata<PropertyNature.Calculated> metadata,
-                         PropertyNature.Calculated.Data natureData) {
+    default R calculated(PropertyMetadata.Calculated metadata) {
         return otherwise(metadata);
     }
 
-    default R critOnly(PropertyMetadata<PropertyNature.CritOnly> metadata) {
+    default R critOnly(PropertyMetadata.CritOnly metadata) {
         return otherwise(metadata);
     }
 
-    default R transient_(PropertyMetadata<PropertyNature.Transient> metadata) {
+    default R transient_(PropertyMetadata.Transient metadata) {
         return otherwise(metadata);
     }
 

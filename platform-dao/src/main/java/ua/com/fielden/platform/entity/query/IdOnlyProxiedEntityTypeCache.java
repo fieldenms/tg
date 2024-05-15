@@ -44,7 +44,7 @@ public class IdOnlyProxiedEntityTypeCache implements IIdOnlyProxiedEntityTypeCac
     }
 
     private <T extends AbstractEntity<?>> Class<? extends T> produceIdOnlyProxiedResultType
-            (final Class<T> originalType, final Collection<? extends PropertyMetadata<?>> propsMetadata)
+            (final Class<T> originalType, final Collection<? extends PropertyMetadata> propsMetadata)
     {
         final List<String> proxiedProps = propsMetadata.stream()
                 .filter(pm -> !ID.equals(pm.name()) && !pm.type().isCompositeKey() && !pm.nature().isCritOnly())

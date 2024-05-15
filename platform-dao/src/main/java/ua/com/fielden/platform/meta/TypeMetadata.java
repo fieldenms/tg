@@ -37,9 +37,9 @@ public sealed interface TypeMetadata {
 
         EntityNature.Data<N> data();
 
-        Collection<? extends PropertyMetadata<?>> properties();
+        Collection<? extends PropertyMetadata> properties();
 
-        Optional<PropertyMetadata<?>> property(String name);
+        Optional<PropertyMetadata> property(String name);
 
         <R> R match(EntityMetadataVisitor<R> visitor);
 
@@ -79,9 +79,9 @@ public sealed interface TypeMetadata {
      */
     non-sealed interface Composite extends TypeMetadata {
 
-        Collection<? extends PropertyMetadata<?>> properties();
+        Collection<? extends PropertyMetadata> properties();
 
-        Optional<PropertyMetadata<?>> property(String name);
+        Optional<PropertyMetadata> property(String name);
 
     }
 

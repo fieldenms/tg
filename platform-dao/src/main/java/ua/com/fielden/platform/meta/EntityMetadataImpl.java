@@ -13,7 +13,7 @@ final class EntityMetadataImpl<N extends EntityNature> implements TypeMetadata.E
     private final Class<? extends AbstractEntity<?>> javaType;
     private final N nature;
     private final EntityNature.Data<N> data;
-    private final Map<String, ? extends PropertyMetadata<?>> properties;
+    private final Map<String, ? extends PropertyMetadata> properties;
 
     EntityMetadataImpl(final Builder<N> builder) {
         this.javaType = builder.javaType;
@@ -29,12 +29,12 @@ final class EntityMetadataImpl<N extends EntityNature> implements TypeMetadata.E
     }
 
     @Override
-    public Collection<? extends PropertyMetadata<?>> properties() {
+    public Collection<? extends PropertyMetadata> properties() {
         return properties.values();
     }
 
     @Override
-    public Optional<PropertyMetadata<?>> property(final String name) {
+    public Optional<PropertyMetadata> property(final String name) {
         return Optional.ofNullable(properties.get(name));
     }
 
@@ -93,7 +93,7 @@ final class EntityMetadataImpl<N extends EntityNature> implements TypeMetadata.E
         private final Class<? extends AbstractEntity<?>> javaType;
         private final N nature;
         private final EntityNature.Data<N> data;
-        private final Collection<PropertyMetadata<?>> properties = new ArrayList<>();
+        private final Collection<PropertyMetadata> properties = new ArrayList<>();
 
         Builder(final Class<? extends AbstractEntity<?>> javaType, final N nature, final EntityNature.Data<N> data) {
             this.javaType = javaType;
@@ -105,12 +105,12 @@ final class EntityMetadataImpl<N extends EntityNature> implements TypeMetadata.E
             return new EntityMetadataImpl<>(this);
         }
 
-        public Builder<N> properties(final Iterable<? extends PropertyMetadata<?>> properties) {
+        public Builder<N> properties(final Iterable<? extends PropertyMetadata> properties) {
             properties.forEach(this.properties::add);
             return this;
         }
 
-        public Builder<N> properties(final PropertyMetadata<?>... properties) {
+        public Builder<N> properties(final PropertyMetadata... properties) {
             Collections.addAll(this.properties, properties);
             return this;
         }
