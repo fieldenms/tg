@@ -33,19 +33,19 @@ sealed public interface EntityMetadata extends TypeMetadata {
     // * Convenient methods as an alternative to a visitor with a single clause
 
     default Optional<EntityMetadata.Union> asUnion() {
-        return this instanceof Union ? Optional.of((Union) this) : Optional.empty();
+        return this instanceof Union u ? Optional.of(u) : Optional.empty();
     }
 
     default Optional<EntityMetadata.Persistent> asPersistent() {
-        return this instanceof Persistent ? Optional.of((Persistent) this) : Optional.empty();
+        return this instanceof Persistent p ? Optional.of(p) : Optional.empty();
     }
 
     default Optional<EntityMetadata.Synthetic> asSynthetic() {
-        return this instanceof Synthetic ? Optional.of((Synthetic) this) : Optional.empty();
+        return this instanceof Synthetic s ? Optional.of(s) : Optional.empty();
     }
 
     default Optional<EntityMetadata.Other> asOther() {
-        return this instanceof Other ? Optional.of((Other) this) : Optional.empty();
+        return this instanceof Other o ? Optional.of(o) : Optional.empty();
     }
 
 

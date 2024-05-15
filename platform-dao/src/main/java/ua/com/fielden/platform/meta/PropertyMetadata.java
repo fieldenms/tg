@@ -58,19 +58,19 @@ public sealed interface PropertyMetadata extends Comparable<PropertyMetadata> {
     // * Convenient methods as an alternative to a visitor with a single clause
 
     default Optional<Persistent> asPersistent() {
-        return this instanceof Persistent ? Optional.of((Persistent) this) : Optional.empty();
+        return this instanceof Persistent p ? Optional.of(p) : Optional.empty();
     }
 
     default Optional<Calculated> asCalculated() {
-        return this instanceof Calculated ? Optional.of((Calculated) this) : Optional.empty();
+        return this instanceof Calculated c ? Optional.of(c) : Optional.empty();
     }
 
     default Optional<CritOnly> asCritOnly() {
-        return this instanceof CritOnly ? Optional.of((CritOnly) this) : Optional.empty();
+        return this instanceof CritOnly c ? Optional.of(c) : Optional.empty();
     }
 
     default Optional<Transient> asTransient() {
-        return this instanceof Transient ? Optional.of((Transient) this) : Optional.empty();
+        return this instanceof Transient t ? Optional.of(t) : Optional.empty();
     }
 
     non-sealed interface Persistent extends PropertyMetadata {
