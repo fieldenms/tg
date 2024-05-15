@@ -4,9 +4,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
+import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
-import ua.com.fielden.platform.meta.TypeMetadata;
 import ua.com.fielden.platform.utils.Pair;
 
 import java.util.Collection;
@@ -33,7 +33,7 @@ public class IdOnlyProxiedEntityTypeCache implements IIdOnlyProxiedEntityTypeCac
 
     private Map<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>> buildMap(final IDomainMetadata domainMetadata) {
         // the following operations are a bit heavy and benefit from parallel processing
-        return domainMetadata.allTypes(TypeMetadata.Entity.class).parallelStream()
+        return domainMetadata.allTypes(EntityMetadata.class).parallelStream()
                 .filter(em -> em.nature().isPersistent())
                 .map(em -> {
                     final Class<? extends AbstractEntity<?>> key = em.javaType();

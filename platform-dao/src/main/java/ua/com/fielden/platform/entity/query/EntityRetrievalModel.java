@@ -25,7 +25,7 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractRetrievalModel<T> {
-    private final TypeMetadata.Entity<?> entityMetadata;
+    private final EntityMetadata entityMetadata;
     private final EntityMetadataUtils entityMetadataUtils;
     private final PropertyMetadataUtils propMetadataUtils;
 
@@ -202,7 +202,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         }
 
         if (pm.type() instanceof PropertyTypeMetadata.Entity et) {
-            final TypeMetadata.Entity<?> em = domainMetadata.forEntity(et.javaType());
+            final EntityMetadata em = domainMetadata.forEntity(et.javaType());
             em.asUnion().ifPresent(uem -> entityMetadataUtils.unionMembers(uem).stream()
                     .map(PropertyMetadata::name)
                     .map(s -> pm.name() + "." + s)

@@ -26,7 +26,7 @@ public interface IDomainMetadata {
 
     Optional<TypeMetadata> forType(Class<?> javaType);
 
-    TypeMetadata.Entity<?> forEntity(Class<? extends AbstractEntity<?>> entityType);
+    EntityMetadata forEntity(Class<? extends AbstractEntity<?>> entityType);
 
     /**
      * Empty optional is returned if the given type is not composite or not a known composite type.

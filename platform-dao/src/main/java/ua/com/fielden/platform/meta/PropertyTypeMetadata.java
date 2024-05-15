@@ -60,7 +60,7 @@ public sealed interface PropertyTypeMetadata {
     /**
      * Type of entity-typed properties.
      * <p>
-     * Corresponds to {@link TypeMetadata.Entity}.
+     * Corresponds to {@link EntityMetadata}.
      */
     non-sealed interface Entity extends PropertyTypeMetadata {
         @Override
