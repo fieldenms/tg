@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.meta;
 
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.utils.IDates;
 
 /**
  * Provides a contract for handling After Change Events (ACE). It can be used for implementing a logic that assigns meta-property properties based on the value of the entity
@@ -35,4 +36,15 @@ public interface IAfterChangeEventHandler<T> {
     default <R extends IEntityReader<E>, E extends AbstractEntity<?>> R co(final Class<E> type) {
         throw new UnsupportedOperationException("This method is not implemented by default. Use [AbstractAfterChangeEventHandler] as the base type to inherit the implementation.");
     }
+
+    /**
+     * Returns {@link ua.com.fielden.platform.utils.IDates} instance for dates API easy access.
+     * By default this method throws {@link UnsupportedOperationException} exception.
+     *
+     * @return
+     */
+    default IDates dates() {
+        throw new UnsupportedOperationException("This method is not implemented by default. Use [AbstractAfterChangeEventHandler] as the base type to inherit the implementation.");
+    }
+
 }

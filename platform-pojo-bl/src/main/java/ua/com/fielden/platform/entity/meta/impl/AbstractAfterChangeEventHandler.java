@@ -32,6 +32,7 @@ public abstract class AbstractAfterChangeEventHandler<T> implements IAfterChange
         return coFinder.findAsReader(type, true);
     }
 
+    @Override
     public IDates dates() {
         if (dates == null) {
             throw new BceOrAceInitException("IDates has not been instantiated.");

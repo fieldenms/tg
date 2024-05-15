@@ -7,13 +7,14 @@ import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.utils.IDates;
 
 /**
  * Contract that should be implemented by any class to be used as an Entity property before change event handler.
  * <p>
  * <i><b>IMPORTANT:</b> Class implementing this interface must be thread-safe.</i><br/>
  * <i><b>IMPORTANT:</b> Class implementing this interface must not have any side-effects on the state of the entity being modified and property value being set.</i><br/>
- * <i><b>IMPORTANT:</b> If method {@link #handle(MetaProperty, Object, Object, Set)} returns unsuccessful result then the new value is not set.</i>
+ * <i><b>IMPORTANT:</b> If method {@link #handle(MetaProperty, Object, Set)} returns unsuccessful result then the new value is not set.</i>
  *
  * @author TG Team
  *
@@ -49,6 +50,16 @@ public interface IBeforeChangeEventHandler<T> {
      * @return
      */
     default <R extends IEntityReader<E>, E extends AbstractEntity<?>> R co(final Class<E> type) {
+        throw new UnsupportedOperationException("This method is not implemented by default. Use [AbstractBeforeChangeEventHandler] as the base type to inherit the implementation.");
+    }
+
+    /**
+     * Returns {@link ua.com.fielden.platform.utils.IDates} instance for dates API easy access.
+     * By default this method throws {@link UnsupportedOperationException} exception.
+     *
+     * @return
+     */
+    default IDates dates() {
         throw new UnsupportedOperationException("This method is not implemented by default. Use [AbstractBeforeChangeEventHandler] as the base type to inherit the implementation.");
     }
 
