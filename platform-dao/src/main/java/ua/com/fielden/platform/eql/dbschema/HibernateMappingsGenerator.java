@@ -1,31 +1,22 @@
 package ua.com.fielden.platform.eql.dbschema;
 
-import static java.util.Collections.emptyList;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
-import static ua.com.fielden.platform.eql.meta.EntityCategory.PERSISTENT;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.SPECIAL_PROPS;
-import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-
 import org.apache.logging.log4j.Logger;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
-import ua.com.fielden.platform.eql.meta.EqlEntityMetadata;
-import ua.com.fielden.platform.eql.meta.EqlPropertyMetadata;
 import ua.com.fielden.platform.eql.meta.PropColumn;
+import ua.com.fielden.platform.meta.*;
+
+import java.util.List;
+import java.util.function.Predicate;
+
+import static java.util.Collections.emptyList;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.AbstractEntity.*;
+import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.SPECIAL_PROPS;
+import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
 
 /**
  * Generates hibernate class mappings from MapTo annotations on domain entity types.
@@ -39,6 +30,20 @@ public class HibernateMappingsGenerator {
     public static final String ID_SEQUENCE_NAME = "TG_ENTITY_ID_SEQ";
 
     public static String generateMappings(final EqlDomainMetadata domainMetadata) {
+        throw new UnsupportedOperationException();
+    }
+
+    private final IDomainMetadata domainMetadata;
+    private final DbVersion dbVersion;
+    private final PropertyMetadataUtils pmUtils;
+
+    public HibernateMappingsGenerator(final IDomainMetadata domainMetadata, final DbVersion dbVersion) {
+        this.domainMetadata = domainMetadata;
+        this.pmUtils = domainMetadata.propertyMetadataUtils();
+        this.dbVersion = dbVersion;
+    }
+
+    public String generateMappings() {
         final StringBuffer sb = new StringBuffer();
         sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         sb.append("<!DOCTYPE hibernate-mapping PUBLIC\n");
@@ -46,18 +51,19 @@ public class HibernateMappingsGenerator {
         sb.append("\"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\">\n");
         sb.append("<hibernate-mapping default-access=\"field\">\n");
 
-        final Set<EqlEntityMetadata<?>> entries = new TreeSet<>(domainMetadata.entityPropsMetadata().values());
-        for (final EqlEntityMetadata<?> entry : entries) {
-            if (entry.typeInfo.category == PERSISTENT) {
-                try {
-                    sb.append(generateEntityClassMapping(entry.entityType, domainMetadata.entityMetadataHolder.getTableForEntityType(entry.entityType).name(), entry.props(), domainMetadata.dbVersion));
-                } catch (final Exception e) {
-                    e.printStackTrace();
-                    throw new EqlMetadataGenerationException("Couldn't generate mapping for " + entry.entityType.getName() + " due to: " + e.getMessage());
-                }
-                sb.append("\n");
-            }
-        }
+        domainMetadata.allTypes(EntityMetadata.class).stream().distinct()
+                .filter(em -> em.nature().isPersistent())
+                .forEach(em -> {
+                    try {
+                        // TODO retrieve the table through a corresponding service
+                        String tableName = null;
+                        sb.append(generateEntityClassMapping(domainMetadata, em, tableName, dbVersion));
+                    } catch (final Exception e) {
+                        LOGGER.error(e);
+                        throw new EqlMetadataGenerationException("Couldn't generate mapping for " + em, e);
+                    }
+                    sb.append("\n");
+                });
         sb.append("</hibernate-mapping>");
 
         final String result = sb.toString();
@@ -65,14 +71,14 @@ public class HibernateMappingsGenerator {
         return result;
     }
 
-    private static String generateEntityIdMapping(final String name, final String columnName, final String hibTypeName, final DbVersion dbVersion) {
+    private String generateEntityIdMapping(final String name, final String columnName, final String hibTypeName) {
         final StringBuilder sb = new StringBuilder();
         sb.append("\t<id name=\"" + name + "\" column=\"" + columnName + "\" type=\"" + hibTypeName + "\" access=\"property\">\n");
         sb.append("\t</id>\n");
         return sb.toString();
     }
 
-    private static String generateOneToOneEntityIdMapping(final String name, final String columnName, final String hibTypeName) {
+    private String generateOneToOneEntityIdMapping(final String name, final String columnName, final String hibTypeName) {
         final StringBuffer sb = new StringBuffer();
         sb.append("\t<id name=\"" + name + "\" column=\"" + columnName + "\" type=\"" + hibTypeName + "\" access=\"property\">\n");
         sb.append("\t\t<generator class=\"foreign\">\n");
@@ -83,7 +89,7 @@ public class HibernateMappingsGenerator {
         return sb.toString();
     }
 
-    private static String generateEntityVersionMapping(final String name, final String columnName, final String hibTypeName) {
+    private String generateEntityVersionMapping(final String name, final String columnName, final String hibTypeName) {
         final StringBuffer sb = new StringBuffer();
         sb.append("\t<version name=\"" + name + "\" type=\"" + hibTypeName + "\" access=\"field\" insert=\"false\">\n");
         sb.append("\t\t<column name=\"" + columnName + "\" default=\"0\" />\n");
@@ -91,30 +97,36 @@ public class HibernateMappingsGenerator {
         return sb.toString();
     }
 
-    private static String generateManyToOnePropertyMapping(final String propName, final String columnName, final Class entityType) {
+    private String generateManyToOnePropertyMapping(final String propName, final String columnName, final Class entityType) {
         final StringBuffer sb = new StringBuffer();
         sb.append("\t<many-to-one name=\"" + propName + "\" class=\"" + entityType.getName() + "\" column=\"" + columnName + "\"");
         sb.append("/>\n");
         return sb.toString();
     }
 
-    private static String generateOneToOnePropertyMapping(final String propName, final Class entityType) {
+    private String generateOneToOnePropertyMapping(final String propName, final Class entityType) {
         return "\t<one-to-one name=\"" + propName + "\" class=\"" + entityType.getName() + "\" constrained=\"true\"/>\n";
     }
 
-    private static String generateUnionEntityPropertyMapping(final EqlPropertyMetadata info) {
+    private String generateUnionEntityPropertyMapping(final PropertyMetadata pm) {
+        final var entityType = (Class<?>) pm.type().javaType();
+
         final StringBuffer sb = new StringBuffer();
-        sb.append("\t<component name=\"" + info.name + "\" class=\"" + info.javaType.getName() + "\">\n");
-        for (final EqlPropertyMetadata subpropField : info.subitems) {
-            if (subpropField.column != null) {
-                sb.append("\t\t<many-to-one name=\"" + subpropField.name + "\" class=\"" + subpropField.javaType.getName() + "\" column = \"" + subpropField.column.name.toUpperCase() + "\"/>\n");
-            }
-        }
+        sb.append("\t<component name=\"" + pm.name() + "\" class=\"" + entityType.getName() + "\">\n");
+
+        pmUtils.subProperties(pm).stream()
+                .flatMap(spm -> spm.asPersistent().stream())
+                .map(spm -> {
+                    final var spType = (Class<?>) spm.type().javaType();
+                    return "\t\t<many-to-one name=\"" + spm.name() + "\" class=\"" + spType.getName() + "\" column = \"" + spm.data().column().name.toUpperCase() + "\"/>\n";
+                })
+                .forEach(sb::append);
+
         sb.append("\t</component>\n");
         return sb.toString();
     }
 
-    private static String generatePlainPropertyMapping(final String propName, final PropColumn singleColumn, final List<String> multipleColumns, final String hibTypeName) {
+    private String generatePlainPropertyMapping(final String propName, final PropColumn singleColumn, final List<String> multipleColumns, final String hibTypeName) {
         final String propNameClause = "\t<property name=\"" + propName + "\"";
         final String typeClause = hibTypeName == null ? "" : " type=\"" + hibTypeName + "\"";
         final String endClause = "/>\n";
@@ -136,64 +148,85 @@ public class HibernateMappingsGenerator {
     }
 
     /**
-     * Generates mapping for entity type.
-     *
-     * @param entityType
-     * @return
-     * @throws Exception
+     * Generates mapping for an entity type.
      */
-    private static <ET extends AbstractEntity<?>> String generateEntityClassMapping(final Class<? extends AbstractEntity<?>> type, final String tableName, final Collection<EqlPropertyMetadata> propsMetadata, final DbVersion dbVersion) throws Exception {
+    private String generateEntityClassMapping(final IDomainMetadata domainMetadata, final EntityMetadata em,
+                                              final String tableName, final DbVersion dbVersion)
+    {
+        final Class<? extends AbstractEntity<?>> entityType= em.javaType();
         final StringBuffer sb = new StringBuffer();
-        sb.append("<class name=\"" + type.getName() + "\" table=\"" + tableName + "\">\n");
+        sb.append("<class name=\"" + entityType.getName() + "\" table=\"" + tableName + "\">\n");
 
-        final EqlPropertyMetadata id = propsMetadata.stream().filter(e -> ID.equals(e.name)).findAny().get();
-        if (isOneToOne(type)) {
-            sb.append(generateOneToOneEntityIdMapping(id.name, id.column.name, id.hibType.getClass().getName()));
-        } else {
-            sb.append(generateEntityIdMapping(id.name, id.column.name, id.hibType.getClass().getName(), dbVersion));
-        }
-        final EqlPropertyMetadata version = propsMetadata.stream().filter(e -> VERSION.equals(e.name)).findAny().get();
-        sb.append(generateEntityVersionMapping(version.name, version.column.name, version.hibType.getClass().getName()));
-
-        final EqlPropertyMetadata keyProp = propsMetadata.stream().filter(e -> KEY.equals(e.name)).findAny().get();
-        if (keyProp.column != null) {
-            sb.append(generatePropertyMappingFromPropertyMetadata(keyProp));
-        }
-
-        for (final EqlPropertyMetadata ppi : propsMetadata) {
-            if (ppi.expressionModel == null && !SPECIAL_PROPS.contains(ppi.name) && (ppi.column != null || ppi.subitems.stream().anyMatch(e -> e.column != null))) {
-                sb.append(generatePropertyMappingFromPropertyMetadata(ppi));
+        sb.append(em.property(ID).flatMap(PropertyMetadata::asPersistent).map(pm -> {
+            if (isOneToOne(entityType)) {
+                return generateOneToOneEntityIdMapping(pm.name(), pm.data().column().name, pm.hibType().getClass().getName());
+            } else {
+                return generateEntityIdMapping(pm.name(), pm.data().column().name, pm.hibType().getClass().getName());
             }
-        }
+        }).orElseThrow(() -> unexpectedPropNature("%s.%s".formatted(entityType.getSimpleName(), ID), PropertyNature.PERSISTENT)));
+
+        sb.append(em.property(VERSION).flatMap(PropertyMetadata::asPersistent).map(pm -> {
+            return generateEntityVersionMapping(pm.name(), pm.data().column().name, pm.hibType().getClass().getName());
+        }).orElseThrow(() -> unexpectedPropNature("%s.%s".formatted(entityType.getSimpleName(), VERSION), PropertyNature.PERSISTENT)));
+
+        em.property(KEY).orElseThrow(() -> new InvalidArgumentException("Missing property [%s] in [%s].".formatted(KEY, em)))
+                .asPersistent()
+                .ifPresent(pm -> sb.append(generatePropertyMappingFromPropertyMetadata(domainMetadata, pm)));
+
+        em.properties().stream()
+                .filter(pm -> !pm.nature().isCalculated() && !SPECIAL_PROPS.contains(pm.name())
+                              && (pm.nature().isPersistent() || anySubPropMatches(pm, spm -> spm.nature().isPersistent())))
+                .forEach(pm -> sb.append(generatePropertyMappingFromPropertyMetadata(domainMetadata, pm)));
+
         sb.append("</class>\n");
         return sb.toString();
+    }
+
+    private boolean anySubPropMatches(final PropertyMetadata pm, final Predicate<? super PropertyMetadata> predicate) {
+        return pmUtils.subProperties(pm).stream().anyMatch(predicate);
     }
 
     /**
      * Generates mapping string for common property based on it persistence info.
      *
-     * @param propMetadata
+     * @param pm
      * @return
      * @throws Exception
      */
-    private static String generatePropertyMappingFromPropertyMetadata(final EqlPropertyMetadata propMetadata) throws Exception {
-        if (isUnionEntityType(propMetadata.javaType)) {
-            return generateUnionEntityPropertyMapping(propMetadata);
-        } else if (isPersistedEntityType(propMetadata.javaType)) {
-            if (KEY.equals(propMetadata.name)) {
-                return generateOneToOnePropertyMapping(propMetadata.name, propMetadata.javaType);
-            } else {
-                return generateManyToOnePropertyMapping(propMetadata.name, propMetadata.column.name, propMetadata.javaType);
+    private String generatePropertyMappingFromPropertyMetadata(final IDomainMetadata domainMetadata, final PropertyMetadata pm) {
+        final var pmUtils = domainMetadata.propertyMetadataUtils();
+        // TODO replace by a PropertyTypeVisitor
+        if (pmUtils.isPropEntityType(pm, em -> em.nature().isUnion())) {
+            return generateUnionEntityPropertyMapping(pm);
+        }
+        else if (pmUtils.isPropEntityType(pm, em -> em.nature().isPersistent())) {
+            final var et = (PropertyTypeMetadata.Entity) pm.type();
+            if (KEY.equals(pm.name())) {
+                return generateOneToOnePropertyMapping(pm.name(), et.javaType());
             }
-        } else {
-            final List<String> columns = new ArrayList<>();
-            for (final EqlPropertyMetadata subitem : propMetadata.subitems) {
-                if (subitem.expressionModel == null) {
-                    columns.add(subitem.column.name);
-                }
+            else {
+                return pm.asPersistent()
+                        .map(ppm -> generateManyToOnePropertyMapping(ppm.name(), ppm.data().column().name, et.javaType()))
+                        .orElseThrow(() -> unexpectedPropNature(pm, PropertyNature.PERSISTENT));
             }
-            final PropColumn singleColumn = propMetadata.subitems.size() == 1 ? propMetadata.subitems.get(0).column : propMetadata.column;
-            return generatePlainPropertyMapping(propMetadata.name, singleColumn, singleColumn == null ? columns : emptyList(), propMetadata.hibType.getClass().getName());
+        }
+        else {
+            final List<PropColumn> subColumns = pmUtils.subProperties(pm).stream()
+                    .flatMap(spm -> spm.asPersistent().stream())
+                    .map(spm -> spm.data().column())
+                    .toList();
+
+            final PropColumn singleColumn = subColumns.size() == 1
+                    ? subColumns.getFirst()
+                    : pm.asPersistent().map(ppm -> ppm.data().column()).orElse(null);
+            return generatePlainPropertyMapping(pm.name(), singleColumn,
+                                                singleColumn == null ? subColumns.stream().map(c -> c.name).toList() : emptyList(),
+                                                pm.hibType().getClass().getName());
         }
     }
+
+    private static IllegalArgumentException unexpectedPropNature(Object prop, Object expectedNature) {
+        return new IllegalArgumentException("Expected property [%s] to have nature [%s].".formatted(prop, expectedNature));
+    }
+
 }
