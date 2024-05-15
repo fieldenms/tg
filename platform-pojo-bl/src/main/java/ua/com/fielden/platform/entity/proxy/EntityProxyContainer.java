@@ -3,10 +3,7 @@ package ua.com.fielden.platform.entity.proxy;
 import static java.util.stream.Collectors.joining;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 import com.google.common.cache.Cache;
@@ -51,17 +48,16 @@ public class EntityProxyContainer {
      * 
      * @param entityType -- entity that is the owner of the properties to be proxied
      * @param propNames -- the names of properties to be proxied
-     * @return
      */
-    public static <T extends AbstractEntity<?>> Class<? extends T> proxy(final Class<T> entityType, final String... propNames) {
+    public static <T extends AbstractEntity<?>> Class<? extends T> proxy(final Class<T> entityType, final List<String> propNames) {
         // if there is nothing to proxy then we can simply return the same type
-        if (propNames.length == 0) {
+        if (propNames.isEmpty()) {
             return entityType;
         }
         
         // let's use a set to avoid potential property duplicates
         // it should be an ordered set to ensure equality between sets for the same propNames, but in different order
-        final Set<String> properties = new TreeSet<>(Arrays.asList(propNames));
+        final Set<String> properties = new TreeSet<>(propNames);
         final String key = properties.stream().collect(joining(","));
 
         // let's try to find the generated type in the cache
@@ -99,6 +95,15 @@ public class EntityProxyContainer {
         return ownerType;
     }
 
+    /**
+     * Factory method for creating entity type proxies.
+     *
+     * @param entityType -- entity that is the owner of the properties to be proxied
+     * @param propNames -- the names of properties to be proxied
+     */
+    public static <T extends AbstractEntity<?>> Class<? extends T> proxy(final Class<T> entityType, final String... propNames) {
+        return proxy(entityType, Arrays.asList(propNames));
+    }
 
     protected static <T extends AbstractEntity<?>> Cache<String, Class<? extends AbstractEntity<?>>> getOrCreateTypeCache(final Class<T> entityType) {
         try {
