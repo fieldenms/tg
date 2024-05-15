@@ -2,6 +2,7 @@ package ua.com.fielden.platform.meta;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 
+import java.util.Collection;
 import java.util.Optional;
 
 /**
@@ -12,6 +13,16 @@ public interface IDomainMetadata {
     PropertyMetadataUtils propertyMetadataUtils();
 
     EntityMetadataUtils entityMetadataUtils();
+
+    /**
+     * Returns a collection of all existing type metadata instances.
+     */
+    Collection<? extends TypeMetadata> allTypes();
+
+    /**
+     * Returns a collection of all existing type metadata instances that are of the given metadata type.
+     */
+    <T extends TypeMetadata> Collection<T> allTypes(Class<T> metadataType);
 
     Optional<TypeMetadata> forType(Class<?> javaType);
 
