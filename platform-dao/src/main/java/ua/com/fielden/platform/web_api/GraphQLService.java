@@ -30,6 +30,7 @@ import static ua.com.fielden.platform.web_api.FieldSchema.bold;
 import static ua.com.fielden.platform.web_api.FieldSchema.createGraphQLFieldDefinition;
 import static ua.com.fielden.platform.web_api.FieldSchema.titleAndDescRepresentation;
 import static ua.com.fielden.platform.web_api.RootEntityUtils.QUERY_TYPE_NAME;
+import static ua.com.fielden.platform.web_api.WebApiUtils.errors;
 import static ua.com.fielden.platform.web_api.WebApiUtils.operationName;
 import static ua.com.fielden.platform.web_api.WebApiUtils.query;
 import static ua.com.fielden.platform.web_api.WebApiUtils.variables;
@@ -82,6 +83,7 @@ import ua.com.fielden.platform.web_api.exceptions.WebApiException;
 @Singleton
 public class GraphQLService implements IWebApi {
     private final Logger logger = LogManager.getLogger(getClass());
+    private static final String ERR_EXECUTING_QUERY = "Query [%s] execution completed with errors [%s].";
     private final GraphQLSchema schema;
     private final Integer maxQueryDepth;
 
@@ -167,7 +169,7 @@ public class GraphQLService implements IWebApi {
      */
     @Override
     public Map<String, Object> execute(final Map<String, Object> input) {
-        return newGraphQL(schema)
+        final var result = newGraphQL(schema)
                .instrumentation(new MaxQueryDepthInstrumentation(maxQueryDepth)).build()
                .execute(
                        newExecutionInput()
@@ -175,6 +177,11 @@ public class GraphQLService implements IWebApi {
                        .operationName(operationName(input).orElse(null))
                        .variables(variables(input)))
                .toSpecification();
+        final var errors = errors(result);
+        if (!errors.isEmpty()) {
+            logger.error(ERR_EXECUTING_QUERY.formatted(input, errors));
+        }
+        return result;
     }
 
     /**
