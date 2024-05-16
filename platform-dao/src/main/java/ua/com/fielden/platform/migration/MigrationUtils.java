@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.migration;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.meta.EqlPropertyMetadata;
 import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
@@ -22,12 +21,9 @@ import static ua.com.fielden.platform.reflection.EntityMetadata.keyTypeInfo;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
+// TODO This class uses both typeful metadata and reflection + EntityTypeInfo. The latter should be replaced.
 public class MigrationUtils {
     private static final Set<String> PROPS_TO_IGNORE = setOf(ID, VERSION);
-
-    public static final EntityMd generateEntityMd(final String tableName, final Collection<EqlPropertyMetadata> propsMetadatas) {
-        throw new UnsupportedOperationException("Migration to typeful metadata is in progress.");
-    }
 
     public static EntityMd generateEntityMd(final String tableName, final Collection<PropertyMetadata> pms,
                                             final IDomainMetadata domainMetadata) {
@@ -77,6 +73,7 @@ public class MigrationUtils {
         }).orElseGet(List::of);
     }
 
+    // TODO migrate to typeful metadata
     public static <ET extends AbstractEntity<?>> List<String> keyPaths(final String propName, final Class<ET> et) {
         final List<String> result = new ArrayList<>();
         final List<T2<String, Class<?>>> keyMembers = getEntityTypeInfo(et).compositeKeyMembers;
@@ -114,6 +111,7 @@ public class MigrationUtils {
         }
     }
 
+    // TODO migrate to typeful metadata
     public static <ET extends AbstractEntity<?>> List<String> keyPaths(final Class<ET> et) {
         final var result = new ArrayList<String>();
         final var keyMembers = getEntityTypeInfo(et).compositeKeyMembers;
