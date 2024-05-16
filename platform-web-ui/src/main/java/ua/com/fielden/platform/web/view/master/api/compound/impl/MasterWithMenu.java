@@ -101,7 +101,7 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
         }
 
         // generate the final master with menu
-        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/js/master/tg-entity-master-template.js")
+        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
                 .replace(IMPORTS, createImports(importPaths))
                 .replace(ENTITY_TYPE, flattenedNameOf(functionalEntityType))
                 .replace("<!--@tg-entity-master-content-->",

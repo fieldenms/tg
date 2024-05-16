@@ -7,10 +7,10 @@ import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
 import static java.util.regex.Pattern.quote;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static ua.com.fielden.platform.basic.config.Workflows.deployment;
 import static ua.com.fielden.platform.basic.config.Workflows.vulcanizing;
 import static ua.com.fielden.platform.serialisation.api.SerialiserEngines.JACKSON;
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.ResourceLoader.getStream;
 import static ua.com.fielden.platform.utils.ResourceLoader.getText;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.getCustomView;
@@ -19,6 +19,7 @@ import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.g
 import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
 
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -41,6 +42,7 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.serialisation.jackson.EntityType;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
@@ -129,7 +131,7 @@ public class WebResourceLoader implements IWebResourceLoader {
      * @return
      */
     private static Optional<String> getReflectorSource(final IWebUiConfig webUiConfig, final ISerialiser serialiser, final TgJackson tgJackson) {
-        final Optional<String> originalSource = ofNullable(getText("ua/com/fielden/platform/js/reflection/tg-reflector.js"));
+        final Optional<String> originalSource = ofNullable(getText("ua/com/fielden/platform/web/reflection/tg-reflector.js"));
         return originalSource.map(src -> src.replace("@typeTable", new String(serialiser.serialise(enhanceWithMasterInfo(webUiConfig, tgJackson.getTypeTable()), JACKSON), UTF_8)));
     }
 
@@ -281,16 +283,18 @@ public class WebResourceLoader implements IWebResourceLoader {
     }
 
     private static Optional<String> getFile(final String filePath, final List<String> resourcePaths) {
-        return ofNullable(replaceBareModuleSpecifier(getText(filePath), resourcePaths));
+        return ofNullable(replaceBareModuleSpecifier(filePath, resourcePaths));
     }
 
-    private static String replaceBareModuleSpecifier(String fileText, final List<String> resourcePaths) {
+    private static String replaceBareModuleSpecifier(String filePath, final List<String> resourcePaths) {
+        final String fileText = getText(filePath);
         if (fileText != null) {
             final Pattern importWithFrom = Pattern.compile("((import|export)\\s*?[^;]+?\\s*?from\\s*?[\"'])([^\\/\\/.][^\"']*?)([\"'];)", Pattern.MULTILINE);
             final Pattern simpleImport = Pattern.compile("((import\\s*?)[\"'])([^\\/\\.][^\"']*?)([\"'];)", Pattern.MULTILINE);
 
-            Function<MatchResult, String> nodeResolver = matchResult -> matchResult.group(1) + "/resources/node_modules/"
-                    + resolveModule(matchResult.group(3), resourcePaths) + matchResult.group(4);
+            final String closestNodeModules = findClosestNodeModules(filePath, resourcePaths);
+            Function<MatchResult, String> nodeResolver = matchResult -> matchResult.group(1) + "/resources/" + closestNodeModules + "/"
+                    + resolveModule(matchResult.group(3), closestNodeModules, resourcePaths) + matchResult.group(4);
 
             return importWithFrom.matcher(simpleImport.matcher(fileText).replaceAll(nodeResolver))
                     .replaceAll(nodeResolver);
@@ -298,11 +302,25 @@ public class WebResourceLoader implements IWebResourceLoader {
         return null;
     }
 
-    private static String resolveModule(final String moduleName, final List<String> resourcePaths) {
+    private static String findClosestNodeModules(final String filePath, final List<String> resourcePaths) {
+        final String parentResourcePath = findParentResourcePath(resourcePaths, filePath);
+        String path = filePath.substring(parentResourcePath.length());
+        while (isNotEmpty(path)  && !ResourceLoader.exist(parentResourcePath + "/" + path + "/node_modules")) {
+            int lastSlashIndex = path.lastIndexOf('/');
+            path = lastSlashIndex < 0 ? "" : path.substring(0, lastSlashIndex);
+        }
+        return isEmpty(path) ? "node_modules" : path + "/node_modules";
+    }
+
+    private static String findParentResourcePath(final List<String> resourcePaths, final String filePath) {
+        return resourcePaths.stream().filter(resourcePath -> filePath.startsWith(resourcePath)).findFirst().orElse("");
+    }
+
+    private static String resolveModule(final String moduleName, final String closestNodeModules, final List<String> resourcePaths) {
         if (moduleName.endsWith(".js")) {
             return moduleName;
         } else if (moduleName.indexOf(".") < 0){
-            String packagePath = generateFileName(resourcePaths, "node_modules/" + moduleName + "/package.json");
+            String packagePath = generateFileName(resourcePaths, closestNodeModules + "/" + moduleName + "/package.json");
             if (!isEmpty(packagePath)) {
                 return getMain(getText(packagePath))
                         .map(mainModuleName -> moduleName + "/" + mainModuleName)

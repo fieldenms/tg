@@ -25,7 +25,7 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
     private final IRenderable renderable;
 
     public AbstractMasterWithMaster(final Class<T> entityType, final Class<? extends AbstractEntity<?>> embededMasterType, final boolean shouldRefreshParentCentreAfterSave) {
-        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/js/master/tg-entity-master-template.js")
+        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
                 .replace(IMPORTS, "import '/resources/element_loader/tg-element-loader.js';\n" + StringUtils.join(getAdditionalImports(), "\n"))
                 .replace(ENTITY_TYPE, flattenedNameOf(entityType))
                 .replace("<!--@tg-entity-master-content-->",

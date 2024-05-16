@@ -250,7 +250,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         }
 
         public NoUiMaster(final Class<T> entityType, final JsCode customCode, final JsCode customCodeOnAttach) {
-            final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/js/master/tg-entity-master-template.js")
+            final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
                     .replace(IMPORTS, "")
                     .replace(ENTITY_TYPE, flattenedNameOf(entityType))
                     .replace("<!--@tg-entity-master-content-->", "")

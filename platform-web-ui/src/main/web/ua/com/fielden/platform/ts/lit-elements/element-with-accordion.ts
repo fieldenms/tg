@@ -1,7 +1,7 @@
 import {LitElement, html, css} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 
-import '/resources/components/tg-accordion.js';
+import '@fieldenms/tg-web-components/components/tg-accordion.js'
 
 @customElement('element-with-accordion')
 export class ElementWithAccordion extends LitElement {

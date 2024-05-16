@@ -296,7 +296,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         final String primaryActionObjectsString = primaryActionObjects.toString();
         final String dimensionsString = prefDimBuilder.toString();
 
-        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/js/master/tg-entity-master-template.js")
+        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
                 .replace(IMPORTS, createImports(importPaths) + customImports.map(ci -> ci.toString()).orElse(""))
                 .replace(ENTITY_TYPE, flattenedNameOf(entityType))
                 .replace("<!--@tg-entity-master-content-->", elementContainer.toString()) // TODO should contain prop actions

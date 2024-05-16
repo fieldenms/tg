@@ -141,7 +141,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         this.workflow = workflow;
 
         final LinkedHashSet<String> allResourcePaths = new LinkedHashSet<>();
-        allResourcePaths.addAll(Arrays.asList("", "ua/com/fielden/platform/js/", "ua/com/fielden/platform/ts/"));
+        allResourcePaths.addAll(Arrays.asList("", "ua/com/fielden/platform/js/", "ua/com/fielden/platform/web/", "ua/com/fielden/platform/ts/"));
         allResourcePaths.addAll(Arrays.asList(externalResourcePaths));
         this.resourcePaths = new ArrayList<>(Collections.unmodifiableSet(allResourcePaths));
         Collections.reverse(this.resourcePaths);
@@ -253,7 +253,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     @Override
     public final String genMainWebUIComponent() {
-        final String mainWebUiComponent = ResourceLoader.getText("ua/com/fielden/platform/js/app/tg-app-template.js");
+        final String mainWebUiComponent = ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-app-template.js");
         if (Workflows.deployment == workflow || Workflows.vulcanizing == workflow) {
             return mainWebUiComponent.replace("//@use-empty-console.log", "console.log = () => {};\n");
         } else {

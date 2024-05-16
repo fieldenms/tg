@@ -32,11 +32,11 @@ public class Vulcanize extends VulcanizingUtility {
         logger.info("Started app.");
 
         final String platformVendorResourcesPath = "../platform-web-ui/src/main/resources";
-        final String platformWebUiResourcesPath = "../platform-web-ui/src/main/web/ua/com/fielden/platform/js";
+        final String platformWebUiResourcesPath = "../platform-web-ui/src/main/web/ua/com/fielden/platform/web";
         final String appVendorResourcesPath = null;
         final String appWebUiResourcesPath = null;
-        final String loginTargetPlatformSpecificPath = "../platform-web-ui/src/main/web/ua/com/fielden/platform/js/";
-        final String mobileAndDesktopAppSpecificPath = "../platform-web-ui/src/main/web/ua/com/fielden/platform/js/";
+        final String loginTargetPlatformSpecificPath = "../platform-web-ui/src/main/web/ua/com/fielden/platform/web/";
+        final String mobileAndDesktopAppSpecificPath = "../platform-web-ui/src/main/web/ua/com/fielden/platform/web/";
 
         final Function<String, String[]> commandMaker = System.getProperty("os.name").toLowerCase().contains("windows") ? Vulcanize::windowsCommands : Vulcanize::unixCommands;
         vulcanize(

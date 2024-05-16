@@ -183,7 +183,7 @@ public class WebAppConfig {
      */
     public String run() {
         // TODO should check whether user is authentic first.
-        return ResourceLoader.getText("ua/com/fielden/platform/js/app.html").
+        return ResourceLoader.getText("ua/com/fielden/platform/web/app.html").
                 replaceAll("@defaultView", defaultRoute == null ? "0" : "'" + defaultRoute + "'").
                 replaceAll("@appName", appName).
                 replaceAll("@pages", generatePages());

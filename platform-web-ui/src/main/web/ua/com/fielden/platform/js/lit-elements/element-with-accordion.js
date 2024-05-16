@@ -6,7 +6,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 import { LitElement, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '/resources/components/tg-accordion.js';
+import '@fieldenms/tg-web-components/components/tg-accordion.js';
 let ElementWithAccordion = class ElementWithAccordion extends LitElement {
     render() {
         return html `

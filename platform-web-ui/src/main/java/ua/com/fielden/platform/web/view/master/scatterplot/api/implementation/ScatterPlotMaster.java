@@ -55,7 +55,7 @@ public class ScatterPlotMaster<T extends AbstractEntity<?>> implements IMaster<T
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         final Optional<Pair<String, DomElement>> actionPair = generateAction(importPaths, scatterPlotMasterBuilder.getAction());
 
-        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/js/master/scatter-plot/tg-scatter-plot-master-template.js")
+        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/scatter-plot/tg-scatter-plot-master-template.js")
                 .replace(IMPORTS, createImports(importPaths))
                 .replace(ENTITY_TYPE, flattenedNameOf(scatterPlotMasterBuilder.getEntityType()))
                 .replace("<!--@tg-entity-master-content-->", actionPair.map(a -> a.getValue().toString()).orElse(""))
