@@ -176,6 +176,7 @@ public class PersistDomainMetadataModel {
     private static List<DomainPropertyData> generateDomainPropsData
     (final IDomainMetadata domainMetadata, final Map<Class<?>, DomainTypeData> typesMap)
     {
+        final PropertyMetadataUtils pmUtils = domainMetadata.propertyMetadataUtils();
         final List<DomainPropertyData> result = new ArrayList<>();
 
         long id = typesMap.size();
@@ -206,7 +207,7 @@ public class PersistDomainMetadataModel {
                                                   prelDesc, //
                                                   entityType.getKeyMemberIndex(pm.name()), //
                                                   pm.is(REQUIRED), //
-                                                  determinePropColumn(domainMetadata.propertyMetadataUtils(),
+                                                  determinePropColumn(pmUtils,
                                                                       entityType.superType == null
                                                                               ? pm
                                                                               : superTypeDtd.getProps().get(pm.name()) != null
@@ -215,8 +216,8 @@ public class PersistDomainMetadataModel {
                                                   position));
 
                 // adding subproperties of union type properties
-                final List<PropertyMetadata> subProps = domainMetadata.propertyMetadataUtils().subProperties(pm);
-                if (subProps.size() > 1) { //skipping cases of SimpleMoney with single subproperty
+                if (pmUtils.isPropEntityType(pm.type(), em -> em.nature().isUnion())) {
+                    final List<PropertyMetadata> subProps = pmUtils.subProperties(pm);
                     final long holderId = id;
                     int subItemPosition = 0;
                     for (final var spm : subProps.stream().flatMap(spm -> spm.asPersistent().stream()).toList()) {
