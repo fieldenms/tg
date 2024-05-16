@@ -30,6 +30,22 @@ sealed public interface EntityMetadata extends TypeMetadata {
 
     <R> R match(EntityMetadataVisitor<R> visitor);
 
+    default boolean isPersistent() {
+        return this instanceof Persistent;
+    }
+
+    default boolean isSynthetic() {
+        return this instanceof Synthetic;
+    }
+
+    default boolean isUnion() {
+        return this instanceof Union;
+    }
+
+    default boolean isOther() {
+        return this instanceof Other;
+    }
+
     // ****************************************
     // * Convenient methods as an alternative to a visitor with a single clause
 

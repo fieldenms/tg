@@ -8,6 +8,7 @@ import ua.com.fielden.platform.types.Money;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
+import java.util.Optional;
 
 /**
  * Represents a property type. This abstraction can be viewed as being in a class-instance relationship with {@link TypeMetadata}:
@@ -43,6 +44,30 @@ public sealed interface PropertyTypeMetadata {
 
     default boolean isOther() {
         return this instanceof Other;
+    }
+
+    default Optional<Primitive> asPrimitive() {
+        return this instanceof Primitive it ? Optional.of(it) : Optional.empty();
+    }
+
+    default Optional<Composite> asComposite() {
+        return this instanceof Composite it ? Optional.of(it) : Optional.empty();
+    }
+
+    default Optional<Entity> asEntity() {
+        return this instanceof Entity it ? Optional.of(it) : Optional.empty();
+    }
+
+    default Optional<Collectional> asCollectional() {
+        return this instanceof Collectional it ? Optional.of(it) : Optional.empty();
+    }
+
+    default Optional<CompositeKey> asCompositeKey() {
+        return this instanceof CompositeKey it ? Optional.of(it) : Optional.empty();
+    }
+
+    default Optional<Other> asOther() {
+        return this instanceof Other it ? Optional.of(it) : Optional.empty();
     }
 
     /**

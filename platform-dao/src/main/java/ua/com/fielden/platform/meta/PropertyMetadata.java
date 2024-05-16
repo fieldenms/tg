@@ -54,6 +54,22 @@ public sealed interface PropertyMetadata extends Comparable<PropertyMetadata> {
         return name().compareTo(that.name());
     }
 
+    default boolean isPersistent() {
+        return this instanceof Persistent;
+    }
+
+    default boolean isCalculated() {
+        return this instanceof Calculated;
+    }
+
+    default boolean isCritOnly() {
+        return this instanceof CritOnly;
+    }
+
+    default boolean isTransient() {
+        return this instanceof Transient;
+    }
+
     // ****************************************
     // * Convenient methods as an alternative to a visitor with a single clause
 
