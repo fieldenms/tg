@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.meta;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -66,6 +67,9 @@ sealed public interface EntityMetadata extends TypeMetadata {
     }
 
     non-sealed interface Union extends EntityMetadata {
+        @Override
+        Class<? extends AbstractUnionEntity> javaType();
+
         @Override
         EntityNature.Union nature();
 
