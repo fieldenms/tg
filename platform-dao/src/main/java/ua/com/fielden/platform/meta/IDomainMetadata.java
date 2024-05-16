@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.meta;
 
+import org.hibernate.dialect.Dialect;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -43,5 +45,13 @@ public interface IDomainMetadata {
      * @param propPath  property path (dot-notation supported)
      */
     Optional<PropertyMetadata> forProperty(Class<?> enclosingType, CharSequence propPath);
+
+    // ****************************************
+    // * Temporary baggage from old metadata that can't be moved until dependency injection is properly configured.
+
+    /**
+     * Generates DDL statements for creating tables, primary keys, indices and foreign keys for all persistent entity types, which includes domain entities and auxiliary platform entities.
+     */
+    List<String> generateDatabaseDdl(final Dialect dialect);
 
 }

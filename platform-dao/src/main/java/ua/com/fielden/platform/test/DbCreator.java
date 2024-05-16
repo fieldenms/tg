@@ -28,6 +28,8 @@ import com.google.common.io.Files;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
+import ua.com.fielden.platform.meta.EntityMetadata;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
 
 /**
@@ -46,7 +48,7 @@ public abstract class DbCreator {
 
     private final Class<? extends AbstractDomainDrivenTestCase> testCaseType;
     public final Connection conn;
-    public final Collection<PersistedEntityMetadata<?>> entityMetadatas;
+    public final Collection<EntityMetadata.Persistent> persistentEntitiesMetadata;
 
     private final Set<String> dataScripts = new LinkedHashSet<>();
     private final List<String> truncateScripts = new ArrayList<>();
@@ -60,7 +62,7 @@ public abstract class DbCreator {
             final boolean execDdslScripts) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
 
         this.testCaseType = testCaseType;
-        this.entityMetadatas = config.getDomainMetadata().getPersistedEntityMetadatas();
+        this.persistentEntitiesMetadata = config.getInstance(IDomainMetadata.class).allTypes(EntityMetadata.Persistent.class);
 
         // this is a single place where a new DB connection is established
         logger.info("CREATING DB CONNECTION...");
@@ -72,7 +74,7 @@ public abstract class DbCreator {
             final Class<?> dialectType = Class.forName(defaultDbProps.getProperty("hibernate.dialect"));
             final Dialect dialect = (Dialect) dialectType.newInstance();
         
-            maybeDdl.addAll(genDdl(config.getDomainMetadata(), dialect));
+            maybeDdl.addAll(genDdl(config.getInstance(IDomainMetadata.class), dialect));
         }
         
         if (execDdslScripts) {
@@ -102,7 +104,7 @@ public abstract class DbCreator {
      * @param dialect
      * @return
      */
-    protected abstract List<String> genDdl(final DomainMetadata domainMetaData, final Dialect dialect);
+    protected abstract List<String> genDdl(final IDomainMetadata domainMetaData, final Dialect dialect);
     
     /**
      * Executes test data population logic. Should be executed before each unit test. 
@@ -206,10 +208,10 @@ public abstract class DbCreator {
     private void recordDataPopulationScript(final AbstractDomainDrivenTestCase testCase, final Connection conn) {
         try {
             dataScripts.clear();
-            dataScripts.addAll(genInsertStmt(entityMetadatas, conn));
+            dataScripts.addAll(genInsertStmt(persistentEntitiesMetadata, conn));
 
             truncateScripts.clear();
-            truncateScripts.addAll(genTruncStmt(entityMetadatas, conn));
+            truncateScripts.addAll(genTruncStmt(persistentEntitiesMetadata, conn));
 
             if (testCase.saveDataPopulationScriptToFile()) {
                 // flush data population script to file for later use
@@ -230,7 +232,7 @@ public abstract class DbCreator {
      * @param conn
      * @return
      */
-    public abstract List<String> genTruncStmt(final Collection<PersistedEntityMetadata<?>> entityMetadata, final Connection conn);
+    public abstract List<String> genTruncStmt(final Collection<EntityMetadata.Persistent> entityMetadata, final Connection conn);
 
     /**
      * Implement to generate SQL statements for inserting records that correspond to test domain data that is present currently in the database with the specified connection.
@@ -240,7 +242,7 @@ public abstract class DbCreator {
      * @return
      * @throws SQLException
      */
-    public abstract List<String> genInsertStmt(final Collection<PersistedEntityMetadata<?>> entityMetadata, final Connection conn) throws SQLException;
+    public abstract List<String> genInsertStmt(final Collection<EntityMetadata.Persistent> entityMetadata, final Connection conn) throws SQLException;
     
     /**
      * Creates a new DB connection based on the provided properties.

@@ -17,6 +17,8 @@ import org.hibernate.dialect.Dialect;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
+import ua.com.fielden.platform.meta.EntityMetadata;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.DbCreator;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
@@ -44,7 +46,7 @@ public class SqlServerDbCreator extends DbCreator {
      * Generates DDL for creation of a test database. All constraints are dropped to enable out-of-order data insertion and table truncation.
      */
     @Override
-    protected List<String> genDdl(final DomainMetadata domainMetaData, final Dialect dialect) {
+    protected List<String> genDdl(final IDomainMetadata domainMetaData, final Dialect dialect) {
         final List<String> createDdl = DbUtils.prependDropDdlForSqlServer(domainMetaData.generateDatabaseDdl(dialect));
         createDdl.add("EXEC sp_msforeachtable \"ALTER TABLE ? NOCHECK CONSTRAINT all\";");
         createDdl.add(
@@ -65,8 +67,8 @@ public class SqlServerDbCreator extends DbCreator {
      * Generate the script for emptying the test database.
      */
     @Override
-    public List<String> genTruncStmt(final Collection<PersistedEntityMetadata<?>> entityMetadata, final Connection conn) {
-        return entityMetadata.stream().map(entry -> format("TRUNCATE TABLE %s;", entry.getTable())).collect(toList());
+    public List<String> genTruncStmt(final Collection<EntityMetadata.Persistent> entityMetadata, final Connection conn) {
+        return entityMetadata.stream().map(em -> format("TRUNCATE TABLE %s;", em.data().tableName())).collect(toList());
     }
 
     /**
@@ -74,12 +76,12 @@ public class SqlServerDbCreator extends DbCreator {
      * Tables <code>ENTITY_CENTRE_CONFIG</code>, <code>ENTITY_LOCATOR_CONFIG</code> and <code>ENTITY_MASTER_CONFIG</code> are excluded as they contains <code>varbinary</code> columns that cannot be easily scripted.
      */
     @Override
-    public List<String> genInsertStmt(final Collection<PersistedEntityMetadata<?>> entityMetadata, final Connection conn) throws SQLException {
+    public List<String> genInsertStmt(final Collection<EntityMetadata.Persistent> entityMetadata, final Connection conn) throws SQLException {
         // unfortunately we have to drop all the constraints to enable data truncation and repopulation out of order...
         // now let's generate insert statements
         try (final PreparedStatement ps = conn.prepareStatement("EXEC sp_generate_inserts ?")) {
             return entityMetadata.stream()
-                .map(PersistedEntityMetadata::getTable)
+                .map(em -> em.data().tableName())
                 .filter(table -> !"ENTITY_CENTRE_CONFIG".equals(table) && !"ENTITY_LOCATOR_CONFIG".equals(table) && !"ENTITY_MASTER_CONFIG".equals(table))
                 .flatMap(table -> {
                     final List<String> inserts = new ArrayList<>();
