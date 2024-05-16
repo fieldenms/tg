@@ -23,8 +23,6 @@ import java.util.concurrent.ConcurrentMap;
 
 import static java.util.stream.Collectors.*;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.eql.meta.EntityCategory.QUERY_BASED;
-import static ua.com.fielden.platform.eql.meta.EntityTypeInfo.getEntityTypeInfo;
 import static ua.com.fielden.platform.eql.meta.utils.TopologicalSort.sortTopologically;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.REQUIRED;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
@@ -236,12 +234,10 @@ public class QuerySourceInfoProvider {
             return existing;
         }
 
-        final EntityTypeInfo<?> eti = getEntityTypeInfo(type);
-        if (eti.category == QUERY_BASED) {
+        if (domainMetadata.forEntity(type) instanceof EntityMetadata.Synthetic) {
             return generateModelledQuerySourceInfoForSyntheticType(type, seModels.get(getOriginalType(type)));
-        } else {
-            return generateModelledQuerySourceInfoForPersistentType(type);
         }
+        return generateModelledQuerySourceInfoForPersistentType(type);
     }
 
     private static CalcPropInfo toCalcPropInfo(final PropertyMetadata.Calculated pm) {
