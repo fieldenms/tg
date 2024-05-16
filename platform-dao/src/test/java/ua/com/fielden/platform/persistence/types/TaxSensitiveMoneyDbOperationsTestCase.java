@@ -12,8 +12,6 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.sample.domain.TgWorkOrder;
-import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
 

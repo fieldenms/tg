@@ -27,7 +27,7 @@ import ua.com.fielden.platform.security.user.User;
  * Intercepts methods annotated with {@link SessionRequired} to inject Hibernate session before the actual method execution. Nested invocation of methods annotated with
  * {@link SessionRequired} is supported. For example, method <code>findAll()</code> could invoke method <code>findByCriteria()</code> -- both with {@link SessionRequired}.
  * <p>
- * A very important functionality provided by this intercepter is transaction management:
+ * A very important functionality provided by this interceptor is transaction management:
  * <ul>
  * <li>If the current session has no active transaction then it is activated and the current method invocation is marked as the one that should commit it.</li>
  * <li>If the current session has an active transaction then the current method invocation is marked as the one that should NOT commit it.</li>
@@ -37,8 +37,8 @@ import ua.com.fielden.platform.security.user.User;
  * The last item ensures that any exception at any level of method invocation would ensure transaction rollback. If transaction is not active at the time of rollback then that
  * means it has already been rollbacked.
  *
- * Please note that transaction can be started outside of this intercepter, which means it will not be committed within it, and the transaction originator is responsible for
- * commit. At the same time, if an exception occurs then transaction will be rollbacked.
+ * Please note that transaction can be started outside of this interceptor, which means it will not be committed within it, and the transaction originator is responsible for
+ * commit. At the same time, if an exception occurs then transaction will be rolled back.
  *
  * @author TG Team
  *
@@ -51,8 +51,8 @@ public class SessionInterceptor implements MethodInterceptor {
     
     private final ThreadLocal<String> transactionGuid = new ThreadLocal<>();
 
-    public SessionInterceptor(final SessionFactory sessnioFactory) {
-        this.sessionFactory = sessnioFactory;
+    public SessionInterceptor(final SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
     }
 
     @Override
