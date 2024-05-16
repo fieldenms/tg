@@ -27,10 +27,10 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> implem
     private final Set<String> primProps = new HashSet<String>();
     private final Set<String> proxiedProps = new HashSet<String>();
 
-    protected AbstractRetrievalModel(final fetch<T> originalFetch, final DomainMetadataAnalyser domainMetadataAnalyser, final boolean topLevel) {
+    protected AbstractRetrievalModel(final fetch<T> originalFetch, final IDomainMetadata domainMetadata, final boolean topLevel) {
         this.originalFetch = originalFetch;
         this.topLevel = topLevel;
-        this.domainMetadata = null; // TODO
+        this.domainMetadata = domainMetadata;
     }
 
     public fetch<T> getOriginalFetch() {

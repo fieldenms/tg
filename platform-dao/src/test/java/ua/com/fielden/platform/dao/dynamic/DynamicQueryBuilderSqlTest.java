@@ -47,6 +47,8 @@ import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryPro
 import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.meta.DomainMetadataBuilder;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -121,8 +123,10 @@ public class DynamicQueryBuilderSqlTest {
         domainTypes.add(MasterEntity.class);
         domainTypes.add(SlaveEntity.class);
         domainTypes.add(EvenSlaverEntity.class);
+
+        final IDomainMetadata domainMetadata = new DomainMetadataBuilder(hibTypeMap, null, domainTypes, DbVersion.H2).build();
         try {
-            hibConf.addInputStream(new ByteArrayInputStream(HibernateMappingsGenerator.generateMappings(new EqlDomainMetadata(hibTypeMap, null, domainTypes, DbVersion.H2)).getBytes("UTF8")));
+            hibConf.addInputStream(new ByteArrayInputStream(new HibernateMappingsGenerator(domainMetadata).generateMappings().getBytes("UTF8")));
         } catch (final MappingException | UnsupportedEncodingException e) {
             throw new HibernateException("Could not add mappings.", e);
         }

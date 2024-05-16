@@ -52,13 +52,6 @@ public class PersistDomainMetadataModel {
      */
     public static void persist(
             final List<Class<? extends AbstractEntity<?>>> entityTypes,
-            final EqlDomainMetadata domainMetadata,
-            final TransactionalExecution trEx) {
-        throw new UnsupportedOperationException("Migration to typeful metadata is in progress.");
-    }
-
-    public static void persist(
-            final List<Class<? extends AbstractEntity<?>>> entityTypes,
             final IDomainMetadata domainMetadata,
             final TransactionalExecution trEx) {
         LOGGER.info("Starting to save the domain metadata...");

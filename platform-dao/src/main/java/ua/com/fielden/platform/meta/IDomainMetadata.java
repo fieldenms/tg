@@ -2,6 +2,11 @@ package ua.com.fielden.platform.meta;
 
 import org.hibernate.dialect.Dialect;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation;
+import ua.com.fielden.platform.eql.meta.EqlTable;
+import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 
 import java.util.Collection;
 import java.util.List;
@@ -49,9 +54,21 @@ public interface IDomainMetadata {
     // ****************************************
     // * Temporary baggage from old metadata that can't be moved until dependency injection is properly configured.
 
+    // TODO create a separate service for this
     /**
      * Generates DDL statements for creating tables, primary keys, indices and foreign keys for all persistent entity types, which includes domain entities and auxiliary platform entities.
      */
     List<String> generateDatabaseDdl(final Dialect dialect);
+
+    // TODO create a separate service for this
+    EqlTable getTableForEntityType(final Class<? extends AbstractEntity<?>> entityType);
+
+    // TODO create a separate service for this
+    EntityBatchInsertOperation.TableStructForBatchInsertion getTableStructsForBatchInsertion(final Class<? extends AbstractEntity<?>> entityType);
+
+    DbVersion dbVersion();
+
+    // TODO make this type injectable
+    QuerySourceInfoProvider querySourceInfoProvider();
 
 }

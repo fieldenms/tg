@@ -5,7 +5,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PropColumn;
 import ua.com.fielden.platform.meta.*;
 
@@ -29,18 +28,14 @@ public class HibernateMappingsGenerator {
 
     public static final String ID_SEQUENCE_NAME = "TG_ENTITY_ID_SEQ";
 
-    public static String generateMappings(final EqlDomainMetadata domainMetadata) {
-        throw new UnsupportedOperationException();
-    }
-
     private final IDomainMetadata domainMetadata;
     private final DbVersion dbVersion;
     private final PropertyMetadataUtils pmUtils;
 
-    public HibernateMappingsGenerator(final IDomainMetadata domainMetadata, final DbVersion dbVersion) {
+    public HibernateMappingsGenerator(final IDomainMetadata domainMetadata) {
         this.domainMetadata = domainMetadata;
         this.pmUtils = domainMetadata.propertyMetadataUtils();
-        this.dbVersion = dbVersion;
+        this.dbVersion = domainMetadata.dbVersion();
     }
 
     public String generateMappings() {

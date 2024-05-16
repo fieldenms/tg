@@ -16,12 +16,12 @@ import org.hibernate.type.Type;
 import com.google.inject.Guice;
 
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.metadata.PropertyCategory;
 import ua.com.fielden.platform.entity.query.metadata.PropertyColumn;
 import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
+import ua.com.fielden.platform.meta.DomainMetadataBuilder;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.types.ColourType;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.persistence.types.HyperlinkType;
@@ -79,9 +79,7 @@ public class BaseEntQueryTCase1 {
 
     public static final Map<Class, Class> hibTypeDefaults = new HashMap<>();
 
-    protected static final DomainMetadata DOMAIN_METADATA;
-
-    protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER;
+    protected static final IDomainMetadata DOMAIN_METADATA;
 
     static {
         hibTypeDefaults.put(Date.class, DateTimeType.class);
@@ -91,12 +89,8 @@ public class BaseEntQueryTCase1 {
         hibTypeDefaults.put(Colour.class, ColourType.class);
         hibTypeDefaults.put(Hyperlink.class, HyperlinkType.class);
 
-        DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, 
-                Guice.createInjector(new HibernateUserTypesModule()), 
-                entityTypes, 
-                H2);
-        
-        DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
+        DOMAIN_METADATA = new DomainMetadataBuilder(
+                hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), entityTypes, H2).build();
     }
     
     public static PropertyMetadata ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final String column, final PropertyCategory type/*, final EntityTypeInfo <? extends AbstractEntity<?>> entityCategory*/) {

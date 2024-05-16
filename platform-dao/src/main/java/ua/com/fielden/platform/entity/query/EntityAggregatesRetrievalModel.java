@@ -8,11 +8,12 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 
 public class EntityAggregatesRetrievalModel<T extends AbstractEntity<?>> extends AbstractRetrievalModel<T> {
 
-    public EntityAggregatesRetrievalModel(final fetch<T> originalFetch, final DomainMetadataAnalyser domainMetadataAnalyser) {
-        super(originalFetch, domainMetadataAnalyser, true);
+    public EntityAggregatesRetrievalModel(final fetch<T> originalFetch, final IDomainMetadata domainMetadata) {
+        super(originalFetch, domainMetadata, true);
 
         validateModel();
 
@@ -42,7 +43,7 @@ public class EntityAggregatesRetrievalModel<T extends AbstractEntity<?>> extends
     private void addEntityPropsModel(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
         final EntityRetrievalModel<?> existingFetch = getRetrievalModels().get(propName);
         fetch<?> finalFetch = existingFetch != null ? existingFetch.originalFetch.unionWith(fetchModel) : fetchModel;
-        addEntityPropFetchModel(propName, new EntityRetrievalModel<>(finalFetch, getDomainMetadataAnalyser(), false));
+        addEntityPropFetchModel(propName, new EntityRetrievalModel<>(finalFetch, domainMetadata, false));
     }
 
     @Override

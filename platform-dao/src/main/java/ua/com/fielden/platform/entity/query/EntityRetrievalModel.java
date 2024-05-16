@@ -5,7 +5,6 @@ import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.meta.*;
 
 import java.util.Map.Entry;
@@ -29,15 +28,15 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     private final EntityMetadataUtils entityMetadataUtils;
     private final PropertyMetadataUtils propMetadataUtils;
 
-    public EntityRetrievalModel(final fetch<T> originalFetch, final DomainMetadataAnalyser domainMetadataAnalyser) {
-        this(originalFetch, domainMetadataAnalyser, true);
+    public EntityRetrievalModel(final fetch<T> originalFetch, final IDomainMetadata domainMetadata) {
+        this(originalFetch, domainMetadata, true);
     }
 
-    EntityRetrievalModel(final fetch<T> originalFetch, final DomainMetadataAnalyser domainMetadataAnalyser, final boolean topLevel) {
-        super(originalFetch, domainMetadataAnalyser, topLevel);
-        this.entityMetadata = null; // TODO
-        this.entityMetadataUtils = null; // TODO
-        this.propMetadataUtils = null; // TODO
+    EntityRetrievalModel(final fetch<T> originalFetch, final IDomainMetadata domainMetadata, final boolean topLevel) {
+        super(originalFetch, domainMetadata, topLevel);
+        this.entityMetadata = domainMetadata.forEntity(originalFetch.getEntityType());
+        this.entityMetadataUtils = domainMetadata.entityMetadataUtils();
+        this.propMetadataUtils = domainMetadata.propertyMetadataUtils();
 
         switch (originalFetch.getFetchCategory()) {
         case ALL_INCL_CALC:
@@ -212,7 +211,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
 
         final EntityRetrievalModel<?> existingFetch = getRetrievalModels().get(propName);
         fetch<?> finalFetch = existingFetch != null ? existingFetch.originalFetch.unionWith(fetchModel) : fetchModel;
-        addEntityPropFetchModel(propName, new EntityRetrievalModel<>(finalFetch, getDomainMetadataAnalyser(), false));
+        addEntityPropFetchModel(propName, new EntityRetrievalModel<>(finalFetch, domainMetadata, false));
     }
 
     public boolean isFetchIdOnly() {

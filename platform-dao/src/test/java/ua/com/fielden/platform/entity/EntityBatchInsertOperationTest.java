@@ -20,7 +20,7 @@ import ua.com.fielden.platform.dao.exceptions.EntityAlreadyExists;
 import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.sample.domain.EntityOne;
 import ua.com.fielden.platform.sample.domain.EntityTwo;
 import ua.com.fielden.platform.sample.domain.IEntityOne;
@@ -87,12 +87,12 @@ public class EntityBatchInsertOperationTest extends AbstractDaoTestCase {
     }
 
     private int batchInserEntities(final List<TgEntityWithManyPropTypes> entities, final int batchSize) {
-        final EntityBatchInsertOperation insertOp = new EntityBatchInsertOperation(getInstance(DomainMetadata.class).eqlDomainMetadata, () -> getInstance(TransactionalExecution.class));
+        final EntityBatchInsertOperation insertOp = new EntityBatchInsertOperation(getInstance(IDomainMetadata.class), () -> getInstance(TransactionalExecution.class));
         return insertOp.batchInsert(entities, batchSize);
     }
 
     private int batchInserEntitiesAsStream(final Stream<TgEntityWithManyPropTypes> entities, final int batchSize) {
-        final EntityBatchInsertOperation insertOp = new EntityBatchInsertOperation(getInstance(DomainMetadata.class).eqlDomainMetadata, () -> getInstance(TransactionalExecution.class));
+        final EntityBatchInsertOperation insertOp = new EntityBatchInsertOperation(getInstance(IDomainMetadata.class), () -> getInstance(TransactionalExecution.class));
         return insertOp.batchInsert(entities, batchSize);
     }
 

@@ -6,7 +6,6 @@ import org.joda.time.Period;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.entity.query.*;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadataUtils;
@@ -26,11 +25,11 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
     private final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
     private static final Logger logger = getLogger(EntityContainerEnhancer.class);
 
-    protected EntityContainerEnhancer(final EntityContainerFetcher fetcher, final DomainMetadataAnalyser domainMetadataAnalyser, final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
+    protected EntityContainerEnhancer(final EntityContainerFetcher fetcher, final IDomainMetadata domainMetadata, final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
         this.fetcher = fetcher;
         this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
-        this.domainMetadata = null; // TODO
-        this.propMetadataUtils = null; // TODO
+        this.domainMetadata = domainMetadata;
+        this.propMetadataUtils = domainMetadata.propertyMetadataUtils();
     }
 
     /**
@@ -186,7 +185,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
             final List<EntityContainer<T>> enhancedPropInstances = (retrievedPropertyInstances.size() == 0) ? //
             getDataInBatches(new ArrayList<Long>(propertyValuesIds.keySet()), fetchModel, paramValues)
                     : //
-                    new EntityContainerEnhancer<T>(fetcher, null, idOnlyProxiedEntityTypeCache).enhance(retrievedPropertyInstances, fetchModel, paramValues);
+                    new EntityContainerEnhancer<T>(fetcher, domainMetadata, idOnlyProxiedEntityTypeCache).enhance(retrievedPropertyInstances, fetchModel, paramValues);
 
             // Replacing in entities the proxies of properties with properly enhanced property instances.
             for (final EntityContainer<? extends AbstractEntity<?>> enhancedPropInstance : enhancedPropInstances) {
@@ -215,7 +214,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
             final List<EntityContainer<T>> enhancedPropInstances = (retrievedPropertyInstances.size() == 0) ? //
             getDataInBatches(new ArrayList<Long>(propertyValuesIds.keySet()), fetchModel, paramValues)
                     : //
-                    new EntityContainerEnhancer<T>(fetcher, null, idOnlyProxiedEntityTypeCache).enhance(retrievedPropertyInstances, fetchModel, paramValues);
+                    new EntityContainerEnhancer<T>(fetcher, domainMetadata, idOnlyProxiedEntityTypeCache).enhance(retrievedPropertyInstances, fetchModel, paramValues);
 
             // Replacing in entities the proxies of properties with properly enhanced property instances.
             for (final EntityContainer<? extends AbstractEntity<?>> enhancedPropInstance : enhancedPropInstances) {

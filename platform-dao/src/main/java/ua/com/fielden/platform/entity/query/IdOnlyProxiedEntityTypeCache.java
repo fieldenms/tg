@@ -21,9 +21,8 @@ public class IdOnlyProxiedEntityTypeCache implements IIdOnlyProxiedEntityTypeCac
 
     private final Map<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>> typesMap;
 
-    public IdOnlyProxiedEntityTypeCache(final EqlDomainMetadata domainMetadata) {
-        // TODO use IDomainMetadata
-        typesMap = buildMap(null);
+    public IdOnlyProxiedEntityTypeCache(final IDomainMetadata domainMetadata) {
+        typesMap = buildMap(domainMetadata);
     }
 
     @Override

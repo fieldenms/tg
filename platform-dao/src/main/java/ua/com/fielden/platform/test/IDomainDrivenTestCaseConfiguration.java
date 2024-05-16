@@ -3,6 +3,7 @@ package ua.com.fielden.platform.test;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 
 /**
  * Contract for configuration used by db driven test cases such as {@link AbstractDomainDrivenTestCase}.
@@ -16,7 +17,7 @@ public interface IDomainDrivenTestCaseConfiguration {
 
     <T> T getInstance(Class<T> type);
 
-    DomainMetadata getDomainMetadata();
+    IDomainMetadata getDomainMetadata();
     
     IdOnlyProxiedEntityTypeCache getIdOnlyProxiedEntityTypeCache();
 }

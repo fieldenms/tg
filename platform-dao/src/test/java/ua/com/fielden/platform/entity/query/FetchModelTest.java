@@ -38,8 +38,8 @@ import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 public class FetchModelTest extends BaseEntQueryTCase1 {
 
     private static <T extends AbstractEntity<?>> IRetrievalModel<T> produceRetrievalModel(final fetch<T> fetchModel) {
-        return EntityAggregates.class.equals(fetchModel.getEntityType()) ? new EntityAggregatesRetrievalModel<T>(fetchModel, DOMAIN_METADATA_ANALYSER) : //
-                new EntityRetrievalModel<T>(fetchModel, DOMAIN_METADATA_ANALYSER);
+        return EntityAggregates.class.equals(fetchModel.getEntityType()) ? new EntityAggregatesRetrievalModel<T>(fetchModel, DOMAIN_METADATA) : //
+                new EntityRetrievalModel<T>(fetchModel, DOMAIN_METADATA);
     }
     
     private static <T extends AbstractEntity<?>> IRetrievalModel<T> produceRetrievalModel(final Class<T> entityType, final FetchCategory fetchCategory) {

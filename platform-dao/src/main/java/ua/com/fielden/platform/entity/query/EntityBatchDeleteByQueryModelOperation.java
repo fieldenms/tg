@@ -10,6 +10,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage3.queries.ResultQuery3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 
 import javax.persistence.PersistenceException;
 import java.util.Collections;
@@ -47,13 +48,13 @@ public class EntityBatchDeleteByQueryModelOperation {
     }
 
     private <T extends AbstractEntity<?>> DeletionModel getModelSql(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
-        final EqlDomainMetadata eqlDomainMetadata = executionContext.getEqlDomainMetadata();
+        final IDomainMetadata domainMetadata = executionContext.getDomainMetadata();
         final AggregatedResultQueryModel finalModel = select(model.getResultType()).where().prop(ID).in().model(model).yield().prop(ID).as(ID).modelAsAggregate();
-        final String tableName = eqlDomainMetadata.entityMetadataHolder.getTableForEntityType(model.getResultType()).name();
-        final TransformationResultFromStage2To3<ResultQuery3> s2tr = transform(new QueryProcessingModel(finalModel, null, null, paramValues, true), null, null, executionContext.dates(), eqlDomainMetadata);
+        final String tableName = domainMetadata.getTableForEntityType(model.getResultType()).name();
+        final TransformationResultFromStage2To3<ResultQuery3> s2tr = transform(new QueryProcessingModel(finalModel, null, null, paramValues, true), null, null, executionContext.dates(), domainMetadata);
         final ResultQuery3 entQuery3 = s2tr.item;
-        final String selectionSql = entQuery3.sql(eqlDomainMetadata.dbVersion);
-        final String deletionSql = produceDeletionSql(selectionSql, tableName, eqlDomainMetadata.dbVersion);
+        final String selectionSql = entQuery3.sql(domainMetadata.dbVersion());
+        final String deletionSql = produceDeletionSql(selectionSql, tableName, domainMetadata.dbVersion());
         return new DeletionModel(deletionSql, s2tr.updatedContext.getSqlParamValues());
     }
 
