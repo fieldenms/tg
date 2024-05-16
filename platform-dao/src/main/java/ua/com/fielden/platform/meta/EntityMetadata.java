@@ -23,7 +23,7 @@ sealed public interface EntityMetadata extends TypeMetadata {
 
     EntityNature.Data data();
 
-    Collection<? extends PropertyMetadata> properties();
+    Collection<PropertyMetadata> properties();
 
     Optional<PropertyMetadata> property(String name);
 

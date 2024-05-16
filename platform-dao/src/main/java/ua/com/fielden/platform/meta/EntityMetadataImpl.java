@@ -13,7 +13,7 @@ abstract class EntityMetadataImpl<N extends EntityNature, D extends EntityNature
     private final Class<? extends AbstractEntity<?>> javaType;
     private final N nature;
     private final D data;
-    private final Map<String, ? extends PropertyMetadata> properties;
+    private final Map<String, PropertyMetadata> properties;
 
     EntityMetadataImpl(final Builder<N, D> builder) {
         this.javaType = builder.javaType;
@@ -27,7 +27,7 @@ abstract class EntityMetadataImpl<N extends EntityNature, D extends EntityNature
         return javaType;
     }
 
-    public Collection<? extends PropertyMetadata> properties() {
+    public Collection<PropertyMetadata> properties() {
         return properties.values();
     }
 
