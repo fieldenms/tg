@@ -141,7 +141,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         this.workflow = workflow;
 
         final LinkedHashSet<String> allResourcePaths = new LinkedHashSet<>();
-        allResourcePaths.addAll(Arrays.asList("", "ua/com/fielden/platform/js/", "ua/com/fielden/platform/web/", "ua/com/fielden/platform/ts/"));
+        allResourcePaths.addAll(Arrays.asList("", "ua/com/fielden/platform/web/"));
         allResourcePaths.addAll(Arrays.asList(externalResourcePaths));
         this.resourcePaths = new ArrayList<>(Collections.unmodifiableSet(allResourcePaths));
         Collections.reverse(this.resourcePaths);

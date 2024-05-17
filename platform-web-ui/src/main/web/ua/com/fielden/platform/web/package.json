@@ -1,0 +1,14 @@
+{
+  "name": "tg-example",
+  "version": "1.0.0",
+  "description": "Example of TG based application",
+  "main": "startup-resources-origin.js",
+  "scripts": {
+    "test": "exit 0"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "lit": "^3.1.3"
+  }
+}
