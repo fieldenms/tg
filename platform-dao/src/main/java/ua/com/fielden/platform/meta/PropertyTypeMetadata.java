@@ -102,7 +102,7 @@ public sealed interface PropertyTypeMetadata {
 
         PropertyTypeMetadata elementType();
 
-        String linkProp();
+//        String linkProp();
 
         @Override
         default ParameterizedType javaType() {
