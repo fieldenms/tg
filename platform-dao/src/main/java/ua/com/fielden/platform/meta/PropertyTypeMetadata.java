@@ -138,6 +138,17 @@ public sealed interface PropertyTypeMetadata {
         }
     }
 
+    NoKey NO_KEY = new NoKey();
+
+    final class NoKey implements PropertyTypeMetadata {
+        private NoKey() {}
+
+        @Override
+        public Class<ua.com.fielden.platform.entity.NoKey> javaType() {
+            return ua.com.fielden.platform.entity.NoKey.class;
+        }
+    }
+
     /**
      * Type of other, yet unclassified property types.
      */
