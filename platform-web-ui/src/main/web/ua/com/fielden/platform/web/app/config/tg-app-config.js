@@ -1,6 +1,6 @@
-import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
+import {Polymer} from '/resources/node_modules/@fieldenms/tg-polymer/polymer/lib/legacy/polymer-fn.js';
 
-import {generateUUID} from '/resources/reflection/tg-polymer-utils.js';
+import {generateUUID} from '/resources/node_modules/@fieldenms/tg-web-components/reflection/tg-polymer-utils.js';
 
 import '/resources/components/postal-lib.js';
 import '/resources/components/moment-lib.js';

@@ -1,8 +1,8 @@
-import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
-import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
+import '/resources/node_modules/@fieldenms/tg-polymer/polymer/polymer-legacy.js';
+import { Polymer } from '/resources/node_modules/@fieldenms/tg-polymer/polymer/lib/legacy/polymer-fn.js';
 
-import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
-import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
+import { _millisDateRepresentation } from '/resources/node_modules/@fieldenms/tg-web-components/reflection/tg-date-utils.js';
+import { resultMessages } from '/resources/node_modules/@fieldenms/tg-web-components/reflection/tg-polymer-utils.js';
 
 /**
  * Used for decimal and money formatting. If the scale value for formatting wasn't specified then the default one is used.

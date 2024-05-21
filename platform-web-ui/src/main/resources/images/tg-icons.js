@@ -1,6 +1,6 @@
-import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
-import '/resources/polymer/@polymer/iron-iconset-svg/iron-iconset-svg.js';
-import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import '/resources/node_modules/@fieldenms/tg-polymer/iron-icon/iron-icon.js';
+import '/resources/node_modules/@fieldenms/tg-polymer/iron-iconset-svg/iron-iconset-svg.js';
+import {html} from '/resources/node_modules/@fieldenms/tg-polymer/polymer/lib/utils/html-tag.js';
 const template = html`<iron-iconset-svg name='tg-icons' size='24'> 
  <svg> 
  <defs> 
