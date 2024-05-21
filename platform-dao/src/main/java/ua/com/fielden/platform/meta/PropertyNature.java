@@ -50,6 +50,11 @@ public sealed interface PropertyNature {
                 return PERSISTENT;
             }
         }
+
+        @Override
+        public String toString() {
+            return "Persistent Property";
+        }
     }
 
     /**
@@ -88,6 +93,10 @@ public sealed interface PropertyNature {
             }
         }
 
+        @Override
+        public String toString() {
+            return "Calculated Property";
+        }
     }
 
     /**
@@ -110,6 +119,11 @@ public sealed interface PropertyNature {
                 return CRIT_ONLY;
             }
         }
+
+        @Override
+        public String toString() {
+            return "Calculated Property";
+        }
     }
 
 }
@@ -119,5 +133,10 @@ public sealed interface PropertyNature {
  */
 final class OnlyTransient implements PropertyNature.Transient {
     OnlyTransient() {}
+
+    @Override
+    public String toString() {
+        return "Transient Property";
+    }
 }
 

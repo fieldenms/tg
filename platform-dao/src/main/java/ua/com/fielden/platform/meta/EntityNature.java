@@ -42,6 +42,11 @@ public sealed interface EntityNature {
         }
 
         public record Data(String tableName) implements EntityNature.Data<Persistent> {}
+
+        @Override
+        public String toString() {
+            return "Persistent Entity";
+        }
     }
 
     final class Synthetic implements EntityNature {
@@ -50,6 +55,11 @@ public sealed interface EntityNature {
         }
 
         public record Data(List<? extends EntityResultQueryModel<?>> models) implements EntityNature.Data<Synthetic> {}
+
+        @Override
+        public String toString() {
+            return "Synthetic Entity";
+        }
     }
 
     final class Union implements EntityNature {
@@ -58,6 +68,11 @@ public sealed interface EntityNature {
         }
 
         public record Data(List<? extends EntityResultQueryModel<?>> models) implements EntityNature.Data<Union> {}
+
+        @Override
+        public String toString() {
+            return "Union Entity";
+        }
     }
 
     /**
@@ -68,6 +83,11 @@ public sealed interface EntityNature {
 
         public static final class Data implements EntityNature.Data<Other> {
             private Data() {}
+        }
+
+        @Override
+        public String toString() {
+            return "Other Entity";
         }
     }
 

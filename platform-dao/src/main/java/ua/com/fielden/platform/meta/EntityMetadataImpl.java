@@ -60,11 +60,7 @@ abstract class EntityMetadataImpl<N extends EntityNature, D extends EntityNature
 
     @Override
     public String toString() {
-        return "EntityMetadata[" +
-               "javaType=" + javaType + ", " +
-               "nature=" + nature + ", " +
-               "data=" + data + ", " +
-               "properties=" + properties + ']';
+        return "%s %s (%s properties) (%s)".formatted(nature, javaType.getTypeName(), properties.size(), data);
     }
 
     static final class Persistent

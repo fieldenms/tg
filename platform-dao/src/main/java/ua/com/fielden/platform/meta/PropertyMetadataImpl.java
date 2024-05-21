@@ -7,8 +7,10 @@ import ua.com.fielden.platform.types.tuples.T2;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.StringJoiner;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.joining;
 
 abstract class PropertyMetadataImpl<N extends PropertyNature, D extends PropertyNature.Data<N>> {
 
@@ -72,6 +74,20 @@ abstract class PropertyMetadataImpl<N extends PropertyNature, D extends Property
                   && Objects.equals(data, that.data)
                   && Objects.equals(type, that.type)
                   && Objects.equals(keyMap, that.keyMap);
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(" ")
+                .add(nature().toString())
+                .add("[%s]".formatted(name()))
+                .add("(type %s)".formatted(type()))
+                .add("(hibType %s)".formatted(hibType()))
+                .add("(data %s)".formatted(data()))
+                .add(keyMap.entrySet().stream()
+                             .map(e -> "%s: %s".formatted(e.getKey(), e.getValue()))
+                             .collect(joining(",", "{", "}")))
+                .toString();
     }
 
     static final class Persistent
