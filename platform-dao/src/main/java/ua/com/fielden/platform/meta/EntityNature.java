@@ -37,14 +37,26 @@ public sealed interface EntityNature {
     sealed interface Data<N extends EntityNature> {}
 
     final class Persistent implements EntityNature {
+        public static Data data(final String tableName) {
+            return new Data(tableName);
+        }
+
         public record Data(String tableName) implements EntityNature.Data<Persistent> {}
     }
 
     final class Synthetic implements EntityNature {
+        public static Data data(final List<? extends EntityResultQueryModel<?>> models) {
+            return new Data(models);
+        }
+
         public record Data(List<? extends EntityResultQueryModel<?>> models) implements EntityNature.Data<Synthetic> {}
     }
 
     final class Union implements EntityNature {
+        public static Data data(final List<? extends EntityResultQueryModel<?>> models) {
+            return new Data(models);
+        }
+
         public record Data(List<? extends EntityResultQueryModel<?>> models) implements EntityNature.Data<Union> {}
     }
 
