@@ -120,6 +120,22 @@ interface Assertions {
             assertor.accept(type());
             return this;
         }
+
+        public <V> PropertyA<P> assertKey(final PropertyMetadata.AnyKey<V> key, final Consumer<V> assertor) {
+            final var v = assertPresent("Key [%s] is absent from [%s]".formatted(key, propertyMetadata), propertyMetadata.get(key));
+            assertor.accept(v);
+            return this;
+        }
+
+        public <V> PropertyA<P> assertKeyEq(final PropertyMetadata.AnyKey<V> key, final V expectedValue) {
+            return assertKey(key, v -> assertEquals("Unexpected value for key [%s] in [%s]".formatted(key, propertyMetadata),
+                                                    expectedValue, v));
+        }
+
+        public PropertyA<P> asserting(final Consumer<? super P> assertor) {
+            assertor.accept(propertyMetadata);
+            return this;
+        }
     }
 
 }
