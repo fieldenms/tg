@@ -14,6 +14,7 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -28,6 +29,7 @@ import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -375,6 +377,27 @@ public class PropertyTypeDeterminator {
     public static boolean isCollectional(final Class<?> entityType, final String doNotationExp) {
         final Field field = Finder.findFieldByName(entityType, doNotationExp);
         return EntityUtils.isCollectional(field.getType());
+    }
+
+    /**
+     * Given a type of a collectional property, returns a pair (raw collectional type, collectional element type).
+     * <pre>{@code
+     * > asCollectional(List<String>)
+     * (List.class, String.class)
+     * > asCollectional(List)
+     * ()
+     * }</pre>
+     */
+    public static Optional<T2<Class<?>, Class<?>>> asCollectional(final Type type) {
+        if (type instanceof ParameterizedType paramType) {
+            if (paramType.getRawType() instanceof Class<?> rawClass && paramType.getActualTypeArguments().length == 1) {
+                return Optional.ofNullable(classFrom(paramType.getActualTypeArguments()[0]))
+                        .map(eltClass -> T2.t2(rawClass, eltClass));
+
+            }
+        }
+
+        return Optional.empty();
     }
 
     /**
