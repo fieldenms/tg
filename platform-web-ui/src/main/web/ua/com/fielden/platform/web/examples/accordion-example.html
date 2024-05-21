@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Accordion example</title>
+    <script type="module">
+        import '@fieldenms/tg-polymer/iron-flex-layout/iron-flex-layout-classes.js'; // fullbleed class
+        import '@fieldenms/tg-polymer/paper-styles/paper-styles-classes.js'; // Roboto font
+        import '@fieldenms/tg-polymer/polymer/lib/elements/dom-bind.js'; // dom-bind
+        import '@fieldenms/tg-web-components/components/tg-accordion-group.js';
+    </script>
+    <style>
+        body {
+            font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+        }
+    </style>
+</head>
+
+<body unresolved class="fullbleed">
+    <dom-bind>
+        <template id="app">
+            <tg-accordion-group single-open>
+                <tg-accordion slot="accordion" dont-close-on-tap heading="Test 1" opened>
+                    <div>Test 1 Test 1 Test 1</div>
+                    <div>Test 1 Test 1 Test 1</div>
+                </tg-accordion>
+                <tg-accordion slot="accordion" dont-close-on-tap heading="Test 2">
+                    <div>Test 2 Test 2 Test 2</div>
+                    <div>Test 2 Test 2 Test 2</div>
+                </tg-accordion>
+                <tg-accordion slot="accordion" dont-close-on-tap heading="Test 3">
+                    <div>Test 3 Test 3 Test 3</div>
+                    <div>Test 3 Test 3 Test 3</div>
+                </tg-accordion>
+            </tg-accordion-group>
+        </template>
+    </dom-bind>
+</body>
+
+</html>
