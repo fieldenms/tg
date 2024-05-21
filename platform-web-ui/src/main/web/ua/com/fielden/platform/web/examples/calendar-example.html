@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>calendar example</title>
+    <script type="module">
+        import '@fieldenms/tg-polymer/paper-styles/paper-styles-classes.js';
+        import '@fieldenms/tg-web-components/components/tg-calendar.js';
+    </script>
+    <style>
+        body {
+            font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+        }
+    </style>
+</head>
+
+<body unresolved class="fullbleed">
+    <dom-bind>
+        <template is="dom-bind">
+            <tg-calendar pick-time selected-date="{{selectedDate}}" selected-hour="{{selectedHour}}" selected-minute="{{selectedMinute}}"></tg-calendar>
+            <span>[[selectedDate]]</span> <span>[[selectedHour]]</span> <span>[[selectedMinute]]</span>
+        </template>
+    </dom-bind>
+</body>
+
+</html>
