@@ -15,11 +15,11 @@ abstract class EntityMetadataImpl<N extends EntityNature, D extends EntityNature
     private final D data;
     private final Map<String, PropertyMetadata> properties;
 
-    EntityMetadataImpl(final Builder<N, D> builder) {
-        this.javaType = builder.javaType;
-        this.nature = builder.nature;
-        this.data = builder.data;
-        this.properties = builder.properties.stream()
+    EntityMetadataImpl(final EntityMetadataBuilder<N, D> builder) {
+        this.javaType = builder.getJavaType();
+        this.nature = builder.getNature();
+        this.data = builder.getData();
+        this.properties = builder.getProperties().stream()
                 .collect(toImmutableMap(PropertyMetadata::name, identity()));
     }
 
@@ -71,7 +71,7 @@ abstract class EntityMetadataImpl<N extends EntityNature, D extends EntityNature
             extends EntityMetadataImpl<EntityNature.Persistent, EntityNature.Persistent.Data>
             implements EntityMetadata.Persistent
     {
-        Persistent(final Builder<EntityNature.Persistent, EntityNature.Persistent.Data> builder) {
+        Persistent(final EntityMetadataBuilder<EntityNature.Persistent, EntityNature.Persistent.Data> builder) {
             super(builder);
         }
 
@@ -85,7 +85,7 @@ abstract class EntityMetadataImpl<N extends EntityNature, D extends EntityNature
             extends EntityMetadataImpl<EntityNature.Synthetic, EntityNature.Synthetic.Data>
             implements EntityMetadata.Synthetic
     {
-        Synthetic(final Builder<EntityNature.Synthetic, EntityNature.Synthetic.Data> builder) {
+        Synthetic(final EntityMetadataBuilder<EntityNature.Synthetic, EntityNature.Synthetic.Data> builder) {
             super(builder);
         }
 
@@ -99,7 +99,7 @@ abstract class EntityMetadataImpl<N extends EntityNature, D extends EntityNature
             extends EntityMetadataImpl<EntityNature.Union, EntityNature.Union.Data>
             implements EntityMetadata.Union
     {
-        Union(final Builder<EntityNature.Union, EntityNature.Union.Data> builder) {
+        Union(final EntityMetadataBuilder<EntityNature.Union, EntityNature.Union.Data> builder) {
             super(builder);
         }
 
@@ -118,68 +118,13 @@ abstract class EntityMetadataImpl<N extends EntityNature, D extends EntityNature
             extends EntityMetadataImpl<EntityNature.Other, EntityNature.Other.Data>
             implements EntityMetadata.Other
     {
-        Other(final Builder<EntityNature.Other, EntityNature.Other.Data> builder) {
+        Other(final EntityMetadataBuilder<EntityNature.Other, EntityNature.Other.Data> builder) {
             super(builder);
         }
 
         @Override
         public <R> R match(final EntityMetadataVisitor<R> visitor) {
             return visitor.otherwise(this);
-        }
-    }
-
-    /**
-     * <b>NOTE</b>: This builder is <b>mutable</b>.
-     */
-    static final class Builder<N extends EntityNature, D extends EntityNature.Data<N>> {
-        private final Class<? extends AbstractEntity<?>> javaType;
-        private final N nature;
-        private final D data;
-        private final Collection<PropertyMetadata> properties = new ArrayList<>();
-
-        Builder(final Class<? extends AbstractEntity<?>> javaType, final N nature, final D data) {
-            this.javaType = javaType;
-            this.nature = nature;
-            this.data = data;
-        }
-
-        public EntityMetadata build() {
-            return switch (nature) {
-                case EntityNature.Persistent $ -> new Persistent((Builder<EntityNature.Persistent, EntityNature.Persistent.Data>) this);
-                case EntityNature.Synthetic $ -> new Synthetic((Builder<EntityNature.Synthetic, EntityNature.Synthetic.Data>) this);
-                case EntityNature.Union $ -> new Union((Builder<EntityNature.Union, EntityNature.Union.Data>) this);
-                case EntityNature.Other $ -> new Other((Builder<EntityNature.Other, EntityNature.Other.Data>) this);
-            };
-        }
-
-        public Builder<N, D> properties(final Iterable<? extends PropertyMetadata> properties) {
-            properties.forEach(this.properties::add);
-            return this;
-        }
-
-        public Builder<N, D> properties(final PropertyMetadata... properties) {
-            Collections.addAll(this.properties, properties);
-            return this;
-        }
-
-        static Builder<EntityNature.Persistent, EntityNature.Persistent.Data> persistentEntity
-                (final Class<? extends AbstractEntity<?>> type, final EntityNature.Persistent.Data data) {
-            return new Builder<>(type, EntityNature.PERSISTENT, data);
-        }
-
-        static Builder<EntityNature.Synthetic, EntityNature.Synthetic.Data> syntheticEntity
-                (final Class<? extends AbstractEntity<?>> type, final EntityNature.Synthetic.Data data) {
-            return new Builder<>(type, EntityNature.SYNTHETIC, data);
-        }
-
-        static Builder<EntityNature.Union, EntityNature.Union.Data> unionEntity
-                (final Class<? extends AbstractUnionEntity> type, final EntityNature.Union.Data data) {
-            return new Builder<>(type, EntityNature.UNION, data);
-        }
-
-        static Builder<EntityNature.Other, EntityNature.Other.Data> otherEntity
-                (final Class<? extends AbstractEntity<?>> type) {
-            return new Builder<>(type, EntityNature.OTHER, EntityNature.Other.NO_DATA);
         }
     }
 
