@@ -37,4 +37,12 @@ public class TestUtils {
         return opt.get();
     }
 
+    public static <T> T assertInstanceOf(final Class<T> type, final Object object) {
+        if (type.isInstance(object)) {
+            return type.cast(object);
+        }
+        throw new AssertionError("Expected [%s] but was: %s".formatted(type.getTypeName(), object));
+    }
+
+
 }
