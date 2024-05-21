@@ -289,8 +289,8 @@ public class WebResourceLoader implements IWebResourceLoader {
     private static String replaceBareModuleSpecifier(String filePath, final List<String> resourcePaths) {
         final String fileText = getText(filePath);
         if (fileText != null) {
-            final Pattern importWithFrom = Pattern.compile("((import|export)\\s*?[^;]+?\\s*?from\\s*?[\"'])([^\\/\\/.][^\"']*?)([\"'];)", Pattern.MULTILINE);
-            final Pattern simpleImport = Pattern.compile("((import\\s*?)[\"'])([^\\/\\.][^\"']*?)([\"'];)", Pattern.MULTILINE);
+            final Pattern importWithFrom = Pattern.compile("((import|export)\\s*?[^;]+?\\s*?from\\s*?[\"'])([^\\/\\/.][^\"'\\s]*?)(([\"'])(.*?)([;\\s]))", Pattern.MULTILINE);
+            final Pattern simpleImport = Pattern.compile("((import\\s*?)[\"'])([^\\/\\.][^\"'\\s]*?)(([\"'])(.*?)([;\\s]))", Pattern.MULTILINE);
 
             final String closestNodeModules = findClosestNodeModules(filePath, resourcePaths);
             Function<MatchResult, String> nodeResolver = matchResult -> matchResult.group(1) + "/resources/" + closestNodeModules + "/"
@@ -322,7 +322,10 @@ public class WebResourceLoader implements IWebResourceLoader {
         } else if (moduleName.indexOf(".") < 0){
             String packagePath = generateFileName(resourcePaths, closestNodeModules + "/" + moduleName + "/package.json");
             if (!isEmpty(packagePath)) {
-                return getMain(getText(packagePath))
+                String packageText = getText(packagePath);
+                return getProperty(getText(packagePath), "module")
+                        .filter(main -> main.endsWith(".js"))
+                        .or(() -> getProperty(getText(packagePath), "main"))
                         .map(mainModuleName -> moduleName + "/" + mainModuleName)
                         .orElse(moduleName + "/index.js");
             } else {
@@ -334,9 +337,9 @@ public class WebResourceLoader implements IWebResourceLoader {
 
     }
 
-    private static Optional<String> getMain(final String fileText) {
+    private static Optional<String> getProperty(final String fileText, final String property) {
         if (fileText != null) {
-            Pattern pattern = Pattern.compile("['\"]?+main['\"]?+\\s*?:\\s*?[\"'](.+)[\"']", Pattern.MULTILINE);
+            Pattern pattern = Pattern.compile("['\"]?+" + property + "['\"]?+\\s*?:\\s*?[\"'](.+)[\"']", Pattern.MULTILINE);
             Matcher matcher = pattern.matcher(fileText);
             if (matcher.find()) {
                 return Optional.ofNullable(matcher.group(1));
