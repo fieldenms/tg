@@ -23,10 +23,6 @@ public class CommonFactoryModule extends PropertyFactoryModule {
         super(props, defaultHibernateTypes, applicationEntityTypes);
     }
 
-    public CommonFactoryModule(final SessionFactory sessionFactory, final DomainMetadata domainMetadata, final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
-        super(sessionFactory, domainMetadata, idOnlyProxiedEntityTypeCache);
-    }
-
     protected EntityFactory getEntityFactory() {
         return entityFactory;
     }

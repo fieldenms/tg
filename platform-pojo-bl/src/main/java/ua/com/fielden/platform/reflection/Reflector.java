@@ -1,10 +1,21 @@
 package ua.com.fielden.platform.reflection;
 
-import static java.lang.String.format;
-import static java.util.stream.Collectors.joining;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
-import static ua.com.fielden.platform.utils.Pair.pair;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.Accessor;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.annotation.DescTitle;
+import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.MapTo;
+import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
+import ua.com.fielden.platform.entity.validation.annotation.Max;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
+import ua.com.fielden.platform.utils.Pair;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -18,25 +29,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
-
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.entity.Accessor;
-import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
-import ua.com.fielden.platform.entity.validation.annotation.Max;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
-import ua.com.fielden.platform.utils.Pair;
+import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 /**
  * This is a helper class to provide some commonly used method for retrieval of RTTI not provided directly by the Java reflection package.
@@ -221,7 +217,7 @@ public final class Reflector {
                 return true;
             }
         } catch (NoSuchMethodException | SecurityException ex) {
-            LOGGER.debug(format("Checking the oberriding of method [%s] for type [%s] with base type [%s] failed.", methodName, type.getName(), baseType.getName()), ex);
+            LOGGER.debug(format("Checking the overriding of method [%s] for type [%s] with base type [%s] failed.", methodName, type.getName(), baseType.getName()), ex);
         }
         
         return false;

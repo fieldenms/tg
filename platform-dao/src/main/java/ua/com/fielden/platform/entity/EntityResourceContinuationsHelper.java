@@ -59,6 +59,8 @@ public class EntityResourceContinuationsHelper {
         } else {
             co.clearMoreData();
         }
+        // declare that continuations are supported in this context
+        co.setContinuationSupported(true);
         final T saved = co.save(entity);
         if (continuationsPresent) {
             co.clearMoreData();

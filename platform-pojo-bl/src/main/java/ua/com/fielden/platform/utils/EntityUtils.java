@@ -1,76 +1,15 @@
 package ua.com.fielden.platform.utils;
 
-import static java.lang.String.format;
-import static java.lang.reflect.Modifier.isStatic;
-import static java.util.Arrays.stream;
-import static java.util.Optional.ofNullable;
-import static java.util.stream.Stream.concat;
-import static java.util.stream.Stream.empty;
-import static java.util.stream.Stream.of;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.lastIndexOf;
-import static org.apache.commons.lang3.StringUtils.length;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
-import static ua.com.fielden.platform.entity.fetch.FetchProviderFactory.createDefaultFetchProvider;
-import static ua.com.fielden.platform.entity.fetch.FetchProviderFactory.createEmptyFetchProvider;
-import static ua.com.fielden.platform.entity.fetch.FetchProviderFactory.createFetchProviderWithKeyAndDesc;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresent;
-import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
-import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.PROPERTY_SPLITTER;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.StreamUtils.takeWhile;
-import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
-
-import java.io.Serializable;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.math.BigDecimal;
-import java.math.MathContext;
-import java.math.RoundingMode;
-import java.text.DateFormat;
-import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import org.apache.logging.log4j.Logger;
-import org.joda.time.DateTime;
-
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-
+import org.apache.logging.log4j.Logger;
+import org.joda.time.DateTime;
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.annotation.DateOnly;
-import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -91,6 +30,41 @@ import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.try_wrapper.TryWrapper;
 import ua.com.fielden.platform.types.tuples.T2;
+
+import java.io.Serializable;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
+import java.text.DateFormat;
+import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
+import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static java.lang.String.format;
+import static java.lang.reflect.Modifier.isStatic;
+import static java.util.Arrays.stream;
+import static java.util.Optional.ofNullable;
+import static java.util.stream.Stream.*;
+import static org.apache.commons.lang3.StringUtils.*;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.AbstractEntity.*;
+import static ua.com.fielden.platform.entity.fetch.FetchProviderFactory.*;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresent;
+import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
+import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.PROPERTY_SPLITTER;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.StreamUtils.takeWhile;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 
 public class EntityUtils {
     private static final Logger logger = getLogger(EntityUtils.class);
@@ -191,8 +165,8 @@ public class EntityUtils {
     /**
      * Null-safe comparator.
      *
-     * @param o1
-     * @param o2
+     * @param c1
+     * @param c2
      * @return
      */
     public static <T> int safeCompare(final Comparable<T> c1, final T c2) {
@@ -241,7 +215,7 @@ public class EntityUtils {
 
 
     /**
-     * Returns value that indicates whether entity is among entities. The equality comparison is based on {@link #areEquals(AbstractEntity, AbstractEntity)} method
+     * Returns value that indicates whether entity is among entities. The equality comparison is based on {@link #areEqual(AbstractEntity, AbstractEntity)} method
      *
      * @param entities
      * @param entity
@@ -257,7 +231,7 @@ public class EntityUtils {
     }
 
     /**
-     * Returns index of the entity in the entities list. The equality comparison is based on the {@link #areEquals(AbstractEntity, AbstractEntity)} method.
+     * Returns index of the entity in the entities list. The equality comparison is based on the {@link #areEqual(AbstractEntity, AbstractEntity)} method.
      *
      * @param entities
      * @param entity
@@ -393,12 +367,11 @@ public class EntityUtils {
     /**
      * This method throws Result (so can be used to specify DYNAMIC validation inside the date setters) when the specified finish/start dates are invalid together.
      *
-     * @param start
-     * @param finish
-     * @param fieldPrefix
-     *            - the prefix for the field in the error message for e.g. "actual" or "early".
-     * @param finishSetter
-     *            - use true if validation have to be performed inside the "finish" date setter, false - inside the "start" date setter
+     * @param start a lower value for a range.
+     * @param finish an upper value for a range.
+     * @param startProperty a property representing the start of a range.
+     * @param finishProperty a property representing the finish of a range.
+     * @param finishSetter specify {@code true} if validation has to be performed for the finish property, {@code false} - for the start property.
      * @throws Result
      */
     public static void validateDateRange(final Date start, final Date finish, final MetaProperty<Date> startProperty, final MetaProperty<Date> finishProperty, final boolean finishSetter, final IDates dates) {
@@ -419,14 +392,13 @@ public class EntityUtils {
     }
 
     /**
-     * This method throws Result (so can be used to specify DYNAMIC validation inside the date setters) when the specified finish/start date times are invalid together.
+     * This method throws {@link Result} when the specified finish/start date times are invalid together.
      *
      * @param start
      * @param finish
-     * @param fieldPrefix
-     *            - the prefix for the field in the error message for e.g. "actual" or "early".
-     * @param finishSetter
-     *            - use true if validation have to be performed inside the "finish" date setter, false - inside the "start" date setter
+     * @param startProperty a property representing the start of a range.
+     * @param finishProperty a property representing the finish of a range.
+     * @param finishSetter specify {@code true} if validation has to be performed for the finish property, {@code false} - for the start property.
      * @throws Result
      */
     public static void validateDateTimeRange(final DateTime start, final DateTime finish, final MetaProperty<DateTime> startProperty, final MetaProperty<DateTime> finishProperty, final boolean finishSetter, final IDates dates) {
@@ -685,6 +657,24 @@ public class EntityUtils {
     }
 
     /**
+     * Returns the first persistent entity type of the type hierarchy for {@code entityType}. This could be {@code entityType} itself or the first super type that represents a persistent entity.
+     * Otherwise, an empty result is returned.
+     *
+     * @param entityType
+     * @return
+     */
+    public static Optional<Class<? extends AbstractEntity<?>>> findFirstPersistentTypeInHierarchyFor(final Class<? extends AbstractEntity<?>> entityType) {
+        Class<?> type = entityType;
+        while (type != AbstractEntity.class) {
+            if (isPersistedEntityType(type)) {
+                return Optional.of((Class<? extends AbstractEntity<?>>) type);
+            }
+            type = type.getSuperclass();
+        }
+        return Optional.empty();
+    }
+
+    /**
      * Determines whether the provided entity type is of synthetic nature, which means that is based on an EQL model.
      *
      * @param type
@@ -731,7 +721,7 @@ public class EntityUtils {
 
     /**
      * Determines whether the provided entity type is of synthetic nature that at the same time is based on a persistent type.
-     * This kind of entities most typically should have a model with <code>yieldAll</code> clause.
+     * This kind of entity most typically should have a model with <code>yieldAll</code> clause.
      *
      * @param type
      * @return
@@ -1041,8 +1031,8 @@ public class EntityUtils {
      * @param instrumented
      * @return
      */
-    public static <T extends AbstractEntity<?>> IFetchProvider<T> fetch(final Class<T> entityType, final boolean instumented) {
-        return createDefaultFetchProvider(entityType, instumented);
+    public static <T extends AbstractEntity<?>> IFetchProvider<T> fetch(final Class<T> entityType, final boolean instrumented) {
+        return createDefaultFetchProvider(entityType, instrumented);
     }
 
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetch(final Class<T> entityType) {
@@ -1242,9 +1232,9 @@ public class EntityUtils {
      * final PmRoutine pmRoutine = EntityUtils.<PmRoutine>fetchEntityForPropOf(pmId, "pmRoutine", co(PmExpendable.class)).orElseThrow(...);
      * </pre>
      *
+     * @param id
      * @param propName
      * @param coOther
-     * @param keyValues
      * @return
      */
     public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final Long id, final String propName, final IEntityReader<?> coOther) {
@@ -1265,9 +1255,9 @@ public class EntityUtils {
      * final PmRoutine freshPmRoutine = EntityUtils.<PmRoutine>fetchEntityForPropOf(stalePmRoutine, "pmRoutine", co(PmExpendable.class)).orElseThrow(...);
      * </pre>
      *
+     * @param instance
      * @param propName
      * @param coOther
-     * @param keyValues
      * @return
      */
     public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final T instance, final String propName, final IEntityReader<?> coOther) {
@@ -1304,7 +1294,7 @@ public class EntityUtils {
      * However, if the resultant entity to be mutated then argument {@code co} must correspond to an instrumenting instance.
      *
      * @param co -- either pure reader or mutator if the resultant entity needs to be changed
-     * @param kayValues -- an array of values for entity key members
+     * @param keyValues -- an array of values for entity key members
      * @return
      */
     public static <T extends AbstractEntity<?>> Optional<T> findByKeyWithMasterFetch(final IEntityReader<T> co, final Object... keyValues) {
