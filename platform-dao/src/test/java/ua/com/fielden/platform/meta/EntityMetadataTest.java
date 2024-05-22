@@ -14,6 +14,7 @@ import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.test.PlatformTestHibernateSetup;
 import ua.com.fielden.platform.types.Money;
 
+import java.math.BigDecimal;
 import java.util.SortedSet;
 
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.KEY_MEMBER;
@@ -138,6 +139,17 @@ public class EntityMetadataTest {
                 .assertProperty("orgunitCritOnly", p -> p
                         .assertIs(CritOnly.class)
                         .assertType(t -> t.assertIs(PropertyTypeMetadata.Entity.class).assertJavaType(TgOrgUnit1.class)));
+    }
+
+    @Test
+    public void metadata_is_generated_for_calculated_properties() {
+        EntityA.of(generator.forEntity(TgVehicle.class))
+                .assertProperty("lastFuelUsage", p -> p
+                        .assertIs(Calculated.class)
+                        .assertType(t -> t.assertIs(PropertyTypeMetadata.Entity.class).assertJavaType(TgFuelUsage.class)))
+                .assertProperty("lastFuelUsageQty", p -> p
+                        .assertIs(Calculated.class)
+                        .assertType(t -> t.assertIs(Primitive.class).assertJavaType(BigDecimal.class)));
     }
 
 }
