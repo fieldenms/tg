@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Element Loader Example</title>
+    <script type="module">
+        import '@fieldenms/tg-web-components/element_loader/tg-element-loader.js';
+        import '@fieldenms/tg-polymer/iron-flex-layout/iron-flex-layout-classes.js'; // fullbleed class
+        import '@fieldenms/tg-polymer/paper-styles/paper-styles-classes.js'; // Roboto font
+    </script>
+    <custom-style>
+        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning">
+            body {
+                font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 10pt;
+            }
+        </style>
+    </custom-style>
+</head>
+
+<body unresolved class="fullbleed">
+    <dom-bind>
+        <template is="dom-bind">
+            <tg-element-loader id="firstLoader" import="[[url]]" element-name="[[elementName]]" attrs="[[getAttributes()]]" on-after-load="afterLoadListener">
+                Loading testing element...
+            </tg-element-loader><br>
+            <tg-element-loader id="secondLoader" import="[[url]]" element-name="[[elementName]]" attrs="[[getAttributes()]]">
+                Loading testing element...
+            </tg-element-loader>
+        </template>
+    </dom-bind>
+</body>
+<script>
+    customElements.whenDefined('tg-element-loader').then(() => {
+        const app = document.querySelector('dom-bind');
+        app.url = "/resources/examples/element-loader/tg-element-loader-test.js";
+        app.elementName = "tg-element-loader-test";
+        app.getAttributes = function() {
+            return {
+                test: {
+                    prop1: "property_1_test",
+                    prop2: "property_2_test"
+                }
+            };
+        }
+        app.afterLoadListener = function (e) {
+            app.$.secondLoader.load();
+        };
+        app.$.firstLoader.load();
+    });
+</script>
+
+</html>
