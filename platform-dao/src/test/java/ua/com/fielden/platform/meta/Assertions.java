@@ -138,5 +138,43 @@ interface Assertions {
         }
     }
 
+    class CompositeA {
+        private final TypeMetadata.Composite typeMetadata;
+
+        public CompositeA(final TypeMetadata.Composite typeMetadata) {
+            this.typeMetadata = typeMetadata;
+        }
+
+        static CompositeA of(final TypeMetadata.Composite typeMetadata) {
+            return new CompositeA(typeMetadata);
+        }
+
+        public TypeMetadata.Composite get() { return typeMetadata; }
+
+        public CompositeA assertJavaType(final Class<?> expectedJavaType) {
+            assertEquals("Wrong Java Type", expectedJavaType, typeMetadata.javaType());
+            return this;
+        }
+
+        public CompositeA assertProperty(final CharSequence propName, final Consumer<PropertyA<PropertyMetadata>> assertor) {
+            final PropertyMetadata propertyMetadata = assertPresent(
+                    "Metadata for property [%s] not found in [%s]".formatted(propName, typeMetadata),
+                    typeMetadata.property(propName.toString()));
+            assertor.accept(PropertyA.of(propertyMetadata));
+            return this;
+        }
+
+        public CompositeA assertPropertyExists(final CharSequence propName) {
+            assertPresent("Metadata for property [%s] not found in [%s]".formatted(propName, typeMetadata),
+                          typeMetadata.property(propName.toString()));
+            return this;
+        }
+
+        public CompositeA assertPropertiesExist(final Iterable<? extends CharSequence> propName) {
+            propName.forEach(this::assertPropertyExists);
+            return this;
+        }
+    }
+
 }
 
