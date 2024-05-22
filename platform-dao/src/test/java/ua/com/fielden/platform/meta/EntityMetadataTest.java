@@ -6,10 +6,13 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.meta.Assertions.EntityA;
 import ua.com.fielden.platform.meta.PropertyMetadata.Calculated;
+import ua.com.fielden.platform.meta.PropertyMetadata.Transient;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata.CompositeKey;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata.Primitive;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.test.PlatformTestHibernateSetup;
+
+import java.util.SortedSet;
 
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.KEY_MEMBER;
 
@@ -78,7 +81,7 @@ public class EntityMetadataTest {
     public void synthetic_entity_property_key() {
         EntityA.of(generator.forEntity(TgAverageFuelUsage.class))
                 .assertProperty("key", p -> p
-                        .assertIs(PropertyMetadata.Transient.class)
+                        .assertIs(Transient.class)
                         .assertType(t -> t.assertIs(PropertyTypeMetadata.Entity.class).assertJavaType(TgVehicle.class)));
     }
 
@@ -86,7 +89,7 @@ public class EntityMetadataTest {
     public void entity_with_DynamicEntityKey() {
         EntityA.of(generator.forEntity(TgOrgUnit2.class))
                 .assertProperty("key", p -> p
-                        .assertIs(PropertyMetadata.Calculated.class)
+                        .assertIs(Calculated.class)
                         .assertType(t -> t.assertIs(CompositeKey.class).assertJavaType(String.class)))
                 .assertProperty("parent", p -> p.assertKeyEq(KEY_MEMBER, true))
                 .assertProperty("name", p -> p.assertKeyEq(KEY_MEMBER, true));
@@ -106,6 +109,16 @@ public class EntityMetadataTest {
                 .assertProperty("version", p -> p
                         .assertIs(PropertyMetadata.Persistent.class)
                         .assertType(t -> t.assertIs(Primitive.class).assertJavaType(Long.class)));
+    }
+
+    @Test
+    public void metadata_is_generated_for_collectional_properties() {
+        EntityA.of(generator.forEntity(TgWagon.class))
+                .assertProperty("slots", p -> p
+                        .assertIs(PropertyMetadata.Transient.class)
+                        .assertType(t -> t.assertCollectional()
+                                .assertCollectionType(SortedSet.class)
+                                .elementType().assertIs(PropertyTypeMetadata.Entity.class).assertJavaType(TgWagonSlot.class)));
     }
 
 }

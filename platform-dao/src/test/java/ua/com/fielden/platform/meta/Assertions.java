@@ -42,12 +42,12 @@ interface Assertions {
                 super(typeMetadata);
             }
 
-            CollectionalA assertCollectionType(final Class<?> klass) {
+            public CollectionalA assertCollectionType(final Class<?> klass) {
                 assertEquals(klass, typeMetadata.collectionType());
                 return this;
             }
 
-            PropertyTypeA<PropertyTypeMetadata> elementType() {
+            public PropertyTypeA<PropertyTypeMetadata> elementType() {
                 return new PropertyTypeA<>(typeMetadata.elementType());
             }
         }

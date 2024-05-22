@@ -42,6 +42,10 @@ public sealed interface PropertyTypeMetadata {
         return this instanceof CompositeKey;
     }
 
+    default boolean isNoKey() {
+        return this instanceof NoKey;
+    }
+
     default boolean isOther() {
         return this instanceof Other;
     }
@@ -64,6 +68,10 @@ public sealed interface PropertyTypeMetadata {
 
     default Optional<CompositeKey> asCompositeKey() {
         return this instanceof CompositeKey it ? Optional.of(it) : Optional.empty();
+    }
+
+    default Optional<NoKey> asNoKey() {
+        return this instanceof NoKey it ? Optional.of(it) : Optional.empty();
     }
 
     default Optional<Other> asOther() {
