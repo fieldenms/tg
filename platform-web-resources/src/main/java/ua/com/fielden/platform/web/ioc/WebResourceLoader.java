@@ -289,8 +289,8 @@ public class WebResourceLoader implements IWebResourceLoader {
     private static String replaceBareModuleSpecifier(String filePath, final List<String> resourcePaths) {
         final String fileText = getText(filePath);
         if (fileText != null) {
-            final Pattern importWithFrom = Pattern.compile("((import|export)\\s*?[^;]+?\\s*?from\\s*?[\"'])([^\\/\\/.][^\"'\\s]*?)(([\"'])(.*?)([;\\s]))", Pattern.MULTILINE);
-            final Pattern simpleImport = Pattern.compile("((import\\s*?)[\"'])([^\\/\\.][^\"'\\s]*?)(([\"'])(.*?)([;\\s]))", Pattern.MULTILINE);
+            final Pattern importWithFrom = Pattern.compile("((import|export)\\s*?[^;]+?\\s*?from\\s*?[\"'])([^\\/\\/.][\\w@//.\\-\\_]*?)([\"'];?)", Pattern.MULTILINE);
+            final Pattern simpleImport = Pattern.compile("((import\\s*?)[\"'])([^\\/\\.][\\w@//.\\-\\_]*?)(([\"']);?)", Pattern.MULTILINE);
 
             final String closestNodeModules = findClosestNodeModules(filePath, resourcePaths);
             Function<MatchResult, String> nodeResolver = matchResult -> matchResult.group(1) + "/resources/" + closestNodeModules + "/"
