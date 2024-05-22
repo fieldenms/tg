@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Drag example</title>
+
+    <script type="module">
+        import '@fieldenms/tg-polymer/iron-flex-layout/iron-flex-layout-classes.js'; // fullbleed class
+        import '@fieldenms/tg-polymer/paper-styles/paper-styles-classes.js'; // Roboto font
+        import './tg-drag-from-component-example.js';
+        import './tg-drop-to-component-example.js';
+    </script>
+    <custom-style>
+        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning">
+            html {
+                font-size: 10pt;
+            }
+            body {
+                font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 10pt;
+            }
+        </style>
+    </custom-style>
+</head>
+
+<body unresolved class="layout horizontal">
+    <tg-drag-from-component-example style="margin-right: 300px;"></tg-drag-from-component-example>
+    <tg-drop-to-component-example></tg-drop-to-component-example>
+</body>
+
+</html>
