@@ -6,11 +6,13 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.meta.Assertions.EntityA;
 import ua.com.fielden.platform.meta.PropertyMetadata.Calculated;
+import ua.com.fielden.platform.meta.PropertyMetadata.CritOnly;
 import ua.com.fielden.platform.meta.PropertyMetadata.Transient;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata.CompositeKey;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata.Primitive;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.test.PlatformTestHibernateSetup;
+import ua.com.fielden.platform.types.Money;
 
 import java.util.SortedSet;
 
@@ -119,6 +121,23 @@ public class EntityMetadataTest {
                         .assertType(t -> t.assertCollectional()
                                 .assertCollectionType(SortedSet.class)
                                 .elementType().assertIs(PropertyTypeMetadata.Entity.class).assertJavaType(TgWagonSlot.class)));
+    }
+
+    @Test
+    public void metadata_is_generated_for_critOnly_properties() {
+        EntityA.of(generator.forEntity(TgWorkOrder.class))
+                .assertProperty("intSingle", p -> p
+                        .assertIs(CritOnly.class)
+                        .assertType(t -> t.assertIs(Primitive.class).assertJavaType(Integer.class)))
+                .assertProperty("boolSingle", p -> p
+                        .assertIs(CritOnly.class)
+                        .assertType(t -> t.assertIs(Primitive.class).assertJavaType(boolean.class)))
+                .assertProperty("moneySingle", p -> p
+                        .assertIs(CritOnly.class)
+                        .assertType(t -> t.assertIs(PropertyTypeMetadata.Composite.class).assertJavaType(Money.class)))
+                .assertProperty("orgunitCritOnly", p -> p
+                        .assertIs(CritOnly.class)
+                        .assertType(t -> t.assertIs(PropertyTypeMetadata.Entity.class).assertJavaType(TgOrgUnit1.class)));
     }
 
 }
