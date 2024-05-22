@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.meta;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
 
 import static java.lang.Boolean.FALSE;
@@ -28,7 +29,17 @@ public sealed interface PropertyMetadata extends Comparable<PropertyMetadata> {
 
     PropertyTypeMetadata type();
 
-    Object hibType();
+    /**
+     * The Hibernate type of this property.
+     * <p>
+     * The following properties do not have a corresponding Hibernate type:
+     * <ul>
+     *   <li> Collectional properties.
+     *   <li> Property {@code key} with type {@link PropertyTypeMetadata.NoKey}.
+     * </ul>
+     */
+    // TODO encapsulate Hibernate type access in a separate abstraction once dependency injection is properly configured
+    @Nullable Object hibType();
 
     PropertyNature nature();
 

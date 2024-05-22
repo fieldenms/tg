@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import ua.com.fielden.platform.meta.PropertyMetadata.AnyKey;
 import ua.com.fielden.platform.types.tuples.T2;
 
+import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -15,7 +16,7 @@ import static java.util.stream.Collectors.joining;
 abstract class PropertyMetadataImpl<N extends PropertyNature, D extends PropertyNature.Data<N>> {
 
     private final String name;
-    private final Object hibType;
+    private final @Nullable Object hibType;
     private final N nature;
     private final D data;
     private final PropertyTypeMetadata type;
@@ -25,7 +26,7 @@ abstract class PropertyMetadataImpl<N extends PropertyNature, D extends Property
         return name;
     }
 
-    public Object hibType() {
+    public @Nullable Object hibType() {
         return hibType;
     }
 
@@ -153,12 +154,12 @@ abstract class PropertyMetadataImpl<N extends PropertyNature, D extends Property
     static class Builder<N extends PropertyNature, D extends PropertyNature.Data<N>> {
         private final String name;
         private final PropertyTypeMetadata type;
-        private final Object hibType;
+        private final @Nullable Object hibType;
         private final N nature;
         private final D data;
         private final ImmutableMap.Builder<PropertyMetadata.IKey, Object> keyMap;
 
-        Builder(final String name, final PropertyTypeMetadata type, final Object hibType, final N nature, final D data) {
+        Builder(final String name, final PropertyTypeMetadata type, final @Nullable Object hibType, final N nature, final D data) {
             this.name = name;
             this.type = type;
             this.hibType = hibType;
@@ -168,25 +169,25 @@ abstract class PropertyMetadataImpl<N extends PropertyNature, D extends Property
         }
 
         public static Builder<PropertyNature.CritOnly, PropertyNature.CritOnly.Data> critOnlyProp
-                (final String name, final PropertyTypeMetadata type, final Object hibType)
+                (final String name, final PropertyTypeMetadata type, final @Nullable Object hibType)
         {
             return new Builder<>(name, type, hibType, PropertyNature.CRIT_ONLY, PropertyNature.CritOnly.NO_DATA);
         }
 
         public static Builder<PropertyNature.Transient, PropertyNature.Transient.Data> transientProp
-                (final String name, final PropertyTypeMetadata type, final Object hibType)
+                (final String name, final PropertyTypeMetadata type, final @Nullable Object hibType)
         {
             return new Builder<>(name, type, hibType, PropertyNature.TRANSIENT, PropertyNature.Transient.NO_DATA);
         }
 
         public static Builder<PropertyNature.Persistent, PropertyNature.Persistent.Data> persistentProp
-                (final String name, final PropertyTypeMetadata type, final Object hibType, final PropertyNature.Persistent.Data data)
+                (final String name, final PropertyTypeMetadata type, final @Nullable Object hibType, final PropertyNature.Persistent.Data data)
         {
             return new Builder<>(name, type, hibType, PropertyNature.PERSISTENT, data);
         }
 
         public static Builder<PropertyNature.Calculated, PropertyNature.Calculated.Data> calculatedProp
-                (final String name, final PropertyTypeMetadata type, final Object hibType, final PropertyNature.Calculated.Data data)
+                (final String name, final PropertyTypeMetadata type, final @Nullable Object hibType, final PropertyNature.Calculated.Data data)
         {
             return new Builder<>(name, type, hibType, PropertyNature.CALCULATED, data);
         }

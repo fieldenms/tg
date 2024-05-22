@@ -269,7 +269,7 @@ final class DomainMetadataGenerator {
         }
 
         final PropertyTypeMetadata propTypeMd = mkPropertyTypeOrThrow(field);
-        final Object hibType = getHibernateType(field);
+        final Object hibType = propTypeMd.isCollectional() || propTypeMd.isNoKey() ? null : getHibernateType(field);
         final MapTo atMapTo = getAnnotation(field, MapTo.class);
         final Calculated atCalculated = getAnnotation(field, Calculated.class);
 
