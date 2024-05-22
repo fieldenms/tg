@@ -15,6 +15,8 @@ import java.util.Date;
 import java.util.Optional;
 import java.util.Set;
 
+import static ua.com.fielden.platform.meta.TypeRegistry.COMPOSITE_TYPES;
+import static ua.com.fielden.platform.meta.TypeRegistry.PRIMITIVE_PROPERTY_TYPES;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 final class PropertyTypeMetadataGenerator {
@@ -41,7 +43,7 @@ final class PropertyTypeMetadataGenerator {
     }
 
     private Optional<PropertyTypeMetadata.Primitive> asPrimitive(final Type type) {
-        return type instanceof Class<?> klass && PRIMITIVE_TYPES.contains(klass)
+        return type instanceof Class<?> klass && PRIMITIVE_PROPERTY_TYPES.contains(klass)
                 ? Optional.of(new PrimitivePropertyTypeMetadata(klass))
                 : Optional.empty();
     }
@@ -58,12 +60,6 @@ final class PropertyTypeMetadataGenerator {
                 .map(eltTypeMd -> new CollectionalPropertyTypeMetadata(rawType, eltTypeMd));
         // new EqlMetadataGenerationException("Failed to generate metadata for element type of collectional property type [%s].".formatted(type));
     }
-
-    private static final Set<Class<?>> PRIMITIVE_TYPES = Set.of(
-            String.class, Long.class, Integer.class, BigDecimal.class, Date.class, boolean.class, Boolean.class, byte[].class,
-            Colour.class, Hyperlink.class, Currency.class);
-
-    private static final Set<Class<?>> COMPOSITE_TYPES = Set.of(Money.class);
 
     private static boolean isValidCollectionalElementType(final PropertyTypeMetadata eltTypeMetadata) {
         return switch (eltTypeMetadata) {
