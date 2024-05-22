@@ -11,6 +11,8 @@ import ua.com.fielden.platform.meta.PropertyMetadata.Transient;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata.CompositeKey;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata.Primitive;
 import ua.com.fielden.platform.sample.domain.*;
+import ua.com.fielden.platform.sample.domain.crit_gen.SecondLevelEntity;
+import ua.com.fielden.platform.sample.domain.crit_gen.TopLevelEntity;
 import ua.com.fielden.platform.test.PlatformTestHibernateSetup;
 import ua.com.fielden.platform.types.Money;
 
@@ -150,6 +152,17 @@ public class EntityMetadataTest {
                 .assertProperty("lastFuelUsageQty", p -> p
                         .assertIs(Calculated.class)
                         .assertType(t -> t.assertIs(Primitive.class).assertJavaType(BigDecimal.class)));
+    }
+
+    @Test
+    public void metadata_is_generated_for_transient_properties() {
+        EntityA.of(generator.forEntity(UnionEntityWithoutSecondDescTitle.class))
+                .assertProperty("propertyOne", p -> p
+                        .assertIs(Transient.class)
+                        .assertType(t -> t.assertIs(PropertyTypeMetadata.Entity.class).assertJavaType(EntityOne.class)))
+                .assertProperty("propertyThree", p -> p
+                        .assertIs(Transient.class)
+                        .assertType(t -> t.assertIs(PropertyTypeMetadata.Entity.class).assertJavaType(EntityThree.class)));
     }
 
 }
