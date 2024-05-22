@@ -17,6 +17,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
 import ua.com.fielden.platform.eql.meta.PropColumn;
+import ua.com.fielden.platform.eql.retrieval.EntityContainerEnhancer;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 
 import javax.annotation.Nullable;
@@ -52,6 +53,12 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
  * - Synthetic based on Persistent - can't have an entity-typed key.
  */
 
+/**
+ * <h4> Collectional Properties </h4>
+ * Although collectional properties are implicitly calculated, the nature of any given collectional property is inferred
+ * from its definition (typically it is {@link PropertyNature.Transient}). The calculation part is independently
+ * performed by {@link EntityContainerEnhancer}.
+ */
 final class DomainMetadataGenerator {
 
     private static final org.hibernate.type.Type H_ENTITY = LongType.INSTANCE;

@@ -887,6 +887,7 @@ public class EntityUtils {
 
     /**
      * Splits dot.notated property in two parts: first level property and the rest of subproperties.
+     * If there is no rest, the 2nd pair element will be {@code null}.
      *
      * @param dotNotatedPropName
      * @return
