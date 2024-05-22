@@ -9,7 +9,7 @@ import static java.util.function.Function.identity;
 
 final class CompositeTypeMetadataImpl implements TypeMetadata.Composite {
 
-    private final Class<? extends AbstractEntity<?>> javaType;
+    private final Class<?> javaType;
     private final Map<String, ? extends PropertyMetadata> properties;
 
     CompositeTypeMetadataImpl(final Builder builder) {
@@ -19,7 +19,7 @@ final class CompositeTypeMetadataImpl implements TypeMetadata.Composite {
     }
 
     @Override
-    public Class<? extends AbstractEntity<?>> javaType() {
+    public Class<?> javaType() {
         return javaType;
     }
 
@@ -54,11 +54,15 @@ final class CompositeTypeMetadataImpl implements TypeMetadata.Composite {
     }
 
     static final class Builder {
-        private Class<? extends AbstractEntity<?>> javaType;
+        private Class<?> javaType;
         private final Collection<PropertyMetadata> properties = new ArrayList<>();
 
-        Builder(final Class<? extends AbstractEntity<?>> javaType) {
+        Builder(final Class<?> javaType) {
             this.javaType = javaType;
+        }
+
+        public Class<?> getJavaType() {
+            return javaType;
         }
 
         public Builder javaType(final Class<? extends AbstractEntity<?>> javaType) {
@@ -75,6 +79,11 @@ final class CompositeTypeMetadataImpl implements TypeMetadata.Composite {
             Collections.addAll(this.properties, properties);
             return this;
         }
+
+        public TypeMetadata.Composite build() {
+            return new CompositeTypeMetadataImpl(this);
+        }
+
     }
 
 }

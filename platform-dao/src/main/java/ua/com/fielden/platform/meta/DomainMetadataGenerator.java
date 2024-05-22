@@ -106,6 +106,58 @@ final class DomainMetadataGenerator {
         }
     }
 
+    // ****************************************
+    // * Composite Type Metadata
+
+    public Optional<TypeMetadata.Composite> forComposite(final Class<?> type) {
+        if (!TypeRegistry.COMPOSITE_TYPES.contains(type)) {
+            return Optional.empty();
+        }
+
+        final var builder = new CompositeTypeMetadataImpl.Builder(type);
+        return Optional.of(builder.properties(buildProperties(builder)).build());
+    }
+
+    /**
+     * Builds metadata for properties of a given composite type.
+     */
+    private Iterable<? extends PropertyMetadata> buildProperties(final CompositeTypeMetadataImpl.Builder typeBuilder) {
+        // DO NOT MODIFY THE GIVEN BUILDER
+        return Arrays.stream(typeBuilder.getJavaType().getDeclaredFields())
+                .map(this::mkPropForComposite)
+                .flatMap(Optional::stream)
+                .toList();
+    }
+
+    private Optional<PropertyMetadata> mkPropForComposite(final Field field) {
+        final IsProperty atIsProperty = getAnnotation(field, IsProperty.class);
+        if (atIsProperty == null) {
+            return Optional.empty();
+        }
+
+        final PropertyTypeMetadata propTypeMd = mkPropertyTypeOrThrow(field);
+        final Object hibType = getHibernateType(field);
+        final MapTo atMapTo = getAnnotation(field, MapTo.class);
+
+        final PropertyMetadataImpl.Builder<?, ?> builder;
+
+        // PERSISTENT
+        if (atMapTo != null) {
+            final String columnName = mkColumnName(field.getName(), atMapTo);
+            builder = persistentProp(field.getName(), propTypeMd, hibType,
+                                     PropertyNature.Persistent.data(propColumn(columnName, atIsProperty)));
+        }
+        // TRANSIENT
+        else {
+            builder = transientProp(field.getName(), propTypeMd, hibType);
+        }
+
+        return Optional.of(builder.build());
+    }
+
+    // ****************************************
+    // * Entity Metadata
+
     public EntityMetadata forEntity(final Class<? extends AbstractEntity<?>> entityType) {
         final EntityMetadataBuilder<?, ?> entityBuilder;
         if (isUnionEntityType(entityType)) {
@@ -125,11 +177,6 @@ final class DomainMetadataGenerator {
         }
 
         return entityBuilder.properties(buildProperties(entityBuilder)).build();
-    }
-
-    public Optional<TypeMetadata.Composite> forComposite(final Class<?> type) {
-        // TODO
-        throw new UnsupportedOperationException();
     }
 
     /**
