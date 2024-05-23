@@ -49,7 +49,6 @@ public class ReverseProxyServlet extends HttpServlet {
 
     public static Optional<Server> createProxyService(
             final Properties props,
-            final boolean requiresHttps,
             final Logger logger
     ) {
         if (!Boolean.valueOf(props.getProperty("proxy.enabled", "true"))) {
@@ -83,7 +82,7 @@ public class ReverseProxyServlet extends HttpServlet {
         final ServletHandler handler = new ServletHandler();
         server.setHandler(handler);
         // Proxy servlet instantiation, which still needs to be associated with a Jetty instance
-        addProxyServlet(handler, requiresHttps, maxThreads, minThreads, idleTimeout, acceptors);
+        addProxyServlet(handler, maxThreads, minThreads, idleTimeout, acceptors);
         return of(server);
     }
 
@@ -92,11 +91,9 @@ public class ReverseProxyServlet extends HttpServlet {
      * A factory method for instantiating and adding Proxy servlet to {@code handler}.
      *
      * @param handler
-     * @param requiresHttps
      */
     private static void addProxyServlet(
             final ServletHandler handler,
-            final boolean requiresHttps,
             final int maxThreads,
             final int minThreads,
             final int idleTimeout,
