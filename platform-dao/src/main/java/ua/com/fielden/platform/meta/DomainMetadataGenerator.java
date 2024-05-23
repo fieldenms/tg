@@ -383,19 +383,17 @@ final class DomainMetadataGenerator {
                                    .build());
     }
 
-    /**
-     * Prefer {@link #mkPropertyType(Field)} whenever possible.
-     */
-    public Optional<PropertyTypeMetadata> mkPropertyType(final Type type) {
-        final var cacheEntry = primitivePropTypeMetadataCache.get(type);
+    public Optional<PropertyTypeMetadata> mkPropertyType(final Field field) {
+        final var primitivePropTypeMetadataCacheKey = field.getGenericType();
+        final var cacheEntry = primitivePropTypeMetadataCache.get(primitivePropTypeMetadataCacheKey);
         if (cacheEntry != null) {
             return Optional.of(cacheEntry);
         }
 
-        final Optional<PropertyTypeMetadata> optPtm = propTypeMetadataGenerator.fromType(type);
+        final Optional<PropertyTypeMetadata> optPtm = propTypeMetadataGenerator.generate(field);
         optPtm.ifPresent(ptm -> {
             if (ptm instanceof PropertyTypeMetadata.Primitive p) {
-                primitivePropTypeMetadataCache.put(type, p);
+                primitivePropTypeMetadataCache.put(primitivePropTypeMetadataCacheKey, p);
             }
         });
         return optPtm;
@@ -403,20 +401,31 @@ final class DomainMetadataGenerator {
     // Cache for primitive property types that exists throughout the lifetime of this generator
     private final ConcurrentHashMap<Type, PropertyTypeMetadata.Primitive> primitivePropTypeMetadataCache = new ConcurrentHashMap<>();
 
-    public Optional<PropertyTypeMetadata> mkPropertyType(final Field field) {
-        return mkPropertyType(field.getGenericType());
-    }
+    public Optional<PropertyTypeMetadata> mkPropertyType(final Type type) {
+        final var cacheEntry = primitivePropTypeMetadataCache.get(type);
+        if (cacheEntry != null) {
+            return Optional.of(cacheEntry);
+        }
 
-    /**
-     * Prefer {@link #mkPropertyType(Field)} whenever possible.
-     */
-    private PropertyTypeMetadata mkPropertyTypeOrThrow(final Type type) {
-        return mkPropertyType(type)
-                .orElseThrow(() -> new EqlMetadataGenerationException("Failed to generate metadata for property type [%s]".formatted(type.getTypeName())));
+        final Optional<PropertyTypeMetadata> optPtm = propTypeMetadataGenerator.generate(type);
+        optPtm.ifPresent(ptm -> {
+            if (ptm instanceof PropertyTypeMetadata.Primitive p) {
+                primitivePropTypeMetadataCache.put(type, p);
+            }
+        });
+        return optPtm;
     }
 
     private PropertyTypeMetadata mkPropertyTypeOrThrow(final Field field) {
-        return mkPropertyTypeOrThrow(field.getGenericType());
+        return mkPropertyType(field)
+                .orElseThrow(() -> new EqlMetadataGenerationException(
+                        "Failed to generate metadata for type of property [%s]".formatted(field.toGenericString())));
+    }
+
+    private PropertyTypeMetadata mkPropertyTypeOrThrow(final Type type) {
+        return mkPropertyType(type)
+                .orElseThrow(() -> new EqlMetadataGenerationException(
+                        "Failed to generate metadata for property type [%s]".formatted(type.getTypeName())));
     }
 
     // TODO old code; merge with HibernateTypeDeterminer

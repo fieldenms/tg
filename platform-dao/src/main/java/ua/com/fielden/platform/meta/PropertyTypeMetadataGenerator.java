@@ -4,16 +4,10 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.NoKey;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.types.Colour;
-import ua.com.fielden.platform.types.Hyperlink;
-import ua.com.fielden.platform.types.Money;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
-import java.math.BigDecimal;
-import java.util.Currency;
-import java.util.Date;
 import java.util.Optional;
-import java.util.Set;
 
 import static ua.com.fielden.platform.meta.TypeRegistry.COMPOSITE_TYPES;
 import static ua.com.fielden.platform.meta.TypeRegistry.PRIMITIVE_PROPERTY_TYPES;
@@ -21,13 +15,27 @@ import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 final class PropertyTypeMetadataGenerator {
 
+    /**
+     * Generates metadata for the property's type.
+     */
     // TODO use Either to capture the error message
-    public Optional<PropertyTypeMetadata> fromType(final Type type) {
+    public Optional<PropertyTypeMetadata> generate(final Field field) {
+        // start with empty() to type-check
+        return Optional.<PropertyTypeMetadata>empty()
+                .or(() -> PropertyTypeDeterminator.collectionalType(field)
+                        .flatMap(rawType_eltType -> asCollectional(rawType_eltType._1, rawType_eltType._2)))
+                .or(() -> generate(field.getGenericType()));
+    }
+
+    /**
+     * Prefer {@link #generate(Field)} if the property's {@link Field} is available. This method should be used only in
+     * special cases. It's uncapable of handling collectional types, for example, since that would require knowledge
+     * of property's annotations.
+     */
+    public Optional<PropertyTypeMetadata> generate(final Type type) {
         // start with empty() to type-check
         return Optional.<PropertyTypeMetadata>empty()
                 .or(() -> asPrimitive(type))
-                .or(() -> PropertyTypeDeterminator.asCollectional(type)
-                        .flatMap(rawType_eltType -> asCollectional(rawType_eltType._1, rawType_eltType._2)))
                 .or(() -> type instanceof Class<?> klass && isEntityType(klass)
                         ? Optional.of(new EntityPropertyTypeMetadata((Class<? extends AbstractEntity<?>>) klass))
                         : Optional.empty())
@@ -55,7 +63,7 @@ final class PropertyTypeMetadataGenerator {
     }
 
     private Optional<PropertyTypeMetadata.Collectional> asCollectional(final Class<?> rawType, final Class<?> elementType) {
-        return fromType(elementType)
+        return generate(elementType)
                 .filter(PropertyTypeMetadataGenerator::isValidCollectionalElementType)
                 .map(eltTypeMd -> new CollectionalPropertyTypeMetadata(rawType, eltTypeMd));
         // new EqlMetadataGenerationException("Failed to generate metadata for element type of collectional property type [%s].".formatted(type));

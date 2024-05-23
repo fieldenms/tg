@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.reflection;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.isDecimal;
 import static ua.com.fielden.platform.utils.EntityUtils.isInteger;
 import static ua.com.fielden.platform.utils.Pair.pair;
@@ -32,6 +34,8 @@ import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+
+import javax.annotation.Nullable;
 
 /**
  * Contains methods for property type determination. Methods traverses through 1. class hierarchy 2. dot-notation expression.
@@ -380,20 +384,40 @@ public class PropertyTypeDeterminator {
     }
 
     /**
-     * Given a type of a collectional property, returns a pair (raw collectional type, collectional element type).
+     * Given a collectional property, returns a pair (raw collectional type, collectional element type).
+     * <p>
+     * This method does not check the property definition's correctness.
+     * <p>
+     * The element type must be specified with {@link IsProperty}. If it's missing, the first type parameter will be used.
+     * This lax behaviour might become stricter in the future.
      * <pre>{@code
-     * > asCollectional(List<String>)
-     * (List.class, String.class)
-     * > asCollectional(List)
-     * ()
+     * @IsProperty(Vehicle.class)
+     * List<Vehicle> vehicles;
+     * => (List.class, Vehicle.class)
+     *
+     * @IsProperty
+     * List<Vehicle> vehicles;
+     * => (List.class, Vehicle.class)
+     *
+     * @IsProperty
+     * String name;
+     * => ()
      * }</pre>
      */
-    public static Optional<T2<Class<?>, Class<?>>> asCollectional(final Type type) {
-        if (type instanceof ParameterizedType paramType) {
-            if (paramType.getRawType() instanceof Class<?> rawClass && paramType.getActualTypeArguments().length == 1) {
-                return Optional.ofNullable(classFrom(paramType.getActualTypeArguments()[0]))
-                        .map(eltClass -> T2.t2(rawClass, eltClass));
+    public static Optional<T2<Class<?>, Class<?>>> collectionalType(final Field field) {
+        if (field.getGenericType() instanceof ParameterizedType paramType) {
+            if (paramType.getRawType() instanceof Class<?> rawClass && EntityUtils.isCollectional(rawClass)) {
+                final @Nullable Class<?> eltClass;
+                final IsProperty atIsProperty = getAnnotation(field, IsProperty.class);
+                if (atIsProperty != null && atIsProperty.value() != IsProperty.DEFAULT_VALUE) {
+                    eltClass = atIsProperty.value();
+                } else if (paramType.getActualTypeArguments().length == 1) {
+                    eltClass = classFrom(paramType.getActualTypeArguments()[0]);
+                } else {
+                    eltClass = null;
+                }
 
+                return eltClass == null ? Optional.empty() : Optional.of(t2(rawClass, eltClass));
             }
         }
 
