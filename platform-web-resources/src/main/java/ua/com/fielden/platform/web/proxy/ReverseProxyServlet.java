@@ -203,7 +203,9 @@ public class ReverseProxyServlet extends HttpServlet {
 
         // Use AsyncContext to improve performance
         final AsyncContext asyncContext = req.startAsync();
-        asyncContext.setTimeout(30_000); // TODO  Set a timeout for the async context as a configuration property.
+        // Server-Sent Event requests require special handling - no timeout, no completion and aggressive flushing of the buffer
+        final boolean isSSE = "text/event-stream".equals(req.getHeader("Accept"));
+        asyncContext.setTimeout(isSSE ? 0 : 30_000); // TODO  Set a timeout for the async context as a configuration property.
 
         // Create proxy request with targetUrl as the destination
         final Request proxyRequest = httpClient.newRequest(targetUrl).method(req.getMethod());
@@ -250,6 +252,10 @@ public class ReverseProxyServlet extends HttpServlet {
                     byte[] bytes = new byte[content.remaining()];
                     content.get(bytes);
                     proxyResponse.getOutputStream().write(bytes);
+                    // immediately flush content for SSE requests, which critical for the heartbeat to work correctly
+                    if (isSSE) {
+                        proxyResponse.getOutputStream().flush();
+                    }
                 } catch (final IOException ex) {
                     asyncContext.complete();
                 }
@@ -263,8 +269,11 @@ public class ReverseProxyServlet extends HttpServlet {
                         proxyResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Proxy Error: " + result.getFailure().getMessage());
                     } catch (final IOException ex) {
                         ex.printStackTrace();
+                    } finally {
+                        asyncContext.complete();
                     }
-                } else {
+                }
+                else {
                     final Response response = result.getResponse();
                     if (response.getStatus() >= 300 && response.getStatus() < 400) {
                         final String location = response.getHeaders().get("Location");
@@ -275,10 +284,16 @@ public class ReverseProxyServlet extends HttpServlet {
                                                        : location;
                             HttpServletResponse proxyResponse = (HttpServletResponse) asyncContext.getResponse();
                             proxyResponse.setHeader("Location", newLocation);
+                            asyncContext.complete();
+                        }
+                    }
+                    else {
+                        // The context should not be completed for SSE requests as it will be reused.
+                        if (!isSSE) {
+                            asyncContext.complete();
                         }
                     }
                 }
-                asyncContext.complete();
             }
         });
     }
