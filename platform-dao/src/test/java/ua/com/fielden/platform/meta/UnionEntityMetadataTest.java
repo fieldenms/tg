@@ -15,11 +15,11 @@ import java.util.List;
 
 public class UnionEntityMetadataTest {
 
-    private final DomainMetadataGenerator generator = new DomainMetadataGenerator(
-            Guice.createInjector(new HibernateUserTypesModule()),
-            PlatformTestHibernateSetup.getHibernateTypes(),
-            DbVersion.MSSQL
-    );
+    private final TestDomainMetadataGenerator generator = TestDomainMetadataGenerator.wrap(
+            new DomainMetadataGenerator(
+                    Guice.createInjector(new HibernateUserTypesModule()),
+                    PlatformTestHibernateSetup.getHibernateTypes(),
+                    DbVersion.MSSQL));
 
     @Test
     public void union_entity_gets_union_nature() {

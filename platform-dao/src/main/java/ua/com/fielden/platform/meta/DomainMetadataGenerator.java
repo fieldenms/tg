@@ -42,6 +42,8 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator.generateCompositeKeyEqlExpression;
 import static ua.com.fielden.platform.eql.meta.DomainMetadataUtils.extractExpressionModelFromCalculatedProperty;
+import static ua.com.fielden.platform.meta.EntityNature.SYNTHETIC;
+import static ua.com.fielden.platform.meta.EntityNature.UNION;
 import static ua.com.fielden.platform.meta.PropertyMetadataImpl.Builder.*;
 import static ua.com.fielden.platform.meta.PropertyTypeMetadata.COMPOSITE_KEY;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.*;
@@ -158,25 +160,31 @@ final class DomainMetadataGenerator {
     // ****************************************
     // * Entity Metadata
 
-    public EntityMetadata forEntity(final Class<? extends AbstractEntity<?>> entityType) {
-        final EntityMetadataBuilder<?, ?> entityBuilder;
-        if (isUnionEntityType(entityType)) {
-            final var unionEntityType = (Class<? extends AbstractUnionEntity>) entityType;
-            entityBuilder = EntityMetadataBuilder.unionEntity(
-                    unionEntityType, EntityNature.Union.data(produceUnionEntityModels(unionEntityType)));
-        } else if (isPersistedEntityType(entityType)) {
-            entityBuilder = EntityMetadataBuilder.persistentEntity(
-                    entityType, EntityNature.Persistent.data(mkTableName(entityType)));
-        } else if (isSyntheticEntityType(entityType)) {
-            final var modelField = requireNonNull(findSyntheticModelFieldFor(entityType),
-                                                  () -> "Synthetic entity [%s] has no model field.".formatted(entityType.getTypeName()));
-            entityBuilder = EntityMetadataBuilder.syntheticEntity(
-                    entityType, EntityNature.Synthetic.data(getEntityModelsOfQueryBasedEntityType(entityType, modelField)));
-        } else {
-            entityBuilder = EntityMetadataBuilder.otherEntity(entityType);
+    public Optional<EntityMetadata> forEntity(final Class<? extends AbstractEntity<?>> entityType) {
+        final Optional<EntityMetadataBuilder<?, ?>> entityBuilder;
+
+        switch (inferEntityNature(entityType)) {
+            case EntityNature.Union $ -> {
+                final var unionEntityType = (Class<? extends AbstractUnionEntity>) entityType;
+                entityBuilder = Optional.of(EntityMetadataBuilder.unionEntity(
+                        unionEntityType, EntityNature.Union.data(produceUnionEntityModels(unionEntityType))));
+            }
+            case EntityNature.Persistent $ ->
+                entityBuilder = Optional.of(EntityMetadataBuilder.persistentEntity(
+                        entityType, EntityNature.Persistent.data(mkTableName(entityType))));
+            case EntityNature.Synthetic $ -> {
+                final var modelField = requireNonNull(findSyntheticModelFieldFor(entityType),
+                                                      () -> "Synthetic entity [%s] has no model field.".formatted(
+                                                              entityType.getTypeName()));
+                entityBuilder = Optional.of(EntityMetadataBuilder.syntheticEntity(
+                        entityType,
+                        EntityNature.Synthetic.data(getEntityModelsOfQueryBasedEntityType(entityType, modelField))));
+            }
+            case EntityNature.Other $ -> entityBuilder = Optional.empty();
+
         }
 
-        return entityBuilder.properties(buildProperties(entityBuilder)).build();
+        return entityBuilder.map(b -> b.properties(buildProperties(b)).build());
     }
 
     /**
@@ -455,6 +463,21 @@ final class DomainMetadataGenerator {
             } else {
                 throw new EqlMetadataGenerationException("Persistent annotation doesn't provide intended information.");
             }
+        }
+    }
+
+    EntityNature inferEntityNature(final Class<? extends AbstractEntity<?>> entityType) {
+        if (isUnionEntityType(entityType)) {
+            return UNION;
+        }
+        else if (isPersistedEntityType(entityType)) {
+            return EntityNature.PERSISTENT;
+        }
+        else if (isSyntheticEntityType(entityType)) {
+            return SYNTHETIC;
+        }
+        else {
+            return EntityNature.OTHER;
         }
     }
 

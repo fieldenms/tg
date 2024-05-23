@@ -23,11 +23,11 @@ import static ua.com.fielden.platform.meta.PropertyMetadataKeys.KEY_MEMBER;
 
 public class EntityMetadataTest {
 
-    private final DomainMetadataGenerator generator = new DomainMetadataGenerator(
-            Guice.createInjector(new HibernateUserTypesModule()),
-            PlatformTestHibernateSetup.getHibernateTypes(),
-            DbVersion.MSSQL
-    );
+    private final TestDomainMetadataGenerator generator = TestDomainMetadataGenerator.wrap(
+            new DomainMetadataGenerator(
+                    Guice.createInjector(new HibernateUserTypesModule()),
+                    PlatformTestHibernateSetup.getHibernateTypes(),
+                    DbVersion.MSSQL));
 
     @Test
     public void entity_annotated_with_MapEntityTo_gets_persistent_nature() {

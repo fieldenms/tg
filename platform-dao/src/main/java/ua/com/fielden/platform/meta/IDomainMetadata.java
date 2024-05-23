@@ -6,7 +6,6 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation;
 import ua.com.fielden.platform.eql.meta.EqlTable;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 
 import java.util.Collection;
 import java.util.List;
@@ -33,6 +32,16 @@ public interface IDomainMetadata {
 
     Optional<TypeMetadata> forType(Class<?> javaType);
 
+    /**
+     * Non-throwing alternative to {@link #forEntity(Class)}.
+     */
+    Optional<EntityMetadata> forEntityOpt(Class<? extends AbstractEntity<?>> entityType);
+
+    /**
+     * Retrieves metadata for an entity or throws if an entity is unfit for metadata generation.
+     * </p>
+     * {@link #forEntityOpt(Class)} is a non-throwing alternative.
+     */
     EntityMetadata forEntity(Class<? extends AbstractEntity<?>> entityType);
 
     /**
