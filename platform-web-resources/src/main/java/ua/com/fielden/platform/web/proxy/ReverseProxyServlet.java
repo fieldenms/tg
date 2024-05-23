@@ -56,11 +56,11 @@ public class ReverseProxyServlet extends HttpServlet {
             logger.warn("Proxy service is disabled. Make sure HAProxy or other external proxy is in use.");
             return empty();
         }
-        final int port = parseInt(props.getProperty("proxy.jetty.port", "8092"));
-        final int maxThreads = parseInt(props.getProperty("proxy.jetty.threadPool.maxThreads", "10"));
-        final int minThreads = parseInt(props.getProperty("proxy.jetty.threadPool.minThreads", "1"));
-        final int idleTimeout = parseInt(props.getProperty("proxy.jetty.threadPool.idleTimeout", "60000"));
-        final int acceptors = parseInt(props.getProperty("proxy.jetty.connector.acceptors", "3"));
+        final int port = parseInt(props.getProperty("proxy.jetty.port", "8090"));
+        final int minThreads = parseInt(props.getProperty("proxy.jetty.threadPool.minThreads", "5"));
+        final int maxThreads = parseInt(props.getProperty("proxy.jetty.threadPool.maxThreads", "50"));
+        final int idleTimeout = parseInt(props.getProperty("proxy.jetty.threadPool.idleTimeout", "30000"));
+        final int acceptors = parseInt(props.getProperty("proxy.jetty.connector.acceptors", "2"));
 
         logger.info(
                 """
