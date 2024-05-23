@@ -188,7 +188,11 @@ public class ReverseProxyServlet extends HttpServlet {
      */
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        final String requestTargetServer = req.getRequestURI().startsWith("/sse/")
+        // Server-Sent Event requests require special handling:
+        // 1. Forward to a designated resource, if specified.
+        // 2. Async operation should not timeout or complete, and aggressive flushing of the content buffer is required to push all data back to the client.
+        final boolean isSSE = "text/event-stream".equals(req.getHeader("Accept"));
+        final String requestTargetServer = isSSE
                                            ? maybeTargetSseServer.orElse(targetServer)
                                            : targetServer;
         final String targetUrl;
@@ -203,8 +207,6 @@ public class ReverseProxyServlet extends HttpServlet {
 
         // Use AsyncContext to improve performance
         final AsyncContext asyncContext = req.startAsync();
-        // Server-Sent Event requests require special handling - no timeout, no completion and aggressive flushing of the buffer
-        final boolean isSSE = "text/event-stream".equals(req.getHeader("Accept"));
         asyncContext.setTimeout(isSSE ? 0 : 30_000); // TODO  Set a timeout for the async context as a configuration property.
 
         // Create proxy request with targetUrl as the destination
