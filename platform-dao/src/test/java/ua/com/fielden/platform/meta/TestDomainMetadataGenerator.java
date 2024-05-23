@@ -3,6 +3,7 @@ package ua.com.fielden.platform.meta;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 import static java.lang.String.format;
+import static org.junit.Assert.assertTrue;
 
 /**
  * A wrapper for {@link DomainMetadataGenerator} for testing purposes.
@@ -24,7 +25,16 @@ class TestDomainMetadataGenerator {
      */
     public EntityMetadata forEntity(final Class<? extends AbstractEntity<?>> entityType) {
         return generator.forEntity(entityType)
-                .orElseThrow(() -> new AssertionError(format("Expected metadata to be generated for entity [%s]", entityType)));
+                .orElseThrow(() -> new AssertionError(format("Expected metadata to be generated for entity [%s]",
+                                                             entityType.getTypeName())));
+    }
+
+    // raw AbstractEntity is used to accept generic types
+    public TestDomainMetadataGenerator assertNotGenerated(final Class<? extends AbstractEntity> entityType) {
+        assertTrue(format("Did not expected metadata to be generated for entity [%s]", entityType.getTypeName()),
+                   // cast is required to type-check...
+                   generator.forEntity((Class<? extends AbstractEntity<?>>) entityType).isEmpty());
+        return this;
     }
 
 }

@@ -2,7 +2,11 @@ package ua.com.fielden.platform.meta;
 
 import com.google.inject.Guice;
 import org.junit.Test;
+import ua.com.fielden.platform.domain.metadata.DomainTreeEntity;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.meta.Assertions.EntityA;
 import ua.com.fielden.platform.meta.PropertyMetadata.Calculated;
@@ -10,6 +14,8 @@ import ua.com.fielden.platform.meta.PropertyMetadata.CritOnly;
 import ua.com.fielden.platform.meta.PropertyMetadata.Transient;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata.CompositeKey;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata.Primitive;
+import ua.com.fielden.platform.ref_hierarchy.AbstractTreeEntry;
+import ua.com.fielden.platform.ref_hierarchy.TypeLevelHierarchyEntry;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.sample.domain.crit_gen.SecondLevelEntity;
 import ua.com.fielden.platform.sample.domain.crit_gen.TopLevelEntity;
@@ -163,6 +169,25 @@ public class EntityMetadataTest {
                 .assertProperty("propertyThree", p -> p
                         .assertIs(Transient.class)
                         .assertType(t -> t.assertIs(PropertyTypeMetadata.Entity.class).assertJavaType(EntityThree.class)));
+    }
+
+    @Test
+    public void metadata_is_not_generated_for_abstract_entity_types() {
+        generator.assertNotGenerated(AbstractEntity.class)
+                .assertNotGenerated(AbstractTreeEntry.class)
+                .assertNotGenerated(AbstractPersistentEntity.class);
+    }
+
+    @Test
+    public void metadata_is_not_generated_for_non_persistent_functional_entity_types() {
+        generator.assertNotGenerated(TgDummyAction.class);
+    }
+
+    @Test
+    public void metadata_is_not_generated_for_entity_types_with_no_exact_nature() {
+        generator.assertNotGenerated(EntityAggregates.class);
+        generator.assertNotGenerated(DomainTreeEntity.class);
+        generator.assertNotGenerated(TypeLevelHierarchyEntry.class);
     }
 
 }
