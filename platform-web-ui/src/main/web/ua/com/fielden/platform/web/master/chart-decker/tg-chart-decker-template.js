@@ -1,13 +1,13 @@
-import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
+import '/resources/node_modules/@fieldenms/tg-polymer/polymer/polymer-legacy.js';
 
-import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import {Polymer} from '/resources/node_modules/@fieldenms/tg-polymer/polymer/lib/legacy/polymer-fn.js';
+import {html} from '/resources/node_modules/@fieldenms/tg-polymer/polymer/lib/utils/html-tag.js';
 
-import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
+import '/resources/node_modules/@fieldenms/tg-polymer/iron-flex-layout/iron-flex-layout-classes.js';
 
 <!--@imports-->
-import {TgChartDeckerTemplateBehavior} from '/resources/components/chart-decker/tg-chart-decker-template-behavior.js'
-import '/resources/master/tg-entity-master-styles.js';
+import {TgChartDeckerTemplateBehavior} from '/resources/node_modules/@fieldenms/tg-web-components/components/chart-decker/tg-chart-decker-template-behavior.js'
+import '/resources/node_modules/@fieldenms/tg-web-components/master/tg-entity-master-styles.js';
 
 const template = html`
     <style include="tg-entity-master-styles"></style>

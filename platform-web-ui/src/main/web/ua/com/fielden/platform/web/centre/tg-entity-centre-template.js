@@ -1,32 +1,32 @@
-import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
+import '/resources/node_modules/@fieldenms/tg-polymer/polymer/polymer-legacy.js';
 
 <!--@imports-->
 
-import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
-import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import { Polymer } from '/resources/node_modules/@fieldenms/tg-polymer/polymer/lib/legacy/polymer-fn.js';
+import { html } from '/resources/node_modules/@fieldenms/tg-polymer/polymer/lib/utils/html-tag.js';
 
-import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
-import '/resources/polymer/@polymer/iron-icons/editor-icons.js';
-import '/resources/polymer/@polymer/iron-icons/hardware-icons.js';
-import '/resources/polymer/@polymer/iron-icons/image-icons.js';
-import '/resources/polymer/@polymer/iron-icons/av-icons.js';
+import '/resources/node_modules/@fieldenms/tg-polymer/iron-icons/iron-icons.js';
+import '/resources/node_modules/@fieldenms/tg-polymer/iron-icons/editor-icons.js';
+import '/resources/node_modules/@fieldenms/tg-polymer/iron-icons/hardware-icons.js';
+import '/resources/node_modules/@fieldenms/tg-polymer/iron-icons/image-icons.js';
+import '/resources/node_modules/@fieldenms/tg-polymer/iron-icons/av-icons.js';
 
-import '/resources/polymer/@polymer/paper-button/paper-button.js';
-import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
-import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
+import '/resources/node_modules/@fieldenms/tg-polymer/paper-button/paper-button.js';
+import '/resources/node_modules/@fieldenms/tg-polymer/paper-icon-button/paper-icon-button.js';
+import '/resources/node_modules/@fieldenms/tg-polymer/iron-flex-layout/iron-flex-layout-classes.js';
 
-import '/resources/actions/tg-ui-action.js';
-import '/resources/egi/tg-entity-grid-inspector.js';
-import '/resources/components/tg-dropdown-switch.js';
-import '/resources/master/actions/tg-action.js';
-import {TgEgiMasterBehavior} from '/resources/egi/tg-egi-master-behavior.js';
-import '/resources/centre/tg-selection-criteria.js';
-import { TgSelectionCriteriaTemplateBehavior } from '/resources/centre/tg-selection-criteria-template-behavior.js';
-import '/resources/centre/tg-entity-centre.js';
-import '/resources/centre/tg-entity-centre-styles.js';
-import '/resources/centre/tg-selection-criteria-styles.js';
-import { TgEntityCentreTemplateBehavior } from '/resources/centre/tg-entity-centre-template-behavior.js';
-import '/resources/centre/tg-entity-centre-insertion-point.js';
+import '/resources/node_modules/@fieldenms/tg-web-components/actions/tg-ui-action.js';
+import '/resources/node_modules/@fieldenms/tg-web-components/egi/tg-entity-grid-inspector.js';
+import '/resources/node_modules/@fieldenms/tg-web-components/components/tg-dropdown-switch.js';
+import '/resources/node_modules/@fieldenms/tg-web-components/master/actions/tg-action.js';
+import {TgEgiMasterBehavior} from '/resources/node_modules/@fieldenms/tg-web-components/egi/tg-egi-master-behavior.js';
+import '/resources/node_modules/@fieldenms/tg-web-components/centre/tg-selection-criteria.js';
+import { TgSelectionCriteriaTemplateBehavior } from '/resources/node_modules/@fieldenms/tg-web-components/centre/tg-selection-criteria-template-behavior.js';
+import '/resources/node_modules/@fieldenms/tg-web-components/centre/tg-entity-centre.js';
+import '/resources/node_modules/@fieldenms/tg-web-components/centre/tg-entity-centre-styles.js';
+import '/resources/node_modules/@fieldenms/tg-web-components/centre/tg-selection-criteria-styles.js';
+import { TgEntityCentreTemplateBehavior } from '/resources/node_modules/@fieldenms/tg-web-components/centre/tg-entity-centre-template-behavior.js';
+import '/resources/node_modules/@fieldenms/tg-web-components/centre/tg-entity-centre-insertion-point.js';
 import { TgReflector } from '/app/tg-reflector.js';
 
 const selectionCritTemplate = html`

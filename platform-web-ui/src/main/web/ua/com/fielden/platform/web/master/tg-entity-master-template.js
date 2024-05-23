@@ -1,10 +1,10 @@
 <!--@imports-->
 
-import '/resources/actions/tg-ui-action.js';
+import '/resources/node_modules/@fieldenms/tg-web-components/actions/tg-ui-action.js';
 
-import { TgEntityMasterTemplateBehavior, Polymer, html } from '/resources/master/tg-entity-master-template-behavior.js';
+import { TgEntityMasterTemplateBehavior, Polymer, html } from '/resources/node_modules/@fieldenms/tg-web-components/master/tg-entity-master-template-behavior.js';
 import { TgReflector } from '/app/tg-reflector.js';
-import { getParentAnd } from '/resources/reflection/tg-polymer-utils.js'; // required by BindSavedPropertyPostActionSuccess/Error handlers
+import { getParentAnd } from '/resources/node_modules/@fieldenms/tg-web-components/reflection/tg-polymer-utils.js'; // required by BindSavedPropertyPostActionSuccess/Error handlers
 
 // <!-- TODO this import should be generated <link rel="import" href="/resources/master/actions/tg-action.html"> -->
 
