@@ -44,8 +44,8 @@ import static java.util.Optional.of;
 public class ReverseProxyServlet extends HttpServlet {
 
     private HttpClient httpClient;
-    private String targetServer;
-    private String targetSseServer;
+    private final String targetServer;
+    private final Optional<String> maybeTargetSseServer;
 
     public static Optional<Server> createProxyService(
             final Properties props,
@@ -56,10 +56,15 @@ public class ReverseProxyServlet extends HttpServlet {
             return empty();
         }
         final int port = parseInt(props.getProperty("proxy.jetty.port", "8090"));
+        final int targetPort = parseInt(props.getProperty("port.listen", "Missing value for application property `port.listen`."));
+        final int targetSsePort = !Boolean.valueOf(props.getProperty("sse.enabled", "false")) ? 0 : parseInt(props.getProperty("sse.jetty.port", "0"));
         final int minThreads = parseInt(props.getProperty("proxy.jetty.threadPool.minThreads", "5"));
         final int maxThreads = parseInt(props.getProperty("proxy.jetty.threadPool.maxThreads", "50"));
         final int idleTimeout = parseInt(props.getProperty("proxy.jetty.threadPool.idleTimeout", "30000"));
         final int acceptors = parseInt(props.getProperty("proxy.jetty.connector.acceptors", "2"));
+
+        final String targetServer = "http://localhost:" + targetPort;
+        final Optional<String> maybeTargetSseServer = targetSsePort == 0 ? empty() : of("http://localhost:" + targetSsePort);
 
         logger.info(
                 """
@@ -69,7 +74,9 @@ public class ReverseProxyServlet extends HttpServlet {
                     proxy.jetty.threadPool.minThreads.............%s
                     proxy.jetty.threadPool.idleTimeout............%s
                     proxy.jetty.connector.acceptors...............%s
-                """.formatted(port, maxThreads, minThreads, idleTimeout, acceptors));
+                    target server.................................%s
+                    target SSE server.............................%s
+                """.formatted(port, maxThreads, minThreads, idleTimeout, acceptors, targetServer, maybeTargetSseServer.orElse("disabled")));
 
         final QueuedThreadPool threadPool = new QueuedThreadPool(maxThreads, minThreads, idleTimeout);
         final Server server = new Server(threadPool);
@@ -82,7 +89,7 @@ public class ReverseProxyServlet extends HttpServlet {
         final ServletHandler handler = new ServletHandler();
         server.setHandler(handler);
         // Proxy servlet instantiation, which still needs to be associated with a Jetty instance
-        addProxyServlet(handler, maxThreads, minThreads, idleTimeout, acceptors);
+        addProxyServlet(handler, maxThreads, minThreads, idleTimeout, acceptors, targetServer, maybeTargetSseServer);
         return of(server);
     }
 
@@ -97,9 +104,11 @@ public class ReverseProxyServlet extends HttpServlet {
             final int maxThreads,
             final int minThreads,
             final int idleTimeout,
-            final int acceptors) {
+            final int acceptors,
+            final String targetServer,
+            final Optional<String> maybeTargetSseServer) {
         // Instantiate this servlet.
-        final ReverseProxyServlet proxyServlet = new ReverseProxyServlet();
+        final ReverseProxyServlet proxyServlet = new ReverseProxyServlet(targetServer, maybeTargetSseServer);
         // Configure a servlet holder with async support.
         final ServletHolder servletHolder = new ServletHolder(proxyServlet);
         servletHolder.setInitParameter("maxThreads", maxThreads + "");
@@ -112,12 +121,13 @@ public class ReverseProxyServlet extends HttpServlet {
         handler.addServletWithMapping(servletHolder, "/*");
     }
 
+    protected ReverseProxyServlet(final String targetServer, final Optional<String> maybeTargetSseServer) {
+        this.targetServer = targetServer;
+        this.maybeTargetSseServer = maybeTargetSseServer;
+    }
 
     @Override
     public void init() throws ServletException {
-        // TODO The base URLs of the target servers, which need to be passed as parameters.
-        targetServer = "http://localhost:8091";
-        targetSseServer = "http://localhost:8092";
         httpClient = newHttpClient();
     }
 
@@ -179,7 +189,7 @@ public class ReverseProxyServlet extends HttpServlet {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         final String requestTargetServer = req.getRequestURI().startsWith("/sse/")
-                                           ? targetSseServer
+                                           ? maybeTargetSseServer.orElse(targetServer)
                                            : targetServer;
         final String targetUrl;
         try {
