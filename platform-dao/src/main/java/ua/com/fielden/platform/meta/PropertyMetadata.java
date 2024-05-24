@@ -31,11 +31,13 @@ public sealed interface PropertyMetadata extends Comparable<PropertyMetadata> {
 
     /**
      * The Hibernate type of this property.
-     * <p>
-     * The following properties do not have a corresponding Hibernate type:
+     * </p>
+     * Not all properties have a corresponding Hibernate type. It applies only to those properties that are used in
+     * interactions with the database:
      * <ul>
-     *   <li> Collectional properties.
-     *   <li> Property {@code key} with type {@link PropertyTypeMetadata.NoKey}.
+     *   <li> Persistent properties.
+     *   <li> Calculated properties whose type can be mapped onto the database. This excludes collectional properties,
+     *        for example.
      * </ul>
      */
     // TODO encapsulate Hibernate type access in a separate abstraction once dependency injection is properly configured

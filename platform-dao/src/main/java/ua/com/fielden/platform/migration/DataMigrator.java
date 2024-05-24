@@ -37,6 +37,7 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 
@@ -117,7 +118,7 @@ public class DataMigrator {
                     index = index + 1;
                 }
                 final var emd = domainMetadata.forEntity(retriever.type()).asPersistent()
-                        .orElseThrow(() -> new DataMigrationException("Unable to generate a retriever job for non-persistent entity: [%s].".formatted(retriever.type())));
+                        .orElseThrow(() -> new DataMigrationException("Unable to generate a retriever job for entity: [%s].".formatted(retriever.type())));
                 final var md = generateEntityMd(emd.data().tableName(), emd.properties(), domainMetadata);
 
                 if (retriever.isUpdater()) {

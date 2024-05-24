@@ -17,8 +17,6 @@ import ua.com.fielden.platform.meta.PropertyTypeMetadata.Primitive;
 import ua.com.fielden.platform.ref_hierarchy.AbstractTreeEntry;
 import ua.com.fielden.platform.ref_hierarchy.TypeLevelHierarchyEntry;
 import ua.com.fielden.platform.sample.domain.*;
-import ua.com.fielden.platform.sample.domain.crit_gen.SecondLevelEntity;
-import ua.com.fielden.platform.sample.domain.crit_gen.TopLevelEntity;
 import ua.com.fielden.platform.test.PlatformTestHibernateSetup;
 import ua.com.fielden.platform.types.Money;
 

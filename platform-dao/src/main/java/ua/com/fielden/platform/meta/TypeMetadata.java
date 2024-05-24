@@ -31,6 +31,9 @@ public sealed interface TypeMetadata permits EntityMetadata, TypeMetadata.Compos
      */
     non-sealed interface Composite extends TypeMetadata {
 
+        @Override
+        Class<?> javaType();
+
         Collection<? extends PropertyMetadata> properties();
 
         Optional<PropertyMetadata> property(String name);

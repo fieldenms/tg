@@ -122,7 +122,7 @@ public sealed interface PropertyNature {
 
         @Override
         public String toString() {
-            return "Calculated Property";
+            return "Crit-only Property";
         }
     }
 
