@@ -23,8 +23,10 @@ class TestDomainMetadataGenerator {
     /**
      * Forwards to {@link DomainMetadataGenerator#forEntity(Class)} and asserts the result's presence.
      */
-    public EntityMetadata forEntity(final Class<? extends AbstractEntity<?>> entityType) {
-        return generator.forEntity(entityType)
+    // raw AbstractEntity is used to accept generic types
+    public EntityMetadata forEntity(final Class<? extends AbstractEntity> entityType) {
+        // cast is required to type-check...
+        return generator.forEntity((Class<? extends AbstractEntity<?>>) entityType)
                 .orElseThrow(() -> new AssertionError(format("Expected metadata to be generated for entity [%s]",
                                                              entityType.getTypeName())));
     }

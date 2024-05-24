@@ -14,6 +14,7 @@ import ua.com.fielden.platform.meta.PropertyMetadata.CritOnly;
 import ua.com.fielden.platform.meta.PropertyMetadata.Transient;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata.CompositeKey;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata.Primitive;
+import ua.com.fielden.platform.meta.test_entities.Entity_UnknownPropertyTypes;
 import ua.com.fielden.platform.ref_hierarchy.AbstractTreeEntry;
 import ua.com.fielden.platform.ref_hierarchy.TypeLevelHierarchyEntry;
 import ua.com.fielden.platform.sample.domain.*;
@@ -21,6 +22,7 @@ import ua.com.fielden.platform.test.PlatformTestHibernateSetup;
 import ua.com.fielden.platform.types.Money;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.SortedSet;
 
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.KEY_MEMBER;
@@ -186,6 +188,12 @@ public class EntityMetadataTest {
         generator.assertNotGenerated(EntityAggregates.class);
         generator.assertNotGenerated(DomainTreeEntity.class);
         generator.assertNotGenerated(TypeLevelHierarchyEntry.class);
+    }
+
+    @Test
+    public void metadata_is_not_generated_for_properties_with_unknown_types() {
+        EntityA.of(generator.forEntity(Entity_UnknownPropertyTypes.class))
+                .assertPropertiesNotExist(List.of("map", "listWithTypeVar", "rawList"));
     }
 
 }

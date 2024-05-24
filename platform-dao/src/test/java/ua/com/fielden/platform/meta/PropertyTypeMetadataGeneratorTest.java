@@ -15,16 +15,14 @@ import ua.com.fielden.platform.types.Money;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
-import java.util.Currency;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 public class PropertyTypeMetadataGeneratorTest {
 
-    private final PropertyTypeMetadataGenerator generator = new PropertyTypeMetadataGenerator();
+    private final TestPropertyMetadataGenerator generator =
+            TestPropertyMetadataGenerator.wrap(new PropertyTypeMetadataGenerator());
 
     @Test
     public void primitive_property_types_are_generated_as_Primitive() {
@@ -55,11 +53,20 @@ public class PropertyTypeMetadataGeneratorTest {
     }
 
     @Test
-    public void unknown_property_types_are_generated_as_Other() {
-        List.of(Double.class, List.class, Object.class, int.class)
-                .forEach(klass -> PropertyTypeA.of(generator.generate(klass))
-                        .assertIs(PropertyTypeMetadata.Other.class)
-                        .assertJavaType(klass));
+    public void unknown_property_types_are_not_modelled() {
+        class A<T> {
+            @IsProperty Map<String, String> map;
+            @IsProperty List<T> listWithTypeVar;
+            @IsProperty Set<? super TgVehicle> superVehicles;
+            @IsProperty List rawList;
+            @IsProperty List<?> wildList;
+            @IsProperty List<T> paramList;
+            @IsProperty List<List<String>> nestedList;
+        }
+
+        Stream.of("map", "listWithTypeVar", "superVehicles", "rawList", "wildList", "paramList", "nestedList")
+                .map(f -> getField(A.class, f))
+                .forEach(generator::assertNotGenerated);
     }
 
     @Test
@@ -81,28 +88,10 @@ public class PropertyTypeMetadataGeneratorTest {
             Set<TgVehicle> vehicles2;
             @IsProperty
             Set<? extends TgVehicle> subVehicles;
-            @IsProperty
-            Set<? super TgVehicle> superVehicles;
-            @IsProperty
-            List rawList;
-            @IsProperty
-            List<?> wildList;
-            @IsProperty
-            List<T> paramList;
-            @IsProperty
-            List<List<String>> nestedList;
-
-            static Field field(String name) {
-                try {
-                    return A.class.getDeclaredField(name);
-                } catch (NoSuchFieldException e) {
-                    throw new RuntimeException(e);
-                }
-            }
         }
 
         final Function<String, PropertyTypeA<PropertyTypeMetadata>> f =
-                fieldName -> PropertyTypeA.of(generator.generate(A.field(fieldName)));
+                fieldName -> PropertyTypeA.of(generator.generate(getField(A.class, fieldName)));
 
         f.apply("strings").assertCollectional()
                 .assertCollectionType(List.class)
@@ -116,11 +105,14 @@ public class PropertyTypeMetadataGeneratorTest {
         f.apply("subVehicles").assertCollectional()
                 .assertCollectionType(Set.class)
                 .elementType().assertIs(PropertyTypeMetadata.Entity.class).assertJavaType(TgVehicle.class);
-        f.apply("superVehicles").assertIs(PropertyTypeMetadata.Other.class);
-        f.apply("rawList").assertIs(PropertyTypeMetadata.Other.class);
-        f.apply("wildList").assertIs(PropertyTypeMetadata.Other.class);
-        f.apply("paramList").assertIs(PropertyTypeMetadata.Other.class);
-        f.apply("nestedList").assertIs(PropertyTypeMetadata.Other.class);
+    }
+
+    private static Field getField(final Class<?> klass, final String name) {
+        try {
+            return klass.getDeclaredField(name);
+        } catch (NoSuchFieldException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

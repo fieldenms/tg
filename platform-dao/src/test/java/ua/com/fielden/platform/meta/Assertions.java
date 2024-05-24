@@ -18,8 +18,8 @@ interface Assertions {
             this.typeMetadata = typeMetadata;
         }
 
-        static PropertyTypeA<PropertyTypeMetadata> of(Optional<PropertyTypeMetadata> optTypeMetadata) {
-            return new PropertyTypeA<>(assertPresent(optTypeMetadata));
+        static PropertyTypeA<PropertyTypeMetadata> of(PropertyTypeMetadata typeMetadata) {
+            return new PropertyTypeA<>(typeMetadata);
         }
 
         public T get() { return typeMetadata; }
@@ -89,8 +89,19 @@ interface Assertions {
             return this;
         }
 
-        public EntityA<E> assertPropertiesExist(final Iterable<? extends CharSequence> propName) {
-            propName.forEach(this::assertPropertyExists);
+        public EntityA<E> assertPropertiesExist(final Iterable<? extends CharSequence> propNames) {
+            propNames.forEach(this::assertPropertyExists);
+            return this;
+        }
+
+        public EntityA<E> assertPropertyNotExists(final CharSequence propName) {
+            assertTrue("Unexpected metadata found for property [%s] in [%s]".formatted(propName, entityMetadata),
+                       entityMetadata.property(propName.toString()).isEmpty());
+            return this;
+        }
+
+        public EntityA<E> assertPropertiesNotExist(final Iterable<? extends CharSequence> propNames) {
+            propNames.forEach(this::assertPropertyNotExists);
             return this;
         }
     }
