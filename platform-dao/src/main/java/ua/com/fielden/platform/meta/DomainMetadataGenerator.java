@@ -1,13 +1,13 @@
 package ua.com.fielden.platform.meta;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.inject.Injector;
-import org.hibernate.type.*;
-import org.hibernate.type.spi.TypeConfiguration;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.query.DbVersion;
@@ -26,6 +26,7 @@ import java.lang.reflect.Type;
 import java.util.Optional;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableList;
@@ -44,7 +45,9 @@ import static ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpre
 import static ua.com.fielden.platform.eql.meta.DomainMetadataUtils.extractExpressionModelFromCalculatedProperty;
 import static ua.com.fielden.platform.meta.EntityNature.SYNTHETIC;
 import static ua.com.fielden.platform.meta.EntityNature.UNION;
+import static ua.com.fielden.platform.meta.HibernateTypeGenerator.*;
 import static ua.com.fielden.platform.meta.PropertyMetadataImpl.Builder.*;
+import static ua.com.fielden.platform.meta.PropertyNature.*;
 import static ua.com.fielden.platform.meta.PropertyTypeMetadata.COMPOSITE_KEY;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.*;
 import static ua.com.fielden.platform.reflection.Finder.*;
@@ -63,22 +66,10 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
  */
 final class DomainMetadataGenerator {
 
-    private static final org.hibernate.type.Type H_ENTITY = LongType.INSTANCE;
-    private static final org.hibernate.type.Type H_LONG = LongType.INSTANCE;
-    private static final org.hibernate.type.Type H_STRING = StringType.INSTANCE;
-    private static final org.hibernate.type.Type H_BOOLEAN = YesNoType.INSTANCE;
-
-    // NOTE This came from old code and it's unclear whether this is the right way of obtaining Hibernate types.
-    private static final TypeConfiguration typeConfiguration = new TypeConfiguration();
-    private static final TypeResolver typeResolver = new TypeResolver(typeConfiguration, new TypeFactory(typeConfiguration));
-
     private static final Set<String> SPECIAL_PROPS = Set.of(ID, KEY, VERSION);
 
-    /** Class-to-instance map for Hibernate types. */
-    private final Map<Class<?>, Object> hibTypesDefaults;
-    private final Injector hibTypesInjector;
-
     private final PropertyTypeMetadataGenerator propTypeMetadataGenerator = new PropertyTypeMetadataGenerator();
+    private final HibernateTypeGenerator hibTypeGenerator;
     private final Map<String, PropColumn> specialPropColumns;
 
     // TODO make this injectable
@@ -88,24 +79,7 @@ final class DomainMetadataGenerator {
         this.specialPropColumns = Map.of(
                 ID, new PropColumn(dbVersion.idColumnName()),
                 VERSION, new PropColumn(dbVersion.versionColumnName()));
-
-        this.hibTypesInjector = hibTypesInjector;
-        if (hibTypesDefaults != null) {
-            final var map = new HashMap<Class<?>, Object>();
-            hibTypesDefaults.forEach((javaType, hibType) -> {
-                try {
-                    map.put(javaType, hibType.getDeclaredField("INSTANCE").get(null));
-                } catch (final Exception e) {
-                    throw new EqlMetadataGenerationException("Couldn't instantiate Hibernate type [" + hibType + "].", e);
-                }
-            });
-            // TODO old code, definitely a kludge, this class should not be responsible for establishing any mappings
-            map.put(Boolean.class, H_BOOLEAN);
-            map.put(boolean.class, H_BOOLEAN);
-            this.hibTypesDefaults = Collections.unmodifiableMap(map);
-        } else {
-            this.hibTypesDefaults = ImmutableMap.of();
-        }
+        this.hibTypeGenerator = new HibernateTypeGenerator(hibTypesDefaults, hibTypesInjector);
     }
 
     // ****************************************
@@ -126,32 +100,32 @@ final class DomainMetadataGenerator {
     private Iterable<? extends PropertyMetadata> buildProperties(final CompositeTypeMetadataImpl.Builder typeBuilder) {
         // DO NOT MODIFY THE GIVEN BUILDER
         return Arrays.stream(typeBuilder.getJavaType().getDeclaredFields())
-                .map(this::mkPropForComposite)
+                .map(fld -> mkPropForComposite(fld, typeBuilder))
                 .flatMap(Optional::stream)
                 .toList();
     }
 
-    private Optional<PropertyMetadata> mkPropForComposite(final Field field) {
+    private Optional<PropertyMetadata> mkPropForComposite(final Field field, final CompositeTypeMetadataImpl.Builder typeBuilder) {
         final IsProperty atIsProperty = getAnnotation(field, IsProperty.class);
         if (atIsProperty == null) {
             return Optional.empty();
         }
 
         final PropertyTypeMetadata propTypeMd = mkPropertyTypeOrThrow(field);
-        final Object hibType = getHibernateType(field);
         final MapTo atMapTo = getAnnotation(field, MapTo.class);
-
         final PropertyMetadataImpl.Builder<?, ?> builder;
 
         // PERSISTENT
         if (atMapTo != null) {
             final String columnName = mkColumnName(field.getName(), atMapTo);
-            builder = persistentProp(field.getName(), propTypeMd, hibType,
+            builder = persistentProp(field.getName(), propTypeMd,
+                                     hibTypeGenerator.generate(PropertyNature.PERSISTENT, propTypeMd, typeBuilder).use(field).get(),
                                      PropertyNature.Persistent.data(propColumn(columnName, atIsProperty)));
         }
         // TRANSIENT
         else {
-            builder = transientProp(field.getName(), propTypeMd, hibType);
+            builder = transientProp(field.getName(), propTypeMd,
+                                    hibTypeGenerator.generate(PropertyNature.TRANSIENT, propTypeMd, typeBuilder).use(field).get());
         }
 
         return Optional.of(builder.build());
@@ -195,7 +169,7 @@ final class DomainMetadataGenerator {
         switch (entityBuilder) {
             case EntityMetadataBuilder.Union u -> {
                 return ImmutableList.<PropertyMetadata>builder()
-                        .addAll(generateUnionImplicitCalcSubprops(u.getJavaType()))
+                        .addAll(generateUnionImplicitCalcSubprops(u.getJavaType(), entityBuilder))
                         // union members
                         .addAll(unionProperties(u.getJavaType()).stream().map(field -> mkProp(field, u)).flatMap(Optional::stream)
                                         .iterator())
@@ -255,18 +229,20 @@ final class DomainMetadataGenerator {
                                            .required(true).build());
             } else {
                 final var keyColumn = new PropColumn("KEY_");
-                final Object keyHibType = typeResolver.basic(keyType.getName());
+                final PropertyTypeMetadata propTypeMd = mkPropertyTypeOrThrow(keyType);
+                final Function<PropertyNature, Object> getHibType =
+                        propNature -> hibTypeGenerator.generate(propNature, propTypeMd, entityBuilder).get();
                 return switch (entityBuilder) {
                     case EntityMetadataBuilder.Persistent $ ->
-                            Optional.of(persistentProp(KEY, mkPropertyTypeOrThrow(keyType), keyHibType,
+                            Optional.of(persistentProp(KEY, propTypeMd, getHibType.apply(PERSISTENT),
                                                        PropertyNature.Persistent.data(keyColumn))
                                                 .required(true).build());
                     case EntityMetadataBuilder.Synthetic s ->
                             isSyntheticBasedOnPersistentEntityType(s.getJavaType())
-                                    ? Optional.of(persistentProp(KEY, mkPropertyTypeOrThrow(keyType), keyHibType,
+                                    ? Optional.of(persistentProp(KEY, propTypeMd, getHibType.apply(PERSISTENT),
                                                                  PropertyNature.Persistent.data(keyColumn))
                                                           .required(true).build())
-                                    : Optional.of(transientProp(KEY, mkPropertyTypeOrThrow(keyType), keyHibType)
+                                    : Optional.of(transientProp(KEY, propTypeMd, getHibType.apply(TRANSIENT))
                                                           .required(true).build());
                     default -> Optional.empty();
                 };
@@ -331,7 +307,6 @@ final class DomainMetadataGenerator {
         }
 
         final PropertyTypeMetadata propTypeMd = mkPropertyTypeOrThrow(field);
-        final Object hibType = propTypeMd.isCollectional() || propTypeMd.isNoKey() ? null : getHibernateType(field);
         final MapTo atMapTo = getAnnotation(field, MapTo.class);
         final Calculated atCalculated = getAnnotation(field, Calculated.class);
 
@@ -346,7 +321,8 @@ final class DomainMetadataGenerator {
         // TODO throw an exception for incorrect definitions ?
         else if (atMapTo != null && !isSyntheticEntityType(enclosingEntityType) && atCalculated == null) {
             final String columnName = mkColumnName(field.getName(), atMapTo);
-            builder = persistentProp(field.getName(), propTypeMd, hibType,
+            builder = persistentProp(field.getName(), propTypeMd,
+                                     hibTypeGenerator.generate(PropertyNature.PERSISTENT, propTypeMd, entityBuilder).use(field).get(),
                                      PropertyNature.Persistent.data(propColumn(columnName, atIsProperty)));
         }
         // CALCULATED
@@ -354,11 +330,14 @@ final class DomainMetadataGenerator {
             final boolean aggregatedExpression = AGGREGATED_EXPRESSION == atCalculated.category();
             final var data = PropertyNature.Calculated.data(
                     extractExpressionModelFromCalculatedProperty(enclosingEntityType, field), false, aggregatedExpression);
-            builder = calculatedProp(field.getName(), propTypeMd, hibType, data);
+            builder = calculatedProp(field.getName(), propTypeMd,
+                                     hibTypeGenerator.generate(CALCULATED, propTypeMd, entityBuilder).use(field).get(),
+                                     data);
         }
         // TRANSIENT
         else {
-            builder = transientProp(field.getName(), propTypeMd, hibType);
+            builder = transientProp(field.getName(), propTypeMd,
+                                    hibTypeGenerator.generate(TRANSIENT, propTypeMd, entityBuilder).use(field).get());
         }
 
         // Scan the property for any additional metadata
@@ -378,7 +357,9 @@ final class DomainMetadataGenerator {
         final ExpressionModel expressionModel = expr()
                 .model(select(propType).where().prop(KEY).eq().extProp(ID).model())
                 .model();
-        return Optional.of(calculatedProp(field.getName(), mkPropertyTypeOrThrow(field), getHibernateType(field),
+        final PropertyTypeMetadata typeMetadata = mkPropertyTypeOrThrow(field);
+        return Optional.of(calculatedProp(field.getName(), typeMetadata,
+                                          hibTypeGenerator.generate(CALCULATED, typeMetadata, entityBuilder).use(field).get(),
                                           PropertyNature.Calculated.data(expressionModel, true, false))
                                    .build());
     }
@@ -426,68 +407,6 @@ final class DomainMetadataGenerator {
         return mkPropertyType(type)
                 .orElseThrow(() -> new EqlMetadataGenerationException(
                         "Failed to generate metadata for property type [%s]".formatted(type.getTypeName())));
-    }
-
-    // TODO old code; merge with HibernateTypeDeterminer
-    /**
-     * Determines hibernate type instance (Type/UserType/CustomUserType) for entity property based on provided property's meta information.
-     */
-    private Object getHibernateType(final Field propField) {
-        final String propName = propField.getName();
-        final Class<?> propType = propField.getType();
-
-        if (isPersistedEntityType(propType) || isUnionEntityType(propType) || isSyntheticEntityType(propType)) {
-            return H_ENTITY;
-        }
-
-        final PersistentType persistentType = getAnnotation(propField, PersistentType.class);
-
-        if (persistentType == null) {
-            final Object defaultHibType = hibTypesDefaults.get(propType);
-            if (defaultHibType != null) { // default is provided for given property java type
-                return defaultHibType;
-            } else { // trying to mimic hibernate logic when no type has been specified - use hibernate's map of defaults
-                final BasicType result = typeResolver.basic(propType.getName());
-                if (result == null) {
-                    throw new EqlMetadataGenerationException(format("Could not determined Hibernate type for property [%s : %s].",
-                                                                    propName, propType.getTypeName()));
-                }
-                return result;
-            }
-        } else {
-            final String hibernateTypeName = persistentType.value();
-            final Class<?> hibernateUserTypeImplementor = persistentType.userType();
-            if (isNotEmpty(hibernateTypeName)) {
-                final BasicType result = typeResolver.basic(hibernateTypeName);
-                if (result == null) {
-                    throw new EqlMetadataGenerationException(propName + " of type " + propType.getName() + " has no hibType (2)");
-                }
-                return result;
-            } else if (hibTypesInjector != null && !Void.class.equals(hibernateUserTypeImplementor)) { // Hibernate type is definitely either IUserTypeInstantiate or ICompositeUserTypeInstantiate
-                try {
-                    return hibTypesInjector.getInstance(hibernateUserTypeImplementor).getClass().getDeclaredField("INSTANCE").get(null); // need to have the same instance in use for the unit tests sake
-                } catch (final Exception e) {
-                    throw new EqlMetadataGenerationException("Couldn't obtain instance of hibernate type [" + hibernateUserTypeImplementor + "] due to: " + e);
-                }
-            } else {
-                throw new EqlMetadataGenerationException("Persistent annotation doesn't provide intended information.");
-            }
-        }
-    }
-
-    EntityNature inferEntityNature(final Class<? extends AbstractEntity<?>> entityType) {
-        if (isUnionEntityType(entityType)) {
-            return UNION;
-        }
-        else if (isPersistedEntityType(entityType)) {
-            return EntityNature.PERSISTENT;
-        }
-        else if (isSyntheticEntityType(entityType)) {
-            return SYNTHETIC;
-        }
-        else {
-            return EntityNature.OTHER;
-        }
     }
 
     // ****************************************
@@ -589,7 +508,8 @@ final class DomainMetadataGenerator {
     }
 
     private List<PropertyMetadata> generateUnionImplicitCalcSubprops(final Class<? extends AbstractUnionEntity> unionType,
-                                                                     @Nullable final String contextPropName) {
+                                                                     @Nullable final String contextPropName,
+                                                                     final EntityMetadataBuilder<?, ?> entityBuilder) {
         final List<Field> unionMembers = unionProperties(unionType);
         if (unionMembers.isEmpty()) {
             throw new EntityDefinitionException("Ill-defined union entity [%s] has no union members.".formatted(unionType.getTypeName()));
@@ -615,7 +535,9 @@ final class DomainMetadataGenerator {
                                                            unionType.getTypeName(), commonProp));
             }
             final Field commonPropField = findFieldByName(firstUnionEntityPropType, commonProp);
-            props.add(calculatedProp(commonProp, mkPropertyTypeOrThrow(commonPropField), getHibernateType(commonPropField),
+            final PropertyTypeMetadata typeMetadata = mkPropertyTypeOrThrow(commonPropField);
+            props.add(calculatedProp(commonProp, typeMetadata,
+                                     hibTypeGenerator.generate(CALCULATED, typeMetadata, entityBuilder).use(commonPropField).get(),
                                      PropertyNature.Calculated.data(generateUnionEntityPropertyContextualExpression(unionMembersNames, commonProp, contextPropName), true, false))
                               .build());
         }
@@ -623,8 +545,9 @@ final class DomainMetadataGenerator {
         return unmodifiableList(props);
     }
 
-    private List<PropertyMetadata> generateUnionImplicitCalcSubprops(final Class<? extends AbstractUnionEntity> unionType) {
-        return generateUnionImplicitCalcSubprops(unionType, null);
+    private List<PropertyMetadata> generateUnionImplicitCalcSubprops(final Class<? extends AbstractUnionEntity> unionType,
+                                                                     final EntityMetadataBuilder<?, ?> entityBuilder) {
+        return generateUnionImplicitCalcSubprops(unionType, null, entityBuilder);
     }
 
     private ExpressionModel generateUnionCommonDescPropExpressionModel(final List<Field> unionMembers, final String contextPropName) {
@@ -646,6 +569,32 @@ final class DomainMetadataGenerator {
         }
 
         return expressionModelInProgress.end().model();
+    }
+
+    // ****************************************
+    // * Misc. utilities
+
+    static EntityNature inferEntityNature(final Class<? extends AbstractEntity<?>> entityType) {
+        if (isUnionEntityType(entityType)) {
+            return UNION;
+        }
+        else if (isPersistedEntityType(entityType)) {
+            return EntityNature.PERSISTENT;
+        }
+        else if (isSyntheticEntityType(entityType)) {
+            return SYNTHETIC;
+        }
+        else {
+            return EntityNature.OTHER;
+        }
+    }
+
+    static boolean hasNature(final Class<? extends AbstractEntity<?>> entityType, final EntityNature nature) {
+        return nature.equals(inferEntityNature(entityType));
+    }
+
+    static boolean hasAnyNature(final Class<? extends AbstractEntity<?>> entityType, final Iterable<? extends EntityNature> natures) {
+        return Iterables.any(natures, nature -> hasNature(entityType, nature));
     }
 
 }
