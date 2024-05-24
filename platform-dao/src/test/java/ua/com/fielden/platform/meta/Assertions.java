@@ -5,7 +5,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertInstanceOf;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertPresent;
 
@@ -114,6 +114,28 @@ interface Assertions {
 
         public PropertyTypeA<PropertyTypeMetadata> type() {
             return new PropertyTypeA<>(propertyMetadata.type());
+        }
+
+        public PropertyA<P> assertHibType(final Consumer<Object> assertor) {
+            assertor.accept(propertyMetadata.hibType());
+            return this;
+        }
+
+        public PropertyA<P> assertHasHibType() {
+            assertHibType(t -> assertNotNull("Hibernate type is missing for property [%s]".formatted(propertyMetadata),
+                                             t));
+            return this;
+        }
+
+        public PropertyA<P> assertNoHibType() {
+            assertHibType(t -> assertNull("Hibernate type should not be present in property [%s]".formatted(propertyMetadata),
+                                          t));
+            return this;
+        }
+
+        public PropertyA<P> assertHibTypeEq(final Object expectedHibType) {
+            return assertHibType(t -> assertEquals("Unexpected Hibernate type of property [%s]".formatted(propertyMetadata),
+                                                   expectedHibType, t));
         }
 
         public PropertyA<P> assertType(final Consumer<PropertyTypeA<?>> assertor) {
