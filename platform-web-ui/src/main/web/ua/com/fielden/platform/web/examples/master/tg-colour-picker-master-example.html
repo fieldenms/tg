@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Generated Master</title>
+    <link rel="stylesheet" type="text/css" crossorigin="anonymous" href="https://fonts.googleapis.com/css?family=Roboto+Mono:400,700|Roboto:400,300,300italic,400italic,500,500italic,700,700italic"></link>
+    <script type="module">
+        import '@fieldenms/tg-polymer/paper-styles/paper-styles-classes.js';
+        import "/master_ui/ua.com.fielden.platform.sample.domain.TgEntityForColourMaster.js";
+    </script>
+    
+    <style>
+        html {
+            font-size: 10pt;
+        }
+        body {
+            font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+        }
+    </style>
+</head>
+
+<body>
+    <tg-tgentityforcolourmaster-master 
+    	id="master" 
+    	entity-type="ua.com.fielden.platform.sample.domain.TgEntityForColourMaster" 
+    	entity-id="53" 
+    	current-state="EDIT">
+    </tg-tgentityforcolourmaster-master>
+    
+    <script>
+        customElements.whenDefined('tg-tgentityforcolourmaster-master').then(() => {
+            // imports are loaded and elements have been registered
+            
+            console.log('Components are ready');
+            
+            /* var editor = document.querySelector('#editor'); */
+            
+            var master = document.querySelector('#master');
+            master.postRetrieved = function(entity, bindingEntity, customObject) {
+                console.log("postRetrieved");
+            };
+            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
+                console.log("postValidated");
+            };
+            master.postSaved = function(potentiallySavedOrNewEntity, newBindingEntity) {
+                console.log("postSaved");
+            };
+            master.retrieve();
+        });
+   </script>
+</body>
+
+</html>

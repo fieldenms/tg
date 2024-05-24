@@ -2,8 +2,8 @@ import {Polymer} from '/resources/node_modules/@fieldenms/tg-polymer/polymer/lib
 
 import {generateUUID} from '/resources/node_modules/@fieldenms/tg-web-components/reflection/tg-polymer-utils.js';
 
-import '/resources/components/postal-lib.js';
-import '/resources/components/moment-lib.js';
+import '/resources/node_modules/@fieldenms/tg-web-components/components/postal-lib.js';
+import '/resources/node_modules/@fieldenms/tg-web-components/components/moment-lib.js';
 
 @independentTimeZoneSetting
 
