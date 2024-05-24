@@ -4,6 +4,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.NoKey;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.meta.Assertions.PropertyTypeA;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgReMaxVehicleReading;
@@ -105,6 +106,17 @@ public class PropertyTypeMetadataGeneratorTest {
         f.apply("subVehicles").assertCollectional()
                 .assertCollectionType(Set.class)
                 .elementType().assertIs(PropertyTypeMetadata.Entity.class).assertJavaType(TgVehicle.class);
+    }
+
+    @Test
+    public void PropertyDescriptor_property_type_is_generated_as_Entity() {
+        class A {
+            @IsProperty PropertyDescriptor<TgVehicle> pd;
+        }
+
+        PropertyTypeA.of(generator.generate(getField(A.class, "pd")))
+                .assertIs(PropertyTypeMetadata.Entity.class)
+                .assertJavaType(PropertyDescriptor.class);
     }
 
     private static Field getField(final Class<?> klass, final String name) {

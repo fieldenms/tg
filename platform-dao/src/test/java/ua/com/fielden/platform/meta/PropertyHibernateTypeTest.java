@@ -6,6 +6,7 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.meta.Assertions.EntityA;
 import ua.com.fielden.platform.meta.Assertions.PropertyA;
+import ua.com.fielden.platform.meta.test_entities.Entity_PropertyDescriptor;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
@@ -52,6 +53,12 @@ public class PropertyHibernateTypeTest {
                 .assertProperty("key", PropertyA::assertHasHibType)
                 .assertProperty("qty", PropertyA::assertHasHibType)
                 .assertProperty("cost", PropertyA::assertHasHibType);
+    }
+
+    @Test
+    public void hibernate_type_is_attached_to_properties_with_PropertyDescriptor_type() {
+        EntityA.of(generator.forEntity(Entity_PropertyDescriptor.class))
+                .assertProperty("pd", PropertyA::assertHasHibType);
     }
 
 }
