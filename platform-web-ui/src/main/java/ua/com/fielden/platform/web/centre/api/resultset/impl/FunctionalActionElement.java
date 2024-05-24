@@ -6,6 +6,7 @@ import static java.util.Optional.of;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.join;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.webComponent;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -90,7 +91,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
      */
     private FunctionalActionElement(final EntityActionConfig entityActionConfig, final int numberOfAction, final FunctionalActionKind functionalActionKind, final String chosenProperty) {
         this.widgetName = AbstractCriterionWidget.extractNameFrom("actions/tg-ui-action");
-        this.widgetPath = "actions/tg-ui-action";
+        this.widgetPath = webComponent("actions/tg-ui-action");
         this.entityActionConfig = entityActionConfig;
         this.numberOfAction = numberOfAction;
         this.functionalActionKind = functionalActionKind;

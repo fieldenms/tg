@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.view.master.api.with_master.impl;
 
 import static java.util.Optional.empty;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.webComponent;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.PRIMARY_RESULT_SET;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
@@ -35,7 +36,7 @@ public class CalendarEntityMaster<T extends AbstractEntity<?>> implements IMaste
 
     /**
      * Creates {@link CalendarEntityMaster} for concrete entity type with from / to date properties.
-     * 
+     *
      * @param entityType
      * @param calendarComponentUri -- 'tg-fullcalendar' component URI or URI of the component that extends 'tg-fullcalendar'
      * @param eventKeyProp -- property name to be displayed as titles in calendar events and tooltips
@@ -89,7 +90,7 @@ public class CalendarEntityMaster<T extends AbstractEntity<?>> implements IMaste
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
                 .replace(IMPORTS, createImports(importPaths) +
-                        "\nimport { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';\n")
+                        "\nimport { TgEntityBinderBehavior } from '/resources/" + webComponent("binding/tg-entity-binder-behavior") + ".js';\n")
                 .replace(ENTITY_TYPE, flattenedNameOf(entityType))
                 .replace("<!--@tg-entity-master-content-->", calendar.toString())
                 .replace("//generatedPrimaryActions", editActionObjectString)

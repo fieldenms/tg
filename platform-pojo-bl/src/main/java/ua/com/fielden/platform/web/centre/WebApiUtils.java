@@ -8,12 +8,12 @@ import java.util.stream.Collectors;
 
 /**
  * Utilities for Web API (centre, master) and its implementation.
- * 
+ *
  * @author TG Team
  *
  */
 public class WebApiUtils {
-    
+
     /**
      * The surrogate title of not yet known configuration. This is used during first time centre loading.
      */
@@ -26,7 +26,7 @@ public class WebApiUtils {
     /** Private default constructor to prevent instantiation. */
     private WebApiUtils() {
     }
-    
+
     /**
      * Return DSL representation for property name.
      *
@@ -46,10 +46,10 @@ public class WebApiUtils {
     public static String treeName(final String name) {
         return name.equals("this") ? "" : name;
     }
-    
+
     /**
-     * Returns filtered list of checked properties without aggregation calculated properties ('summary properties' aka 'totals'). 
-     * 
+     * Returns filtered list of checked properties without aggregation calculated properties ('summary properties' aka 'totals').
+     *
      * @param checkedProperties
      * @param managedType
      * @return
@@ -59,5 +59,12 @@ public class WebApiUtils {
             .filter(checkedProperty -> "".equals(checkedProperty) || !isCalculatedAndOfTypes(managedType, checkedProperty, AGGREGATED_EXPRESSION))
             .collect(Collectors.toList());
     }
-    
+
+    public static String polymer(final String component) {
+        return "node_modules/@fieldenms/tg-polymer/" + component;
+    }
+
+    public static String webComponent(final String component) {
+        return "node_modules/@fieldenms/tg-web-components/" + component;
+    }
 }

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.checkbox.impl;
 
+import static ua.com.fielden.platform.web.centre.WebApiUtils.webComponent;
+
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 
@@ -18,7 +20,7 @@ public class CheckboxWidget extends AbstractWidget {
      * @param propertyName
      */
     public CheckboxWidget(final Pair<String, String> titleDesc, final String propertyName) {
-        super("editors/tg-boolean-editor", titleDesc, propertyName);
+        super(webComponent("editors/tg-boolean-editor"), titleDesc, propertyName);
     }
 
 }

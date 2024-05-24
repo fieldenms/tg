@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.layout;
 
+import static ua.com.fielden.platform.web.centre.WebApiUtils.webComponent;
+
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
@@ -13,12 +15,12 @@ import ua.com.fielden.platform.web.minijs.JsCode;
  *
  */
 public class FlexLayout extends AbstractLayout<AbstractLayoutSetter<FlexLayout>> implements IImportable, IExecutable {
-    private final String flexLayoutPath = "layout/tg-flex-layout";
+    private final String flexLayoutPath = webComponent("layout/tg-flex-layout");
     private final String name;
-    
+
     /**
      * Constructs {@link FlexLayout} instance with <code>name</code> providing uniqueness inside the same source file where it is generated into.
-     * 
+     *
      * @param name
      */
     public FlexLayout(final String name) {

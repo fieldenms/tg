@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.with_master.impl;
 
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.webComponent;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 
@@ -26,7 +27,7 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
 
     public AbstractMasterWithMaster(final Class<T> entityType, final Class<? extends AbstractEntity<?>> embededMasterType, final boolean shouldRefreshParentCentreAfterSave) {
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
-                .replace(IMPORTS, "import '/resources/element_loader/tg-element-loader.js';\n" + StringUtils.join(getAdditionalImports(), "\n"))
+                .replace(IMPORTS, "import '/resources/" + webComponent("element_loader/tg-element-loader") + ".js';\n" + StringUtils.join(getAdditionalImports(), "\n"))
                 .replace(ENTITY_TYPE, flattenedNameOf(entityType))
                 .replace("<!--@tg-entity-master-content-->",
                           "<tg-element-loader id='loader' context='[[_createContextHolderForEmbeddedViews]]' context-property='getMasterEntity' "

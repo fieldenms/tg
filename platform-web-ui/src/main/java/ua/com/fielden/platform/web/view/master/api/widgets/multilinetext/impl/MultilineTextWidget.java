@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.view.master.api.widgets.multilinetext.impl;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.Mutator.SETTER;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.webComponent;
 
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -36,7 +37,7 @@ public class MultilineTextWidget extends AbstractWidget {
      * @param propertyName
      */
     public MultilineTextWidget(final Pair<String, String> titleDesc, final Class<? extends AbstractEntity<?>> entityType, final String propertyName) {
-        super("editors/tg-multiline-text-editor", titleDesc, propertyName);
+        super(webComponent("editors/tg-multiline-text-editor"), titleDesc, propertyName);
         this.entityType = entityType;
     }
 

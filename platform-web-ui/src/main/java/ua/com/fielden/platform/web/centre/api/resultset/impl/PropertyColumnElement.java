@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.centre.api.resultset.impl;
 
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableList;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.webComponent;
 import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_DESC;
 import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_DISPLAY_PROP;
 import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_GROUP_PROP;
@@ -62,7 +63,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
      */
     public PropertyColumnElement(final String propertyName, final Optional<AbstractWidget> widget, final boolean isDynamic, final boolean isSortable, final int width, final int growFactor, final boolean isFlexible, final String tooltipProp, final Object propertyType, final Pair<String, String> titleDesc, final List<FunctionalActionElement> actions) {
         this.widgetName = AbstractCriterionWidget.extractNameFrom("egi/tg-property-column");
-        this.widgetPath = "egi/tg-property-column";
+        this.widgetPath = webComponent("egi/tg-property-column");
         this.propertyName = propertyName;
         this.widget = widget;
         this.isDynamic = isDynamic;

@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.security;
 
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.webComponent;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 import static ua.com.fielden.platform.web.view.master.api.actions.MasterActions.SAVE;
@@ -86,7 +87,7 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
                 .replace(IMPORTS, createImports(linkedSetOf("components/tg-security-matrix", "editors/tg-singleline-text-editor"))
-                        + "import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';\n")
+                        + "import { TgEntityBinderBehavior } from '/resources/" + webComponent("binding/tg-entity-binder-behavior") + ".js';\n")
                 .replace(ENTITY_TYPE, flattenedNameOf(SecurityMatrixInsertionPoint.class))
                 .replace("<!--@tg-entity-master-content-->", securityMatrix.toString())
                 .replace("//generatedPrimaryActions", "")

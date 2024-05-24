@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.view.master.attachments;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.webComponent;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.MOBILE;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.TABLET;
@@ -59,9 +60,9 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
 
     public AttachmentsUploadActionMaster(final PrefDim dims, final int fileSizeLimitKb, final String mimeType, final String... moreMimeTypes) {
         final LinkedHashSet<String> importPaths = linkedSetOf(
-                "file_operations/tg-attachment-uploader-list",
-                "layout/tg-flex-layout",
-                "master/actions/tg-action");
+                webComponent("file_operations/tg-attachment-uploader-list"),
+                webComponent("layout/tg-flex-layout"),
+                webComponent("master/actions/tg-action"));
 
         final String mimeTypesAccepted = StreamUtils.of(mimeType, moreMimeTypes).collect(Collectors.joining(","));
         final DomElement attachmentUploaderList = new DomElement("tg-attachment-uploader-list")

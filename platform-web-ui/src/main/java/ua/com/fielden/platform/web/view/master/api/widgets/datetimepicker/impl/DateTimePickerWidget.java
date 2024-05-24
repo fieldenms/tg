@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.datetimepicker.impl;
 
+import static ua.com.fielden.platform.web.centre.WebApiUtils.webComponent;
+
 import java.util.Map;
 
 import ua.com.fielden.platform.utils.Pair;
@@ -23,7 +25,7 @@ public class DateTimePickerWidget extends AbstractWidget {
      * @param propertyName
      */
     public DateTimePickerWidget(final Pair<String, String> titleDesc, final String propertyName, final boolean timePortionToBecomeEndOfDay, final String timeZone, final String datePortion) {
-        super("editors/tg-datetime-picker", titleDesc, propertyName);
+        super(webComponent("editors/tg-datetime-picker"), titleDesc, propertyName);
         this.timePortionToBecomeEndOfDay = timePortionToBecomeEndOfDay;
         this.timeZone = timeZone;
         this.datePortion = datePortion;

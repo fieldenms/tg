@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.view.master.hierarchy;
 
 import static java.util.Optional.empty;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.webComponent;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
@@ -39,9 +40,9 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
     public ReferenceHierarchyMaster () {
 
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
-        importPaths.add("components/tg-reference-hierarchy");
-        importPaths.add("editors/tg-singleline-text-editor");
-        importPaths.add("actions/tg-ui-action");
+        importPaths.add(webComponent("components/tg-reference-hierarchy"));
+        importPaths.add(webComponent("editors/tg-singleline-text-editor"));
+        importPaths.add(webComponent("actions/tg-ui-action"));
 
 
         this.actions.add(EntityActionBuilder.editAction().withContext(context().withCurrentEntity().build())
@@ -90,7 +91,7 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
                 .replace(IMPORTS, createImports(importPaths)+
-                        "\nimport { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';\n")
+                        "\nimport { TgEntityBinderBehavior } from '/resources/"+ webComponent("binding/tg-entity-binder-behavior") + ".js';\n")
                 .replace(ENTITY_TYPE, flattenedNameOf(ReferenceHierarchy.class))
                 .replace("<!--@tg-entity-master-content-->", referenceHierarchyDom.toString())
                 .replace("//generatedPrimaryActions", customActionObjectsString.length() > prefixLength ? customActionObjectsString.substring(prefixLength)

@@ -6,6 +6,7 @@ import static org.apache.commons.lang3.StringUtils.join;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimePortionToDisplay;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimeZone;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.webComponent;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.PRIMARY_RESULT_SET;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
@@ -43,13 +44,13 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
     public ChartDeckerMaster(final IChartDeckerConfig<T> deckerConfig) {
 
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
-        importPaths.add("components/tg-bar-chart/tg-bar-chart");
+        importPaths.add(webComponent("components/tg-bar-chart/tg-bar-chart"));
 
         final DomElement decks = createDeckElements(deckerConfig);
         final Pair<String, DomElement> actions = generateActions(deckerConfig, importPaths);
         decks.add(actions.getValue());
 
-        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/components/chart-decker/tg-chart-decker-template.js")
+        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/chart-decker/tg-chart-decker-template.js")
                 .replace(IMPORTS, createImports(importPaths))
                 .replace(ENTITY_TYPE, flattenedNameOf(deckerConfig.getEntityType()))
                 .replace("<!--@tg-entity-master-content-->", decks.toString())

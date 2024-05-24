@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl;
 
+import static ua.com.fielden.platform.web.centre.WebApiUtils.polymer;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -64,7 +66,7 @@ public class CentreToolbar implements IToolbarConfig {
 
     @Override
     public String importPath() {
-        return "polymer/@polymer/paper-icon-button/paper-icon-button";
+        return polymer("paper-icon-button/paper-icon-button");
     }
 
     @Override
@@ -184,7 +186,7 @@ public class CentreToolbar implements IToolbarConfig {
     public int getSwitchViewButtonWidth() {
         return switchViewButtonWidth;
     }
-    
+
     /**
      * A convenient factory method to create a toolbar that would include top actions, a view switch button, and a refresh action.
      *

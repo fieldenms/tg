@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.resultset.impl;
 
+import static ua.com.fielden.platform.web.centre.WebApiUtils.webComponent;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -33,7 +35,7 @@ public class SummaryElement implements IRenderable, IImportable {
      */
     public SummaryElement(final String propertyName, final Class<?> propertyType, final Pair<String, String> titleDesc) {
         this.widgetName = AbstractCriterionWidget.extractNameFrom("egi/tg-summary-property");
-        this.widgetPath = "egi/tg-summary-property";
+        this.widgetPath = webComponent("egi/tg-summary-property");
         this.propertyName = propertyName;
         this.propertyType = propertyType;
         this.titleDesc = titleDesc;

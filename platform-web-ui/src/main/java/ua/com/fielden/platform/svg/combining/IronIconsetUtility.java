@@ -3,6 +3,7 @@ package ua.com.fielden.platform.svg.combining;
 import static java.lang.String.format;
 import static java.nio.file.Files.readAllBytes;
 import static java.util.Comparator.comparing;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.polymer;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -21,9 +22,9 @@ import java.util.Set;
 import com.google.common.base.Charsets;
 
 public class IronIconsetUtility {
-    public static final String FILE_BEGIN_TEMPLATE = "import '/resources/node_modules/@fieldenms/tg-polymer/iron-icon/iron-icon.js';%n" +
-                                                     "import '/resources/node_modules/@fieldenms/tg-polymer/iron-iconset-svg/iron-iconset-svg.js';%n" +
-                                                     "import {html} from '/resources/node_modules/@fieldenms/tg-polymer/polymer/lib/utils/html-tag.js';%n" +
+    public static final String FILE_BEGIN_TEMPLATE = "import '/resources/" + polymer("iron-icon/iron-icon") + ".js';%n" +
+                                                     "import '/resources/" + polymer("iron-iconset-svg/iron-iconset-svg") + ".js';%n" +
+                                                     "import {html} from '/resources/" + polymer("polymer/lib/utils/html-tag") + ".js';%n" +
                                                      "const template = html`<iron-iconset-svg name='%s' size='%d'> %n <svg> %n <defs> %n";
     public static final String FILE_END_TEMPLATE = "</defs> \n </svg> \n </iron-iconset-svg>`;\n" +
                                                    "document.head.appendChild(template.content);";

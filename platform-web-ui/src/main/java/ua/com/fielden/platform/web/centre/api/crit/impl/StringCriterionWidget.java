@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.crit.impl;
 
+import static ua.com.fielden.platform.web.centre.WebApiUtils.webComponent;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.view.master.api.widgets.singlelinetext.impl.SinglelineTextWidget;
 
@@ -18,7 +20,7 @@ public class StringCriterionWidget extends AbstractCriterionWidget {
      * @param propertyName
      */
     public StringCriterionWidget(final Class<? extends AbstractEntity<?>> root, final Class<?> managedType, final String propertyName) {
-        super(root, "centre/criterion/tg-criterion", propertyName,
+        super(root, webComponent("centre/criterion/tg-criterion"), propertyName,
                 new SinglelineTextWidget(
                         AbstractCriterionWidget.generateSingleTitleDesc(root, managedType, propertyName),
                         AbstractCriterionWidget.generateSingleName(root, managedType, propertyName)

@@ -1,8 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.collectional.impl;
 
-import java.util.Map;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.webComponent;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 
@@ -18,6 +17,6 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 public class CollectionalRepresentorWidget extends AbstractWidget {
 
     public CollectionalRepresentorWidget(final Pair<String, String> titleAndDesc, final String propertyName) {
-        super("editors/tg-collectional-representor", titleAndDesc, propertyName);
+        super(webComponent("editors/tg-collectional-representor"), titleAndDesc, propertyName);
     }
 }

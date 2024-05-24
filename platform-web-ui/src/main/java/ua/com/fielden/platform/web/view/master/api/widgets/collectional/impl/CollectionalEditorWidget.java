@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.collectional.impl;
 
+import static ua.com.fielden.platform.web.centre.WebApiUtils.webComponent;
+
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -46,7 +48,7 @@ public class CollectionalEditorWidget extends AbstractWidget {
     private boolean staticOrder = false;
 
     public CollectionalEditorWidget(final Pair<String, String> titleAndDesc, final String propertyName) {
-        super("editors/tg-collectional-editor", titleAndDesc, propertyName);
+        super(webComponent("editors/tg-collectional-editor"), titleAndDesc, propertyName);
     }
 
     public void setHeaderPropertyName(final String headerPropertyName) {

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl;
 
+import static ua.com.fielden.platform.web.centre.WebApiUtils.webComponent;
+
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -15,7 +17,7 @@ import ua.com.fielden.platform.utils.Pair;
 public class EntityAutocompletionWidget extends AbstractEntityAutocompletionWidget {
 
     public EntityAutocompletionWidget(final Pair<String, String> titleAndDesc, final String propertyName, final Class<? extends AbstractEntity<?>> propertyType) {
-        super("editors/tg-entity-editor", titleAndDesc, propertyName, propertyType);
+        super(webComponent("editors/tg-entity-editor"), titleAndDesc, propertyName, propertyType);
     }
 
     @Override

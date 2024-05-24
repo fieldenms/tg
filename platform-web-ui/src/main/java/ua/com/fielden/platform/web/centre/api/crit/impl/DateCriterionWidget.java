@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.crit.impl;
 
+import static ua.com.fielden.platform.web.centre.WebApiUtils.webComponent;
+
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -21,7 +23,7 @@ public class DateCriterionWidget extends AbstractRangeCriterionWidget {
      * @param propertyName
      */
     public DateCriterionWidget(final Class<? extends AbstractEntity<?>> root, final Class<?> managedType, final String propertyName) {
-        super(root, "centre/criterion/multi/range/tg-date-range-criterion", propertyName,
+        super(root, webComponent("centre/criterion/multi/range/tg-date-range-criterion"), propertyName,
                 new DateTimePickerWidget(
                         AbstractCriterionWidget.generateTitleDesc(root, managedType, propertyName).getKey(),
                         AbstractCriterionWidget.generateNames(root, managedType, propertyName).getKey(),

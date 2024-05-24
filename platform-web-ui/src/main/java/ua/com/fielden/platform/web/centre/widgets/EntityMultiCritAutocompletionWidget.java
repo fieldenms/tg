@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.centre.widgets;
 
+import static ua.com.fielden.platform.web.centre.WebApiUtils.webComponent;
+
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -18,7 +20,7 @@ public class EntityMultiCritAutocompletionWidget extends AbstractEntityCritAutoc
     private final CentreContextConfig centreContextConfig;
 
     public EntityMultiCritAutocompletionWidget(final Pair<String, String> titleAndDesc, final String propertyName, final Class<? extends AbstractEntity<?>> propType, final CentreContextConfig centreContextConfig) {
-        super("editors/tg-entity-editor", titleAndDesc, propertyName, propType);
+        super(webComponent("editors/tg-entity-editor"), titleAndDesc, propertyName, propType);
         this.centreContextConfig = centreContextConfig;
     }
 

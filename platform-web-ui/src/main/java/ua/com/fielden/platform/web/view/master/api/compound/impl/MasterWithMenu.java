@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.view.master.api.compound.impl;
 import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.webComponent;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
@@ -58,8 +59,8 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
         }
 
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
-        importPaths.add("master/menu/tg-master-menu");
-        importPaths.add("master/menu/tg-master-menu-item-section");
+        importPaths.add(webComponent("master/menu/tg-master-menu"));
+        importPaths.add(webComponent("master/menu/tg-master-menu-item-section"));
 
         this.menuItemActions.addAll(menuItemActions);
 

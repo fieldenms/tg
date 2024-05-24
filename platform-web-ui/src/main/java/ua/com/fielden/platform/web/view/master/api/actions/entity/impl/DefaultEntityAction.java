@@ -6,6 +6,7 @@ import static org.apache.commons.lang3.StringUtils.join;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresentForClass;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.webComponent;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -39,7 +40,7 @@ public class DefaultEntityAction<T extends AbstractEntity<?>> extends AbstractAc
      * @param propertyName
      */
     public DefaultEntityAction(final String name, final Class<T> entityType, final String postActionFunction, final String postActionErrorFunction) {
-        super(name, "master/actions/tg-action");
+        super(name, webComponent("master/actions/tg-action"));
         this.postActionFunction = postActionFunction;
         this.postActionErrorFunction = postActionErrorFunction;
         if (isActionWithOptions(name, entityType)) {

@@ -2,6 +2,8 @@ package ua.com.fielden.platform.web.view.master.metadata;
 
 import static java.util.Optional.empty;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.polymer;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.webComponent;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
@@ -26,10 +28,10 @@ public class DomainExplorerInsertionPointMaster implements IMaster<DomainExplore
     public DomainExplorerInsertionPointMaster () {
 
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
-        importPaths.add("components/tg-domain-explorer");
-        importPaths.add("editors/tg-singleline-text-editor");
-        importPaths.add("polymer/@polymer/iron-icons/iron-icons");
-        importPaths.add("polymer/@polymer/paper-icon-button/paper-icon-button");
+        importPaths.add(webComponent("components/tg-domain-explorer"));
+        importPaths.add(webComponent("editors/tg-singleline-text-editor"));
+        importPaths.add(polymer("iron-icons/iron-icons"));
+        importPaths.add(polymer("paper-icon-button/paper-icon-button"));
         final DomElement searchItemsText = new DomElement("div").attr("slot", "property-action").attr("hidden", "[[!_searchText]]").add(new InnerTextElement("[[_calcMatchedItems(_searchText, _matchedItemOrder, _matchedItemsNumber)]]"))
                 .style("font-size: 0.9rem", "color:#757575", "margin-right: 8px");
         final DomElement prevButton = new DomElement("paper-icon-button").attr("slot", "property-action").attr("hidden", "[[!_searchText]]").attr("icon", "icons:expand-less").attr("on-tap", "_goToPrevMatchedItem")
@@ -66,7 +68,7 @@ public class DomainExplorerInsertionPointMaster implements IMaster<DomainExplore
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
                 .replace(IMPORTS, createImports(importPaths)
-                        + "\nimport { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';\n")
+                        + "\nimport { TgEntityBinderBehavior } from '/resources/" + webComponent("binding/tg-entity-binder-behavior") + ".js';\n")
                 .replace(ENTITY_TYPE, flattenedNameOf(DomainExplorerInsertionPoint.class))
                 .replace("<!--@tg-entity-master-content-->", domainExplorerDom.toString())
                 .replace("//@ready-callback", readyCallback())

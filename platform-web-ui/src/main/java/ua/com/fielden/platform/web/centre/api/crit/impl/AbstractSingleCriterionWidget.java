@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.crit.impl;
 
+import static ua.com.fielden.platform.web.centre.WebApiUtils.webComponent;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 
@@ -18,6 +20,6 @@ public abstract class AbstractSingleCriterionWidget extends AbstractCriterionWid
      * @param propertyName
      */
     public AbstractSingleCriterionWidget(final Class<? extends AbstractEntity<?>> root, final String propertyName, final AbstractWidget... editors) {
-        super(root, "centre/criterion/tg-criterion", propertyName, editors);
+        super(root, webComponent("centre/criterion/tg-criterion"), propertyName, editors);
     }
 }

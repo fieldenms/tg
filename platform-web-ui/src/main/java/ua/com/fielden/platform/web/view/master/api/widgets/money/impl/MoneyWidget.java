@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.money.impl;
 
+import static ua.com.fielden.platform.web.centre.WebApiUtils.webComponent;
+
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 
@@ -18,7 +20,7 @@ public class MoneyWidget extends AbstractWidget {
      * @param propertyName
      */
     public MoneyWidget(final Pair<String, String> titleDesc, final String propertyName) {
-        super("editors/tg-money-editor", titleDesc, propertyName);
+        super(webComponent("editors/tg-money-editor"), titleDesc, propertyName);
     }
 
 }

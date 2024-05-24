@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.decimal.impl;
 
+import static ua.com.fielden.platform.web.centre.WebApiUtils.webComponent;
+
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 
@@ -18,7 +20,7 @@ public class DecimalWidget extends AbstractWidget {
      * @param propertyName
      */
     public DecimalWidget(final Pair<String, String> titleDesc, final String propertyName) {
-        super("editors/tg-decimal-editor", titleDesc, propertyName);
+        super(webComponent("editors/tg-decimal-editor"), titleDesc, propertyName);
     }
 
 }

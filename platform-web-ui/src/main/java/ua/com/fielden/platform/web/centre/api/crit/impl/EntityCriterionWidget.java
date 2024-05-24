@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.crit.impl;
 
+import static ua.com.fielden.platform.web.centre.WebApiUtils.webComponent;
+
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -25,7 +27,7 @@ public class EntityCriterionWidget extends AbstractCriterionWidget {
      * @param propertyName
      */
     public EntityCriterionWidget(final Class<? extends AbstractEntity<?>> root, final Class<?> managedType, final String propertyName, final List<Pair<String, Boolean>> additionalProps, final CentreContextConfig centreContextConfig) {
-        super(root, "centre/criterion/tg-criterion", propertyName,
+        super(root, webComponent("centre/criterion/tg-criterion"), propertyName,
                 new EntityMultiCritAutocompletionWidget(
                         AbstractCriterionWidget.generateSingleTitleDesc(root, managedType, propertyName),
                         AbstractCriterionWidget.generateSingleName(root, managedType, propertyName),

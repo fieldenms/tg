@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.actions.multi;
 
+import static ua.com.fielden.platform.web.centre.WebApiUtils.webComponent;
+
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -33,7 +35,7 @@ public class FunctionalMultiActionElement implements IRenderable, IImportable {
      * @param actionKind
      */
     public FunctionalMultiActionElement(final EntityMultiActionConfig entityMultiActionConfig, final int numberOfAction, final FunctionalActionKind actionKind) {
-        this.widgetPath = "egi/tg-egi-multi-action";
+        this.widgetPath = webComponent("egi/tg-egi-multi-action");
         this.widgetName = AbstractCriterionWidget.extractNameFrom(this.widgetPath);
 
         for (int configIndex = 0; configIndex < entityMultiActionConfig.actions().size(); configIndex++) {

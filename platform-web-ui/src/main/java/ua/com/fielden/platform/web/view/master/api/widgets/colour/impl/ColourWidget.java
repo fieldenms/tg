@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.colour.impl;
 
+import static ua.com.fielden.platform.web.centre.WebApiUtils.webComponent;
+
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 
@@ -17,6 +19,6 @@ public class ColourWidget extends AbstractWidget {
      * @param propertyName
      */
     public ColourWidget(final Pair<String, String> titleDesc, final String propertyName) {
-        super("editors/tg-colour-picker", titleDesc, propertyName);
+        super(webComponent("editors/tg-colour-picker"), titleDesc, propertyName);
     }
 }
