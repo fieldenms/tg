@@ -2,8 +2,6 @@ package ua.com.fielden.platform.meta;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 
-import java.lang.reflect.Type;
-
 /* Implementations of PropertyTypeMetadata.
  */
 
@@ -18,5 +16,3 @@ record CollectionalPropertyTypeMetadata
         implements PropertyTypeMetadata.Collectional {}
 
 record CompositePropertyTypeMetadata(Class<?> javaType) implements PropertyTypeMetadata.Composite {}
-
-record OtherPropertyTypeMetadata(Type javaType) implements PropertyTypeMetadata.Other {}

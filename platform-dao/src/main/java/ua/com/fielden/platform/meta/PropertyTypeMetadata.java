@@ -8,6 +8,7 @@ import ua.com.fielden.platform.types.Money;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -17,6 +18,15 @@ import java.util.Optional;
  * <p>
  * However, the mentioned class-instance relationship is not a universal rule. There are property types that don't directly
  * correspond to any {@link TypeMetadata}. For example, types of collectional properties or primitive types such as {@link String}.
+ *
+ * <h5> Property types that aren't modelled </h5>
+ * This abstraction is not exhaustive, i.e., it does not cover all possible property types.
+ * <p>
+ * Examples property types that aren't modelled:
+ * <ul>
+ *   <li> {@link Map}
+ *   <li> Collectional types parameterised with unmodelled property types (e.g, with a type variable)
+ * </ul>
  */
 public sealed interface PropertyTypeMetadata {
 
@@ -46,10 +56,6 @@ public sealed interface PropertyTypeMetadata {
         return this instanceof NoKey;
     }
 
-    default boolean isOther() {
-        return this instanceof Other;
-    }
-
     default Optional<Primitive> asPrimitive() {
         return this instanceof Primitive it ? Optional.of(it) : Optional.empty();
     }
@@ -72,10 +78,6 @@ public sealed interface PropertyTypeMetadata {
 
     default Optional<NoKey> asNoKey() {
         return this instanceof NoKey it ? Optional.of(it) : Optional.empty();
-    }
-
-    default Optional<Other> asOther() {
-        return this instanceof Other it ? Optional.of(it) : Optional.empty();
     }
 
     /**
@@ -155,13 +157,6 @@ public sealed interface PropertyTypeMetadata {
         public Class<ua.com.fielden.platform.entity.NoKey> javaType() {
             return ua.com.fielden.platform.entity.NoKey.class;
         }
-    }
-
-    /**
-     * Type of other, yet unclassified property types.
-     */
-    non-sealed interface Other extends PropertyTypeMetadata {
-        Type javaType();
     }
 
 }

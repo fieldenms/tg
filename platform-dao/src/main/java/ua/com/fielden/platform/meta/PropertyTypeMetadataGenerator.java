@@ -18,7 +18,6 @@ final class PropertyTypeMetadataGenerator {
     /**
      * Generates metadata for the property's type.
      */
-    // TODO use Either to capture the error message
     public Optional<PropertyTypeMetadata> generate(final Field field) {
         // start with empty() to type-check
         return Optional.<PropertyTypeMetadata>empty()
@@ -45,9 +44,7 @@ final class PropertyTypeMetadataGenerator {
                         : Optional.empty())
                 .or(() -> NoKey.class == type
                         ? Optional.of(PropertyTypeMetadata.NO_KEY)
-                        : Optional.empty())
-                // TODO remove Other?
-                .or(() -> Optional.of(new OtherPropertyTypeMetadata(type)));
+                        : Optional.empty());
     }
 
     private Optional<PropertyTypeMetadata.Primitive> asPrimitive(final Type type) {

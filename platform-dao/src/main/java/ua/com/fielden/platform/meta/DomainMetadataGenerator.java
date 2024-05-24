@@ -59,6 +59,29 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
  */
 
 /**
+ * <h3> Property Metadata </h3>
+ * Given a Java type that has properties (e.g., entity type or composite type), metadata is optionally generated for each
+ * property.
+ * <p>
+ * For the purpose of metadata generation properties can be divided into <i>special</i> and <i>ordinary</i> groups.
+ * <p>
+ * Special properties include: "id", "version", "key", one-to-one associations.
+ * <p>
+ * Whether metadata is generated for a property depends on several factors: the nature of its enclosing type (e.g.,
+ * persistent entity), the nature and the type of the property itself.
+ *
+ * <h4> Property Type Metadata </h4>
+ * Metadata is also generated for property types, see {@link PropertyTypeMetadata}.
+ * <p>
+ * Properties whose type cannot be modelled by metadata are skipped. However, for some properties it is required that
+ * their type be modelled, otherwise the property's definition must be incorrect. These include:
+ * <ul>
+ *   <li> Special properties.
+ *   <li> Persistent properties.
+ *   <li> Calculated properties.
+ *   <li> Crit-only properties.
+ * </ul>
+ *
  * <h4> Collectional Properties </h4>
  * Although collectional properties are implicitly calculated, the nature of any given collectional property is inferred
  * from its definition (typically it is {@link PropertyNature.Transient}). The calculation part is independently
@@ -306,48 +329,51 @@ final class DomainMetadataGenerator {
             return mkOne2OneProp(field, entityBuilder);
         }
 
-        final PropertyTypeMetadata propTypeMd = mkPropertyTypeOrThrow(field);
         final MapTo atMapTo = getAnnotation(field, MapTo.class);
         final Calculated atCalculated = getAnnotation(field, Calculated.class);
 
-        final PropertyMetadataImpl.Builder<?, ?> builder;
+        final Optional<PropertyMetadataImpl.Builder<?, ?>> builder;
 
         // CRIT-ONLY
         if (isAnnotationPresent(field, CritOnly.class)) {
-            builder = critOnlyProp(field.getName(), propTypeMd, null);
+            builder = Optional.of(critOnlyProp(field.getName(), mkPropertyTypeOrThrow(field), null));
         }
         // PERSISTENT
         // old code: last 2 conditions are to overcome incorrect metadata combinations
         // TODO throw an exception for incorrect definitions ?
         else if (atMapTo != null && !isSyntheticEntityType(enclosingEntityType) && atCalculated == null) {
             final String columnName = mkColumnName(field.getName(), atMapTo);
-            builder = persistentProp(field.getName(), propTypeMd,
-                                     hibTypeGenerator.generate(PropertyNature.PERSISTENT, propTypeMd, entityBuilder).use(field).get(),
-                                     PropertyNature.Persistent.data(propColumn(columnName, atIsProperty)));
+            final var propTypeMd = mkPropertyTypeOrThrow(field);
+            builder = Optional.of(
+                    persistentProp(field.getName(), propTypeMd,
+                                   hibTypeGenerator.generate(PropertyNature.PERSISTENT, propTypeMd, entityBuilder).use(field).get(),
+                                   PropertyNature.Persistent.data(propColumn(columnName, atIsProperty))));
         }
         // CALCULATED
         else if (atCalculated != null) {
             final boolean aggregatedExpression = AGGREGATED_EXPRESSION == atCalculated.category();
             final var data = PropertyNature.Calculated.data(
                     extractExpressionModelFromCalculatedProperty(enclosingEntityType, field), false, aggregatedExpression);
-            builder = calculatedProp(field.getName(), propTypeMd,
-                                     hibTypeGenerator.generate(CALCULATED, propTypeMd, entityBuilder).use(field).get(),
-                                     data);
+            final var propTypeMd = mkPropertyTypeOrThrow(field);
+            builder = Optional.of(calculatedProp(field.getName(), propTypeMd,
+                                                 hibTypeGenerator.generate(CALCULATED, propTypeMd, entityBuilder).use(field).get(),
+                                                 data));
         }
         // TRANSIENT
         else {
-            builder = transientProp(field.getName(), propTypeMd,
-                                    hibTypeGenerator.generate(TRANSIENT, propTypeMd, entityBuilder).use(field).get());
+            // skip properties that have an unknown type
+            builder = mkPropertyType(field)
+                    .map(propTypeMd -> transientProp(field.getName(), propTypeMd,
+                                                     hibTypeGenerator.generate(TRANSIENT, propTypeMd, entityBuilder).use(field).get()));
         }
 
-        // Scan the property for any additional metadata
-        builder.required(isRequiredByDefinition(field, enclosingEntityType));
-
-        if (isAnnotationPresent(field, CompositeKeyMember.class)) {
-            builder.with(PropertyMetadataKeys.KEY_MEMBER, true);
-        }
-
-        return Optional.of(builder.build());
+        return builder
+                // Scan the property for any additional metadata
+                .map(bld -> bld.required(isRequiredByDefinition(field, enclosingEntityType)))
+                .map(bld -> isAnnotationPresent(field, CompositeKeyMember.class)
+                        ? bld.with(PropertyMetadataKeys.KEY_MEMBER, true)
+                        : bld)
+                .map(PropertyMetadataImpl.Builder::build);
     }
 
     private Optional<PropertyMetadata> mkOne2OneProp(final Field field, final EntityMetadataBuilder<?, ?> entityBuilder) {
@@ -414,6 +440,12 @@ final class DomainMetadataGenerator {
 
     private static String mkColumnName(final String propName, final MapTo mapTo) {
         return isNotEmpty(mapTo.value()) ? mapTo.value() : propName.toUpperCase() + "_";
+    }
+
+    PropColumn propColumn(final String columnName, final Optional<IsProperty> optIsProperty) {
+        return optIsProperty
+                .map(isProperty -> propColumn(columnName, isProperty))
+                .orElseGet(() -> propColumn(columnName));
     }
 
     PropColumn propColumn(final String columnName) {
