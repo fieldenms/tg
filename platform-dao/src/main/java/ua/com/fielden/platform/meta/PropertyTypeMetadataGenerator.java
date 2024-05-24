@@ -4,14 +4,15 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.NoKey;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Optional;
 
 import static ua.com.fielden.platform.meta.TypeRegistry.COMPOSITE_TYPES;
 import static ua.com.fielden.platform.meta.TypeRegistry.PRIMITIVE_PROPERTY_TYPES;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 final class PropertyTypeMetadataGenerator {
 
@@ -35,9 +36,7 @@ final class PropertyTypeMetadataGenerator {
         // start with empty() to type-check
         return Optional.<PropertyTypeMetadata>empty()
                 .or(() -> asPrimitive(type))
-                .or(() -> type instanceof Class<?> klass && isEntityType(klass)
-                        ? Optional.of(new EntityPropertyTypeMetadata((Class<? extends AbstractEntity<?>>) klass))
-                        : Optional.empty())
+                .or(() -> asEntity(type))
                 .or(() -> asComposite(type))
                 .or(() -> DynamicEntityKey.class == type
                         ? Optional.of(PropertyTypeMetadata.COMPOSITE_KEY)
@@ -51,6 +50,12 @@ final class PropertyTypeMetadataGenerator {
         return type instanceof Class<?> klass && PRIMITIVE_PROPERTY_TYPES.contains(klass)
                 ? Optional.of(new PrimitivePropertyTypeMetadata(klass))
                 : Optional.empty();
+    }
+
+    private Optional<PropertyTypeMetadata.Entity> asEntity(final Type type) {
+        return rawClass(type)
+                .filter(EntityUtils::isEntityType)
+                .map(klass -> new EntityPropertyTypeMetadata((Class<? extends AbstractEntity<?>>) klass));
     }
 
     private Optional<PropertyTypeMetadata.Composite> asComposite(final Type type) {
@@ -72,6 +77,14 @@ final class PropertyTypeMetadataGenerator {
             case PropertyTypeMetadata.Primitive $ -> true;
             default -> false;
         };
+    }
+
+    private static Optional<Class<?>> rawClass(final Type type) {
+        return type instanceof Class<?> klass
+                ? Optional.of(klass)
+                : type instanceof ParameterizedType paramType
+                        ? rawClass(paramType.getRawType())
+                        : Optional.empty();
     }
 
 }
