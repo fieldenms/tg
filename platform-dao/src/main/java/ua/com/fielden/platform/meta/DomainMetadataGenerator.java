@@ -32,7 +32,6 @@ import static java.lang.String.format;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElseGet;
-import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.AGGREGATED_EXPRESSION;
@@ -172,8 +171,7 @@ final class DomainMetadataGenerator {
                         entityType, EntityNature.Persistent.data(mkTableName(entityType))));
             case EntityNature.Synthetic $ -> {
                 final var modelField = requireNonNull(findSyntheticModelFieldFor(entityType),
-                                                      () -> "Synthetic entity [%s] has no model field.".formatted(
-                                                              entityType.getTypeName()));
+                                                      () -> format("Synthetic entity [%s] has no model field.", entityType.getTypeName()));
                 entityBuilder = Optional.of(EntityMetadataBuilder.syntheticEntity(
                         entityType,
                         EntityNature.Synthetic.data(getEntityModelsOfQueryBasedEntityType(entityType, modelField))));
@@ -296,8 +294,10 @@ final class DomainMetadataGenerator {
             case EntityMetadataBuilder.Synthetic s -> {
                 if (isSyntheticBasedOnPersistentEntityType(s.getJavaType())) {
                     if (isEntityType(getKeyType(s.getJavaType()))) {
-                        throw new EntityDefinitionException(format("Entity [%s] is recognised as synthetic based on a persistent type with an entity-typed key. This is not supported.",
-                                                                   s.getJavaType().getTypeName()));
+                        throw new EntityDefinitionException(format(
+                                "Entity [%s] is recognised as synthetic based on a persistent type with an entity-typed key. " +
+                                "This is not supported.",
+                                s.getJavaType().getTypeName()));
                     }
                     yield Optional.of(propId);
                 } else if (isEntityType(getKeyType(s.getJavaType()))) {
@@ -510,7 +510,9 @@ final class DomainMetadataGenerator {
             if (ex instanceof ReflectionException) {
                 throw (ReflectionException) ex;
             } else {
-                throw new ReflectionException("Could not obtain the model for synthetic entity [%s].".formatted(entityType.getSimpleName()), ex);
+                throw new ReflectionException(
+                        format("Could not obtain the model for synthetic entity [%s].", entityType.getSimpleName()),
+                        ex);
             }
         }
     }
@@ -585,12 +587,18 @@ final class DomainMetadataGenerator {
         return generateUnionImplicitCalcSubprops(unionType, null, entityBuilder);
     }
 
-    private ExpressionModel generateUnionCommonDescPropExpressionModel(final List<Field> unionMembers, final String contextPropName) {
-        final List<String> unionMembersNames = unionMembers.stream().filter(et -> hasDescProperty((Class<? extends AbstractEntity<?>>) et.getType())).map(et -> et.getName()).collect(toList());
+    private ExpressionModel generateUnionCommonDescPropExpressionModel(final List<Field> unionMembers,
+                                                                       final @Nullable String contextPropName) {
+        final List<String> unionMembersNames = unionMembers.stream()
+                .filter(et -> hasDescProperty((Class<? extends AbstractEntity<?>>) et.getType()))
+                .map(Field::getName)
+                .toList();
         return generateUnionEntityPropertyContextualExpression(unionMembersNames, DESC, contextPropName);
     }
 
-    private static ExpressionModel generateUnionEntityPropertyContextualExpression(final List<String> unionMembers, final String commonSubpropName, final String contextPropName) {
+    private static ExpressionModel generateUnionEntityPropertyContextualExpression(final List<String> unionMembers,
+                                                                                   final String commonSubpropName,
+                                                                                   final @Nullable String contextPropName) {
         if (unionMembers.isEmpty()) {
             return expr().val(null).model();
         }
