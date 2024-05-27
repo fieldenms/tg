@@ -2,10 +2,14 @@ package ua.com.fielden.platform.meta;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 
-import java.util.Optional;
+import java.util.Collection;
+import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
+import static java.util.function.Function.identity;
 import static org.junit.Assert.*;
+import static ua.com.fielden.platform.test_utils.CollectionTestUtils.assertEqualByContents;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertInstanceOf;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertPresent;
 
@@ -89,6 +93,11 @@ interface Assertions {
             return this;
         }
 
+        public PropertyA<PropertyMetadata> getProperty(final CharSequence propName) {
+            assertPropertyExists(propName);
+            return PropertyA.of(entityMetadata.property(propName.toString()).orElseThrow());
+        }
+
         public EntityA<E> assertPropertiesExist(final Iterable<? extends CharSequence> propNames) {
             propNames.forEach(this::assertPropertyExists);
             return this;
@@ -167,6 +176,54 @@ interface Assertions {
 
         public PropertyA<P> asserting(final Consumer<? super P> assertor) {
             assertor.accept(propertyMetadata);
+            return this;
+        }
+
+        public SubPropertiesA subProperties(final PropertyMetadataUtils pmUtils) {
+            return new SubPropertiesA(propertyMetadata, pmUtils.subProperties(propertyMetadata));
+        }
+    }
+
+    class SubPropertiesA {
+        private final PropertyMetadata parent;
+        private final Map<String, PropertyMetadata> subProperties;
+
+        public SubPropertiesA(final PropertyMetadata parent, final Collection<? extends PropertyMetadata> subProperties) {
+            this.parent = parent;
+            this.subProperties = subProperties.stream().collect(Collectors.toMap(PropertyMetadata::name, identity()));
+        }
+
+        public SubPropertiesA forEach(final Consumer<PropertyA<PropertyMetadata>> fn) {
+            subProperties.values().stream().map(PropertyA::of).forEach(fn);
+            return this;
+        }
+
+        public SubPropertiesA assertSubProperty(final CharSequence propName, final Consumer<PropertyA<PropertyMetadata>> assertor) {
+            final var subProp = subProperties.get(propName);
+            assertNotNull("Sub-property [%s] not found for property [%s]".formatted(propName, parent), subProp);
+            assertor.accept(PropertyA.of(subProp));
+            return this;
+        }
+
+        public SubPropertiesA assertSubPropertyExists(final CharSequence propName) {
+            return assertSubProperty(propName, $ -> {});
+        }
+
+        public SubPropertiesA assertSubPropertiesExist(final Iterable<? extends CharSequence> propNames) {
+            propNames.forEach(this::assertSubPropertyExists);
+            return this;
+        }
+
+        /**
+         * Unlike {@link #assertSubPropertiesExist(Iterable)}, which assert set membership, this method asserts set equality.
+         */
+        public SubPropertiesA assertSubPropertiesAre(final Collection<? extends CharSequence> propNames) {
+            assertEqualByContents(propNames, subProperties.values().stream().map(PropertyMetadata::name).toList());
+            return this;
+        }
+
+        public SubPropertiesA assertSubProperties(final Consumer<? super Collection<? extends PropertyMetadata>> assertor) {
+            assertor.accept(subProperties.values());
             return this;
         }
     }
