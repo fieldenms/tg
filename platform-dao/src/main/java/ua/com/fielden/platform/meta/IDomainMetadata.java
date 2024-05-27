@@ -30,7 +30,7 @@ public interface IDomainMetadata {
      */
     <T extends TypeMetadata> Collection<T> allTypes(Class<T> metadataType);
 
-    Optional<TypeMetadata> forType(Class<?> javaType);
+    Optional<? extends TypeMetadata> forType(Class<?> javaType);
 
     /**
      * Non-throwing alternative to {@link #forEntity(Class)}.
