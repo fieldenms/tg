@@ -7,6 +7,10 @@ import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.meta.Assertions.EntityA;
 import ua.com.fielden.platform.meta.Assertions.SubPropertiesA;
 import ua.com.fielden.platform.meta.test_entities.Entity_VariousMoney;
+import ua.com.fielden.platform.sample.domain.TgBogie;
+import ua.com.fielden.platform.sample.domain.TgFuelType;
+import ua.com.fielden.platform.sample.domain.TgWagonSlot;
+import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.test.PlatformTestHibernateSetup;
 
 import java.math.BigDecimal;
@@ -14,7 +18,6 @@ import java.util.Currency;
 import java.util.List;
 
 import static com.google.inject.Guice.createInjector;
-import static ua.com.fielden.platform.test_utils.TestUtils.assertPresent;
 
 public class PropertyMetadataUtilsTest {
 
@@ -58,6 +61,45 @@ public class PropertyMetadataUtilsTest {
                         .assertIs(PropertyTypeMetadata.Primitive.class).assertJavaType(BigDecimal.class))
                 .assertSubProperty("currency", p -> p.type()
                         .assertIs(PropertyTypeMetadata.Primitive.class).assertJavaType(Currency.class));
+    }
+
+    @Test
+    public void subProperties_of_union_entity_typed_property_are_union_members_and_implicitly_calculated_properties() {
+        subPropertiesOf(TgBogie.class, "location")
+                .assertSubPropertiesAre(List.of("wagonSlot", "workshop", "key", "id", "desc", "fuelType"));
+    }
+
+    @Test
+    public void subProperties_of_union_entity_typed_property_include_union_members_as_persistent() {
+        subPropertiesOf(TgBogie.class, "location")
+                .assertSubProperty("wagonSlot", p -> p.assertIs(PropertyMetadata.Persistent.class))
+                .assertSubProperty("workshop", p -> p.assertIs(PropertyMetadata.Persistent.class));
+    }
+
+    @Test
+    public void subProperties_of_union_entity_typed_property_include_implicitly_caclulated_properties_as_calculated() {
+        subPropertiesOf(TgBogie.class, "location")
+                .assertSubProperty("id", p -> p.assertIs(PropertyMetadata.Calculated.class))
+                .assertSubProperty("key", p -> p.assertIs(PropertyMetadata.Calculated.class))
+                .assertSubProperty("desc", p -> p.assertIs(PropertyMetadata.Calculated.class))
+                .assertSubProperty("fuelType", p -> p.assertIs(PropertyMetadata.Calculated.class));
+    }
+
+    @Test
+    public void types_of_subProperties_of_union_entity_typed_property_are_preserved() {
+        subPropertiesOf(TgBogie.class, "location")
+                .assertSubProperty("wagonSlot", p -> p.type()
+                        .assertIs(PropertyTypeMetadata.Entity.class).assertJavaType(TgWagonSlot.class))
+                .assertSubProperty("workshop", p -> p.type()
+                        .assertIs(PropertyTypeMetadata.Entity.class).assertJavaType(TgWorkshop.class))
+                .assertSubProperty("fuelType", p -> p.type()
+                        .assertIs(PropertyTypeMetadata.Entity.class).assertJavaType(TgFuelType.class))
+                .assertSubProperty("id", p -> p.type()
+                        .assertIs(PropertyTypeMetadata.Primitive.class).assertJavaType(Long.class))
+                .assertSubProperty("key", p -> p.type()
+                        .assertIs(PropertyTypeMetadata.Primitive.class).assertJavaType(String.class))
+                .assertSubProperty("desc", p -> p.type()
+                        .assertIs(PropertyTypeMetadata.Primitive.class).assertJavaType(String.class));
     }
 
     // ****************************************
