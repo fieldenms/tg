@@ -70,7 +70,12 @@ interface Assertions {
 
         public E get() { return entityMetadata; }
 
-        <U extends EntityMetadata> EntityA<U> assertIs(final Class<U> type) {
+        public EntityA<E> peek(final Consumer<? super E> fn) {
+            fn.accept(entityMetadata);
+            return this;
+        }
+
+        public <U extends EntityMetadata> EntityA<U> assertIs(final Class<U> type) {
             return new EntityA<>(assertInstanceOf(type, entityMetadata));
         }
 
