@@ -27,7 +27,7 @@ public interface PropertyMetadataUtils {
      * <ul>
      *   <li> Union Entity - the following sub-properties are included:
      *     <ul>
-     *       <li> Union members - persistent nature is attributed to each sub-property.
+     *       <li> Union members.
      *       <li> Implicitly calculated properties of the union entity.
      *     </ul>
      *   <li> Composite Type - component properties are included. Their nature depends on the nature of the given property:

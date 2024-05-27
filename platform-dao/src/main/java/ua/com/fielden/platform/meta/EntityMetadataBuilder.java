@@ -24,6 +24,21 @@ abstract class EntityMetadataBuilder<N extends EntityNature, D extends EntityNat
         this.data = data;
     }
 
+    static EntityMetadataBuilder<?, ?> toBuilder(final EntityMetadata entityMetadata) {
+        final var builder = switch (entityMetadata) {
+            case EntityMetadata.Persistent it ->
+                    new Persistent(it.javaType(), it.nature(), it.data());
+            case EntityMetadata.Synthetic it ->
+                    new Synthetic(it.javaType(), it.nature(), it.data());
+            case EntityMetadata.Union it ->
+                    new Union(it.javaType(), it.nature(), it.data());
+            case EntityMetadata.Other it ->
+                    new Other(it.javaType(), it.nature(), it.data());
+        };
+
+        return builder.properties(entityMetadata.properties());
+    }
+
     public abstract EntityMetadata build();
 
     public Class<? extends AbstractEntity<?>> getJavaType() {
@@ -54,22 +69,22 @@ abstract class EntityMetadataBuilder<N extends EntityNature, D extends EntityNat
 
     static EntityMetadataBuilder<EntityNature.Persistent, EntityNature.Persistent.Data> persistentEntity
             (final Class<? extends AbstractEntity<?>> type, final EntityNature.Persistent.Data data) {
-        return new EntityMetadataBuilder.Persistent(type, EntityNature.PERSISTENT, data);
+        return new Persistent(type, EntityNature.PERSISTENT, data);
     }
 
     static EntityMetadataBuilder<EntityNature.Synthetic, EntityNature.Synthetic.Data> syntheticEntity
             (final Class<? extends AbstractEntity<?>> type, final EntityNature.Synthetic.Data data) {
-        return new EntityMetadataBuilder.Synthetic(type, EntityNature.SYNTHETIC, data);
+        return new Synthetic(type, EntityNature.SYNTHETIC, data);
     }
 
     static EntityMetadataBuilder<EntityNature.Union, EntityNature.Union.Data> unionEntity
             (final Class<? extends AbstractUnionEntity> type, final EntityNature.Union.Data data) {
-        return new EntityMetadataBuilder.Union(type, EntityNature.UNION, data);
+        return new Union(type, EntityNature.UNION, data);
     }
 
     static EntityMetadataBuilder<EntityNature.Other, EntityNature.Other.Data> otherEntity
             (final Class<? extends AbstractEntity<?>> type) {
-        return new EntityMetadataBuilder.Other(type, EntityNature.OTHER, EntityNature.Other.NO_DATA);
+        return new Other(type, EntityNature.OTHER, EntityNature.Other.NO_DATA);
     }
 
     static final class Persistent

@@ -542,9 +542,9 @@ final class DomainMetadataGenerator {
                         (m1, m2) -> {throw new UnsupportedOperationException("Combining is not applicable here.");});
     }
 
-    private List<PropertyMetadata> generateUnionImplicitCalcSubprops(final Class<? extends AbstractUnionEntity> unionType,
-                                                                     @Nullable final String contextPropName,
-                                                                     final EntityMetadataBuilder<?, ?> entityBuilder) {
+    List<PropertyMetadata> generateUnionImplicitCalcSubprops(final Class<? extends AbstractUnionEntity> unionType,
+                                                             @Nullable final String contextPropName,
+                                                             final EntityMetadataBuilder<?, ?> entityBuilder) {
         final List<Field> unionMembers = unionProperties(unionType);
         if (unionMembers.isEmpty()) {
             throw new EntityDefinitionException("Ill-defined union entity [%s] has no union members.".formatted(unionType.getTypeName()));
