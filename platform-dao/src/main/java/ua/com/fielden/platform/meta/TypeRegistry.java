@@ -16,7 +16,7 @@ final class TypeRegistry {
 
     public static final Set<Class<?>> PRIMITIVE_PROPERTY_TYPES = Set.of(
             String.class, Long.class, Integer.class, BigDecimal.class, Date.class, boolean.class, Boolean.class, byte[].class,
-            Colour.class, Hyperlink.class, Currency.class);
+            Colour.class, Hyperlink.class, Currency.class, Class.class);
 
     public static final Set<Class<?>> VALUE_ENTITY_TYPES = Set.of(PropertyDescriptor.class);
 

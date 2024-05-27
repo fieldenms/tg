@@ -47,9 +47,9 @@ final class PropertyTypeMetadataGenerator {
     }
 
     private Optional<PropertyTypeMetadata.Primitive> asPrimitive(final Type type) {
-        return type instanceof Class<?> klass && PRIMITIVE_PROPERTY_TYPES.contains(klass)
+        return rawClass(type).flatMap(klass -> PRIMITIVE_PROPERTY_TYPES.contains(klass)
                 ? Optional.of(new PrimitivePropertyTypeMetadata(klass))
-                : Optional.empty();
+                : Optional.empty());
     }
 
     private Optional<PropertyTypeMetadata.Entity> asEntity(final Type type) {
