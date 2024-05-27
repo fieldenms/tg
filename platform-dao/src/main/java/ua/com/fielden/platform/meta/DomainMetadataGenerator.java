@@ -47,6 +47,7 @@ import static ua.com.fielden.platform.meta.EntityNature.SYNTHETIC;
 import static ua.com.fielden.platform.meta.EntityNature.UNION;
 import static ua.com.fielden.platform.meta.HibernateTypeGenerator.*;
 import static ua.com.fielden.platform.meta.PropertyMetadataImpl.Builder.*;
+import static ua.com.fielden.platform.meta.PropertyMetadataKeys.UNION_MEMBER;
 import static ua.com.fielden.platform.meta.PropertyNature.*;
 import static ua.com.fielden.platform.meta.PropertyTypeMetadata.COMPOSITE_KEY;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.*;
@@ -194,7 +195,10 @@ final class DomainMetadataGenerator {
                 return ImmutableList.<PropertyMetadata>builder()
                         .addAll(generateUnionImplicitCalcSubprops(u.getJavaType(), entityBuilder))
                         // union members
-                        .addAll(unionProperties(u.getJavaType()).stream().map(field -> mkProp(field, u)).flatMap(Optional::stream)
+                        .addAll(unionProperties(u.getJavaType()).stream()
+                                        .map(field -> mkProp(field, u)).flatMap(Optional::stream)
+                                        .map(bld -> bld.with(UNION_MEMBER, true))
+                                        .map(PropertyMetadataImpl.Builder::build)
                                         .iterator())
                         .build();
             }
@@ -207,6 +211,7 @@ final class DomainMetadataGenerator {
                         .filter(field -> !SPECIAL_PROPS.contains(field.getName()))
                         .map(field -> mkProp(field, entityBuilder))
                         .flatMap(Optional::stream)
+                        .map(PropertyMetadataImpl.Builder::build)
                         .forEach(props::add);
                 return props.build();
             }
@@ -317,7 +322,7 @@ final class DomainMetadataGenerator {
      *   <li> One-to-one association - implicitly calculated.
      * </ul>
      */
-    Optional<PropertyMetadata> mkProp(final Field field, final EntityMetadataBuilder<?, ?> entityBuilder) {
+    Optional<PropertyMetadataImpl.Builder<?, ?>> mkProp(final Field field, final EntityMetadataBuilder<?, ?> entityBuilder) {
         final IsProperty atIsProperty = getAnnotation(field, IsProperty.class);
         if (atIsProperty == null) {
             return Optional.empty();
@@ -372,11 +377,10 @@ final class DomainMetadataGenerator {
                 .map(bld -> bld.required(isRequiredByDefinition(field, enclosingEntityType)))
                 .map(bld -> isAnnotationPresent(field, CompositeKeyMember.class)
                         ? bld.with(PropertyMetadataKeys.KEY_MEMBER, true)
-                        : bld)
-                .map(PropertyMetadataImpl.Builder::build);
+                        : bld);
     }
 
-    private Optional<PropertyMetadata> mkOne2OneProp(final Field field, final EntityMetadataBuilder<?, ?> entityBuilder) {
+    private Optional<PropertyMetadataImpl.Builder<?, ?>> mkOne2OneProp(final Field field, final EntityMetadataBuilder<?, ?> entityBuilder) {
         // TODO optional metadata Key<Boolean> to indicate that this property is one2one?
         final var propType = (Class<? extends AbstractEntity<?>>) field.getType();
         // one2one is not required to exist -- that's why need longer formula -- that's why one2one is in fact implicitly calculated nullable prop
@@ -386,8 +390,7 @@ final class DomainMetadataGenerator {
         final PropertyTypeMetadata typeMetadata = mkPropertyTypeOrThrow(field);
         return Optional.of(calculatedProp(field.getName(), typeMetadata,
                                           hibTypeGenerator.generate(CALCULATED, typeMetadata, entityBuilder).use(field).get(),
-                                          PropertyNature.Calculated.data(expressionModel, true, false))
-                                   .build());
+                                          PropertyNature.Calculated.data(expressionModel, true, false)));
     }
 
     public Optional<PropertyTypeMetadata> mkPropertyType(final Field field) {

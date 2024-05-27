@@ -4,6 +4,7 @@ public final class PropertyMetadataKeys {
 
     public static final PropertyMetadata.AnyKey<Boolean> REQUIRED = mkAnyKey("Required");
     public static final PropertyMetadata.AnyKey<Boolean> KEY_MEMBER = mkAnyKey("Key Member");
+    public static final PropertyMetadata.AnyKey<Boolean> UNION_MEMBER = mkAnyKey("Union Member");
 
     private PropertyMetadataKeys() {}
 
