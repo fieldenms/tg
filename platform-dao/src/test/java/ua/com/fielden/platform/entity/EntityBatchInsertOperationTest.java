@@ -113,7 +113,6 @@ public class EntityBatchInsertOperationTest extends AbstractDaoTestCase {
                 setStringProp("someString").
                 setBooleanProp(true).
                 setBigDecimalProp(new BigDecimal("100.999")).
-                setIntProp(20).
                 setIntegerProp(200).
                 setLongProp(100l).
                 setColourProp(BLACK).
