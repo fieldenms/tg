@@ -9,6 +9,7 @@ import ua.com.fielden.platform.meta.Assertions.PropertyTypeA;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgReMaxVehicleReading;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
+import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
@@ -91,8 +92,7 @@ public class PropertyTypeMetadataGeneratorTest {
             Set<? extends TgVehicle> subVehicles;
         }
 
-        final Function<String, PropertyTypeA<PropertyTypeMetadata>> f =
-                fieldName -> PropertyTypeA.of(generator.generate(getField(A.class, fieldName)));
+        final Function<String, PropertyTypeA<PropertyTypeMetadata>> f = fieldName -> fromField(A.class, fieldName);
 
         f.apply("strings").assertCollectional()
                 .assertCollectionType(List.class)
@@ -119,12 +119,27 @@ public class PropertyTypeMetadataGeneratorTest {
                 .assertJavaType(PropertyDescriptor.class);
     }
 
+    @Test
+    public void Class_property_type_is_generated_as_primitive() {
+        class A {
+            @IsProperty Class<? extends ISecurityToken> tokenClass;
+            @IsProperty Class rawClass;
+        }
+
+        fromField(A.class, "tokenClass").assertIs(PropertyTypeMetadata.Primitive.class).assertJavaType(Class.class);
+        fromField(A.class, "rawClass").assertIs(PropertyTypeMetadata.Primitive.class).assertJavaType(Class.class);
+    }
+
     private static Field getField(final Class<?> klass, final String name) {
         try {
             return klass.getDeclaredField(name);
         } catch (NoSuchFieldException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private PropertyTypeA<PropertyTypeMetadata> fromField(final Class<?> klass, final String name) {
+        return PropertyTypeA.of(generator.generate(getField(klass, name)));
     }
 
 }
