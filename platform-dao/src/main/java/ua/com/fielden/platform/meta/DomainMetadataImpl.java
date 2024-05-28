@@ -44,6 +44,7 @@ final class DomainMetadataImpl implements IDomainMetadata {
     private final DomainMetadataGenerator generator;
     private final PropertyMetadataUtils pmUtils;
     private final EntityMetadataUtils emUtils;
+    private final QuerySourceInfoProvider querySourceInfoProvider;
 
     DomainMetadataImpl(final Map<Class<? extends AbstractEntity<?>>, EntityMetadata> entityMetadataMap,
                        final Map<Class<?>, TypeMetadata.Composite> compositeTypeMetadataMap,
@@ -62,6 +63,7 @@ final class DomainMetadataImpl implements IDomainMetadata {
         this.hibTypesInjector = hibTypesInjector;
         this.dbVersion = dbVersion;
         initBaggage(requireNonNullElseGet(hibTypesDefaults, Map::of), entityMetadataMap.values());
+        this.querySourceInfoProvider = new QuerySourceInfoProvider(this);
     }
 
     @Override
@@ -284,8 +286,7 @@ final class DomainMetadataImpl implements IDomainMetadata {
 
     @Override
     public QuerySourceInfoProvider querySourceInfoProvider() {
-        // TODO
-        return null;
+        return querySourceInfoProvider;
     }
 
 }
