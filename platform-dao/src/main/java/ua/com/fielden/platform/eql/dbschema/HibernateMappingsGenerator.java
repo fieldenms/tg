@@ -50,8 +50,7 @@ public class HibernateMappingsGenerator {
                 .filter(em -> em.nature().isPersistent())
                 .forEach(em -> {
                     try {
-                        // TODO retrieve the table through a corresponding service
-                        String tableName = null;
+                        String tableName = domainMetadata.getTableForEntityType(em.javaType()).name();
                         sb.append(generateEntityClassMapping(domainMetadata, em, tableName, dbVersion));
                     } catch (final Exception e) {
                         LOGGER.error(e);

@@ -4,9 +4,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Injector;
 import org.hibernate.dialect.Dialect;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation.TableStructForBatchInsertion;
+import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation.TableStructForBatchInsertion.PropColumnInfo;
 import ua.com.fielden.platform.eql.dbschema.ColumnDefinitionExtractor;
 import ua.com.fielden.platform.eql.dbschema.TableDdl;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
@@ -21,9 +21,16 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNullElseGet;
+import static java.util.stream.Collectors.toConcurrentMap;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.meta.HibernateTypeGenerator.H_BOOLEAN;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
 
@@ -42,14 +49,19 @@ final class DomainMetadataImpl implements IDomainMetadata {
                        final Map<Class<?>, TypeMetadata.Composite> compositeTypeMetadataMap,
                        final Collection<? extends Class<? extends AbstractEntity<?>>> entityTypes,
                        final DomainMetadataGenerator generator,
+                       final Injector hibTypesInjector,
+                       final @Nullable Map<? extends Class, ? extends Class> hibTypesDefaults,
                        final DbVersion dbVersion) {
         this.entityMetadataMap = new ConcurrentHashMap<>(entityMetadataMap);
         this.compositeTypeMetadataMap = new ConcurrentHashMap<>(compositeTypeMetadataMap);
         this.entityTypes = entityTypes.stream().distinct().collect(toImmutableList());
         this.generator = generator;
-        this.dbVersion = dbVersion;
         this.pmUtils = new PropertyMetadataUtilsImpl(this, generator);
         this.emUtils = new EntityMetadataUtilsImpl();
+
+        this.hibTypesInjector = hibTypesInjector;
+        this.dbVersion = dbVersion;
+        initBaggage(requireNonNullElseGet(hibTypesDefaults, Map::of), entityMetadataMap.values());
     }
 
     @Override
@@ -147,13 +159,86 @@ final class DomainMetadataImpl implements IDomainMetadata {
     // ****************************************
     // * Temporary baggage from old metadata that can't be moved until dependency injection is properly configured.
 
-    private final Injector hibTypesInjector = null;
-    private final Map<Class<?>, Object> hibTypesDefaults = Map.of();
+    private final Injector hibTypesInjector;
+    private final Map<Class<?>, Object> hibTypesDefaults = new HashMap<>();
     private final DbVersion dbVersion;
-    // TODO populate
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EqlTable> tables = new ConcurrentHashMap<>();
-    // TODO populate
     private final ConcurrentMap<String, TableStructForBatchInsertion> tableStructsForBatchInsertion = new ConcurrentHashMap<>();
+
+    private void initBaggage(final Map<? extends Class, ? extends Class> hibTypesDefaults,
+                             final Collection<? extends EntityMetadata> entityMetadataMap) {
+        initHibTypesDefaults(hibTypesDefaults);
+        entityMetadataMap.parallelStream().map(EntityMetadata::asPersistent).flatMap(Optional::stream)
+                .forEach(em -> {
+                    tables.put(em.javaType(), generateEqlTable(em));
+                    tableStructsForBatchInsertion.put(em.javaType().getName(), generateTableStructForBatchInsertion(em));
+                });
+    }
+
+    private void initHibTypesDefaults(final Map<? extends Class, ? extends Class> hibTypesDefaults) {
+        hibTypesDefaults.forEach((javaType, hibType) -> {
+            try {
+                this.hibTypesDefaults.put(javaType, hibType.getDeclaredField("INSTANCE").get(null));
+            } catch (final Exception e) {
+                throw new EqlMetadataGenerationException("Couldn't instantiate Hibernate type [%s]".formatted(hibType), e);
+            }
+        });
+
+        this.hibTypesDefaults.put(Boolean.class, H_BOOLEAN);
+        this.hibTypesDefaults.put(boolean.class, H_BOOLEAN);
+    }
+
+    private EqlTable generateEqlTable(final EntityMetadata.Persistent entityMetadata) {
+        final Map<String, String> columns = entityMetadata.properties().stream()
+                .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
+                .flatMap(prop -> {
+                    if (prop.type().isComposite() || pmUtils.isPropEntityType(prop, EntityMetadata::isUnion)) {
+                        return pmUtils.subProperties(prop).stream()
+                                .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
+                                .map(subProp -> t2(prop.name() + "." + subProp.name(), subProp.data().column().name));
+                    } else {
+                        return Stream.of(t2(prop.name(), prop.data().column().name));
+                    }
+                })
+                .collect(toConcurrentMap(t2 -> t2._1, t2 -> t2._2));
+
+        return new EqlTable(entityMetadata.data().tableName(), columns);
+    }
+
+    private TableStructForBatchInsertion generateTableStructForBatchInsertion(final EntityMetadata.Persistent entityMetadata) {
+        final var columns = entityMetadata.properties().stream()
+                .filter(prop -> !ID.equals(prop.name()) && !VERSION.equals(prop.name()))
+                .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
+                .flatMap(prop -> {
+                    if (prop.type().isComposite()) {
+                        final var subColumnNames = pmUtils.subProperties(prop).stream()
+                                .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
+                                .map(p -> p.data().column().name)
+                                .toList();
+                        return subColumnNames.isEmpty()
+                                ? Stream.of()
+                                : Stream.of(new PropColumnInfo(prop.name(), subColumnNames, prop.hibType()));
+                    }
+                    else if (pmUtils.isPropEntityType(prop, EntityMetadata::isUnion)) {
+                        return pmUtils.subProperties(prop).stream()
+                                .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
+                                .map(subProp -> {
+                                    final String colName = prop.name() + "." + subProp.name() +
+                                                          (pmUtils.isPropEntityType(prop, EntityMetadata::isPersistent) ? ("." + ID) : "");
+                                    return new PropColumnInfo(colName, subProp.data().column().name, subProp.hibType());
+                                });
+                    }
+                    else {
+                        final String colName = pmUtils.isPropEntityType(prop, EntityMetadata::isPersistent)
+                                ? prop.name() + "." + ID
+                                : prop.name();
+                        return Stream.of(new PropColumnInfo(colName, prop.data().column().name, prop.hibType()));
+                    }
+                })
+                .toList();
+
+        return new TableStructForBatchInsertion(entityMetadata.data().tableName(), columns);
+    }
 
     /**
      * Generates DDL statements for creating tables, primary keys, indices and foreign keys for all persistent entity types,

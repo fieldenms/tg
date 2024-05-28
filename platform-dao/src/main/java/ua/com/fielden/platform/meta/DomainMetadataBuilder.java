@@ -5,6 +5,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
 
@@ -20,12 +21,16 @@ public class DomainMetadataBuilder {
     private final DomainMetadataGenerator generator;
     private final Collection<? extends Class<? extends AbstractEntity<?>>> entityTypes;
     private final DbVersion dbVersion;
+    private final Map<? extends Class, ? extends Class> hibTypesDefaults;
+    private final Injector hibTypesInjector;
 
-    public DomainMetadataBuilder(final Map<? extends Class, ? extends Class> hibTypesDefaults,
+    public DomainMetadataBuilder(final @Nullable Map<? extends Class, ? extends Class> hibTypesDefaults,
                                  final Injector hibTypesInjector,
                                  final Collection<? extends Class<? extends AbstractEntity<?>>> entityTypes,
                                  final DbVersion dbVersion)
     {
+        this.hibTypesDefaults = hibTypesDefaults;
+        this.hibTypesInjector = hibTypesInjector;
         this.generator = new DomainMetadataGenerator(hibTypesInjector, hibTypesDefaults, dbVersion);
         this.entityTypes = entityTypes.stream().distinct().collect(toImmutableList());
         this.dbVersion = dbVersion;
@@ -43,7 +48,8 @@ public class DomainMetadataBuilder {
                 .flatMap(type -> generator.forComposite(type).map(ctm -> t2(type, ctm)).stream())
                 .collect(toConcurrentMap(pair -> pair._1, pair -> pair._2));
 
-        return new DomainMetadataImpl(entityMetadataMap, compositeTypeMetadataMap, entityTypes, generator, dbVersion);
+        return new DomainMetadataImpl(entityMetadataMap, compositeTypeMetadataMap, entityTypes, generator,
+                                      hibTypesInjector, hibTypesDefaults, dbVersion);
     }
 
 }
