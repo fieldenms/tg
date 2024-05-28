@@ -159,20 +159,24 @@ public class QuerySourceInfoProvider {
         (final PropertyMetadata pm, final PropertyTypeMetadata.Entity et,
          final Map<Class<? extends AbstractEntity<?>>, QuerySourceInfo<?>> allQuerySourceInfos)
     {
-        return switch (domainMetadata.forEntity(et.javaType())) {
-            case EntityMetadata.Union uem -> Optional.of(mkQuerySourceItemForUnionEntityType(pm, uem, allQuerySourceInfos));
-            case EntityMetadata.Persistent pem ->
-                // TODO may be used for future improvement related to treating ID property as if it is an entity, while yielding ID property within EntityAggregates result model.
-                // if (ID.equals(name))
-                //     querySourceInfo.addProp(new EntityTypePropInfo(name, allEntitiesInfo.get(querySourceInfo.javaType()), hibType, required, expr));
-                    Optional.of(
+        return domainMetadata.forEntityOpt(et.javaType())
+                .map(em -> switch (em) {
+                    case EntityMetadata.Union uem -> mkQuerySourceItemForUnionEntityType(pm, uem, allQuerySourceInfos);
+                    case EntityMetadata.Persistent pem ->
+                        // TODO may be used for future improvement related to treating ID property as if it is an entity, while yielding ID property within EntityAggregates result model.
+                        // if (ID.equals(name))
+                        //     querySourceInfo.addProp(new EntityTypePropInfo(name, allEntitiesInfo.get(querySourceInfo.javaType()), hibType, required, expr));
                             new QuerySourceItemForEntityType<>(pm.name(), allQuerySourceInfos.get(pem.javaType()), pm.hibType(), pm.is(REQUIRED),
-                                                               pm.asCalculated().map(QuerySourceInfoProvider::toCalcPropInfo).orElse(null)));
-            // TODO Why PrimType ?
-            default -> Optional.of(
-                    new QuerySourceItemForPrimType<>(pm.name(), (Class<?>) pm.type().javaType(), pm.hibType(),
-                                                     pm.asCalculated().map(QuerySourceInfoProvider::toCalcPropInfo).orElse(null)));
-        };
+                                                               pm.asCalculated().map(QuerySourceInfoProvider::toCalcPropInfo).orElse(null));
+                    // TODO Why PrimType ?
+                    default -> mkPrim(pm);
+                })
+                .or(() -> Optional.of(mkPrim(pm)));
+    }
+    // where
+    private QuerySourceItemForPrimType<?> mkPrim(final PropertyMetadata pm) {
+        return new QuerySourceItemForPrimType<>(pm.name(), (Class<?>) pm.type().javaType(), pm.hibType(),
+                                                pm.asCalculated().map(QuerySourceInfoProvider::toCalcPropInfo).orElse(null));
     }
 
     private AbstractQuerySourceItem<?> mkQuerySourceItemForUnionEntityType
