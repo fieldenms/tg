@@ -97,8 +97,6 @@ public class WebResourceLoader implements IWebResourceLoader {
             return getFileSource("/resources/login-initiate-reset.html", webUiConfig.resourcePaths()).map(src -> StringUtils.replace(src, "@title", "Login Reset Request"));
         } else if ("/app/tg-app-config.js".equalsIgnoreCase(resourceUri)) {
             return ofNullable(webUiConfig.genWebUiPreferences());
-        } else if ("/app/tg-app.js".equalsIgnoreCase(resourceUri)) {
-            return ofNullable(webUiConfig.genMainWebUIComponent());
         } else if ("/app/tg-reflector.js".equalsIgnoreCase(resourceUri)) {
             return getReflectorSource(webUiConfig, serialiser, (TgJackson) serialiser.getEngine(JACKSON));
         } else if (resourceUri.startsWith("/master_ui")) {

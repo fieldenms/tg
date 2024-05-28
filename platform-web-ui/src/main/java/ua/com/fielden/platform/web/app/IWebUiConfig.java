@@ -78,13 +78,6 @@ public interface IWebUiConfig extends IMenuRetriever {
     String genAppIndex();
 
     /**
-     * Generates the main menu component for desktop application.
-     *
-     * @return
-     */
-    String genMainWebUIComponent();
-
-    /**
      * Generates the global configuration component.
      *
      * @return
