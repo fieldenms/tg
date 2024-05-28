@@ -3,7 +3,7 @@
 
 <head>
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
-    <title>Pub/Sub with Postal Spike</title>
+    <title>Pub/Sub Example</title>
     <link rel="stylesheet" type="text/css" crossorigin="anonymous" as="font" href="https://fonts.googleapis.com/css?family=Roboto+Mono:400,700|Roboto:400,300,300italic,400italic,500,500italic,700,700italic"></link>
     <script src="../../node_modules/lodash/lodash.min.js"></script>
     <script src="../../node_modules/postal/lib/postal.min.js"></script>
@@ -54,7 +54,7 @@
 
     <script>
         customElements.whenDefined('paper-button').then(() => {
-            var spike = document.querySelector('dom-bind');
+            const spike = document.querySelector('dom-bind');
             spike.messagCount = 0;
             spike.onTap = function () {
                 postal.publish({
@@ -67,7 +67,7 @@
                 });
             };
 
-            var subscription1 = postal.subscribe({
+            const subscription1 = postal.subscribe({
                 channel: "orders",
                 topic: "item.add",
                 callback: function (data, envelope) {
@@ -81,7 +81,7 @@
                 }
             });
 
-            var subscription2 = postal.subscribe({
+            const subscription2 = postal.subscribe({
                 channel: "orders",
                 topic: "item.add",
                 callback: function (data, envelope) {

@@ -67,11 +67,11 @@ public class FileResource extends AbstractWebResource {
             return createRepresentation(webResourceLoader, mediaType, getReference().getPath(), getReference().getRemainingPart(), of(getResponse()));
         }
     }
-    
+
     /**
      * Returns checksum representation for the resource in case where checksum has been requested.
      * Otherwise, creates representation using <code>createRepresentation</code> callback.
-     * 
+     *
      * @param createRepresentation
      * @param webResourceLoader
      * @param mediaType
@@ -86,11 +86,11 @@ public class FileResource extends AbstractWebResource {
             return createRepresentation.get();
         }
     }
-    
+
     /**
      * Returns checksum representation for the resource in case where checksum has been requested.
      * Otherwise, creates stream-based representation for resources like images.
-     *  
+     *
      * @param webResourceLoader
      * @param resourcePaths
      * @param mediaType
@@ -107,8 +107,8 @@ public class FileResource extends AbstractWebResource {
 
     /**
      * Returns checksum representation for the resource in case where checksum has been requested.
-     * Otherwise, creates textual representation for text-like resources. 
-     * 
+     * Otherwise, creates textual representation for text-like resources.
+     *
      * @param webResourceLoader
      * @param mediaType
      * @param path
@@ -130,7 +130,7 @@ public class FileResource extends AbstractWebResource {
 
     /**
      * Searches for the file resource among resource paths starting from the last one path and generates full file path by concatenating resource path and relative file path.
-     * 
+     *
      * @param filePath - the relative file path for which full file path must be generated.
      * @return
      */
@@ -138,7 +138,7 @@ public class FileResource extends AbstractWebResource {
         // this is a preventive stuff: if the server receives additional link parameters -- JUST IGNORE THEM. Was used to run
         // appropriately Mocha / Chai tests for Polymer web components. See http://localhost:8091/resources/polymer/runner.html for results.
         final String filePathWithExtension = path.contains("?") ? path.substring(0, path.indexOf('?')) : path;
-        
+
         for (int pathIndex = 0; pathIndex < resourcePaths.size(); pathIndex++) {
             final String prepender = resourcePaths.get(pathIndex);
             if (ResourceLoader.exist(prepender + filePathWithExtension)) {
@@ -156,7 +156,7 @@ public class FileResource extends AbstractWebResource {
      * @return
      */
     private static MediaType determineMediaType(final String extension) {
-        switch (extension.substring(extension.lastIndexOf(".") + 1)) {
+        switch (extension == null ? "" : extension.substring(extension.lastIndexOf(".") + 1)) {
         case "png":
             return IMAGE_PNG;
         case "js":

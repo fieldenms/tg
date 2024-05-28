@@ -19,7 +19,6 @@ import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.g
 import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
 
 import java.io.InputStream;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -273,7 +272,8 @@ public class WebResourceLoader implements IWebResourceLoader {
     ////////////////////////////////// Getting file source //////////////////////////////////
     private static Optional<String> getFileSource(final String resourceURI, final List<String> resourcePaths) {
         final String originalPath = resourceURI.replaceFirst("/resources/", "");
-        final String filePath = generateFileName(resourcePaths, originalPath);
+        final String updatePath = originalPath.lastIndexOf(".") >= 0 ? originalPath : originalPath + ".js";
+        final String filePath = generateFileName(resourcePaths, updatePath);
         if (isEmpty(filePath)) {
             logger.error(format("The requested resource (%s) wasn't found.", originalPath));
             return empty();
@@ -286,14 +286,14 @@ public class WebResourceLoader implements IWebResourceLoader {
         return ofNullable(replaceBareModuleSpecifier(filePath, resourcePaths));
     }
 
-    private static String replaceBareModuleSpecifier(String filePath, final List<String> resourcePaths) {
+    private static String replaceBareModuleSpecifier(final String filePath, final List<String> resourcePaths) {
         final String fileText = getText(filePath);
         if (fileText != null) {
             final Pattern importWithFrom = Pattern.compile("((import|export)\\s*?[^;]+?\\s*?from\\s*?[\"'])([\\w@][\\w@//.\\-\\_]*?)([\"'];?)", Pattern.MULTILINE);
             final Pattern simpleImport = Pattern.compile("((import\\s*?)[\"'])([\\w@][\\w@//.\\-\\_]*?)(([\"']);?)", Pattern.MULTILINE);
 
             final String closestNodeModules = findClosestNodeModules(filePath, resourcePaths);
-            Function<MatchResult, String> nodeResolver = matchResult -> matchResult.group(1) + "/resources/" + closestNodeModules + "/"
+            final Function<MatchResult, String> nodeResolver = matchResult -> matchResult.group(1) + "/resources/" + closestNodeModules + "/"
                     + resolveModule(matchResult.group(3), closestNodeModules, resourcePaths) + matchResult.group(4);
 
             return importWithFrom.matcher(simpleImport.matcher(fileText).replaceAll(nodeResolver))
@@ -306,7 +306,7 @@ public class WebResourceLoader implements IWebResourceLoader {
         final String parentResourcePath = findParentResourcePath(resourcePaths, filePath);
         String path = filePath.substring(parentResourcePath.length());
         while (isNotEmpty(path)  && !ResourceLoader.exist(parentResourcePath + "/" + path + "/node_modules")) {
-            int lastSlashIndex = path.lastIndexOf('/');
+            final int lastSlashIndex = path.lastIndexOf('/');
             path = lastSlashIndex < 0 ? "" : path.substring(0, lastSlashIndex);
         }
         return isEmpty(path) ? "node_modules" : path + "/node_modules";
@@ -320,9 +320,9 @@ public class WebResourceLoader implements IWebResourceLoader {
         if (moduleName.endsWith(".js")) {
             return moduleName;
         } else if (moduleName.indexOf(".") < 0){
-            String packagePath = generateFileName(resourcePaths, closestNodeModules + "/" + moduleName + "/package.json");
+            final String packagePath = generateFileName(resourcePaths, closestNodeModules + "/" + moduleName + "/package.json");
             if (!isEmpty(packagePath)) {
-                String packageText = getText(packagePath);
+                final String packageText = getText(packagePath);
                 return getProperty(getText(packagePath), "module")
                         .filter(main -> main.endsWith(".js"))
                         .or(() -> getProperty(getText(packagePath), "main"))
@@ -339,8 +339,8 @@ public class WebResourceLoader implements IWebResourceLoader {
 
     private static Optional<String> getProperty(final String fileText, final String property) {
         if (fileText != null) {
-            Pattern pattern = Pattern.compile("['\"]?+" + property + "['\"]?+\\s*?:\\s*?[\"'](.+)[\"']", Pattern.MULTILINE);
-            Matcher matcher = pattern.matcher(fileText);
+            final Pattern pattern = Pattern.compile("['\"]?+" + property + "['\"]?+\\s*?:\\s*?[\"'](.+)[\"']", Pattern.MULTILINE);
+            final Matcher matcher = pattern.matcher(fileText);
             if (matcher.find()) {
                 return Optional.ofNullable(matcher.group(1));
             }
