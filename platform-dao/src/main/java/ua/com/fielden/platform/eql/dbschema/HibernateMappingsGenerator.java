@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+import static java.util.Comparator.comparing;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.SPECIAL_PROPS;
@@ -50,6 +51,8 @@ public class HibernateMappingsGenerator {
         sb.append("<hibernate-mapping default-access=\"field\">\n");
 
         domainMetadata.allTypes(EntityMetadata.class).stream().distinct()
+                // sort for testing purposes
+                .sorted(comparing(em -> em.javaType().getSimpleName()))
                 .filter(em -> em.nature().isPersistent())
                 .forEach(em -> {
                     try {
@@ -178,6 +181,8 @@ public class HibernateMappingsGenerator {
                 .ifPresent(pm -> sb.append(generatePropertyMappingFromPropertyMetadata(domainMetadata, pm)));
 
         em.properties().stream()
+                // sort for testing purposes
+                .sorted(comparing(PropertyMetadata::name))
                 .filter(pm -> !SPECIAL_PROPS.contains(pm.name()))
                 .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
                 .forEach(pm -> sb.append(generatePropertyMappingFromPropertyMetadata(domainMetadata, pm)));
