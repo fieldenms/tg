@@ -23,14 +23,16 @@ public interface PropertyMetadataUtils {
     }
 
     /**
-     * Returns sub-properties of a property. The result depends on the property's type:
+     * Returns sub-properties of a property. The result depends on the property's type and nature.
+     *
      * <ul>
-     *   <li> Union Entity - the following sub-properties are included:
+     *   <li> Union Entity - all natures are supported and the following sub-properties are included:
      *     <ul>
      *       <li> Union members.
      *       <li> Implicitly calculated properties of the union entity.
      *     </ul>
-     *   <li> Composite Type - component properties are included. Their nature depends on the nature of the given property:
+     *   <li> Composite Type - only <b>persistent</b> and <b>calculated</b> natures are supported.
+     *        Component properties are included, and their nature depends on the nature of the given property:
      *     <ul>
      *       <li> Persistent - nature is inherited.
      *       <li> Calculated - nature is inherited, the same expression is used (the effects are unspecified when there

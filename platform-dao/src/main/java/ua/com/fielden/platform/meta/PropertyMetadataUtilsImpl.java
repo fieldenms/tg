@@ -5,14 +5,15 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
+import ua.com.fielden.platform.meta.PropertyMetadataImpl.Calculated;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.function.Predicate;
 
 import static java.lang.Boolean.FALSE;
 import static java.lang.String.format;
+import static java.util.Arrays.stream;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.meta.PropertyMetadataImpl.Builder.calculatedProp;
 import static ua.com.fielden.platform.meta.PropertyMetadataImpl.Builder.persistentProp;
@@ -72,41 +73,57 @@ final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
         }).orElse(member);
     }
 
-    private List<PropertyMetadata> subPropertiesForComposite(final PropertyMetadata pm, final PropertyTypeMetadata.Composite ct) {
+    private List<PropertyMetadata> subPropertiesForComposite(final PropertyMetadata prop, final PropertyTypeMetadata.Composite ct) {
         final var compositeTypeMetadata = domainMetadata.forComposite(ct.javaType())
                 .orElseThrow(() -> new EqlMetadataGenerationException("Unknown composite type: %s".formatted(ct.javaType().getTypeName())));
-        final var compositeHibType = (ICompositeUserTypeInstantiate) pm.hibType();
+        return switch (prop) {
+            case PropertyMetadata.Persistent it -> subPropertiesForCompositePersistent(it, compositeTypeMetadata);
+            case Calculated it -> subPropertiesForCompositeCalculated(it, compositeTypeMetadata);
+            default -> ImmutableList.of();
+        };
+    }
 
-        final String[] propNames = compositeHibType.getPropertyNames();
-        final Class<?> compositeJavaType = ct.javaType();
+    private List<PropertyMetadata> subPropertiesForCompositePersistent(final PropertyMetadata.Persistent prop,
+                                                                       final TypeMetadata.Composite compositeTypeMetadata) {
+        if (prop.hibType() == null) {
+            throw new EqlMetadataGenerationException("Expected Hibernate type to be present for [%s]".formatted(prop));
+        }
+        final var compositeHibType = (ICompositeUserTypeInstantiate) prop.hibType();
 
-        return zip(Arrays.stream(propNames), Arrays.stream(compositeHibType.getPropertyTypes()), (propName, hibType) -> {
-            final var subPm = compositeTypeMetadata.property(propName)
+        final String[] subPropNames = compositeHibType.getPropertyNames();
+        final Class<?> compositeJavaType = compositeTypeMetadata.javaType();
+
+        return zip(stream(subPropNames), stream(compositeHibType.getPropertyTypes()), (subPropName, subHibType) -> {
+            final var subProp = compositeTypeMetadata.property(subPropName)
                     .orElseThrow(() -> new EqlMetadataGenerationException(
-                            format("Missing property [%s] in [%s]. Expected by [%s].", propName, compositeTypeMetadata, compositeHibType)));
+                            format("Missing property [%s] in [%s]. Expected by [%s].", subPropName, compositeTypeMetadata, compositeHibType)));
 
-            // determine the nature of the sub-property
-            final var builder = switch (pm) {
-                case PropertyMetadata.Persistent it -> {
-                    final var mapToColumn = getPropertyAnnotationOptionally(MapTo.class, compositeJavaType, propName)
-                            .map(MapTo::value).orElse("");
-                    final var headerColName = it.data().column().name;
-                    final var columnName = propNames.length == 1
-                            ? headerColName
-                            : (headerColName
-                               + (headerColName.endsWith("_") ? "" : "_")
-                               + (isEmpty(mapToColumn) ? propName.toUpperCase() : mapToColumn));
-                    final var propColumn = generator.propColumn(
-                            columnName, getPropertyAnnotationOptionally(IsProperty.class, compositeJavaType, propName));
-                    yield persistentProp(propName, subPm.type(), hibType, PropertyNature.Persistent.data(propColumn));
-                }
-                case PropertyMetadataImpl.Calculated it -> calculatedProp(propName, subPm.type(), hibType, it.data());
-                default -> throw new EqlMetadataGenerationException(
-                        format("Unexpected nature [%s] for property [%s] of composite type [%s]",
-                               pm.nature(), pm.name(), ct));
-            };
+            final var mapToColumn = getPropertyAnnotationOptionally(MapTo.class, compositeJavaType, subPropName)
+                    .map(MapTo::value).orElse("");
+            final var headerColName = prop.data().column().name;
+            final var columnName = subPropNames.length == 1
+                    ? headerColName
+                    : (headerColName
+                       + (headerColName.endsWith("_") ? "" : "_")
+                       + (isEmpty(mapToColumn) ? subPropName.toUpperCase() : mapToColumn));
+            final var propColumn = generator.propColumn(
+                    columnName, getPropertyAnnotationOptionally(IsProperty.class, compositeJavaType, subPropName));
+            return persistentProp(subPropName, subProp.type(), subHibType, PropertyNature.Persistent.data(propColumn)).build();
+        }).toList();
+    }
 
-            return builder.build();
+    private List<PropertyMetadata> subPropertiesForCompositeCalculated(final Calculated prop,
+                                                                       final TypeMetadata.Composite compositeTypeMetadata) {
+        if (prop.hibType() == null) {
+            throw new EqlMetadataGenerationException("Expected Hibernate type to be present for [%s]".formatted(prop));
+        }
+        final var compositeHibType = (ICompositeUserTypeInstantiate) prop.hibType();
+
+        return zip(stream(compositeHibType.getPropertyNames()), stream(compositeHibType.getPropertyTypes()), (subPropName, subHibType) -> {
+            final var subProp = compositeTypeMetadata.property(subPropName)
+                    .orElseThrow(() -> new EqlMetadataGenerationException(
+                            format("Missing property [%s] in [%s]. Expected by [%s].", subPropName, compositeTypeMetadata, compositeHibType)));
+            return calculatedProp(subPropName, subProp.type(), subHibType, prop.data()).build();
         }).toList();
     }
 
@@ -116,7 +133,7 @@ final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
 
     private static String failedProp(final Object owner, final Object prop, final Object... rest) {
         final var sj = new StringJoiner("\n", "\n", "").setEmptyValue("");
-        Arrays.stream(rest).map(Object::toString).forEach(sj::add);
+        stream(rest).map(Object::toString).forEach(sj::add);
         return "Failed to generate metadata for property [%s.%s]" + sj;
     }
 
