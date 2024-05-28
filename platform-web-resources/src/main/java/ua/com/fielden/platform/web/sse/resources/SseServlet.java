@@ -47,9 +47,9 @@ import ua.com.fielden.platform.web.sse.RequestInfo;
 import ua.com.fielden.platform.web.sse.exceptions.SseException;
 
 /**
- * A Servlet that implements support for non-blocking async Server-Sent Eventing.
+ * A Servlet that implements support for non-blocking async Server-Sent Events.
  * <p>
- * TG-based applications should use factory method {@link #addSseServlet(ServletHandler, IEventSourceEmitterRegister, IUserProvider, ICompanionObjectFinder, String, SessionIdentifierGenerator)}
+ * TG-based applications should use factory method {@link #addSseServlet(ServletHandler, IEventSourceEmitterRegister, ICompanionObjectFinder, String, SessionIdentifierGenerator)}
  * to create and add an SSE servlet to {@link ServletHandler}.
  *
  * @author TG Team
@@ -121,6 +121,7 @@ public final class SseServlet extends HttpServlet {
                 """.formatted(port, maxThreads, minThreads, idleTimeout, acceptors));
 
         final QueuedThreadPool threadPool = new QueuedThreadPool(maxThreads, minThreads, idleTimeout);
+        threadPool.setName("Server-Sent Events");
         final Server server = new Server(threadPool);
 
         final ServerConnector http = new ServerConnector(server, acceptors /* acceptors */, -1 /* selectors */);
@@ -225,7 +226,6 @@ public final class SseServlet extends HttpServlet {
      * Obtains and verifies authenticator from the request, and returns a corresponding user if successful.
      *
      * @param request
-     * @param response
      * @return
      * @throws ServletException
      * @throws IOException
