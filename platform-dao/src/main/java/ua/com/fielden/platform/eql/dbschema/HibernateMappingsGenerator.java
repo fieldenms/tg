@@ -7,14 +7,17 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
 import ua.com.fielden.platform.eql.meta.PropColumn;
 import ua.com.fielden.platform.meta.*;
+import ua.com.fielden.platform.types.either.Either;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 
-import static java.util.Collections.emptyList;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.SPECIAL_PROPS;
+import static ua.com.fielden.platform.types.either.Either.left;
+import static ua.com.fielden.platform.types.either.Either.right;
 import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
 
 /**
@@ -120,25 +123,32 @@ public class HibernateMappingsGenerator {
         return sb.toString();
     }
 
-    private String generatePlainPropertyMapping(final String propName, final PropColumn singleColumn, final List<String> multipleColumns, final String hibTypeName) {
+    /**
+     * @param column  either a single column or multiple column names
+     */
+    private String generatePlainPropertyMapping(final String propName,
+                                                final Either<PropColumn, List<String>> column,
+                                                final String hibTypeName) {
         final String propNameClause = "\t<property name=\"" + propName + "\"";
         final String typeClause = hibTypeName == null ? "" : " type=\"" + hibTypeName + "\"";
         final String endClause = "/>\n";
-        if (multipleColumns.isEmpty()) {
-            final String columnClause = " column=\"" + singleColumn.name + "\"";
-            final String lengthClause = singleColumn.length == null ? "" : " length=\"" + singleColumn.length + "\"";
-            final String precisionClause = singleColumn.precision == null ? "" : " precision=\"" + singleColumn.precision + "\"";
-            final String scaleClause = singleColumn.scale == null ? "" : " scale=\"" + singleColumn.scale + "\"";
-            return propNameClause + columnClause + typeClause + lengthClause + precisionClause + scaleClause + endClause;
-        } else {
-            final StringBuffer sb = new StringBuffer();
-            sb.append(propNameClause + typeClause + ">\n");
-            for (final String column : multipleColumns) {
-                sb.append("\t\t<column name=\"" + column + "\"" + endClause);
-            }
-            sb.append("\t</property>\n");
-            return sb.toString();
-        }
+        return column.unfold(
+                singleCol -> {
+                    final String columnClause = " column=\"" + singleCol.name + "\"";
+                    final String lengthClause = singleCol.length == null ? "" : " length=\"" + singleCol.length + "\"";
+                    final String precisionClause = singleCol.precision == null ? "" : " precision=\"" + singleCol.precision + "\"";
+                    final String scaleClause = singleCol.scale == null ? "" : " scale=\"" + singleCol.scale + "\"";
+                    return propNameClause + columnClause + typeClause + lengthClause + precisionClause + scaleClause + endClause;
+                },
+                multCols -> {
+                    final StringBuffer sb = new StringBuffer();
+                    sb.append(propNameClause + typeClause + ">\n");
+                    for (final String name : multCols) {
+                        sb.append("\t\t<column name=\"" + name + "\"" + endClause);
+                    }
+                    sb.append("\t</property>\n");
+                    return sb.toString();
+                });
     }
 
     /**
@@ -168,8 +178,8 @@ public class HibernateMappingsGenerator {
                 .ifPresent(pm -> sb.append(generatePropertyMappingFromPropertyMetadata(domainMetadata, pm)));
 
         em.properties().stream()
-                .filter(pm -> !pm.nature().isCalculated() && !SPECIAL_PROPS.contains(pm.name())
-                              && (pm.nature().isPersistent() || anySubPropMatches(pm, spm -> spm.nature().isPersistent())))
+                .filter(pm -> !SPECIAL_PROPS.contains(pm.name()))
+                .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
                 .forEach(pm -> sb.append(generatePropertyMappingFromPropertyMetadata(domainMetadata, pm)));
 
         sb.append("</class>\n");
@@ -182,40 +192,36 @@ public class HibernateMappingsGenerator {
 
     /**
      * Generates mapping string for common property based on it persistence info.
-     *
-     * @param pm
-     * @return
-     * @throws Exception
      */
-    private String generatePropertyMappingFromPropertyMetadata(final IDomainMetadata domainMetadata, final PropertyMetadata pm) {
+    private String generatePropertyMappingFromPropertyMetadata(final IDomainMetadata domainMetadata,
+                                                               final PropertyMetadata.Persistent prop) {
         final var pmUtils = domainMetadata.propertyMetadataUtils();
         // TODO replace by a PropertyTypeVisitor
-        if (pmUtils.isPropEntityType(pm, em -> em.nature().isUnion())) {
-            return generateUnionEntityPropertyMapping(pm);
+        if (pmUtils.isPropEntityType(prop, em -> em.nature().isUnion())) {
+            return generateUnionEntityPropertyMapping(prop);
         }
-        else if (pmUtils.isPropEntityType(pm, em -> em.nature().isPersistent())) {
-            final var et = (PropertyTypeMetadata.Entity) pm.type();
-            if (KEY.equals(pm.name())) {
-                return generateOneToOnePropertyMapping(pm.name(), et.javaType());
-            }
-            else {
-                return pm.asPersistent()
-                        .map(ppm -> generateManyToOnePropertyMapping(ppm.name(), ppm.data().column().name, et.javaType()))
-                        .orElseThrow(() -> unexpectedPropNature(pm, PropertyNature.PERSISTENT));
+        // potential multi-column mapping
+        else if (prop.type().isComposite() || pmUtils.isPropEntityType(prop, EntityMetadata::isUnion)) {
+            final List<PropColumn> subColumns = pmUtils.subProperties(prop).stream()
+                    .flatMap(subProp -> subProp.asPersistent().stream())
+                    .map(subProp -> subProp.data().column())
+                    .toList();
+
+            final Either<PropColumn, List<String>> column = subColumns.size() == 1
+                    ? left(subColumns.getFirst())
+                    : right(subColumns.stream().map(c -> c.name).toList());
+            return generatePlainPropertyMapping(prop.name(), column, prop.hibType().getClass().getName());
+        }
+        else if (pmUtils.isPropEntityType(prop, EntityMetadata::isPersistent)) {
+            final var et = prop.type().asEntity().orElseThrow();
+            if (KEY.equals(prop.name())) {
+                return generateOneToOnePropertyMapping(prop.name(), et.javaType());
+            } else {
+                return generateManyToOnePropertyMapping(prop.name(), prop.data().column().name, et.javaType());
             }
         }
         else {
-            final List<PropColumn> subColumns = pmUtils.subProperties(pm).stream()
-                    .flatMap(spm -> spm.asPersistent().stream())
-                    .map(spm -> spm.data().column())
-                    .toList();
-
-            final PropColumn singleColumn = subColumns.size() == 1
-                    ? subColumns.getFirst()
-                    : pm.asPersistent().map(ppm -> ppm.data().column()).orElse(null);
-            return generatePlainPropertyMapping(pm.name(), singleColumn,
-                                                singleColumn == null ? subColumns.stream().map(c -> c.name).toList() : emptyList(),
-                                                pm.hibType().getClass().getName());
+            return generatePlainPropertyMapping(prop.name(), left(prop.data().column()), prop.hibType().getClass().getName());
         }
     }
 
