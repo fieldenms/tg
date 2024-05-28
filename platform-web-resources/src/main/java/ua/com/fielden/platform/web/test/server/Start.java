@@ -33,11 +33,10 @@ public class Start {
             final String jdbcUri;
             if (databseUri.contains("5432")) {
                 propsFileSuffix = "PostgreSql";
-                jdbcUri = "jdbc:postgresql:" + databseUri; 
+                jdbcUri = "jdbc:postgresql:" + databseUri;
             } else {
                 propsFileSuffix = "SqlServer";
-                jdbcUri = "jdbc:sqlserver:" + databseUri; 
- 
+                jdbcUri = "jdbc:sqlserver:" + databseUri;
             }
             props.put("hibernate.connection.url", jdbcUri);
         }
@@ -62,7 +61,7 @@ public class Start {
 
         LOGGER.info("Starting...");
         final Component component = new TgTestApplicationConfiguration(props);
-        component.getServers().add(Protocol.HTTP, Integer.parseInt(props.getProperty("port")));
+        component.getServers().add(Protocol.HTTP, Integer.parseInt(props.getProperty("port.listen")));
 
         try {
             component.start();
