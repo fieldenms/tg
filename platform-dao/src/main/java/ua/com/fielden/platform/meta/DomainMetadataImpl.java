@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
 
 final class DomainMetadataImpl implements IDomainMetadata {
 
@@ -80,7 +81,9 @@ final class DomainMetadataImpl implements IDomainMetadata {
             return (Collection<T>) compositeTypeMetadataMap.values();
         }
         else {
-            throw new InvalidArgumentException("Unknown metadata type: %s".formatted(metadataType.getTypeName()));
+            return entityMetadataMap.values().stream()
+                    .mapMulti(typeFilter(metadataType))
+                    .toList();
         }
     }
 
