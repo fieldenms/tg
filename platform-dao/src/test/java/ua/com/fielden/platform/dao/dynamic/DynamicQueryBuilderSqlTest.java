@@ -133,7 +133,6 @@ public class DynamicQueryBuilderSqlTest {
 
         final List<String> propertyNames = Arrays.asList(new String[] { //
         "integerProp", //
-        "doubleProp", //
         "bigDecimalProp", //
         "moneyProp", //
         "dateProp", //
@@ -142,7 +141,6 @@ public class DynamicQueryBuilderSqlTest {
         "entityProp", //
         "entityProp.masterEntityProp", //
         "entityProp.integerProp", //
-        "entityProp.doubleProp", //
         "entityProp.bigDecimalProp", //
         "entityProp.moneyProp", //
         "entityProp.dateProp", //
@@ -150,7 +148,6 @@ public class DynamicQueryBuilderSqlTest {
         "entityProp.stringProp", //
         "collection.masterEntityProp", //
         "collection.integerProp", //
-        "collection.doubleProp", //
         "collection.bigDecimalProp", //
         "collection.dateProp", //
         "collection.stringProp", //
@@ -165,7 +162,6 @@ public class DynamicQueryBuilderSqlTest {
         "collection.allOfDateProp", //
         "entityProp.collection.slaveEntityProp", //
         "entityProp.collection.integerProp", //
-        "entityProp.collection.doubleProp", //
         "entityProp.collection.bigDecimalProp", //
         "entityProp.collection.dateProp", //
         "entityProp.collection.stringProp", //
@@ -269,12 +265,6 @@ public class DynamicQueryBuilderSqlTest {
     public void test_atomic_query_composition_for_integer_range_type() {
         test_atomic_query_composition_for_range_type("integerProp");
         test_atomic_query_composition_for_range_type("entityProp.integerProp");
-    }
-
-    @Test
-    public void test_atomic_query_composition_for_double_range_type() {
-        test_atomic_query_composition_for_range_type("doubleProp");
-        test_atomic_query_composition_for_range_type("entityProp.doubleProp");
     }
 
     @Test
@@ -853,7 +843,6 @@ public class DynamicQueryBuilderSqlTest {
         // Properties sequence is the following:
         //
         // integerProp
-        // doubleProp
         // bigDecimalProp
         // moneyProp
         // dateProp

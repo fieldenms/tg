@@ -302,7 +302,7 @@ public class PropertyTypeDeterminatorTest {
     public void properties_of_non_numeric_typs_are_not_recognized_as_numeric() {
         assertFalse(isNumeric(Entity.class, "propertyDescriptor"));
         assertFalse(isNumeric(Entity.class, "monitoring"));
-        assertFalse(isNumeric(Entity.class, "doubles"));
+        assertFalse(isNumeric(Entity.class, "bigDecimals"));
     }
 
     @Test

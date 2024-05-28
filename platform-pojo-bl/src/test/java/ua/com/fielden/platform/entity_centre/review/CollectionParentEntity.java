@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity_centre.review;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -45,9 +46,10 @@ public class CollectionParentEntity extends AbstractEntity<String> {
     @IsProperty
     @Title(value = "First Property", desc = "used for testing")
     private Integer firstProperty = null;
+
     @IsProperty
     @Title("Observable Property")
-    private Double observableProperty = 0.0;
+    private BigDecimal observableProperty = BigDecimal.ZERO;
 
     @IsProperty
     private Date date;
@@ -82,12 +84,12 @@ public class CollectionParentEntity extends AbstractEntity<String> {
         return this;
     }
 
-    public Double getObservableProperty() {
+    public BigDecimal getObservableProperty() {
         return observableProperty;
     }
 
     @Observable
-    public CollectionParentEntity setObservableProperty(final Double observableProperty) {
+    public CollectionParentEntity setObservableProperty(final BigDecimal observableProperty) {
         this.observableProperty = observableProperty;
         return this;
     }
