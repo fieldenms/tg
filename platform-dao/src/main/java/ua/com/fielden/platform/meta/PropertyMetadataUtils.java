@@ -11,7 +11,7 @@ import java.util.function.Predicate;
 public interface PropertyMetadataUtils {
 
     /**
-     * If property type is an entity type, tests it with the given predicate, otherwise returns {@code false}.
+     * If property type is an entity type that has metadata, tests the metadata with the predicate, otherwise returns {@code false}.
      */
     boolean isPropEntityType(PropertyTypeMetadata propType, Predicate<EntityMetadata> predicate);
 
