@@ -473,6 +473,30 @@ public class EntityUtils {
     }
 
     /**
+     * A convenient method for validating two {@link BigDecimal} properties that form a range [from;to].
+     */
+    public static void validateBigDecimalRange(final BigDecimal start, final BigDecimal finish,
+                                               final MetaProperty<BigDecimal> startProperty,
+                                               final MetaProperty<BigDecimal> finishProperty,
+                                               final boolean finishSetter) {
+        if (finish != null) {
+            if (start != null) {
+                if (start.compareTo(finish) > 0) { //  after(finish)
+                    throw new Result("", new Exception(
+                            finishSetter
+                                    ? finishProperty.getTitle() + " cannot be less than " + startProperty.getTitle() + "."
+                                    : startProperty.getTitle() + " cannot be greater than " + finishProperty.getTitle() + "."));
+                }
+            } else {
+                throw new Result("", new Exception(
+                        finishSetter
+                                ? finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle()
+                                : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified."));
+            }
+        }
+    }
+
+    /**
      * A convenient method for validating two money properties that form a range [from;to].
      *
      * @param start
