@@ -152,11 +152,11 @@ abstract class PropertyMetadataImpl<N extends PropertyNature, D extends Property
      * @param <N>
      */
     static class Builder<N extends PropertyNature, D extends PropertyNature.Data<N>> {
-        private final String name;
-        private final PropertyTypeMetadata type;
-        private final @Nullable Object hibType;
+        private String name;
+        private PropertyTypeMetadata type;
+        private @Nullable Object hibType;
         private final N nature;
-        private final D data;
+        private D data;
         private final ImmutableMap.Builder<PropertyMetadata.IKey, Object> keyMap;
 
         Builder(final String name, final PropertyTypeMetadata type, final @Nullable Object hibType, final N nature, final D data) {
@@ -166,6 +166,18 @@ abstract class PropertyMetadataImpl<N extends PropertyNature, D extends Property
             this.nature = nature;
             this.data = data;
             this.keyMap = ImmutableMap.builder();
+        }
+
+        /**
+         * Key-value pairs are not used.
+         */
+        public static Builder<?, ?> toBuilder(final PropertyMetadata propertyMetadata) {
+            return switch (propertyMetadata) {
+                case PropertyMetadata.Calculated it -> calculatedProp(it.name(), it.type(), it.hibType(), it.data());
+                case PropertyMetadata.CritOnly   it -> critOnlyProp(it.name(), it.type(), it.hibType());
+                case PropertyMetadata.Persistent it -> persistentProp(it.name(), it.type(), it.hibType(), it.data());
+                case PropertyMetadata.Transient  it -> transientProp(it.name(), it.type(), it.hibType());
+            };
         }
 
         public static Builder<PropertyNature.CritOnly, PropertyNature.CritOnly.Data> critOnlyProp
@@ -199,6 +211,26 @@ abstract class PropertyMetadataImpl<N extends PropertyNature, D extends Property
                 case PropertyNature.CritOnly $ -> new CritOnly((Builder<PropertyNature.CritOnly, PropertyNature.CritOnly.Data>) this);
                 case PropertyNature.Transient $ -> new Transient((Builder<PropertyNature.Transient, PropertyNature.Transient.Data>) this);
             };
+        }
+
+        public Builder<N, D> name(final String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Builder<N, D> type(final PropertyTypeMetadata type) {
+            this.type = type;
+            return this;
+        }
+
+        public Builder<N, D> hibType(final Object hibType) {
+            this.hibType = hibType;
+            return this;
+        }
+
+        public Builder<N, D> data(final D data) {
+            this.data = data;
+            return this;
         }
 
         public <V> Builder<N, D> with(final AnyKey<V> key, final V value) {

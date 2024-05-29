@@ -79,8 +79,26 @@ final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
         return switch (prop) {
             case PropertyMetadata.Persistent it -> subPropertiesForCompositePersistent(it, compositeTypeMetadata);
             case Calculated it -> subPropertiesForCompositeCalculated(it, compositeTypeMetadata);
-            default -> ImmutableList.of();
+            // Hibernate type is required to make sense of a composite type's representation
+            default -> prop.hibType() != null
+                    ? subPropertiesForCompositeAny(prop, prop.hibType(), compositeTypeMetadata)
+                    : ImmutableList.of();
         };
+    }
+
+    private List<PropertyMetadata> subPropertiesForCompositeAny(final PropertyMetadata prop, final Object hibType,
+                                                                final TypeMetadata.Composite compositeTypeMetadata) {
+        final var compositeHibType = (ICompositeUserTypeInstantiate) hibType;
+
+        return zip(stream(compositeHibType.getPropertyNames()), stream(compositeHibType.getPropertyTypes()), (subPropName, subHibType) -> {
+            final var subProp = compositeTypeMetadata.property(subPropName)
+                    .orElseThrow(() -> new EqlMetadataGenerationException(
+                            format("Missing property [%s] in [%s]. Expected by [%s].", subPropName, compositeTypeMetadata, compositeHibType)));
+
+            return PropertyMetadataImpl.Builder.toBuilder(prop)
+                    .name(subPropName).type(subProp.type()).hibType(subHibType)
+                    .build();
+        }).toList();
     }
 
     private List<PropertyMetadata> subPropertiesForCompositePersistent(final PropertyMetadata.Persistent prop,

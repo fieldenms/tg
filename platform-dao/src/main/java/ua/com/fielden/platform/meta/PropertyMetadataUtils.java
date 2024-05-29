@@ -3,7 +3,6 @@ package ua.com.fielden.platform.meta;
 import ua.com.fielden.platform.persistence.types.MoneyUserType;
 import ua.com.fielden.platform.persistence.types.MoneyWithTaxAmountUserType;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.markers.IMoneyUserType;
 
 import java.util.List;
 import java.util.function.Predicate;
@@ -31,12 +30,12 @@ public interface PropertyMetadataUtils {
      *       <li> Union members.
      *       <li> Implicitly calculated properties of the union entity.
      *     </ul>
-     *   <li> Composite Type - only <b>persistent</b> and <b>calculated</b> natures are supported.
-     *        Component properties are included, and their nature depends on the nature of the given property:
+     *   <li> Composite Type - depending on the property's nature:
      *     <ul>
      *       <li> Persistent - nature is inherited.
      *       <li> Calculated - nature is inherited, the same expression is used (the effects are unspecified when there
      *            are multiple components).
+     *       <li> Other natures - makes sense only if the property has a Hibernate type. Nature is inherited.
      *     </ul>
      *     Note that a composite type may have several representations. Thus, which component properties are included
      *     depends on the representation used by the property. For example, {@link Money} can be represented as:
