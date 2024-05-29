@@ -2,16 +2,27 @@ package ua.com.fielden.platform.meta;
 
 import com.google.inject.Guice;
 import org.junit.Test;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.meta.Assertions.EntityA;
-import ua.com.fielden.platform.meta.Assertions.PropertyA;
-import ua.com.fielden.platform.meta.test_entities.Entity_PropertyDescriptor;
-import ua.com.fielden.platform.sample.domain.TgAuthor;
-import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
-import ua.com.fielden.platform.sample.domain.TgVehicle;
-import ua.com.fielden.platform.sample.domain.TgWorkOrder;
+import ua.com.fielden.platform.meta.PropertyTypeMetadata.Primitive;
+import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.test.PlatformTestHibernateSetup;
+import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
+
+import java.math.BigDecimal;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.meta.PropertyHibernateTypeTest.Case.hasHibType;
+import static ua.com.fielden.platform.meta.PropertyHibernateTypeTest.Case.noHibType;
 
 public class PropertyHibernateTypeTest {
 
@@ -22,43 +33,132 @@ public class PropertyHibernateTypeTest {
                     DbVersion.MSSQL));
 
     @Test
-    public void hibernate_type_is_attached_to_persistent_properties() {
-        EntityA.of(generator.forEntity(TgAuthor.class))
-                .assertProperty("id", PropertyA::assertHasHibType)
-                .assertProperty("key", PropertyA::assertHasHibType)
-                .assertProperty("name", PropertyA::assertHasHibType)
-                .assertProperty("surname", PropertyA::assertHasHibType)
-                .assertProperty("webpage", PropertyA::assertHasHibType);
+    public void hibernate_type_is_attached() {
+        runCases(Entity.class,
+                 List.of(hasHibType("persistentPrimitive", PropertyMetadata.Persistent.class, Primitive.class),
+                         hasHibType("calculatedPrimitive", PropertyMetadata.Calculated.class, Primitive.class),
+                         hasHibType("transientPrimitive", PropertyMetadata.Transient.class, Primitive.class),
+                         hasHibType("critOnlyPrimitive", PropertyMetadata.CritOnly.class, Primitive.class),
+
+                         hasHibType("persistentComposite", PropertyMetadata.Persistent.class, PropertyTypeMetadata.Composite.class),
+                         hasHibType("calculatedComposite", PropertyMetadata.Calculated.class, PropertyTypeMetadata.Composite.class),
+                         hasHibType("transientComposite", PropertyMetadata.Transient.class, PropertyTypeMetadata.Composite.class),
+                         hasHibType("critOnlyComposite", PropertyMetadata.CritOnly.class, PropertyTypeMetadata.Composite.class),
+
+                         hasHibType("persistentEntity", PropertyMetadata.Persistent.class, PropertyTypeMetadata.Entity.class),
+                         hasHibType("calculatedEntity", PropertyMetadata.Calculated.class, PropertyTypeMetadata.Entity.class),
+                         hasHibType("transientEntity", PropertyMetadata.Transient.class, PropertyTypeMetadata.Entity.class),
+                         hasHibType("critOnlyEntity", PropertyMetadata.CritOnly.class, PropertyTypeMetadata.Entity.class),
+
+                         hasHibType("persistentUnionEntity", PropertyMetadata.Persistent.class, PropertyTypeMetadata.Entity.class),
+                         hasHibType("calculatedUnionEntity", PropertyMetadata.Calculated.class, PropertyTypeMetadata.Entity.class),
+                         hasHibType("transientUnionEntity", PropertyMetadata.Transient.class, PropertyTypeMetadata.Entity.class),
+                         hasHibType("critOnlyUnionEntity", PropertyMetadata.CritOnly.class, PropertyTypeMetadata.Entity.class),
+
+                         hasHibType("key", PropertyMetadata.Calculated.class, PropertyTypeMetadata.CompositeKey.class),
+                         noHibType ("entities", PropertyMetadata.Transient.class, PropertyTypeMetadata.Collectional.class)
+                 ));
     }
 
-    @Test
-    public void hibernate_type_is_attached_to_calculated_properties() {
-        EntityA.of(generator.forEntity(TgVehicle.class))
-                .assertProperty("lastFuelUsage", PropertyA::assertHasHibType)
-                .assertProperty("calc0", PropertyA::assertHasHibType);
+    record Case (String propName,
+                 Class<? extends PropertyMetadata> propNature,
+                 Class<? extends PropertyTypeMetadata> propType,
+                 boolean hasHibType)
+    {
+        static Case hasHibType(String propName, Class<? extends PropertyMetadata> propNature,
+                               Class<? extends PropertyTypeMetadata> propType) {
+            return new Case(propName, propNature, propType, true);
+        }
+        static Case noHibType(String propName, Class<? extends PropertyMetadata> propNature,
+                              Class<? extends PropertyTypeMetadata> propType) {
+            return new Case(propName, propNature, propType, false);
+        }
     }
 
-    @Test
-    public void hibernate_type_is_not_attached_to_transient_properties_of_persistent_entities() {
-        EntityA.of(generator.forEntity(TgWorkOrder.class))
-                .assertProperty("orgUnit1", PropertyA::assertNoHibType)
-                .assertProperty("stringSingle", PropertyA::assertNoHibType)
-                .assertProperty("moneySingle", PropertyA::assertNoHibType);
+    private void runCases(final Class<? extends AbstractEntity<?>> entityType, final Iterable<Case> cases) {
+        final var entityA = EntityA.of(generator.forEntity(entityType));
+
+        cases.forEach(c -> {
+            final var propA = entityA.getProperty(c.propName);
+            propA.assertIs(c.propNature())
+                    .type().assertIs(c.propType());
+            if (c.hasHibType()) {
+                propA.assertHasHibType();
+            } else {
+                propA.assertNoHibType();
+            }
+        });
     }
 
-    @Test
-    public void hibernate_type_is_attached_to_properties_of_synthetic_entities() {
-        EntityA.of(generator.forEntity(TgAverageFuelUsage.class))
-                .assertProperty("id", PropertyA::assertHasHibType)
-                .assertProperty("key", PropertyA::assertHasHibType)
-                .assertProperty("qty", PropertyA::assertHasHibType)
-                .assertProperty("cost", PropertyA::assertHasHibType);
-    }
+    @KeyType(DynamicEntityKey.class)
+    @MapEntityTo
+    static class Entity extends AbstractEntity<DynamicEntityKey> {
 
-    @Test
-    public void hibernate_type_is_attached_to_properties_with_PropertyDescriptor_type() {
-        EntityA.of(generator.forEntity(Entity_PropertyDescriptor.class))
-                .assertProperty("pd", PropertyA::assertHasHibType);
+        @IsProperty
+        @MapTo
+        private String persistentPrimitive;
+
+        @IsProperty
+        @ua.com.fielden.platform.entity.annotation.Calculated("1")
+        private BigDecimal calculatedPrimitive;
+
+        @IsProperty
+        private Integer transientPrimitive;
+
+        @IsProperty
+        @CritOnly
+        private String critOnlyPrimitive;
+
+        @IsProperty
+        @MapTo
+        private Money persistentComposite;
+
+        @IsProperty
+        @Calculated("1")
+        @PersistentType(userType = ISimpleMoneyType.class)
+        private Money calculatedComposite;
+
+        @IsProperty
+        private Money transientComposite;
+
+        @IsProperty
+        @CritOnly
+        private Money critOnlyComposite;
+
+        @IsProperty
+        @MapTo
+        private Entity persistentEntity;
+
+        @IsProperty
+        @Calculated
+        private Entity calculatedEntity;
+        private static final ExpressionModel calculatedEntity_ = expr().prop("persistentEntity").model();
+
+        @IsProperty
+        private Entity transientEntity;
+
+        @IsProperty
+        @CritOnly
+        private Entity critOnlyEntity;
+
+        @IsProperty(Entity.class)
+        private final Set<Entity> entities = new LinkedHashSet<>();
+
+        @IsProperty
+        @MapTo
+        private TgBogieLocation persistentUnionEntity;
+
+        @IsProperty
+        @Calculated
+        private TgBogieLocation calculatedUnionEntity;
+        private static final ExpressionModel calculatedUnionEntity_ = expr().prop("persistentUnionEntity").model();
+
+        @IsProperty
+        private TgBogieLocation transientUnionEntity;
+
+        @IsProperty
+        @CritOnly
+        private TgBogieLocation critOnlyUnionEntity;
     }
 
 }
