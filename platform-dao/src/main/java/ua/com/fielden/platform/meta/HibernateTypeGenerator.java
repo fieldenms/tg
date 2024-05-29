@@ -63,81 +63,36 @@ class HibernateTypeGenerator {
     }
 
     /**
-     * Resolves a Hibernate type for a property declared by a composite type.
-     * <p>
-     * The returned {@link Generate#get()} never returns null, an exception is thrown if the Hibernate type can't be resolved.
+     * Resolves a Hibernate type for a property.
      */
-    public Generate generate(final PropertyNature nature, final PropertyTypeMetadata typeMetadata,
-                             final CompositeTypeMetadataImpl.Builder builder) {
-        return new Generate(nature, typeMetadata) {
-            @Override
-            public Object get() {
-                final var hibType = get_();
-                if (hibType == null) {
-                    throw new EqlMetadataGenerationException(format("Couldn't resolve Hibernate of [%s]", typeMetadata));
-                }
-                return hibType;
-            }
-        };
-    }
-
-    /**
-     * Resolves a Hibernate type for a property declared by an entity type.
-     * <p>
-     * The returned {@link Generate#get()} may return null if the Hibernate type is not applicable to the given property,
-     * but if it is applicable, then an exception is thrown.
-     */
-    public Generate generate(final PropertyNature nature, final PropertyTypeMetadata typeMetadata,
-                             final EntityMetadataBuilder<?, ?> builder) {
-        return new Generate(nature, typeMetadata) {
-            @Override
-            public Object get() {
-                final boolean applicable = isHibTypeApplicable(nature, typeMetadata, builder.getNature());
-                if (!applicable) {
-                    return null;
-                }
-
-                final var hibType = get_();
-                if (hibType == null) {
-                    throw new EqlMetadataGenerationException(format("Couldn't resolve Hibernate type of [%s]", typeMetadata));
-                }
-                return hibType;
-            }
-        };
-    }
-
-    private static boolean isHibTypeApplicable(final PropertyNature nature, final PropertyTypeMetadata typeMetadata,
-                                               final EntityNature entityNature) {
-        return (   typeMetadata.isPrimitive()
-                || typeMetadata.isCompositeKey() // mkPropKey handles composite keys
-                || typeMetadata.isComposite()
-                // surely not all entities have a Hibernate type, but it's a calculated property so it must have one
-                || typeMetadata.isEntity())
-               && (entityNature.isSynthetic() && !nature.isCritOnly())
-               || nature.isPersistent()
-               || nature.isCalculated();
+    public Generate generate(final PropertyTypeMetadata typeMetadata) {
+        return new Generate(typeMetadata);
     }
 
     /**
      * An abstraction for a method with optional parameters. Helps avoid having multiple signatures of the same method.
      *
-     * @see #generate(PropertyNature, PropertyTypeMetadata, CompositeTypeMetadataImpl.Builder)
-     * @see #generate(PropertyNature, PropertyTypeMetadata, EntityMetadataBuilder)
+     * @see #generate(PropertyTypeMetadata)
      */
-    public abstract class Generate {
-        final PropertyNature nature;
-        final PropertyTypeMetadata typeMetadata;
-        Optional<PersistentType> optAtPersistentType = Optional.empty();
+    public class Generate {
+        private final PropertyTypeMetadata typeMetadata;
+        private Optional<PersistentType> optAtPersistentType = Optional.empty();
 
-        private Generate(final PropertyNature nature, final PropertyTypeMetadata typeMetadata) {
-            this.nature = nature;
+        private Generate(final PropertyTypeMetadata typeMetadata) {
             this.typeMetadata = typeMetadata;
         }
 
         /**
-         * Returns the Hibernate type or {@code null} if it could not be resolved.
+         * Returns the Hibernate type or throws if it could not be resolved.
          */
-        public abstract @Nullable Object get();
+        public Object get() {
+            return getOpt()
+                    .orElseThrow(() -> new EqlMetadataGenerationException(format("Couldn't resolve Hibernate type of [%s]", typeMetadata)));
+        }
+
+        public Optional<Object> getOpt() {
+            return Optional.ofNullable(get_());
+        }
 
         public Generate use(final PersistentType atPersistentType) {
             this.optAtPersistentType = Optional.of(atPersistentType);
@@ -150,9 +105,14 @@ class HibernateTypeGenerator {
         }
 
         @Nullable Object get_() {
+            if (!isHibTypeApplicable(typeMetadata)) {
+                return null;
+            }
+
             return switch (typeMetadata) {
                 case PropertyTypeMetadata.Entity et
-                        when hasAnyNature(et.javaType(), List.of(UNION, EntityNature.PERSISTENT, SYNTHETIC)) -> H_ENTITY;
+                        when hasAnyNature(et.javaType(), List.of(UNION, EntityNature.PERSISTENT, SYNTHETIC))
+                        -> H_ENTITY;
                 default -> {
                     yield optAtPersistentType.map(atPersistentType -> {
                         final String hibernateTypeName = atPersistentType.value();
@@ -190,6 +150,13 @@ class HibernateTypeGenerator {
                     });
                 }
             };
+        }
+
+        private boolean isHibTypeApplicable(final PropertyTypeMetadata typeMetadata) {
+            return (   typeMetadata.isPrimitive()
+                    || typeMetadata.isCompositeKey() // mkPropKey handles composite keys
+                    || typeMetadata.isComposite()
+                    || typeMetadata.isEntity());
         }
     }
 

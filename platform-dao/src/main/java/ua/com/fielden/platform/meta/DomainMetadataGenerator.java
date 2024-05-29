@@ -6,8 +6,6 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.query.DbVersion;
@@ -26,7 +24,6 @@ import java.lang.reflect.Type;
 import java.util.Optional;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableList;
@@ -47,7 +44,6 @@ import static ua.com.fielden.platform.meta.EntityNature.UNION;
 import static ua.com.fielden.platform.meta.HibernateTypeGenerator.*;
 import static ua.com.fielden.platform.meta.PropertyMetadataImpl.Builder.*;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.UNION_MEMBER;
-import static ua.com.fielden.platform.meta.PropertyNature.*;
 import static ua.com.fielden.platform.meta.PropertyTypeMetadata.COMPOSITE_KEY;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.*;
 import static ua.com.fielden.platform.reflection.Finder.*;
@@ -142,13 +138,13 @@ final class DomainMetadataGenerator {
         if (atMapTo != null) {
             final String columnName = mkColumnName(field.getName(), atMapTo);
             builder = persistentProp(field.getName(), propTypeMd,
-                                     hibTypeGenerator.generate(PropertyNature.PERSISTENT, propTypeMd, typeBuilder).use(field).get(),
+                                     hibTypeGenerator.generate(propTypeMd).use(field).get(),
                                      PropertyNature.Persistent.data(propColumn(columnName, atIsProperty)));
         }
         // TRANSIENT
         else {
             builder = transientProp(field.getName(), propTypeMd,
-                                    hibTypeGenerator.generate(PropertyNature.TRANSIENT, propTypeMd, typeBuilder).use(field).get());
+                                    hibTypeGenerator.generate(propTypeMd).use(field).getOpt().orElse(null));
         }
 
         return Optional.of(builder.build());
@@ -256,19 +252,16 @@ final class DomainMetadataGenerator {
             } else {
                 final var keyColumn = new PropColumn("KEY_");
                 final PropertyTypeMetadata propTypeMd = mkPropertyTypeOrThrow(keyType);
-                final Function<PropertyNature, Object> getHibType =
-                        propNature -> hibTypeGenerator.generate(propNature, propTypeMd, entityBuilder).get();
+                final var getHibType = hibTypeGenerator.generate(propTypeMd);
                 return switch (entityBuilder) {
                     case EntityMetadataBuilder.Persistent $ ->
-                            Optional.of(persistentProp(KEY, propTypeMd, getHibType.apply(PERSISTENT),
-                                                       PropertyNature.Persistent.data(keyColumn))
+                            Optional.of(persistentProp(KEY, propTypeMd, getHibType.get(), PropertyNature.Persistent.data(keyColumn))
                                                 .required(true).build());
                     case EntityMetadataBuilder.Synthetic s ->
                             isSyntheticBasedOnPersistentEntityType(s.getJavaType())
-                                    ? Optional.of(persistentProp(KEY, propTypeMd, getHibType.apply(PERSISTENT),
-                                                                 PropertyNature.Persistent.data(keyColumn))
+                                    ? Optional.of(persistentProp(KEY, propTypeMd, getHibType.get(), PropertyNature.Persistent.data(keyColumn))
                                                           .required(true).build())
-                                    : Optional.of(transientProp(KEY, propTypeMd, getHibType.apply(TRANSIENT))
+                                    : Optional.of(transientProp(KEY, propTypeMd, getHibType.getOpt().orElse(null))
                                                           .required(true).build());
                     default -> Optional.empty();
                 };
@@ -341,7 +334,9 @@ final class DomainMetadataGenerator {
 
         // CRIT-ONLY
         if (isAnnotationPresent(field, CritOnly.class)) {
-            builder = Optional.of(critOnlyProp(field.getName(), mkPropertyTypeOrThrow(field), null));
+            final var propTypeMd = mkPropertyTypeOrThrow(field);
+            builder = Optional.of(critOnlyProp(field.getName(), propTypeMd,
+                                               hibTypeGenerator.generate(propTypeMd).use(field).getOpt().orElse(null)));
         }
         // PERSISTENT
         // old code: last 2 conditions are to overcome incorrect metadata combinations
@@ -351,7 +346,7 @@ final class DomainMetadataGenerator {
             final var propTypeMd = mkPropertyTypeOrThrow(field);
             builder = Optional.of(
                     persistentProp(field.getName(), propTypeMd,
-                                   hibTypeGenerator.generate(PropertyNature.PERSISTENT, propTypeMd, entityBuilder).use(field).get(),
+                                   hibTypeGenerator.generate(propTypeMd).use(field).get(),
                                    PropertyNature.Persistent.data(propColumn(columnName, atIsProperty))));
         }
         // CALCULATED
@@ -361,7 +356,7 @@ final class DomainMetadataGenerator {
                     extractExpressionModelFromCalculatedProperty(enclosingEntityType, field), false, aggregatedExpression);
             final var propTypeMd = mkPropertyTypeOrThrow(field);
             builder = Optional.of(calculatedProp(field.getName(), propTypeMd,
-                                                 hibTypeGenerator.generate(CALCULATED, propTypeMd, entityBuilder).use(field).get(),
+                                                 hibTypeGenerator.generate(propTypeMd).use(field).get(),
                                                  data));
         }
         // TRANSIENT
@@ -369,7 +364,7 @@ final class DomainMetadataGenerator {
             // skip properties that have an unknown type
             builder = mkPropertyType(field)
                     .map(propTypeMd -> transientProp(field.getName(), propTypeMd,
-                                                     hibTypeGenerator.generate(TRANSIENT, propTypeMd, entityBuilder).use(field).get()));
+                                                     hibTypeGenerator.generate(propTypeMd).use(field).getOpt().orElse(null)));
         }
 
         return builder
@@ -389,7 +384,7 @@ final class DomainMetadataGenerator {
                 .model();
         final PropertyTypeMetadata typeMetadata = mkPropertyTypeOrThrow(field);
         return Optional.of(calculatedProp(field.getName(), typeMetadata,
-                                          hibTypeGenerator.generate(CALCULATED, typeMetadata, entityBuilder).use(field).get(),
+                                          hibTypeGenerator.generate(typeMetadata).use(field).get(),
                                           PropertyNature.Calculated.data(expressionModel, true, false)));
     }
 
@@ -574,7 +569,7 @@ final class DomainMetadataGenerator {
             final Field commonPropField = findFieldByName(firstUnionEntityPropType, commonProp);
             final PropertyTypeMetadata typeMetadata = mkPropertyTypeOrThrow(commonPropField);
             props.add(calculatedProp(commonProp, typeMetadata,
-                                     hibTypeGenerator.generate(CALCULATED, typeMetadata, entityBuilder).use(commonPropField).get(),
+                                     hibTypeGenerator.generate(typeMetadata).use(commonPropField).get(),
                                      PropertyNature.Calculated.data(generateUnionEntityPropertyContextualExpression(unionMembersNames, commonProp, contextPropName), true, false))
                               .build());
         }
