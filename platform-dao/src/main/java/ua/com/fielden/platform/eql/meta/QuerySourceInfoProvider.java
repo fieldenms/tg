@@ -227,11 +227,17 @@ public class QuerySourceInfoProvider {
         return new QuerySourceInfo<>(type, true, generateQuerySourceItems(modelledQuerySourceInfoMap, domainMetadata.forEntity(type).properties()));
     }
 
+    /**
+     * @param type  entity type which must be reifiable with metadata
+     */
     public QuerySourceInfo<?> getDeclaredQuerySourceInfo(final Class<? extends AbstractEntity<?>> type) {
         final QuerySourceInfo<?> existing = declaredQuerySourceInfoMap.get(type);
         return existing != null ? existing : generateDeclaredQuerySourceInfo(type);
     }
 
+    /**
+     * @param type  entity type which must be reifiable with metadata
+     */
     public QuerySourceInfo<?> getModelledQuerySourceInfo(final Class<? extends AbstractEntity<?>> type) {
         final QuerySourceInfo<?> existing = modelledQuerySourceInfoMap.get(type);
         if (existing != null) {

@@ -146,6 +146,11 @@ public sealed interface PropertyTypeMetadata {
         public Class<String> javaType() {
             return String.class;
         }
+
+        @Override
+        public String toString() {
+            return "CompositeKey";
+        }
     }
 
     NoKey NO_KEY = new NoKey();
@@ -156,6 +161,11 @@ public sealed interface PropertyTypeMetadata {
         @Override
         public Class<ua.com.fielden.platform.entity.NoKey> javaType() {
             return ua.com.fielden.platform.entity.NoKey.class;
+        }
+
+        @Override
+        public String toString() {
+            return "NoKey";
         }
     }
 

@@ -154,6 +154,15 @@ final class DomainMetadataGenerator {
     // * Entity Metadata
 
     public Optional<EntityMetadata> forEntity(final Class<? extends AbstractEntity<?>> entityType) {
+        try {
+            return forEntity_(entityType);
+        } catch (final Exception e) {
+            // rethrow to facilitate debugging
+            throw new EqlMetadataGenerationException("Failed to generate metadata for entity [%s]".formatted(entityType), e);
+        }
+    }
+
+    private Optional<EntityMetadata> forEntity_(final Class<? extends AbstractEntity<?>> entityType) {
         final Optional<EntityMetadataBuilder<?, ?>> entityBuilder;
 
         switch (inferEntityNature(entityType)) {
@@ -173,7 +182,6 @@ final class DomainMetadataGenerator {
                         EntityNature.Synthetic.data(getEntityModelsOfQueryBasedEntityType(entityType, modelField))));
             }
             case EntityNature.Other $ -> entityBuilder = Optional.empty();
-
         }
 
         return entityBuilder.map(b -> b.properties(buildProperties(b)).build());
@@ -316,6 +324,15 @@ final class DomainMetadataGenerator {
      * </ul>
      */
     Optional<PropertyMetadataImpl.Builder<?, ?>> mkProp(final Field field, final EntityMetadataBuilder<?, ?> entityBuilder) {
+        try {
+            return mkProp_(field, entityBuilder);
+        } catch (final Exception e) {
+            // rethrow to facilitate debugging
+            throw new EqlMetadataGenerationException("Failed to generate metadata for property [%s]".formatted(field), e);
+        }
+    }
+
+    private Optional<PropertyMetadataImpl.Builder<?, ?>> mkProp_(final Field field, final EntityMetadataBuilder<?, ?> entityBuilder) {
         final IsProperty atIsProperty = getAnnotation(field, IsProperty.class);
         if (atIsProperty == null) {
             return Optional.empty();
