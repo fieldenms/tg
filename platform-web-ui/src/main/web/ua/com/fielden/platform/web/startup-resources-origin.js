@@ -1,5 +1,5 @@
 /* main-app related resources */
-import '/resources/polymer/@polymer/paper-styles/paper-styles.js';
+import '@fieldenms/tg-polymer/paper-styles/paper-styles.js';
 import '/resources/images/tg-reference-hierarchy.js';
 import '@fieldenms/tg-web-components/app/tg-app.js';
 

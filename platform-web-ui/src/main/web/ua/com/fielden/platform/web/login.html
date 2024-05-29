@@ -3,17 +3,20 @@
 
 <head>
     <!-- Startup configuration -->
-    <link rel="manifest" href="/resources/manifest.webmanifest">
+    <link rel="manifest" href="./manifest.webmanifest">
     
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <title>@title</title>
-     
-    <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js'></script>
-    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
-    <script src="/resources/zxcvbn/zxcvbn.js"></script>
+    <script src="./node_modules/lodash/lodash.min.js"></script>
+    <script src="./node_modules/postal/lib/postal.min.js"></script>
+    <script src="./node_modules/moment/moment.js"></script>
+    <script src="./node_modules/moment-timezone/builds/moment-timezone-with-data.min.js"></script>
+    <script src="./node_modules/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src="./node_modules/web-animations-js/web-animations-next-lite.min.js"></script>
+    <script src="./node_modules/zxcvbn/dist/zxcvbn.js"></script>
     <script type="module">
-        import '/resources/login-startup-resources-vulcanized.js';
+        import './login-startup-resources-vulcanized.js';
     </script>
     
     <!-- Add to homescreen for Chrome on Android -->

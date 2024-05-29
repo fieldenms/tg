@@ -9,7 +9,7 @@
     
     <!-- Load Roboto font (as in roboto.js) as soon as possible to be used by the 'Loading...' message -->
     <link rel="stylesheet" type="text/css" crossorigin="anonymous" href="https://fonts.googleapis.com/css?family=Roboto+Mono:400,700|Roboto:400,300,300italic,400italic,500,500italic,700,700italic"></link>
-    <script type="module" crossorigin="use-credentials">
+    <script>
         window.polymerSkipLoadingFontRoboto = true; // skip loading of Roboto font later on
         window.TG_APP = {
             watermark: @watermark
@@ -27,11 +27,18 @@
             loadTag('link', ['rel', 'apple-touch-startup-image'], ['href', '/resources/icons/tg-icon192x192.png']);
             loadTag('link', ['rel', 'apple-touch-icon'], ['href', '/resources/icons/tg-icon192x192.png']);
             loadTag('meta', ['name', 'msapplication-TileImage'], ['content', '/resources/icons/tg-icon144x144.png']); // Tile icon for Win8 (144x144)
-            loadTag('script', ['src', '/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js'], ['async', 'true']);
-            loadTag('script', ['src', '/resources/polymer/web-animations-js/web-animations-next-lite.min.js'], ['async', 'true']);
-            loadTag('script', ['src', '/resources/filesaver/FileSaver.min.js'], ['async', 'true']);
+            loadTag('script', ['src', '/resources/node_modules/lodash/lodash.min.js']);
+            loadTag('script', ['src', '/resources/node_modules/postal/lib/postal.js']);
+            loadTag('script', ['src', '/resources/node_modules/moment/moment.js'], ['async', 'true']);
+            loadTag('script', ['src', '/resources/node_modules/moment-timezone/builds/moment-timezone-with-data.min.js'], ['async', 'true']);
+            loadTag('script', ['src', '/resources/node_modules/@webcomponents/webcomponentsjs/webcomponents-bundle.js'], ['async', 'true']);
+            loadTag('script', ['src', '/resources/node_modules/web-animations-js/web-animations-next-lite.min.js'], ['async', 'true']);
+            loadTag('script', ['src', '/resources/node_modules/file-saver/dist/FileSaver.min.js'], ['async', 'true']);
             import('/resources/@startupResources.js');
         };
+    </script>
+    <script type="module" crossorigin="use-credentials">
+        import('/resources/@startupResources.js');
 @service-worker
     </script>
     
