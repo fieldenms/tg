@@ -106,13 +106,20 @@ public sealed interface PropertyTypeMetadata {
      * Type of collectional properties.
      * <p>
      * Has no corresponding {@link TypeMetadata}.
+     * <p>
+     * Is a wrapper type: wraps a collection's element type.
      */
-    non-sealed interface Collectional extends PropertyTypeMetadata {
+    non-sealed interface Collectional extends PropertyTypeMetadata, Wrapper {
         Class<?> collectionType();
 
         PropertyTypeMetadata elementType();
 
 //        String linkProp();
+
+        @Override
+        default PropertyTypeMetadata wrappedType() {
+            return elementType();
+        }
 
         @Override
         default ParameterizedType javaType() {
@@ -166,6 +173,16 @@ public sealed interface PropertyTypeMetadata {
         @Override
         public String toString() {
             return "NoKey";
+        }
+    }
+
+    interface Wrapper {
+        PropertyTypeMetadata wrappedType();
+
+        static PropertyTypeMetadata unwrap(PropertyTypeMetadata typeMetadata) {
+            return typeMetadata instanceof Wrapper wrapper
+                    ? wrapper.wrappedType()
+                    : typeMetadata;
         }
     }
 

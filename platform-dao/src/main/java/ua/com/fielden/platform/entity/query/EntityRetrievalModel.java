@@ -20,6 +20,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.MSG_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.KEY_MEMBER;
+import static ua.com.fielden.platform.meta.PropertyTypeMetadata.Wrapper.unwrap;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 
@@ -196,7 +197,9 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         final PropertyMetadata pm = domainMetadata.forProperty(getEntityType(), propName)
                 .orElseThrow(() -> new EqlException("Property [%s] not found in [%s].".formatted(propName, getEntityType())));
 
-        if (pm.type().javaType() != fetchModel.getEntityType()) {
+        // unwrap here to adapt to fetch models -- they are constructed heuristically, and one case where unwrapping is
+        // needed is collectional properties: fetch models know only about the collectional element type
+        if (unwrap(pm.type()).javaType() != fetchModel.getEntityType()) {
             throw new EqlException(format(MSG_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES, pm.type(), propName, getEntityType(), fetchModel.getEntityType()));
         }
 
