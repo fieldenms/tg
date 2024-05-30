@@ -103,8 +103,8 @@ public class EntityMetadataTest {
                 .assertProperty("key", p -> p
                         .assertIs(Calculated.class)
                         .assertType(t -> t.assertIs(CompositeKey.class).assertJavaType(String.class)))
-                .assertProperty("parent", p -> p.assertKeyEq(KEY_MEMBER, true))
-                .assertProperty("name", p -> p.assertKeyEq(KEY_MEMBER, true));
+                .assertProperty("parent", p -> p.assertHasKey(KEY_MEMBER))
+                .assertProperty("name", p -> p.assertHasKey(KEY_MEMBER));
     }
 
     @Test

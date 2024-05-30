@@ -51,6 +51,10 @@ abstract class PropertyMetadataImpl<N extends PropertyNature, D extends Property
         return Optional.ofNullable((V) keyMap.get(key));
     }
 
+    public boolean has(final AnyKey<?> key) {
+        return keyMap.containsKey(key);
+    }
+
     private PropertyMetadataImpl(final Builder<N, D> builder) {
         name = requireNonNull(builder.name);
         hibType = builder.hibType;

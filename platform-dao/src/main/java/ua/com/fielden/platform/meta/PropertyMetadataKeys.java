@@ -1,13 +1,18 @@
 package ua.com.fielden.platform.meta;
 
+import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.meta.PropertyMetadata.AnyKey;
 
 public final class PropertyMetadataKeys {
 
     public static final AnyKey<Boolean>
             REQUIRED = mkAnyKey("Required"),
-            KEY_MEMBER = mkAnyKey("Key Member"),
             UNION_MEMBER = mkAnyKey("Union Member");
+
+    /**
+     * Denotes a composite key member. Does not apply to simple keys.
+     */
+    public static final AnyKey<CompositeKeyMember> KEY_MEMBER = mkAnyKey("Key Member");
 
     private PropertyMetadataKeys() {}
 

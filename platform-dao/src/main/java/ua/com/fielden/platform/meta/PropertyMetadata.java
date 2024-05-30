@@ -62,6 +62,10 @@ public sealed interface PropertyMetadata extends Comparable<PropertyMetadata> {
         return get(key).orElse(FALSE);
     }
 
+    default boolean has(AnyKey<?> key) {
+        return get(key).isPresent();
+    }
+
     @Override
     default int compareTo(final PropertyMetadata that) {
         return name().compareTo(that.name());

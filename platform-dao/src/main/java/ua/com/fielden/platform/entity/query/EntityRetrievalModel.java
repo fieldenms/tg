@@ -116,7 +116,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         entityMetadata.properties().stream()
                 .filter(pm -> !pm.nature().isCalculated() && !pm.type().isCollectional() && !isPure(pm))
                 .forEach(pm -> {
-                    final boolean skipEntities = !(pm.type().isEntity() && (AbstractEntity.KEY.equals(pm.name()) || pm.is(KEY_MEMBER)));
+                    final boolean skipEntities = !(pm.type().isEntity() && (AbstractEntity.KEY.equals(pm.name()) || pm.has(KEY_MEMBER)));
                     with(pm.name(), skipEntities);
                 });
     }

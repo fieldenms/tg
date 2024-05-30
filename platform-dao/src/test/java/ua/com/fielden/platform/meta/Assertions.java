@@ -174,6 +174,10 @@ interface Assertions {
             return this;
         }
 
+        public <V> PropertyA<P> assertHasKey(final PropertyMetadata.AnyKey<V> key) {
+            return assertKey(key, $ -> {});
+        }
+
         public <V> PropertyA<P> assertKeyEq(final PropertyMetadata.AnyKey<V> key, final V expectedValue) {
             return assertKey(key, v -> assertEquals("Unexpected value for key [%s] in [%s]".formatted(key, propertyMetadata),
                                                     expectedValue, v));

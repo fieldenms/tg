@@ -43,6 +43,7 @@ import static ua.com.fielden.platform.meta.EntityNature.SYNTHETIC;
 import static ua.com.fielden.platform.meta.EntityNature.UNION;
 import static ua.com.fielden.platform.meta.HibernateTypeGenerator.*;
 import static ua.com.fielden.platform.meta.PropertyMetadataImpl.Builder.*;
+import static ua.com.fielden.platform.meta.PropertyMetadataKeys.KEY_MEMBER;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.UNION_MEMBER;
 import static ua.com.fielden.platform.meta.PropertyTypeMetadata.COMPOSITE_KEY;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.*;
@@ -387,9 +388,7 @@ final class DomainMetadataGenerator {
         return builder
                 // Scan the property for any additional metadata
                 .map(bld -> bld.required(isRequiredByDefinition(field, enclosingEntityType)))
-                .map(bld -> isAnnotationPresent(field, CompositeKeyMember.class)
-                        ? bld.with(PropertyMetadataKeys.KEY_MEMBER, true)
-                        : bld);
+                .map(bld -> getAnnotationOptionally(field, CompositeKeyMember.class).map(annot -> bld.with(KEY_MEMBER, annot)).orElse(bld));
     }
 
     private Optional<PropertyMetadataImpl.Builder<?, ?>> mkOne2OneProp(final Field field, final EntityMetadataBuilder<?, ?> entityBuilder) {
