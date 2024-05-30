@@ -10,10 +10,7 @@ import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.queries.SourceQuery1;
 import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnQueries;
 import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
-import ua.com.fielden.platform.meta.EntityMetadata;
-import ua.com.fielden.platform.meta.IDomainMetadata;
-import ua.com.fielden.platform.meta.PropertyMetadata;
-import ua.com.fielden.platform.meta.PropertyTypeMetadata;
+import ua.com.fielden.platform.meta.*;
 import ua.com.fielden.platform.types.tuples.T2;
 
 import javax.annotation.Nullable;
@@ -59,13 +56,13 @@ public class QuerySourceInfoProvider {
         declaredQuerySourceInfoMap = domainMetadata.allTypes(EntityMetadata.class).stream()
                 .collect(toConcurrentMap(EntityMetadata::javaType, em -> new QuerySourceInfo<>(em.javaType(), true)));
         declaredQuerySourceInfoMap.values()
-                .forEach(ei -> ei.addProps(generateQuerySourceItems(declaredQuerySourceInfoMap, domainMetadata.forEntity(ei.javaType()).properties())));
+                .forEach(ei -> ei.addProps(generateQuerySourceItems(declaredQuerySourceInfoMap, ei.javaType())));
 
         modelledQuerySourceInfoMap = domainMetadata.allTypes(EntityMetadata.class).stream()
                 .filter(em -> em.nature().isPersistent() || em.nature().isUnion())
                 .collect(toConcurrentMap(EntityMetadata::javaType, em -> new QuerySourceInfo<>(em.javaType(), true)));
         modelledQuerySourceInfoMap.values()
-                .forEach(ei -> ei.addProps(generateQuerySourceItems(modelledQuerySourceInfoMap, domainMetadata.forEntity(ei.javaType()).properties())));
+                .forEach(ei -> ei.addProps(generateQuerySourceItems(modelledQuerySourceInfoMap, ei.javaType())));
 
         seModels = new ConcurrentHashMap<>();
         // generating models and dependencies info for SE types (there is no need to include UE types here as their models are implicitly generated and have no interdependencies)
@@ -123,20 +120,26 @@ public class QuerySourceInfoProvider {
 
     private List<AbstractQuerySourceItem<?>> generateQuerySourceItems
         (final Map<Class<? extends AbstractEntity<?>>, QuerySourceInfo<?>> allQuerySourceInfos,
-         final Collection<PropertyMetadata> properties)
+         final Class<? extends AbstractEntity<?>> entityType)
     {
-        return properties.stream()
-            .filter(pm -> !pm.nature().isCritOnly())
+        final var pmUtils = domainMetadata.propertyMetadataUtils();
+        final var entityMetadata = domainMetadata.forEntity(entityType);
+
+        // Exclude properties that are irrelevant to EQL.
+        // TODO Formally define the set of EQL-relevant properties and define a corresponding predicate.
+        return entityMetadata.properties().stream()
+            .filter(pm -> !pm.isCritOnly())
+            .filter(pm -> !(pm.isTransient() && entityMetadata.isPersistent()))
             .<Optional<AbstractQuerySourceItem<?>>> map(pm -> {
-                final String name = pm.name();
-                final Object hibType = pm.hibType();
-                final @Nullable CalcPropInfo expr = pm.asCalculated().map(QuerySourceInfoProvider::toCalcPropInfo).orElse(null);
+                final var name = pm.name();
+                final var hibType = pm.hibType();
+                final @Nullable var expr = pm.asCalculated().map(QuerySourceInfoProvider::toCalcPropInfo).orElse(null);
 
                 return switch (pm.type()) {
                     case PropertyTypeMetadata.Entity et -> mkQuerySourceItemForEntityType(pm, et, allQuerySourceInfos);
                     case PropertyTypeMetadata.Composite ct -> {
                         final var propTpi = new QuerySourceItemForComponentType<>(name, ct.javaType(), hibType);
-                        for (final PropertyMetadata spm : domainMetadata.propertyMetadataUtils().subProperties(pm)) {
+                        for (final PropertyMetadata spm : pmUtils.subProperties(pm)) {
                             propTpi.addSubitem(
                                     new QuerySourceItemForPrimType<>(spm.name(), (Class<?>) spm.type().javaType(),
                                                                      spm.hibType(),
@@ -220,11 +223,11 @@ public class QuerySourceInfoProvider {
     }
 
     private QuerySourceInfo<?> generateDeclaredQuerySourceInfo(final Class<? extends AbstractEntity<?>> type) {
-        return new QuerySourceInfo<>(type, true, generateQuerySourceItems(declaredQuerySourceInfoMap, domainMetadata.forEntity(type).properties()));
+        return new QuerySourceInfo<>(type, true, generateQuerySourceItems(declaredQuerySourceInfoMap, type));
     }
 
     private QuerySourceInfo<?> generateModelledQuerySourceInfoForPersistentType(final Class<? extends AbstractEntity<?>> type) {
-        return new QuerySourceInfo<>(type, true, generateQuerySourceItems(modelledQuerySourceInfoMap, domainMetadata.forEntity(type).properties()));
+        return new QuerySourceInfo<>(type, true, generateQuerySourceItems(modelledQuerySourceInfoMap, type));
     }
 
     /**
