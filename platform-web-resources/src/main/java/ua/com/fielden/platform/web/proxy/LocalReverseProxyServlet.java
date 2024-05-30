@@ -6,7 +6,9 @@ import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.client.api.Result;
 import org.eclipse.jetty.client.http.HttpClientTransportOverHTTP;
-import org.eclipse.jetty.client.util.BytesContentProvider;
+import org.eclipse.jetty.client.util.InputStreamContentProvider;
+import org.eclipse.jetty.http.HttpMethod;
+import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletHandler;
@@ -15,14 +17,16 @@ import org.eclipse.jetty.util.HttpCookieStore;
 import org.eclipse.jetty.util.ProcessorUtils;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
-import ua.com.fielden.platform.utils.CollectionUtil;
+import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.web.proxy.exceptions.ReverseProxyException;
 
 import javax.servlet.AsyncContext;
+import javax.servlet.AsyncEvent;
+import javax.servlet.AsyncListener;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -30,7 +34,6 @@ import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import static java.lang.Integer.parseInt;
 import static java.util.Optional.empty;
@@ -61,6 +64,7 @@ public class LocalReverseProxyServlet extends HttpServlet {
     private final String targetServer;
     private final Optional<String> maybeTargetSseServer;
     private final int clientMinThreads, clientMaxThreads, clientIdleTimeout;
+    private final int backendTimeout;
 
     public static Optional<Server> createProxyService(
             final Properties props,
@@ -77,6 +81,7 @@ public class LocalReverseProxyServlet extends HttpServlet {
         final int maxThreads = parseInt(props.getProperty("proxy.jetty.threadPool.maxThreads", "50"));
         final int idleTimeout = parseInt(props.getProperty("proxy.jetty.threadPool.idleTimeout", "30000"));
         final int acceptors = parseInt(props.getProperty("proxy.jetty.connector.acceptors", "2"));
+        final int backendTimeout = parseInt(props.getProperty("proxy.backendTimeout", "30000"));
 
         final String targetServer = "http://localhost:" + targetPort;
         final Optional<String> maybeTargetSseServer = targetSsePort == 0 ? empty() : of("http://localhost:" + targetSsePort);
@@ -89,9 +94,10 @@ public class LocalReverseProxyServlet extends HttpServlet {
                     proxy.jetty.threadPool.maxThreads.............%s
                     proxy.jetty.threadPool.idleTimeout............%s
                     proxy.jetty.connector.acceptors...............%s
+                    proxy.backendTimeout (millis).................%s
                     target server.................................%s
                     target SSE server.............................%s
-                """.formatted(port, minThreads, maxThreads, idleTimeout, acceptors, targetServer, maybeTargetSseServer.orElse("disabled")));
+                """.formatted(port, minThreads, maxThreads, idleTimeout, acceptors, backendTimeout, targetServer, maybeTargetSseServer.orElse("disabled")));
 
         final QueuedThreadPool threadPool = new QueuedThreadPool(maxThreads, minThreads, idleTimeout);
         threadPool.setName("Local-Proxy-Server");
@@ -105,7 +111,7 @@ public class LocalReverseProxyServlet extends HttpServlet {
         final ServletHandler handler = new ServletHandler();
         server.setHandler(handler);
         // Proxy servlet instantiation, which still needs to be associated with a Jetty instance
-        addProxyServlet(handler, minThreads, maxThreads, idleTimeout, targetServer, maybeTargetSseServer);
+        addProxyServlet(handler, minThreads, maxThreads, idleTimeout, backendTimeout, targetServer, maybeTargetSseServer);
         return of(server);
     }
 
@@ -114,17 +120,21 @@ public class LocalReverseProxyServlet extends HttpServlet {
      * A factory method for instantiating and adding Proxy servlet to {@code handler}.
      *
      * @param handler
-     * @param clientMinThreads
+     * @param clientMinThreads min thread count used for running proxied HTTP client requests.
+     * @param clientMaxThreads max thread count used for running proxied HTTP client requests.
+     * @param clientIdleTimeout idle timeout (millis) for threads used for running proxied HTTP client requests.
+     * @param backendTimeout timeout (millis) for processing proxied requests; if response for a proxied request is not returned withing the specified timeout, a timeout error is reported and the proxied request aborted.
      */
     private static void addProxyServlet(
             final ServletHandler handler,
             final int clientMinThreads,
             final int clientMaxThreads,
             final int clientIdleTimeout,
+            final int backendTimeout,
             final String targetServer,
             final Optional<String> maybeTargetSseServer) {
         // Instantiate this servlet.
-        final LocalReverseProxyServlet proxyServlet = new LocalReverseProxyServlet(targetServer, maybeTargetSseServer, clientMinThreads, clientMaxThreads, clientIdleTimeout);
+        final LocalReverseProxyServlet proxyServlet = new LocalReverseProxyServlet(targetServer, maybeTargetSseServer, clientMinThreads, clientMaxThreads, clientIdleTimeout, backendTimeout);
         // Configure a servlet holder with async support.
         final ServletHolder servletHolder = new ServletHolder(proxyServlet);
         servletHolder.setAsyncSupported(true);
@@ -133,12 +143,13 @@ public class LocalReverseProxyServlet extends HttpServlet {
         handler.addServletWithMapping(servletHolder, "/*");
     }
 
-    protected LocalReverseProxyServlet(final String targetServer, final Optional<String> maybeTargetSseServer, final int clientMinThreads, final int clientMaxThreads, final int clientIdleTimeout) {
+    protected LocalReverseProxyServlet(final String targetServer, final Optional<String> maybeTargetSseServer, final int clientMinThreads, final int clientMaxThreads, final int clientIdleTimeout, final int backendTimeout) {
         this.targetServer = targetServer;
         this.maybeTargetSseServer = maybeTargetSseServer;
         this.clientMinThreads = clientMinThreads;
         this.clientMaxThreads = clientMaxThreads;
         this.clientIdleTimeout = clientIdleTimeout;
+        this.backendTimeout = backendTimeout;
     }
 
     @Override
@@ -216,32 +227,67 @@ public class LocalReverseProxyServlet extends HttpServlet {
         // Server-Sent Event requests require special handling:
         // 1. Forward to a designated resource, if specified.
         // 2. Async operation should not timeout or complete, and aggressive flushing of the content buffer is required to push all data back to the client.
-        final boolean isSSE = "text/event-stream".equals(req.getHeader("Accept"));
-        final String requestTargetServer = isSSE
-                                           ? maybeTargetSseServer.orElse(targetServer)
-                                           : targetServer;
+        final boolean sse = "text/event-stream".equals(req.getHeader("Accept"));
+
+        // Prepare the target URL where the original request should be proxied to.
+        final String requestTargetServer = sse ? maybeTargetSseServer.orElse(targetServer) : targetServer;
         final String targetUrl;
         try {
             final String queryString = req.getQueryString();
-            URI uri = new URI(requestTargetServer + req.getRequestURI() + (queryString == null ? "" : "?" + queryString));
+            final URI uri = new URI(requestTargetServer + req.getRequestURI() + (queryString == null ? "" : "?" + queryString));
             targetUrl = uri.toString();
         } catch (final URISyntaxException ex) {
-            final String msg = "Invalid URI: " + ex.getMessage();
+            final String msg = "Proxy Server encountered invalid target URI: " + ex.getMessage();
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, msg);
             LOGGER.error(msg, ex);
             return;
         }
 
-        // Use AsyncContext to improve performance
+        // Use AsyncContext to improve performance.
         final AsyncContext asyncContext = req.startAsync();
-        asyncContext.setTimeout(isSSE ? 0 : 20 * 60_000); // TODO  Set a timeout for the async context as a configuration property.
+        asyncContext.setTimeout(sse ? 0 : backendTimeout);
 
-        // Create proxy request with targetUrl as the destination
-        final Request proxyRequest = httpClient.newRequest(targetUrl).method(req.getMethod());
-        // proxyRequest.timeout(60_000, TimeUnit.MILLISECONDS); // TODO Timeout for the client needs to be considered further, including extra testing.
+        // Create proxy request with targetUrl as the destination.
+        final Request proxyRequest = httpClient.newRequest(targetUrl).method(HttpMethod.fromString(req.getMethod())).version(HttpVersion.fromString(req.getProtocol()));
 
+        // Add Async Context listener that processes timeouts.
+        asyncContext.addListener(mkAsyncTimeoutListener(proxyRequest, asyncContext));
 
-        // Copy request headers from the original request, skipping hop-by-hop headers.
+        // Copy request headers from the original request, skipping hop-by-hop headers and adding forward headers.
+        copyRequestHeaders(req, proxyRequest);
+
+        // Copy the request body, if present.
+        copyRequestBody(req, proxyRequest);
+
+        // Send the proxy request asynchronously and provide a response listener to handle the proxied response.
+        proxyRequest.send(mkProxyResponseListener(req, asyncContext, sse, requestTargetServer));
+    }
+
+    /**
+     * Copies a body of the original request {@code req} to the body of {@code proxyRequest}.
+     *
+     * @param req
+     * @param proxyRequest
+     * @throws IOException
+     */
+    private static void copyRequestBody(final HttpServletRequest req, final Request proxyRequest) throws IOException {
+        if (req.getContentLength() > 0) {
+            proxyRequest.content(new InputStreamContentProvider(req.getInputStream()) {
+                @Override
+                public long getLength() {
+                    return req.getContentLength();
+                }
+            });
+        }
+    }
+
+    /**
+     * Copies headers from the original request {@code req} to {@code proxyRequest}. Skips hop-by-hop headers for security and adds forward headers, which proxies suppose to be doing.
+     *
+     * @param req an original request that is being proxied.
+     * @param proxyRequest a proxy request that passes the original request onto an alternative target.
+     */
+    private static void copyRequestHeaders(final HttpServletRequest req, final Request proxyRequest) {
         req.getHeaderNames().asIterator()
                             .forEachRemaining(headerName -> {
                                 if (!HOP_HEADERS.contains(headerName.toLowerCase())) {
@@ -260,17 +306,24 @@ public class LocalReverseProxyServlet extends HttpServlet {
         }
         proxyRequest.header("X-Forwarded-Host", req.getHeader("Host"));
         proxyRequest.header("X-Forwarded-Proto", req.getScheme());
+    }
 
-        // Copy the request body if present
-        if (req.getContentLength() > 0) {
-            final ByteArrayOutputStream requestBodyStream = new ByteArrayOutputStream();
-            req.getInputStream().transferTo(requestBodyStream);
-            byte[] requestBody = requestBodyStream.toByteArray();
-            proxyRequest.content(new BytesContentProvider(requestBody));
-        }
-
-        // Send the proxy request asynchronously and provide a response listener to handle the proxied response.
-        proxyRequest.send(new Response.Listener.Adapter() {
+    /**
+     * Creates {@link Response.Listener} to process events for a proxied response in async manner.
+     * Special care is taken for:
+     * <ul>
+     *     <li>Processing SSE responses by not completing the async context (i.e., keeping it alive to accept future SSE events sent to the same client).
+     *     <li>Processing redirects by not following them, but passing onto the client.
+     * </ul>
+     *
+     * @param req
+     * @param asyncContext
+     * @param sse
+     * @param requestTargetServer
+     * @return
+     */
+    private static Response.Listener mkProxyResponseListener(final HttpServletRequest req, final AsyncContext asyncContext, final boolean sse, final String requestTargetServer) {
+        return new Response.Listener.Adapter() {
 
             @Override
             public void onHeaders(final Response response) {
@@ -287,17 +340,18 @@ public class LocalReverseProxyServlet extends HttpServlet {
                     content.get(bytes);
                     proxyResponse.getOutputStream().write(bytes);
                     // Immediately flush content for SSE requests, which critical for the heartbeat to work correctly.
-                    if (isSSE) {
+                    if (sse) {
                         proxyResponse.getOutputStream().flush();
                     }
                 } catch (final IOException ex) {
+                    LOGGER.error("Proxy Server content IO error%s.".formatted(sse ? " [SSE]" : ""), ex);
                     asyncContext.complete();
-                    LOGGER.error("Proxy Server content IO error.", ex);
                 }
             }
 
             @Override
             public void onComplete(final Result result) {
+                // response may fail
                 if (result.isFailed()) {
                     final HttpServletResponse proxyResponse = (HttpServletResponse) asyncContext.getResponse();
                     final String msg = "Proxy error (on complete): " + result.getFailure().getMessage();
@@ -312,6 +366,7 @@ public class LocalReverseProxyServlet extends HttpServlet {
                 }
                 else {
                     final Response response = result.getResponse();
+                    // check for and handle redirects
                     if (response.getStatus() >= 300 && response.getStatus() < 400) {
                         final String location = response.getHeaders().get("Location");
                         if (location != null) {
@@ -321,18 +376,67 @@ public class LocalReverseProxyServlet extends HttpServlet {
                                                        : location;
                             final HttpServletResponse proxyResponse = (HttpServletResponse) asyncContext.getResponse();
                             proxyResponse.setHeader("Location", newLocation);
+                            LOGGER.info("Proxy Server redirecting to [%s]".formatted(newLocation));
                             asyncContext.complete();
                         }
                     }
+                    // otherwise, this is a non-redirect
                     else {
                         // The context should not be completed for SSE requests as it will be reused.
-                        if (!isSSE) {
+                        if (!sse) {
                             asyncContext.complete();
                         }
                     }
                 }
             }
-        });
+        };
+    }
+
+    /**
+     * Creates {@link AsyncListener} with {@link AsyncListener#onTimeout(AsyncEvent)} to correctly report a timeout error back to the client, and to abort {@code proxyRequest}.
+     *
+     * @param proxyRequest
+     * @param asyncContext
+     * @return
+     */
+    private AsyncListener mkAsyncTimeoutListener(final Request proxyRequest, final AsyncContext asyncContext) {
+        return new AsyncListener() {
+            @Override
+            public void onTimeout(final AsyncEvent event) {
+                final var strBackendTimeout = EntityUtils.toString(backendTimeout);
+                LOGGER.warn("Proxy timeout. The request is taking longer than permitted [%s].".formatted(strBackendTimeout));
+                final HttpServletResponse response = (HttpServletResponse) event.getSuppliedResponse();
+                try {
+                    final String msgError = "Proxy timeout [%s].".formatted(strBackendTimeout);
+                    response.sendError(HttpServletResponse.SC_GATEWAY_TIMEOUT, msgError);
+                    // let's try aborting the proxy request...
+                    if (proxyRequest.abort(new ReverseProxyException(msgError))) {
+                        LOGGER.info("Request was aborted due to Proxy timeout.");
+                    } else {
+                        LOGGER.info("Request could not be aborted due to Proxy timeout.");
+                    }
+                } catch (final IOException ex) {
+                    LOGGER.error("Proxy timeout error could not be sent.", ex);
+                } finally {
+                    asyncContext.complete();
+                }
+            }
+
+            @Override
+            public void onComplete(AsyncEvent event) {
+                // No action needed on complete.
+            }
+
+            @Override
+            public void onError(final AsyncEvent event) {
+                // No action needed on error.
+            }
+
+            @Override
+            public void onStartAsync(AsyncEvent event) {
+                // No action needed on start async.
+            }
+        };
     }
 
     @Override

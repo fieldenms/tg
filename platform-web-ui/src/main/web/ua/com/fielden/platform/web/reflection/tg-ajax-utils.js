@@ -26,6 +26,9 @@ export function processResponseError (e, reflector, serialiser, customHandler, t
     } else if (xhr.status === 503) { // service unavailable
         toaster && toaster.openToastForError('Service Unavailable.', 'Server responded with error 503 (Service Unavailable).', true);
         customHandler && customHandler('Service Unavailable');
+    } else if (xhr.status === 504) { // request timeout
+             toaster && toaster.openToastForError('Request Timeout.', 'Server responded with error 504 (Request Timeout).<br>' + xhr.response.message, true);
+             customHandler && customHandler('Request Timeout');
     } else if (xhr.status >= 400) { // other client or server error codes
         toaster && toaster.openToastForError('Service Error (' + xhr.status + ').', 'Server responded with error code ' + xhr.status, true);
         customHandler && customHandler('Service Error (' + xhr.status + ').');
