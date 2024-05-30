@@ -51,6 +51,12 @@ abstract class PropertyMetadataImpl<N extends PropertyNature, D extends Property
         return Optional.ofNullable((V) keyMap.get(key));
     }
 
+    public <K extends AnyKey<V>, V> Optional<PropertyMetadataWithKey<K, V>> withKey(final K key) {
+        // Let's cast to avoid overriding this method in each subclass.
+        // The cast is safe since all subclasses of this class are subtypes of the type being casted to.
+        return get(key).map(v -> new PropertyMetadataWithKeyImpl<>((PropertyMetadata) this, v));
+    }
+
     public boolean has(final AnyKey<?> key) {
         return keyMap.containsKey(key);
     }

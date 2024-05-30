@@ -54,6 +54,13 @@ public sealed interface PropertyMetadata extends Comparable<PropertyMetadata> {
 
     <V> Optional<V> get(AnyKey<V> key);
 
+    /**
+     * If key is present, returns a proof of its presence.
+     *
+     * @see PropertyMetadataWithKey
+     */
+    <K extends AnyKey<V>, V> Optional<PropertyMetadataWithKey<K, V>> withKey(K key);
+
 //    default boolean is(Key<Boolean, N> key) {
 //        return get(key).orElse(FALSE);
 //    }
