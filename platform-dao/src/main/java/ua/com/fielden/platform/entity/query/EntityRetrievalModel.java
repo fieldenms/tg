@@ -24,6 +24,13 @@ import static ua.com.fielden.platform.meta.PropertyTypeMetadata.Wrapper.unwrap;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 
+/**
+ * <h4> Implementation Details </h4>
+ *
+ * When inspecting property types for a potential entity type {@link PropertyTypeMetadata.Wrapper#unwrap(PropertyTypeMetadata)}
+ * is used because of the way fetch models are constructed -- heuristically, and one case where unwrapping is needed is
+ * collectional properties: fetch models know only about the collectional element type.
+ */
 public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractRetrievalModel<T> {
     private final EntityMetadata entityMetadata;
     private final EntityMetadataUtils entityMetadataUtils;
@@ -174,9 +181,11 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
                 addPrimProp(KEY);
                 includeAllUnionEntityKeyMembers();
             } else {
-                if (pm.type() instanceof PropertyTypeMetadata.Entity et && !PropertyDescriptor.class.equals(et.javaType())/* && !optPm.isId()*/) {
+                final var propType = unwrap(pm.type());
+                // treat PropertyDescriptor as primitive, it doesn't make sense to fetch its subproperties
+                if (propType instanceof PropertyTypeMetadata.Entity et && !PropertyDescriptor.class.equals(et.javaType())/* && !optPm.isId()*/) {
                     if (!skipEntities) {
-                        if (propMetadataUtils.isPropEntityType(pm.type(), em -> em.nature().isUnion())) {
+                        if (propMetadataUtils.isPropEntityType(propType, em -> em.nature().isUnion())) {
                             with(propName, fetchAll(et.javaType()));
                         } else {
                             with(propName, fetch(et.javaType()));
@@ -197,13 +206,12 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         final PropertyMetadata pm = domainMetadata.forProperty(getEntityType(), propName)
                 .orElseThrow(() -> new EqlException("Property [%s] not found in [%s].".formatted(propName, getEntityType())));
 
-        // unwrap here to adapt to fetch models -- they are constructed heuristically, and one case where unwrapping is
-        // needed is collectional properties: fetch models know only about the collectional element type
-        if (unwrap(pm.type()).javaType() != fetchModel.getEntityType()) {
+        final var propType = unwrap(pm.type());
+        if (propType.javaType() != fetchModel.getEntityType()) {
             throw new EqlException(format(MSG_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES, pm.type(), propName, getEntityType(), fetchModel.getEntityType()));
         }
 
-        if (pm.type() instanceof PropertyTypeMetadata.Entity et) {
+        if (propType instanceof PropertyTypeMetadata.Entity et) {
             final EntityMetadata em = domainMetadata.forEntity(et.javaType());
             em.asUnion().ifPresent(uem -> entityMetadataUtils.unionMembers(uem).stream()
                     .map(PropertyMetadata::name)
