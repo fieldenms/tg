@@ -12,7 +12,7 @@ public final class PropertyMetadataKeys {
     /**
      * Denotes a composite key member. Does not apply to simple keys.
      */
-    public static final AnyKey<CompositeKeyMember> KEY_MEMBER = mkAnyKey("Key Member");
+    public static final KCompositeKeyMember KEY_MEMBER = KCompositeKeyMember.INSTANCE;
 
     private PropertyMetadataKeys() {}
 
@@ -20,7 +20,7 @@ public final class PropertyMetadataKeys {
         return new AnyKeyImpl<>(name);
     }
 
-    private static final class AnyKeyImpl<V> implements AnyKey<V> {
+    private static class AnyKeyImpl<V> implements AnyKey<V> {
         private final String name;
 
         private AnyKeyImpl(final String name) {
@@ -30,6 +30,16 @@ public final class PropertyMetadataKeys {
         @Override
         public String toString() {
             return "Property Metadata Key [%s]".formatted(name);
+        }
+    }
+
+    /**
+     * Denotes a composite key member. Does not apply to simple keys.
+     */
+    public static class KCompositeKeyMember extends AnyKeyImpl<CompositeKeyMember> {
+        private static final KCompositeKeyMember INSTANCE = new KCompositeKeyMember();
+        private KCompositeKeyMember() {
+            super("Key Member");
         }
     }
 

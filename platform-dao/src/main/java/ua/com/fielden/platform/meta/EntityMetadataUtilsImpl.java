@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.meta;
 
 import com.google.common.collect.ImmutableList;
+import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
+import ua.com.fielden.platform.meta.PropertyMetadataKeys.KCompositeKeyMember;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,9 +19,11 @@ final class EntityMetadataUtilsImpl implements EntityMetadataUtils {
     @Override
     public List<PropertyMetadata> compositeKeyMembers(final EntityMetadata entityMetadata) {
         final var compKeyMembers = entityMetadata.properties().stream()
-                .filter(prop -> prop.has(KEY_MEMBER))
+                .flatMap(prop -> prop.withKey(KEY_MEMBER).stream())
                 .collect(toImmutableList());
-        return validateCompositeKeyMembers(compKeyMembers, entityMetadata);
+        return validateCompositeKeyMembers(compKeyMembers, entityMetadata).stream()
+                .map(PropertyMetadataWithKey::unwrap)
+                .collect(toImmutableList());
     }
 
     @Override
@@ -37,8 +41,10 @@ final class EntityMetadataUtilsImpl implements EntityMetadataUtils {
                 .toList();
     }
 
-    private static List<PropertyMetadata> validateCompositeKeyMembers(final List<PropertyMetadata> members,
-                                                                      final EntityMetadata entityMetadata) {
+    private static List<PropertyMetadataWithKey<KCompositeKeyMember, CompositeKeyMember>> validateCompositeKeyMembers
+            (final List<PropertyMetadataWithKey<KCompositeKeyMember, CompositeKeyMember>> members,
+             final EntityMetadata entityMetadata)
+    {
         if (members.size() <= 1) {
             return members;
         }
@@ -48,7 +54,7 @@ final class EntityMetadataUtilsImpl implements EntityMetadataUtils {
         final var seenOrders = new ArrayList<Integer>(5);
 
         for (final var memb : members) {
-            final var atCompositeKeyMember = memb.get(KEY_MEMBER).orElseThrow();
+            final var atCompositeKeyMember = memb.get();
             final int order = atCompositeKeyMember.value();
 
             // side-effectful stream
@@ -57,12 +63,12 @@ final class EntityMetadataUtilsImpl implements EntityMetadataUtils {
                 if (Integer.compare(order, seenOrder) == 0) {
                     throw new EntityDefinitionException(
                             format(ERR_DUPLICATE_COMPOSITE_KEY_ORDER,
-                                   entityMetadata.javaType().getTypeName(), memb.name(), seenMemb.name()));
+                                   entityMetadata.javaType().getTypeName(), memb.unwrap().name(), seenMemb.name()));
                 }
                 return "ok"; // return anything
             }).close();
 
-            seenMembers.add(memb);
+            seenMembers.add(memb.unwrap());
             seenOrders.add(order);
         }
 
