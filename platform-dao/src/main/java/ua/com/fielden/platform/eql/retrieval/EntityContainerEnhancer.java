@@ -17,6 +17,8 @@ import java.util.*;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.utils.EntityUtils.findCollectionalProperty;
+import static ua.com.fielden.platform.utils.EntityUtils.streamCollectionalProperties;
 
 public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
     private final EntityContainerFetcher fetcher;
@@ -94,14 +96,11 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
 
     private void enhanceCollectional(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel, final Map<String, Object> paramValues, final String propName, final EntityRetrievalModel<? extends AbstractEntity<?>> propFetchModel) {
         // TODO replace with EntityTree metadata (wrt collectional properties retrieval)
-        final List<Field> collProps = EntityUtils.getCollectionalProperties(fetchModel.getEntityType());
-        for (final Field field : collProps) {
-            if (field.getName().equals(propName)) {
-                //final String linkPropName = field.getAnnotation(IsProperty.class).linkProperty();
-                final String linkPropName = Finder.findLinkProperty(fetchModel.getEntityType(), propName);
-                enhanceCollectional(entities, propName, field.getType(), linkPropName, propFetchModel, paramValues);
-            }
-        }
+        // TODO if the property is missing, consider throwing an exception instead of silently doing nothing
+        findCollectionalProperty(fetchModel.getEntityType(), propName).ifPresent(prop -> {
+            final String linkPropName = Finder.findLinkProperty(fetchModel.getEntityType(), propName);
+            enhanceCollectional(entities, propName, prop.getType(), linkPropName, propFetchModel, paramValues);
+        });
     }
 
     private void assignInstrumentationSetting(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel) {
