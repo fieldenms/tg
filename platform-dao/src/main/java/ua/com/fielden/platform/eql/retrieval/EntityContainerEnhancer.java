@@ -61,7 +61,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
                              if (pm.type().isCollectional()) {
                                  enhanceCollectional(entities, fetchModel, paramValues, propName, propFetchModel);
                              }
-                             if (propMetadataUtils.isPropEntityType(pm.type(), em -> em.nature().isUnion())) {
+                             else if (propMetadataUtils.isPropEntityType(pm.type(), em -> em.nature().isUnion())) {
                                  enhanceProperty(entities, propName, propFetchModel, paramValues);
                              }
                              else {
