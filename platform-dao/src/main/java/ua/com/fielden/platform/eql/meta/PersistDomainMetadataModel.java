@@ -107,7 +107,7 @@ public class PersistDomainMetadataModel {
             result.put(entityType,
                        new DomainTypeData(entityType, superType, id, entityType.getName(), typeTitleAndDesc.getKey(),
                                           true, tableName, typeTitleAndDesc.getValue(), props.size(),
-                                          domainMetadata.entityMetadataUtils().compositeKeyMembers(em),
+                                          domainMetadata.entityMetadataUtils().keyMembers(em),
                                           props));
 
             // collecting primitive, union,custom user types and pure types (like XXXGroupingProperty) from props

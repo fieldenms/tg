@@ -58,7 +58,7 @@ public class MigrationUtils {
 
     public static List<String> keyPaths(final PropertyMetadata pm, final IDomainMetadata domainMetadata) {
         return pm.type().asEntity().map(et -> {
-            final var keyMembers = domainMetadata.entityMetadataUtils().compositeKeyMembers(domainMetadata.forEntity(et.javaType()));
+            final var keyMembers = domainMetadata.entityMetadataUtils().keyMembers(domainMetadata.forEntity(et.javaType()));
             if (keyMembers.isEmpty()) {
                 return List.of(pm.name());
             } else {
@@ -93,7 +93,7 @@ public class MigrationUtils {
 
     public static List<String> keyPaths(final Class<? extends AbstractEntity<?>> entityType, final IDomainMetadata domainMetadata) {
         final EntityMetadata em = domainMetadata.forEntity(entityType);
-        final var keyMembers = domainMetadata.entityMetadataUtils().compositeKeyMembers(em);
+        final var keyMembers = domainMetadata.entityMetadataUtils().keyMembers(em);
         if (keyMembers.isEmpty()) {
             if (EntityUtils.isOneToOne(entityType)) {
                 return keyPaths(em.property(KEY).orElseThrow(), domainMetadata);
