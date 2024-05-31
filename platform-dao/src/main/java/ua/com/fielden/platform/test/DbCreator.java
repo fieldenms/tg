@@ -45,8 +45,8 @@ public abstract class DbCreator {
     protected final Logger logger = getLogger(getClass());
 
     private final Class<? extends AbstractDomainDrivenTestCase> testCaseType;
-    public final Connection conn;
-    public final Collection<EntityMetadata.Persistent> persistentEntitiesMetadata;
+    private final Connection conn;
+    private final Collection<EntityMetadata.Persistent> persistentEntitiesMetadata;
 
     private final Set<String> dataScripts = new LinkedHashSet<>();
     private final List<String> truncateScripts = new ArrayList<>();
@@ -103,7 +103,15 @@ public abstract class DbCreator {
      * @return
      */
     protected abstract List<String> genDdl(final IDomainMetadata domainMetaData, final Dialect dialect);
-    
+
+    public Collection<EntityMetadata.Persistent> persistentEntitiesMetadata() {
+        return persistentEntitiesMetadata;
+    }
+
+    public Connection connection() {
+        return conn;
+    }
+
     /**
      * Executes test data population logic. Should be executed before each unit test. 
      * 
