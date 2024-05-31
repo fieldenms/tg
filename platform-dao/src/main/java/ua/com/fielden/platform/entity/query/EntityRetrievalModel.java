@@ -93,6 +93,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
             if (!ID.equals(name) &&
                 !(KEY.equals(name) && !pm.nature().isPersistent()) &&
                 !pm.type().isCollectional() &&
+                !pm.nature().isCritOnly() &&
                 !name.contains(".") &&
                 !containsProp(name) &&
                 (entityMetadata.nature().isSynthetic() || !pm.nature().isTransient())) {
