@@ -43,7 +43,7 @@ import ua.com.fielden.platform.utils.IDates;
  *
  */
 public class TgScalars {
-    private static final String UNEXPECTED_TYPE_ERROR = "Expected [%] but was [%].";
+    private static final String UNEXPECTED_TYPE_ERROR = "Expected [%s] but was [%s].";
 
     @Inject
     private static IDates dates;
