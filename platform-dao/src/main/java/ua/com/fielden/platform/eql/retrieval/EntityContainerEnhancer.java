@@ -7,6 +7,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.entity.query.*;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.eql.retrieval.exceptions.EntityRetrievalException;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadataUtils;
 import ua.com.fielden.platform.reflection.Finder;
@@ -16,6 +17,7 @@ import java.util.*;
 import java.util.function.Function;
 
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.groupingBy;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -37,11 +39,6 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
 
     /**
      * Enhances a list of entity containers.
-     * 
-     * @param entities
-     * @param fetchModel
-     * @return
-     * @throws Exception
      */
     protected List<EntityContainer<E>> enhance(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel, final Map<String, Object> paramValues) {
         if (entities.isEmpty() || fetchModel == null) {
@@ -146,15 +143,13 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
         final Map<Long, List<EntityContainer<E>>> propValuesMap = new HashMap<>();
         for (final EntityContainer<E> entity : entities) {
             if (entity.isEmpty()) {
-                throw new IllegalStateException("Entity is null!");
+                throw new EntityRetrievalException("Entity container [%s] is empty!".formatted(entity));
             }
-            if (entity.getEntities() == null) {
-                throw new IllegalStateException("Entity.getEntities() is null!");
-            }
+            requireNonNull(entity.getEntities());
             final EntityContainer<? extends AbstractEntity<?>> propEntity = entity.getEntities().get(propertyName);
             if (propEntity != null && !propEntity.isEmpty() && propEntity.getId() != null) {
                 if (!propValuesMap.containsKey(propEntity.getId())) {
-                    propValuesMap.put(propEntity.getId(), new ArrayList<EntityContainer<E>>());
+                    propValuesMap.put(propEntity.getId(), new ArrayList<>());
                 }
                 propValuesMap.get(propEntity.getId()).add(entity);
             }
@@ -173,8 +168,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
         return propValues;
     }
 
-    private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhancePropertyWithLinkToParent(final List<EntityContainer<E>> entities, final String propertyName, final EntityRetrievalModel<T> fetchModel, final String linkPropName, final Map<String, Object> paramValues)
-            throws Exception {
+    private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhancePropertyWithLinkToParent(final List<EntityContainer<E>> entities, final String propertyName, final EntityRetrievalModel<T> fetchModel, final String linkPropName, final Map<String, Object> paramValues) {
         // Obtaining map between property id and list of entities where this property occurs
         final Map<Long, List<EntityContainer<E>>> propertyValuesIds = getEntityPropertyIds(entities, propertyName);
 
@@ -294,7 +288,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
                                     dets.forEach(det -> det.getEntities().put(linkPropName, idToMaster.get(masterId))));
 
         if (!(SortedSet.class.equals(collPropType) || Set.class.equals(collPropType))) {
-            throw new UnsupportedOperationException(
+            throw new EntityRetrievalException(
                     "Fetching of collectional property type [%s] is not supported.".formatted(collPropType.getTypeName()));
         }
 
