@@ -16,7 +16,7 @@ import java.util.function.Predicate;
 import static java.util.Comparator.comparing;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.SPECIAL_PROPS;
+import static ua.com.fielden.platform.meta.EntityMetadata.SPECIAL_PROPS;
 import static ua.com.fielden.platform.types.either.Either.left;
 import static ua.com.fielden.platform.types.either.Either.right;
 import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;

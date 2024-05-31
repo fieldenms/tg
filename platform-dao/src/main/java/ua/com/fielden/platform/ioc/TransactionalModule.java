@@ -9,7 +9,6 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.ioc.session.SessionInterceptor;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.HibernateUtil;
@@ -38,12 +37,8 @@ public abstract class TransactionalModule extends EntityModule {
     private final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes;
 
     /**
-     * Creates transactional module, which holds references to instances of {@link SessionFactory} and {@link DomainMetadata}. All descending classes needs to provide those two
-     * parameters.
-     *
-     * @param props
-     * @param defaultHibernateTypes
-     * @param applicationEntityTypes
+     * Creates transactional module, which holds references to instances of {@link SessionFactory} and {@link IDomainMetadata}.
+     * All descending classes needs to provide those two parameters.
      */
     public TransactionalModule(
             final Properties props, 

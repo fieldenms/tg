@@ -10,7 +10,10 @@ import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.queries.SourceQuery1;
 import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnQueries;
 import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
-import ua.com.fielden.platform.meta.*;
+import ua.com.fielden.platform.meta.EntityMetadata;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.meta.PropertyMetadata;
+import ua.com.fielden.platform.meta.PropertyTypeMetadata;
 import ua.com.fielden.platform.types.tuples.T2;
 
 import javax.annotation.Nullable;
@@ -44,10 +47,6 @@ public class QuerySourceInfoProvider {
 
     private final ConcurrentMap<String, List<String>> entityTypesDependentCalcPropsOrder = new ConcurrentHashMap<>();
     private final IDomainMetadata domainMetadata;
-
-    public QuerySourceInfoProvider(final EqlEntityMetadataHolder entityMetadataHolder) {
-        throw new UnsupportedOperationException("Migration to typeful metadata is in progress");
-    }
 
     public QuerySourceInfoProvider(final IDomainMetadata domainMetadata) {
         this.domainMetadata = domainMetadata;

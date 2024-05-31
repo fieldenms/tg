@@ -29,7 +29,7 @@ import static java.util.Objects.requireNonNullElseGet;
 import static java.util.stream.Collectors.toConcurrentMap;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
-import static ua.com.fielden.platform.meta.HibernateTypeGenerator.H_BOOLEAN;
+import static ua.com.fielden.platform.persistence.HibernateConstants.H_BOOLEAN;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;

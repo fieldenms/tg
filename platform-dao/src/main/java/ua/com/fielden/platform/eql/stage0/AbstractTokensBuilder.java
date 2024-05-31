@@ -15,8 +15,8 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.PR
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VAL;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.buildCondition;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.queryPropertyParamName;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.N;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.Y;
+import static ua.com.fielden.platform.persistence.HibernateConstants.N;
+import static ua.com.fielden.platform.persistence.HibernateConstants.Y;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.util.ArrayList;

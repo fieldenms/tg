@@ -1,7 +1,8 @@
 package ua.com.fielden.platform.meta;
 
 import com.google.inject.Injector;
-import org.hibernate.type.*;
+import org.hibernate.type.TypeFactory;
+import org.hibernate.type.TypeResolver;
 import org.hibernate.type.spi.TypeConfiguration;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
@@ -20,17 +21,14 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static ua.com.fielden.platform.meta.DomainMetadataGenerator.hasAnyNature;
 import static ua.com.fielden.platform.meta.EntityNature.SYNTHETIC;
 import static ua.com.fielden.platform.meta.EntityNature.UNION;
+import static ua.com.fielden.platform.persistence.HibernateConstants.H_BOOLEAN;
+import static ua.com.fielden.platform.persistence.HibernateConstants.H_ENTITY;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.classFrom;
 
 // TODO merge with HibernateTypeDeterminer
 // TODO once dependency injection is properly configured, refactor this class into a service that provides the following API:
 // Optional<Object> hibernateType(PropertyMetadata)
 class HibernateTypeGenerator {
-
-    static final org.hibernate.type.Type H_ENTITY = LongType.INSTANCE;
-    static final org.hibernate.type.Type H_LONG = LongType.INSTANCE;
-    static final org.hibernate.type.Type H_STRING = StringType.INSTANCE;
-    static final org.hibernate.type.Type H_BOOLEAN = YesNoType.INSTANCE;
 
     // NOTE This came from old code and it's unclear whether this is the right way of obtaining Hibernate types.
     private static final TypeConfiguration typeConfiguration = new TypeConfiguration();

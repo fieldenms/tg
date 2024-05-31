@@ -3,7 +3,6 @@ package ua.com.fielden.platform.entity.query;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 
@@ -40,11 +39,6 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> implem
     @Override
     public Set<String> getProxiedProps() {
         return proxiedProps;
-    }
-
-    // TODO remove
-    public DomainMetadataAnalyser getDomainMetadataAnalyser() {
-        return null;
     }
 
     @Override
