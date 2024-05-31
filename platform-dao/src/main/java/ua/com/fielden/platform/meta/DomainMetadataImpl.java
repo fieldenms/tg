@@ -208,6 +208,13 @@ final class DomainMetadataImpl implements IDomainMetadata {
     }
 
     private TableStructForBatchInsertion generateTableStructForBatchInsertion(final EntityMetadata.Persistent entityMetadata) {
+        // a way to do inner helper methods (avoids pollution of the outer class method namespace)
+        class $ {
+            static String mkColumnName(final PropertyMetadataUtils pmUtils, final PropertyMetadata prop) {
+                return prop.name() + (pmUtils.isPropEntityType(prop, EntityMetadata::isPersistent) ? ("." + ID) : "");
+            }
+        }
+
         final var columns = entityMetadata.properties().stream()
                 .filter(prop -> !ID.equals(prop.name()) && !VERSION.equals(prop.name()))
                 .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
@@ -225,16 +232,12 @@ final class DomainMetadataImpl implements IDomainMetadata {
                         return pmUtils.subProperties(prop).stream()
                                 .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
                                 .map(subProp -> {
-                                    final String colName = prop.name() + "." + subProp.name() +
-                                                          (pmUtils.isPropEntityType(prop, EntityMetadata::isPersistent) ? ("." + ID) : "");
+                                    final String colName = prop.name() + "." + $.mkColumnName(pmUtils, subProp);
                                     return new PropColumnInfo(colName, subProp.data().column().name, subProp.hibType());
                                 });
                     }
                     else {
-                        final String colName = pmUtils.isPropEntityType(prop, EntityMetadata::isPersistent)
-                                ? prop.name() + "." + ID
-                                : prop.name();
-                        return Stream.of(new PropColumnInfo(colName, prop.data().column().name, prop.hibType()));
+                        return Stream.of(new PropColumnInfo($.mkColumnName(pmUtils, prop), prop.data().column().name, prop.hibType()));
                     }
                 })
                 .toList();
