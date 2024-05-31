@@ -24,28 +24,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.reflection.Reflector;
-import ua.com.fielden.platform.sample.domain.ITgBogie;
-import ua.com.fielden.platform.sample.domain.ITgVehicle;
-import ua.com.fielden.platform.sample.domain.TgAuthor;
-import ua.com.fielden.platform.sample.domain.TgBogie;
-import ua.com.fielden.platform.sample.domain.TgBogieLocation;
-import ua.com.fielden.platform.sample.domain.TgFuelType;
-import ua.com.fielden.platform.sample.domain.TgFuelUsage;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
-import ua.com.fielden.platform.sample.domain.TgPersonName;
-import ua.com.fielden.platform.sample.domain.TgReVehicleModel;
-import ua.com.fielden.platform.sample.domain.TgTimesheet;
-import ua.com.fielden.platform.sample.domain.TgVehicle;
-import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
-import ua.com.fielden.platform.sample.domain.TgVehicleMake;
-import ua.com.fielden.platform.sample.domain.TgVehicleModel;
-import ua.com.fielden.platform.sample.domain.TgWagon;
-import ua.com.fielden.platform.sample.domain.TgWagonSlot;
-import ua.com.fielden.platform.sample.domain.TgWorkshop;
+import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
@@ -64,7 +43,8 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
     }
 
     private static void shouldBeProxy(final AbstractEntity<?> entity, final String propName) {
-        assertTrue("Should be proxy", Reflector.isPropertyProxied(entity, propName));
+        assertTrue("Should be proxied: [%s.%s]".formatted(entity.getType().getSimpleName(), propName),
+                   Reflector.isPropertyProxied(entity, propName));
     }
 
     private static void shouldNotBeProxy(final AbstractEntity<?> entity, final String propName) {
@@ -327,6 +307,7 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
                 assertTrue("Not-feched and not-yielded props should be proxied", isPropertyProxied(vm, "noYieldIntProp"));
                 assertTrue("Not-fetched inherited @MapTo props should be proxied", isPropertyProxied(vm, "make"));
                 assertTrue("Even inherited, oridinary, not persistent props should become proxied in the context of a synthetic entity", isPropertyProxied(vm, "ordinaryIntProp"));
+                assertTrue("Calculated properties should be proxied", isPropertyProxied(vm, "makeModelsCount"));
                 assertFalse("@CritOnly props should not be proxied", isPropertyProxied(vm, "intCritProp"));
                 assertFalse("Fetched inherited @MapTo props should not be proxied.", isPropertyProxied(vm, "key"));
                 assertNull(vm.getIntCritProp());
