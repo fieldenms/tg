@@ -15,12 +15,12 @@ import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.utils.StreamUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
@@ -31,7 +31,6 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.persistence.HibernateConstants.H_BOOLEAN;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
 
 final class DomainMetadataImpl implements IDomainMetadata {
@@ -251,21 +250,29 @@ final class DomainMetadataImpl implements IDomainMetadata {
      */
     @Override
     public List<String> generateDatabaseDdl(final Dialect dialect) {
-        final ColumnDefinitionExtractor columnDefinitionExtractor = new ColumnDefinitionExtractor(hibTypesInjector, hibTypesDefaults);
+        return generateDatabaseDdl_(dialect, entityTypes.stream());
+    }
 
-        final List<Class<? extends AbstractEntity<?>>> persistentTypes = entityTypes.stream().filter(et -> isPersistedEntityType(et)).collect(
-                Collectors.toList());
+    @Override
+    public List<String> generateDatabaseDdl(final Dialect dialect, final Class<? extends AbstractEntity<?>> type,
+                                            final Class<? extends AbstractEntity<?>>... types) {
+        return generateDatabaseDdl_(dialect, StreamUtils.of(type, types));
+    }
+
+    private List<String> generateDatabaseDdl_(final Dialect dialect, final Stream<? extends Class<? extends AbstractEntity<?>>> types) {
+        final ColumnDefinitionExtractor columnDefinitionExtractor = new ColumnDefinitionExtractor(hibTypesInjector, hibTypesDefaults);
 
         final Set<String> ddlTables = new LinkedHashSet<>();
         final Set<String> ddlFKs = new LinkedHashSet<>();
 
-        for (final Class<? extends AbstractEntity<?>> entityType : persistentTypes) {
+        types.filter(EntityUtils::isPersistedEntityType).forEach(entityType -> {
             final TableDdl tableDefinition = new TableDdl(columnDefinitionExtractor, entityType);
             ddlTables.add(tableDefinition.createTableSchema(dialect, ""));
             ddlTables.add(tableDefinition.createPkSchema(dialect));
             ddlTables.addAll(tableDefinition.createIndicesSchema(dialect));
             ddlFKs.addAll(tableDefinition.createFkSchema(dialect));
-        }
+        });
+
         final List<String> ddl = new LinkedList<>();
         ddl.addAll(ddlTables);
         ddl.addAll(ddlFKs);

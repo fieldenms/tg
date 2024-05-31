@@ -69,6 +69,9 @@ public interface IDomainMetadata {
      */
     List<String> generateDatabaseDdl(final Dialect dialect);
 
+    List<String> generateDatabaseDdl(final Dialect dialect, final Class<? extends AbstractEntity<?>> type,
+                                     final Class<? extends AbstractEntity<?>>... types);
+
     // TODO create a separate service for this
     EqlTable getTableForEntityType(final Class<? extends AbstractEntity<?>> entityType);
 
