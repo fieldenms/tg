@@ -14,6 +14,8 @@ import java.util.Optional;
  * Matching on the nature can be performed with the {@code switch} statement or via {@link #match(EntityMetadataVisitor)}.
  * <p>
  * The set of properties includes both declared and inherited ones.
+ * <p>
+ * No metadata exists for entity nature {@link EntityNature.Other}.
  */
 sealed public interface EntityMetadata extends TypeMetadata {
 
@@ -42,10 +44,6 @@ sealed public interface EntityMetadata extends TypeMetadata {
         return this instanceof Union;
     }
 
-    default boolean isOther() {
-        return this instanceof Other;
-    }
-
     // ****************************************
     // * Convenient methods as an alternative to a visitor with a single clause
 
@@ -60,11 +58,6 @@ sealed public interface EntityMetadata extends TypeMetadata {
     default Optional<EntityMetadata.Synthetic> asSynthetic() {
         return this instanceof Synthetic s ? Optional.of(s) : Optional.empty();
     }
-
-    default Optional<EntityMetadata.Other> asOther() {
-        return this instanceof Other o ? Optional.of(o) : Optional.empty();
-    }
-
 
     non-sealed interface Persistent extends EntityMetadata {
         @Override
@@ -91,14 +84,6 @@ sealed public interface EntityMetadata extends TypeMetadata {
 
         @Override
         EntityNature.Union.Data data();
-    }
-
-    non-sealed interface Other extends EntityMetadata {
-        @Override
-        EntityNature.Other nature();
-
-        @Override
-        EntityNature.Other.Data data();
     }
 
 }

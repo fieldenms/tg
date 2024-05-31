@@ -32,8 +32,6 @@ abstract class EntityMetadataBuilder<N extends EntityNature, D extends EntityNat
                     new Synthetic(it.javaType(), it.nature(), it.data());
             case EntityMetadata.Union it ->
                     new Union(it.javaType(), it.nature(), it.data());
-            case EntityMetadata.Other it ->
-                    new Other(it.javaType(), it.nature(), it.data());
         };
 
         return builder.properties(entityMetadata.properties());
@@ -82,11 +80,6 @@ abstract class EntityMetadataBuilder<N extends EntityNature, D extends EntityNat
         return new Union(type, EntityNature.UNION, data);
     }
 
-    static EntityMetadataBuilder<EntityNature.Other, EntityNature.Other.Data> otherEntity
-            (final Class<? extends AbstractEntity<?>> type) {
-        return new Other(type, EntityNature.OTHER, EntityNature.Other.NO_DATA);
-    }
-
     static final class Persistent
             extends EntityMetadataBuilder<EntityNature.Persistent, EntityNature.Persistent.Data>
     {
@@ -128,19 +121,6 @@ abstract class EntityMetadataBuilder<N extends EntityNature, D extends EntityNat
         @Override
         public EntityMetadata build() {
             return new EntityMetadataImpl.Union(this);
-        }
-    }
-
-    static final class Other
-            extends EntityMetadataBuilder<EntityNature.Other, EntityNature.Other.Data>
-    {
-        Other(final Class<? extends AbstractEntity<?>> javaType, final EntityNature.Other nature, final EntityNature.Other.Data data) {
-            super(javaType, nature, data);
-        }
-
-        @Override
-        public EntityMetadata build() {
-            return new EntityMetadataImpl.Other(this);
         }
     }
 

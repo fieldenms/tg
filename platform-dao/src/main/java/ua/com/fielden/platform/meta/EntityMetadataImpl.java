@@ -3,7 +3,10 @@ package ua.com.fielden.platform.meta;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static java.util.function.Function.identity;
@@ -107,20 +110,6 @@ abstract class EntityMetadataImpl<N extends EntityNature, D extends EntityNature
         @Override
         public <R> R match(final EntityMetadataVisitor<R> visitor) {
             return visitor.union(this);
-        }
-    }
-
-    static final class Other
-            extends EntityMetadataImpl<EntityNature.Other, EntityNature.Other.Data>
-            implements EntityMetadata.Other
-    {
-        Other(final EntityMetadataBuilder<EntityNature.Other, EntityNature.Other.Data> builder) {
-            super(builder);
-        }
-
-        @Override
-        public <R> R match(final EntityMetadataVisitor<R> visitor) {
-            return visitor.otherwise(this);
         }
     }
 
