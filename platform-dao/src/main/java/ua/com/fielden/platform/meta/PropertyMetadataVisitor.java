@@ -16,7 +16,7 @@ public interface PropertyMetadataVisitor<R> {
         return otherwise(metadata);
     }
 
-    default R transient_(PropertyMetadata.Transient metadata) {
+    default R plain(PropertyMetadata.Plain metadata) {
         return otherwise(metadata);
     }
 

@@ -21,6 +21,7 @@ import static java.lang.Boolean.FALSE;
  * </ul>
  * The purpose of this mechanism is to represent optional information.
  *
+ * @see PropertyNature
  * @see PropertyMetadataKeys
  */
 public sealed interface PropertyMetadata extends Comparable<PropertyMetadata> {
@@ -94,6 +95,10 @@ public sealed interface PropertyMetadata extends Comparable<PropertyMetadata> {
         return this instanceof Transient;
     }
 
+    default boolean isPlain() {
+        return this instanceof Plain;
+    }
+
     // ****************************************
     // * Convenient methods as an alternative to a visitor with a single clause
 
@@ -113,6 +118,10 @@ public sealed interface PropertyMetadata extends Comparable<PropertyMetadata> {
         return this instanceof Transient t ? Optional.of(t) : Optional.empty();
     }
 
+    default Optional<Plain> asPlain() {
+        return this instanceof Plain p ? Optional.of(p) : Optional.empty();
+    }
+
     non-sealed interface Persistent extends PropertyMetadata {
         @Override
         PropertyNature.Persistent nature();
@@ -121,7 +130,7 @@ public sealed interface PropertyMetadata extends Comparable<PropertyMetadata> {
         PropertyNature.Persistent.Data data();
     }
 
-    non-sealed interface Calculated extends PropertyMetadata {
+    non-sealed interface Calculated extends Transient {
         @Override
         PropertyNature.Calculated nature();
 
@@ -129,20 +138,22 @@ public sealed interface PropertyMetadata extends Comparable<PropertyMetadata> {
         PropertyNature.Calculated.Data data();
     }
 
-    non-sealed interface Transient extends PropertyMetadata {
+    sealed interface Transient extends PropertyMetadata {
         @Override
         PropertyNature.Transient nature();
-
-        @Override
-        PropertyNature.Transient.Data data();
     }
 
-    non-sealed interface CritOnly extends PropertyMetadata {
+    non-sealed interface CritOnly extends Transient {
         @Override
         PropertyNature.CritOnly nature();
 
         @Override
         PropertyNature.CritOnly.Data data();
+    }
+
+    non-sealed interface Plain extends Transient {
+        @Override
+        PropertyNature.Plain nature();
     }
 
     interface Key<V, N extends PropertyNature> extends IKey {}

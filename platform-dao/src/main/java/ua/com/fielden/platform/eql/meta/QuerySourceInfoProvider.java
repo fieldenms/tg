@@ -129,7 +129,7 @@ public class QuerySourceInfoProvider {
         // TODO Formally define the set of EQL-relevant properties and define a corresponding predicate.
         return entityMetadata.properties().stream()
             .filter(pm -> !pm.isCritOnly())
-            .filter(pm -> !(pm.isTransient() && entityMetadata.isPersistent()))
+            .filter(pm -> !(pm.isPlain() && entityMetadata.isPersistent()))
             .<Optional<AbstractQuerySourceItem<?>>> map(pm -> {
                 final var name = pm.name();
                 final var hibType = pm.hibType();

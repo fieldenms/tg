@@ -143,17 +143,17 @@ abstract class PropertyMetadataImpl<N extends PropertyNature, D extends Property
         }
     }
 
-    static final class Transient
-            extends PropertyMetadataImpl<PropertyNature.Transient, PropertyNature.Transient.Data>
-            implements PropertyMetadata.Transient
+    static final class Plain
+            extends PropertyMetadataImpl<PropertyNature.Plain, PropertyNature.Plain.Data>
+            implements PropertyMetadata.Plain
     {
-        private Transient(final Builder<PropertyNature.Transient, PropertyNature.Transient.Data> builder) {
+        private Plain(final Builder<PropertyNature.Plain, PropertyNature.Plain.Data> builder) {
             super(builder);
         }
 
         @Override
         public <R> R match(final PropertyMetadataVisitor<R> visitor) {
-            return visitor.transient_(this);
+            return visitor.plain(this);
         }
     }
 
@@ -186,7 +186,7 @@ abstract class PropertyMetadataImpl<N extends PropertyNature, D extends Property
                 case PropertyMetadata.Calculated it -> calculatedProp(it.name(), it.type(), it.hibType(), it.data());
                 case PropertyMetadata.CritOnly   it -> critOnlyProp(it.name(), it.type(), it.hibType());
                 case PropertyMetadata.Persistent it -> persistentProp(it.name(), it.type(), it.hibType(), it.data());
-                case PropertyMetadata.Transient  it -> transientProp(it.name(), it.type(), it.hibType());
+                case PropertyMetadata.Plain      it -> plainProp(it.name(), it.type(), it.hibType());
             };
         }
 
@@ -196,10 +196,10 @@ abstract class PropertyMetadataImpl<N extends PropertyNature, D extends Property
             return new Builder<>(name, type, hibType, PropertyNature.CRIT_ONLY, PropertyNature.CritOnly.NO_DATA);
         }
 
-        public static Builder<PropertyNature.Transient, PropertyNature.Transient.Data> transientProp
+        public static Builder<PropertyNature.Plain, PropertyNature.Plain.Data> plainProp
                 (final String name, final PropertyTypeMetadata type, final @Nullable Object hibType)
         {
-            return new Builder<>(name, type, hibType, PropertyNature.TRANSIENT, PropertyNature.Transient.NO_DATA);
+            return new Builder<>(name, type, hibType, PropertyNature.PLAIN, PropertyNature.Plain.NO_DATA);
         }
 
         public static Builder<PropertyNature.Persistent, PropertyNature.Persistent.Data> persistentProp
@@ -219,7 +219,7 @@ abstract class PropertyMetadataImpl<N extends PropertyNature, D extends Property
                 case PropertyNature.Persistent $ -> new Persistent((Builder<PropertyNature.Persistent, PropertyNature.Persistent.Data>) this);
                 case PropertyNature.Calculated $ -> new Calculated((Builder<PropertyNature.Calculated, PropertyNature.Calculated.Data>) this);
                 case PropertyNature.CritOnly $ -> new CritOnly((Builder<PropertyNature.CritOnly, PropertyNature.CritOnly.Data>) this);
-                case PropertyNature.Transient $ -> new Transient((Builder<PropertyNature.Transient, PropertyNature.Transient.Data>) this);
+                case PropertyNature.Plain $ -> new Plain((Builder<PropertyNature.Plain, PropertyNature.Plain.Data>) this);
             };
         }
 

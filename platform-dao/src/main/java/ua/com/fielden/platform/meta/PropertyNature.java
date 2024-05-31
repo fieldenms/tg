@@ -3,12 +3,17 @@ package ua.com.fielden.platform.meta;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.meta.PropColumn;
 
+/**
+ * Classifies an entity property.
+ * <p>
+ * This type is designed using a combination of Algebraic Data Types and subtyping.
+ */
 public sealed interface PropertyNature {
 
     CritOnly CRIT_ONLY = new CritOnly();
-    Transient TRANSIENT = new OnlyTransient();
     Persistent PERSISTENT = new Persistent();
     Calculated CALCULATED = new Calculated();
+    Plain PLAIN = new Plain();
 
     default boolean isCritOnly() {
         return this instanceof CritOnly;
@@ -24,6 +29,10 @@ public sealed interface PropertyNature {
 
     default boolean isCalculated() {
         return this instanceof Calculated;
+    }
+
+    default boolean isPlain() {
+        return this instanceof Plain;
     }
 
     /**
@@ -62,18 +71,7 @@ public sealed interface PropertyNature {
      * <p>
      * No data is associated with properties of this particular nature (but may be for more specific ones).
      */
-    sealed interface Transient extends PropertyNature {
-        Transient.Data NO_DATA = new Data();
-
-        final class Data implements PropertyNature.Data<Transient> {
-            private Data() {}
-
-            @Override
-            public Transient nature() {
-                return TRANSIENT;
-            }
-        }
-    }
+    sealed interface Transient extends PropertyNature {}
 
     /**
      * Calculated nature is attributed to properties that are transient and have an associated expression that is used
@@ -100,7 +98,7 @@ public sealed interface PropertyNature {
     }
 
     /**
-     * Crit-only nature is attributed to properties that are transient and server the purpose of criterion.
+     * Crit-only nature is attributed to properties that are transient and serve the purpose of criterion.
      * <p>
      * No data is associated with properties of this nature.
      *
@@ -126,17 +124,30 @@ public sealed interface PropertyNature {
         }
     }
 
-}
+    /**
+     * Plain nature is attributed to properties that are transient and don't fit into any other specific transient nature.
+     * <p>
+     * No data is associated with properties of this nature.
+     */
+    final class Plain implements Transient {
+        private Plain() {}
 
-/**
- * This is a private class.
- */
-final class OnlyTransient implements PropertyNature.Transient {
-    OnlyTransient() {}
+        public static final Plain.Data NO_DATA = new Plain.Data();
 
-    @Override
-    public String toString() {
-        return "Transient Property";
+        public static final class Data implements PropertyNature.Data<Plain> {
+            private Data() {}
+
+            @Override
+            public Plain nature() {
+                return PLAIN;
+            }
+        }
+
+        @Override
+        public String toString() {
+            return "Plain Property";
+        }
     }
+
 }
 

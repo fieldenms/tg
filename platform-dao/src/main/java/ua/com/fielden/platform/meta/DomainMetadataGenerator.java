@@ -144,8 +144,8 @@ final class DomainMetadataGenerator {
         }
         // TRANSIENT
         else {
-            builder = transientProp(field.getName(), propTypeMd,
-                                    hibTypeGenerator.generate(propTypeMd).use(field).getOpt().orElse(null));
+            builder = plainProp(field.getName(), propTypeMd,
+                                hibTypeGenerator.generate(propTypeMd).use(field).getOpt().orElse(null));
         }
 
         return Optional.of(builder.build());
@@ -248,7 +248,7 @@ final class DomainMetadataGenerator {
                         Optional.of(persistentProp(KEY, mkPropertyTypeOrThrow(keyType), H_ENTITY, PropertyNature.Persistent.data(propColumn(ID)))
                                             .required(true).build());
                 case EntityMetadataBuilder.Synthetic $ ->
-                        Optional.of(transientProp(KEY, mkPropertyTypeOrThrow(keyType), H_ENTITY).required(true).build());
+                        Optional.of(plainProp(KEY, mkPropertyTypeOrThrow(keyType), H_ENTITY).required(true).build());
                 default -> Optional.empty();
             };
         } else {
@@ -270,7 +270,7 @@ final class DomainMetadataGenerator {
                             isSyntheticBasedOnPersistentEntityType(s.getJavaType())
                                     ? Optional.of(persistentProp(KEY, propTypeMd, getHibType.get(), PropertyNature.Persistent.data(keyColumn))
                                                           .required(true).build())
-                                    : Optional.of(transientProp(KEY, propTypeMd, getHibType.getOpt().orElse(null))
+                                    : Optional.of(plainProp(KEY, propTypeMd, getHibType.getOpt().orElse(null))
                                                           .required(true).build());
                     default -> Optional.empty();
                 };
@@ -381,8 +381,8 @@ final class DomainMetadataGenerator {
         else {
             // skip properties that have an unknown type
             builder = mkPropertyType(field)
-                    .map(propTypeMd -> transientProp(field.getName(), propTypeMd,
-                                                     hibTypeGenerator.generate(propTypeMd).use(field).getOpt().orElse(null)));
+                    .map(propTypeMd -> plainProp(field.getName(), propTypeMd,
+                                                 hibTypeGenerator.generate(propTypeMd).use(field).getOpt().orElse(null)));
         }
 
         return builder
