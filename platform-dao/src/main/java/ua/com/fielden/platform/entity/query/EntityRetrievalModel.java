@@ -96,7 +96,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
                 !pm.nature().isCritOnly() &&
                 !name.contains(".") &&
                 !containsProp(name) &&
-                (entityMetadata.nature().isSynthetic() || !pm.nature().isTransient())) {
+                (entityMetadata.nature().isSynthetic() || pm.nature().isCalculated() || !pm.nature().isTransient())) {
                 getProxiedProps().add(name);
             }
         }
@@ -240,7 +240,12 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     }
 
     private boolean isPure(final PropertyMetadata pm) {
-        return entityMetadata.nature().isPersistent() && pm.nature().isTransient();
+        return entityMetadata.nature().isPersistent() &&
+               switch (pm.nature()) {
+                   case PropertyNature.Persistent $ -> false;
+                   case PropertyNature.Calculated $ -> false;
+                   case PropertyNature.Transient  $ -> true;
+               };
     }
 
     private Optional<String> getSinglePropertyOfCompositeUserType(final PropertyMetadata pm) {
