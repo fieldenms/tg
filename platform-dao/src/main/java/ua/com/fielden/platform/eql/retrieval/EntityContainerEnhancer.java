@@ -12,13 +12,14 @@ import ua.com.fielden.platform.meta.PropertyMetadataUtils;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
 
-import java.lang.reflect.Field;
 import java.util.*;
+import java.util.function.Function;
 
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
+import static java.util.stream.Collectors.groupingBy;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.utils.EntityUtils.findCollectionalProperty;
-import static ua.com.fielden.platform.utils.EntityUtils.streamCollectionalProperties;
 
 public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
     private final EntityContainerFetcher fetcher;
@@ -252,38 +253,56 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
         return result;
     }
 
-    private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhanceCollectional(final List<EntityContainer<E>> entitiesToBeEnhanced, final String propertyName, final Class propType, final String parentPropName, final EntityRetrievalModel<T> fetchModel, final Map<String, Object> paramValues) {
-        // collect parental ids
-        final Map<Long, EntityContainer<E>> parentIds = new HashMap<Long, EntityContainer<E>>();
-        for (final EntityContainer<E> parentEntity : entitiesToBeEnhanced) {
-            parentIds.put(parentEntity.getId(), parentEntity);
-        }
-        final List<EntityContainer<T>> properties = getCollectionalDataInBatches(parentIds.keySet(), parentPropName, fetchModel, paramValues);
+    /**
+     * Enhances entity containers by populating collectional property {@code collPropName}.
+     * This method mutates the containers it is given.
+     * <p>
+     * There are 2 entities at play here:
+     * <ol>
+     * <li> master entity (<i>ME</i>) -- the one being enhanced and owning the collectional property;
+     * <li> detail entity (<i>DE</i>) -- the type of the collectional property's elements;
+     * </ol>
+     *
+     * Both ME and DE containers are enhanced by populating the respective sides of their one-to-many relationhsip.
+     *
+     * @param masterEntities  ME containers that will be enhanced
+     * @param collPropName  name of the collectional property
+     * @param collPropType  type of the collectional property
+     * @param linkPropName  name of the link property, i.e., property of DE typed with ME
+     * @param fetchModel  fetch model for DE
+     * @param paramValues  query parameters for DE
+     *
+     * @return  ME containers enhanced with collectional property by populating it with DE containers which are also
+     *          enhanced by populating the link property with the corresponding ME
+     */
+    private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhanceCollectional
+            (final List<EntityContainer<E>> masterEntities,
+             final String collPropName, final Class<?> collPropType,
+             final String linkPropName,
+             final EntityRetrievalModel<T> fetchModel,
+             final Map<String, Object> paramValues)
+    {
+        final Map<Long, EntityContainer<E>> idToMaster = masterEntities.stream()
+                .collect(toImmutableMap(EntityContainer::getId, Function.identity()));
+        // DE containers where the value of link property is contained in master IDs
+        final List<EntityContainer<T>> details = getCollectionalDataInBatches(idToMaster.keySet(), linkPropName, fetchModel, paramValues);
+        // group DE containers by master's id
+        final Map<Long, List<EntityContainer<T>>> masterIdToDetails = details.stream()
+                .collect(groupingBy(det -> det.getEntities().get(linkPropName).getId()));
+        // mutate DE containers by assigning the corresponding ME container instance
+        masterIdToDetails.forEach((masterId, dets) ->
+                                    dets.forEach(det -> det.getEntities().put(linkPropName, idToMaster.get(masterId))));
 
-        // group retrieved collections by parents
-        final Map<Long, List<EntityContainer<T>>> results = new HashMap<Long, List<EntityContainer<T>>>();
-        for (final EntityContainer<T> collectionalItem : properties) {
-            final Long currentParentId = collectionalItem.getEntities().get(parentPropName).getId();
-            if (!results.containsKey(currentParentId)) {
-                results.put(currentParentId, new ArrayList<EntityContainer<T>>());
-            }
-            // assign collectional item parent property reference to its already fetched parent
-            collectionalItem.getEntities().put(parentPropName, parentIds.get(currentParentId));
-            results.get(currentParentId).add(collectionalItem);
+        if (!(SortedSet.class.equals(collPropType) || Set.class.equals(collPropType))) {
+            throw new UnsupportedOperationException(
+                    "Fetching of collectional property type [%s] is not supported.".formatted(collPropType.getTypeName()));
         }
 
-        // set the retrieved data for those entities where collectional property is not empty
-        for (final Map.Entry<Long, List<EntityContainer<T>>> resultEntry : results.entrySet()) {
-            // assigns initialised collection to parent collectional property (lazy-collection is already evicted)
-            final EntityContainer<E> entity = parentIds.get(resultEntry.getKey());
-            if (SortedSet.class.equals(propType) || Set.class.equals(propType)) {
-                entity.getCollections().put(propertyName, new CollectionContainer<T>(resultEntry.getValue()));
-            } else {
-                throw new UnsupportedOperationException("Fetching via models for collections of type [" + propType + "] is not yet supported.");
-            }
-        }
+        // populate ME containers with associated DE containers
+        masterIdToDetails.forEach((masterId, dets) ->
+                                    idToMaster.get(masterId).getCollections().put(collPropName, new CollectionContainer<>(dets)));
 
-        return entitiesToBeEnhanced;
+        return masterEntities;
     }
 
     private <T extends AbstractEntity<?>> List<EntityContainer<T>> getCollectionalDataInBatches(final Set<Long> parentIds, final String parentPropName, final EntityRetrievalModel<T> fetchModel, final Map<String, Object> paramValues) {
