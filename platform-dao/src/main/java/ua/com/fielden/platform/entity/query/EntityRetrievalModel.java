@@ -96,7 +96,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
                 !pm.nature().isCritOnly() &&
                 !name.contains(".") &&
                 !containsProp(name) &&
-                (entityMetadata.nature().isSynthetic() || pm.nature().isCalculated() || !pm.nature().isTransient())) {
+                (entityMetadata.nature().isSynthetic() || !pm.nature().isPlain())) {
                 getProxiedProps().add(name);
             }
         }
