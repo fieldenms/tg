@@ -39,11 +39,6 @@ public class PropertyFactoryModule extends TransactionalModule {
         initHibernateConfig(entityFactory);
     }
 
-    public PropertyFactoryModule(final SessionFactory sessionFactory, final DomainMetadata domainMetadata, final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
-        super(sessionFactory, domainMetadata, idOnlyProxiedEntityTypeCache);
-        entityFactory = new EntityFactory() {};
-    }
-
     @Override
     protected void configure() {
         super.configure();

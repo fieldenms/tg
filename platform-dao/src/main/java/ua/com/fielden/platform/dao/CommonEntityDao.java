@@ -1,34 +1,12 @@
 package ua.com.fielden.platform.dao;
 
-import static java.lang.String.format;
-import static java.util.Optional.empty;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
-import static ua.com.fielden.platform.types.either.Either.left;
-import static ua.com.fielden.platform.types.either.Either.right;
-
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.joda.time.DateTime;
-
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-
-import ua.com.fielden.platform.companion.AbstractEntityReader;
-import ua.com.fielden.platform.companion.DeleteOperations;
-import ua.com.fielden.platform.companion.ICanReadUninstrumented;
-import ua.com.fielden.platform.companion.IEntityReader;
-import ua.com.fielden.platform.companion.PersistentEntitySaver;
+import ua.com.fielden.platform.companion.*;
 import ua.com.fielden.platform.dao.annotations.AfterSave;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
@@ -41,17 +19,12 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.EntityBatchDeleteByIdsOperation;
-import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
-import ua.com.fielden.platform.entity.query.QueryExecutionContext;
+import ua.com.fielden.platform.entity.query.*;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.either.Either;
@@ -60,6 +33,17 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.interfaces.IUriGenerator;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
+import static ua.com.fielden.platform.types.either.Either.left;
+import static ua.com.fielden.platform.types.either.Either.right;
 
 /**
  * This is a base class for db-aware implementations of entity companions.
@@ -443,7 +427,13 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return $instrumented$;
     }
 
+    ////////////////////////////////////////////////////////////////
+    //////// Continuation related structures and methods ///////////
+    ////////////////////////////////////////////////////////////////
+    // a map to hold the "more data" gathered by means of continuations
     private final Map<String, IContinuationData> moreData = new HashMap<>();
+    // indicates whether continuations are supported to provide "more data" in the caller's context
+    private boolean continuationSupported = false;
 
     /**
      * Replaces any previously provided "more data" with new "more data".
@@ -497,8 +487,18 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return Collections.unmodifiableMap(moreData);
     }
 
+    public CommonEntityDao<T> setContinuationSupported(final boolean supported) {
+        this.continuationSupported = supported;
+        return this;
+    }
+
+    public boolean isContinuationSupported() {
+        return this.continuationSupported;
+    }
+
     ////////////////////////////////////////////////////////////////
     //////////////////// Before and After save methods /////////////
+    ////////////////////////////////////////////////////////////////
     /**
      * A method for assigning a value to a domain specific transactional property. This method does nothing by default, and should be overridden by companion objects in order to
      * provide domain specific behaviour.

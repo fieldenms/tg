@@ -5,6 +5,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableSet;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -23,7 +24,10 @@ import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.types.tuples.T2;
+
+import javax.annotation.Nonnull;
 
 /**
  * A convenience class to provide common collection related routines and algorithms.
@@ -76,6 +80,41 @@ public final class CollectionUtil {
             map.put(t2._1, t2._2);
         }
         return map;
+    }
+
+    /**
+     * Merges the values from {@code map1} and all the maps provided as {@code otherMaps} into a new map of the same type as {@code map1}.
+     * Passing just {@code map1} without any other maps, is equivalent to creating a shallow copy of {@code map1}.
+     *
+     * @param map1 the first map to merge, which should not be {@code null} as it is used for determining the type of the resultant map.
+     * @param otherMaps other maps to merge.
+     * @return a new map of the same type as {@code map1} with values from {@code map1} and all non-null maps in {@code otherMaps}.
+     * @param <K>
+     * @param <V>
+     */
+    public static <K,V> Map<K, V> merge(@Nonnull final Map<K, V> map1, final Map<? extends K, ? extends V> ... otherMaps) {
+        final Map<K, V> result;
+        // get the class of map1 and use it to instantiate the resultant map
+        if (map1 == null) {
+            throw new NullPointerException("First map cannot be null.");
+        }
+        final Class<? extends Map> mapClass = map1.getClass();
+        try {
+            final Constructor<? extends Map> constructor = mapClass.getDeclaredConstructor(); // get the constructor of the map1 class
+            constructor.setAccessible(true); // make the constructor accessible
+            result = constructor.newInstance(); // create a new instance using the constructor
+        } catch (final Exception ex) {
+            throw new ReflectionException("Could not instantiate a map of type [%s].".formatted(mapClass), ex);
+        }
+
+        // now that we have a resultant map, we can put all the maps into it
+        result.putAll(map1);
+        for (final var mapN: otherMaps) {
+            if (mapN != null) {
+                result.putAll(mapN);
+            }
+        }
+        return result;
     }
 
     /**
