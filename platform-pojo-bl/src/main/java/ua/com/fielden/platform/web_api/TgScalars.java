@@ -16,6 +16,8 @@ import java.math.BigInteger;
 import java.util.Date;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.DateTimeFormatterBuilder;
 
@@ -43,7 +45,8 @@ import ua.com.fielden.platform.utils.IDates;
  *
  */
 public class TgScalars {
-    private static final String UNEXPECTED_TYPE_ERROR = "Expected [%] but was [%].";
+    private static final Logger LOGGER = LogManager.getLogger(TgScalars.class);
+    private static final String UNEXPECTED_TYPE_ERROR = "Expected [%s] but was [%s].";
 
     @Inject
     private static IDates dates;
@@ -107,17 +110,25 @@ public class TgScalars {
         
         @Override
         default O serialize(final Object dataFetcherResult) {
-            return convertDataFetcherResult(dataFetcherResult).orElseThrow((error) -> new CoercingSerializeException(error));
+            return convertDataFetcherResult(dataFetcherResult).orElseThrow(error -> {
+                final var ex = new CoercingSerializeException(error);
+                LOGGER.error(ex.getMessage(), ex);
+                return ex;
+            });
         }
         
         @Override
         default Object parseValue(final Object variableInput) {
-            throw new CoercingParseValueException(format("%s argument variables not supported.", title()));
+            final var ex = new CoercingParseValueException(format("%s argument variables not supported.", title()));
+            LOGGER.error(ex.getMessage(), ex);
+            throw ex;
         }
         
         @Override
         default Object parseLiteral(final Object argumentInput) {
-            throw new CoercingParseLiteralException(format("%s argument literals not supported.", title()));
+            final var ex = new CoercingParseLiteralException(format("%s argument literals not supported.", title()));
+            LOGGER.error(ex.getMessage(), ex);
+            throw ex;
         }
     }
     
@@ -177,7 +188,11 @@ public class TgScalars {
         
         @Override
         default O serialize(final Object dataFetcherResult) {
-            return convertDataFetcherResult(dataFetcherResult).orElseThrow((error) -> new CoercingSerializeException(error));
+            return convertDataFetcherResult(dataFetcherResult).orElseThrow(error -> {
+                final var ex = new CoercingSerializeException(error);
+                LOGGER.error(ex.getMessage(), ex);
+                return ex;
+            });
         }
         
         /**
@@ -190,7 +205,11 @@ public class TgScalars {
         
         @Override
         default I parseValue(final Object variableInput) {
-            return convertVariableInput(variableInput).orElseThrow((error) -> new CoercingParseValueException(error));
+            return convertVariableInput(variableInput).orElseThrow(error -> {
+                final var ex = new CoercingParseValueException(error);
+                LOGGER.error(ex.getMessage(), ex);
+                return ex;
+            });
         }
         
         /**
@@ -203,7 +222,11 @@ public class TgScalars {
         
         @Override
         default I parseLiteral(final Object literalInput) {
-            return convertLiteralInput(literalInput).orElseThrow((error) -> new CoercingParseLiteralException(error));
+            return convertLiteralInput(literalInput).orElseThrow(error -> {
+                final var ex = new CoercingParseLiteralException(error);
+                LOGGER.error(ex.getMessage(), ex);
+                return ex;
+            });
         }
         
     }
