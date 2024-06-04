@@ -305,7 +305,9 @@ public class TgScalars {
     /**
      * GraphQL scalar implementation for {@link Date} type.
      */
-    public static final GraphQLScalarType GraphQLDate = newScalarType("Date").coercing(new TgCoercing<Date, Map<String, Object>>() {
+    public static final GraphQLScalarType GraphQLDate = newScalar().name("Date")
+            .description("Date type.\n\nInput formats:  \n20221002  \n\"2022\"  \n\"2022-10\"  \n\"2022-10-02\"  \n\"2022-10-02 14\"  \n\"2022-10-02 14:07\"  \n\"2022-10-02 14:07:19\"  \n\"2022-10-02 14:07:19.999\"")
+            .coercing(new TgCoercing<Date, Map<String, Object>>() {
         private final DateTimeFormatter basicDateParser = basicDate();
         private final DateTimeFormatter dateTimeParser = new DateTimeFormatterBuilder()
             .append(dateElementParser())
