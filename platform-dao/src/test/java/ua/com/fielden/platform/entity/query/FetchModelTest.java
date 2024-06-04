@@ -301,4 +301,11 @@ public class FetchModelTest extends BaseEntQueryTCase1 {
         assertFalse(fetchModel.getRetrievalModels().get("author").containsProp("honorarium.amount"));
 
     }
+
+    @Test
+    public void default_strategy_implicitly_includes_calculated_properties_with_a_composite_type() {
+        var model = produceRetrievalModel(TgVehicle.class, DEFAULT);
+        assertPropsAreFetched(model, Set.of("sumOfPrices"));
+    }
+
 }
