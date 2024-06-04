@@ -43,6 +43,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import graphql.execution.AsyncExecutionStrategy;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -170,13 +171,14 @@ public class GraphQLService implements IWebApi {
     @Override
     public Map<String, Object> execute(final Map<String, Object> input) {
         final var result = newGraphQL(schema)
-               .instrumentation(new MaxQueryDepthInstrumentation(maxQueryDepth)).build()
-               .execute(
-                       newExecutionInput()
-                       .query(query(input))
-                       .operationName(operationName(input).orElse(null))
-                       .variables(variables(input)))
-               .toSpecification();
+                .queryExecutionStrategy(new AsyncExecutionStrategy(new TgSimpleDataFetcherExceptionHandler()))
+                .instrumentation(new MaxQueryDepthInstrumentation(maxQueryDepth)).build()
+                .execute(
+                        newExecutionInput()
+                                .query(query(input))
+                                .operationName(operationName(input).orElse(null))
+                                .variables(variables(input)))
+                .toSpecification();
         final var errors = errors(result);
         if (!errors.isEmpty()) {
             logger.error(ERR_EXECUTING_QUERY.formatted(input, errors));
