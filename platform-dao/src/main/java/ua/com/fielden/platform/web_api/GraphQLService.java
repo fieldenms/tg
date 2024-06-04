@@ -85,6 +85,7 @@ import ua.com.fielden.platform.web_api.exceptions.WebApiException;
 public class GraphQLService implements IWebApi {
     private final Logger logger = LogManager.getLogger(getClass());
     private static final String ERR_EXECUTING_QUERY = "Query [%s] execution completed with errors [%s].";
+    private static final String ERR_EXECUTING_QUERY_WITH_EX = "Query [%s] execution completed with exception.";
     private final GraphQLSchema schema;
     private final Integer maxQueryDepth;
 
@@ -170,20 +171,25 @@ public class GraphQLService implements IWebApi {
      */
     @Override
     public Map<String, Object> execute(final Map<String, Object> input) {
-        final var result = newGraphQL(schema)
-                .queryExecutionStrategy(new TgAsyncExecutionStrategy(new TgSimpleDataFetcherExceptionHandler()))
-                .instrumentation(new MaxQueryDepthInstrumentation(maxQueryDepth)).build()
-                .execute(
-                        newExecutionInput()
-                                .query(query(input))
-                                .operationName(operationName(input).orElse(null))
-                                .variables(variables(input)))
-                .toSpecification();
-        final var errors = errors(result);
-        if (!errors.isEmpty()) {
-            logger.error(ERR_EXECUTING_QUERY.formatted(input, errors));
+        try {
+            final var result = newGraphQL(schema)
+                    .queryExecutionStrategy(new TgAsyncExecutionStrategy(new TgSimpleDataFetcherExceptionHandler()))
+                    .instrumentation(new MaxQueryDepthInstrumentation(maxQueryDepth)).build()
+                    .execute(
+                            newExecutionInput()
+                                    .query(query(input))
+                                    .operationName(operationName(input).orElse(null))
+                                    .variables(variables(input)))
+                    .toSpecification();
+            final var errors = errors(result);
+            if (!errors.isEmpty()) {
+                logger.error(ERR_EXECUTING_QUERY.formatted(input, errors));
+            }
+            return result;
+        } catch (final Throwable throwable) {
+            logger.error(ERR_EXECUTING_QUERY_WITH_EX.formatted(input), throwable);
+            throw throwable;
         }
-        return result;
     }
 
     /**
