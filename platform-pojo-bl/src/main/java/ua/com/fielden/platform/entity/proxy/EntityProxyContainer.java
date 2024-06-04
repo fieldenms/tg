@@ -25,24 +25,21 @@ import ua.com.fielden.platform.reflection.Reflector;
  * Factory method {@link #proxy(Class, String...)} should be used to create proxied entity type.
  * 
  * @author TG Team
- *
- * @param <T>
  */
 public class EntityProxyContainer {
 
     private static final MethodDelegation proxyChecker = MethodDelegation.to(ProxyPropertyInterceptor.class);
     
-    private static final Cache<Class<? extends AbstractEntity<?>>, Cache<String, Class<? extends AbstractEntity<?>>>> TYPES = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).maximumSize(10000).concurrencyLevel(50).build();
+    private static final Cache<Class<? extends AbstractEntity<?>>, Cache<String, Class<? extends AbstractEntity<?>>>>
+            TYPES = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).maximumSize(10000).concurrencyLevel(50).build();
     
     public static long cleanUp() {
         TYPES.cleanUp();
         return TYPES.size();
     }
 
-    private EntityProxyContainer() {
-    }
-    
-    
+    private EntityProxyContainer() {}
+
     /**
      * Factory method for creating entity type proxies.
      * 

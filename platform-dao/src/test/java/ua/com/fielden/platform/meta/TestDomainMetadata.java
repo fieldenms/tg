@@ -16,8 +16,8 @@ class TestDomainMetadata {
         this.domainMetadata = domainMetadata;
     }
 
-    public static TestDomainMetadata wrap(final IDomainMetadata generator) {
-        return new TestDomainMetadata(generator);
+    public static TestDomainMetadata wrap(final IDomainMetadata domainMetadata) {
+        return new TestDomainMetadata(domainMetadata);
     }
 
     /**

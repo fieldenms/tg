@@ -127,13 +127,16 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
         }
     }
 
-    private <T extends AbstractEntity<?>> void assignIdOnlyProxiedResultTypeToIdOnlyEntityProperty(final List<EntityContainer<E>> entities, final String propName, final Class<T> originalPropertyResultType) {
-        if (originalPropertyResultType != EntityAggregates.class) {
-            final Class<? extends T> proxiedResultType = idOnlyProxiedEntityTypeCache.getIdOnlyProxiedTypeFor(originalPropertyResultType);
-            for (final EntityContainer<E> entContainer : entities) {
-                final EntityContainer<T> propContainer = (EntityContainer<T>) entContainer.getEntities().get(propName);
+    private <T extends AbstractEntity<?>> void assignIdOnlyProxiedResultTypeToIdOnlyEntityProperty
+            (final List<EntityContainer<E>> entities,
+             final String propName, final Class<T> propType)
+    {
+        if (propType != EntityAggregates.class) {
+            final Class<? extends T> proxiedPropType = idOnlyProxiedEntityTypeCache.getIdOnlyProxiedTypeFor(propType);
+            for (final EntityContainer<E> entity : entities) {
+                final EntityContainer<T> propContainer = (EntityContainer<T>) entity.getEntities().get(propName);
                 if (propContainer != null) {
-                    propContainer.setProxiedResultType(proxiedResultType);
+                    propContainer.setProxiedResultType(proxiedPropType);
                 }
             }
         }
