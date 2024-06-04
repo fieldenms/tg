@@ -115,7 +115,10 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
 
     private void includeAllFirstLevelPrimPropsAndKey() {
         entityMetadata.properties().stream()
-                .filter(pm -> !pm.nature().isCalculated() && !pm.type().isCollectional() && !isPure(pm))
+                .filter(pm -> !pm.type().isCollectional() && !isPure(pm))
+                // calculated composite are included (legacy EQL2 behaviour)
+                // TODO don't treat calculated composite specially once TG applications no longer rely on this behaviour
+                .filter(pm -> !pm.isCalculated() || pm.type().isComposite())
                 .forEach(pm -> {
                     final boolean skipEntities = !(pm.type().isEntity() && (AbstractEntity.KEY.equals(pm.name()) || pm.has(KEY_MEMBER)));
                     with(pm.name(), skipEntities);
@@ -146,7 +149,10 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
 
     private void includeAllFirstLevelProps() {
         entityMetadata.properties().stream()
-                .filter(pm -> !pm.nature().isCalculated() && !pm.type().isCollectional() && !isPure(pm))
+                .filter(pm -> !pm.type().isCollectional() && !isPure(pm))
+                // calculated composite are included (legacy EQL2 behaviour)
+                // TODO don't treat calculated composite specially once TG applications no longer rely on this behaviour
+                .filter(pm -> !pm.isCalculated() || pm.type().isComposite())
                 .forEach(pm -> with(pm.name(), false));
     }
 
