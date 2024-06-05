@@ -19,6 +19,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
@@ -29,6 +30,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.REQUIRED;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
+import static ua.com.fielden.platform.utils.EntityUtils.entityTypeHierarchy;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 /**
@@ -159,10 +161,10 @@ public class PersistDomainMetadataModel {
                                                                 final Function<EntityMetadata.Persistent, R> fn) {
         return em.asSynthetic()
                 .map(EntityMetadata::javaType)
-                .map(Class::getSuperclass)
-                .flatMap(domainMetadata::forType)
-                .flatMap(TypeMetadata::asEntity)
-                .flatMap(EntityMetadata::asPersistent)
+                .map(entityType -> entityTypeHierarchy(entityType, false).skip(1))
+                .orElseGet(Stream::empty)
+                .flatMap(entityType -> domainMetadata.forEntityOpt(entityType).flatMap(EntityMetadata::asPersistent).stream())
+                .findFirst()
                 .map(fn);
     }
 
