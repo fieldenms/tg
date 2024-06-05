@@ -5,7 +5,7 @@ import org.hibernate.type.TypeFactory;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.type.spi.TypeConfiguration;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
-import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
+import ua.com.fielden.platform.meta.exceptions.DomainMetadataGenerationException;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 
 import javax.annotation.Nullable;
@@ -47,8 +47,8 @@ class HibernateTypeGenerator {
                 try {
                     map.put(javaType, hibType.getDeclaredField("INSTANCE").get(null));
                 } catch (final Exception e) {
-                    throw new EqlMetadataGenerationException("Couldn't instantiate Hibernate type [" + hibType + "].",
-                                                             e);
+                    throw new DomainMetadataGenerationException("Couldn't instantiate Hibernate type [" + hibType + "].",
+                                                                e);
                 }
             });
             // TODO old code, definitely a kludge, this class should not be responsible for establishing any mappings
@@ -85,7 +85,7 @@ class HibernateTypeGenerator {
          */
         public Object get() {
             return getOpt()
-                    .orElseThrow(() -> new EqlMetadataGenerationException(format("Couldn't resolve Hibernate type of [%s]", typeMetadata)));
+                    .orElseThrow(() -> new DomainMetadataGenerationException(format("Couldn't resolve Hibernate type of [%s]", typeMetadata)));
         }
 
         public Optional<Object> getOpt() {
@@ -124,12 +124,12 @@ class HibernateTypeGenerator {
                                 return hibTypesInjector.getInstance(hibernateUserTypeImplementor).getClass()
                                         .getDeclaredField("INSTANCE").get(null);
                             } catch (final Exception e) {
-                                throw new EqlMetadataGenerationException(
+                                throw new DomainMetadataGenerationException(
                                         format("Couldn't obtain instance of Hibernate type [%s]", hibernateUserTypeImplementor),
                                         e);
                             }
                         } else {
-                            throw new EqlMetadataGenerationException(
+                            throw new DomainMetadataGenerationException(
                                     format("Annotation [%s] doesn't provide enough information to obtain a Hibernate type.",
                                            atPersistentType));
                         }

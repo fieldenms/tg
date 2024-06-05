@@ -4,6 +4,7 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
+import ua.com.fielden.platform.meta.exceptions.DomainMetadataGenerationException;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -39,7 +40,7 @@ public class DomainMetadataBuilder {
     public IDomainMetadata build() {
         final Map<Class<? extends AbstractEntity<?>>, EntityMetadata> entityMetadataMap = entityTypes.parallelStream()
                 .flatMap(type -> Try(() -> generator.forEntity(type))
-                        .orElseThrow(e -> new EqlMetadataGenerationException(
+                        .orElseThrow(e -> new DomainMetadataGenerationException(
                                 format("Failed to generate metadata for entity [%s]", type.getTypeName()), e))
                         .map(em -> t2(type, em)).stream())
                 .collect(toConcurrentMap(pair -> pair._1, pair -> pair._2));

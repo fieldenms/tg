@@ -9,9 +9,9 @@ import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation.TableStru
 import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation.TableStructForBatchInsertion.PropColumnInfo;
 import ua.com.fielden.platform.eql.dbschema.ColumnDefinitionExtractor;
 import ua.com.fielden.platform.eql.dbschema.TableDdl;
-import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
 import ua.com.fielden.platform.eql.meta.EqlTable;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
+import ua.com.fielden.platform.meta.exceptions.DomainMetadataGenerationException;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -111,7 +111,7 @@ final class DomainMetadataImpl implements IDomainMetadata {
     @Override
     public EntityMetadata forEntity(final Class<? extends AbstractEntity<?>> entityType) {
         return forEntityOpt(entityType)
-                .orElseThrow(() -> new EqlMetadataGenerationException(
+                .orElseThrow(() -> new DomainMetadataGenerationException(
                         format("Could not generate metadata for entity [%s]", entityType.getTypeName())));
     }
 
@@ -181,7 +181,7 @@ final class DomainMetadataImpl implements IDomainMetadata {
             try {
                 this.hibTypesDefaults.put(javaType, hibType.getDeclaredField("INSTANCE").get(null));
             } catch (final Exception e) {
-                throw new EqlMetadataGenerationException("Couldn't instantiate Hibernate type [%s]".formatted(hibType), e);
+                throw new DomainMetadataGenerationException("Couldn't instantiate Hibernate type [%s]".formatted(hibType), e);
             }
         });
 

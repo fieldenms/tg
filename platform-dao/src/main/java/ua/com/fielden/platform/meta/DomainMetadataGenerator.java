@@ -3,20 +3,19 @@ package ua.com.fielden.platform.meta;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.inject.Injector;
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
 import ua.com.fielden.platform.eql.meta.PropColumn;
 import ua.com.fielden.platform.eql.retrieval.EntityContainerEnhancer;
-import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
+import ua.com.fielden.platform.meta.exceptions.DomainMetadataGenerationException;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Field;
@@ -31,6 +30,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElseGet;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.AGGREGATED_EXPRESSION;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.commonProperties;
@@ -85,6 +85,8 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
  * performed by {@link EntityContainerEnhancer}.
  */
 final class DomainMetadataGenerator {
+
+    private static final Logger LOGGER = getLogger(DomainMetadataGenerator.class);
 
     private static final Set<String> SPECIAL_PROPS = Set.of(ID, KEY, VERSION);
 
@@ -159,7 +161,7 @@ final class DomainMetadataGenerator {
             return forEntity_(entityType);
         } catch (final Exception e) {
             // rethrow to facilitate debugging
-            throw new EqlMetadataGenerationException("Failed to generate metadata for entity [%s]".formatted(entityType), e);
+            throw new DomainMetadataGenerationException("Failed to generate metadata for entity [%s]".formatted(entityType), e);
         }
     }
 
@@ -251,30 +253,29 @@ final class DomainMetadataGenerator {
                         Optional.of(plainProp(KEY, mkPropertyTypeOrThrow(keyType), H_ENTITY).required(true).build());
                 default -> Optional.empty();
             };
+        }
+        else if (DynamicEntityKey.class.equals(keyType)) {
+            final var entityType = (Class<? extends AbstractEntity<DynamicEntityKey>>) entityBuilder.getJavaType();
+            return Optional.of(calculatedProp(KEY, COMPOSITE_KEY, H_STRING,
+                                              PropertyNature.Calculated.data(generateCompositeKeyEqlExpression(entityType), true, false))
+                                       // TODO why required?
+                                       .required(true).build());
         } else {
-            if (DynamicEntityKey.class.equals(keyType)) {
-                final var entityType = (Class<? extends AbstractEntity<DynamicEntityKey>>) entityBuilder.getJavaType();
-                return Optional.of(calculatedProp(KEY, COMPOSITE_KEY, H_STRING,
-                                                  PropertyNature.Calculated.data(generateCompositeKeyEqlExpression(entityType), true, false))
-                                           // TODO why required?
-                                           .required(true).build());
-            } else {
-                final var keyColumn = new PropColumn("KEY_");
-                final PropertyTypeMetadata propTypeMd = mkPropertyTypeOrThrow(keyType);
-                final var getHibType = hibTypeGenerator.generate(propTypeMd);
-                return switch (entityBuilder) {
-                    case EntityMetadataBuilder.Persistent $ ->
-                            Optional.of(persistentProp(KEY, propTypeMd, getHibType.get(), PropertyNature.Persistent.data(keyColumn))
-                                                .required(true).build());
-                    case EntityMetadataBuilder.Synthetic s ->
-                            isSyntheticBasedOnPersistentEntityType(s.getJavaType())
-                                    ? Optional.of(persistentProp(KEY, propTypeMd, getHibType.get(), PropertyNature.Persistent.data(keyColumn))
-                                                          .required(true).build())
-                                    : Optional.of(plainProp(KEY, propTypeMd, getHibType.getOpt().orElse(null))
-                                                          .required(true).build());
-                    default -> Optional.empty();
-                };
-            }
+            final var keyColumn = new PropColumn("KEY_");
+            final PropertyTypeMetadata propTypeMd = mkPropertyTypeOrThrow(keyType);
+            final var getHibType = hibTypeGenerator.generate(propTypeMd);
+            return switch (entityBuilder) {
+                case EntityMetadataBuilder.Persistent $ ->
+                        Optional.of(persistentProp(KEY, propTypeMd, getHibType.get(), PropertyNature.Persistent.data(keyColumn))
+                                            .required(true).build());
+                case EntityMetadataBuilder.Synthetic s ->
+                        isSyntheticBasedOnPersistentEntityType(s.getJavaType())
+                                ? Optional.of(persistentProp(KEY, propTypeMd, getHibType.get(), PropertyNature.Persistent.data(keyColumn))
+                                                      .required(true).build())
+                                : Optional.of(plainProp(KEY, propTypeMd, getHibType.getOpt().orElse(null))
+                                                      .required(true).build());
+                default -> Optional.empty();
+            };
         }
     }
 
@@ -297,7 +298,7 @@ final class DomainMetadataGenerator {
                 if (isSyntheticBasedOnPersistentEntityType(s.getJavaType())) {
                     if (isEntityType(getKeyType(s.getJavaType()))) {
                         throw new EntityDefinitionException(format(
-                                "Entity [%s] is recognised as synthetic based on a persistent type with an entity-typed key. " +
+                                "Entity [%s] is recognised as synthetic-based-on-persistent having an entity-typed key. " +
                                 "This is not supported.",
                                 s.getJavaType().getTypeName()));
                     }
@@ -329,7 +330,7 @@ final class DomainMetadataGenerator {
             return mkProp_(field, entityBuilder);
         } catch (final Exception e) {
             // rethrow to facilitate debugging
-            throw new EqlMetadataGenerationException("Failed to generate metadata for property [%s]".formatted(field), e);
+            throw new DomainMetadataGenerationException("Failed to generate metadata for property [%s]".formatted(field), e);
         }
     }
 
@@ -380,7 +381,11 @@ final class DomainMetadataGenerator {
         // TRANSIENT
         else {
             // skip properties that have an unknown type
-            builder = mkPropertyType(field)
+            final var optPropType = mkPropertyType(field);
+            if (optPropType.isEmpty()) {
+                LOGGER.debug(format("Skipping metadata generation for property [%s] due to its unrecognised type.", field));
+            }
+            builder = optPropType
                     .map(propTypeMd -> plainProp(field.getName(), propTypeMd,
                                                  hibTypeGenerator.generate(propTypeMd).use(field).getOpt().orElse(null)));
         }
@@ -439,13 +444,13 @@ final class DomainMetadataGenerator {
 
     private PropertyTypeMetadata mkPropertyTypeOrThrow(final Field field) {
         return mkPropertyType(field)
-                .orElseThrow(() -> new EqlMetadataGenerationException(
+                .orElseThrow(() -> new DomainMetadataGenerationException(
                         "Failed to generate metadata for type of property [%s]".formatted(field.toGenericString())));
     }
 
     private PropertyTypeMetadata mkPropertyTypeOrThrow(final Type type) {
         return mkPropertyType(type)
-                .orElseThrow(() -> new EqlMetadataGenerationException(
+                .orElseThrow(() -> new DomainMetadataGenerationException(
                         "Failed to generate metadata for property type [%s]".formatted(type.getTypeName())));
     }
 
@@ -494,7 +499,8 @@ final class DomainMetadataGenerator {
                 return mapEntityToAnnotation.value();
             }
         } catch (final Exception ex) {
-            throw new EqlException(format("Could not determine table name for entity [%s].", entityType.getTypeName()), ex);
+            throw new DomainMetadataGenerationException(
+                    format("Could not determine table name for entity [%s].", entityType.getTypeName()), ex);
         }
     }
 
@@ -518,13 +524,10 @@ final class DomainMetadataGenerator {
                 return ImmutableList.copyOf((List<EntityResultQueryModel<T>>) modelField.get(null));
             }
         } catch (final Exception ex) {
-            if (ex instanceof ReflectionException) {
-                throw (ReflectionException) ex;
-            } else {
-                throw new ReflectionException(
-                        format("Could not obtain the model for synthetic entity [%s].", entityType.getSimpleName()),
-                        ex);
-            }
+            throw new DomainMetadataGenerationException(
+                    format("Could not obtain model(s) for synthetic entity [%s].", entityType.getSimpleName()),
+                    ex);
+
         }
     }
 
