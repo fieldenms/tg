@@ -14,6 +14,8 @@ import ua.com.fielden.platform.meta.PropertyMetadata.CritOnly;
 import ua.com.fielden.platform.meta.PropertyMetadata.Transient;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata.CompositeKey;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata.Primitive;
+import ua.com.fielden.platform.meta.test_entities.Entity_OverridesProperty;
+import ua.com.fielden.platform.meta.test_entities.Entity_OverridesProperty_Super;
 import ua.com.fielden.platform.meta.test_entities.Entity_PropertyDescriptor;
 import ua.com.fielden.platform.meta.test_entities.Entity_UnknownPropertyTypes;
 import ua.com.fielden.platform.ref_hierarchy.AbstractTreeEntry;
@@ -26,6 +28,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.SortedSet;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.KEY_MEMBER;
 
 public class EntityMetadataTest {
@@ -201,6 +205,16 @@ public class EntityMetadataTest {
     public void properties_with_PropertyDescriptor_type_are_included() {
         EntityA.of(generator.forEntity(Entity_PropertyDescriptor.class))
                 .assertPropertyExists("pd");
+    }
+
+    @Test
+    public void overriding_property_is_inlcuded_instead_of_the_overriden_one() {
+        EntityA.of(generator.forEntity(Entity_OverridesProperty.class))
+                .assertProperty("name", p -> p.assertIs(PropertyMetadata.Persistent.class))
+                .peek(em -> assertEquals("Expected a single property [name]",
+                                         1, em.properties().stream().filter(p -> p.name().equals("name")).count()));
+        EntityA.of(generator.forEntity(Entity_OverridesProperty_Super.class))
+                .assertProperty("name", p -> p.assertIs(PropertyMetadata.Plain.class));
     }
 
 }
