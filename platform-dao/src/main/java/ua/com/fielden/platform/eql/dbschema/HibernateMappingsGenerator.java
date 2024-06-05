@@ -11,12 +11,12 @@ import ua.com.fielden.platform.types.either.Either;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 
 import static java.util.Comparator.comparing;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
-import static ua.com.fielden.platform.meta.EntityMetadata.SPECIAL_PROPS;
 import static ua.com.fielden.platform.types.either.Either.left;
 import static ua.com.fielden.platform.types.either.Either.right;
 import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
@@ -31,6 +31,8 @@ public class HibernateMappingsGenerator {
     private static final Logger LOGGER = getLogger(HibernateMappingsGenerator.class);
 
     public static final String ID_SEQUENCE_NAME = "TG_ENTITY_ID_SEQ";
+
+    private static final Set<String> SPECIAL_PROPS = Set.of(ID, KEY, VERSION);
 
     private final IDomainMetadata domainMetadata;
     private final DbVersion dbVersion;

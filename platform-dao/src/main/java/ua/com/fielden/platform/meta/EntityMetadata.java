@@ -1,14 +1,10 @@
 package ua.com.fielden.platform.meta;
 
-import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
-
-import static ua.com.fielden.platform.entity.AbstractEntity.*;
 
 /**
  * Represents entity type metadata.
@@ -22,8 +18,6 @@ import static ua.com.fielden.platform.entity.AbstractEntity.*;
  * No metadata exists for entity nature {@link EntityNature.Other}.
  */
 sealed public interface EntityMetadata extends TypeMetadata {
-
-    List<String> SPECIAL_PROPS = ImmutableList.of(ID, KEY, VERSION);
 
     @Override
     Class<? extends AbstractEntity<?>> javaType();
