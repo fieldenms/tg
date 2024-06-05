@@ -8,7 +8,6 @@ import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.utils.Pair;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -34,20 +33,20 @@ public class IdOnlyProxiedEntityTypeCache implements IIdOnlyProxiedEntityTypeCac
         return domainMetadata.allTypes(EntityMetadata.class).parallelStream()
                 .filter(em -> em.nature().isPersistent())
                 .map(em -> {
-                    final Class<? extends AbstractEntity<?>> key = em.javaType();
-                    final Class<? extends AbstractEntity<?>> proxyType = produceIdOnlyProxiedResultType(key, em.properties());
-                    return Pair.<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>>pair(key, proxyType);
+                    final var origType = em.javaType();
+                    final var proxyType = produceIdOnlyProxiedResultType(em);
+                    return Pair.<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>>pair(origType, proxyType);
                 })
                 .collect(toMap(Entry::getKey, Entry::getValue));
     }
 
-    private <T extends AbstractEntity<?>> Class<? extends T> produceIdOnlyProxiedResultType
-            (final Class<T> originalType, final Collection<? extends PropertyMetadata> propsMetadata)
-    {
-        final List<String> proxiedProps = propsMetadata.stream()
-                .filter(pm -> !ID.equals(pm.name()) && !pm.type().isCompositeKey() && !pm.nature().isCritOnly())
+    private Class<? extends AbstractEntity<?>> produceIdOnlyProxiedResultType(EntityMetadata entity) {
+        final List<String> proxiedProps = entity.properties().stream()
+                .filter(pm -> !ID.equals(pm.name()) && !pm.type().isCompositeKey() && !pm.nature().isCritOnly()
+                              && !pm.type().isCollectional()
+                              && !(pm.nature().isPlain() && entity.isPersistent()))
                 .map(PropertyMetadata::name)
                 .toList();
-        return EntityProxyContainer.proxy(originalType, proxiedProps);
+        return EntityProxyContainer.proxy(entity.javaType(), proxiedProps);
     }
 }
