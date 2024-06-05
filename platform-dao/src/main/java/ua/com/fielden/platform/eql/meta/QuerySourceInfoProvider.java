@@ -15,6 +15,7 @@ import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -27,7 +28,6 @@ import static ua.com.fielden.platform.eql.meta.utils.TopologicalSort.sortTopolog
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.REQUIRED;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 
 public class QuerySourceInfoProvider {
     private static final Logger LOGGER = getLogger(QuerySourceInfoProvider.class);
@@ -66,16 +66,13 @@ public class QuerySourceInfoProvider {
         seModels = new ConcurrentHashMap<>();
         // generating models and dependencies info for SE types (there is no need to include UE types here as their models are implicitly generated and have no interdependencies)
         final Map<Class<? extends AbstractEntity<?>>, Set<Class<? extends AbstractEntity<?>>>> seDependencies = new HashMap<>();
-        domainMetadata.allTypes(EntityMetadata.class).forEach(em -> {
-            switch (em) {
-                case EntityMetadata.Synthetic sem -> {
-                    final T2<List<SourceQuery1>, Set<Class<? extends AbstractEntity<?>>>> res = generateModelsAndDependenciesForSyntheticType(sem, qmToS1Transformer);
-                    seModels.put(sem.javaType(), res._1);
-                    seDependencies.put(sem.javaType(), res._2.stream().filter(cl -> isSyntheticEntityType(cl)).collect(toSet()));
-                }
-                default -> {}
-            }
-        });
+        domainMetadata.allTypes(EntityMetadata.class)
+                .map(EntityMetadata::asSynthetic).flatMap(Optional::stream)
+                .forEach(em -> {
+                    final T2<List<SourceQuery1>, Set<Class<? extends AbstractEntity<?>>>> res = generateModelsAndDependenciesForSyntheticType(em, qmToS1Transformer);
+                    seModels.put(em.javaType(), res._1);
+                    seDependencies.put(em.javaType(), res._2.stream().filter(EntityUtils::isSyntheticEntityType).collect(toSet()));
+                });
 
         for (final Class<? extends AbstractEntity<?>> seType : sortTopologically(seDependencies)) {
             try {
