@@ -242,7 +242,7 @@ final class DomainMetadataGenerator {
     private Optional<PropertyMetadata> mkPropKey(final EntityMetadataBuilder<?, ?> entityBuilder) {
         final Class<? extends Comparable<?>> keyType = getKeyType(entityBuilder.getJavaType());
         if (keyType == null) {
-            throw new EntityDefinitionException("Property [key] not found in entity [%s]".formatted(entityBuilder.getJavaType().getTypeName()));
+            throw new EntityDefinitionException("Can't determine key type of [%s]".formatted(entityBuilder.getJavaType().getTypeName()));
         }
 
         if (isOneToOne(entityBuilder.getJavaType())) {
