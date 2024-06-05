@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.test;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.utils.DbUtils.batchExecSql;
@@ -19,7 +20,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.dialect.Dialect;
 
@@ -60,7 +63,7 @@ public abstract class DbCreator {
             final boolean execDdslScripts) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
 
         this.testCaseType = testCaseType;
-        this.persistentEntitiesMetadata = config.getInstance(IDomainMetadata.class).allTypes(EntityMetadata.Persistent.class);
+        this.persistentEntitiesMetadata = config.getInstance(IDomainMetadata.class).allTypes(EntityMetadata.Persistent.class).collect(toImmutableList());
 
         // this is a single place where a new DB connection is established
         logger.info("CREATING DB CONNECTION...");

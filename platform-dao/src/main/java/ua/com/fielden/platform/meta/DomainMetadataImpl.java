@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.meta;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.Injector;
 import org.hibernate.dialect.Dialect;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -76,27 +75,21 @@ final class DomainMetadataImpl implements IDomainMetadata {
     }
 
     @Override
-    public Collection<? extends TypeMetadata> allTypes() {
-        // TODO optimise by changing the return type to Stream
-        return ImmutableList.<TypeMetadata>builderWithExpectedSize(entityMetadataMap.size() + compositeTypeMetadataMap.size())
-                .addAll(entityMetadataMap.values())
-                .addAll(compositeTypeMetadataMap.values())
-                .build();
+    public Stream<TypeMetadata> allTypes() {
+        return Stream.concat(entityMetadataMap.values().stream(), compositeTypeMetadataMap.values().stream());
     }
 
     @Override
-    public <T extends TypeMetadata> Collection<T> allTypes(final Class<T> metadataType) {
-        // TODO optimise by changing the return type to Stream
+    public <T extends TypeMetadata> Stream<T> allTypes(final Class<T> metadataType) {
         if (metadataType == EntityMetadata.class) {
-            return (Collection<T>) entityMetadataMap.values();
+            return (Stream<T>) entityMetadataMap.values().stream();
         }
         else if (metadataType == TypeMetadata.Composite.class) {
-            return (Collection<T>) compositeTypeMetadataMap.values();
+            return (Stream<T>) compositeTypeMetadataMap.values().stream();
         }
         else {
             return entityMetadataMap.values().stream()
-                    .mapMulti(typeFilter(metadataType))
-                    .toList();
+                    .mapMulti(typeFilter(metadataType));
         }
     }
 

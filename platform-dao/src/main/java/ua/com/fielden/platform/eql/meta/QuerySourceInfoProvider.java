@@ -52,12 +52,12 @@ public class QuerySourceInfoProvider {
         this.domainMetadata = domainMetadata;
         final var qmToS1Transformer = new QueryModelToStage1Transformer();
 
-        declaredQuerySourceInfoMap = domainMetadata.allTypes(EntityMetadata.class).stream()
+        declaredQuerySourceInfoMap = domainMetadata.allTypes(EntityMetadata.class)
                 .collect(toConcurrentMap(EntityMetadata::javaType, em -> new QuerySourceInfo<>(em.javaType(), true)));
         declaredQuerySourceInfoMap.values()
                 .forEach(ei -> ei.addProps(generateQuerySourceItems(declaredQuerySourceInfoMap, ei.javaType())));
 
-        modelledQuerySourceInfoMap = domainMetadata.allTypes(EntityMetadata.class).stream()
+        modelledQuerySourceInfoMap = domainMetadata.allTypes(EntityMetadata.class)
                 .filter(em -> em.isPersistent() || em.isUnion())
                 .collect(toConcurrentMap(EntityMetadata::javaType, em -> new QuerySourceInfo<>(em.javaType(), true)));
         modelledQuerySourceInfoMap.values()
@@ -66,7 +66,7 @@ public class QuerySourceInfoProvider {
         seModels = new ConcurrentHashMap<>();
         // generating models and dependencies info for SE types (there is no need to include UE types here as their models are implicitly generated and have no interdependencies)
         final Map<Class<? extends AbstractEntity<?>>, Set<Class<? extends AbstractEntity<?>>>> seDependencies = new HashMap<>();
-        for (final EntityMetadata em : domainMetadata.allTypes(EntityMetadata.class)) {
+        domainMetadata.allTypes(EntityMetadata.class).forEach(em -> {
             switch (em) {
                 case EntityMetadata.Synthetic sem -> {
                     final T2<List<SourceQuery1>, Set<Class<? extends AbstractEntity<?>>>> res = generateModelsAndDependenciesForSyntheticType(sem, qmToS1Transformer);
@@ -75,7 +75,7 @@ public class QuerySourceInfoProvider {
                 }
                 default -> {}
             }
-        }
+        });
 
         for (final Class<? extends AbstractEntity<?>> seType : sortTopologically(seDependencies)) {
             try {

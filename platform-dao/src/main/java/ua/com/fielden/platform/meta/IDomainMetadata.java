@@ -7,9 +7,9 @@ import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation;
 import ua.com.fielden.platform.eql.meta.EqlTable;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * Service that provides domain metadata specific to a TG application.
@@ -21,14 +21,14 @@ public interface IDomainMetadata {
     EntityMetadataUtils entityMetadataUtils();
 
     /**
-     * Returns a collection of all existing type metadata instances.
+     * Returns all existing type metadata instances.
      */
-    Collection<? extends TypeMetadata> allTypes();
+    Stream<TypeMetadata> allTypes();
 
     /**
-     * Returns a collection of all existing type metadata instances that are of the given metadata type.
+     * Returns all existing type metadata instances that are of the given metadata type.
      */
-    <T extends TypeMetadata> Collection<T> allTypes(Class<T> metadataType);
+    <T extends TypeMetadata> Stream<T> allTypes(Class<T> metadataType);
 
     Optional<? extends TypeMetadata> forType(Class<?> javaType);
 

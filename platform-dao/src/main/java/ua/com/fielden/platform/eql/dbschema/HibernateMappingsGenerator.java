@@ -52,7 +52,7 @@ public class HibernateMappingsGenerator {
         sb.append("\"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\">\n");
         sb.append("<hibernate-mapping default-access=\"field\">\n");
 
-        domainMetadata.allTypes(EntityMetadata.class).stream().distinct()
+        domainMetadata.allTypes(EntityMetadata.class).distinct()
                 // sort for testing purposes
                 .sorted(comparing(em -> em.javaType().getSimpleName()))
                 .filter(EntityMetadata::isPersistent)

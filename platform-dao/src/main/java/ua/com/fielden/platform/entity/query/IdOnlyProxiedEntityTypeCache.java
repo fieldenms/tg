@@ -30,7 +30,7 @@ public class IdOnlyProxiedEntityTypeCache implements IIdOnlyProxiedEntityTypeCac
 
     private Map<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>> buildMap(final IDomainMetadata domainMetadata) {
         // the following operations are a bit heavy and benefit from parallel processing
-        return domainMetadata.allTypes(EntityMetadata.class).parallelStream()
+        return domainMetadata.allTypes(EntityMetadata.class).parallel()
                 .filter(EntityMetadata::isPersistent)
                 .map(em -> {
                     final var origType = em.javaType();
