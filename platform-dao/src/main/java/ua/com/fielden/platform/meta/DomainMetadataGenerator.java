@@ -15,7 +15,9 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.meta.PropColumn;
 import ua.com.fielden.platform.eql.retrieval.EntityContainerEnhancer;
+import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
 import ua.com.fielden.platform.meta.exceptions.DomainMetadataGenerationException;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Field;
@@ -38,7 +40,6 @@ import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator.generateCompositeKeyEqlExpression;
-import static ua.com.fielden.platform.eql.meta.DomainMetadataUtils.extractExpressionModelFromCalculatedProperty;
 import static ua.com.fielden.platform.meta.EntityNature.SYNTHETIC;
 import static ua.com.fielden.platform.meta.EntityNature.UNION;
 import static ua.com.fielden.platform.meta.PropertyMetadataImpl.Builder.*;
@@ -372,7 +373,7 @@ final class DomainMetadataGenerator {
         else if (atCalculated != null) {
             final boolean aggregatedExpression = AGGREGATED_EXPRESSION == atCalculated.category();
             final var data = PropertyNature.Calculated.data(
-                    extractExpressionModelFromCalculatedProperty(enclosingEntityType, field), false, aggregatedExpression);
+                    extractExpressionModelFromCalculatedProperty(enclosingEntityType, field, atCalculated), false, aggregatedExpression);
             final var propTypeMd = mkPropertyTypeOrThrow(field);
             builder = Optional.of(calculatedProp(field.getName(), propTypeMd,
                                                  hibTypeGenerator.generate(propTypeMd).use(field).get(),
@@ -541,6 +542,19 @@ final class DomainMetadataGenerator {
                 .toList();
     }
 
+    /**
+     * Given a list of union properties and the current property from that list, constructs a query that yields {@code id}
+     * under the selected property's name, and {@code null} under names of other properties.
+     *
+     * {@snippet :
+     * ["a", "b", "c"], "b"
+     * ->
+     * select(B).yield().val(null).as("a")
+     *          .yield().prop("id").as("b")
+     *          .yield().val(null).as("c")
+     * }
+     * where {@code B} is the type of property {@code "b"}.
+     */
     private static EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded<?>
     generateModelForUnionEntityProperty(final List<Field> unionProps, final Field currProp) {
         final var startWith = select((Class<? extends AbstractEntity<?>>) currProp.getType());
@@ -626,6 +640,40 @@ final class DomainMetadataGenerator {
         }
 
         return expressionModelInProgress.end().model();
+    }
+
+    // ****************************************
+    // * Calculated property utilities
+
+    private static ExpressionModel extractExpressionModelFromCalculatedProperty
+            (final Class<? extends AbstractEntity<?>> entityType, final Field prop, final Calculated atCalculated)
+    {
+        try {
+            if (isNotEmpty(atCalculated.value())) {
+                return createExpressionText2ModelConverter(entityType, atCalculated).convert().getModel();
+            } else {
+                final Field exprField = getFieldByName(entityType, prop.getName() + "_");
+                exprField.setAccessible(true);
+                return (ExpressionModel) exprField.get(null);
+            }
+        } catch (final Exception e) {
+            throw new DomainMetadataGenerationException(
+                    format("Can't obtain expression model for calculated property [%s]", prop), e);
+        }
+    }
+
+    private static ExpressionText2ModelConverter createExpressionText2ModelConverter
+            (final Class<? extends AbstractEntity<?>> entityType, final Calculated atCalculated) throws Exception
+    {
+        if (isContextual(atCalculated)) {
+            return new ExpressionText2ModelConverter(getRootType(atCalculated), atCalculated.contextPath(), atCalculated.value());
+        } else {
+            return new ExpressionText2ModelConverter(entityType, atCalculated.value());
+        }
+    }
+
+    private static Class<? extends AbstractEntity<?>> getRootType(final Calculated atCalculated) throws ClassNotFoundException {
+        return (Class<? extends AbstractEntity<?>>) DynamicEntityClassLoader.loadType(atCalculated.rootTypeName());
     }
 
     // ****************************************
