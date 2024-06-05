@@ -7,7 +7,6 @@ import ua.com.fielden.platform.dao.exceptions.DbException;
 import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.meta.*;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -18,7 +17,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
@@ -98,17 +96,13 @@ public class PersistDomainMetadataModel {
                     .filter(pm -> !pm.name().equals(VERSION) && !pm.type().isCollectional() && !pm.type().isCompositeKey())
                     .toList();
 
-            final String tableName = (switch (em) {
-                case EntityMetadata.Persistent pem -> Optional.of(pem.data().tableName());
-                case EntityMetadata.Synthetic sem -> ifSyntheticBasedOnPersistent(domainMetadata, sem, pem -> pem.data().tableName());
-                default -> Optional.<String> empty();
-            }).orElseThrow(() -> new InvalidArgumentException("Couldn't determine table name for entity [%s].".formatted(em)));
-
-            final Class<?> superType = ifSyntheticBasedOnPersistent(domainMetadata, em, EntityMetadata::javaType).orElse(null);
+            final Optional<EntityMetadata.Persistent> persistentBase = persistentBaseForSynthetic(domainMetadata, em);
+            final Optional<String> tableName = persistentBase.or(em::asPersistent).map(pem -> pem.data().tableName());
 
             result.put(entityType,
-                       new DomainTypeData(entityType, superType, id, entityType.getName(), typeTitleAndDesc.getKey(),
-                                          true, tableName, typeTitleAndDesc.getValue(), props.size(),
+                       new DomainTypeData(entityType, persistentBase.map(EntityMetadata::javaType).orElse(null),
+                                          id, entityType.getName(), typeTitleAndDesc.getKey(),
+                                          true, tableName.orElse(null), typeTitleAndDesc.getValue(), props.size(),
                                           domainMetadata.entityMetadataUtils().keyMembers(em),
                                           props));
 
@@ -152,20 +146,16 @@ public class PersistDomainMetadataModel {
     }
 
     /**
-     * If given a synthetic entity that is based on a persistent one, apply the function to the persistent one.
-     *
-     * @param em  potential synthetic entity
-     * @param fn  function to apply
+     * If given a synthetic-based-on-persistent entity, returns the persistent type it's based on.
      */
-    private static <R> Optional<R> ifSyntheticBasedOnPersistent(final IDomainMetadata domainMetadata, final EntityMetadata em,
-                                                                final Function<EntityMetadata.Persistent, R> fn) {
+    private static Optional<EntityMetadata.Persistent> persistentBaseForSynthetic(final IDomainMetadata domainMetadata,
+                                                                                  final EntityMetadata em) {
         return em.asSynthetic()
                 .map(EntityMetadata::javaType)
                 .map(entityType -> entityTypeHierarchy(entityType, false).skip(1))
                 .orElseGet(Stream::empty)
                 .flatMap(entityType -> domainMetadata.forEntityOpt(entityType).flatMap(EntityMetadata::asPersistent).stream())
-                .findFirst()
-                .map(fn);
+                .findFirst();
     }
 
     private static List<DomainPropertyData> generateDomainPropsData
