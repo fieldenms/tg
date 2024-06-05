@@ -682,6 +682,23 @@ public class EntityUtils {
     }
 
     /**
+     * Returns a hierarchy of entity types starting from the given one.
+     * <p>
+     * <b>NOTE</b>: This method won't accept generic entity types.
+     *
+     * @param withAbstractEntity  whether to include {@link AbstractEntity} as the last element
+     */
+    public static Stream<Class<? extends AbstractEntity<?>>> entityTypeHierarchy(final Class<? extends AbstractEntity<?>> entityType,
+                                                                                 final boolean withAbstractEntity) {
+        final Stream<Class<? extends AbstractEntity<?>>> stream =
+                Stream.iterate(entityType, type -> (Class<? extends AbstractEntity<?>>) type.getSuperclass());
+        return withAbstractEntity
+                // won't compile without type cast...
+                ? StreamUtils.stopAfter(stream, type -> (Class) type == AbstractEntity.class)
+                : stream.takeWhile(type -> (Class) type != AbstractEntity.class);
+    }
+
+    /**
      * Returns the first persistent entity type of the type hierarchy for {@code entityType}. This could be {@code entityType} itself or the first super type that represents a persistent entity.
      * Otherwise, an empty result is returned.
      *
