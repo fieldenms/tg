@@ -51,6 +51,7 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.*;
 import static ua.com.fielden.platform.reflection.Finder.*;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isRequiredByDefinition;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
+import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 
 /* General verification rules for entities:
  * - Synthetic based on Persistent - can't have an entity-typed key.
@@ -562,14 +563,11 @@ final class DomainMetadataGenerator {
         final var initialModel = firstUnionProp.equals(currProp)
                 ? startWith.yield().prop(ID).as(firstUnionProp.getName())
                 : startWith.yield().val(null).as(firstUnionProp.getName());
-        // TODO just use foldLeft (implement it first)
-        return unionProps.stream()
-                .skip(1)
-                .reduce(initialModel,
+        return foldLeft(unionProps.stream().skip(1),
+                        initialModel,
                         (m, f) -> f.equals(currProp)
                                 ? m.yield().prop(ID).as(f.getName())
-                                : m.yield().val(null).as(f.getName()),
-                        (m1, m2) -> {throw new UnsupportedOperationException("Combining is not applicable here.");});
+                                : m.yield().val(null).as(f.getName()));
     }
 
     List<PropertyMetadata> generateUnionImplicitCalcSubprops(final Class<? extends AbstractUnionEntity> unionType,
