@@ -58,7 +58,7 @@ public class QuerySourceInfoProvider {
                 .forEach(ei -> ei.addProps(generateQuerySourceItems(declaredQuerySourceInfoMap, ei.javaType())));
 
         modelledQuerySourceInfoMap = domainMetadata.allTypes(EntityMetadata.class).stream()
-                .filter(em -> em.nature().isPersistent() || em.nature().isUnion())
+                .filter(em -> em.isPersistent() || em.isUnion())
                 .collect(toConcurrentMap(EntityMetadata::javaType, em -> new QuerySourceInfo<>(em.javaType(), true)));
         modelledQuerySourceInfoMap.values()
                 .forEach(ei -> ei.addProps(generateQuerySourceItems(modelledQuerySourceInfoMap, ei.javaType())));

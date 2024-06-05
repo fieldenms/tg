@@ -91,12 +91,12 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
             // FIXME the following condition needs to be revisited as part of EQL 3 implementation
             final String name = pm.name();
             if (!ID.equals(name) &&
-                !(KEY.equals(name) && !pm.nature().isPersistent()) &&
+                !(KEY.equals(name) && !pm.isPersistent()) &&
                 !pm.type().isCollectional() &&
-                !pm.nature().isCritOnly() &&
+                !pm.isCritOnly() &&
                 !name.contains(".") &&
                 !containsProp(name) &&
-                (entityMetadata.nature().isSynthetic() || !pm.nature().isPlain())) {
+                (entityMetadata.isSynthetic() || !pm.isPlain())) {
                 getProxiedProps().add(name);
             }
         }
@@ -109,7 +109,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
 
     private void includeAllUnionEntityKeyMembers() {
         entityMetadata.properties().stream()
-                .filter(pm -> propMetadataUtils.isPropEntityType(pm.type(), em -> em.nature().isPersistent()))
+                .filter(pm -> propMetadataUtils.isPropEntityType(pm.type(), EntityMetadata::isPersistent))
                 .forEach(pm -> with(pm.name(), false));
     }
 
@@ -192,12 +192,12 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
                 // treat PropertyDescriptor as primitive, it doesn't make sense to fetch its subproperties
                 if (propType instanceof PropertyTypeMetadata.Entity et && !PropertyDescriptor.class.equals(et.javaType())/* && !optPm.isId()*/) {
                     if (!skipEntities) {
-                        if (propMetadataUtils.isPropEntityType(propType, em -> em.nature().isUnion())) {
+                        if (propMetadataUtils.isPropEntityType(propType, EntityMetadata::isUnion)) {
                             with(propName, fetchAll(et.javaType()));
                         } else {
                             with(propName, fetch(et.javaType()));
                         }
-                    } else if (pm.nature().isPersistent()) {
+                    } else if (pm.isPersistent()) {
                         with(propName, fetchIdOnly(et.javaType()));
                     }
                 } else {
@@ -246,7 +246,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     }
 
     private boolean isPure(final PropertyMetadata pm) {
-        return entityMetadata.nature().isPersistent() &&
+        return entityMetadata.isPersistent() &&
                switch (pm.nature()) {
                    case PropertyNature.Persistent $ -> false;
                    case PropertyNature.Calculated $ -> false;

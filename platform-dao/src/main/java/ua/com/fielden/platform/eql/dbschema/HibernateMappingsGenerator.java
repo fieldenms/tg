@@ -55,7 +55,7 @@ public class HibernateMappingsGenerator {
         domainMetadata.allTypes(EntityMetadata.class).stream().distinct()
                 // sort for testing purposes
                 .sorted(comparing(em -> em.javaType().getSimpleName()))
-                .filter(em -> em.nature().isPersistent())
+                .filter(EntityMetadata::isPersistent)
                 .forEach(em -> {
                     try {
                         String tableName = domainMetadata.getTableForEntityType(em.javaType()).name();
@@ -203,8 +203,7 @@ public class HibernateMappingsGenerator {
     private String generatePropertyMappingFromPropertyMetadata(final IDomainMetadata domainMetadata,
                                                                final PropertyMetadata.Persistent prop) {
         final var pmUtils = domainMetadata.propertyMetadataUtils();
-        // TODO replace by a PropertyTypeVisitor
-        if (pmUtils.isPropEntityType(prop, em -> em.nature().isUnion())) {
+        if (pmUtils.isPropEntityType(prop, EntityMetadata::isUnion)) {
             return generateUnionEntityPropertyMapping(prop);
         }
         // potential multi-column mapping

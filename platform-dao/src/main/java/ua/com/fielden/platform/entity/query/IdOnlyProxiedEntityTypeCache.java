@@ -31,7 +31,7 @@ public class IdOnlyProxiedEntityTypeCache implements IIdOnlyProxiedEntityTypeCac
     private Map<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>> buildMap(final IDomainMetadata domainMetadata) {
         // the following operations are a bit heavy and benefit from parallel processing
         return domainMetadata.allTypes(EntityMetadata.class).parallelStream()
-                .filter(em -> em.nature().isPersistent())
+                .filter(EntityMetadata::isPersistent)
                 .map(em -> {
                     final var origType = em.javaType();
                     final var proxyType = produceIdOnlyProxiedResultType(em);
@@ -42,9 +42,9 @@ public class IdOnlyProxiedEntityTypeCache implements IIdOnlyProxiedEntityTypeCac
 
     private Class<? extends AbstractEntity<?>> produceIdOnlyProxiedResultType(EntityMetadata entity) {
         final List<String> proxiedProps = entity.properties().stream()
-                .filter(pm -> !ID.equals(pm.name()) && !pm.type().isCompositeKey() && !pm.nature().isCritOnly()
+                .filter(pm -> !ID.equals(pm.name()) && !pm.type().isCompositeKey() && !pm.isCritOnly()
                               && !pm.type().isCollectional()
-                              && !(pm.nature().isPlain() && entity.isPersistent()))
+                              && !(pm.isPlain() && entity.isPersistent()))
                 .map(PropertyMetadata::name)
                 .toList();
         return EntityProxyContainer.proxy(entity.javaType(), proxiedProps);

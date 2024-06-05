@@ -4,6 +4,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.entity.query.*;
 import ua.com.fielden.platform.eql.retrieval.exceptions.EntityRetrievalException;
+import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadataUtils;
 import ua.com.fielden.platform.reflection.Finder;
@@ -64,7 +65,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
                              if (pm.type().isCollectional()) {
                                  enhanceCollectional(entities, fetchModel, paramValues, propName, propFetchModel);
                              }
-                             else if (propMetadataUtils.isPropEntityType(pm.type(), em -> em.nature().isUnion())) {
+                             else if (propMetadataUtils.isPropEntityType(pm.type(), EntityMetadata::isUnion)) {
                                  enhanceProperty(entities, propName, propFetchModel, paramValues);
                              }
                              else {
@@ -72,7 +73,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
                                      final String linkPropName = Finder.findLinkProperty(fetchModel.getEntityType(), propName);
                                      enhancePropertyWithLinkToParent(entities, propName, propFetchModel, linkPropName, paramValues);
                                  } catch (final Exception e) {
-                                     if (propMetadataUtils.isPropEntityType(pm.type(), em -> em.nature().isPersistent() || EntityUtils.isOneToOne(em.javaType()))) {
+                                     if (propMetadataUtils.isPropEntityType(pm.type(), em -> em.isPersistent() || EntityUtils.isOneToOne(em.javaType()))) {
                                          enhanceProperty(entities, propName, propFetchModel, paramValues);
                                      } else {
                                          // logger.debug(format("Property [%s] of type [%s] can't be fetched with model: %s.", propName, fetchModel.getEntityType(), entry.getValue()));

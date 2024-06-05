@@ -209,7 +209,7 @@ public class PersistDomainMetadataModel {
                                                   position));
 
                 // adding subproperties of union type properties
-                if (pmUtils.isPropEntityType(pm.type(), em -> em.nature().isUnion())) {
+                if (pmUtils.isPropEntityType(pm.type(), EntityMetadata::isUnion)) {
                     final List<PropertyMetadata> subProps = pmUtils.subProperties(pm);
                     final long holderId = id;
                     int subItemPosition = 0;
