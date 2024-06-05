@@ -8,7 +8,7 @@ import static java.lang.String.format;
 /**
  * A wrapper for {@link IDomainMetadata} for testing purposes.
  */
-class TestDomainMetadata {
+public class TestDomainMetadata {
 
     private final IDomainMetadata domainMetadata;
 
