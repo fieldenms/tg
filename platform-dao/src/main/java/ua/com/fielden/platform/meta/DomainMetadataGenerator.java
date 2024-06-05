@@ -82,7 +82,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
  *
  * <h4> Collectional Properties </h4>
  * Although collectional properties are implicitly calculated, the nature of any given collectional property is inferred
- * from its definition (typically it is {@link PropertyNature.Transient}). The calculation part is independently
+ * from its definition (typically it is {@link PropertyNature.Plain}). The calculation part is independently
  * performed by {@link EntityContainerEnhancer}.
  */
 final class DomainMetadataGenerator {
