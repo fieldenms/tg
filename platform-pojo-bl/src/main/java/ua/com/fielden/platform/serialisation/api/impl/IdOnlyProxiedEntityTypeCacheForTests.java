@@ -1,13 +1,16 @@
 package ua.com.fielden.platform.serialisation.api.impl;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
+import ua.com.fielden.platform.entity.proxy.IIdOnlyProxyEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static ua.com.fielden.platform.entity.proxy.EntityProxyContainer.proxy;
 
 /**
  * {@link IIdOnlyProxiedEntityTypeCache} implementation for tests.
@@ -26,8 +29,10 @@ public class IdOnlyProxiedEntityTypeCacheForTests implements IIdOnlyProxiedEntit
 
     private Map<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>> buildMap() {
         final Map<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>> map = new HashMap<>();
-        map.put(OtherEntity.class, EntityProxyContainer.proxy(OtherEntity.class, "version", "key", "desc"));
-        map.put(TgPersistentEntityWithProperties.class, EntityProxyContainer.proxy(TgPersistentEntityWithProperties.class, "version", "key", "desc"));
+        map.put(OtherEntity.class,
+                proxy(OtherEntity.class, List.of("version", "key", "desc"), List.of(IIdOnlyProxyEntity.class)));
+        map.put(TgPersistentEntityWithProperties.class,
+                proxy(TgPersistentEntityWithProperties.class, List.of("version", "key", "desc"), List.of(IIdOnlyProxyEntity.class)));
         return map;
     }
 }

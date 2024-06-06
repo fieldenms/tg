@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity.query;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
+import ua.com.fielden.platform.entity.proxy.IIdOnlyProxyEntity;
 import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
@@ -47,6 +48,6 @@ public class IdOnlyProxiedEntityTypeCache implements IIdOnlyProxiedEntityTypeCac
                               && !(pm.isPlain() && entity.isPersistent()))
                 .map(PropertyMetadata::name)
                 .toList();
-        return EntityProxyContainer.proxy(entity.javaType(), proxiedProps);
+        return EntityProxyContainer.proxy(entity.javaType(), proxiedProps, List.of(IIdOnlyProxyEntity.class));
     }
 }

@@ -68,6 +68,7 @@ import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.MetaPropertyFull;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.proxy.IIdOnlyProxyEntity;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.ICustomValidator;
@@ -1518,6 +1519,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * @return
      */
     public boolean isIdOnlyProxy() {
-        return proxiedPropertyNames().contains(VERSION);
+        return this instanceof IIdOnlyProxyEntity;
     }
+
 }
