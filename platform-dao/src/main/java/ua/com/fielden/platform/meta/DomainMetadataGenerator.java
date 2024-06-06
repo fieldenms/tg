@@ -227,7 +227,6 @@ final class DomainMetadataGenerator {
 
     private Optional<PropertyMetadata> mkPropVersion(final EntityMetadataBuilder<?, ?> entityBuilder) {
         return switch (entityBuilder) {
-            // NOTE old code also did NOT use isSyntheticBasedOnPersistentEntityType, which traverses the whole type hierarchy
             case EntityMetadataBuilder.Synthetic s when isSyntheticBasedOnPersistentEntityType(s.getJavaType()) ->
                     Optional.of(persistentProp(VERSION, mkPropertyTypeOrThrow(Long.class), H_LONG,
                                                PropertyNature.Persistent.data(propColumn(VERSION)))
