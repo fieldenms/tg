@@ -67,11 +67,18 @@ public class EntityProxyContainer {
         if (type != null) {
             return (Class<? extends T>) type;
         }
-        
-        Builder<T> buddy = new ByteBuddy().subclass(entityType).implement(interfaces);
+
+        Builder<T> buddy = new ByteBuddy()
+                .subclass(entityType);
+
+        // try to avoid implementing IProxyEntity more than once
+        if (interfaces.stream().noneMatch(IProxyEntity.class::isAssignableFrom)) {
+            buddy = buddy.implement(IProxyEntity.class);
+        }
+
+        buddy = buddy.implement(interfaces);
 
         for (final String propName: uniquePropNames) {
-    
             final Method accessor = Reflector.obtainPropertyAccessor(entityType, propName);
             final Method setter = Reflector.obtainPropertySetter(entityType, propName);
     
@@ -80,7 +87,6 @@ public class EntityProxyContainer {
                     .intercept(proxyChecker)
                 .method(ElementMatchers.named(setter.getName())) // 
                     .intercept(proxyChecker);
-
         }
         
         final Class<? extends T> ownerType = buddy
