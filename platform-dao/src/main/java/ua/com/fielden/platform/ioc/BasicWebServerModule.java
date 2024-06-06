@@ -114,7 +114,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bindConstant().annotatedWith(Names.named("independent.time.zone")).to(Boolean.valueOf(props.getProperty("independent.time.zone")));
         final boolean webApiPresent = Boolean.valueOf(props.getProperty("web.api"));
         bindConstant().annotatedWith(Names.named("web.api")).to(webApiPresent);
-        bindConstant().annotatedWith(Names.named("web.api.maxQueryDepth")).to(Integer.valueOf(props.getProperty("web.api.maxQueryDepth", "13")));
+        bindConstant().annotatedWith(Names.named("web.api.maxQueryDepth")).to(Integer.valueOf(props.getProperty("web.api.maxQueryDepth", "15")));
         // authentication parameters
         bindConstant().annotatedWith(Names.named("auth.mode")).to(props.getProperty("auth.mode", AuthMode.RSO.name()));
         bindConstant().annotatedWith(Names.named("auth.sso.provider")).to(props.getProperty("auth.sso.provider", "Identity Provider"));
