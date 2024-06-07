@@ -52,7 +52,8 @@ public class EntityProxyContainer {
      * @param interfaces  interfaces for the proxied type to implement
      */
     public static <T extends AbstractEntity<?>>
-    Class<? extends T> proxy(final Class<T> entityType, final List<String> propNames, final List<? extends Class> interfaces) {
+    Class<? extends T> proxy(final Class<T> entityType, final Collection<String> propNames,
+                             final List<? extends Class> interfaces) {
         // if there is nothing to proxy then we can simply return the same type
         if (propNames.isEmpty()) {
             return entityType;
@@ -83,9 +84,9 @@ public class EntityProxyContainer {
             final Method setter = Reflector.obtainPropertySetter(entityType, propName);
     
             buddy = buddy
-                .method(ElementMatchers.named(accessor.getName())) //
+                .method(ElementMatchers.named(accessor.getName()))
                     .intercept(proxyChecker)
-                .method(ElementMatchers.named(setter.getName())) // 
+                .method(ElementMatchers.named(setter.getName()))
                     .intercept(proxyChecker);
         }
         
@@ -109,7 +110,7 @@ public class EntityProxyContainer {
      * @param propNames -- the names of properties to be proxied
      */
     public static <T extends AbstractEntity<?>>
-    Class<? extends T> proxy(final Class<T> entityType, final List<String> propNames) {
+    Class<? extends T> proxy(final Class<T> entityType, final Collection<String> propNames) {
         return proxy(entityType, propNames, List.of());
     }
 
