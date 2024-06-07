@@ -231,7 +231,8 @@ public class PersistDomainMetadataModel {
     private static @Nullable String determinePropColumn(final PropertyMetadataUtils pmUtils, final PropertyMetadata pm) {
         return switch (pm) {
             case PropertyMetadata.CritOnly $ -> CRITERION;
-            case PropertyMetadata.Persistent ppm -> ppm.data().column().name;
+            case PropertyMetadata.Persistent ppm ->
+                    pmUtils.isPropEntityType(ppm, EntityMetadata::isUnion) ? null : ppm.data().column().name;
             default -> {
                 final var subProps = pmUtils.subProperties(pm);
                 yield subProps.size() == 1
