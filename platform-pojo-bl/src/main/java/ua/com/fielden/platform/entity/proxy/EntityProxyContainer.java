@@ -10,7 +10,6 @@ import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.implementation.MethodDelegation;
 import net.bytebuddy.matcher.ElementMatchers;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.reflection.Reflector;
 
 import java.lang.reflect.Method;
@@ -22,6 +21,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
+import static ua.com.fielden.platform.entity.AbstractEntity.PROXIED_PROPERTY_NAMES_METHOD_NAME;
 
 /**
  * 
@@ -90,8 +90,8 @@ public class EntityProxyContainer {
                     .intercept(proxyChecker);
         }
         
-        final Class<? extends T> ownerType = buddy
-            .method(ElementMatchers.named("proxiedPropertyNames"))
+        final Class<? extends T> proxyType = buddy
+            .method(ElementMatchers.named(PROXIED_PROPERTY_NAMES_METHOD_NAME))
             .intercept(FixedValue.value(ImmutableSet.copyOf(uniquePropNames)))
             .make()
             // use class loader of the entity being proxied instead of a general system class loader,
@@ -99,8 +99,8 @@ public class EntityProxyContainer {
             .load(entityType.getClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
             .getLoaded();
 
-        typeCache.put(typeKey, ownerType);
-        return ownerType;
+        typeCache.put(typeKey, proxyType);
+        return proxyType;
     }
 
     /**
@@ -127,13 +127,9 @@ public class EntityProxyContainer {
     protected static <T extends AbstractEntity<?>>
     Cache<Object, Class<? extends AbstractEntity<?>>> getOrCreateTypeCache(final Class<T> entityType) {
         try {
-            return TYPES.get(entityType, () -> { 
-                final Cache<Object, Class<? extends AbstractEntity<?>>> newTypeCache = CacheBuilder.newBuilder().weakValues().build();
-                TYPES.put(entityType, newTypeCache);
-                return newTypeCache;
-            });
+            return TYPES.get(entityType, () -> CacheBuilder.newBuilder().weakValues().build());
         } catch (final ExecutionException ex) {
-            throw new EntityException("Could not create a proxy type.", ex);
+            throw new RuntimeException("Failed to create type cache.", ex);
         }
     }
 

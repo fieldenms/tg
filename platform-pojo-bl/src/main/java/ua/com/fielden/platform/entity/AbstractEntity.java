@@ -1513,6 +1513,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         return Collections.emptySet();
     }
 
+    public static final String PROXIED_PROPERTY_NAMES_METHOD_NAME = "proxiedPropertyNames";
+
     /**
      * Indicates whether this instance represents a proxied id-only value.
      *
