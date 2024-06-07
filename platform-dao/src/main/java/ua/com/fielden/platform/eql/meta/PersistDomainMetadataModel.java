@@ -93,7 +93,8 @@ public class PersistDomainMetadataModel {
             id = id + 1;
             final Pair<String, String> typeTitleAndDesc = getEntityTitleAndDesc(entityType);
             final List<? extends PropertyMetadata> props = em.properties().stream()
-                    .filter(pm -> !pm.name().equals(VERSION) && !pm.type().isCollectional() && !pm.type().isCompositeKey())
+                    .filter(pm -> !pm.name().equals(VERSION) && !pm.type().isCollectional() && !pm.type().isCompositeKey()
+                                  && !(pm.isPlain() && em.isPersistent()))
                     .toList();
 
             final Optional<EntityMetadata.Persistent> persistentBase = persistentBaseForSynthetic(domainMetadata, em);
@@ -103,7 +104,7 @@ public class PersistDomainMetadataModel {
                        new DomainTypeData(entityType, persistentBase.map(EntityMetadata::javaType).orElse(null),
                                           id, entityType.getName(), typeTitleAndDesc.getKey(),
                                           true, tableName.orElse(null), typeTitleAndDesc.getValue(), props.size(),
-                                          domainMetadata.entityMetadataUtils().keyMembers(em),
+                                          domainMetadata.entityMetadataUtils().compositeKeyMembers(em),
                                           props));
 
             // collecting primitive, union,custom user types and pure types (like XXXGroupingProperty) from props
@@ -111,7 +112,6 @@ public class PersistDomainMetadataModel {
                 final Optional<Class<?>> optPropJavaType = switch (pm.type()) {
                     case PropertyTypeMetadata.Composite    it -> Optional.of(it.javaType());
                     case PropertyTypeMetadata.Primitive    it -> Optional.of(it.javaType());
-                    case PropertyTypeMetadata.CompositeKey it -> Optional.of(it.javaType());
                     case PropertyTypeMetadata.Entity       it when domainMetadata.forType(it.javaType()).isEmpty()
                                                                    || !entityTypes.contains(it.javaType())
                                                                       && !result.containsKey(it.javaType())
