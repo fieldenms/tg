@@ -6,6 +6,7 @@ import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.meta.PropertyMetadataKeys.KCompositeKeyMember;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
@@ -22,6 +23,7 @@ final class EntityMetadataUtilsImpl implements EntityMetadataUtils {
                 .flatMap(prop -> prop.withKey(KEY_MEMBER).stream())
                 .collect(toImmutableList());
         return validateCompositeKeyMembers(compKeyMembers, entityMetadata).stream()
+                .sorted(Comparator.comparing(prop -> prop.get().value()))
                 .map(PropertyMetadataWithKey::unwrap)
                 .collect(toImmutableList());
     }
