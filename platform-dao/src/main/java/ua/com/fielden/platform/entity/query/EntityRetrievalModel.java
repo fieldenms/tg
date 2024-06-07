@@ -120,8 +120,13 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
                 // TODO don't treat calculated composite specially once TG applications no longer rely on this behaviour
                 .filter(pm -> !pm.isCalculated() || pm.type().isComposite())
                 .forEach(pm -> {
-                    final boolean skipEntities = !(pm.type().isEntity() && (AbstractEntity.KEY.equals(pm.name()) || pm.has(KEY_MEMBER)));
-                    with(pm.name(), skipEntities);
+                    // if this property is a key member typed with a union entity that has property P typed with this entity
+                    // (the one we are constructing fetch model for), then we need to ensure that P is not explored,
+                    // otherwise fetch model construction will never terminate
+                    final boolean exploreEntities = pm.type().isEntity()
+                                                    && !propMetadataUtils.isPropEntityType(pm, EntityMetadata::isUnion)
+                                                    && (KEY.equals(pm.name()) || pm.has(KEY_MEMBER));
+                    with(pm.name(), !exploreEntities);
                 });
     }
 
