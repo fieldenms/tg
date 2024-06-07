@@ -210,7 +210,7 @@ public class PersistDomainMetadataModel {
                         subItemPosition = subItemPosition + 1;
                         final Pair<String, String> titleAndDesc = getTitleAndDesc(spm.name(), propJavaType);
                         result.add(new DomainPropertyData(id, //
-                                                          pm.name(), //
+                                                          spm.name(), //
                                                           null, //
                                                           holderId, //
                                                           typesMap.get((Class<?>) spm.type().javaType()).id, //
