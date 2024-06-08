@@ -119,13 +119,16 @@ Polymer({
     /**
      * Calculates the style for cell that contains the property value.
      */
-    _calcValueRenderingHintsStyle: function (_renderingHints, column, isBoolean) {
+    _calcValueRenderingHintsStyle: function (_renderingHints, column, isBoolean, isValueInactive) {
         let style = isBoolean ? "" : "width: 100%;";
         let rendHints = (this._isProperty(column) && _renderingHints && _renderingHints[column.property] && _renderingHints[column.property].valueStyles) || {};
         for (let property in rendHints) {
             if (rendHints.hasOwnProperty(property)) {
                 style += " " + property + ": " + rendHints[property] + ";";
             }
+        }
+        if (typeof rendHints.color === 'undefined' && isValueInactive) {
+            style += " color: #c5c5c5;";
         }
         return style;
     },
@@ -230,7 +233,13 @@ Polymer({
 
     _propertyRenderingHintsChangedHandler: function () {
         this._backgroundRendHints = this._calcBackgroundRenderingHintsStyle(this._renderingHints, this.column),
-        this._foregroundRendHints = this._calcValueRenderingHintsStyle(this._renderingHints, this.column, this._isBooleanProp(this._hostComponent, this._entity, this.column));
+        this._foregroundRendHints = this._calcValueRenderingHintsStyle(this._renderingHints, this.column, this._isBooleanProp(this._hostComponent, this._entity, this.column), this._hostComponent && this._isProperty(this.column) && this.column.type && this._entity && this._isValueInactive(this._hostComponent.getRealEntity(this._entity, this.column), this._hostComponent.getRealProperty(this.column)));
+    },
+
+    _isValueInactive: function (entity, dotNotationProp) {
+        const value = entity.get(dotNotationProp);
+        const valueInactive = value && typeof value.active !== undefined && value.active === false;
+        return valueInactive || (dotNotationProp.lastIndexOf('.') > -1 ? this._isValueInactive(entity, dotNotationProp.slice(0, dotNotationProp.lastIndexOf('.'))) : ('' === dotNotationProp ? false : this._isValueInactive(entity, '')));
     },
 
     //Utility methods
