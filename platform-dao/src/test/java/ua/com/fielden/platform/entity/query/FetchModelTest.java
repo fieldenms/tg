@@ -1,39 +1,23 @@
 package ua.com.fielden.platform.entity.query;
 
-import static java.lang.String.format;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
-import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ALL;
-import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ALL_INCL_CALC;
-import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.DEFAULT;
-import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ID_AND_VERSION;
-import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ID_ONLY;
-import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.KEY_AND_DESC;
-import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
-
-import java.util.Set;
-
 import org.junit.Ignore;
 import org.junit.Test;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
+import ua.com.fielden.platform.entity.query.test_entities.Circular_EntityWithCompositeKeyMemberUnionEntity;
+import ua.com.fielden.platform.entity.query.test_entities.Circular_UnionEntity;
 import ua.com.fielden.platform.eql.meta.BaseEntQueryTCase1;
-import ua.com.fielden.platform.sample.domain.TgAuthor;
-import ua.com.fielden.platform.sample.domain.TgAuthorship;
-import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
-import ua.com.fielden.platform.sample.domain.TgBogie;
-import ua.com.fielden.platform.sample.domain.TgBogieLocation;
-import ua.com.fielden.platform.sample.domain.TgFuelUsage;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
-import ua.com.fielden.platform.sample.domain.TgPublishedYearly;
-import ua.com.fielden.platform.sample.domain.TgVehicle;
-import ua.com.fielden.platform.sample.domain.TgVehicleMake;
-import ua.com.fielden.platform.sample.domain.TgVehicleModel;
+import ua.com.fielden.platform.sample.domain.*;
+
+import java.util.Set;
+
+import static java.lang.String.format;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.*;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
 public class FetchModelTest extends BaseEntQueryTCase1 {
 
@@ -306,6 +290,15 @@ public class FetchModelTest extends BaseEntQueryTCase1 {
     public void default_strategy_implicitly_includes_calculated_properties_with_a_composite_type() {
         var model = produceRetrievalModel(TgVehicle.class, DEFAULT);
         assertPropsAreFetched(model, Set.of("sumOfPrices"));
+    }
+
+    // asserts that fetch model construction terminates
+    @Test
+    public void fetch_model_is_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
+        assertPropsAreFetched(produceRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, ALL),
+                              Set.of("union"));
+        assertPropsAreFetched(produceRetrievalModel(Circular_UnionEntity.class, ALL),
+                              Set.of("entity"));
     }
 
 }
