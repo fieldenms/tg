@@ -170,6 +170,12 @@ export const TgAppConfig = Polymer({
             notify: true,
             readOnly: true,
             value: window.firstDayOfWeek
+        },
+        inactiveColour: {
+            type: String,
+            readOnly: true,
+            notify: true,
+            value: @inactiveColour
         }
     },
     

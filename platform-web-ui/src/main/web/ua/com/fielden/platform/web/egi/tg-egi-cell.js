@@ -128,7 +128,7 @@ Polymer({
             }
         }
         if (typeof rendHints.color === 'undefined' && isValueInactive) {
-            style += " color: #c5c5c5;";
+            style += ` color: ${this._appConfig.inactiveColour};`;
         }
         return style;
     },

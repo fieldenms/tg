@@ -204,6 +204,13 @@ public interface IWebUiConfig extends IMenuRetriever {
     MasterActionOptions masterActionOptions();
 
     /**
+     * Returns colour for inactive values - #c5c5c5 (grey) by default.
+     *
+     * @return
+     */
+    String inactiveColour();
+
+    /**
      * A set of domain-specific actions for centre configurations sharing.
      *
      * @return

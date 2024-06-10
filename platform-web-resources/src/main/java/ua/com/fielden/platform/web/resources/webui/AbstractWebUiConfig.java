@@ -2,8 +2,7 @@ package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
+import static java.util.Optional.*;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.ResourceLoader.getStream;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.getDefaultCentre;
@@ -103,6 +102,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     private final Map<String, String> checksums;
     private final boolean independentTimeZone;
     private final MasterActionOptions masterActionOptions;
+    private final String inactiveColour;
     /**
      * Holds the map between embedded entity centre's menu item type and [entity centre; entity master] pair.
      */
@@ -117,11 +117,13 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      * - additional root paths for file resources. (see {@link #resourcePaths} for more information).
      * @param independentTimeZone -- if {@code true} is passed then user requests are treated as if they are made from the same timezone as defined for the application server.
      * @param masterActionOptions -- determines what options are available for master's save and cancel actions.
+     * @param inactiveColourOpt -- optional colour for inactive values (#c5c5c5 if empty)
      */
-    public AbstractWebUiConfig(final String title, final Workflows workflow, final String[] externalResourcePaths, final boolean independentTimeZone, final Optional<MasterActionOptions> masterActionOptions) {
+    public AbstractWebUiConfig(final String title, final Workflows workflow, final String[] externalResourcePaths, final boolean independentTimeZone, final Optional<MasterActionOptions> masterActionOptions, final Optional<String> inactiveColourOpt) {
         this.title = title;
         this.independentTimeZone = independentTimeZone;
         this.masterActionOptions = masterActionOptions.orElse(ALL_OFF);
+        this.inactiveColour = inactiveColourOpt.orElse("#c5c5c5");
         this.webUiBuilder = new WebUiBuilder(this);
         this.dispatchingEmitter = new EventSourceDispatchingEmitter();
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -164,7 +166,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      * @param masterActionOptions -- determines what options are available for master's save and cancel actions.
      */
     public AbstractWebUiConfig(final String title, final Workflows workflow, final String[] externalResourcePaths, final Optional<MasterActionOptions> masterActionOptions) {
-        this(title, workflow, externalResourcePaths, false, masterActionOptions);
+        this(title, workflow, externalResourcePaths, false, masterActionOptions, empty());
     }
 
     /**
@@ -177,7 +179,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      * @param independentTimeZone -- if {@code true} is passed then user requests are treated as if they are made from the same timezone as defined for the application server.
      */
     public AbstractWebUiConfig(final String title, final Workflows workflow, final String[] externalResourcePaths, final boolean independentTimeZone) {
-        this(title, workflow, externalResourcePaths, independentTimeZone, of(ALL_OFF));
+        this(title, workflow, externalResourcePaths, independentTimeZone, of(ALL_OFF), empty());
     }
 
     /**
@@ -364,6 +366,11 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     @Override
     public MasterActionOptions masterActionOptions() {
         return masterActionOptions;
+    }
+
+    @Override
+    public String inactiveColour() {
+        return inactiveColour;
     }
 
     /**
