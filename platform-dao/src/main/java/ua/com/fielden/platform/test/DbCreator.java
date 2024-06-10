@@ -9,6 +9,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -319,6 +321,12 @@ public abstract class DbCreator {
      * @param fileName
      */
     public static void saveScriptToFile(final List<String> scripts, final String fileName) {
+        try {
+            Files.createParentDirs(new File(fileName));
+        } catch (final IOException ex) {
+            throw new DomainDriventTestException("Failed to create parent directories for [%s]".formatted(fileName), ex);
+        }
+
         try (final PrintWriter out = new PrintWriter(fileName, StandardCharsets.UTF_8.name())) {
             final StringBuilder builder = new StringBuilder();
             for (final Iterator<String> iter = scripts.iterator(); iter.hasNext();) {
@@ -330,7 +338,8 @@ public abstract class DbCreator {
             }
             out.print(builder.toString());
         } catch (final Exception ex) {
-            throw new DomainDriventTestException(format("Could not save [%s] scripts to file [%s].", scripts.size(), fileName));
+            throw new DomainDriventTestException(format("Could not save [%s] scripts to file [%s].", scripts.size(), fileName),
+                                                 ex);
         }
 
     }
