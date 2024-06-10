@@ -238,7 +238,10 @@ Polymer({
 
     _isValueInactive: function (entity, dotNotationProp) {
         const value = entity.get(dotNotationProp);
-        const valueInactive = value && typeof value.active !== undefined && value.active === false;
+        let valueInactive = false;
+        try {
+            valueInactive = value && this._reflector.isEntity(value) && value.get('active') === false;
+        } catch (ex) {} // Entity.get() may raise a StrictProxyException -- the value is active in this case; no other exceptions should occur, but also consider value as active in that case
         return valueInactive || (dotNotationProp.lastIndexOf('.') > -1 ? this._isValueInactive(entity, dotNotationProp.slice(0, dotNotationProp.lastIndexOf('.'))) : ('' === dotNotationProp ? false : this._isValueInactive(entity, '')));
     },
 
