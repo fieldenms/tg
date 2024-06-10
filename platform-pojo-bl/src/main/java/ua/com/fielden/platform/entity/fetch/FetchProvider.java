@@ -8,6 +8,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.commonProperties;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnlyAndInstrument;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
@@ -473,6 +474,11 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
                 fetchModel = fetchModel.with(entry.getKey());
             } else {
                 fetchModel = fetchModel.with(entry.getKey(), propModel.fetchModel());
+            }
+        }
+        if (streamProperties(entityType).anyMatch(prop -> ACTIVE.equals(prop.getName())) && !fetchModel.isExplicitlyIncludedOrExcluded(ACTIVE)) {
+            if (!isUnionEntityType(entityType)) {
+                fetchModel = fetchModel.with(ACTIVE);
             }
         }
         return fetchModel;

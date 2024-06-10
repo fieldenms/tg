@@ -65,9 +65,13 @@ public class fetch<T extends AbstractEntity<?>> {
         checkForExistence(propName);
         checkForDuplicate(propName);
     }
+
+    public boolean isExplicitlyIncludedOrExcluded(final String propName) {
+        return includedPropsWithModels.containsKey(propName) || includedProps.contains(propName) || excludedProps.contains(propName);
+    }
     
     private void checkForDuplicate(final String propName) {
-        if (includedPropsWithModels.containsKey(propName) || includedProps.contains(propName) || excludedProps.contains(propName)) {
+        if (isExplicitlyIncludedOrExcluded(propName)) {
             throw new IllegalArgumentException("Property [" + propName + "] is already present within fetch model!");
         }
     }
