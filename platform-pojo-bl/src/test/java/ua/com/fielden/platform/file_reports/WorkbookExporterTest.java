@@ -155,8 +155,9 @@ public class WorkbookExporterTest {
         final String[] propertyTitles = { "This", "Entity property" };
         final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles, of(entity -> of("http://tgdev.com"))).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
+
         assertEquals("Unexpected cell value for ”this”.", "master key1", exportedRow.getCell(0).getStringCellValue());
-        assertNotNull("Hyperlinks are expected for be associated with cells for “this”.", exportedRow.getCell(0).getHyperlink());
+        assertNotNull("Hyperlinks are expected to be associated with cells for “this”.", exportedRow.getCell(0).getHyperlink());
 
         assertEquals("Unexpected cell value for entity-typed property “entityProp”", "master key1 1", exportedRow.getCell(1).getStringCellValue());
         assertNull("Hyperlinks are not expected for non-key entity-typed property “entityProp”", exportedRow.getCell(1).getHyperlink());
@@ -171,7 +172,7 @@ public class WorkbookExporterTest {
         final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles, of(entity -> of("http://tgdev.com"))).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         assertEquals("Unexpected cell value for ”this”.", "master key1", exportedRow.getCell(0).getStringCellValue());
-        assertNotNull("Hyperlinks are expected for be associated with cells for “key”.", exportedRow.getCell(0).getHyperlink());
+        assertNotNull("Hyperlinks are expected to be associated with cells for “key”.", exportedRow.getCell(0).getHyperlink());
     }
 
     @Test
@@ -186,11 +187,32 @@ public class WorkbookExporterTest {
         final String[] propertyTitles = { "Master Entity", "integer property" };
         final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles, of(entity -> of("http://tgdev.com"))).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
+
+        assertEquals("Unexpected cell value for ”masterEntityProp”.", "master key1", exportedRow.getCell(0).getStringCellValue());
+        assertNotNull("Hyperlinks are expected to be associated with cells for “masterEntityProp”.", exportedRow.getCell(0).getHyperlink());
+
+        assertEquals("Unexpected cell value for property “integerProp”", 1d, exportedRow.getCell(1).getNumericCellValue(), 0);
+        assertNotNull("Hyperlinks are expected to be associated with cells for “integerProp”.", exportedRow.getCell(1).getHyperlink());
+    }
+
+    @Test
+    public void exporting_composite_entities_without_master_but_with_an_entity_typed_key_member_included_witch_has_master_associates_hyperlink_with_those_cells() {
+        final MasterEntity master = new MasterEntity();
+        master.setKey("master key1");
+        final SlaveEntity entityToExport = new SlaveEntity();
+        entityToExport.setMasterEntityProp(master); // key member 1
+        entityToExport.setIntegerProp(Integer.valueOf(1)); // key member 2
+
+        final String[] propertyNames = { "masterEntityProp", "integerProp" };
+        final String[] propertyTitles = { "Master Entity", "integer property" };
+        final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles, of(entity -> entity instanceof SlaveEntity ? empty() : of("http://tgdev.com"))).getSheetAt(0);
+        final Row exportedRow = sheet.getRow(1);
+
         assertEquals("Unexpected cell value for ”masterEntityProp”.", "master key1", exportedRow.getCell(0).getStringCellValue());
         assertNotNull("Hyperlinks are expected for be associated with cells for “masterEntityProp”.", exportedRow.getCell(0).getHyperlink());
 
         assertEquals("Unexpected cell value for property “integerProp”", 1d, exportedRow.getCell(1).getNumericCellValue(), 0);
-        assertNotNull("Hyperlinks are expected for be associated with cells for “integerProp”.", exportedRow.getCell(1).getHyperlink());
+        assertNull("Hyperlinks are not expected to be associated with cells for “integerProp”.", exportedRow.getCell(1).getHyperlink());
     }
 
     @Test
