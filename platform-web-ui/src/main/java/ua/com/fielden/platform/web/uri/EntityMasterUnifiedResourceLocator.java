@@ -47,7 +47,7 @@ public class EntityMasterUnifiedResourceLocator implements IEntityMasterUnifiedR
         this.masterInfoProvider = new MasterInfoProvider(webUiConfig);
     }
 
-    public <T extends AbstractEntity<?>> Optional<String> masterUrlFor(final T entity) {
+    public Optional<String> masterUrlFor(final AbstractEntity<?> entity) {
         if (entity == null) {
             return empty();
         }

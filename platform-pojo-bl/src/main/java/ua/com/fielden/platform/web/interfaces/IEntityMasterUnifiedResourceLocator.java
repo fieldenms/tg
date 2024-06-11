@@ -9,6 +9,7 @@ import java.util.Optional;
  *
  * @author TG Team
  */
+@FunctionalInterface
 public interface IEntityMasterUnifiedResourceLocator {
 
     /**
@@ -16,8 +17,7 @@ public interface IEntityMasterUnifiedResourceLocator {
      *
      * @param entity
      * @return
-     * @param <T>
      */
-    <T extends AbstractEntity<?>> Optional<String> masterUrlFor(final T entity);
+    Optional<String> masterUrlFor(final AbstractEntity<?> entity);
 
 }

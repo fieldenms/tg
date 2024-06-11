@@ -10,28 +10,16 @@ import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity.EnumType;
 import ua.com.fielden.platform.domaintree.testing.ShortSlaveEntity;
 import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.web.interfaces.IEntityMasterUnifiedResourceLocator;
 
 import java.util.Arrays;
-import java.util.Optional;
 
-import static java.lang.String.format;
 import static java.util.Optional.empty;
-import static org.junit.Assert.assertEquals;
+import static java.util.Optional.of;
+import static org.junit.Assert.*;
 
 public class WorkbookExporterTest {
-
-    private class EntityMasterUnifiedResourceLocatorStub implements IEntityMasterUnifiedResourceLocator {
-
-        @Override
-        public <T extends AbstractEntity<?>> Optional<String> masterUrlFor(final T entity) {
-            return Optional.of(format("http://tgdev.com/#/master/%s/%s", entity.getType().getName(), entity.getKey().toString().replace(" ", "_")));
-        }
-
-    }
 
     @Test
     public void date_property_can_be_exported() {
@@ -156,19 +144,53 @@ public class WorkbookExporterTest {
     }
 
     @Test
-    public void entity_property_can_be_exported_with_hyperlink() {
+    public void exporting_entities_with_this_included_associates_the_main_hyperlink_with_those_cells() {
         final MasterEntity entityToExport = new MasterEntity();
         entityToExport.setKey("master key1");
         final SlaveEntity slave1 = new SlaveEntity();
         slave1.setMasterEntityProp(entityToExport);
         slave1.setIntegerProp(Integer.valueOf(1));
         entityToExport.setEntityProp(slave1);
-        final String[] propertyNames = { "entityProp" };
-        final String[] propertyTitles = { "Entity property" };
-        final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles, Optional.of(new EntityMasterUnifiedResourceLocatorStub())).getSheetAt(0);
+        final String[] propertyNames = { "", "entityProp" };
+        final String[] propertyTitles = { "This", "Entity property" };
+        final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles, of(entity -> of("http://tgdev.com"))).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
-        assertEquals("Entity property of the exported row is incorrect", "master key1 1", exportedRow.getCell(0).getStringCellValue());
-        assertEquals("Entity property hyperlink of the exported row is incorrect", "http://tgdev.com/#/master/ua.com.fielden.platform.domaintree.testing.SlaveEntity/master_key1_1", exportedRow.getCell(0).getHyperlink().getAddress());
+        assertEquals("Unexpected cell value for ”this”.", "master key1", exportedRow.getCell(0).getStringCellValue());
+        assertNotNull("Hyperlinks are expected for be associated with cells for “this”.", exportedRow.getCell(0).getHyperlink());
+
+        assertEquals("Unexpected cell value for entity-typed property “entityProp”", "master key1 1", exportedRow.getCell(1).getStringCellValue());
+        assertNull("Hyperlinks are not expected for non-key entity-typed property “entityProp”", exportedRow.getCell(1).getHyperlink());
+    }
+
+    @Test
+    public void exporting_entities_with_key_included_associates_the_main_hyperlink_with_those_cells() {
+        final MasterEntity entityToExport = new MasterEntity();
+        entityToExport.setKey("master key1");
+        final String[] propertyNames = { "key", "entityProp" };
+        final String[] propertyTitles = { "Key", "Entity property" };
+        final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles, of(entity -> of("http://tgdev.com"))).getSheetAt(0);
+        final Row exportedRow = sheet.getRow(1);
+        assertEquals("Unexpected cell value for ”this”.", "master key1", exportedRow.getCell(0).getStringCellValue());
+        assertNotNull("Hyperlinks are expected for be associated with cells for “key”.", exportedRow.getCell(0).getHyperlink());
+    }
+
+    @Test
+    public void exporting_composite_entities_without_this_but_with_key_members_included_associates_the_main_hyperlink_with_those_cells() {
+        final MasterEntity master = new MasterEntity();
+        master.setKey("master key1");
+        final SlaveEntity entityToExport = new SlaveEntity();
+        entityToExport.setMasterEntityProp(master); // key member 1
+        entityToExport.setIntegerProp(Integer.valueOf(1)); // key member 2
+
+        final String[] propertyNames = { "masterEntityProp", "integerProp" };
+        final String[] propertyTitles = { "Master Entity", "integer property" };
+        final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles, of(entity -> of("http://tgdev.com"))).getSheetAt(0);
+        final Row exportedRow = sheet.getRow(1);
+        assertEquals("Unexpected cell value for ”masterEntityProp”.", "master key1", exportedRow.getCell(0).getStringCellValue());
+        assertNotNull("Hyperlinks are expected for be associated with cells for “masterEntityProp”.", exportedRow.getCell(0).getHyperlink());
+
+        assertEquals("Unexpected cell value for property “integerProp”", 1d, exportedRow.getCell(1).getNumericCellValue(), 0);
+        assertNotNull("Hyperlinks are expected for be associated with cells for “integerProp”.", exportedRow.getCell(1).getHyperlink());
     }
 
     @Test
@@ -366,4 +388,5 @@ public class WorkbookExporterTest {
         final Row exportedRow = sheet.getRow(1);
         assertEquals("Short collection property of the exported row is incorrect", "master key1 1, master key1 2", exportedRow.getCell(0).getStringCellValue());
     }
+
 }
