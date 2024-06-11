@@ -7,7 +7,6 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.file_reports.WorkbookExporter.convertToByteArray;
 
 import java.util.List;
-import java.util.Optional;
 
 import com.google.inject.Inject;
 
@@ -18,7 +17,7 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
-import ua.com.fielden.platform.web.interfaces.IUriGenerator;
+import ua.com.fielden.platform.web.interfaces.IEntityMasterUnifiedResourceLocator;
 
 /**
  * DAO implementation for companion object {@link IExportAction}.
@@ -30,13 +29,13 @@ import ua.com.fielden.platform.web.interfaces.IUriGenerator;
 public class ExportActionDao extends CommonEntityDao<ExportAction> implements IExportAction {
 
     private final ITgPersistentEntityWithProperties co;
-    private final IUriGenerator uriGenerator;
+    private final IEntityMasterUnifiedResourceLocator uriGenerator;
 
     @Inject
     public ExportActionDao(
             final ITgPersistentEntityWithProperties co,
             final IFilter filter,
-            final IUriGenerator uriGenerator) {
+            final IEntityMasterUnifiedResourceLocator uriGenerator) {
         super(filter);
         this.co = co;
         this.uriGenerator = uriGenerator;

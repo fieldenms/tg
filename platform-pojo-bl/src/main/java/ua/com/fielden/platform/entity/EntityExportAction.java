@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity;
 
 import static ua.com.fielden.platform.entity.NoKey.NO_KEY;
+import static ua.com.fielden.platform.error.Result.failure;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -28,7 +29,7 @@ public class EntityExportAction extends AbstractFunEntityForDataExport<NoKey> {
     public static final String PROP_EXPORT_TOP = "exportTop";
     public static final String PROP_EXPORT_SELECTED = "exportSelected";
     public static final String PROP_NUMBER = "number";
-    public static final String WITH_HYPERLINKS = "exportWithHyperlinks";
+    public static final String PROP_EXPORT_WITH_HYPERLINKS = "exportWithHyperlinks";
     public static final Set<String> EXPORT_OPTION_PROPERTIES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(PROP_EXPORT_ALL, PROP_EXPORT_TOP, PROP_EXPORT_SELECTED)));
     
     @IsProperty
@@ -39,22 +40,22 @@ public class EntityExportAction extends AbstractFunEntityForDataExport<NoKey> {
 
     @IsProperty
     @Title(value = "Export top?", 
-           desc = "Should be used in cases where the specified number of the top matching entities need to be exported."
-                   + "If there are less mathing entities than the number specified then only those get exported.")
+           desc = "This option should be used in cases where the specified number of the top matching entities needs to be exported."
+                   + "If there are less matching entities than the number specified then only those records get exported.")
     @AfterChange(ExportActionHandler.class)
     private boolean exportTop;
 
     @IsProperty
-    @Title(value = "Number", desc = "The number of top matching entities to be exported.")
+    @Title(value = "Number", desc = "A number of top matching entities to be exported.")
     private Integer number;
 
     @IsProperty
-    @Title(value = "Export selected?", desc = "Export selected entities")
+    @Title(value = "Export selected?", desc = "Export selected entities.")
     @AfterChange(ExportActionHandler.class)
     private boolean exportSelected;
 
     @IsProperty
-    @Title(value = "Export with hyperlinks?", desc = "Exports entity properties with hyperlinks to thier entity master")
+    @Title(value = "Export with hyperlinks?", desc = "Exports entity-typed properties with hyperlinks to their Entity Master.")
     private boolean exportWithHyperlinks;
 
     @IsProperty
@@ -150,6 +151,7 @@ public class EntityExportAction extends AbstractFunEntityForDataExport<NoKey> {
             }
         }
 
-        return superResult.isSuccessful() ? Result.failure("One of the export options must be selected.") : superResult;
+        return superResult.isSuccessful() ? failure("One of the export options must be selected.") : superResult;
     }
+
 }

@@ -1,15 +1,9 @@
 package ua.com.fielden.platform.web.ioc;
 
-import static ua.com.fielden.platform.basic.config.Workflows.deployment;
-import static ua.com.fielden.platform.basic.config.Workflows.vulcanizing;
-import static ua.com.fielden.platform.reflection.CompanionObjectAutobinder.bindCo;
-import static ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionSelector.INSTANCE;
-
 import com.google.inject.Binder;
 import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.binder.AnnotatedBindingBuilder;
-
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.menu.IMenuRetriever;
@@ -21,12 +15,17 @@ import ua.com.fielden.platform.web.app.SerialisationTypeEncoder;
 import ua.com.fielden.platform.web.app.ThreadLocalDeviceProvider;
 import ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionSelector;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
-import ua.com.fielden.platform.web.interfaces.IUriGenerator;
+import ua.com.fielden.platform.web.interfaces.IEntityMasterUnifiedResourceLocator;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.test.server.TgTestWebApplicationServerModule;
-import ua.com.fielden.platform.web.uri.UriGenerator;
+import ua.com.fielden.platform.web.uri.EntityMasterUnifiedResourceLocator;
 import ua.com.fielden.platform.web.utils.CriteriaEntityRestorer;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
+
+import static ua.com.fielden.platform.basic.config.Workflows.deployment;
+import static ua.com.fielden.platform.basic.config.Workflows.vulcanizing;
+import static ua.com.fielden.platform.reflection.CompanionObjectAutobinder.bindCo;
+import static ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionSelector.INSTANCE;
 
 /**
  * This interface defines <code>Web UI</code> specific IoC binding contract,
@@ -56,8 +55,8 @@ public interface IBasicWebApplicationServerModule {
         bindType(IWebUiConfig.class).toInstance(webApp);
         bindType(IMenuRetriever.class).toInstance(webApp);
 
-        //bind URI generator
-        bindType(IUriGenerator.class).to(UriGenerator.class).in(Scopes.SINGLETON);
+        // bind Entity Master URI creator
+        bindType(IEntityMasterUnifiedResourceLocator.class).to(EntityMasterUnifiedResourceLocator.class).in(Scopes.SINGLETON);
 
         // bind IWebResourceLoader to its implementation as singleton
         bindType(IWebResourceLoader.class).to(WebResourceLoader.class).in(Scopes.SINGLETON);

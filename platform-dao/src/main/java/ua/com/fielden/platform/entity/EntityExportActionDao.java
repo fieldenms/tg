@@ -32,7 +32,7 @@ import ua.com.fielden.platform.file_reports.WorkbookExporter;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.utils.Pair;
-import ua.com.fielden.platform.web.interfaces.IUriGenerator;
+import ua.com.fielden.platform.web.interfaces.IEntityMasterUnifiedResourceLocator;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
 /**
@@ -46,10 +46,15 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
     private final ICriteriaEntityRestorer criteriaEntityRestorer;
     private final IAuthorisationModel authorisationModel;
     private final ISecurityTokenProvider securityTokenProvider;
-    private final IUriGenerator uriGenerator;
+    private final IEntityMasterUnifiedResourceLocator uriGenerator;
 
     @Inject
-    public EntityExportActionDao(final IFilter filter, final ICriteriaEntityRestorer criteriaEntityRestorer, final IAuthorisationModel authorisationModel, final ISecurityTokenProvider securityTokenProvider, final IUriGenerator uriGenerator) {
+    public EntityExportActionDao(
+            final ICriteriaEntityRestorer criteriaEntityRestorer,
+            final IAuthorisationModel authorisationModel,
+            final ISecurityTokenProvider securityTokenProvider,
+            final IEntityMasterUnifiedResourceLocator uriGenerator,
+            final IFilter filter) {
         super(filter);
         this.criteriaEntityRestorer = criteriaEntityRestorer;
         this.authorisationModel = authorisationModel;

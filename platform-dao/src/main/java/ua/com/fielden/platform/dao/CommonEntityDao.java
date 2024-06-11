@@ -32,7 +32,6 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
-import ua.com.fielden.platform.web.interfaces.IUriGenerator;
 
 import java.io.IOException;
 import java.util.*;

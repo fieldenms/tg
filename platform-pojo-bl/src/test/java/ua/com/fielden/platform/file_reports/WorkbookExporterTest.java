@@ -1,19 +1,11 @@
 package ua.com.fielden.platform.file_reports;
 
-import static java.lang.String.format;
-import static java.util.Optional.empty;
-import static org.junit.Assert.assertEquals;
-
-import java.util.Arrays;
-import java.util.Optional;
-
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.joda.time.DateTime;
 import org.junit.Test;
-
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity.EnumType;
 import ua.com.fielden.platform.domaintree.testing.ShortSlaveEntity;
@@ -21,16 +13,24 @@ import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.web.interfaces.IUriGenerator;
+import ua.com.fielden.platform.web.interfaces.IEntityMasterUnifiedResourceLocator;
+
+import java.util.Arrays;
+import java.util.Optional;
+
+import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static org.junit.Assert.assertEquals;
 
 public class WorkbookExporterTest {
 
-    private class UriGeneratorStub implements IUriGenerator {
+    private class EntityMasterUnifiedResourceLocatorStub implements IEntityMasterUnifiedResourceLocator {
 
         @Override
-        public <T extends AbstractEntity<?>> Optional<String> generateUri(final T entity) {
+        public <T extends AbstractEntity<?>> Optional<String> masterUrlFor(final T entity) {
             return Optional.of(format("http://tgdev.com/#/master/%s/%s", entity.getType().getName(), entity.getKey().toString().replace(" ", "_")));
         }
+
     }
 
     @Test
@@ -165,7 +165,7 @@ public class WorkbookExporterTest {
         entityToExport.setEntityProp(slave1);
         final String[] propertyNames = { "entityProp" };
         final String[] propertyTitles = { "Entity property" };
-        final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles, Optional.of(new UriGeneratorStub())).getSheetAt(0);
+        final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles, Optional.of(new EntityMasterUnifiedResourceLocatorStub())).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         assertEquals("Entity property of the exported row is incorrect", "master key1 1", exportedRow.getCell(0).getStringCellValue());
         assertEquals("Entity property hyperlink of the exported row is incorrect", "http://tgdev.com/#/master/ua.com.fielden.platform.domaintree.testing.SlaveEntity/master_key1_1", exportedRow.getCell(0).getHyperlink().getAddress());

@@ -97,7 +97,7 @@ public class StandardMastersWebUiConfig {
                 .addProp(PROP_EXPORT_SELECTED).asCheckbox().also()
                 .addProp(PROP_EXPORT_TOP).asCheckbox().also()
                 .addProp(PROP_NUMBER).asInteger().also()
-                .addProp(WITH_HYPERLINKS).asCheckbox()
+                .addProp(PROP_EXPORT_WITH_HYPERLINKS).asCheckbox()
                 .also()
                 .addAction(MasterActions.REFRESH)
                 /*      */.shortDesc("CANCEL")
