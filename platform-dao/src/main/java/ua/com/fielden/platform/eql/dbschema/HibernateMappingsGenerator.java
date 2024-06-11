@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.dbschema;
 
+import com.google.inject.Inject;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
@@ -38,6 +39,7 @@ public class HibernateMappingsGenerator {
     private final DbVersion dbVersion;
     private final PropertyMetadataUtils pmUtils;
 
+    @Inject
     public HibernateMappingsGenerator(final IDomainMetadata domainMetadata) {
         this.domainMetadata = domainMetadata;
         this.pmUtils = domainMetadata.propertyMetadataUtils();

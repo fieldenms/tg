@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query;
 
+import com.google.inject.Inject;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
@@ -22,6 +23,7 @@ public class IdOnlyProxiedEntityTypeCache implements IIdOnlyProxiedEntityTypeCac
 
     private final Map<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>> typesMap;
 
+    @Inject
     public IdOnlyProxiedEntityTypeCache(final IDomainMetadata domainMetadata) {
         typesMap = buildMap(domainMetadata);
     }

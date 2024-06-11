@@ -31,8 +31,6 @@ public class PropertyFactoryModule extends TransactionalModule {
     public PropertyFactoryModule(final Properties props, final Map<Class, Class> defaultHibernateTypes, final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes) {
         super(props, defaultHibernateTypes, applicationEntityTypes);
         entityFactory = new EntityFactory() {};
-
-        initHibernateConfig(entityFactory);
     }
 
     @Override
