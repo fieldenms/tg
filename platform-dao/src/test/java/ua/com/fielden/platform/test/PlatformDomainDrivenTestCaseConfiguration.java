@@ -1,18 +1,14 @@
 package ua.com.fielden.platform.test;
 
-import java.util.Properties;
-
 import com.google.inject.Injector;
-
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.DefaultFilter;
-import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
-import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.serialisation.api.impl.DefaultSerialisationClassProvider;
 import ua.com.fielden.platform.test.ioc.PlatformTestServerModule;
+
+import java.util.Properties;
 
 /**
  * Provides Platform specific implementation of {@link IDomainDrivenTestCaseConfiguration} for testing purposes, which is mainly related to construction of appropriate IoC modules.
@@ -21,20 +17,18 @@ import ua.com.fielden.platform.test.ioc.PlatformTestServerModule;
  * 
  */
 public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainDrivenTestCaseConfiguration {
-    private final EntityFactory entityFactory;
     private final Injector injector;
-    private final PlatformTestServerModule hibernateModule;
 
-    public PlatformDomainDrivenTestCaseConfiguration(final Properties hbc) {
-        // instantiate all the factories and Hibernate utility
+    public PlatformDomainDrivenTestCaseConfiguration(final Properties properties) {
         try {
-            final Properties props = getProperties(hbc);
-            final PlatformTestDomainTypes domainProvider = new PlatformTestDomainTypes();
+            injector = new ApplicationInjectorFactory()
+                    .add(new PlatformTestServerModule(
+                            PlatformTestHibernateSetup.getHibernateTypes(), new PlatformTestDomainTypes(),
+                            DefaultSerialisationClassProvider.class, DefaultFilter.class, SecurityTokenProvider.class,
+                            getProperties(properties)))
+                    .add(new NewUserNotifierMockBindingModule())
+                    .getInjector();
 
-            hibernateModule = new PlatformTestServerModule(PlatformTestHibernateSetup.getHibernateTypes(), domainProvider, DefaultSerialisationClassProvider.class, DefaultFilter.class, SecurityTokenProvider.class, props);
-            injector = new ApplicationInjectorFactory().add(hibernateModule).add(new NewUserNotifierMockBindingModule()).getInjector();
-
-            entityFactory = injector.getInstance(EntityFactory.class);
         } catch (final Exception e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -62,22 +56,8 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
     }
 
     @Override
-    public EntityFactory getEntityFactory() {
-        return entityFactory;
-    }
-
-    @Override
     public <T> T getInstance(final Class<T> type) {
         return injector.getInstance(type);
     }
 
-    @Override
-    public IDomainMetadata getDomainMetadata() {
-        return hibernateModule.getDomainMetadata();
-    }
-
-    @Override
-    public IdOnlyProxiedEntityTypeCache getIdOnlyProxiedEntityTypeCache() {
-        return hibernateModule.getIdOnlyProxiedEntityTypeCache();
-    }
 }
