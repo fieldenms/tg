@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query;
 
+import jakarta.inject.Singleton;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 
@@ -9,6 +10,7 @@ import ua.com.fielden.platform.entity.query.model.ConditionModel;
  * @author TG Team
  * 
  */
+@Singleton
 public class DefaultFilter implements IFilter {
 
     @Override
