@@ -14,7 +14,7 @@ import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
-import ua.com.fielden.platform.web.interfaces.IEntityMasterUnifiedResourceLocator;
+import ua.com.fielden.platform.web.interfaces.IEntityMasterUrlProvider;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -44,7 +44,7 @@ public class WorkbookExporter {
 
     private WorkbookExporter() {}
 
-    public static <M extends AbstractEntity<?>> SXSSFWorkbook export(final List<Stream<M>> entities, final List<Pair<String[], String[]>> propTitles, final List<List<List<DynamicColumnForExport>>> dynamicProperties, final List<String> sheetTitles, final Optional<IEntityMasterUnifiedResourceLocator> uriGenerator) {
+    public static <M extends AbstractEntity<?>> SXSSFWorkbook export(final List<Stream<M>> entities, final List<Pair<String[], String[]>> propTitles, final List<List<List<DynamicColumnForExport>>> dynamicProperties, final List<String> sheetTitles, final Optional<IEntityMasterUrlProvider> uriGenerator) {
         final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData = new ArrayList<>();
         if (entities.size() == propTitles.size() && entities.size() == dynamicProperties.size()) {
             for (int sheetIdx = 0; sheetIdx < entities.size(); sheetIdx++) {
@@ -73,7 +73,7 @@ public class WorkbookExporter {
         return new DataForWorkbookSheet<>(sheetTitle, entities, propNamesAndTitles, collectionalProps);
     }
 
-    public static <M extends AbstractEntity<?>> SXSSFWorkbook export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles, final Optional<IEntityMasterUnifiedResourceLocator> uriGenerator) {
+    public static <M extends AbstractEntity<?>> SXSSFWorkbook export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles, final Optional<IEntityMasterUrlProvider> uriGenerator) {
         final List<T2<String, String>> propNamesAndTitles = new ArrayList<>();
         for (int index = 0; index < propertyNames.length && index < propertyTitles.length; index++) {
             propNamesAndTitles.add(t2(propertyNames[index], propertyTitles[index]));
@@ -122,7 +122,7 @@ public class WorkbookExporter {
         }
     }
 
-    private static SXSSFWorkbook export(final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData, final Optional<IEntityMasterUnifiedResourceLocator> uriGenerator) {
+    private static SXSSFWorkbook export(final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData, final Optional<IEntityMasterUrlProvider> uriGenerator) {
         final SXSSFWorkbook wb = new SXSSFWorkbook(SXSSF_WINDOW_SIZE);
         for (final DataForWorkbookSheet<? extends AbstractEntity<?>> sheetData : sheetsData) {
             addSheetWithData(wb, sheetData, uriGenerator);
@@ -130,7 +130,7 @@ public class WorkbookExporter {
         return wb;
     }
 
-    private static <M extends AbstractEntity<?>> void addSheetWithData(final SXSSFWorkbook wb, final DataForWorkbookSheet<M> sheetData, final Optional<IEntityMasterUnifiedResourceLocator> uriGenerator) {
+    private static <M extends AbstractEntity<?>> void addSheetWithData(final SXSSFWorkbook wb, final DataForWorkbookSheet<M> sheetData, final Optional<IEntityMasterUrlProvider> uriGenerator) {
         final SXSSFSheet sheet = wb.createSheet(sheetData.getSheetTitle());
         // Create a header row.
         final Row headerRow = sheet.createRow(0);
@@ -199,7 +199,7 @@ public class WorkbookExporter {
             final M entity,
             final DataForWorkbookSheet<M> sheetData,
             final SXSSFWorkbook wb,
-            final Optional<IEntityMasterUnifiedResourceLocator> uriGenerator,
+            final Optional<IEntityMasterUrlProvider> uriGenerator,
             final AtomicInteger countHyperlinks,
             final Sheet sheet,
             final CreationHelper helper,
@@ -294,7 +294,7 @@ public class WorkbookExporter {
      * @return a map between property names, including dot-noted paths, and corresponding URLs.
      * @param <M>
      */
-    private static <M extends AbstractEntity<?>> Map<String, String> determinePropsForHyperlinks(final M entity, final DataForWorkbookSheet<M> sheetData, final Optional<IEntityMasterUnifiedResourceLocator> uriGenerator) {
+    private static <M extends AbstractEntity<?>> Map<String, String> determinePropsForHyperlinks(final M entity, final DataForWorkbookSheet<M> sheetData, final Optional<IEntityMasterUrlProvider> uriGenerator) {
         final var propsWithHyperlinks = new HashMap<String, String>();
         final var thisPresent = sheetData.getPropNames().stream().anyMatch(StringUtils::isEmpty);
         final Optional<String> maybeMainEntityMaster = uriGenerator.flatMap(g -> g.masterUrlFor(entity));

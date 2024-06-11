@@ -15,10 +15,10 @@ import ua.com.fielden.platform.web.app.SerialisationTypeEncoder;
 import ua.com.fielden.platform.web.app.ThreadLocalDeviceProvider;
 import ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionSelector;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
-import ua.com.fielden.platform.web.interfaces.IEntityMasterUnifiedResourceLocator;
+import ua.com.fielden.platform.web.interfaces.IEntityMasterUrlProvider;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.test.server.TgTestWebApplicationServerModule;
-import ua.com.fielden.platform.web.uri.EntityMasterUnifiedResourceLocator;
+import ua.com.fielden.platform.web.uri.EntityMasterUrlProvider;
 import ua.com.fielden.platform.web.utils.CriteriaEntityRestorer;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
@@ -56,7 +56,7 @@ public interface IBasicWebApplicationServerModule {
         bindType(IMenuRetriever.class).toInstance(webApp);
 
         // bind Entity Master URI creator
-        bindType(IEntityMasterUnifiedResourceLocator.class).to(EntityMasterUnifiedResourceLocator.class).in(Scopes.SINGLETON);
+        bindType(IEntityMasterUrlProvider.class).to(EntityMasterUrlProvider.class).in(Scopes.SINGLETON);
 
         // bind IWebResourceLoader to its implementation as singleton
         bindType(IWebResourceLoader.class).to(WebResourceLoader.class).in(Scopes.SINGLETON);

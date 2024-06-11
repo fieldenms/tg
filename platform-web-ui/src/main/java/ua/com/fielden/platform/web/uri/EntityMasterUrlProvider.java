@@ -8,7 +8,7 @@ import ua.com.fielden.platform.master.MasterInfo;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.web.annotations.AppUri;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.interfaces.IEntityMasterUnifiedResourceLocator;
+import ua.com.fielden.platform.web.interfaces.IEntityMasterUrlProvider;
 import ua.com.fielden.platform.web.view.master.MasterInfoProvider;
 
 import java.util.Optional;
@@ -22,27 +22,27 @@ import static ua.com.fielden.platform.types.Hyperlink.SupportedProtocols.HTTP;
 import static ua.com.fielden.platform.types.Hyperlink.SupportedProtocols.HTTPS;
 
 /**
- * Implementation of {@link IEntityMasterUnifiedResourceLocator}
+ * Implementation of {@link IEntityMasterUrlProvider}
  *
  * @author TG Team
  */
-public class EntityMasterUnifiedResourceLocator implements IEntityMasterUnifiedResourceLocator {
+public class EntityMasterUrlProvider implements IEntityMasterUrlProvider {
 
     private static final UrlValidator URL_VALIDATOR = new UrlValidator(new String[] { HTTP.name(), HTTPS.name(), HTTP.name().toLowerCase(), HTTPS.name().toLowerCase() }, ALLOW_LOCAL_URLS);
-    private static final Logger LOGGER = getLogger(EntityMasterUnifiedResourceLocator.class);
+    private static final Logger LOGGER = getLogger(EntityMasterUrlProvider.class);
     private static final String WARN_INVALID_URL = "Invalid URI [%s].";
 
     private final String entityMasterUriPattern;
     private final MasterInfoProvider masterInfoProvider;
 
     /**
-     * Creates new {@link IEntityMasterUnifiedResourceLocator} instance based on application Uri, and it's web-UI configuration.
+     * Creates new {@link IEntityMasterUrlProvider} instance based on application Uri, and it's web-UI configuration.
      *
      * @param webUiConfig
      * @param appUri
      */
     @Inject
-    public EntityMasterUnifiedResourceLocator(final IWebUiConfig webUiConfig, final @AppUri String appUri) {
+    public EntityMasterUrlProvider(final IWebUiConfig webUiConfig, final @AppUri String appUri) {
         this.entityMasterUriPattern = (appUri.endsWith("/") ? appUri : appUri + "/") + "#/master/%s/%s";
         this.masterInfoProvider = new MasterInfoProvider(webUiConfig);
     }

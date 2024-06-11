@@ -10,7 +10,7 @@ import java.util.Optional;
  * @author TG Team
  */
 @FunctionalInterface
-public interface IEntityMasterUnifiedResourceLocator {
+public interface IEntityMasterUrlProvider {
 
     /**
      * Generates an entity master URI for {@code entity}. It might return empty URI string if {@code entity} does not have a registered entity master.

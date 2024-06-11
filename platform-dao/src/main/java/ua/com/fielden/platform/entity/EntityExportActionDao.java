@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.entity;
 
-import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -32,7 +31,7 @@ import ua.com.fielden.platform.file_reports.WorkbookExporter;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.utils.Pair;
-import ua.com.fielden.platform.web.interfaces.IEntityMasterUnifiedResourceLocator;
+import ua.com.fielden.platform.web.interfaces.IEntityMasterUrlProvider;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
 /**
@@ -46,20 +45,20 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
     private final ICriteriaEntityRestorer criteriaEntityRestorer;
     private final IAuthorisationModel authorisationModel;
     private final ISecurityTokenProvider securityTokenProvider;
-    private final IEntityMasterUnifiedResourceLocator uriGenerator;
+    private final IEntityMasterUrlProvider entityMasterUrlProvider;
 
     @Inject
     public EntityExportActionDao(
             final ICriteriaEntityRestorer criteriaEntityRestorer,
             final IAuthorisationModel authorisationModel,
             final ISecurityTokenProvider securityTokenProvider,
-            final IEntityMasterUnifiedResourceLocator uriGenerator,
+            final IEntityMasterUrlProvider entityMasterUrlProvider,
             final IFilter filter) {
         super(filter);
         this.criteriaEntityRestorer = criteriaEntityRestorer;
         this.authorisationModel = authorisationModel;
         this.securityTokenProvider = securityTokenProvider;
-        this.uriGenerator = uriGenerator;
+        this.entityMasterUrlProvider = entityMasterUrlProvider;
     }
 
     @Override
@@ -97,7 +96,7 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         entity.setMime("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
         try {
-            entity.setData(WorkbookExporter.convertToByteArray(WorkbookExporter.export(entities, propAndTitles, dynamicProperties, titles, entity.getExportWithHyperlinks() ? ofNullable(uriGenerator) : empty())));
+            entity.setData(WorkbookExporter.convertToByteArray(WorkbookExporter.export(entities, propAndTitles, dynamicProperties, titles, ofNullable(entityMasterUrlProvider))));
         } catch (final IOException e) {
             throw failure("An exception occurred during the data export.", e);
         } finally {

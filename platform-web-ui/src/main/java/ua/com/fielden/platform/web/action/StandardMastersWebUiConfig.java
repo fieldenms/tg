@@ -85,8 +85,7 @@ public class StandardMastersWebUiConfig {
                 cell(cell(CELL_LAYOUT))
                .cell(cell(CELL_LAYOUT))
                .cell(cell(CELL_LAYOUT))
-               .cell(cell(CELL_LAYOUT), layout().withStyle("padding-left", "32px").end())
-               .cell(cell(CELL_LAYOUT)),
+               .cell(cell(CELL_LAYOUT), layout().withStyle("padding-left", "32px").end()),
                layout().withStyle("padding", "20px").end()).toString();
 
         final String MASTER_ACTION_LAYOUT_SPECIFICATION = "'horizontal', 'padding: 10px', 'wrap', 'justify-content: center'";
@@ -97,19 +96,17 @@ public class StandardMastersWebUiConfig {
                 .addProp(PROP_EXPORT_SELECTED).asCheckbox().also()
                 .addProp(PROP_EXPORT_TOP).asCheckbox().also()
                 .addProp(PROP_NUMBER).asInteger().also()
-                .addProp(PROP_EXPORT_WITH_HYPERLINKS).asCheckbox()
-                .also()
                 .addAction(MasterActions.REFRESH)
                 /*      */.shortDesc("CANCEL")
-                /*      */.longDesc("Cancel action")
+                /*      */.longDesc("Cancel action.")
                 .addAction(MasterActions.SAVE)
                 /*      */.shortDesc("EXPORT")
-                /*      */.longDesc("Start exporting")
+                /*      */.longDesc("Export data.")
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), buttonPanelLayout)
                 .setLayoutFor(DESKTOP, Optional.empty(), layout)
                 .setLayoutFor(TABLET, Optional.empty(), layout)
                 .setLayoutFor(MOBILE, Optional.empty(), layout)
-                .withDimensions(mkDim(420, 428, Unit.PX))
+                .withDimensions(mkDim(420, 370, Unit.PX))
                 .done();
 
         return new EntityMaster<>(EntityExportAction.class, EntityExportActionProducer.class, masterConfig, injector);
