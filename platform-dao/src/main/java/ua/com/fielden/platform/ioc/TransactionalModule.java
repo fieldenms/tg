@@ -34,7 +34,6 @@ public abstract class TransactionalModule extends EntityModule {
     private final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
     private final ProxyInterceptor interceptor;
     private final HibernateUtil hibernateUtil;
-    private final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes;
 
     /**
      * Creates transactional module, which holds references to instances of {@link SessionFactory} and {@link IDomainMetadata}.
@@ -54,7 +53,6 @@ public abstract class TransactionalModule extends EntityModule {
         this.sessionFactory = hibernateUtil.getSessionFactory();
         this.domainMetadata = hcf.getDomainMetadata();
         this.idOnlyProxiedEntityTypeCache = hcf.getIdOnlyProxiedEntityTypeCache();
-        this.applicationEntityTypes = applicationEntityTypes;
     }
 
     protected void initHibernateConfig(final EntityFactory factory) {
@@ -83,18 +81,6 @@ public abstract class TransactionalModule extends EntityModule {
                 annotatedWith(SessionRequired.class), // having annotated methods
                 new SessionInterceptor(sessionFactory) // the intercepter
         );
-    }
-
-    public IDomainMetadata getDomainMetadata() {
-        return domainMetadata;
-    }
-    
-    public IdOnlyProxiedEntityTypeCache getIdOnlyProxiedEntityTypeCache() {
-        return idOnlyProxiedEntityTypeCache;
-    }
-
-    protected List<Class<? extends AbstractEntity<?>>> getApplicationEntityTypes() {
-        return Collections.unmodifiableList(applicationEntityTypes);
     }
 
 }
