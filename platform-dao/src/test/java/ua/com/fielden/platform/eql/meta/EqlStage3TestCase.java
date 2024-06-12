@@ -1,23 +1,6 @@
 package ua.com.fielden.platform.eql.meta;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyMap;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
-import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
-import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
-import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
-import static ua.com.fielden.platform.eql.meta.PropType.DATETIME_PROP_TYPE;
-import static ua.com.fielden.platform.eql.meta.PropType.INTEGER_PROP_TYPE;
-import static ua.com.fielden.platform.eql.meta.PropType.LONG_PROP_TYPE;
-import static ua.com.fielden.platform.eql.meta.PropType.STRING_PROP_TYPE;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.junit.Before;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.QueryProcessingModel;
@@ -38,18 +21,22 @@ import ua.com.fielden.platform.eql.stage3.operands.functions.CountAll3;
 import ua.com.fielden.platform.eql.stage3.queries.ResultQuery3;
 import ua.com.fielden.platform.eql.stage3.queries.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.queries.SubQuery3;
-import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
-import ua.com.fielden.platform.eql.stage3.sources.ISource3;
-import ua.com.fielden.platform.eql.stage3.sources.JoinInnerNode3;
-import ua.com.fielden.platform.eql.stage3.sources.JoinLeafNode3;
-import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnQueries;
-import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnTable;
-import ua.com.fielden.platform.eql.stage3.sundries.GroupBy3;
-import ua.com.fielden.platform.eql.stage3.sundries.GroupBys3;
-import ua.com.fielden.platform.eql.stage3.sundries.OrderBy3;
-import ua.com.fielden.platform.eql.stage3.sundries.OrderBys3;
-import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
-import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
+import ua.com.fielden.platform.eql.stage3.sources.*;
+import ua.com.fielden.platform.eql.stage3.sundries.*;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyMap;
+import static java.util.Optional.empty;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
+import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
+import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
+import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
+import static ua.com.fielden.platform.eql.meta.PropType.*;
 
 public abstract class EqlStage3TestCase extends EqlTestCase {
     public static int sqlId = 0;
@@ -68,8 +55,8 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
         resetSqlId();
     }
 
-    private static final <E extends AbstractEntity<?>> ResultQuery3 transform(final QueryProcessingModel<E, ?> qem) {
-        return EqlQueryTransformer.transform(qem, filter, null, dates, metadata()).item;
+    private static <E extends AbstractEntity<?>> ResultQuery3 transform(final QueryProcessingModel<E, ?> qem) {
+        return EqlQueryTransformer.transform(qem, filter, empty(), dates, metadata()).item;
     }
 
     protected static <T extends AbstractEntity<?>> ResultQuery3 qryCountAll(final ICompoundCondition0<T> unfinishedQry) {

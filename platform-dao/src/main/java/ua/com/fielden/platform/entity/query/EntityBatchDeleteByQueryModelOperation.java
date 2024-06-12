@@ -3,8 +3,8 @@ package ua.com.fielden.platform.entity.query;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Query;
 import org.hibernate.exception.ConstraintViolationException;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.dao.exceptions.EntityDeletionException;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
@@ -15,6 +15,7 @@ import javax.persistence.PersistenceException;
 import java.util.Collections;
 import java.util.Map;
 
+import static java.util.Optional.empty;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.companion.DeleteOperations.ERR_DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES;
 import static ua.com.fielden.platform.companion.DeleteOperations.ERR_DELETION_WAS_UNSUCCESSFUL_DUE_TO_OTHER_REASONS;
@@ -50,7 +51,7 @@ public class EntityBatchDeleteByQueryModelOperation {
         final IDomainMetadata domainMetadata = executionContext.getDomainMetadata();
         final AggregatedResultQueryModel finalModel = select(model.getResultType()).where().prop(ID).in().model(model).yield().prop(ID).as(ID).modelAsAggregate();
         final String tableName = domainMetadata.getTableForEntityType(model.getResultType()).name();
-        final TransformationResultFromStage2To3<ResultQuery3> s2tr = transform(new QueryProcessingModel(finalModel, null, null, paramValues, true), null, null, executionContext.dates(), domainMetadata);
+        final TransformationResultFromStage2To3<ResultQuery3> s2tr = transform(new QueryProcessingModel(finalModel, null, null, paramValues, true), null, empty(), executionContext.dates(), domainMetadata);
         final ResultQuery3 entQuery3 = s2tr.item;
         final String selectionSql = entQuery3.sql(domainMetadata.dbVersion());
         final String deletionSql = produceDeletionSql(selectionSql, tableName, domainMetadata.dbVersion());

@@ -14,6 +14,8 @@ import ua.com.fielden.platform.eql.stage3.queries.ResultQuery3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.IDates;
 
+import java.util.Optional;
+
 /**
  * A entry point for transforming an EQL query to SQL.
  * <p>
@@ -35,7 +37,7 @@ public class EqlQueryTransformer {
     public static final <E extends AbstractEntity<?>> TransformationResultFromStage2To3<ResultQuery3> transform(
             final QueryProcessingModel<E, ?> qem,
             final IFilter filter,
-            final String username,
+            final Optional<String> username,
             final IDates dates,
             final IDomainMetadata domainMetadata) {
         final QueryModelToStage1Transformer gen = new QueryModelToStage1Transformer(filter, username, new QueryNowValue(dates), qem.getParamValues());

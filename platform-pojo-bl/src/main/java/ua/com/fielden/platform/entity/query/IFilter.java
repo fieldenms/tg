@@ -6,6 +6,8 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
 import com.google.inject.ImplementedBy;
 
+import javax.annotation.Nullable;
+
 /**
  * A contract to be implemented for the purpose of data filtering.
  * <p>
@@ -17,5 +19,5 @@ import com.google.inject.ImplementedBy;
 @ImplementedBy(DefaultFilter.class)
 public interface IFilter {
 
-    <ET extends AbstractEntity<?>> ConditionModel enhance(Class<ET> entityType, String typeAlias, final String username);
+    <ET extends AbstractEntity<?>> ConditionModel enhance(Class<ET> entityType, String typeAlias, final @Nullable String username);
 }

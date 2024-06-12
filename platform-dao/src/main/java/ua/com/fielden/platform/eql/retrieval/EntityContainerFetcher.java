@@ -24,6 +24,7 @@ import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage3.queries.ResultQuery3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.streaming.SequentialGroupingStream;
 import ua.com.fielden.platform.utils.IDates;
 
@@ -50,21 +51,23 @@ public class EntityContainerFetcher {
 
     private final IDomainMetadata domainMetadata;
     private final IFilter filter;
-    private final String username;
+    private final IUserProvider userProvider;
     private final IDates dates;
     private final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
     private final EntityFactory entityFactory;
 
     @Inject
-    public EntityContainerFetcher(final IDomainMetadata domainMetadata,
-                                  final IFilter filter,
-                                  final String username,
-                                  final IDates dates,
-                                  final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache,
-                                  final EntityFactory entityFactory) {
+    public EntityContainerFetcher(
+            final IDomainMetadata domainMetadata,
+            final IFilter filter,
+            final IUserProvider userProvider,
+            final IDates dates,
+            final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache,
+            final EntityFactory entityFactory)
+    {
         this.domainMetadata = domainMetadata;
         this.filter = filter;
-        this.username = username;
+        this.userProvider = userProvider;
         this.dates = dates;
         this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
         this.entityFactory = entityFactory;
@@ -74,7 +77,8 @@ public class EntityContainerFetcher {
             final Session session, final QueryProcessingModel<E, ?> queryModel,
             final Integer pageNumber, final Integer pageCapacity)
     {
-        final QueryModelResult<E> modelResult = getModelResult(queryModel, domainMetadata.dbVersion(), filter, username, dates, domainMetadata);
+        final QueryModelResult<E> modelResult = getModelResult(queryModel, domainMetadata.dbVersion(), filter,
+                                                               userProvider.getUsername(), dates, domainMetadata);
 
         if (idOnlyQuery(modelResult)) {
             return listContainersForIdOnlyQuery(session, queryModel, modelResult.resultType(), pageNumber, pageCapacity);
@@ -89,7 +93,8 @@ public class EntityContainerFetcher {
     public <E extends AbstractEntity<?>> Stream<List<EntityContainer<E>>> streamAndEnhanceContainers(
             final Session session, final QueryProcessingModel<E, ?> queryModel, final Optional<Integer> fetchSize)
     {
-        final QueryModelResult<E> modelResult = getModelResult(queryModel, domainMetadata.dbVersion(), filter, username, dates, domainMetadata);
+        final QueryModelResult<E> modelResult = getModelResult(queryModel, domainMetadata.dbVersion(), filter,
+                                                               userProvider.getUsername(), dates, domainMetadata);
 
         if (idOnlyQuery(modelResult)) {
             return streamContainersForIdOnlyQuery(session, queryModel, modelResult.resultType(), fetchSize);
@@ -161,7 +166,7 @@ public class EntityContainerFetcher {
 
     protected static <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(
             final QueryProcessingModel<E, ?> qem, final DbVersion dbVersion, final IFilter filter,
-            final String username, final IDates dates, final IDomainMetadata domainMetadata)
+            final Optional<String> username, final IDates dates, final IDomainMetadata domainMetadata)
     {
         final TransformationResultFromStage2To3<ResultQuery3> tr = transform(qem, filter, username, dates, domainMetadata);
         final ResultQuery3 entQuery3 = tr.item;

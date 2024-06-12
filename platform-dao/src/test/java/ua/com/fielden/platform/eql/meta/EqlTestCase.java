@@ -8,6 +8,7 @@ import java.math.BigInteger;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
@@ -106,14 +107,14 @@ public abstract class EqlTestCase {
     }
     
     protected static final QueryModelToStage1Transformer qb() {
-        return qb(new SimpleUserFilter(), null, injector.getInstance(IDates.class), emptyMap());
+        return qb(new SimpleUserFilter(), Optional.empty(), injector.getInstance(IDates.class), emptyMap());
     }
 
     protected static final QueryModelToStage1Transformer qb(final Map<String, Object> paramValues) {
-        return qb(new SimpleUserFilter(), null, injector.getInstance(IDates.class), paramValues);
+        return qb(new SimpleUserFilter(), Optional.empty(), injector.getInstance(IDates.class), paramValues);
     }
-    
-    protected static final QueryModelToStage1Transformer qb(final IFilter filter, final String username, final IDates dates, final Map<String, Object> paramValues) {
+
+    protected static final QueryModelToStage1Transformer qb(final IFilter filter, final Optional<String> username, final IDates dates, final Map<String, Object> paramValues) {
         return new QueryModelToStage1Transformer(filter, username, new QueryNowValue(dates), paramValues);
     }
     
