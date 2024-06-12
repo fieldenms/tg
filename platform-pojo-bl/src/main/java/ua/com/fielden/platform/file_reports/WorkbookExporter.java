@@ -104,6 +104,19 @@ public class WorkbookExporter {
         return export(entities, hyperlinks, propertyNames, propertyTitles, Optional.empty());
     }
 
+    /**
+     * Export without hyperlinks.
+     *
+     * @param entities
+     * @param propertyNames
+     * @param propertyTitles
+     * @return
+     * @param <M>
+     */
+    public static <M extends AbstractEntity<?>> SXSSFWorkbook export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles) {
+        return export(entities, Stream.empty(), propertyNames, propertyTitles, Optional.empty());
+    }
+
     private static <M extends AbstractEntity<?>> SXSSFWorkbook export(final Stream<M> entities, final Stream<Map<String, String>> hyperlinks, final String[] propertyNames, final String[] propertyTitles, final Optional<IEntityMasterUrlProvider> entityMasterUrlProvider) {
         final List<T2<String, String>> propNamesAndTitles = new ArrayList<>();
         for (int index = 0; index < propertyNames.length && index < propertyTitles.length; index++) {

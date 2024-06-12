@@ -326,7 +326,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Override
     @SessionRequired
     public byte[] export(final QueryExecutionModel<T, ?> query, final String[] propertyNames, final String[] propertyTitles) throws IOException {
-        return WorkbookExporter.convertToGZipByteArray(WorkbookExporter.export(stream(query), propertyNames, propertyTitles, empty()));
+        return WorkbookExporter.convertToGZipByteArray(WorkbookExporter.export(stream(query), propertyNames, propertyTitles));
     }
 
     public DomainMetadata getDomainMetadata() {
