@@ -14,6 +14,7 @@ import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.utils.StreamUtils;
 import ua.com.fielden.platform.web.interfaces.IEntityMasterUrlProvider;
 
 import java.io.ByteArrayOutputStream;
@@ -44,14 +45,14 @@ public class WorkbookExporter {
 
     private WorkbookExporter() {}
 
-    public static <M extends AbstractEntity<?>> SXSSFWorkbook export(final List<Stream<M>> entities, final List<Pair<String[], String[]>> propTitles, final List<List<List<DynamicColumnForExport>>> dynamicProperties, final List<String> sheetTitles, final Optional<IEntityMasterUrlProvider> uriGenerator) {
+    public static <M extends AbstractEntity<?>> SXSSFWorkbook export(final List<Stream<M>> entities, final List<Pair<String[], String[]>> propTitles, final List<List<List<DynamicColumnForExport>>> dynamicProperties, final List<String> sheetTitles, final Optional<IEntityMasterUrlProvider> entityMasterUrlProvider) {
         final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData = new ArrayList<>();
         if (entities.size() == propTitles.size() && entities.size() == dynamicProperties.size()) {
             for (int sheetIdx = 0; sheetIdx < entities.size(); sheetIdx++) {
                 sheetsData.add(export(entities.get(sheetIdx), propTitles.get(sheetIdx).getKey(), propTitles.get(sheetIdx).getValue(), dynamicProperties.get(sheetIdx), sheetTitles.get(sheetIdx)));
             }
         }
-        return export(sheetsData, uriGenerator);
+        return export(sheetsData, Stream.empty(), entityMasterUrlProvider);
     }
 
     private static <M extends AbstractEntity<?>> DataForWorkbookSheet<M> export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles, final List<List<DynamicColumnForExport>> dynamicProperties, final String sheetTitle) {
@@ -73,7 +74,37 @@ public class WorkbookExporter {
         return new DataForWorkbookSheet<>(sheetTitle, entities, propNamesAndTitles, collectionalProps);
     }
 
-    public static <M extends AbstractEntity<?>> SXSSFWorkbook export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles, final Optional<IEntityMasterUrlProvider> uriGenerator) {
+    /**
+     * Export {@code entities}. Only properties listed in {@code propertyNames} are exported with titles defined in {@code propertyTitles}.
+     * If {@code entityMasterUrlProvider} is supplied, it is used to assign Entity Master hyperlinks.
+     *
+     * @param entities
+     * @param propertyNames
+     * @param propertyTitles
+     * @param entityMasterUrlProvider
+     * @return
+     * @param <M>
+     */
+    public static <M extends AbstractEntity<?>> SXSSFWorkbook export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles, final Optional<IEntityMasterUrlProvider> entityMasterUrlProvider) {
+        return export(entities, Stream.empty(), propertyNames, propertyTitles, entityMasterUrlProvider);
+    }
+
+    /**
+     * The same as {@link #export(Stream, String[], String[], Optional)}, where hyperlinks are supplied by {@code hyperlinks}, which provides a map between property names and URLs.
+     * There should be a correspondence between elements of {@code entities} and {@code hyperlinks}.
+     *
+     * @param entities
+     * @param hyperlinks
+     * @param propertyNames
+     * @param propertyTitles
+     * @return
+     * @param <M>
+     */
+    public static <M extends AbstractEntity<?>> SXSSFWorkbook export(final Stream<M> entities, final Stream<Map<String, String>> hyperlinks, final String[] propertyNames, final String[] propertyTitles) {
+        return export(entities, hyperlinks, propertyNames, propertyTitles, Optional.empty());
+    }
+
+    private static <M extends AbstractEntity<?>> SXSSFWorkbook export(final Stream<M> entities, final Stream<Map<String, String>> hyperlinks, final String[] propertyNames, final String[] propertyTitles, final Optional<IEntityMasterUrlProvider> entityMasterUrlProvider) {
         final List<T2<String, String>> propNamesAndTitles = new ArrayList<>();
         for (int index = 0; index < propertyNames.length && index < propertyTitles.length; index++) {
             propNamesAndTitles.add(t2(propertyNames[index], propertyTitles[index]));
@@ -82,7 +113,7 @@ public class WorkbookExporter {
         final DataForWorkbookSheet<M> dataForWorkbookSheet = new DataForWorkbookSheet<>(DEFAULT_SHEET_TITLE, entities, propNamesAndTitles, new LinkedHashMap<>());
         final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData = new ArrayList<>();
         sheetsData.add(dataForWorkbookSheet);
-        return export(sheetsData, uriGenerator);
+        return export(sheetsData, hyperlinks, entityMasterUrlProvider);
     }
 
     /**
@@ -122,15 +153,15 @@ public class WorkbookExporter {
         }
     }
 
-    private static SXSSFWorkbook export(final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData, final Optional<IEntityMasterUrlProvider> uriGenerator) {
+    private static SXSSFWorkbook export(final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData, final Stream<Map<String, String>> propertiesToHyperlinks, final Optional<IEntityMasterUrlProvider> uriGenerator) {
         final SXSSFWorkbook wb = new SXSSFWorkbook(SXSSF_WINDOW_SIZE);
         for (final DataForWorkbookSheet<? extends AbstractEntity<?>> sheetData : sheetsData) {
-            addSheetWithData(wb, sheetData, uriGenerator);
+            addSheetWithData(wb, sheetData, propertiesToHyperlinks, uriGenerator);
         }
         return wb;
     }
 
-    private static <M extends AbstractEntity<?>> void addSheetWithData(final SXSSFWorkbook wb, final DataForWorkbookSheet<M> sheetData, final Optional<IEntityMasterUrlProvider> uriGenerator) {
+    private static <M extends AbstractEntity<?>> void addSheetWithData(final SXSSFWorkbook wb, final DataForWorkbookSheet<M> sheetData, final Stream<Map<String, String>> propertiesToHyperlinks, final Optional<IEntityMasterUrlProvider> entityMasterUrlProvider) {
         final SXSSFSheet sheet = wb.createSheet(sheetData.getSheetTitle());
         // Create a header row.
         final Row headerRow = sheet.createRow(0);
@@ -183,7 +214,10 @@ public class WorkbookExporter {
         final var countHyperlinks = new AtomicInteger(0);
         final var helper = wb.getCreationHelper();
         final var cacheShortCollectionalProps = new HashMap<String, String>();
-        sheetData.getEntities().forEach(entity -> addRow(rowIndex, entity, sheetData, wb, uriGenerator, countHyperlinks, sheet, helper, cacheShortCollectionalProps, dateCellStyle, integerCellStyle, decimalCellStyle, moneyCellStyle, dataCellStyle));
+        // zip entities with corresponding stream of hyperlinks, while taking care of situations where not links are provided
+        final Stream<T2<M, Map<String, String>>> entitiesMaybeWithHyperlinks = StreamUtils.zip(sheetData.getEntities(), StreamUtils.supplyIfEmpty(propertiesToHyperlinks, Collections::emptyMap), T2::t2);
+        // and now let's export each entity with hyperlinks, if provided
+        entitiesMaybeWithHyperlinks.forEach(entityMaybeWithHyperlinks -> addRow(rowIndex, entityMaybeWithHyperlinks, sheetData, wb, entityMasterUrlProvider, countHyperlinks, sheet, helper, cacheShortCollectionalProps, dateCellStyle, integerCellStyle, decimalCellStyle, moneyCellStyle, dataCellStyle));
 
         // adjusting columns widths
         for (int propIndex = 0; propIndex < sheetData.getPropNames().size(); propIndex++) {
@@ -196,7 +230,7 @@ public class WorkbookExporter {
 
     private static <M extends AbstractEntity<?>> void addRow(
             final AtomicInteger index,
-            final M entity,
+            final T2<M, Map<String, String>> entityMaybeWithHyperlinks,
             final DataForWorkbookSheet<M> sheetData,
             final SXSSFWorkbook wb,
             final Optional<IEntityMasterUrlProvider> uriGenerator,
@@ -211,7 +245,8 @@ public class WorkbookExporter {
             final CellStyle dataCellStyle) {
         final Row row = sheet.createRow(index.incrementAndGet()); // new row starting with 1
 
-        final var propsWithHyperlinks = determinePropsForHyperlinks(entity, sheetData, uriGenerator);
+        final M entity = entityMaybeWithHyperlinks._1;
+        final var propsWithHyperlinks = entityMaybeWithHyperlinks._2.isEmpty() ? determinePropsForHyperlinks(entity, sheetData, uriGenerator) : entityMaybeWithHyperlinks._2;
 
         // Iterate through values in the current table row, which correspond to entity properties, and populate the row
         for (int propIndex = 0; propIndex < sheetData.getPropNames().size(); propIndex++) {
