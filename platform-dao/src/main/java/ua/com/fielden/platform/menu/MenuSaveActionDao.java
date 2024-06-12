@@ -30,8 +30,7 @@ public class MenuSaveActionDao extends CommonEntityDao<MenuSaveAction> implement
     private final IUserProvider userProvider;
 
     @Inject
-    protected MenuSaveActionDao(final IFilter filter, final IUserProvider userProvider) {
-        super(filter);
+    protected MenuSaveActionDao(final IUserProvider userProvider) {
         this.userProvider = userProvider;
     }
 

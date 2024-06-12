@@ -9,9 +9,4 @@ import ua.com.fielden.platform.entity.query.IFilter;
 @EntityType(SecurityTokenTreeNodeEntity.class)
 public class SecurityTokenTreeNodeEntityDao extends CommonEntityDao<SecurityTokenTreeNodeEntity> implements SecurityTokenTreeNodeEntityCo {
 
-    @Inject
-    protected SecurityTokenTreeNodeEntityDao(final IFilter filter) {
-        super(filter);
-    }
-
 }

@@ -13,16 +13,13 @@ import ua.com.fielden.platform.security.Authorise;
 @EntityType(TgFuelType.class)
 public class TgFuelTypeDao extends CommonEntityDao<TgFuelType> implements ITgFuelType {
 
-    @Inject
-    protected TgFuelTypeDao(final IFilter filter) {
-        super(filter);
-    }
-
     @Override
     @Authorise(TgFuelType_CanSaveNew_Token.class)
     public TgFuelType new_() {
-        final var entity = super.new_().setGuardedIfPersisted(DEFAULT_VALUE_FOR_PROP_guarded).setGuardedEvenIfNotPersisted(DEFAULT_VALUE_FOR_PROP_guarded);
-        entity.getProperty("guardedEvenIfNotPersisted").resetValues(); // this is to define an original value for "guardedEvenIfNotPersisted" while entity is not yet persisted.
+        final var entity = super.new_().setGuardedIfPersisted(DEFAULT_VALUE_FOR_PROP_guarded)
+                .setGuardedEvenIfNotPersisted(DEFAULT_VALUE_FOR_PROP_guarded);
+        entity.getProperty("guardedEvenIfNotPersisted")
+                .resetValues(); // this is to define an original value for "guardedEvenIfNotPersisted" while entity is not yet persisted.
         return entity;
     }
 

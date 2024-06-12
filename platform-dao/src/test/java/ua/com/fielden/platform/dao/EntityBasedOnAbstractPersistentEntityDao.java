@@ -15,34 +15,29 @@ import ua.com.fielden.platform.persistence.types.EntityBasedOnAbstractPersistent
 
 /**
  * A companion object implementation for {@link EntityBasedOnAbstractPersistentEntity} used for testing.
- * 
+ *
  * @author TG Team
- * 
  */
 @EntityType(EntityBasedOnAbstractPersistentEntity.class)
 public class EntityBasedOnAbstractPersistentEntityDao extends CommonEntityDao<EntityBasedOnAbstractPersistentEntity> {
 
-    @Inject
-    protected EntityBasedOnAbstractPersistentEntityDao(final IFilter filter) {
-        super(filter);
-    }
-    
     @SessionRequired
     public List<EntityBasedOnAbstractPersistentEntity> saveInSingleTransaction(final List<EntityBasedOnAbstractPersistentEntity> toSave) {
         return toSave.stream().map(entity -> save(entity)).collect(Collectors.toList());
     }
-    
+
     @SessionRequired
     public List<AbstractPersistentEntity<?>> nestedSaveWithDifferentCompanion(
             final List<EntityBasedOnAbstractPersistentEntity> thisToSave,
             final List<EntityBasedOnAbstractPersistentEntity2> thatToSave) {
-        
+
         final List<AbstractPersistentEntity<?>> result = new ArrayList<>();
         result.addAll(thisToSave.stream().map(entity -> save(entity)).collect(Collectors.toList()));
-        
+
         final EntityBasedOnAbstractPersistentEntity2Dao thatCo = co$(EntityBasedOnAbstractPersistentEntity2.class);
         result.addAll(thatToSave.stream().map(entity -> thatCo.save(entity)).collect(Collectors.toList()));
-        
+
         return result;
     }
+
 }

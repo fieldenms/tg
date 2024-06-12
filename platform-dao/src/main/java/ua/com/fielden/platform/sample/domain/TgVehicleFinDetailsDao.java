@@ -10,9 +10,4 @@ import com.google.inject.Inject;
 
 @EntityType(TgVehicleFinDetails.class)
 public class TgVehicleFinDetailsDao extends CommonEntityDao<TgVehicleFinDetails> implements ITgVehicleFinDetails {
-
-    @Inject
-    protected TgVehicleFinDetailsDao(final IFilter filter) {
-        super(filter);
-    }
 }

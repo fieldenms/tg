@@ -22,19 +22,13 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
 /**
  * A companion that is responsible for associating attachments with other domain entities.
- * 
- * @author TG Team
  *
+ * @author TG Team
  */
 @EntityType(AttachmentsUploadAction.class)
 public class AttachmentsUploadActionDao extends CommonEntityDao<AttachmentsUploadAction> implements IAttachmentsUploadAction {
 
     private static final Logger LOGGER = getLogger(AttachmentsUploadActionDao.class);
-    
-    @Inject
-    protected AttachmentsUploadActionDao(final IFilter filter) {
-        super(filter);
-    }
 
     @Override
     @SessionRequired
@@ -44,8 +38,10 @@ public class AttachmentsUploadActionDao extends CommonEntityDao<AttachmentsUploa
             final fetch<Attachment> attachmentFetchModel = co(Attachment.class).getFetchProvider().fetchModel();
             final Class<? extends AbstractEntity<?>> entityType = action.getMasterEntity().getType();
             action.setSingleAttachment(null);
-            final EntityResultQueryModel<Attachment> query = select(Attachment.class).where().prop(ID).in().values(action.getAttachmentIds().toArray(new Long[] {})).model();
-            try (final Stream<Attachment> attachments = co(Attachment.class).stream(from(query).with(attachmentFetchModel).model())) {
+            final EntityResultQueryModel<Attachment> query = select(Attachment.class).where().prop(ID).in()
+                    .values(action.getAttachmentIds().toArray(new Long[] {})).model();
+            try (final Stream<Attachment> attachments = co(Attachment.class).stream(
+                    from(query).with(attachmentFetchModel).model())) {
                 attachments.forEach(att -> {
                     action.setSingleAttachment(att);
                     if (co$(entityType) instanceof ICanAttach) {
@@ -57,8 +53,8 @@ public class AttachmentsUploadActionDao extends CommonEntityDao<AttachmentsUploa
         } else { // otherwise do nothing...
             LOGGER.debug("Either master entity or attachments are missing.");
         }
-        
+
         return action.setAttachmentIds(emptySet());
     }
-    
+
 }

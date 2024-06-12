@@ -17,29 +17,23 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.error.Result;
 
-/** 
+/**
  * DAO implementation for companion object {@link IDumpCsvTxtProcessor}.
- * 
- * @author Developers
  *
+ * @author Developers
  */
 @EntityType(DumpCsvTxtProcessor.class)
 public class DumpCsvTxtProcessorDao extends CommonEntityDao<DumpCsvTxtProcessor> implements IDumpCsvTxtProcessor {
-    
-    @Inject
-    public DumpCsvTxtProcessorDao(final IFilter filter) {
-        super(filter);
-    }
-    
+
     @Override
     public DumpCsvTxtProcessor save(final DumpCsvTxtProcessor entity) {
-        
+
         if (entity.getInputStream() == null) {
             throw failure("Input stream was not provided.");
         }
-        
+
         System.out.println("ORIGINAL FILE NAME: " + entity.getOrigFileName());
-        
+
         // lets read the data from file line by line
         final BufferedReader br = new BufferedReader(new InputStreamReader(entity.getInputStream()));
         final List<String> data = new ArrayList<>();
@@ -63,7 +57,7 @@ public class DumpCsvTxtProcessorDao extends CommonEntityDao<DumpCsvTxtProcessor>
                 Thread.sleep(rnd.nextInt(2));
             } catch (InterruptedException e) {
             }
-            
+
             final double x = index;
             entity.getEventSourceSubject().ifPresent(ess -> {
                 // in practice there is no need to report every percent completed
@@ -75,11 +69,10 @@ public class DumpCsvTxtProcessorDao extends CommonEntityDao<DumpCsvTxtProcessor>
                 }
             });
         }
-        
+
         // make sure we report 100% completion
         entity.getEventSourceSubject().ifPresent(ess -> ess.publish(100));
 
-        
         return entity.setNoOfProcessedLines(Integer.valueOf(data.size()));
     }
 

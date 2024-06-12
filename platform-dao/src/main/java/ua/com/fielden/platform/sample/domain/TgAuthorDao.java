@@ -25,9 +25,7 @@ public class TgAuthorDao extends CommonEntityDao<TgAuthor> implements ITgAuthor 
     private final TgAuthorMixin mixin;
 
     @Inject
-    public TgAuthorDao(final IFilter filter) {
-        super(filter);
-
+    public TgAuthorDao() {
         mixin = new TgAuthorMixin(this);
     }
 

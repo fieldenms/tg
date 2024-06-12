@@ -28,9 +28,7 @@ public class TgPersonNameDao extends CommonEntityDao<TgPersonName> implements IT
     private final TgPersonNameMixin mixin;
 
     @Inject
-    public TgPersonNameDao(final IFilter filter) {
-        super(filter);
-
+    public TgPersonNameDao() {
         mixin = new TgPersonNameMixin(this);
     }
 

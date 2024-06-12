@@ -8,9 +8,4 @@ import ua.com.fielden.platform.entity.query.IFilter;
 
 @EntityType(TgVehicleFuelUsage.class)
 public class TgVehicleFuelUsageDao extends CommonEntityDao<TgVehicleFuelUsage> implements ITgVehicleFuelUsage {
-
-    @Inject
-    protected TgVehicleFuelUsageDao(final IFilter filter) {
-        super(filter);
-    }
 }

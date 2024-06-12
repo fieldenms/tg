@@ -44,8 +44,7 @@ public class DomainExplorerInsertionPointDao extends CommonEntityDao<DomainExplo
     private final ISecurityTokenProvider tokenProvider;
     
     @Inject
-    protected DomainExplorerInsertionPointDao(final IAuthorisationModel authModel, final ISecurityTokenProvider tokenProvider, final IFilter filter) {
-        super(filter);
+    protected DomainExplorerInsertionPointDao(final IAuthorisationModel authModel, final ISecurityTokenProvider tokenProvider) {
         this.authModel = authModel;
         this.tokenProvider = tokenProvider;
     }

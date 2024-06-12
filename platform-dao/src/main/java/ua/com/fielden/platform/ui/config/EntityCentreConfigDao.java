@@ -22,12 +22,12 @@ import static ua.com.fielden.platform.utils.EntityUtils.isConflicting;
 /**
  * DAO implementation of {@link EntityCentreConfigCo}.
  * <p>
- * Method {@link #save(EntityCentreConfig)} is intentionally not overridden due to the need to use {@link #quickSave(EntityCentreConfig)}.
- * However, please always use {@link #saveWithRetry(EntityCentreConfig)} instead of save/quickSave.
- * This ensures graceful conflict resolution in cases where simultaneous processes for the same user occur.
+ * Method {@link #save(EntityCentreConfig)} is intentionally not overridden due to the need to use
+ * {@link #quickSave(EntityCentreConfig)}. However, please always use {@link #saveWithRetry(EntityCentreConfig)} instead
+ * of save/quickSave. This ensures graceful conflict resolution in cases where simultaneous processes for the same user
+ * occur.
  *
  * @author TG Team
- *
  */
 @EntityType(EntityCentreConfig.class)
 public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> implements EntityCentreConfigCo {
@@ -37,29 +37,24 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
     public static final String ERR_ALREADY_IN_TRANSACTIONAL_SCOPE = "Saving of an Entity Centre should never occur in an existing transactional scope.";
     public static final String ERR_COULD_NOT_SAVE_CONFIG = "Could not save Entity Centre [%s] after %s attempts.";
 
-    @Inject
-    protected EntityCentreConfigDao(final IFilter filter) {
-        super(filter);
-    }
-    
     @Override
     @SessionRequired
     public void delete(final EntityCentreConfig entity) {
         defaultDelete(entity);
     }
-    
+
     @Override
     @SessionRequired
     public void delete(final EntityResultQueryModel<EntityCentreConfig> model, final Map<String, Object> paramValues) {
         defaultDelete(model, paramValues);
     }
-    
+
     @Override
     @SessionRequired
     public int batchDelete(final EntityResultQueryModel<EntityCentreConfig> model) {
         return defaultBatchDelete(model);
     }
-    
+
     @Override
     public <T> T withDbVersion(final Function<DbVersion, T> fun) {
         return fun.apply(getDbVersion());
@@ -70,14 +65,18 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
      * <p>
      * Implementation details:
      * <p>
-     * This method should not manage a transaction scope.
-     * Similarly, method {@link #refetchReapplyAndSaveWithRetry(EntityCentreConfig, int, long, RuntimeException)} should also not manage a transaction scope.
-     * This is due to a recursive invocation of the same logic inside of method {@link #refetchReapplyAndSaveWithRetry(EntityCentreConfig, int, long, RuntimeException)}.
-     * The problem lies in {@link OptimisticLockException} (or other conflict-based exceptions) which, when actioned, rolls back the current transaction;
-     * This, in turn, makes it impossible to invoke method {@link #refetchReapplyAndSaveWithRetry(EntityCentreConfig, int, long, RuntimeException)} recursively.
-     * What we need here is more granular transaction scoping, which is why we have {@link #quickSave(EntityCentreConfig)} with {@link SessionRequired}. If {@link OptimisticLockException} occurs then
-     * only a granular transaction around ({@link #quickSave(EntityCentreConfig)}) is rolled back.
-     * Any subsequent recursive invocation of {@link #refetchReapplyAndSaveWithRetry(EntityCentreConfig, int, long, RuntimeException)} would create a separate, independent {@link SessionRequired} scope for nested calls to {@link #quickSave(EntityCentreConfig)}.
+     * This method should not manage a transaction scope. Similarly, method
+     * {@link #refetchReapplyAndSaveWithRetry(EntityCentreConfig, int, long, RuntimeException)} should also not manage a
+     * transaction scope. This is due to a recursive invocation of the same logic inside of method
+     * {@link #refetchReapplyAndSaveWithRetry(EntityCentreConfig, int, long, RuntimeException)}. The problem lies in
+     * {@link OptimisticLockException} (or other conflict-based exceptions) which, when actioned, rolls back the current
+     * transaction; This, in turn, makes it impossible to invoke method
+     * {@link #refetchReapplyAndSaveWithRetry(EntityCentreConfig, int, long, RuntimeException)} recursively. What we
+     * need here is more granular transaction scoping, which is why we have {@link #quickSave(EntityCentreConfig)} with
+     * {@link SessionRequired}. If {@link OptimisticLockException} occurs then only a granular transaction around
+     * ({@link #quickSave(EntityCentreConfig)}) is rolled back. Any subsequent recursive invocation of
+     * {@link #refetchReapplyAndSaveWithRetry(EntityCentreConfig, int, long, RuntimeException)} would create a separate,
+     * independent {@link SessionRequired} scope for nested calls to {@link #quickSave(EntityCentreConfig)}.
      */
     // @SessionRequired -- avoid transaction here; refer the javadoc
     @Override
@@ -109,7 +108,8 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
             // We catch all exceptions including EntityCompanionException, [PersistenceException, ConstraintViolationException, SQLServerException], EntityDeletionException, EntityAlreadyExists, ObjectNotFoundException caused by saving conflicts.
             // If the exception is not legit (non-conflict-nature), then it will be rethrown after several retries.
             if (!inOuterSessionScope) {
-                return refetchReapplyAndSaveWithRetry(entity, 1 /* first retry */, 300 /* initial delay in millis */, ex); // repeat the procedure of 'conflict-aware' saving in cases of subsequent conflicts
+                return refetchReapplyAndSaveWithRetry(entity, 1 /* first retry */, 300 /* initial delay in millis */,
+                                                      ex); // repeat the procedure of 'conflict-aware' saving in cases of subsequent conflicts
             } else {
                 throw ex;
             }
@@ -124,7 +124,8 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
     private boolean hasActiveSessionScope() {
         try {
             final Session session = getSession(); // throws EntityCompanionException if there is no session
-            return session.getTransaction().isActive(); // if there is a session, need to return the active flag of its transaction
+            return session.getTransaction()
+                    .isActive(); // if there is a session, need to return the active flag of its transaction
         } catch (final EntityCompanionException ex) {
             // an exception is expected in cases where there is no current session, hence returning false
             return false;
@@ -132,12 +133,14 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
     }
 
     /**
-     * Re-fetches Entity Centre configuration based on {@code config}, re-applies dirty properties from {@code config} to the re-fetched instance and saves it.
-     * 
-     * @param config an Entity Centre Configuration that needs saving.
-     * @param retryCount a number of retries to save {@code config} that already took place.
+     * Re-fetches Entity Centre configuration based on {@code config}, re-applies dirty properties from {@code config}
+     * to the re-fetched instance and saves it.
+     *
+     * @param config      an Entity Centre Configuration that needs saving.
+     * @param retryCount  a number of retries to save {@code config} that already took place.
      * @param delayMillis a number of milliseconds to wait before saving is attampted again
-     * @param ex an exception that was throws during the last attempt, preventing {@code config} from saving successfully.
+     * @param ex          an exception that was throws during the last attempt, preventing {@code config} from saving
+     *                    successfully.
      * @return
      */
     private Long refetchReapplyAndSaveWithRetry(final EntityCentreConfig config, final int retryCount, final long delayMillis, final RuntimeException ex) {
@@ -145,7 +148,7 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
             final String msg = format(ERR_COULD_NOT_SAVE_CONFIG, config.getTitle(), SAVING_RETRIES_THRESHOULD);
             throw new EntityCentreExecutionException(msg, ex);
         }
-        
+
         // let's make a small delay before re-attempting the saving
         // this should hopefully give enough time for any concurrent operations to conclude
         try {
@@ -171,7 +174,8 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
         try {
             return quickSave(entityToSave);
         } catch (final RuntimeException nextException) {
-            return refetchReapplyAndSaveWithRetry(entityToSave, retryCount + 1, delayMillis + 100, nextException); // repeat the procedure of 'conflict-aware' saving in cases of subsequent conflicts
+            return refetchReapplyAndSaveWithRetry(entityToSave, retryCount + 1, delayMillis + 100,
+                                                  nextException); // repeat the procedure of 'conflict-aware' saving in cases of subsequent conflicts
         }
     }
 

@@ -37,8 +37,7 @@ public class CentreConfigLoadActionDao extends CommonEntityDao<CentreConfigLoadA
     private static final String ERR_EXACTLY_ONE_CONFIGURATION_MUST_BE_SELECTED = "Please select configuration to load.";
     
     @Inject
-    public CentreConfigLoadActionDao(final IFilter filter, final ICriteriaEntityRestorer criteriaEntityRestorer) {
-        super(filter);
+    public CentreConfigLoadActionDao(final ICriteriaEntityRestorer criteriaEntityRestorer) {
         this.criteriaEntityRestorer = criteriaEntityRestorer;
     }
     

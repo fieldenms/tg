@@ -93,10 +93,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     public UserDao(
             final INewUserNotifier newUserNotifier,
             final SessionIdentifierGenerator crypto,
-            final IApplicationSettings appSettings,
-            final IFilter filter) {
-        super(filter);
-
+            final IApplicationSettings appSettings) {
         this.newUserNotifier = newUserNotifier;
         this.crypto = crypto;
         this.ssoMode = appSettings.authMode() == AuthMode.SSO;

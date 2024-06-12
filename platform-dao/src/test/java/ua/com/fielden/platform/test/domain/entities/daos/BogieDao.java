@@ -9,15 +9,10 @@ import com.google.inject.Inject;
 
 /**
  * Class for retrieval bogies
- * 
+ *
  * @author TG Team
  */
 @EntityType(Bogie.class)
 public class BogieDao extends CommonEntityDao<Bogie> implements IBogieDao {
-
-    @Inject
-    protected BogieDao(final IFilter filter) {
-        super(filter);
-    }
 
 }

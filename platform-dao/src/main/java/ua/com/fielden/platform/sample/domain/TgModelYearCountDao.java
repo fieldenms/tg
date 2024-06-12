@@ -9,9 +9,4 @@ import ua.com.fielden.platform.entity.query.IFilter;
 @EntityType(TgModelYearCount.class)
 public class TgModelYearCountDao extends CommonEntityDao<TgModelYearCount> implements ITgModelYearCount {
 
-    @Inject
-    protected TgModelYearCountDao(IFilter filter) {
-        super(filter);
-    }
-
 }

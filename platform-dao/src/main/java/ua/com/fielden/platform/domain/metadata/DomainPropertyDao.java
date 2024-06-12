@@ -8,14 +8,9 @@ import ua.com.fielden.platform.entity.query.IFilter;
 
 /**
  * DAO for {@link DomainProperty}.
- * 
+ *
  * @author TG Team
  */
 @EntityType(DomainProperty.class)
 public class DomainPropertyDao extends CommonEntityDao<DomainProperty> implements DomainPropertyCo {
-
-    @Inject
-    protected DomainPropertyDao(final IFilter filter) {
-        super(filter);
-    }
 }

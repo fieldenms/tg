@@ -10,15 +10,10 @@ import com.google.inject.Inject;
 
 /**
  * DAO implementation for companion object {@link ITgPublishedYearly}.
- * 
+ *
  * @author Developers
- * 
  */
 @EntityType(TgPublishedYearly.class)
 public class TgPublishedYearlyDao extends CommonEntityDao<TgPublishedYearly> implements ITgPublishedYearly {
-    @Inject
-    public TgPublishedYearlyDao(final IFilter filter) {
-        super(filter);
-    }
 
 }

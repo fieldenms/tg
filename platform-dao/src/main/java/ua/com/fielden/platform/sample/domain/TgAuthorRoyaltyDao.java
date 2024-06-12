@@ -28,9 +28,7 @@ public class TgAuthorRoyaltyDao extends CommonEntityDao<TgAuthorRoyalty> impleme
     private final TgAuthorRoyaltyMixin mixin;
 
     @Inject
-    public TgAuthorRoyaltyDao(final IFilter filter) {
-        super(filter);
-
+    public TgAuthorRoyaltyDao() {
         mixin = new TgAuthorRoyaltyMixin(this);
     }
 

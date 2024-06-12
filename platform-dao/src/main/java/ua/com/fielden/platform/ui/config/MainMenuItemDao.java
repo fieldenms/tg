@@ -20,19 +20,13 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 
 /**
  * DAO implementation of {@link MainMenuItemCo}.
- * 
+ *
  * @author TG Team
- * 
  */
 @EntityType(MainMenuItem.class)
 public class MainMenuItemDao extends CommonEntityDao<MainMenuItem> implements MainMenuItemCo {
 
     private static final Logger LOGGER = getLogger(MainMenuItemDao.class);
-
-    @Inject
-    protected MainMenuItemDao(final IFilter filter) {
-        super(filter);
-    }
 
     @Override
     public MainMenuItem new_() {
@@ -54,7 +48,7 @@ public class MainMenuItemDao extends CommonEntityDao<MainMenuItem> implements Ma
             // perform deletion more effectively (not one by one, as defaultDelete() does, but in one bunch)
             final List<MainMenuItem> withParents = getAllEntities(
                     from(select(MainMenuItem.class).where().prop("parent").isNotNull().model())
-                    .with(fetchAndInstrument(MainMenuItem.class).with("parent")).model());
+                            .with(fetchAndInstrument(MainMenuItem.class).with("parent")).model());
 
             for (final MainMenuItem mmi : withParents) {
                 mmi.setParent(null); // remove dependency

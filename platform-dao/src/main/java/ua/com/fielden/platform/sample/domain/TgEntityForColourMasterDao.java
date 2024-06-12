@@ -20,9 +20,7 @@ public class TgEntityForColourMasterDao extends CommonEntityDao<TgEntityForColou
     private final TgEntityForColourMasterMixin mixin;
 
     @Inject
-    public TgEntityForColourMasterDao(final IFilter filter) {
-        super(filter);
-
+    public TgEntityForColourMasterDao() {
         mixin = new TgEntityForColourMasterMixin(this);
     }
 

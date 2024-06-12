@@ -18,21 +18,18 @@ import com.google.inject.Inject;
 
 /**
  * DAO implementation for companion object {@link EntityCentreAnalysisConfigCo}.
- * 
+ *
  * @author Developers
- * 
  */
 @EntityType(EntityCentreAnalysisConfig.class)
 public class EntityCentreAnalysisConfigDao extends CommonEntityDao<EntityCentreAnalysisConfig> implements EntityCentreAnalysisConfigCo {
-    @Inject
-    public EntityCentreAnalysisConfigDao(final IFilter filter) {
-        super(filter);
-    }
 
     @Override
     public IPage<EntityCentreAnalysisConfig> findDetails(final EntityCentreConfig masterEntity, final fetch<EntityCentreAnalysisConfig> fetch, final int pageCapacity) {
-        final EntityResultQueryModel<EntityCentreAnalysisConfig> selectModel = select(EntityCentreAnalysisConfig.class).where().prop("entityCentreConfig").eq().val(masterEntity).model();
-        return firstPage(from(selectModel).with(orderBy().prop("title").asc().model()).with(fetch).model(), pageCapacity);
+        final EntityResultQueryModel<EntityCentreAnalysisConfig> selectModel = select(
+                EntityCentreAnalysisConfig.class).where().prop("entityCentreConfig").eq().val(masterEntity).model();
+        return firstPage(from(selectModel).with(orderBy().prop("title").asc().model()).with(fetch).model(),
+                         pageCapacity);
     }
 
     @Override

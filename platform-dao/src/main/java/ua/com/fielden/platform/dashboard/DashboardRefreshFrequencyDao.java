@@ -17,16 +17,10 @@ import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFreque
  * DAO implementation for companion object {@link DashboardRefreshFrequencyCo}.
  *
  * @author TG Team
- *
  */
 @EntityType(DashboardRefreshFrequency.class)
 public class DashboardRefreshFrequencyDao extends CommonEntityDao<DashboardRefreshFrequency> implements DashboardRefreshFrequencyCo {
-    
-    @Inject
-    public DashboardRefreshFrequencyDao(final IFilter filter) {
-        super(filter);
-    }
-    
+
     @Override
     @SessionRequired
     @Authorise(DashboardRefreshFrequency_CanSave_Token.class)
@@ -40,10 +34,10 @@ public class DashboardRefreshFrequencyDao extends CommonEntityDao<DashboardRefre
     public int batchDelete(final Collection<Long> entitiesIds) {
         return defaultBatchDelete(entitiesIds);
     }
-    
+
     @Override
     protected IFetchProvider<DashboardRefreshFrequency> createFetchProvider() {
-         return FETCH_PROVIDER;
+        return FETCH_PROVIDER;
     }
-    
+
 }

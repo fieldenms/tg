@@ -8,9 +8,4 @@ import ua.com.fielden.platform.entity.query.IFilter;
 
 @EntityType(MasterInfo.class)
 public class MasterInfoDao extends CommonEntityDao<MasterInfo> implements IMasterInfo {
-
-    @Inject
-    public MasterInfoDao(final IFilter filter) {
-        super(filter);
-    }
 }

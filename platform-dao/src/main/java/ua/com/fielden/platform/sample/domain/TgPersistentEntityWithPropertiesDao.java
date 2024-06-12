@@ -43,9 +43,7 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
     private final TgPersistentEntityWithPropertiesChangeSubject changeSubject;
 
     @Inject
-    public TgPersistentEntityWithPropertiesDao(final TgPersistentEntityWithPropertiesChangeSubject changeSubject, final IFilter filter) {
-        super(filter);
-
+    public TgPersistentEntityWithPropertiesDao(final TgPersistentEntityWithPropertiesChangeSubject changeSubject) {
         this.changeSubject = changeSubject;
     }
 

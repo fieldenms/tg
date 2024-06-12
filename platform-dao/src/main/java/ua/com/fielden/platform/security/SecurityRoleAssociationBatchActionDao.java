@@ -23,9 +23,7 @@ public class SecurityRoleAssociationBatchActionDao extends CommonEntityDao<Secur
     private final SecurityRoleAssociationCo associationDao;
 
     @Inject
-    public SecurityRoleAssociationBatchActionDao(final SecurityRoleAssociationCo associationDao, final IFilter filter) {
-        super(filter);
-
+    public SecurityRoleAssociationBatchActionDao(final SecurityRoleAssociationCo associationDao) {
         this.associationDao = associationDao;
     }
 

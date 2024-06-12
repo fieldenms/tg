@@ -24,8 +24,7 @@ public class TgExportFunctionalEntityDao extends CommonEntityDao<TgExportFunctio
     private final ITgPersistentEntityWithProperties co;
     
     @Inject
-    public TgExportFunctionalEntityDao(final ITgPersistentEntityWithProperties co, final IFilter filter) {
-        super(filter);
+    public TgExportFunctionalEntityDao(final ITgPersistentEntityWithProperties co) {
         this.co = co;
     }
 

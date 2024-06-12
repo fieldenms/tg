@@ -8,9 +8,4 @@ import ua.com.fielden.platform.entity.query.IFilter;
 
 @EntityType(TgOrgUnit5WithSummaries.class)
 public class TgOrgUnit5WithSummariesDao extends CommonEntityDao<TgOrgUnit5WithSummaries> implements TgOrgUnit5WithSummariesCo {
-
-    @Inject
-    protected TgOrgUnit5WithSummariesDao(final IFilter filter) {
-        super(filter);
-    }
 }

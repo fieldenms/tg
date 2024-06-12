@@ -20,8 +20,7 @@ public class TgCreatePersistentStatusActionDao extends CommonEntityDao<TgCreateP
     private final ITgPersistentStatus coTgPersistentStatus;
 
     @Inject
-    public TgCreatePersistentStatusActionDao(final ITgPersistentStatus coTgPersistentStatus, final IFilter filter) {
-        super(filter);
+    public TgCreatePersistentStatusActionDao(final ITgPersistentStatus coTgPersistentStatus) {
         this.coTgPersistentStatus = coTgPersistentStatus;
     }
 

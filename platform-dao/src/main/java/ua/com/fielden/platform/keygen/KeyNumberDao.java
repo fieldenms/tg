@@ -32,8 +32,7 @@ public class KeyNumberDao extends CommonEntityDao<KeyNumber> implements IKeyNumb
     private final EntityFactory factory;
     
     @Inject
-    protected KeyNumberDao(final IFilter filter, final EntityFactory factory) {
-        super(filter);
+    protected KeyNumberDao(final EntityFactory factory) {
         this.factory = factory;
     }
 

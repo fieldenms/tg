@@ -21,9 +21,7 @@ public class TgONStatusActivationFunctionalEntityDao extends CommonEntityDao<TgO
     private final ITgPersistentStatus statusCo;
 
     @Inject
-    public TgONStatusActivationFunctionalEntityDao(final IFilter filter, final ITgPersistentEntityWithProperties masterEntityCo, final ITgPersistentStatus statusCo) {
-        super(filter);
-
+    public TgONStatusActivationFunctionalEntityDao(final ITgPersistentEntityWithProperties masterEntityCo, final ITgPersistentStatus statusCo) {
         this.masterEntityCo = masterEntityCo;
         this.statusCo = statusCo;
     }

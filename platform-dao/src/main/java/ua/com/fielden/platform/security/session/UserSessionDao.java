@@ -72,9 +72,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
             final @SessionCache Cache<String, UserSession> cache,
             final IUniversalConstants constants,
             final SessionIdentifierGenerator crypto,
-            final ISsoSessionController ssoSessionController,
-            final IFilter filter) {
-        super(filter);
+            final ISsoSessionController ssoSessionController) {
         this.constants = constants;
         this.hashingKey = hashingKey;
         this.trustedDurationMins = trustedDurationMins;

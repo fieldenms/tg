@@ -25,8 +25,7 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
     private final ICriteriaEntityRestorer criteriaEntityRestorer;
 
     @Inject
-    public CentreConfigUpdaterDao(final IFilter filter, final ICriteriaEntityRestorer criteriaEntityRestorer) {
-        super(filter);
+    public CentreConfigUpdaterDao(final ICriteriaEntityRestorer criteriaEntityRestorer) {
         this.criteriaEntityRestorer = criteriaEntityRestorer;
     }
 

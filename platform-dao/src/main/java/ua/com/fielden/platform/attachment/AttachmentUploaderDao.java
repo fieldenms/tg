@@ -60,8 +60,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
     public final String attachmentsLocation;
 
     @Inject
-    public AttachmentUploaderDao(final @Named("attachments.location") String attachmentsLocation, final IFilter filter) {
-        super(filter);
+    public AttachmentUploaderDao(final @Named("attachments.location") String attachmentsLocation) {
         this.attachmentsLocation = attachmentsLocation;
     }
 

@@ -10,13 +10,7 @@ import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithHyperlin
  * A DAO for {@link EntityWithHyperlink} used for testing.
  *
  * @author 01es
- *
  */
 @EntityType(EntityWithHyperlink.class)
 public class EntityWithHyperlinkDao extends CommonEntityDao<EntityWithHyperlink> {
-
-    @Inject
-    protected EntityWithHyperlinkDao(final IFilter filter) {
-        super(filter);
-    }
 }

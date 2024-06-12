@@ -10,14 +10,8 @@ import ua.com.fielden.platform.entity.query.IFilter;
  * DAO implementation for companion object {@link CentreColumnWidthConfigUpdaterCo}.
  *
  * @author TG Team
- *
  */
 @EntityType(CentreColumnWidthConfigUpdater.class)
 public class CentreColumnWidthConfigUpdaterDao extends CommonEntityDao<CentreColumnWidthConfigUpdater> implements CentreColumnWidthConfigUpdaterCo {
-    
-    @Inject
-    public CentreColumnWidthConfigUpdaterDao(final IFilter filter) {
-        super(filter);
-    }
-    
+
 }

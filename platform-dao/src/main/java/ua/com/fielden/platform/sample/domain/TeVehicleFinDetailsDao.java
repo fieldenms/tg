@@ -8,9 +8,4 @@ import ua.com.fielden.platform.entity.query.IFilter;
 
 @EntityType(TeVehicleFinDetails.class)
 public class TeVehicleFinDetailsDao extends CommonEntityDao<TeVehicleFinDetails> implements ITeVehicleFinDetails {
-
-    @Inject
-    protected TeVehicleFinDetailsDao(final IFilter filter) {
-        super(filter);
-    }
 }

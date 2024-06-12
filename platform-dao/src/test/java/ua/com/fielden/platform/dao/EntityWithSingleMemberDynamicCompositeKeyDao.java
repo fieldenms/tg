@@ -8,15 +8,9 @@ import ua.com.fielden.platform.persistence.composite.EntityWithSingleMemberDynam
 
 /**
  * This is a test DAO with a single member composite key.
- * 
+ *
  * @author TG Team
- * 
  */
 @EntityType(EntityWithSingleMemberDynamicCompositeKey.class)
 public class EntityWithSingleMemberDynamicCompositeKeyDao extends CommonEntityDao<EntityWithSingleMemberDynamicCompositeKey> {
-
-    @Inject
-    protected EntityWithSingleMemberDynamicCompositeKeyDao(final IFilter filter) {
-        super(filter);
-    }
 }

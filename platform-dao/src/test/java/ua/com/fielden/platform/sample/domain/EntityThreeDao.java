@@ -11,14 +11,8 @@ import ua.com.fielden.platform.sample.domain.EntityThreeCo;
  * DAO implementation for companion object {@link EntityThreeCo}.
  *
  * @author TG Team
- *
  */
 @EntityType(EntityThree.class)
 public class EntityThreeDao extends CommonEntityDao<EntityThree> implements EntityThreeCo {
-
-    @Inject
-    public EntityThreeDao(final IFilter filter) {
-        super(filter);
-    }
 
 }

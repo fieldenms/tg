@@ -16,19 +16,13 @@ import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.tokens.persistent.TgCompoundEntity_CanDelete_Token;
 import ua.com.fielden.platform.security.tokens.persistent.TgCompoundEntity_CanSave_Token;
 
-/** 
+/**
  * DAO implementation for companion object {@link ITgCompoundEntity}.
- * 
- * @author TG Team
  *
+ * @author TG Team
  */
 @EntityType(TgCompoundEntity.class)
 public class TgCompoundEntityDao extends CommonEntityDao<TgCompoundEntity> implements ITgCompoundEntity {
-
-    @Inject
-    public TgCompoundEntityDao(final IFilter filter) {
-        super(filter);
-    }
 
     @Override
     @SessionRequired
@@ -41,17 +35,19 @@ public class TgCompoundEntityDao extends CommonEntityDao<TgCompoundEntity> imple
         }
         final boolean wasPersisted = entity.isPersisted();
         final TgCompoundEntity savedEntity = super.save(entity);
-        
+
         if (!wasPersisted) {
             // Also create and save an instance of detail entity
             final ITgCompoundEntityDetail coDetail = co$(TgCompoundEntityDetail.class);
-            final TgCompoundEntityDetail detailEntity = (TgCompoundEntityDetail) coDetail.new_().setKey(savedEntity).setDesc(savedEntity.getKey() + " detail");
+            final TgCompoundEntityDetail detailEntity = (TgCompoundEntityDetail) coDetail.new_().setKey(savedEntity)
+                    .setDesc(savedEntity.getKey() + " detail");
             coDetail.save(detailEntity);
             // Also create and save an instance of child entity (only for NEWXX entities);
             // this is used in web tests for 'NEW case' where we save entity and move to 'children' menu item.
             if (savedEntity.getKey().startsWith("NEW")) {
                 final ITgCompoundEntityChild coChild = co$(TgCompoundEntityChild.class);
-                final TgCompoundEntityChild childEntity = (TgCompoundEntityChild) coChild.new_().setTgCompoundEntity(savedEntity).setDate(new Date()).setDesc(savedEntity.getKey() + " child");
+                final TgCompoundEntityChild childEntity = (TgCompoundEntityChild) coChild.new_()
+                        .setTgCompoundEntity(savedEntity).setDate(new Date()).setDesc(savedEntity.getKey() + " child");
                 coChild.save(childEntity);
             }
         }
@@ -64,19 +60,19 @@ public class TgCompoundEntityDao extends CommonEntityDao<TgCompoundEntity> imple
     public int batchDelete(final Collection<Long> entitiesIds) {
         return defaultBatchDelete(entitiesIds);
     }
-    
+
     @Override
     @SessionRequired
     @Authorise(TgCompoundEntity_CanDelete_Token.class)
     public int batchDelete(final List<TgCompoundEntity> entities) {
         return defaultBatchDelete(entities);
     }
-    
+
     @Override
     protected IFetchProvider<TgCompoundEntity> createFetchProvider() {
         return FETCH_PROVIDER;
     }
-    
+
     @Override
     public TgCompoundEntity new_() {
         final TgCompoundEntity entity = super.new_();

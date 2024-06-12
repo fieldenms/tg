@@ -28,9 +28,7 @@ public class TgFetchProviderTestEntityDao extends CommonEntityDao<TgFetchProvide
     private final TgFetchProviderTestEntityMixin mixin;
     
     @Inject
-    public TgFetchProviderTestEntityDao(final IFilter filter) {
-        super(filter);
-        
+    public TgFetchProviderTestEntityDao() {
         mixin = new TgFetchProviderTestEntityMixin(this);
     }
     

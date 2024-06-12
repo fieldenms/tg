@@ -22,21 +22,16 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.Money;
+
 /**
  * DAO implementation for companion object {@link ITgGeneratedEntity}.
  *
  * @author TG Team
- *
  */
 @EntityType(TgGeneratedEntityForTrippleDecAnalysis.class)
 public class TgGeneratedEntityForTrippleDecAnalysisDao extends CommonEntityDao<TgGeneratedEntityForTrippleDecAnalysis> implements ITgGeneratedEntityForTrippleDecAnalysis {
 
     private static final int maxRandNumber = 10000;
-
-    @Inject
-    public TgGeneratedEntityForTrippleDecAnalysisDao(final IFilter filter) {
-        super(filter);
-    }
 
     @Override
     public Result gen(final Class<TgGeneratedEntityForTrippleDecAnalysis> type, final Map<String, Optional<?>> params) {
@@ -44,7 +39,8 @@ public class TgGeneratedEntityForTrippleDecAnalysisDao extends CommonEntityDao<T
         final IUser coUser = co(User.class);
         final User currUser = coUser.getUser();
         final Random rand = new Random();
-        final Integer entityCount  = params.get("tgGeneratedEntityForTrippleDecAnalysis_entityCount").map(num -> (Integer)num).orElse(Integer.valueOf(45));
+        final Integer entityCount = params.get("tgGeneratedEntityForTrippleDecAnalysis_entityCount")
+                .map(num -> (Integer) num).orElse(Integer.valueOf(45));
         removeAllGeneratedEntities(coGenerator, currUser);
         for (int entityCounter = 0; entityCounter < entityCount.intValue(); entityCounter++) {
             createAndSaveGeneratedEntity(coGenerator, rand, entityCounter);
@@ -53,7 +49,9 @@ public class TgGeneratedEntityForTrippleDecAnalysisDao extends CommonEntityDao<T
     }
 
     private void removeAllGeneratedEntities(final ITgGeneratedEntityForTrippleDecAnalysis coGenerator, final User currUser) {
-        coGenerator.batchDelete(select(TgGeneratedEntityForTrippleDecAnalysis.class).where().prop("createdBy").eq().val(currUser).model());
+        coGenerator.batchDelete(
+                select(TgGeneratedEntityForTrippleDecAnalysis.class).where().prop("createdBy").eq().val(currUser)
+                        .model());
     }
 
     private void createAndSaveGeneratedEntity(final ITgGeneratedEntityForTrippleDecAnalysis coGenerator, final Random rand, final int entityCounter) {
@@ -88,4 +86,5 @@ public class TgGeneratedEntityForTrippleDecAnalysisDao extends CommonEntityDao<T
     protected IFetchProvider<TgGeneratedEntityForTrippleDecAnalysis> createFetchProvider() {
         return super.createFetchProvider().with("createdBy", "createdDate", "group", "count", "cost", "hours");
     }
+
 }

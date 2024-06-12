@@ -28,9 +28,7 @@ public class TgPersistentStatusDao extends CommonEntityDao<TgPersistentStatus> i
     private final TgPersistentStatusMixin mixin;
     
     @Inject
-    public TgPersistentStatusDao(final IFilter filter) {
-        super(filter);
-        
+    public TgPersistentStatusDao() {
         mixin = new TgPersistentStatusMixin(this);
     }
     

@@ -14,19 +14,13 @@ import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.tokens.persistent.TgCompoundEntityChild_CanDelete_Token;
 import ua.com.fielden.platform.security.tokens.persistent.TgCompoundEntityChild_CanSave_Token;
 
-/** 
+/**
  * DAO implementation for companion object {@link ITgCompoundEntityChild}.
- * 
- * @author TG Team
  *
+ * @author TG Team
  */
 @EntityType(TgCompoundEntityChild.class)
 public class TgCompoundEntityChildDao extends CommonEntityDao<TgCompoundEntityChild> implements ITgCompoundEntityChild {
-
-    @Inject
-    public TgCompoundEntityChildDao(final IFilter filter) {
-        super(filter);
-    }
 
     @Override
     @SessionRequired
@@ -41,14 +35,14 @@ public class TgCompoundEntityChildDao extends CommonEntityDao<TgCompoundEntityCh
     public int batchDelete(final Collection<Long> entitiesIds) {
         return defaultBatchDelete(entitiesIds);
     }
-    
+
     @Override
     @SessionRequired
     @Authorise(TgCompoundEntityChild_CanDelete_Token.class)
     public int batchDelete(final List<TgCompoundEntityChild> entities) {
         return defaultBatchDelete(entities);
     }
-    
+
     @Override
     protected IFetchProvider<TgCompoundEntityChild> createFetchProvider() {
         return FETCH_PROVIDER;

@@ -67,7 +67,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Inject
     private Injector injector;
 
-    private final IFilter filter;
+    @Inject
+    private IFilter filter;
     private final DeleteOperations<T> deleteOps;
 
     @Inject
@@ -93,10 +94,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     /**
      * The default constructor, which looks for annotation {@link EntityType} to identify the entity type automatically.
      * An exception is thrown if the annotation is missing.
-     *
-     * @param filter
      */
-    protected CommonEntityDao(final IFilter filter) {
+    protected CommonEntityDao() {
         final EntityType annotation = AnnotationReflector.getAnnotation(getClass(), EntityType.class);
         if (annotation == null) {
             throw new EntityCompanionException(format("Companion object [%s] is missing @EntityType annotation.", getClass().getName()));
@@ -104,7 +103,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         this.entityType = (Class<T>) annotation.value();
         this.keyType = AnnotationReflector.getKeyType(entityType);
 
-        this.filter = filter;
         this.deleteOps = new DeleteOperations<>(
                 this,
                 this::getSession,

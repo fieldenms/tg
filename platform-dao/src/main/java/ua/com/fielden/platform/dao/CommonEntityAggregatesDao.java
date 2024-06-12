@@ -15,15 +15,9 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
  * DAO implementation for EntityAggregates class used purely for internals of the EntityAggregatesDao.
  *
  * @author TG Team
- *
  */
 @EntityType(EntityAggregates.class)
 public class CommonEntityAggregatesDao extends CommonEntityDao<EntityAggregates> implements IEntityAggregates {
-
-    @Inject
-    protected CommonEntityAggregatesDao(final IFilter filter) {
-        super(filter);
-    }
 
     public int count(final AggregatedResultQueryModel model, final Map<String, Object> paramValues) {
         return evalNumOfPages(model, paramValues, 1).getKey();

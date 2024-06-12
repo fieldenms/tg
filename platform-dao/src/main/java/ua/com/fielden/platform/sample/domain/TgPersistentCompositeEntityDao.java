@@ -22,9 +22,7 @@ public class TgPersistentCompositeEntityDao extends CommonEntityDao<TgPersistent
     private final TgPersistentCompositeEntityMixin mixin;
 
     @Inject
-    public TgPersistentCompositeEntityDao(final IFilter filter) {
-        super(filter);
-
+    public TgPersistentCompositeEntityDao() {
         mixin = new TgPersistentCompositeEntityMixin(this);
     }
 

@@ -12,27 +12,22 @@ import ua.com.fielden.platform.ui.config.EntityLocatorConfigCo;
 
 /**
  * DAO implementation of {@link EntityLocatorConfigCo}.
- * 
+ *
  * @author TG Team
- * 
  */
 @EntityType(EntityLocatorConfig.class)
 public class EntityLocatorConfigDao extends CommonEntityDao<EntityLocatorConfig> implements EntityLocatorConfigCo {
-
-    @Inject
-    protected EntityLocatorConfigDao(final IFilter filter) {
-        super(filter);
-    }
 
     @Override
     @SessionRequired
     public void delete(final EntityLocatorConfig entity) {
         defaultDelete(entity);
     }
-    
+
     @Override
     @SessionRequired
     public int batchDelete(EntityResultQueryModel<EntityLocatorConfig> model) {
         return defaultBatchDelete(model);
     }
+
 }

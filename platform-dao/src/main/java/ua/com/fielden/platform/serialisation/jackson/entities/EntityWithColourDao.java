@@ -18,9 +18,7 @@ public class EntityWithColourDao extends CommonEntityDao<EntityWithColour> imple
     private final EntityWithColourMixin mixin;
     
     @Inject
-    public EntityWithColourDao(final IFilter filter) {
-        super(filter);
-        
+    public EntityWithColourDao() {
         mixin = new EntityWithColourMixin(this);
     }
     

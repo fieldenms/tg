@@ -10,13 +10,7 @@ import ua.com.fielden.platform.entity.query.IFilter;
  * DAO implementation for companion object {@link ITgDateTestEntity}.
  *
  * @author TG Team
- *
  */
 @EntityType(TgDateTestEntity.class)
 public class TgDateTestEntityDao extends CommonEntityDao<TgDateTestEntity> implements ITgDateTestEntity {
-
-    @Inject
-    public TgDateTestEntityDao(final IFilter filter) {
-        super(filter);
-    }
 }

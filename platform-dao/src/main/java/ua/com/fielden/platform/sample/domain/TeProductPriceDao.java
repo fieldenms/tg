@@ -8,14 +8,8 @@ import ua.com.fielden.platform.entity.query.IFilter;
 
 /**
  * @author TG Team
- *
  */
 @EntityType(TeProductPrice.class)
 public class TeProductPriceDao extends CommonEntityDao<TeProductPrice> implements TeProductPriceCo {
-
-    @Inject
-    protected TeProductPriceDao(final IFilter filter) {
-        super(filter);
-    }
 
 }

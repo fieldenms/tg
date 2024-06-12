@@ -29,10 +29,7 @@ public class ExportActionDao extends CommonEntityDao<ExportAction> implements IE
     private final ITgPersistentEntityWithProperties co;
 
     @Inject
-    public ExportActionDao(
-            final ITgPersistentEntityWithProperties co,
-            final IFilter filter) {
-        super(filter);
+    public ExportActionDao(final ITgPersistentEntityWithProperties co) {
         this.co = co;
     }
 

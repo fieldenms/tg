@@ -8,14 +8,8 @@ import ua.com.fielden.platform.entity.query.IFilter;
 
 /**
  * @author TG Team
- * 
  */
 @EntityType(TgReVehicleWithHighPrice.class)
 public class TgReVehicleWithHighPriceDao extends CommonEntityDao<TgReVehicleWithHighPrice> implements TgReVehicleWithHighPriceCo {
-
-    @Inject
-    protected TgReVehicleWithHighPriceDao(final IFilter filter) {
-        super(filter);
-    }
 
 }

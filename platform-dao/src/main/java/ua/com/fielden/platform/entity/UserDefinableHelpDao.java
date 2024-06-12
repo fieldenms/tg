@@ -26,8 +26,7 @@ public class UserDefinableHelpDao extends CommonEntityDao<UserDefinableHelp> imp
     private final String defaultHelpUri;
 
     @Inject
-    public UserDefinableHelpDao(final @Named("help.defaultUri") String defaultHelpUri, final IFilter filter) {
-        super(filter);
+    public UserDefinableHelpDao(final @Named("help.defaultUri") String defaultHelpUri) {
         this.defaultHelpUri = defaultHelpUri;
     }
 
