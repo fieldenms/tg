@@ -22,7 +22,6 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.EntityFetcher;
-import ua.com.fielden.platform.entity.query.QueryExecutionContext;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -33,7 +32,6 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 
-import javax.persistence.Entity;
 import javax.persistence.OptimisticLockException;
 import java.lang.reflect.Field;
 import java.util.*;

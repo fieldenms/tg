@@ -20,7 +20,9 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
-import ua.com.fielden.platform.entity.query.*;
+import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.EntityFetcher;
+import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
@@ -98,12 +100,12 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         this.entityType = (Class<T>) annotation.value();
         this.keyType = AnnotationReflector.getKeyType(entityType);
 
-        this.deleteOps = new DeleteOperations<>(
+        deleteOps = new DeleteOperations<>(
                 this,
                 this::getSession,
                 entityType,
-                this::newQueryExecutionContext,
-                () -> new EntityBatchDeleteByIdsOperation<>(getSession(), getDomainMetadata().getTableForEntityType(entityType)));
+                this::getDomainMetadata,
+                this::dates);
 
         entitySaver = new PersistentEntitySaver<>(
                 this::getSession,
@@ -120,23 +122,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 this::findById,
                 this::exists,
                 logger);
-
-    }
-
-    /**
-     * A helper method to create new instances of {@link QueryExecutionContext}.
-     * @return
-     */
-    protected QueryExecutionContext newQueryExecutionContext() {
-        return new QueryExecutionContext(
-                getSession(),
-                getEntityFactory(),
-                getCoFinder(),
-                getDomainMetadata(),
-                getFilter(),
-                getUsername(),
-                dates,
-                getIdOnlyProxiedEntityTypeCache());
     }
 
     @Inject

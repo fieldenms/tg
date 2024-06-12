@@ -4,16 +4,17 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.exception.ConstraintViolationException;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
+import ua.com.fielden.platform.dao.exceptions.EntityDeletionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleteByIdsOperation;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleteByQueryModelOperation;
-import ua.com.fielden.platform.entity.query.QueryExecutionContext;
-import ua.com.fielden.platform.dao.exceptions.EntityDeletionException;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
+import ua.com.fielden.platform.utils.IDates;
 
 import javax.persistence.PersistenceException;
 import java.util.*;
@@ -45,20 +46,22 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
     private final Supplier<Session> session;
     private final Class<T> entityType;
     private final IEntityReader<T> reader;
-    private final Supplier<QueryExecutionContext> qeCtx;
+    private final Supplier<IDomainMetadata> domainMetadata;
+    private final Supplier<IDates> dates;
     private final Supplier<EntityBatchDeleteByIdsOperation<T>> batchDeleteByIdsOp;
     
     public DeleteOperations(
             final IEntityReader<T> reader,
             final Supplier<Session> session,
             final Class<T> entityType,
-            final Supplier<QueryExecutionContext> qeCtx,
-            final Supplier<EntityBatchDeleteByIdsOperation<T>> batchDeleteByIdsOp) {
+            final Supplier<IDomainMetadata> domainMetadata,
+            final Supplier<IDates> dates) {
         this.reader = reader;
         this.session = session;
         this.entityType = entityType;
-        this.qeCtx = qeCtx;
-        this.batchDeleteByIdsOp = batchDeleteByIdsOp;
+        this.domainMetadata = domainMetadata;
+        this.dates = dates;
+        this.batchDeleteByIdsOp = () -> new EntityBatchDeleteByIdsOperation<>(session.get(), domainMetadata.get().getTableForEntityType(entityType));
     }
     
     /**
@@ -185,7 +188,7 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
         if (ActivatableAbstractEntity.class.isAssignableFrom(entityType)) {
             return defaultDelete(model, paramValues);
         } else {
-            return new EntityBatchDeleteByQueryModelOperation(qeCtx.get()).deleteEntities(model, paramValues);
+            return new EntityBatchDeleteByQueryModelOperation(domainMetadata.get(), dates.get(), session).deleteEntities(model, paramValues);
         }
     }
 

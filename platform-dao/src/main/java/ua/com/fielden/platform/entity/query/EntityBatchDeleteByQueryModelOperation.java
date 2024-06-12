@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.query;
 
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Query;
+import org.hibernate.Session;
 import org.hibernate.exception.ConstraintViolationException;
 import ua.com.fielden.platform.dao.exceptions.EntityDeletionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -10,10 +11,12 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage3.queries.ResultQuery3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.utils.IDates;
 
 import javax.persistence.PersistenceException;
 import java.util.Collections;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import static java.util.Optional.empty;
 import static org.apache.logging.log4j.LogManager.getLogger;
@@ -26,17 +29,25 @@ import static ua.com.fielden.platform.eql.retrieval.EqlQueryTransformer.transfor
 public class EntityBatchDeleteByQueryModelOperation {
     private static final Logger LOGGER = getLogger(EntityBatchDeleteByQueryModelOperation.class);
 
-    private final QueryExecutionContext executionContext;
+    private final IDomainMetadata domainMetadata;
+    private final IDates dates;
+    private final Supplier<Session> session;
 
-    public EntityBatchDeleteByQueryModelOperation(final QueryExecutionContext executionContext) {
-        this.executionContext = executionContext;
+    public EntityBatchDeleteByQueryModelOperation(
+            final IDomainMetadata domainMetadata,
+            final IDates dates,
+            final Supplier<Session> session)
+    {
+        this.domainMetadata = domainMetadata;
+        this.dates = dates;
+        this.session = session;
     }
 
     public <E extends AbstractEntity<?>> int deleteEntities(final EntityResultQueryModel<E> model, final Map<String, Object> paramValues) {
         try {
             final DeletionModel deletionModel = getModelSql(model, paramValues);
             final EntityHibernateDeletionQueryProducer entityHibernateDeletionQueryProducer = new EntityHibernateDeletionQueryProducer(deletionModel.sql, deletionModel.sqlParamValues);
-            final Query sqlQuery = entityHibernateDeletionQueryProducer.produceHibernateQuery(executionContext.getSession());
+            final Query sqlQuery = entityHibernateDeletionQueryProducer.produceHibernateQuery(session.get());
             return sqlQuery.executeUpdate();
         } catch (final PersistenceException ex) {
             final var msg = ex.getCause() instanceof ConstraintViolationException
@@ -48,10 +59,9 @@ public class EntityBatchDeleteByQueryModelOperation {
     }
 
     private <T extends AbstractEntity<?>> DeletionModel getModelSql(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
-        final IDomainMetadata domainMetadata = executionContext.getDomainMetadata();
         final AggregatedResultQueryModel finalModel = select(model.getResultType()).where().prop(ID).in().model(model).yield().prop(ID).as(ID).modelAsAggregate();
         final String tableName = domainMetadata.getTableForEntityType(model.getResultType()).name();
-        final TransformationResultFromStage2To3<ResultQuery3> s2tr = transform(new QueryProcessingModel(finalModel, null, null, paramValues, true), null, empty(), executionContext.dates(), domainMetadata);
+        final TransformationResultFromStage2To3<ResultQuery3> s2tr = transform(new QueryProcessingModel(finalModel, null, null, paramValues, true), null, empty(), dates, domainMetadata);
         final ResultQuery3 entQuery3 = s2tr.item;
         final String selectionSql = entQuery3.sql(domainMetadata.dbVersion());
         final String deletionSql = produceDeletionSql(selectionSql, tableName, domainMetadata.dbVersion());
