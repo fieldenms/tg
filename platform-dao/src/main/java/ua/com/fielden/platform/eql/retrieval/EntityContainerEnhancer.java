@@ -26,8 +26,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.findCollectionalProperty;
 
-// TODO move parameterisation to method-level
-public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
+public class EntityContainerEnhancer {
 
     private static final Integer BATCH_SIZE = 990;
     // private static final Logger logger = getLogger(EntityContainerEnhancer.class);
@@ -37,7 +36,11 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
     private final PropertyMetadataUtils propMetadataUtils;
     private final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
 
-    protected EntityContainerEnhancer(final EntityContainerFetcher fetcher, final IDomainMetadata domainMetadata, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
+    protected EntityContainerEnhancer(
+            final EntityContainerFetcher fetcher,
+            final IDomainMetadata domainMetadata,
+            final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache)
+    {
         this.fetcher = fetcher;
         this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
         this.domainMetadata = domainMetadata;
@@ -47,8 +50,10 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
     /**
      * Enhances a list of entity containers.
      */
-    protected List<EntityContainer<E>> enhance(final Session session, final List<EntityContainer<E>> entities,
-                                               final IRetrievalModel<E> fetchModel, final Map<String, Object> paramValues) {
+    protected <E extends AbstractEntity<?>> List<EntityContainer<E>> enhance(
+            final Session session, final List<EntityContainer<E>> entities,
+            final IRetrievalModel<E> fetchModel, final Map<String, Object> paramValues)
+    {
         if (entities.isEmpty() || fetchModel == null) {
             return entities;
         }
@@ -100,12 +105,14 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
         return entities;
     }
 
-    private void enhanceCollectional(final Session session,
-                                     final List<EntityContainer<E>> entities,
-                                     final IRetrievalModel<E> fetchModel,
-                                     final Map<String, Object> paramValues,
-                                     final String propName,
-                                     final EntityRetrievalModel<? extends AbstractEntity<?>> propFetchModel) {
+    private <E extends AbstractEntity<?>> void enhanceCollectional(
+            final Session session,
+            final List<EntityContainer<E>> entities,
+            final IRetrievalModel<E> fetchModel,
+            final Map<String, Object> paramValues,
+            final String propName,
+            final EntityRetrievalModel<? extends AbstractEntity<?>> propFetchModel)
+    {
         // TODO replace with EntityTree metadata (wrt collectional properties retrieval)
         // TODO if the property is missing, consider throwing an exception instead of silently doing nothing
         findCollectionalProperty(fetchModel.getEntityType(), propName).ifPresent(prop -> {
@@ -114,7 +121,9 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
         });
     }
 
-    private void assignInstrumentationSetting(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel) {
+    private <E extends AbstractEntity<?>> void assignInstrumentationSetting(
+            final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel)
+    {
         if (fetchModel.isInstrumented()) {
             for (final EntityContainer<E> entityContainer : entities) {
                 entityContainer.mkInstrumented();
@@ -130,14 +139,16 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
         return proxiedType;
     }
 
-    private void assignProxiedResultTypeToContainers(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel) {
+    private <E extends AbstractEntity<?>> void assignProxiedResultTypeToContainers(
+            final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel)
+    {
         if (fetchModel.getEntityType() != EntityAggregates.class) {
             final Class<? extends E> proxiedResultType = determineProxiedResultTypeFromFetchModel(fetchModel);
             entities.forEach(e -> e.setProxiedResultType(proxiedResultType));
         }
     }
 
-    private <T extends AbstractEntity<?>> void assignIdOnlyProxiedResultTypeToIdOnlyEntityProperty(
+    private <E extends AbstractEntity<?>, T extends AbstractEntity<?>> void assignIdOnlyProxiedResultTypeToIdOnlyEntityProperty(
             final List<EntityContainer<E>> entities,
             final String propName, final Class<T> propType)
     {
@@ -157,7 +168,9 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
      * The result is a grouping of input containers by IDs of IEC.
      * Depth of scanning is limited to a single level.
      */
-    private Map<Long, List<EntityContainer<E>>> getEntityPropertyIds(final List<EntityContainer<E>> entities, final String propertyName) {
+    private <E extends AbstractEntity<?>> Map<Long, List<EntityContainer<E>>> getEntityPropertyIds(
+            final List<EntityContainer<E>> entities, final String propertyName)
+    {
         return entities.stream()
                 .peek(entity -> {
                     if (entity.isEmpty()) {
@@ -175,14 +188,15 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
                 .collect(groupingBy(e_p -> e_p._2.getId(), mapping(e_p -> e_p._1, toList())));
     }
 
-    private <T extends AbstractEntity<?>> List<EntityContainer<T>> getRetrievedPropertyInstances(final List<EntityContainer<E>> entities, final String propName) {
+    private <E extends AbstractEntity<?>, T extends AbstractEntity<?>> List<EntityContainer<T>> getRetrievedPropertyInstances(
+            final List<EntityContainer<E>> entities, final String propName) {
         return entities.stream()
                 .map(entity -> (EntityContainer<T>) entity.getEntities().get(propName))
                 .filter(prop -> prop != null && !prop.isEmpty() && !prop.notYetInitialised())
                 .toList();
     }
 
-    private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhancePropertyWithLinkToParent(
+    private <E extends AbstractEntity<?> ,T extends AbstractEntity<?>> List<EntityContainer<E>> enhancePropertyWithLinkToParent(
             final Session session,
             final List<EntityContainer<E>> entities,
             final String propertyName,
@@ -199,8 +213,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
             // IMPORTANT: it is assumed that EntityContainer can contain either only id or all props at once. Such assumption relied on fact that once join to property has been made all its columns had been yielded automatically.
             final List<EntityContainer<T>> enhancedPropInstances = retrievedPropertyInstances.isEmpty()
                     ? getDataInBatches(session, propertyValuesIds.keySet(), ID, fetchModel, paramValues)
-                    :  new EntityContainerEnhancer<T>(fetcher, domainMetadata, idOnlyProxiedEntityTypeCache)
-                            .enhance(session, retrievedPropertyInstances, fetchModel, paramValues);
+                    : enhance(session, retrievedPropertyInstances, fetchModel, paramValues);
 
             // Replacing in entities the proxies of properties with properly enhanced property instances.
             for (final EntityContainer<? extends AbstractEntity<?>> enhancedPropInstance : enhancedPropInstances) {
@@ -223,7 +236,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
      * @param propertyName  name of the property to enhance
      * @param fetchModel  fetch model for the property
      */
-    private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhanceProperty(
+    private <E extends AbstractEntity<?>, T extends AbstractEntity<?>> List<EntityContainer<E>> enhanceProperty(
             final Session session,
             final List<EntityContainer<E>> entities,
             final String propertyName,
@@ -239,8 +252,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
             // IMPORTANT: it is assumed that EntityContainer can contain either only id or all props at once. Such assumption relied on fact that once join to property has been made all its columns had been yielded automatically.
             final List<EntityContainer<T>> enhancedPropInstances = retrievedPropertyInstances.isEmpty()
                     ? getDataInBatches(session, propertyValuesIds.keySet(), ID, fetchModel, paramValues)
-                    : new EntityContainerEnhancer<T>(fetcher, domainMetadata, idOnlyProxiedEntityTypeCache)
-                            .enhance(session, retrievedPropertyInstances, fetchModel, paramValues);
+                    : enhance(session, retrievedPropertyInstances, fetchModel, paramValues);
 
             // Replacing in entities the proxies of properties with properly enhanced property instances.
             for (final EntityContainer<? extends AbstractEntity<?>> enhancedPropInstance : enhancedPropInstances) {
@@ -276,7 +288,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
      * @return  ME containers enhanced with collectional property by populating it with DE containers which are also
      *          enhanced by populating the link property with the corresponding ME
      */
-    private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhanceCollectional(
+    private <E extends AbstractEntity<?>, T extends AbstractEntity<?>> List<EntityContainer<E>> enhanceCollectional(
             final Session session,
             final List<EntityContainer<E>> masterEntities,
             final String collPropName, final Class<?> collPropType,
