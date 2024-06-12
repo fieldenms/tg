@@ -33,6 +33,7 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 
+import javax.persistence.Entity;
 import javax.persistence.OptimisticLockException;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -79,7 +80,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     private final Class<T> entityType;
     private final Class<? extends Comparable<?>> keyType;
     private final Supplier<ICompanionObjectFinder> coFinder;
-    private final Supplier<QueryExecutionContext> newQueryExecutionContext;
+    private final Supplier<EntityFetcher> entityFetcher;
     private final Supplier<User> user;
     private final Supplier<DateTime> now;
     
@@ -99,10 +100,10 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             final Supplier<DbVersion> dbVersion,
             final Class<T> entityType,
             final Class<? extends Comparable<?>> keyType,
+            final Supplier<EntityFetcher> entityFetcher,
             final Supplier<User> user,
             final Supplier<DateTime> now,
             final Supplier<ICompanionObjectFinder> coFinder,
-            final Supplier<QueryExecutionContext> newQueryExecutionContext,
             final BiConsumer<T, List<String>> processAfterSaveEvent,
             final Consumer<MetaProperty<?>> assignBeforeSave,
             final BiFunction<Long, fetch<T>, T> findById,
@@ -113,11 +114,10 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         this.dbVersion = dbVersion;
         this.entityType = entityType;
         this.keyType = keyType;
+        this.entityFetcher = entityFetcher;
         this.user = user;
         this.now = now;
         this.coFinder = coFinder;
-        this.newQueryExecutionContext = newQueryExecutionContext;
-        
         this.processAfterSaveEvent = processAfterSaveEvent;
         this.assignBeforeSave = assignBeforeSave;
         
@@ -235,8 +235,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         checkDirtyMarkedForAssignmentBeforeSaveProperties(entity);
         // let's make sure that entity is not a duplicate
         final AggregatedResultQueryModel model = select(createQueryByKey(dbVersion.get(), entityType, keyType, false, entity.getKey())).yield().prop(AbstractEntity.ID).as(AbstractEntity.ID).modelAsAggregate();
-        final QueryExecutionContext queryExecutionContext = newQueryExecutionContext.get();
-        final List<EntityAggregates> ids = new EntityFetcher(queryExecutionContext).getEntities(from(model).lightweight().model());
+        final List<EntityAggregates> ids = entityFetcher.get().getEntities(session, from(model).lightweight().model());
         final int count = ids.size();
         if (count == 1 && entity.getId().longValue() != ((Number) ids.get(0).get(AbstractEntity.ID)).longValue()) {
             throw new EntityAlreadyExists("%s [%s] already exists.".formatted(getEntityTitleAndDesc(entity.getType()).getKey(), entity));

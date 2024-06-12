@@ -68,6 +68,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private IDates dates;
     private IUserProvider up;
     private EntityFactory entityFactory;
+    private EntityFetcher entityFetcher;
     // ***
 
     private Session session;
@@ -110,10 +111,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 this::getDbVersion,
                 entityType,
                 keyType,
+                this::entityFetcher,
                 this::getUser,
                 () -> getUniversalConstants().now(),
                 this::getCoFinder,
-                this::newQueryExecutionContext,
                 this::processAfterSaveEvent,
                 this::assignBeforeSave,
                 this::findById,
@@ -126,7 +127,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * A helper method to create new instances of {@link QueryExecutionContext}.
      * @return
      */
-    @Override
     protected QueryExecutionContext newQueryExecutionContext() {
         return new QueryExecutionContext(
                 getSession(),
@@ -184,9 +184,19 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         this.entityFactory = entityFactory;
     }
 
+    @Inject
+    protected void setEntityFetcher(final EntityFetcher entityFetcher) {
+        this.entityFetcher = entityFetcher;
+    }
+
     @Override
     public DbVersion getDbVersion() {
         return domainMetadata.dbVersion();
+    }
+
+    @Override
+    protected EntityFetcher entityFetcher() {
+        return entityFetcher;
     }
 
     /**
