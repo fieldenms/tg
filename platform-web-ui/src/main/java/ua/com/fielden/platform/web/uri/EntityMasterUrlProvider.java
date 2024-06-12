@@ -32,7 +32,7 @@ public class EntityMasterUrlProvider implements IEntityMasterUrlProvider {
     private static final Logger LOGGER = getLogger(EntityMasterUrlProvider.class);
     private static final String WARN_INVALID_URL = "Invalid URI [%s].";
 
-    private final String entityMasterUriPattern;
+    private final String entityMasterUrlPattern;
     private final MasterInfoProvider masterInfoProvider;
 
     /**
@@ -43,7 +43,7 @@ public class EntityMasterUrlProvider implements IEntityMasterUrlProvider {
      */
     @Inject
     public EntityMasterUrlProvider(final IWebUiConfig webUiConfig, final @AppUri String appUri) {
-        this.entityMasterUriPattern = (appUri.endsWith("/") ? appUri : appUri + "/") + "#/master/%s/%s";
+        this.entityMasterUrlPattern = (appUri.endsWith("/") ? appUri : appUri + "/") + PARTIAL_URL_PATTERN;
         this.masterInfoProvider = new MasterInfoProvider(webUiConfig);
     }
 
@@ -54,7 +54,7 @@ public class EntityMasterUrlProvider implements IEntityMasterUrlProvider {
         final MasterInfo masterInfo = masterInfoProvider.getMasterInfo(DynamicEntityClassLoader.getOriginalType(entity.getType()));
         if (masterInfo != null) {
             final AbstractEntity<?> relativeEntityValue = isEmpty(masterInfo.getRelativePropertyName()) ? entity : entity.get(masterInfo.getRelativePropertyName());
-            final var url = entityMasterUriPattern.formatted(masterInfo.getRootEntityType().getName(), relativeEntityValue.getId());
+            final var url = entityMasterUrlPattern.formatted(masterInfo.getRootEntityType().getName(), relativeEntityValue.getId());
             if (URL_VALIDATOR.isValid(url)) {
                 return of(url);
             } else {

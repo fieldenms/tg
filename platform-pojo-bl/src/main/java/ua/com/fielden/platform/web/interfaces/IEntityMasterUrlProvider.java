@@ -12,6 +12,8 @@ import java.util.Optional;
 @FunctionalInterface
 public interface IEntityMasterUrlProvider {
 
+    static String PARTIAL_URL_PATTERN = "#/master/%s/%s";
+
     /**
      * Generates an entity master URI for {@code entity}. It might return empty URI string if {@code entity} does not have a registered entity master.
      *
