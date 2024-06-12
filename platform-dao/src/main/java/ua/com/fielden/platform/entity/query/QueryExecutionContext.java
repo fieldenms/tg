@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.entity.query;
 
 import org.hibernate.Session;
-
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.IDates;
 
@@ -16,9 +16,9 @@ public class QueryExecutionContext {
     private final IFilter filter;
     private final String username;
     private final IDates dates;
-    private final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
+    private final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
     
-    public QueryExecutionContext(final Session session, final EntityFactory entityFactory, final ICompanionObjectFinder coFinder, final IDomainMetadata domainMetadata, final IFilter filter, final String username, final IDates dates, final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
+    public QueryExecutionContext(final Session session, final EntityFactory entityFactory, final ICompanionObjectFinder coFinder, final IDomainMetadata domainMetadata, final IFilter filter, final String username, final IDates dates, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
         this.session = session;
         this.entityFactory = entityFactory;
         this.coFinder = coFinder;
@@ -57,7 +57,7 @@ public class QueryExecutionContext {
         return dates;
     }
 
-    public IdOnlyProxiedEntityTypeCache getIdOnlyProxiedEntityTypeCache() {
+    public IIdOnlyProxiedEntityTypeCache getIdOnlyProxiedEntityTypeCache() {
         return idOnlyProxiedEntityTypeCache;
     }
 }

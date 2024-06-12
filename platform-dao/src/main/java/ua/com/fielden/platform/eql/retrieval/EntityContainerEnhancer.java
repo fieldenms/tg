@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.retrieval;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
+import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.*;
 import ua.com.fielden.platform.eql.retrieval.exceptions.EntityRetrievalException;
 import ua.com.fielden.platform.meta.EntityMetadata;
@@ -32,9 +33,9 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
     private final EntityContainerFetcher fetcher;
     private final IDomainMetadata domainMetadata;
     private final PropertyMetadataUtils propMetadataUtils;
-    private final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
+    private final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
 
-    protected EntityContainerEnhancer(final EntityContainerFetcher fetcher, final IDomainMetadata domainMetadata, final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
+    protected EntityContainerEnhancer(final EntityContainerFetcher fetcher, final IDomainMetadata domainMetadata, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
         this.fetcher = fetcher;
         this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
         this.domainMetadata = domainMetadata;

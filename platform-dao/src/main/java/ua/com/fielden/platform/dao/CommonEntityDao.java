@@ -19,6 +19,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.*;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -59,7 +60,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     // *** INJECTABLE FIELDS
     private IDomainMetadata domainMetadata;
-    private IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
+    private IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
     private ICompanionObjectFinder coFinder;
     private Injector injector;
     private IFilter filter;
@@ -144,7 +145,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     @Inject
-    protected void setIdOnlyProxiedEntityTypeCache(final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
+    protected void setIdOnlyProxiedEntityTypeCache(final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
         this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
     }
 
@@ -353,7 +354,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return domainMetadata;
     }
 
-    public IdOnlyProxiedEntityTypeCache getIdOnlyProxiedEntityTypeCache() {
+    public IIdOnlyProxiedEntityTypeCache getIdOnlyProxiedEntityTypeCache() {
         return idOnlyProxiedEntityTypeCache;
     }
 
