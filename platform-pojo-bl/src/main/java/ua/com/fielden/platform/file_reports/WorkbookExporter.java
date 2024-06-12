@@ -45,14 +45,14 @@ public class WorkbookExporter {
 
     private WorkbookExporter() {}
 
-    public static <M extends AbstractEntity<?>> SXSSFWorkbook export(final List<Stream<M>> entities, final List<Pair<String[], String[]>> propTitles, final List<List<List<DynamicColumnForExport>>> dynamicProperties, final List<String> sheetTitles, final Optional<IEntityMasterUrlProvider> entityMasterUrlProvider) {
+    public static <M extends AbstractEntity<?>> SXSSFWorkbook export(final List<Stream<M>> entities, final List<Pair<String[], String[]>> propTitles, final List<List<List<DynamicColumnForExport>>> dynamicProperties, final List<String> sheetTitles, final IEntityMasterUrlProvider entityMasterUrlProvider) {
         final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData = new ArrayList<>();
         if (entities.size() == propTitles.size() && entities.size() == dynamicProperties.size()) {
             for (int sheetIdx = 0; sheetIdx < entities.size(); sheetIdx++) {
                 sheetsData.add(export(entities.get(sheetIdx), propTitles.get(sheetIdx).getKey(), propTitles.get(sheetIdx).getValue(), dynamicProperties.get(sheetIdx), sheetTitles.get(sheetIdx)));
             }
         }
-        return export(sheetsData, Stream.empty(), entityMasterUrlProvider);
+        return export(sheetsData, Stream.empty(), Optional.of(entityMasterUrlProvider));
     }
 
     private static <M extends AbstractEntity<?>> DataForWorkbookSheet<M> export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles, final List<List<DynamicColumnForExport>> dynamicProperties, final String sheetTitle) {
@@ -85,12 +85,12 @@ public class WorkbookExporter {
      * @return
      * @param <M>
      */
-    public static <M extends AbstractEntity<?>> SXSSFWorkbook export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles, final Optional<IEntityMasterUrlProvider> entityMasterUrlProvider) {
-        return export(entities, Stream.empty(), propertyNames, propertyTitles, entityMasterUrlProvider);
+    public static <M extends AbstractEntity<?>> SXSSFWorkbook export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles, final IEntityMasterUrlProvider entityMasterUrlProvider) {
+        return export(entities, Stream.empty(), propertyNames, propertyTitles, Optional.of(entityMasterUrlProvider));
     }
 
     /**
-     * The same as {@link #export(Stream, String[], String[], Optional)}, where hyperlinks are supplied by {@code hyperlinks}, which provides a map between property names and URLs.
+     * The same as {@link #export(Stream, String[], String[], IEntityMasterUrlProvider)}, where hyperlinks are supplied by {@code hyperlinks} instead of {@link IEntityMasterUrlProvider}, which provides a map between property names and URLs.
      * There should be a correspondence between elements of {@code entities} and {@code hyperlinks}.
      *
      * @param entities

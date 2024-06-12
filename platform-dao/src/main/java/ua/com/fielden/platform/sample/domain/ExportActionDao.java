@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.sample.domain;
 
-import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -29,16 +28,16 @@ import ua.com.fielden.platform.web.interfaces.IEntityMasterUrlProvider;
 public class ExportActionDao extends CommonEntityDao<ExportAction> implements IExportAction {
 
     private final ITgPersistentEntityWithProperties co;
-    private final IEntityMasterUrlProvider uriGenerator;
+    private final IEntityMasterUrlProvider entityMasterUrlProvider;
 
     @Inject
     public ExportActionDao(
             final ITgPersistentEntityWithProperties co,
             final IFilter filter,
-            final IEntityMasterUrlProvider uriGenerator) {
+            final IEntityMasterUrlProvider entityMasterUrlProvider) {
         super(filter);
         this.co = co;
-        this.uriGenerator = uriGenerator;
+        this.entityMasterUrlProvider = entityMasterUrlProvider;
     }
 
     @Override
@@ -52,7 +51,7 @@ public class ExportActionDao extends CommonEntityDao<ExportAction> implements IE
         try {
             entity.setFileName("export-of-TgPersistentEntityWithProperties.xlsx");
             entity.setMime("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-            final byte[] data = convertToByteArray(WorkbookExporter.export(entitiesToExport.stream(), new String[] {"key", "desc"}, new String[] {"key", "desc"}, ofNullable(uriGenerator)));
+            final byte[] data = convertToByteArray(WorkbookExporter.export(entitiesToExport.stream(), new String[] {"key", "desc"}, new String[] {"key", "desc"}, entityMasterUrlProvider));
             entity.setData(data);
         } catch (final Exception e) {
             e.printStackTrace();

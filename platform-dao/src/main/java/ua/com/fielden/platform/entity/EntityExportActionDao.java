@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity;
 
+import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -96,7 +97,7 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         entity.setMime("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
         try {
-            entity.setData(WorkbookExporter.convertToByteArray(WorkbookExporter.export(entities, propAndTitles, dynamicProperties, titles, ofNullable(entityMasterUrlProvider))));
+            entity.setData(WorkbookExporter.convertToByteArray(WorkbookExporter.export(entities, propAndTitles, dynamicProperties, titles, entityMasterUrlProvider)));
         } catch (final IOException e) {
             throw failure("An exception occurred during the data export.", e);
         } finally {
