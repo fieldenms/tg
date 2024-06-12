@@ -46,6 +46,8 @@ import static ua.com.fielden.platform.types.either.Either.right;
 
 /**
  * This is a base class for db-aware implementations of entity companions.
+ * <p>
+ * Method injection is used to free subclasses from the burden of declaring a huge constructor that only needs to call {@code super}.
  *
  * @author TG Team
  *
@@ -55,28 +57,22 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     private final Logger logger = getLogger(this.getClass());
 
-    private final PersistentEntitySaver<T> entitySaver;
+    // *** INJECTABLE FIELDS
+    private IDomainMetadata domainMetadata;
+    private IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
+    private ICompanionObjectFinder coFinder;
+    private Injector injector;
+    private IFilter filter;
+    private IUniversalConstants universalConstants;
+    private IDates dates;
+    private IUserProvider up;
+    private EntityFactory entityFactory;
+    // ***
 
     private Session session;
     private String transactionGuid;
-    private IDomainMetadata domainMetadata;
-    private IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
-
-    @Inject
-    private ICompanionObjectFinder coFinder;
-    @Inject
-    private Injector injector;
-
-    @Inject
-    private IFilter filter;
+    private final PersistentEntitySaver<T> entitySaver;
     private final DeleteOperations<T> deleteOps;
-
-    @Inject
-    private IUniversalConstants universalConstants;
-    @Inject
-    private IDates dates;
-    @Inject
-    private IUserProvider up;
 
     /** A guard against an accidental use of quick save to prevent its use for companions with overridden method <code>save</code>.
      *  Refer issue <a href='https://github.com/fieldenms/tg/issues/421'>#421</a> for more details. */
@@ -87,9 +83,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private final Class<? extends Comparable<?>> keyType;
     private final Class<T> entityType;
     private IFetchProvider<T> fetchProvider;
-
-    @Inject
-    private EntityFactory entityFactory;
 
     /**
      * The default constructor, which looks for annotation {@link EntityType} to identify the entity type automatically.
@@ -145,24 +138,54 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 getIdOnlyProxiedEntityTypeCache());
     }
 
-    /**
-     * A separate setter is used in order to avoid enforcement of providing mapping generator as one of constructor parameter in descendant classes.
-     *
-     * @param domainMetadata
-     */
     @Inject
     protected void setDomainMetadata(final IDomainMetadata domainMetadata) {
         this.domainMetadata = domainMetadata;
     }
 
-    @Override
-    public DbVersion getDbVersion() {
-        return domainMetadata.dbVersion();
-    }
-
     @Inject
     protected void setIdOnlyProxiedEntityTypeCache(final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
         this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
+    }
+
+    @Inject
+    protected void setCoFinder(final ICompanionObjectFinder coFinder) {
+        this.coFinder = coFinder;
+    }
+
+    @Inject
+    protected void setInjector(final Injector injector) {
+        this.injector = injector;
+    }
+
+    @Inject
+    protected void setFilter(final IFilter filter) {
+        this.filter = filter;
+    }
+
+    @Inject
+    protected void setUniversalConstants(final IUniversalConstants universalConstants) {
+        this.universalConstants = universalConstants;
+    }
+
+    @Inject
+    protected void setDates(final IDates dates) {
+        this.dates = dates;
+    }
+
+    @Inject
+    protected void setUp(final IUserProvider up) {
+        this.up = up;
+    }
+
+    @Inject
+    protected void setEntityFactory(final EntityFactory entityFactory) {
+        this.entityFactory = entityFactory;
+    }
+
+    @Override
+    public DbVersion getDbVersion() {
+        return domainMetadata.dbVersion();
     }
 
     /**
