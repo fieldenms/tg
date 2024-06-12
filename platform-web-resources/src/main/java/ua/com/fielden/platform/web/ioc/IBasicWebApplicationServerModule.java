@@ -29,10 +29,10 @@ import static ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionS
 
 /**
  * This interface defines <code>Web UI</code> specific IoC binding contract,
- * which is to be implement by an application specific IoC module, used by an application server.
+ * which is to be implemented by an application specific IoC module, used by an application server.
  * <p>
  *  Each concrete application is expected to have a principle IoC module <code>ApplicationServerModules</code> that binds everything except the <code>Web UI</code> related dependencies.
- *  The reason the principle IoC module cannot bind these dependencies is rooted in the fact that the're not visible at the <code>DAO</code> project module, where it must reside and be used for unit tests, data population and migration utilities and more.
+ *  The reason the principle IoC module cannot bind these dependencies is rooted in the fact that they're not visible at the <code>DAO</code> project module, where it must reside and be used for unit tests, data population and migration utilities and more.
  *  <p>
  *  Module {@link TgTestWebApplicationServerModule}, which governs <code>Web UI</code> dependencies for a platform demo and test application server, can be used as an example.
  *
@@ -76,7 +76,7 @@ public interface IBasicWebApplicationServerModule {
 
     /**
      * Initialises an already bound {@link IWebUiConfig} instance.
-     * The default implementation assumes that is has a concrete type {@link AbstractWebUiConfig}.
+     * The default implementation assumes that it is of type {@link AbstractWebUiConfig}.
      *
      * @param injector
      */
@@ -95,7 +95,7 @@ public interface IBasicWebApplicationServerModule {
 
     /**
      * Initialises an already bound {@link IWebUiConfig} instance.
-     * The default implementation assumes that is has a concrete type {@link AbstractWebUiConfig}.
+     * The default implementation assumes that it is of type {@link AbstractWebUiConfig}.
      * <p>
      * This implementation creates default configurations for all registered centres to perform early
      * caching of DomainTreeEnhancers (to avoid heavy computations later).
