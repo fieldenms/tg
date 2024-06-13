@@ -44,8 +44,8 @@ import ua.com.fielden.platform.utils.IDates;
  * @author TG Team
  *
  */
-public class TgScalars {
-    private static final Logger LOGGER = LogManager.getLogger(TgScalars.class);
+public class GraphQLScalars {
+    private static final Logger LOGGER = LogManager.getLogger(GraphQLScalars.class);
     private static final String UNEXPECTED_TYPE_ERROR = "Expected [%s] but was [%s].";
 
     @Inject

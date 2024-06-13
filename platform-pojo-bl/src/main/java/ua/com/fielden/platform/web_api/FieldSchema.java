@@ -34,10 +34,10 @@ import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
-import static ua.com.fielden.platform.web_api.TgScalars.GraphQLColour;
-import static ua.com.fielden.platform.web_api.TgScalars.GraphQLDate;
-import static ua.com.fielden.platform.web_api.TgScalars.GraphQLHyperlink;
-import static ua.com.fielden.platform.web_api.TgScalars.GraphQLMoney;
+import static ua.com.fielden.platform.web_api.GraphQLScalars.GraphQLColour;
+import static ua.com.fielden.platform.web_api.GraphQLScalars.GraphQLDate;
+import static ua.com.fielden.platform.web_api.GraphQLScalars.GraphQLHyperlink;
+import static ua.com.fielden.platform.web_api.GraphQLScalars.GraphQLMoney;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
