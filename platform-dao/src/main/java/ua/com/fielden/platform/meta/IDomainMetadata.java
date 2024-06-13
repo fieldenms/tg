@@ -3,9 +3,7 @@ package ua.com.fielden.platform.meta;
 import org.hibernate.dialect.Dialect;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation;
 import ua.com.fielden.platform.eql.meta.EqlTable;
-import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 
 import java.util.List;
 import java.util.Optional;
@@ -74,9 +72,6 @@ public interface IDomainMetadata {
 
     // TODO create a separate service for this
     EqlTable getTableForEntityType(final Class<? extends AbstractEntity<?>> entityType);
-
-    // TODO create a separate service for this
-    EntityBatchInsertOperation.TableStructForBatchInsertion getTableStructsForBatchInsertion(final Class<? extends AbstractEntity<?>> entityType);
 
     DbVersion dbVersion();
 

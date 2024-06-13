@@ -4,8 +4,6 @@ import com.google.inject.Injector;
 import org.hibernate.dialect.Dialect;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation.TableStructForBatchInsertion;
-import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation.TableStructForBatchInsertion.PropColumnInfo;
 import ua.com.fielden.platform.eql.dbschema.ColumnDefinitionExtractor;
 import ua.com.fielden.platform.eql.dbschema.TableDdl;
 import ua.com.fielden.platform.eql.meta.EqlTable;
@@ -25,8 +23,6 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNullElseGet;
 import static java.util.stream.Collectors.toConcurrentMap;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.persistence.HibernateConstants.H_BOOLEAN;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
@@ -154,7 +150,6 @@ final class DomainMetadataImpl implements IDomainMetadata {
     private final Map<Class<?>, Object> hibTypesDefaults = new HashMap<>();
     private final DbVersion dbVersion;
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EqlTable> tables = new ConcurrentHashMap<>();
-    private final ConcurrentMap<String, TableStructForBatchInsertion> tableStructsForBatchInsertion = new ConcurrentHashMap<>();
 
     private void initBaggage(final Map<? extends Class, ? extends Class> hibTypesDefaults,
                              final Collection<? extends EntityMetadata> entityMetadataMap) {
@@ -162,7 +157,6 @@ final class DomainMetadataImpl implements IDomainMetadata {
         entityMetadataMap.parallelStream().map(EntityMetadata::asPersistent).flatMap(Optional::stream)
                 .forEach(em -> {
                     tables.put(em.javaType(), generateEqlTable(em));
-                    tableStructsForBatchInsertion.put(em.javaType().getName(), generateTableStructForBatchInsertion(em));
                 });
     }
 
@@ -194,44 +188,6 @@ final class DomainMetadataImpl implements IDomainMetadata {
                 .collect(toConcurrentMap(t2 -> t2._1, t2 -> t2._2));
 
         return new EqlTable(entityMetadata.data().tableName(), columns);
-    }
-
-    private TableStructForBatchInsertion generateTableStructForBatchInsertion(final EntityMetadata.Persistent entityMetadata) {
-        // a way to do inner helper methods (avoids pollution of the outer class method namespace)
-        class $ {
-            static String mkColumnName(final PropertyMetadataUtils pmUtils, final PropertyMetadata prop) {
-                return prop.name() + (pmUtils.isPropEntityType(prop, EntityMetadata::isPersistent) ? ("." + ID) : "");
-            }
-        }
-
-        final var columns = entityMetadata.properties().stream()
-                .filter(prop -> !ID.equals(prop.name()) && !VERSION.equals(prop.name()))
-                .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
-                .flatMap(prop -> {
-                    if (prop.type().isComposite()) {
-                        final var subColumnNames = pmUtils.subProperties(prop).stream()
-                                .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
-                                .map(p -> p.data().column().name)
-                                .toList();
-                        return subColumnNames.isEmpty()
-                                ? Stream.of()
-                                : Stream.of(new PropColumnInfo(prop.name(), subColumnNames, prop.hibType()));
-                    }
-                    else if (pmUtils.isPropEntityType(prop, EntityMetadata::isUnion)) {
-                        return pmUtils.subProperties(prop).stream()
-                                .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
-                                .map(subProp -> {
-                                    final String colName = prop.name() + "." + $.mkColumnName(pmUtils, subProp);
-                                    return new PropColumnInfo(colName, subProp.data().column().name, subProp.hibType());
-                                });
-                    }
-                    else {
-                        return Stream.of(new PropColumnInfo($.mkColumnName(pmUtils, prop), prop.data().column().name, prop.hibType()));
-                    }
-                })
-                .toList();
-
-        return new TableStructForBatchInsertion(entityMetadata.data().tableName(), columns);
     }
 
     /**
@@ -272,11 +228,6 @@ final class DomainMetadataImpl implements IDomainMetadata {
     @Override
     public EqlTable getTableForEntityType(final Class<? extends AbstractEntity<?>> entityType) {
         return tables.get(DynamicEntityClassLoader.getOriginalType(entityType));
-    }
-
-    @Override
-    public TableStructForBatchInsertion getTableStructsForBatchInsertion(final Class<? extends AbstractEntity<?>> entityType) {
-        return tableStructsForBatchInsertion.get(entityType.getName());
     }
 
     @Override
