@@ -26,7 +26,6 @@ import javax.tools.Diagnostic;
 import java.lang.annotation.Annotation;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -263,7 +262,7 @@ public class EntityFinder extends ElementFinder {
      * @return
      */
     public Optional<ExecutableElement> findPropertyAccessor(final EntityElement entity, final String propertyName) {
-        return doFindPropertyAccessor(() -> streamMethods(entity.element()), propertyName);
+        return doFindPropertyAccessor(streamMethods(entity.element()), propertyName);
     }
 
     /**
@@ -276,7 +275,7 @@ public class EntityFinder extends ElementFinder {
      * @return
      */
     public Optional<ExecutableElement> findPropertyAccessor(final EntityElement entity, final IConvertableToPath propertyPath) {
-        return doFindPropertyAccessor(() -> streamMethods(entity.element()), propertyPath.toPath());
+        return doFindPropertyAccessor(streamMethods(entity.element()), propertyPath.toPath());
     }
 
     /**
@@ -287,7 +286,7 @@ public class EntityFinder extends ElementFinder {
      * @return
      */
     public Optional<ExecutableElement> findDeclaredPropertyAccessor(final EntityElement entity, final String propertyName) {
-        return doFindPropertyAccessor(() -> streamDeclaredMethods(entity.element()), propertyName);
+        return doFindPropertyAccessor(streamDeclaredMethods(entity.element()), propertyName);
     }
 
     /**
@@ -300,16 +299,16 @@ public class EntityFinder extends ElementFinder {
      * @return
      */
     public Optional<ExecutableElement> findDeclaredPropertyAccessor(final EntityElement entity, final IConvertableToPath propertyPath) {
-        return doFindPropertyAccessor(() -> streamDeclaredMethods(entity.element()), propertyPath.toPath());
+        return doFindPropertyAccessor(streamDeclaredMethods(entity.element()), propertyPath.toPath());
     }
 
-    private Optional<ExecutableElement> doFindPropertyAccessor(final Supplier<Stream<ExecutableElement>> methods, final String propertyName) {
+    private Optional<ExecutableElement> doFindPropertyAccessor(final Stream<ExecutableElement> methods, final String propertyName) {
         final String getName = Accessor.GET.getName(propertyName); 
         final String isName = Accessor.IS.getName(propertyName); 
 
         final Function<ExecutableElement, Function<String, Boolean>> nameFilter = method -> name -> method.getSimpleName().toString().equals(name);
-        return        methods.get().filter(m -> nameFilter.apply(m).apply(getName)).findAny()
-            .or(() -> methods.get().filter(m -> nameFilter.apply(m).apply(isName)).findAny());
+        return        methods.filter(m -> nameFilter.apply(m).apply(getName)).findAny()
+            .or(() -> methods.filter(m -> nameFilter.apply(m).apply(isName)).findAny());
     }
 
     /**
