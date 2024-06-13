@@ -9,7 +9,11 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -17,16 +21,20 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import graphql.GraphQLException;
 import graphql.Internal;
 import graphql.schema.GraphQLType;
-import graphql.util.StringKit;
 
 /**
  * A re-usable class that can fetch from POJOs
  */
 @Internal
 public class TgPropertyFetchingImpl {
+    private static final Logger log = LoggerFactory.getLogger(TgPropertyFetchingImpl.class);
+
     private final AtomicBoolean USE_SET_ACCESSIBLE = new AtomicBoolean(true);
     private final AtomicBoolean USE_LAMBDA_FACTORY = new AtomicBoolean(true);
     private final AtomicBoolean USE_NEGATIVE_CACHE = new AtomicBoolean(true);
@@ -58,7 +66,7 @@ public class TgPropertyFetchingImpl {
         }
     }
 
-    public Object getPropertyValue(final String propertyName, final Object object, final GraphQLType graphQLType, final boolean dfeInUse, final Supplier<?> singleArgumentValue) {
+    public Object getPropertyValue(final String propertyName, final Object object, final GraphQLType graphQLType, final boolean dfeInUse, final Supplier<Object> singleArgumentValue) {
         if (object instanceof Map) {
             return ((Map<?, ?>) object).get(propertyName);
         }
@@ -116,6 +124,8 @@ public class TgPropertyFetchingImpl {
                 // are preventing the Meta Lambda from working.  So let's continue with
                 // old skool reflection and if it's all broken there then it will eventually
                 // end up negatively cached
+                log.debug("Unable to invoke fast Meta Lambda for `{}` - Falling back to reflection", object.getClass().getName(), ignored);
+
             }
         }
 
@@ -186,12 +196,12 @@ public class TgPropertyFetchingImpl {
         Method apply(Class<?> aClass, String s) throws NoSuchMethodException;
     }
 
-    private Object getPropertyViaRecordMethod(final Object object, final String propertyName, final MethodFinder methodFinder, final Supplier<?> singleArgumentValue) throws NoSuchMethodException {
+    private Object getPropertyViaRecordMethod(final Object object, final String propertyName, final MethodFinder methodFinder, final Supplier<Object> singleArgumentValue) throws NoSuchMethodException {
         final Method method = methodFinder.apply(object.getClass(), propertyName);
         return invokeMethod(object, singleArgumentValue, method, takesSingleArgumentTypeAsOnlyArgument(method));
     }
 
-    private Object getPropertyViaGetterMethod(final Object object, final String propertyName, final GraphQLType graphQLType, final MethodFinder methodFinder, final Supplier<?> singleArgumentValue) throws NoSuchMethodException {
+    private Object getPropertyViaGetterMethod(final Object object, final String propertyName, final GraphQLType graphQLType, final MethodFinder methodFinder, final Supplier<Object> singleArgumentValue) throws NoSuchMethodException {
         if (isBooleanProperty(graphQLType)) {
             try {
                 return getPropertyViaGetterUsingPrefix(object, propertyName, "get" /* TG change, was "is" */, methodFinder, singleArgumentValue);
@@ -203,8 +213,8 @@ public class TgPropertyFetchingImpl {
         }
     }
 
-    private Object getPropertyViaGetterUsingPrefix(final Object object, final String propertyName, final String prefix, final MethodFinder methodFinder, final Supplier<?> singleArgumentValue) throws NoSuchMethodException {
-        final String getterName = prefix + StringKit.capitalize(propertyName);
+    private Object getPropertyViaGetterUsingPrefix(final Object object, final String propertyName, final String prefix, final MethodFinder methodFinder, final Supplier<Object> singleArgumentValue) throws NoSuchMethodException {
+        final String getterName = prefix + propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1);
         final Method method = methodFinder.apply(object.getClass(), getterName);
         return invokeMethod(object, singleArgumentValue, method, takesSingleArgumentTypeAsOnlyArgument(method));
     }
@@ -332,7 +342,7 @@ public class TgPropertyFetchingImpl {
         }
     }
 
-    private Object invokeMethod(final Object object, final Supplier<?> singleArgumentValue, final Method method, final boolean takesSingleArgument) throws FastNoSuchMethodException {
+    private Object invokeMethod(final Object object, final Supplier<Object> singleArgumentValue, final Method method, final boolean takesSingleArgument) throws FastNoSuchMethodException {
         try {
             if (takesSingleArgument) {
                 final Object argValue = singleArgumentValue.get();
