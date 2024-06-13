@@ -31,7 +31,7 @@ public class TgWebApiEntityWithBooleanPropWithIsGetterAndRecordLikeAccessor exte
     }
 
     /**
-     * Alternative record-like accessor for {@code boolean}-typed property. Returns wrong, opposite, value for testing purposes.
+     * Alternative record-like accessor for {@code boolean}-typed property. Returns wrong, opposite, value.
      */
     public boolean prop() {
         return !isProp();

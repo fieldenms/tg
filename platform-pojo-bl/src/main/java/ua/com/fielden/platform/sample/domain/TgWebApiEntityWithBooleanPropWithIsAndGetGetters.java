@@ -24,17 +24,17 @@ public class TgWebApiEntityWithBooleanPropWithIsAndGetGetters extends AbstractTg
     }
 
     /**
-     * Preferred TG getter for {@code boolean}-typed property in case if "canonical" 'is'-getter also exists.
+     * "Canonical" TG getter for {@code boolean}-typed property.
      */
-    public boolean getProp() {
+    public boolean isProp() {
         return prop;
     }
 
     /**
-     * "Canonical" getter for {@code boolean}-typed property. Returns wrong, opposite, value for testing purposes.
+     * Alternative getter for {@code boolean}-typed property. Returns wrong, opposite, value.
      */
-    public boolean isProp() {
-        return !getProp();
+    public boolean getProp() {
+        return !isProp();
     }
 
 }

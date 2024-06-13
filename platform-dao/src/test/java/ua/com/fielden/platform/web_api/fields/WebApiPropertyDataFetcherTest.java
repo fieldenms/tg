@@ -33,7 +33,7 @@ public class WebApiPropertyDataFetcherTest extends AbstractDaoTestCase {
     ////////////////////////////////////////// Boolean prop tests because of 'is/get' accessor specifics //////////////////////////////////////////
 
     @Test
-    public void boolean_property_gets_resolved_from_GetProperty_getter_if_IsProperty_getter_is_also_present_in_proxied_entity() {
+    public void boolean_property_gets_resolved_from_IsProperty_getter_if_GetProperty_getter_is_also_present_in_proxied_entity() {
         save(new_(TgWebApiEntityWithBooleanPropWithIsAndGetGetters.class, KEY).setProp(true).setOtherProp(OTHER));
 
         final Map<String, Object> result = webApi.execute(input("{tgWebApiEntityWithBooleanPropWithIsAndGetGetters{prop}}"));
@@ -47,7 +47,7 @@ public class WebApiPropertyDataFetcherTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void boolean_property_gets_resolved_from_GetProperty_getter_if_IsProperty_getter_is_also_present_in_full_entity() {
+    public void boolean_property_gets_resolved_from_IsProperty_getter_if_GetProperty_getter_is_also_present_in_full_entity() {
         save(new_(TgWebApiEntityWithBooleanPropWithIsAndGetGetters.class, KEY).setProp(true).setOtherProp(OTHER));
 
         final Map<String, Object> result = webApi.execute(input("{tgWebApiEntityWithBooleanPropWithIsAndGetGetters{prop key otherProp}}"));
