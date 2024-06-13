@@ -3,6 +3,8 @@ package ua.com.fielden.platform.ioc;
 import com.google.inject.Singleton;
 import com.google.inject.Stage;
 import com.google.inject.name.Names;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
@@ -37,6 +39,8 @@ import java.util.Map;
 import java.util.Properties;
 
 import static ua.com.fielden.platform.reflection.CompanionObjectAutobinder.bindCo;
+import static ua.com.fielden.platform.web_api.GraphQLService.DEFAULT_MAX_QUERY_DEPTH;
+import static ua.com.fielden.platform.web_api.GraphQLService.WARN_INSUFFICIENT_MAX_QUERY_DEPTH;
 
 /**
  * Basic IoC module for server web applications, which should be enhanced by the application specific IoC module.
@@ -57,6 +61,7 @@ import static ua.com.fielden.platform.reflection.CompanionObjectAutobinder.bindC
  *
  */
 public class BasicWebServerModule extends CommonFactoryModule {
+    private static final Logger LOGGER = LogManager.getLogger(BasicWebServerModule.class);
 
     private final Properties props;
     private final Class<? extends ISecurityTokenProvider> tokenProviderType;
@@ -114,7 +119,13 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bindConstant().annotatedWith(Names.named("independent.time.zone")).to(Boolean.valueOf(props.getProperty("independent.time.zone")));
         final boolean webApiPresent = Boolean.valueOf(props.getProperty("web.api"));
         bindConstant().annotatedWith(Names.named("web.api")).to(webApiPresent);
-        bindConstant().annotatedWith(Names.named("web.api.maxQueryDepth")).to(Integer.valueOf(props.getProperty("web.api.maxQueryDepth", "15")));
+        final var maxQueryDepthKey = "web.api.maxQueryDepth";
+        final var maxQueryDepth = Integer.valueOf(props.getProperty(maxQueryDepthKey, DEFAULT_MAX_QUERY_DEPTH + ""));
+        final var insufficientMaxQueryDepth = maxQueryDepth < DEFAULT_MAX_QUERY_DEPTH;
+        if (insufficientMaxQueryDepth) {
+            LOGGER.warn(WARN_INSUFFICIENT_MAX_QUERY_DEPTH.formatted(maxQueryDepth));
+        }
+        bindConstant().annotatedWith(Names.named(maxQueryDepthKey)).to(insufficientMaxQueryDepth ? DEFAULT_MAX_QUERY_DEPTH : maxQueryDepth);
         // authentication parameters
         bindConstant().annotatedWith(Names.named("auth.mode")).to(props.getProperty("auth.mode", AuthMode.RSO.name()));
         bindConstant().annotatedWith(Names.named("auth.sso.provider")).to(props.getProperty("auth.sso.provider", "Identity Provider"));

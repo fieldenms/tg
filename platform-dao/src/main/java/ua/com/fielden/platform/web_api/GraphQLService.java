@@ -43,7 +43,6 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import graphql.execution.AsyncExecutionStrategy;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -86,6 +85,9 @@ public class GraphQLService implements IWebApi {
     private final Logger logger = LogManager.getLogger(getClass());
     private static final String ERR_EXECUTING_QUERY = "Query [%s] execution completed with errors [%s].";
     private static final String ERR_EXECUTING_QUERY_WITH_EX = "Query [%s] execution completed with exception.";
+    public static final Integer DEFAULT_MAX_QUERY_DEPTH = 15; // this is the lowest value needed to load schema in GraphiQL editor (for version >= 3.2.3)
+    public static final String WARN_INSUFFICIENT_MAX_QUERY_DEPTH = "Web API maximum query depth [%s] is insufficient for GraphiQL editor. Minimum value [" + DEFAULT_MAX_QUERY_DEPTH + "] was used.";
+
     private final GraphQLSchema schema;
     private final Integer maxQueryDepth;
 
