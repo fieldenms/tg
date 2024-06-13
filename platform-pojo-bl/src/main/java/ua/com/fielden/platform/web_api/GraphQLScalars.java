@@ -21,7 +21,6 @@ import java.util.Date;
 import java.util.Map;
 
 import static graphql.schema.GraphQLScalarType.newScalar;
-import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.joda.time.format.ISODateTimeFormat.*;
 import static ua.com.fielden.platform.types.either.Either.left;
@@ -51,7 +50,7 @@ public class GraphQLScalars {
      * @return
      */
     private static Builder newScalarType(final String title) {
-        return newScalar().name(title).description(format("%s type.", title));
+        return newScalar().name(title).description("%s type.".formatted(title));
     }
     
     /**
@@ -62,7 +61,7 @@ public class GraphQLScalars {
      * @return
      */
     private static <R> Either<String, R> error(final String expected, final Object unexpected) {
-        return left(format(ERR_UNEXPECTED_TYPE, expected, unexpected.getClass().getSimpleName()));
+        return left(ERR_UNEXPECTED_TYPE.formatted(expected, unexpected.getClass().getSimpleName()));
     }
     
     /////////////////////////////////////////////////////////////// SCALAR TYPES WITHOUT ARGUMENTS ///////////////////////////////////////////////////////////////
@@ -332,7 +331,7 @@ public class GraphQLScalars {
             try {
                 return right(formatter.withZone(dates.timeZone()).parseDateTime(input).toDate()); // request time-zone is used here (or default for independent time-zone mode)
             } catch (final IllegalArgumentException e) {
-                return left(format(ERR_UNEXPECTED_TYPE, "number-like or string-based " + title(), input));
+                return left(ERR_UNEXPECTED_TYPE.formatted("number-like or string-based " + title(), input));
             }
         }
         
