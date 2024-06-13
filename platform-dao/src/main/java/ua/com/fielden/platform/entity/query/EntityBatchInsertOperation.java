@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.query;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
@@ -13,7 +15,6 @@ import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation.TableStructForBatchInsertion.PropColumnInfo;
 import ua.com.fielden.platform.meta.IDomainMetadata;
-import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.StreamUtils;
 
 import java.sql.PreparedStatement;
@@ -28,7 +29,8 @@ import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.lang.String.join;
-import static java.util.Collections.*;
+import static java.util.Collections.nCopies;
+import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
@@ -84,8 +86,8 @@ public class EntityBatchInsertOperation {
         }
 
         final TableStructForBatchInsertion table = entityBatchInsertTables.getTableStructsForBatchInsertion(entities.get(0).getType());
-        final String tableName = table.name;
-        final List<String> columnNames = table.columns.stream().flatMap(x -> x.columnNames().stream()).collect(toList());
+        final String tableName = table.name();
+        final List<String> columnNames = table.columns().stream().flatMap(x -> x.columnNames().stream()).collect(toList());
         final String insertStmt = generateInsertStmt(tableName, columnNames, domainMetadata.dbVersion());
 
         final AtomicInteger insertedCount = new AtomicInteger(0);
@@ -101,7 +103,7 @@ public class EntityBatchInsertOperation {
                                 final SessionImplementor sessionImpl = (SessionImplementor) trEx.getSession();
                                 try {
                                     int paramIndex = 1; // JDBC parameters start their count from 1
-                                    for (final PropColumnInfo propInfo : table.columns) {
+                                    for (final PropColumnInfo propInfo : table.columns()) {
                                         final Object value = entity.get(propInfo.leafPropName());
                                         if (propInfo.hibType() instanceof UserType) {
                                             ((UserType) propInfo.hibType()).nullSafeSet(pst, value, paramIndex, sessionImpl);
@@ -139,34 +141,31 @@ public class EntityBatchInsertOperation {
                 dbVersion.nextSequenceValSql(),
                 join(", ", nCopies(columns.size(), "?")));
     }
-    
+
     /**
-     * An abstraction for representing a DB table, used to store an entity, which is specific for batch insertion purposes.
+     * An abstraction for representing a DB table, used to store an entity, which is specific for batch insertion
+     * purposes.
      *
      * @author TG Team
      */
-    public static class TableStructForBatchInsertion {
-        public final String name;
-        public final List<PropColumnInfo> columns;
-
+    public record TableStructForBatchInsertion(String name, List<PropColumnInfo> columns) {
         public TableStructForBatchInsertion(final String name, final List<PropColumnInfo> columns) {
             this.name = name;
-            this.columns = unmodifiableList(columns);
+            this.columns = ImmutableList.copyOf(columns);
         }
 
         /**
-         * Represents a table column or columns in case of a component, to which an entity property is mapped.  
+         * Represents a table column or columns in case of a component, to which an entity property is mapped.
          */
-        public static record PropColumnInfo(String leafPropName, Set<String> columnNames, Object hibType) {
+        public record PropColumnInfo(String leafPropName, Set<String> columnNames, Object hibType) {
             public PropColumnInfo(final String leafPropName, final String columnName, final Object hibType) {
-                this (leafPropName, CollectionUtil.unmodifiableSetOf(columnName), hibType);
+                this(leafPropName, ImmutableSet.of(columnName), hibType);
             }
 
             public PropColumnInfo(final String leafPropName, final List<String> columnNames, final Object hibType) {
                 this(leafPropName, unmodifiableSet(new LinkedHashSet<>(columnNames)), hibType);
             }
         }
-
     }
 
 }
