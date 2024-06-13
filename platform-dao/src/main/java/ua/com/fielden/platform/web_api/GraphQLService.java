@@ -1,5 +1,29 @@
 package ua.com.fielden.platform.web_api;
 
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import graphql.GraphQL;
+import graphql.analysis.MaxQueryDepthInstrumentation;
+import graphql.schema.*;
+import graphql.schema.GraphQLObjectType.Builder;
+import org.apache.logging.log4j.Logger;
+import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.security.IAuthorisationModel;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
+import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.utils.IDates;
+import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web_api.exceptions.WebApiException;
+
+import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+
 import static graphql.ExecutionInput.newExecutionInput;
 import static graphql.GraphQL.newGraphQL;
 import static graphql.schema.FieldCoordinates.coordinates;
@@ -13,6 +37,7 @@ import static java.util.Optional.of;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.uncapitalize;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.reflectionProperty;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.constructKeysAndProperties;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isExcluded;
@@ -22,55 +47,9 @@ import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 import static ua.com.fielden.platform.utils.EntityUtils.isIntrospectionDenied;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import static ua.com.fielden.platform.utils.Pair.pair;
-import static ua.com.fielden.platform.web_api.FieldSchema.LIKE_ARGUMENT;
-import static ua.com.fielden.platform.web_api.FieldSchema.ORDER_ARGUMENT;
-import static ua.com.fielden.platform.web_api.FieldSchema.PAGE_CAPACITY_ARGUMENT;
-import static ua.com.fielden.platform.web_api.FieldSchema.PAGE_NUMBER_ARGUMENT;
-import static ua.com.fielden.platform.web_api.FieldSchema.bold;
-import static ua.com.fielden.platform.web_api.FieldSchema.createGraphQLFieldDefinition;
-import static ua.com.fielden.platform.web_api.FieldSchema.titleAndDescRepresentation;
+import static ua.com.fielden.platform.web_api.FieldSchema.*;
 import static ua.com.fielden.platform.web_api.RootEntityUtils.QUERY_TYPE_NAME;
-import static ua.com.fielden.platform.web_api.WebApiUtils.errors;
-import static ua.com.fielden.platform.web_api.WebApiUtils.operationName;
-import static ua.com.fielden.platform.web_api.WebApiUtils.query;
-import static ua.com.fielden.platform.web_api.WebApiUtils.variables;
-
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-
-import graphql.GraphQL;
-import graphql.analysis.MaxQueryDepthInstrumentation;
-import graphql.schema.GraphQLCodeRegistry;
-import graphql.schema.GraphQLFieldDefinition;
-import graphql.schema.GraphQLList;
-import graphql.schema.GraphQLObjectType;
-import graphql.schema.GraphQLObjectType.Builder;
-import graphql.schema.GraphQLSchema;
-import graphql.schema.GraphQLType;
-import graphql.schema.GraphQLTypeReference;
-import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.security.IAuthorisationModel;
-import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
-import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.utils.IDates;
-import ua.com.fielden.platform.utils.Pair;
-import ua.com.fielden.platform.web_api.exceptions.WebApiException;
+import static ua.com.fielden.platform.web_api.WebApiUtils.*;
 
 /**
  * Represents GraphQL-based implementation of TG Web API using library <a href="https://github.com/graphql-java/graphql-java">graphql-java</a>.
@@ -82,7 +61,7 @@ import ua.com.fielden.platform.web_api.exceptions.WebApiException;
  */
 @Singleton
 public class GraphQLService implements IWebApi {
-    private final Logger logger = LogManager.getLogger(getClass());
+    private static final Logger LOGGER = getLogger(GraphQLService.class);
     private static final String ERR_EXECUTING_QUERY = "Query [%s] execution completed with errors [%s].";
     private static final String ERR_EXECUTING_QUERY_WITH_EX = "Query [%s] execution completed with exception.";
     public static final Integer DEFAULT_MAX_QUERY_DEPTH = 15; // this is the lowest value needed to load schema in GraphiQL editor (for version >= 3.2.3)
@@ -115,16 +94,16 @@ public class GraphQLService implements IWebApi {
         final ISecurityTokenProvider securityTokenProvider
     ) {
         try {
-            logger.info("GraphQL Web API...");
+            LOGGER.info("GraphQL Web API...");
             if (maxQueryDepth == null || maxQueryDepth.compareTo(0) < 0) {
                 throw new WebApiException("GraphQL max query depth must be specified and cannot be negative.");
             }
             this.maxQueryDepth = maxQueryDepth;
 
-            logger.info("\tmaxQueryDepth = " + maxQueryDepth);
+            LOGGER.info("\tmaxQueryDepth = " + maxQueryDepth);
             final GraphQLCodeRegistry.Builder codeRegistryBuilder = newCodeRegistry();
 
-            logger.info("\tBuilding dictionary...");
+            LOGGER.info("\tBuilding dictionary...");
             final Set<Class<? extends AbstractEntity<?>>> domainTypes = domainTypesOf(applicationDomainProvider, EntityUtils::isIntrospectionAllowed).stream() // synthetic / persistent without @DenyIntrospection; this includes persistent with activatable nature, synthetic based on persistent; this does not include union, functional and any other entities
                 .sorted((type1, type2) -> type1.getSimpleName().compareTo(type2.getSimpleName()))
                 .collect(toCollection(LinkedHashSet::new));
@@ -133,22 +112,22 @@ public class GraphQLService implements IWebApi {
             // dictionary must have all the types that are referenced by all types that should support querying
             final Map<Class<? extends AbstractEntity<?>>, GraphQLType> dictionary = createDictionary(allTypes);
 
-            logger.info("\tBuilding query type...");
+            LOGGER.info("\tBuilding query type...");
             final GraphQLObjectType queryType = createQueryType(domainTypes, coFinder, dates, codeRegistryBuilder, authorisationModel, securityTokenProvider);
 
-            logger.info("\tBuilding field visibility...");
+            LOGGER.info("\tBuilding field visibility...");
             codeRegistryBuilder.fieldVisibility(new FieldVisibility(authorisationModel, domainTypes, securityTokenProvider));
 
-            logger.info("\tBuilding schema...");
+            LOGGER.info("\tBuilding schema...");
             schema = newSchema()
                 .codeRegistry(codeRegistryBuilder.build())
                 .query(queryType)
                 .additionalTypes(new LinkedHashSet<>(dictionary.values()))
                 .build();
 
-            logger.info("GraphQL Web API...done");
+            LOGGER.info("GraphQL Web API...done");
         } catch (final Throwable t) {
-            logger.error("GraphQL Web API error.", t);
+            LOGGER.error("GraphQL Web API error.", t);
             throw t;
         }
     }
@@ -183,11 +162,11 @@ public class GraphQLService implements IWebApi {
                     .toSpecification();
             final var errors = errors(result);
             if (!errors.isEmpty()) {
-                logger.error(ERR_EXECUTING_QUERY.formatted(input, errors));
+                LOGGER.error(ERR_EXECUTING_QUERY.formatted(input, errors));
             }
             return result;
         } catch (final Throwable throwable) {
-            logger.error(ERR_EXECUTING_QUERY_WITH_EX.formatted(input), throwable);
+            LOGGER.error(ERR_EXECUTING_QUERY_WITH_EX.formatted(input), throwable);
             throw throwable;
         }
     }

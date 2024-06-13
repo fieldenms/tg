@@ -1,71 +1,13 @@
 package ua.com.fielden.platform.web_api;
 
-import static graphql.execution.CoercedVariables.of;
-import static graphql.execution.ValuesResolver.getArgumentValues;
-import static java.lang.Byte.valueOf;
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
-import static java.util.stream.Stream.concat;
-import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.ASCENDING;
-import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.DESCENDING;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity_centre.review.DynamicParamBuilder.getPropertyValues;
-import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createConditionProperty;
-import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createQuery;
-import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.createEmptyQueryProperty;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.types.tuples.T3.t3;
-import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
-import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumentedWithKeyAndDesc;
-import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isString;
-import static ua.com.fielden.platform.utils.Pair.pair;
-import static ua.com.fielden.platform.web_api.FieldSchema.FROM;
-import static ua.com.fielden.platform.web_api.FieldSchema.LIKE;
-import static ua.com.fielden.platform.web_api.FieldSchema.ORDER;
-import static ua.com.fielden.platform.web_api.FieldSchema.ORDER_ARGUMENT;
-import static ua.com.fielden.platform.web_api.FieldSchema.TO;
-import static ua.com.fielden.platform.web_api.FieldSchema.VALUE;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Stream;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import graphql.GraphQLContext;
 import graphql.execution.ValuesResolver;
-import graphql.language.Argument;
-import graphql.language.Field;
-import graphql.language.FragmentDefinition;
-import graphql.language.FragmentSpread;
-import graphql.language.InlineFragment;
-import graphql.language.Selection;
-import graphql.language.SelectionSet;
+import graphql.language.*;
 import graphql.schema.GraphQLArgument;
 import graphql.schema.GraphQLCodeRegistry;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLSchema;
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -82,6 +24,40 @@ import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Stream;
+
+import static graphql.execution.CoercedVariables.of;
+import static graphql.execution.ValuesResolver.getArgumentValues;
+import static java.lang.Byte.valueOf;
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Stream.concat;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.ASCENDING;
+import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.DESCENDING;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity_centre.review.DynamicParamBuilder.getPropertyValues;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.createEmptyQueryProperty;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createConditionProperty;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createQuery;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.types.tuples.T3.t3;
+import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
+import static ua.com.fielden.platform.utils.Pair.pair;
+import static ua.com.fielden.platform.web_api.FieldSchema.*;
+
 /**
  * Contains querying utility methods for root fields in GraphQL query / mutation schemas.
  * 
@@ -96,7 +72,7 @@ public class RootEntityUtils {
     private static final String __TYPENAME = "__typename";
     public static final String ORDER_PRIORITIES_ARE_NOT_DISTINCT = "Order priorities are not distinct.";
     static final String QUERY_TYPE_NAME = "Query";
-    private static final Logger LOGGER = LogManager.getLogger(RootEntityUtils.class);
+    private static final Logger LOGGER = getLogger(RootEntityUtils.class);
     
     /**
      * Returns function for generation of EQL query execution model for retrieving {@code rootField} and its selection set in GraphQL query or mutation [and optional warning about ordering].

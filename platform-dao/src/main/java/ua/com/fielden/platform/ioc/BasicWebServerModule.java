@@ -3,7 +3,6 @@ package ua.com.fielden.platform.ioc;
 import com.google.inject.Singleton;
 import com.google.inject.Stage;
 import com.google.inject.name.Names;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
@@ -38,6 +37,7 @@ import ua.com.fielden.platform.web_api.IWebApi;
 import java.util.Map;
 import java.util.Properties;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.CompanionObjectAutobinder.bindCo;
 import static ua.com.fielden.platform.web_api.GraphQLService.DEFAULT_MAX_QUERY_DEPTH;
 import static ua.com.fielden.platform.web_api.GraphQLService.WARN_INSUFFICIENT_MAX_QUERY_DEPTH;
@@ -61,7 +61,7 @@ import static ua.com.fielden.platform.web_api.GraphQLService.WARN_INSUFFICIENT_M
  *
  */
 public class BasicWebServerModule extends CommonFactoryModule {
-    private static final Logger LOGGER = LogManager.getLogger(BasicWebServerModule.class);
+    private static final Logger LOGGER = getLogger(BasicWebServerModule.class);
 
     private final Properties props;
     private final Class<? extends ISecurityTokenProvider> tokenProviderType;

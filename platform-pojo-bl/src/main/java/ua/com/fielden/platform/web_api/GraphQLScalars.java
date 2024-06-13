@@ -1,42 +1,33 @@
 package ua.com.fielden.platform.web_api;
-import static graphql.schema.GraphQLScalarType.newScalar;
-import static java.lang.String.format;
-import static org.joda.time.format.ISODateTimeFormat.basicDate;
-import static org.joda.time.format.ISODateTimeFormat.date;
-import static org.joda.time.format.ISODateTimeFormat.dateElementParser;
-import static org.joda.time.format.ISODateTimeFormat.time;
-import static org.joda.time.format.ISODateTimeFormat.timeElementParser;
-import static ua.com.fielden.platform.types.either.Either.left;
-import static ua.com.fielden.platform.types.either.Either.right;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
+
+import com.google.inject.Inject;
+import graphql.language.FloatValue;
+import graphql.language.IntValue;
+import graphql.language.StringValue;
+import graphql.schema.*;
+import graphql.schema.GraphQLScalarType.Builder;
+import org.apache.logging.log4j.Logger;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.DateTimeFormatterBuilder;
+import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
+import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.either.Either;
+import ua.com.fielden.platform.utils.IDates;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Date;
 import java.util.Map;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.DateTimeFormatterBuilder;
-
-import com.google.inject.Inject;
-
-import graphql.language.FloatValue;
-import graphql.language.IntValue;
-import graphql.language.StringValue;
-import graphql.schema.Coercing;
-import graphql.schema.CoercingParseLiteralException;
-import graphql.schema.CoercingParseValueException;
-import graphql.schema.CoercingSerializeException;
-import graphql.schema.GraphQLScalarType;
-import graphql.schema.GraphQLScalarType.Builder;
-import ua.com.fielden.platform.types.Colour;
-import ua.com.fielden.platform.types.Hyperlink;
-import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.either.Either;
-import ua.com.fielden.platform.utils.IDates;
+import static graphql.schema.GraphQLScalarType.newScalar;
+import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static org.joda.time.format.ISODateTimeFormat.*;
+import static ua.com.fielden.platform.types.either.Either.left;
+import static ua.com.fielden.platform.types.either.Either.right;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 
 /**
  * TG-specific GraphQL Web API scalar type implementations.
@@ -45,7 +36,7 @@ import ua.com.fielden.platform.utils.IDates;
  *
  */
 public class GraphQLScalars {
-    private static final Logger LOGGER = LogManager.getLogger(GraphQLScalars.class);
+    private static final Logger LOGGER = getLogger(GraphQLScalars.class);
     private static final String UNEXPECTED_TYPE_ERROR = "Expected [%s] but was [%s].";
 
     @Inject

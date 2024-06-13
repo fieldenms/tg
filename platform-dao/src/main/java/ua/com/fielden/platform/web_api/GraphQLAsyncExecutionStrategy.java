@@ -1,10 +1,14 @@
 package ua.com.fielden.platform.web_api;
 
-import graphql.execution.*;
-import org.apache.logging.log4j.LogManager;
+import graphql.execution.AsyncExecutionStrategy;
+import graphql.execution.DataFetcherExceptionHandler;
+import graphql.execution.ExecutionContext;
+import graphql.execution.ExecutionStrategyParameters;
 import org.apache.logging.log4j.Logger;
 
 import java.util.concurrent.CompletableFuture;
+
+import static org.apache.logging.log4j.LogManager.getLogger;
 
 /**
  * Standard graphql-java {@link AsyncExecutionStrategy} with exception logging.
@@ -12,7 +16,7 @@ import java.util.concurrent.CompletableFuture;
  *  not covered on "value fetching" phase using 'exceptionHandler'. Mostly this contains exceptions during "value completion" phase, e.g. when scalars got coerced.
  */
 public class GraphQLAsyncExecutionStrategy extends AsyncExecutionStrategy {
-    private final Logger logger = LogManager.getLogger(getClass());
+    private static final Logger LOGGER = getLogger(GraphQLAsyncExecutionStrategy.class);
 
     /**
      * The standard graphql execution strategy that runs fields asynchronously
@@ -36,7 +40,7 @@ public class GraphQLAsyncExecutionStrategy extends AsyncExecutionStrategy {
         if (result instanceof CompletableFuture<?> cf) {
             cf.whenComplete((r, ex) -> {
                 if (ex != null) {
-                    logger.error(ex.getMessage(), ex);
+                    LOGGER.error(ex.getMessage(), ex);
                 }
             });
         }
