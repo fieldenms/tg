@@ -1,26 +1,24 @@
 package ua.com.fielden.platform.test.mapping;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
+import org.hibernate.type.YesNoType;
 import org.junit.Test;
-
-import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
 import ua.com.fielden.platform.dashboard.DashboardRefreshFrequency;
 import ua.com.fielden.platform.dashboard.DashboardRefreshFrequencyUnit;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
 import ua.com.fielden.platform.eql.meta.EqlTables;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
-import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 public class MappingGenerationTest {
 
@@ -33,8 +31,14 @@ public class MappingGenerationTest {
         domainTypes.add(DashboardRefreshFrequency.class);
         domainTypes.add(DashboardRefreshFrequencyUnit.class);
         domainTypes.add(EntityCentreConfig.class);
-        // FIXME HibernateTypeMappings: register (boolean : YesNoType)
-        final IDomainMetadata domainMetadata = new DomainMetadataBuilder(HibernateTypeMappings.empty(), domainTypes, DbVersion.H2).build();
+
+        final IDomainMetadata domainMetadata = new DomainMetadataBuilder(
+                HibernateTypeMappings.builder()
+                        .put(boolean.class, YesNoType.INSTANCE)
+                        .put(Boolean.class, YesNoType.INSTANCE)
+                        .build(),
+                domainTypes, DbVersion.H2)
+                .build();
 
         final String tgModelMapping = new HibernateMappingsGenerator(domainMetadata, new EqlTables(domainMetadata)).generateMappings();
         final String expectedMapping = String.format("""
