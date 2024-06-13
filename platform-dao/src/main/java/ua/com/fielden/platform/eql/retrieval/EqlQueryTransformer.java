@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.retrieval;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.QueryProcessingModel;
+import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.queries.ResultQuery1;
@@ -34,20 +35,22 @@ public class EqlQueryTransformer {
 
     private EqlQueryTransformer() {}
 
-    public static final <E extends AbstractEntity<?>> TransformationResultFromStage2To3<ResultQuery3> transform(
+    public static <E extends AbstractEntity<?>> TransformationResultFromStage2To3<ResultQuery3> transform(
             final QueryProcessingModel<E, ?> qem,
             final IFilter filter,
             final Optional<String> username,
             final IDates dates,
-            final IDomainMetadata domainMetadata) {
+            final IDomainMetadata domainMetadata,
+            final QuerySourceInfoProvider querySourceInfoProvider)
+    {
         final QueryModelToStage1Transformer gen = new QueryModelToStage1Transformer(filter, username, new QueryNowValue(dates), qem.getParamValues());
         final ResultQuery1 query1 = gen.generateAsResultQuery(qem.queryModel, qem.orderModel, qem.fetchModel);
 
-        final TransformationContextFromStage1To2 context1 = TransformationContextFromStage1To2.forMainContext(domainMetadata.querySourceInfoProvider());
-		final ResultQuery2 query2 = query1.transform(context1);
+        final TransformationContextFromStage1To2 context1 = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider);
+        final ResultQuery2 query2 = query1.transform(context1);
 
-		final PathsToTreeTransformer p2tt = new PathsToTreeTransformer(domainMetadata.querySourceInfoProvider(), gen);
+        final PathsToTreeTransformer p2tt = new PathsToTreeTransformer(querySourceInfoProvider, gen);
         final TransformationContextFromStage2To3 context2 = new TransformationContextFromStage2To3(p2tt.transformFinally(query2.collectProps()), domainMetadata);
-		return query2.transform(context2);
+        return query2.transform(context2);
     }
 }

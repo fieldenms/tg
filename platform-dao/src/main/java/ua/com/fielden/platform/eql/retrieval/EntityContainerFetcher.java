@@ -17,6 +17,7 @@ import ua.com.fielden.platform.entity.query.QueryProcessingModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.entity.query.stream.ScrollableResultStream;
+import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.retrieval.records.EntityTree;
 import ua.com.fielden.platform.eql.retrieval.records.QueryModelResult;
 import ua.com.fielden.platform.eql.retrieval.records.YieldedColumn;
@@ -50,6 +51,7 @@ public class EntityContainerFetcher {
     private final Logger logger = getLogger(this.getClass());
 
     private final IDomainMetadata domainMetadata;
+    private final QuerySourceInfoProvider querySourceInfoProvider;
     private final IFilter filter;
     private final IUserProvider userProvider;
     private final IDates dates;
@@ -59,6 +61,7 @@ public class EntityContainerFetcher {
     @Inject
     public EntityContainerFetcher(
             final IDomainMetadata domainMetadata,
+            final QuerySourceInfoProvider querySourceInfoProvider,
             final IFilter filter,
             final IUserProvider userProvider,
             final IDates dates,
@@ -66,6 +69,7 @@ public class EntityContainerFetcher {
             final EntityFactory entityFactory)
     {
         this.domainMetadata = domainMetadata;
+        this.querySourceInfoProvider = querySourceInfoProvider;
         this.filter = filter;
         this.userProvider = userProvider;
         this.dates = dates;
@@ -78,7 +82,8 @@ public class EntityContainerFetcher {
             final Integer pageNumber, final Integer pageCapacity)
     {
         final QueryModelResult<E> modelResult = getModelResult(queryModel, domainMetadata.dbVersion(), filter,
-                                                               userProvider.getUsername(), dates, domainMetadata);
+                                                               userProvider.getUsername(), dates, domainMetadata,
+                                                               querySourceInfoProvider);
 
         if (idOnlyQuery(modelResult)) {
             return listContainersForIdOnlyQuery(session, queryModel, modelResult.resultType(), pageNumber, pageCapacity);
@@ -94,7 +99,8 @@ public class EntityContainerFetcher {
             final Session session, final QueryProcessingModel<E, ?> queryModel, final Optional<Integer> fetchSize)
     {
         final QueryModelResult<E> modelResult = getModelResult(queryModel, domainMetadata.dbVersion(), filter,
-                                                               userProvider.getUsername(), dates, domainMetadata);
+                                                               userProvider.getUsername(), dates, domainMetadata,
+                                                               querySourceInfoProvider);
 
         if (idOnlyQuery(modelResult)) {
             return streamContainersForIdOnlyQuery(session, queryModel, modelResult.resultType(), fetchSize);
@@ -123,7 +129,7 @@ public class EntityContainerFetcher {
             final Session session, final QueryModelResult<E> modelResult,
             final Integer pageNumber, final Integer pageCapacity)
     {
-        final EntityTree<E> resultTree = build(modelResult.resultType(), modelResult.yieldedColumns(), domainMetadata.querySourceInfoProvider());
+        final EntityTree<E> resultTree = build(modelResult.resultType(), modelResult.yieldedColumns(), querySourceInfoProvider);
 
         final Query query = produceQueryWithPagination(session, modelResult.sql(), getSortedScalars(resultTree), modelResult.paramValues(), pageNumber, pageCapacity);
 
@@ -152,7 +158,7 @@ public class EntityContainerFetcher {
     private <E extends AbstractEntity<?>> Stream<List<EntityContainer<E>>> streamContainersAsIs(
             final Session session, final QueryModelResult<E> modelResult, final Optional<Integer> fetchSize)
     {
-        final EntityTree<E> resultTree = build(modelResult.resultType(), modelResult.yieldedColumns(), domainMetadata.querySourceInfoProvider());
+        final EntityTree<E> resultTree = build(modelResult.resultType(), modelResult.yieldedColumns(), querySourceInfoProvider);
         final int batchSize = fetchSize.orElse(100);
         final Query query = produceQueryWithoutPagination(session, modelResult.sql(), getSortedScalars(resultTree), modelResult.paramValues())
                 .setFetchSize(batchSize);
@@ -166,9 +172,10 @@ public class EntityContainerFetcher {
 
     protected static <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(
             final QueryProcessingModel<E, ?> qem, final DbVersion dbVersion, final IFilter filter,
-            final Optional<String> username, final IDates dates, final IDomainMetadata domainMetadata)
+            final Optional<String> username, final IDates dates, final IDomainMetadata domainMetadata,
+            final QuerySourceInfoProvider querySourceInfoProvider)
     {
-        final TransformationResultFromStage2To3<ResultQuery3> tr = transform(qem, filter, username, dates, domainMetadata);
+        final TransformationResultFromStage2To3<ResultQuery3> tr = transform(qem, filter, username, dates, domainMetadata, querySourceInfoProvider);
         final ResultQuery3 entQuery3 = tr.item;
         final String sql = entQuery3.sql(dbVersion);
         return new QueryModelResult<E>((Class<E>) entQuery3.resultType, sql, getYieldedColumns(entQuery3.yields), tr.updatedContext.getSqlParamValues(), qem.fetchModel);

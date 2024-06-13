@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.meta;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
@@ -29,6 +31,7 @@ import static ua.com.fielden.platform.meta.PropertyMetadataKeys.REQUIRED;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
+@Singleton // TODO replace by a per-IDomainMetadata instance scope
 public class QuerySourceInfoProvider {
     private static final Logger LOGGER = getLogger(QuerySourceInfoProvider.class);
 
@@ -48,6 +51,7 @@ public class QuerySourceInfoProvider {
     private final ConcurrentMap<String, List<String>> entityTypesDependentCalcPropsOrder = new ConcurrentHashMap<>();
     private final IDomainMetadata domainMetadata;
 
+    @Inject
     public QuerySourceInfoProvider(final IDomainMetadata domainMetadata) {
         this.domainMetadata = domainMetadata;
         final var qmToS1Transformer = new QueryModelToStage1Transformer();

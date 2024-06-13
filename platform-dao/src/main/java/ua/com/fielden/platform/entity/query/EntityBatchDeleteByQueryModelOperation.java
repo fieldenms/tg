@@ -8,6 +8,7 @@ import ua.com.fielden.platform.dao.exceptions.EntityDeletionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage3.queries.ResultQuery3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
@@ -30,15 +31,18 @@ public class EntityBatchDeleteByQueryModelOperation {
     private static final Logger LOGGER = getLogger(EntityBatchDeleteByQueryModelOperation.class);
 
     private final IDomainMetadata domainMetadata;
+    private final QuerySourceInfoProvider querySourceInfoProvider;
     private final IDates dates;
     private final Supplier<Session> session;
 
     public EntityBatchDeleteByQueryModelOperation(
             final IDomainMetadata domainMetadata,
+            final QuerySourceInfoProvider querySourceInfoProvider,
             final IDates dates,
             final Supplier<Session> session)
     {
         this.domainMetadata = domainMetadata;
+        this.querySourceInfoProvider = querySourceInfoProvider;
         this.dates = dates;
         this.session = session;
     }
@@ -61,7 +65,9 @@ public class EntityBatchDeleteByQueryModelOperation {
     private <T extends AbstractEntity<?>> DeletionModel getModelSql(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
         final AggregatedResultQueryModel finalModel = select(model.getResultType()).where().prop(ID).in().model(model).yield().prop(ID).as(ID).modelAsAggregate();
         final String tableName = domainMetadata.getTableForEntityType(model.getResultType()).name();
-        final TransformationResultFromStage2To3<ResultQuery3> s2tr = transform(new QueryProcessingModel(finalModel, null, null, paramValues, true), null, empty(), dates, domainMetadata);
+        final TransformationResultFromStage2To3<ResultQuery3> s2tr = transform(
+                new QueryProcessingModel(finalModel, null, null, paramValues, true),
+                null, empty(), dates, domainMetadata, querySourceInfoProvider);
         final ResultQuery3 entQuery3 = s2tr.item;
         final String selectionSql = entQuery3.sql(domainMetadata.dbVersion());
         final String deletionSql = produceDeletionSql(selectionSql, tableName, domainMetadata.dbVersion());

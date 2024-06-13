@@ -9,7 +9,6 @@ import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation.TableStru
 import ua.com.fielden.platform.eql.dbschema.ColumnDefinitionExtractor;
 import ua.com.fielden.platform.eql.dbschema.TableDdl;
 import ua.com.fielden.platform.eql.meta.EqlTable;
-import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.meta.exceptions.DomainMetadataGenerationException;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -42,7 +41,6 @@ final class DomainMetadataImpl implements IDomainMetadata {
     private final DomainMetadataGenerator generator;
     private final PropertyMetadataUtils pmUtils;
     private final EntityMetadataUtils emUtils;
-    private final QuerySourceInfoProvider querySourceInfoProvider;
 
     DomainMetadataImpl(final Map<Class<? extends AbstractEntity<?>>, EntityMetadata> entityMetadataMap,
                        final Map<Class<?>, TypeMetadata.Composite> compositeTypeMetadataMap,
@@ -61,7 +59,6 @@ final class DomainMetadataImpl implements IDomainMetadata {
         this.hibTypesInjector = hibTypesInjector;
         this.dbVersion = dbVersion;
         initBaggage(requireNonNullElseGet(hibTypesDefaults, Map::of), entityMetadataMap.values());
-        this.querySourceInfoProvider = new QuerySourceInfoProvider(this);
     }
 
     @Override
@@ -286,10 +283,4 @@ final class DomainMetadataImpl implements IDomainMetadata {
     public DbVersion dbVersion() {
         return dbVersion;
     }
-
-    @Override
-    public QuerySourceInfoProvider querySourceInfoProvider() {
-        return querySourceInfoProvider;
-    }
-
 }

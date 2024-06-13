@@ -10,6 +10,7 @@ import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleteByIdsOperation;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleteByQueryModelOperation;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -47,6 +48,7 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
     private final Class<T> entityType;
     private final IEntityReader<T> reader;
     private final Supplier<IDomainMetadata> domainMetadata;
+    private final Supplier<QuerySourceInfoProvider> querySourceInfoProvider;
     private final Supplier<IDates> dates;
     private final Supplier<EntityBatchDeleteByIdsOperation<T>> batchDeleteByIdsOp;
     
@@ -55,11 +57,13 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
             final Supplier<Session> session,
             final Class<T> entityType,
             final Supplier<IDomainMetadata> domainMetadata,
+            final Supplier<QuerySourceInfoProvider> querySourceInfoProvider,
             final Supplier<IDates> dates) {
         this.reader = reader;
         this.session = session;
         this.entityType = entityType;
         this.domainMetadata = domainMetadata;
+        this.querySourceInfoProvider = querySourceInfoProvider;
         this.dates = dates;
         this.batchDeleteByIdsOp = () -> new EntityBatchDeleteByIdsOperation<>(session.get(), domainMetadata.get().getTableForEntityType(entityType));
     }
@@ -188,7 +192,8 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
         if (ActivatableAbstractEntity.class.isAssignableFrom(entityType)) {
             return defaultDelete(model, paramValues);
         } else {
-            return new EntityBatchDeleteByQueryModelOperation(domainMetadata.get(), dates.get(), session).deleteEntities(model, paramValues);
+            return new EntityBatchDeleteByQueryModelOperation(domainMetadata.get(), querySourceInfoProvider.get(), dates.get(), session)
+                    .deleteEntities(model, paramValues);
         }
     }
 

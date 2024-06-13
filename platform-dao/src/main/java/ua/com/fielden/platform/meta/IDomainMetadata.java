@@ -80,7 +80,4 @@ public interface IDomainMetadata {
 
     DbVersion dbVersion();
 
-    // TODO make this type injectable
-    QuerySourceInfoProvider querySourceInfoProvider();
-
 }
