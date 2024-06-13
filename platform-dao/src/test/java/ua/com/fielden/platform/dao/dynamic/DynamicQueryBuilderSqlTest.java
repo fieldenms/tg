@@ -1,32 +1,11 @@
 package ua.com.fielden.platform.dao.dynamic;
 
-import static org.junit.Assert.assertEquals;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createQuery;
-import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.getEmptyValue;
-import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.getPropertyNameWithoutKeyPart;
-import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.prepCritValuesForEntityTypedProp;
-
-import java.io.ByteArrayInputStream;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
+import com.google.inject.Injector;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.inject.Injector;
-
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
@@ -43,21 +22,27 @@ import ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum;
 import ua.com.fielden.platform.entity_centre.mnemonics.DateRangeSelectorEnum;
 import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
-import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
+import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.*;
 import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
 import ua.com.fielden.platform.eql.meta.EqlTables;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.IDomainMetadata;
-import ua.com.fielden.platform.persistence.types.DateTimeType;
-import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
-import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
-import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.IDates;
+
+import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
+import java.util.*;
+
+import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.*;
+import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 
 /**
  * A test for {@link DynamicQueryBuilder}.
@@ -123,7 +108,8 @@ public class DynamicQueryBuilderSqlTest {
         domainTypes.add(EvenSlaverEntity.class);
 
         // TODO use dependency injection
-        final IDomainMetadata domainMetadata = new DomainMetadataBuilder(new PlatformHibernateTypeMappings(), domainTypes, DbVersion.H2).build();
+        final IDomainMetadata domainMetadata = new DomainMetadataBuilder(PLATFORM_HIBERNATE_TYPE_MAPPINGS, domainTypes, DbVersion.H2)
+                .build();
         try {
             hibConf.addInputStream(new ByteArrayInputStream(
                     new HibernateMappingsGenerator(domainMetadata, new EqlTables(domainMetadata))

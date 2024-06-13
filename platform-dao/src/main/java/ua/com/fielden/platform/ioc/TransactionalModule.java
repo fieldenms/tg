@@ -21,7 +21,6 @@ import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
 import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
-import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 
 import java.util.List;
 import java.util.Map;
@@ -30,6 +29,7 @@ import java.util.Properties;
 import static com.google.inject.Scopes.SINGLETON;
 import static com.google.inject.matcher.Matchers.annotatedWith;
 import static com.google.inject.matcher.Matchers.subclassesOf;
+import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 
 /**
  * Guice injector module for platform-wide Hibernate related injections such as transaction support and domain level validation configurations.
@@ -56,7 +56,7 @@ public abstract class TransactionalModule extends EntityModule {
     protected void configure() {
         super.configure();
 
-        bind(HibernateTypeMappings.class).to(PlatformHibernateTypeMappings.class);
+        bind(HibernateTypeMappings.class).toInstance(PLATFORM_HIBERNATE_TYPE_MAPPINGS);
         bind(IIdOnlyProxiedEntityTypeCache.class).to(IdOnlyProxiedEntityTypeCache.class).in(SINGLETON);
 
         // bind SessionRequired interceptor

@@ -1,13 +1,11 @@
 package ua.com.fielden.platform.meta;
 
-import com.google.inject.Guice;
 import org.junit.Test;
 import ua.com.fielden.platform.domain.metadata.DomainTreeEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.meta.Assertions.EntityA;
 import ua.com.fielden.platform.meta.PropertyMetadata.Calculated;
 import ua.com.fielden.platform.meta.PropertyMetadata.CritOnly;
@@ -18,11 +16,9 @@ import ua.com.fielden.platform.meta.test_entities.Entity_OverridesProperty;
 import ua.com.fielden.platform.meta.test_entities.Entity_OverridesProperty_Super;
 import ua.com.fielden.platform.meta.test_entities.Entity_PropertyDescriptor;
 import ua.com.fielden.platform.meta.test_entities.Entity_UnknownPropertyTypes;
-import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.ref_hierarchy.AbstractTreeEntry;
 import ua.com.fielden.platform.ref_hierarchy.TypeLevelHierarchyEntry;
 import ua.com.fielden.platform.sample.domain.*;
-import ua.com.fielden.platform.test.PlatformTestHibernateSetup;
 import ua.com.fielden.platform.types.Money;
 
 import java.math.BigDecimal;
@@ -30,13 +26,13 @@ import java.util.List;
 import java.util.SortedSet;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.KEY_MEMBER;
+import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 
 public class EntityMetadataTest {
 
     private final TestDomainMetadataGenerator generator = TestDomainMetadataGenerator.wrap(
-            new DomainMetadataGenerator(new PlatformHibernateTypeMappings(), DbVersion.MSSQL));
+            new DomainMetadataGenerator(PLATFORM_HIBERNATE_TYPE_MAPPINGS, DbVersion.MSSQL));
 
     @Test
     public void entity_annotated_with_MapEntityTo_gets_persistent_nature() {
