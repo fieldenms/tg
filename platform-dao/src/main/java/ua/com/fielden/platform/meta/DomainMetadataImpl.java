@@ -7,6 +7,7 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.dbschema.ColumnDefinitionExtractor;
 import ua.com.fielden.platform.eql.dbschema.TableDdl;
 import ua.com.fielden.platform.meta.exceptions.DomainMetadataGenerationException;
+import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.StreamUtils;
@@ -37,8 +38,7 @@ final class DomainMetadataImpl implements IDomainMetadata {
                        final Map<Class<?>, TypeMetadata.Composite> compositeTypeMetadataMap,
                        final Collection<? extends Class<? extends AbstractEntity<?>>> entityTypes,
                        final DomainMetadataGenerator generator,
-                       final Injector hibTypesInjector,
-                       final @Nullable Map<? extends Class, ? extends Class> hibTypesDefaults,
+                       final HibernateTypeMappings hibernateTypeMappings,
                        final DbVersion dbVersion) {
         this.entityMetadataMap = new ConcurrentHashMap<>(entityMetadataMap);
         this.compositeTypeMetadataMap = new ConcurrentHashMap<>(compositeTypeMetadataMap);
@@ -47,9 +47,8 @@ final class DomainMetadataImpl implements IDomainMetadata {
         this.pmUtils = new PropertyMetadataUtilsImpl(this, generator);
         this.emUtils = new EntityMetadataUtilsImpl();
 
-        this.hibTypesInjector = hibTypesInjector;
         this.dbVersion = dbVersion;
-        initBaggage(requireNonNullElseGet(hibTypesDefaults, Map::of));
+        this.hibernateTypeMappings = hibernateTypeMappings;
     }
 
     @Override
@@ -141,26 +140,8 @@ final class DomainMetadataImpl implements IDomainMetadata {
     // ****************************************
     // * Temporary baggage from old metadata that can't be moved until dependency injection is properly configured.
 
-    private final Injector hibTypesInjector;
-    private final Map<Class<?>, Object> hibTypesDefaults = new HashMap<>();
+    private final HibernateTypeMappings hibernateTypeMappings;
     private final DbVersion dbVersion;
-
-    private void initBaggage(final Map<? extends Class, ? extends Class> hibTypesDefaults) {
-        initHibTypesDefaults(hibTypesDefaults);
-    }
-
-    private void initHibTypesDefaults(final Map<? extends Class, ? extends Class> hibTypesDefaults) {
-        hibTypesDefaults.forEach((javaType, hibType) -> {
-            try {
-                this.hibTypesDefaults.put(javaType, hibType.getDeclaredField("INSTANCE").get(null));
-            } catch (final Exception e) {
-                throw new DomainMetadataGenerationException("Couldn't instantiate Hibernate type [%s]".formatted(hibType), e);
-            }
-        });
-
-        this.hibTypesDefaults.put(Boolean.class, H_BOOLEAN);
-        this.hibTypesDefaults.put(boolean.class, H_BOOLEAN);
-    }
 
     /**
      * Generates DDL statements for creating tables, primary keys, indices and foreign keys for all persistent entity types,
@@ -178,7 +159,7 @@ final class DomainMetadataImpl implements IDomainMetadata {
     }
 
     private List<String> generateDatabaseDdl_(final Dialect dialect, final Stream<? extends Class<? extends AbstractEntity<?>>> types) {
-        final ColumnDefinitionExtractor columnDefinitionExtractor = new ColumnDefinitionExtractor(hibTypesInjector, hibTypesDefaults);
+        final ColumnDefinitionExtractor columnDefinitionExtractor = new ColumnDefinitionExtractor(hibernateTypeMappings);
 
         final Set<String> ddlTables = new LinkedHashSet<>();
         final Set<String> ddlFKs = new LinkedHashSet<>();

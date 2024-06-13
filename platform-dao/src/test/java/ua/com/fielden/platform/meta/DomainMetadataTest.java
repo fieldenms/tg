@@ -3,6 +3,7 @@ package ua.com.fielden.platform.meta;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgSystem;
@@ -18,8 +19,7 @@ import static ua.com.fielden.platform.meta.TestDomainMetadata.wrap;
 public class DomainMetadataTest {
 
     private final TestDomainMetadata domainMetadata = wrap(new DomainMetadataBuilder(
-            PlatformTestHibernateSetup.getHibernateTypes(),
-            createInjector(new HibernateUserTypesModule()),
+            new PlatformHibernateTypeMappings(),
             List.of(),
             DbVersion.MSSQL).build());
 

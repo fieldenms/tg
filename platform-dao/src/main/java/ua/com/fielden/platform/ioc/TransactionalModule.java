@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.ioc;
 
-import com.google.inject.Guice;
 import com.google.inject.Key;
 import com.google.inject.Provides;
 import com.google.inject.name.Named;
@@ -21,6 +20,8 @@ import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
+import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 
 import java.util.List;
 import java.util.Map;
@@ -41,7 +42,6 @@ public abstract class TransactionalModule extends EntityModule {
     private static final String SESSION_FACTORY_FOR_SESSION_INTERCEPTOR = "SessionFactory for SessionInterceptor";
 
     private final Properties props;
-    private final Map<Class, Class> defaultHibernateTypes;
     private final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes;
 
     public TransactionalModule(
@@ -49,7 +49,6 @@ public abstract class TransactionalModule extends EntityModule {
             final Map<Class, Class> defaultHibernateTypes,
             final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes) {
         this.props = props;
-        this.defaultHibernateTypes = defaultHibernateTypes;
         this.applicationEntityTypes = applicationEntityTypes;
     }
 
@@ -57,6 +56,7 @@ public abstract class TransactionalModule extends EntityModule {
     protected void configure() {
         super.configure();
 
+        bind(HibernateTypeMappings.class).to(PlatformHibernateTypeMappings.class);
         bind(IIdOnlyProxiedEntityTypeCache.class).to(IdOnlyProxiedEntityTypeCache.class).in(SINGLETON);
 
         // bind SessionRequired interceptor
@@ -68,9 +68,8 @@ public abstract class TransactionalModule extends EntityModule {
 
     @Provides
     @Singleton
-    IDomainMetadata provideDomainMetadata() {
-        return new DomainMetadataBuilder(defaultHibernateTypes,
-                                         Guice.createInjector(new HibernateUserTypesModule()),
+    IDomainMetadata provideDomainMetadata(final HibernateTypeMappings hibernateTypeMappings) {
+        return new DomainMetadataBuilder(hibernateTypeMappings,
                                          applicationEntityTypes,
                                          HibernateConfigurationFactory.determineDbVersion(props))
                 .build();

@@ -18,6 +18,7 @@ import ua.com.fielden.platform.meta.test_entities.Entity_OverridesProperty;
 import ua.com.fielden.platform.meta.test_entities.Entity_OverridesProperty_Super;
 import ua.com.fielden.platform.meta.test_entities.Entity_PropertyDescriptor;
 import ua.com.fielden.platform.meta.test_entities.Entity_UnknownPropertyTypes;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.ref_hierarchy.AbstractTreeEntry;
 import ua.com.fielden.platform.ref_hierarchy.TypeLevelHierarchyEntry;
 import ua.com.fielden.platform.sample.domain.*;
@@ -35,10 +36,7 @@ import static ua.com.fielden.platform.meta.PropertyMetadataKeys.KEY_MEMBER;
 public class EntityMetadataTest {
 
     private final TestDomainMetadataGenerator generator = TestDomainMetadataGenerator.wrap(
-            new DomainMetadataGenerator(
-                    Guice.createInjector(new HibernateUserTypesModule()),
-                    PlatformTestHibernateSetup.getHibernateTypes(),
-                    DbVersion.MSSQL));
+            new DomainMetadataGenerator(new PlatformHibernateTypeMappings(), DbVersion.MSSQL));
 
     @Test
     public void entity_annotated_with_MapEntityTo_gets_persistent_nature() {

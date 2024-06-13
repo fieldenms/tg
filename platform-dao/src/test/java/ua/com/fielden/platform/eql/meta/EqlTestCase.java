@@ -4,27 +4,20 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
-import org.hibernate.type.YesNoType;
-import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.generation.ioc.HelperIocModule;
 import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
-import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.IDomainMetadata;
-import ua.com.fielden.platform.persistence.types.*;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
-import ua.com.fielden.platform.types.Colour;
-import ua.com.fielden.platform.types.Hyperlink;
-import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.IDates;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -63,8 +56,7 @@ public abstract class EqlTestCase {
     protected static final Type H_BIG_DECIMAL = StandardBasicTypes.BIG_DECIMAL;
     protected static final Type H_BIG_INTEGER = StandardBasicTypes.BIG_INTEGER;
 
-    public static final Map<Class, Class> hibTypeDefaults = new HashMap<>();
-    private static Injector injector = Guice.createInjector(new HibernateUserTypesModule(), new HelperIocModule());
+    private static final Injector injector = Guice.createInjector(new HelperIocModule());
     protected static final IDates dates = injector.getInstance(IDates.class);
     protected static final IFilter filter = new SimpleUserFilter();
 
@@ -74,16 +66,7 @@ public abstract class EqlTestCase {
     private static final EqlTables EQL_TABLES;
 
     static {
-        hibTypeDefaults.put(boolean.class, YesNoType.class);
-        hibTypeDefaults.put(Boolean.class, YesNoType.class);
-        hibTypeDefaults.put(Date.class, DateTimeType.class);
-        hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
-        hibTypeDefaults.put(PropertyDescriptor.class, PropertyDescriptorType.class);
-        hibTypeDefaults.put(Colour.class, ColourType.class);
-        hibTypeDefaults.put(Hyperlink.class, HyperlinkType.class);
-
-        DOMAIN_METADATA = new DomainMetadataBuilder(
-                hibTypeDefaults, injector, PlatformTestDomainTypes.entityTypes, H2)
+        DOMAIN_METADATA = new DomainMetadataBuilder(new PlatformHibernateTypeMappings(), PlatformTestDomainTypes.entityTypes, H2)
                 .build();
         QUERY_SOURCE_INFO_PROVIDER = new QuerySourceInfoProvider(DOMAIN_METADATA);
         EQL_TABLES = new EqlTables(DOMAIN_METADATA);

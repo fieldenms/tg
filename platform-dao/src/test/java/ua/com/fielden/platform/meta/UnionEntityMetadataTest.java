@@ -7,6 +7,7 @@ import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.meta.Assertions.EntityA;
 import ua.com.fielden.platform.meta.PropertyMetadata.Calculated;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata.Primitive;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
 import ua.com.fielden.platform.test.PlatformTestHibernateSetup;
@@ -17,8 +18,7 @@ public class UnionEntityMetadataTest {
 
     private final TestDomainMetadataGenerator generator = TestDomainMetadataGenerator.wrap(
             new DomainMetadataGenerator(
-                    Guice.createInjector(new HibernateUserTypesModule()),
-                    PlatformTestHibernateSetup.getHibernateTypes(),
+                    new PlatformHibernateTypeMappings(),
                     DbVersion.MSSQL));
 
     @Test

@@ -2,6 +2,7 @@ package ua.com.fielden.platform.meta;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -17,6 +18,7 @@ import ua.com.fielden.platform.eql.meta.PropColumn;
 import ua.com.fielden.platform.eql.retrieval.EntityContainerEnhancer;
 import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
 import ua.com.fielden.platform.meta.exceptions.DomainMetadataGenerationException;
+import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 
 import javax.annotation.Nullable;
@@ -96,14 +98,12 @@ final class DomainMetadataGenerator {
     private final HibernateTypeGenerator hibTypeGenerator;
     private final Map<String, PropColumn> specialPropColumns;
 
-    // TODO make this injectable
-    DomainMetadataGenerator(final Injector hibTypesInjector, final Map<? extends Class, ? extends Class> hibTypesDefaults,
-                            final DbVersion dbVersion) {
+    DomainMetadataGenerator(final HibernateTypeMappings hibernateTypeMappings, final DbVersion dbVersion) {
         // some columns are DB-dependent
         this.specialPropColumns = Map.of(
                 ID, new PropColumn(dbVersion.idColumnName()),
                 VERSION, new PropColumn(dbVersion.versionColumnName()));
-        this.hibTypeGenerator = new HibernateTypeGenerator(hibTypesDefaults, hibTypesInjector);
+        this.hibTypeGenerator = new HibernateTypeGenerator(hibernateTypeMappings);
     }
 
     // ****************************************

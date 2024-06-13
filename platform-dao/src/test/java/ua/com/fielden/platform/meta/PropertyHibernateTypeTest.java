@@ -10,6 +10,7 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.meta.Assertions.EntityA;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata.Primitive;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.test.PlatformTestHibernateSetup;
 import ua.com.fielden.platform.types.Money;
@@ -28,8 +29,7 @@ public class PropertyHibernateTypeTest {
 
     private final TestDomainMetadataGenerator generator = TestDomainMetadataGenerator.wrap(
             new DomainMetadataGenerator(
-                    Guice.createInjector(new HibernateUserTypesModule()),
-                    PlatformTestHibernateSetup.getHibernateTypes(),
+                    new PlatformHibernateTypeMappings(),
                     DbVersion.MSSQL));
 
     @Test

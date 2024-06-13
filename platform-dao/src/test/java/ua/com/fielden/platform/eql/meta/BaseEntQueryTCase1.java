@@ -52,20 +52,10 @@ public class BaseEntQueryTCase1 {
     protected static final Type H_BIG_DECIMAL = StandardBasicTypes.BIG_DECIMAL;
     protected static final Type H_BIG_INTEGER = StandardBasicTypes.BIG_INTEGER;
 
-    public static final Map<Class, Class> hibTypeDefaults = new HashMap<>();
-
     protected static final IDomainMetadata DOMAIN_METADATA;
 
     static {
-        hibTypeDefaults.put(Date.class, DateTimeType.class);
-        hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
-        hibTypeDefaults.put(Date.class, DateTimeType.class);
-        hibTypeDefaults.put(PropertyDescriptor.class, PropertyDescriptorType.class);
-        hibTypeDefaults.put(Colour.class, ColourType.class);
-        hibTypeDefaults.put(Hyperlink.class, HyperlinkType.class);
-
-        DOMAIN_METADATA = new DomainMetadataBuilder(
-                hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), entityTypes, H2).build();
+        DOMAIN_METADATA = new DomainMetadataBuilder(new PlatformHibernateTypeMappings(), entityTypes, H2).build();
     }
 
 }

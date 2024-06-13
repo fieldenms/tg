@@ -7,6 +7,7 @@ import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.meta.Assertions.EntityA;
 import ua.com.fielden.platform.meta.Assertions.SubPropertiesA;
 import ua.com.fielden.platform.meta.test_entities.Entity_VariousMoney;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
 import ua.com.fielden.platform.sample.domain.TgWagonSlot;
@@ -22,8 +23,7 @@ import static com.google.inject.Guice.createInjector;
 public class PropertyMetadataUtilsTest {
 
     private final IDomainMetadata domainMetadata = new DomainMetadataBuilder(
-            PlatformTestHibernateSetup.getHibernateTypes(),
-            createInjector(new HibernateUserTypesModule()),
+            new PlatformHibernateTypeMappings(),
             List.of(),
             DbVersion.MSSQL)
             .build();

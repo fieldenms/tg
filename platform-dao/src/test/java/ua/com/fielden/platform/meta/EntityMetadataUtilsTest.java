@@ -4,6 +4,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.meta.Assertions.EntityA;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgCategory;
@@ -18,8 +19,7 @@ import static ua.com.fielden.platform.test_utils.CollectionTestUtils.assertEqual
 public class EntityMetadataUtilsTest {
 
     private final IDomainMetadata domainMetadata = new DomainMetadataBuilder(
-            PlatformTestHibernateSetup.getHibernateTypes(),
-            createInjector(new HibernateUserTypesModule()),
+            new PlatformHibernateTypeMappings(),
             List.of(),
             DbVersion.MSSQL)
             .build();

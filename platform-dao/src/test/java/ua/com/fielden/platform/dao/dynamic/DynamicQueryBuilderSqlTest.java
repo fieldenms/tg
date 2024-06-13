@@ -50,6 +50,7 @@ import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.sample.domain.TgBogie;
@@ -116,16 +117,13 @@ public class DynamicQueryBuilderSqlTest {
 
         final Configuration hibConf = new Configuration();
 
-        final Map<Class<?>, Class<?>> hibTypeMap = new HashMap<>();
-        hibTypeMap.put(Date.class, DateTimeType.class);
-        hibTypeMap.put(Money.class, SimpleMoneyType.class);
         final List<Class<? extends AbstractEntity<?>>> domainTypes = new ArrayList<>();
         domainTypes.add(MasterEntity.class);
         domainTypes.add(SlaveEntity.class);
         domainTypes.add(EvenSlaverEntity.class);
 
         // TODO use dependency injection
-        final IDomainMetadata domainMetadata = new DomainMetadataBuilder(hibTypeMap, null, domainTypes, DbVersion.H2).build();
+        final IDomainMetadata domainMetadata = new DomainMetadataBuilder(new PlatformHibernateTypeMappings(), domainTypes, DbVersion.H2).build();
         try {
             hibConf.addInputStream(new ByteArrayInputStream(
                     new HibernateMappingsGenerator(domainMetadata, new EqlTables(domainMetadata))

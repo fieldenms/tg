@@ -16,6 +16,8 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.EqlTables;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
@@ -31,7 +33,8 @@ public class MappingGenerationTest {
         domainTypes.add(DashboardRefreshFrequency.class);
         domainTypes.add(DashboardRefreshFrequencyUnit.class);
         domainTypes.add(EntityCentreConfig.class);
-        final IDomainMetadata domainMetadata = new DomainMetadataBuilder(Map.of(), null, domainTypes, DbVersion.H2).build();
+        // FIXME HibernateTypeMappings: register (boolean : YesNoType)
+        final IDomainMetadata domainMetadata = new DomainMetadataBuilder(HibernateTypeMappings.empty(), domainTypes, DbVersion.H2).build();
 
         final String tgModelMapping = new HibernateMappingsGenerator(domainMetadata, new EqlTables(domainMetadata)).generateMappings();
         final String expectedMapping = String.format("""
