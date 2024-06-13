@@ -48,6 +48,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isIntrospectionDenied;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web_api.FieldSchema.*;
+import static ua.com.fielden.platform.web_api.GraphQLPropertyDataFetcher.fetching;
 import static ua.com.fielden.platform.web_api.RootEntityUtils.QUERY_TYPE_NAME;
 import static ua.com.fielden.platform.web_api.WebApiUtils.*;
 
@@ -117,6 +118,9 @@ public class GraphQLService implements IWebApi {
 
             LOGGER.info("\tBuilding field visibility...");
             codeRegistryBuilder.fieldVisibility(new FieldVisibility(authorisationModel, domainTypes, securityTokenProvider));
+
+            LOGGER.info("\tBuilding default data fetcher...");
+            codeRegistryBuilder.defaultDataFetcher(env -> fetching(env.getFieldDefinition().getName()));
 
             LOGGER.info("\tBuilding schema...");
             schema = newSchema()
