@@ -11,13 +11,13 @@ import java.util.concurrent.CompletableFuture;
  * Method {@link AsyncExecutionStrategy#resolveFieldWithInfo(ExecutionContext, ExecutionStrategyParameters)} covers other exceptions,
  *  not covered on "value fetching" phase using 'exceptionHandler'. Mostly this contains exceptions during "value completion" phase, e.g. when scalars got coerced.
  */
-public class TgAsyncExecutionStrategy extends AsyncExecutionStrategy {
+public class GraphQLAsyncExecutionStrategy extends AsyncExecutionStrategy {
     private final Logger logger = LogManager.getLogger(getClass());
 
     /**
      * The standard graphql execution strategy that runs fields asynchronously
      */
-    public TgAsyncExecutionStrategy() {
+    public GraphQLAsyncExecutionStrategy() {
         super();
     }
 
@@ -26,7 +26,7 @@ public class TgAsyncExecutionStrategy extends AsyncExecutionStrategy {
      *
      * @param exceptionHandler the exception handler to use
      */
-    public TgAsyncExecutionStrategy(DataFetcherExceptionHandler exceptionHandler) {
+    public GraphQLAsyncExecutionStrategy(DataFetcherExceptionHandler exceptionHandler) {
         super(exceptionHandler);
     }
 
