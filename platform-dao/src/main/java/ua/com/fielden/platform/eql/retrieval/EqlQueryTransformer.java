@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.retrieval;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.QueryProcessingModel;
+import ua.com.fielden.platform.eql.meta.EqlTables;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
@@ -41,6 +42,7 @@ public class EqlQueryTransformer {
             final Optional<String> username,
             final IDates dates,
             final IDomainMetadata domainMetadata,
+            final EqlTables eqlTables,
             final QuerySourceInfoProvider querySourceInfoProvider)
     {
         final QueryModelToStage1Transformer gen = new QueryModelToStage1Transformer(filter, username, new QueryNowValue(dates), qem.getParamValues());
@@ -50,7 +52,8 @@ public class EqlQueryTransformer {
         final ResultQuery2 query2 = query1.transform(context1);
 
         final PathsToTreeTransformer p2tt = new PathsToTreeTransformer(querySourceInfoProvider, gen);
-        final TransformationContextFromStage2To3 context2 = new TransformationContextFromStage2To3(p2tt.transformFinally(query2.collectProps()), domainMetadata);
+        final var context2 = new TransformationContextFromStage2To3(p2tt.transformFinally(query2.collectProps()),
+                                                                    domainMetadata, eqlTables);
         return query2.transform(context2);
     }
 }

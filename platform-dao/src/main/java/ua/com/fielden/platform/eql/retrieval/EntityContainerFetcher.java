@@ -17,6 +17,7 @@ import ua.com.fielden.platform.entity.query.QueryProcessingModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.entity.query.stream.ScrollableResultStream;
+import ua.com.fielden.platform.eql.meta.EqlTables;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.retrieval.records.EntityTree;
 import ua.com.fielden.platform.eql.retrieval.records.QueryModelResult;
@@ -51,6 +52,7 @@ public class EntityContainerFetcher {
     private final Logger logger = getLogger(this.getClass());
 
     private final IDomainMetadata domainMetadata;
+    private final EqlTables eqlTables;
     private final QuerySourceInfoProvider querySourceInfoProvider;
     private final IFilter filter;
     private final IUserProvider userProvider;
@@ -61,6 +63,7 @@ public class EntityContainerFetcher {
     @Inject
     public EntityContainerFetcher(
             final IDomainMetadata domainMetadata,
+            final EqlTables eqlTables,
             final QuerySourceInfoProvider querySourceInfoProvider,
             final IFilter filter,
             final IUserProvider userProvider,
@@ -69,6 +72,7 @@ public class EntityContainerFetcher {
             final EntityFactory entityFactory)
     {
         this.domainMetadata = domainMetadata;
+        this.eqlTables = eqlTables;
         this.querySourceInfoProvider = querySourceInfoProvider;
         this.filter = filter;
         this.userProvider = userProvider;
@@ -83,7 +87,7 @@ public class EntityContainerFetcher {
     {
         final QueryModelResult<E> modelResult = getModelResult(queryModel, domainMetadata.dbVersion(), filter,
                                                                userProvider.getUsername(), dates, domainMetadata,
-                                                               querySourceInfoProvider);
+                                                               eqlTables, querySourceInfoProvider);
 
         if (idOnlyQuery(modelResult)) {
             return listContainersForIdOnlyQuery(session, queryModel, modelResult.resultType(), pageNumber, pageCapacity);
@@ -100,7 +104,7 @@ public class EntityContainerFetcher {
     {
         final QueryModelResult<E> modelResult = getModelResult(queryModel, domainMetadata.dbVersion(), filter,
                                                                userProvider.getUsername(), dates, domainMetadata,
-                                                               querySourceInfoProvider);
+                                                               eqlTables, querySourceInfoProvider);
 
         if (idOnlyQuery(modelResult)) {
             return streamContainersForIdOnlyQuery(session, queryModel, modelResult.resultType(), fetchSize);
@@ -173,9 +177,10 @@ public class EntityContainerFetcher {
     protected static <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(
             final QueryProcessingModel<E, ?> qem, final DbVersion dbVersion, final IFilter filter,
             final Optional<String> username, final IDates dates, final IDomainMetadata domainMetadata,
-            final QuerySourceInfoProvider querySourceInfoProvider)
+            final EqlTables eqlTables, final QuerySourceInfoProvider querySourceInfoProvider)
     {
-        final TransformationResultFromStage2To3<ResultQuery3> tr = transform(qem, filter, username, dates, domainMetadata, querySourceInfoProvider);
+        final TransformationResultFromStage2To3<ResultQuery3> tr = transform(qem, filter, username, dates,
+                                                                             domainMetadata, eqlTables, querySourceInfoProvider);
         final ResultQuery3 entQuery3 = tr.item;
         final String sql = entQuery3.sql(dbVersion);
         return new QueryModelResult<E>((Class<E>) entQuery3.resultType, sql, getYieldedColumns(entQuery3.yields), tr.updatedContext.getSqlParamValues(), qem.fetchModel);

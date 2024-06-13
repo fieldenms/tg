@@ -6,9 +6,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.dbschema.ColumnDefinitionExtractor;
 import ua.com.fielden.platform.eql.dbschema.TableDdl;
-import ua.com.fielden.platform.eql.meta.EqlTable;
 import ua.com.fielden.platform.meta.exceptions.DomainMetadataGenerationException;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.StreamUtils;
@@ -16,15 +14,12 @@ import ua.com.fielden.platform.utils.StreamUtils;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNullElseGet;
-import static java.util.stream.Collectors.toConcurrentMap;
 import static ua.com.fielden.platform.persistence.HibernateConstants.H_BOOLEAN;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
 
 final class DomainMetadataImpl implements IDomainMetadata {
@@ -54,7 +49,7 @@ final class DomainMetadataImpl implements IDomainMetadata {
 
         this.hibTypesInjector = hibTypesInjector;
         this.dbVersion = dbVersion;
-        initBaggage(requireNonNullElseGet(hibTypesDefaults, Map::of), entityMetadataMap.values());
+        initBaggage(requireNonNullElseGet(hibTypesDefaults, Map::of));
     }
 
     @Override
@@ -149,15 +144,9 @@ final class DomainMetadataImpl implements IDomainMetadata {
     private final Injector hibTypesInjector;
     private final Map<Class<?>, Object> hibTypesDefaults = new HashMap<>();
     private final DbVersion dbVersion;
-    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EqlTable> tables = new ConcurrentHashMap<>();
 
-    private void initBaggage(final Map<? extends Class, ? extends Class> hibTypesDefaults,
-                             final Collection<? extends EntityMetadata> entityMetadataMap) {
+    private void initBaggage(final Map<? extends Class, ? extends Class> hibTypesDefaults) {
         initHibTypesDefaults(hibTypesDefaults);
-        entityMetadataMap.parallelStream().map(EntityMetadata::asPersistent).flatMap(Optional::stream)
-                .forEach(em -> {
-                    tables.put(em.javaType(), generateEqlTable(em));
-                });
     }
 
     private void initHibTypesDefaults(final Map<? extends Class, ? extends Class> hibTypesDefaults) {
@@ -171,23 +160,6 @@ final class DomainMetadataImpl implements IDomainMetadata {
 
         this.hibTypesDefaults.put(Boolean.class, H_BOOLEAN);
         this.hibTypesDefaults.put(boolean.class, H_BOOLEAN);
-    }
-
-    private EqlTable generateEqlTable(final EntityMetadata.Persistent entityMetadata) {
-        final Map<String, String> columns = entityMetadata.properties().stream()
-                .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
-                .flatMap(prop -> {
-                    if (prop.type().isComposite() || pmUtils.isPropEntityType(prop, EntityMetadata::isUnion)) {
-                        return pmUtils.subProperties(prop).stream()
-                                .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
-                                .map(subProp -> t2(prop.name() + "." + subProp.name(), subProp.data().column().name));
-                    } else {
-                        return Stream.of(t2(prop.name(), prop.data().column().name));
-                    }
-                })
-                .collect(toConcurrentMap(t2 -> t2._1, t2 -> t2._2));
-
-        return new EqlTable(entityMetadata.data().tableName(), columns);
     }
 
     /**
@@ -223,11 +195,6 @@ final class DomainMetadataImpl implements IDomainMetadata {
         ddl.addAll(ddlTables);
         ddl.addAll(ddlFKs);
         return ddl;
-    }
-
-    @Override
-    public EqlTable getTableForEntityType(final Class<? extends AbstractEntity<?>> entityType) {
-        return tables.get(DynamicEntityClassLoader.getOriginalType(entityType));
     }
 
     @Override

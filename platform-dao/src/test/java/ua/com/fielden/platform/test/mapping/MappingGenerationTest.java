@@ -13,6 +13,7 @@ import ua.com.fielden.platform.dashboard.DashboardRefreshFrequency;
 import ua.com.fielden.platform.dashboard.DashboardRefreshFrequencyUnit;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.meta.EqlTables;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.security.user.User;
@@ -21,6 +22,7 @@ import ua.com.fielden.platform.ui.config.MainMenuItem;
 
 public class MappingGenerationTest {
 
+    // TODO use dependency injection
     @Test
     public void dump_mapping_for_type_wity_byte_array_property() {
         final List<Class<? extends AbstractEntity<?>>> domainTypes = new ArrayList<>();
@@ -31,7 +33,7 @@ public class MappingGenerationTest {
         domainTypes.add(EntityCentreConfig.class);
         final IDomainMetadata domainMetadata = new DomainMetadataBuilder(Map.of(), null, domainTypes, DbVersion.H2).build();
 
-        final String tgModelMapping = new HibernateMappingsGenerator(domainMetadata).generateMappings();
+        final String tgModelMapping = new HibernateMappingsGenerator(domainMetadata, new EqlTables(domainMetadata)).generateMappings();
         final String expectedMapping = String.format("""
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE hibernate-mapping PUBLIC

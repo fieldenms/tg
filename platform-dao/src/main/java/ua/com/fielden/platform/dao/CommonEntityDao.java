@@ -25,6 +25,7 @@ import ua.com.fielden.platform.entity.query.EntityFetcher;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.eql.meta.EqlTables;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
 import ua.com.fielden.platform.meta.IDomainMetadata;
@@ -64,6 +65,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     // *** INJECTABLE FIELDS
     private IDomainMetadata domainMetadata;
     private QuerySourceInfoProvider querySourceInfoProvider;
+    private EqlTables eqlTables;
     private IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
     private ICompanionObjectFinder coFinder;
     private Injector injector;
@@ -107,6 +109,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 this::getSession,
                 entityType,
                 this::getDomainMetadata,
+                () -> eqlTables,
                 () -> querySourceInfoProvider,
                 this::dates);
 
@@ -135,6 +138,11 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Inject
     protected void setQuerySourceInfoProvider(final QuerySourceInfoProvider querySourceInfoProvider) {
         this.querySourceInfoProvider = querySourceInfoProvider;
+    }
+
+    @Inject
+    protected void setEqlTables(final EqlTables eqlTables) {
+        this.eqlTables = eqlTables;
     }
 
     @Inject

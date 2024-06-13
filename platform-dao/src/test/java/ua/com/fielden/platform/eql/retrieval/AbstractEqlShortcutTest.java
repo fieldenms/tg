@@ -39,7 +39,7 @@ public abstract class AbstractEqlShortcutTest extends EqlTestCase {
     }
 
     private static <T extends AbstractEntity<?>> QueryModelResult<T> transformToModelResult(final QueryProcessingModel<T, ?> qem) {
-        return EntityContainerFetcher.getModelResult(qem, H2, filter, empty(), dates, metadata(), querySourceInfoProvider());
+        return EntityContainerFetcher.getModelResult(qem, H2, filter, empty(), dates, metadata(), eqlTables(), querySourceInfoProvider());
     }
 
     protected static final <T extends AbstractEntity<?>> QueryModelResult<T> transformToModelResult(final EntityResultQueryModel<T> queryModel) {

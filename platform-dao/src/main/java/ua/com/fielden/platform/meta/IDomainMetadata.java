@@ -3,7 +3,6 @@ package ua.com.fielden.platform.meta;
 import org.hibernate.dialect.Dialect;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.eql.meta.EqlTable;
 
 import java.util.List;
 import java.util.Optional;
@@ -69,9 +68,6 @@ public interface IDomainMetadata {
 
     List<String> generateDatabaseDdl(final Dialect dialect, final Class<? extends AbstractEntity<?>> type,
                                      final Class<? extends AbstractEntity<?>>... types);
-
-    // TODO create a separate service for this
-    EqlTable getTableForEntityType(final Class<? extends AbstractEntity<?>> entityType);
 
     DbVersion dbVersion();
 

@@ -71,6 +71,7 @@ public abstract class EqlTestCase {
     // TODO let Guice take care of dependencies
     private static final IDomainMetadata DOMAIN_METADATA;
     private static final QuerySourceInfoProvider QUERY_SOURCE_INFO_PROVIDER;
+    private static final EqlTables EQL_TABLES;
 
     static {
         hibTypeDefaults.put(boolean.class, YesNoType.class);
@@ -85,6 +86,7 @@ public abstract class EqlTestCase {
                 hibTypeDefaults, injector, PlatformTestDomainTypes.entityTypes, H2)
                 .build();
         QUERY_SOURCE_INFO_PROVIDER = new QuerySourceInfoProvider(DOMAIN_METADATA);
+        EQL_TABLES = new EqlTables(DOMAIN_METADATA);
     }
     
     protected static final QueryModelToStage1Transformer qb() {
@@ -106,5 +108,9 @@ public abstract class EqlTestCase {
     protected static final QuerySourceInfoProvider querySourceInfoProvider() {
         return QUERY_SOURCE_INFO_PROVIDER;
     }
-    
+
+    protected static EqlTables eqlTables() {
+        return EQL_TABLES;
+    }
+
 }

@@ -56,7 +56,7 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
     }
 
     private static <E extends AbstractEntity<?>> ResultQuery3 transform(final QueryProcessingModel<E, ?> qem) {
-        return EqlQueryTransformer.transform(qem, filter, empty(), dates, metadata(), querySourceInfoProvider()).item;
+        return EqlQueryTransformer.transform(qem, filter, empty(), dates, metadata(), eqlTables(), querySourceInfoProvider()).item;
     }
 
     protected static <T extends AbstractEntity<?>> ResultQuery3 qryCountAll(final ICompoundCondition0<T> unfinishedQry) {
@@ -98,7 +98,7 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
     }
 
     protected static Source3BasedOnTable source(final Class<? extends AbstractEntity<?>> sourceType, final Integer sourceForContextId) {
-        return new Source3BasedOnTable(metadata().getTableForEntityType(sourceType), sourceForContextId, nextSqlId());
+        return new Source3BasedOnTable(eqlTables().getTableForEntityType(sourceType), sourceForContextId, nextSqlId());
     }
 
     protected static Source3BasedOnQueries source(final Integer sourceForContextId, final SourceQuery3... sourceQueries) {

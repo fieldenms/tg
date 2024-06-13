@@ -6,6 +6,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
+import ua.com.fielden.platform.eql.meta.EqlTables;
 import ua.com.fielden.platform.eql.meta.PropColumn;
 import ua.com.fielden.platform.meta.*;
 import ua.com.fielden.platform.types.either.Either;
@@ -36,11 +37,13 @@ public class HibernateMappingsGenerator {
     private static final Set<String> SPECIAL_PROPS = Set.of(ID, KEY, VERSION);
 
     private final IDomainMetadata domainMetadata;
+    private final EqlTables eqlTables;
     private final DbVersion dbVersion;
     private final PropertyMetadataUtils pmUtils;
 
     @Inject
-    public HibernateMappingsGenerator(final IDomainMetadata domainMetadata) {
+    public HibernateMappingsGenerator(final IDomainMetadata domainMetadata, final EqlTables eqlTables) {
+        this.eqlTables = eqlTables;
         this.domainMetadata = domainMetadata;
         this.pmUtils = domainMetadata.propertyMetadataUtils();
         this.dbVersion = domainMetadata.dbVersion();
@@ -60,7 +63,7 @@ public class HibernateMappingsGenerator {
                 .filter(EntityMetadata::isPersistent)
                 .forEach(em -> {
                     try {
-                        String tableName = domainMetadata.getTableForEntityType(em.javaType()).name();
+                        String tableName = eqlTables.getTableForEntityType(em.javaType()).name();
                         sb.append(generateEntityClassMapping(domainMetadata, em, tableName, dbVersion));
                     } catch (final Exception e) {
                         LOGGER.error(e);
