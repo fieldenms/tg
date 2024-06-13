@@ -25,7 +25,6 @@ import javax.lang.model.util.TypeKindVisitor14;
 import javax.tools.Diagnostic;
 import java.lang.annotation.Annotation;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -306,9 +305,10 @@ public class EntityFinder extends ElementFinder {
         final String getName = Accessor.GET.getName(propertyName); 
         final String isName = Accessor.IS.getName(propertyName); 
 
-        final Function<ExecutableElement, Function<String, Boolean>> nameFilter = method -> name -> method.getSimpleName().toString().equals(name);
-        return        methods.filter(m -> nameFilter.apply(m).apply(getName)).findAny()
-            .or(() -> methods.filter(m -> nameFilter.apply(m).apply(isName)).findAny());
+        return methods.filter(m -> {
+            final String methodName = m.getSimpleName().toString();
+            return methodName.equals(getName) || methodName.equals(isName);
+        }).findAny();
     }
 
     /**
