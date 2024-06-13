@@ -173,7 +173,7 @@ public class GraphQLService implements IWebApi {
     public Map<String, Object> execute(final Map<String, Object> input) {
         try {
             final var result = newGraphQL(schema)
-                    .queryExecutionStrategy(new GraphQLAsyncExecutionStrategy(new TgSimpleDataFetcherExceptionHandler()))
+                    .queryExecutionStrategy(new GraphQLAsyncExecutionStrategy(new GraphQLSimpleDataFetcherExceptionHandler()))
                     .instrumentation(new MaxQueryDepthInstrumentation(maxQueryDepth)).build()
                     .execute(
                             newExecutionInput()

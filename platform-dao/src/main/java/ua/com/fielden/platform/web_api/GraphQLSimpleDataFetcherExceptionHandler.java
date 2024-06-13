@@ -8,7 +8,7 @@ import org.apache.logging.log4j.Logger;
 /**
  * Standard graphql-java {@link SimpleDataFetcherExceptionHandler} with exception logging.
  */
-public class TgSimpleDataFetcherExceptionHandler extends SimpleDataFetcherExceptionHandler {
+public class GraphQLSimpleDataFetcherExceptionHandler extends SimpleDataFetcherExceptionHandler {
     private final Logger logger = LogManager.getLogger(getClass());
 
     @Override
