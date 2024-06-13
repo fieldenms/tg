@@ -37,7 +37,9 @@ import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
  */
 public class GraphQLScalars {
     private static final Logger LOGGER = getLogger(GraphQLScalars.class);
-    private static final String UNEXPECTED_TYPE_ERROR = "Expected [%s] but was [%s].";
+    private static final String ERR_UNEXPECTED_TYPE = "Expected [%s] but was [%s].";
+    private static final String ERR_ARGUMENT_VARIABLES_ARE_NOT_SUPPORTED = "%s argument variables are not supported.";
+    private static final String ERR_ARGUMENT_LITERALS_ARE_NOT_SUPPORTED = "%s argument literals are not supported.";
 
     @Inject
     private static IDates dates;
@@ -60,7 +62,7 @@ public class GraphQLScalars {
      * @return
      */
     private static <R> Either<String, R> error(final String expected, final Object unexpected) {
-        return left(format(UNEXPECTED_TYPE_ERROR, expected, unexpected.getClass().getSimpleName()));
+        return left(format(ERR_UNEXPECTED_TYPE, expected, unexpected.getClass().getSimpleName()));
     }
     
     /////////////////////////////////////////////////////////////// SCALAR TYPES WITHOUT ARGUMENTS ///////////////////////////////////////////////////////////////
@@ -110,14 +112,14 @@ public class GraphQLScalars {
         
         @Override
         default Object parseValue(final Object variableInput) {
-            final var ex = new CoercingParseValueException(format("%s argument variables not supported.", title()));
+            final var ex = new CoercingParseValueException(ERR_ARGUMENT_VARIABLES_ARE_NOT_SUPPORTED.formatted(title()));
             LOGGER.error(ex.getMessage(), ex);
             throw ex;
         }
         
         @Override
         default Object parseLiteral(final Object argumentInput) {
-            final var ex = new CoercingParseLiteralException(format("%s argument literals not supported.", title()));
+            final var ex = new CoercingParseLiteralException(ERR_ARGUMENT_LITERALS_ARE_NOT_SUPPORTED.formatted(title()));
             LOGGER.error(ex.getMessage(), ex);
             throw ex;
         }
@@ -330,7 +332,7 @@ public class GraphQLScalars {
             try {
                 return right(formatter.withZone(dates.timeZone()).parseDateTime(input).toDate()); // request time-zone is used here (or default for independent time-zone mode)
             } catch (final IllegalArgumentException e) {
-                return left(format(UNEXPECTED_TYPE_ERROR, "number-like or string-based " + title(), input));
+                return left(format(ERR_UNEXPECTED_TYPE, "number-like or string-based " + title(), input));
             }
         }
         
