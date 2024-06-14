@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.ioc;
 
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.EntityQueryModule;
 
 import java.util.Properties;
@@ -16,10 +15,6 @@ public class CommonFactoryModule extends PropertyFactoryModule {
         super.configure();
 
         install(new EntityQueryModule());
-    }
-
-    protected EntityFactory getEntityFactory() {
-        return entityFactory;
     }
 
 }

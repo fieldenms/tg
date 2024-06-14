@@ -16,7 +16,7 @@ import java.util.Properties;
  */
 public class PropertyFactoryModule extends TransactionalModule {
 
-    protected final EntityFactory entityFactory;
+    private final EntityFactory entityFactory;
 
     public PropertyFactoryModule(final Properties props) {
         super(props);
