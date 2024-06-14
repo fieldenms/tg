@@ -1,80 +1,8 @@
 package ua.com.fielden.platform.web.centre;
 
-import static java.lang.Boolean.FALSE;
-import static java.lang.String.format;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
-import static java.util.stream.Collectors.toSet;
-import static org.apache.commons.lang3.StringUtils.join;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.validateRootType;
-import static ua.com.fielden.platform.domaintree.impl.CalculatedProperty.generateNameFrom;
-import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.types.tuples.T3.t3;
-import static ua.com.fielden.platform.utils.EntityUtils.fetchNone;
-import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
-import static ua.com.fielden.platform.utils.EntityUtils.isDate;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isInteger;
-import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
-import static ua.com.fielden.platform.utils.EntityUtils.isRangeType;
-import static ua.com.fielden.platform.utils.EntityUtils.isString;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.createEmptyCentre;
-import static ua.com.fielden.platform.web.centre.EgiConfigurations.CHECKBOX_FIXED;
-import static ua.com.fielden.platform.web.centre.EgiConfigurations.CHECKBOX_VISIBLE;
-import static ua.com.fielden.platform.web.centre.EgiConfigurations.CHECKBOX_WITH_PRIMARY_ACTION_FIXED;
-import static ua.com.fielden.platform.web.centre.EgiConfigurations.DRAGGABLE;
-import static ua.com.fielden.platform.web.centre.EgiConfigurations.DRAG_ANCHOR_FIXED;
-import static ua.com.fielden.platform.web.centre.EgiConfigurations.FIT_TO_HEIGHT;
-import static ua.com.fielden.platform.web.centre.EgiConfigurations.HEADER_FIXED;
-import static ua.com.fielden.platform.web.centre.EgiConfigurations.HIDDEN;
-import static ua.com.fielden.platform.web.centre.EgiConfigurations.SECONDARY_ACTION_FIXED;
-import static ua.com.fielden.platform.web.centre.EgiConfigurations.SUMMARY_FIXED;
-import static ua.com.fielden.platform.web.centre.EgiConfigurations.TOOLBAR_VISIBLE;
-import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
-import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
-import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp.derivePropName;
-import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints.ALTERNATIVE_VIEW;
-import static ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl.CentreToolbar.selectView;
-import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalPropertyName;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalType;
-import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
-import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
-import static ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.AbstractEntityAutocompletionWidget.createDefaultAdditionalProps;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
-import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import org.apache.logging.log4j.Logger;
-
 import com.google.common.collect.ListMultimap;
 import com.google.inject.Injector;
-
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackPropertyDescriptorMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
@@ -130,27 +58,8 @@ import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.IMultiValueAutocompleterBuilder;
 import ua.com.fielden.platform.web.centre.api.crit.ISingleValueAutocompleterBuilder;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritBooleanValueMnemonic;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritStringValueMnemonic;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritDateValueMnemonic;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritOtherValueMnemonic;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritDateValueMnemonic;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
-import ua.com.fielden.platform.web.centre.api.crit.impl.AbstractCriterionWidget;
-import ua.com.fielden.platform.web.centre.api.crit.impl.BooleanCriterionWidget;
-import ua.com.fielden.platform.web.centre.api.crit.impl.BooleanSingleCriterionWidget;
-import ua.com.fielden.platform.web.centre.api.crit.impl.DateCriterionWidget;
-import ua.com.fielden.platform.web.centre.api.crit.impl.DateSingleCriterionWidget;
-import ua.com.fielden.platform.web.centre.api.crit.impl.DecimalCriterionWidget;
-import ua.com.fielden.platform.web.centre.api.crit.impl.DecimalSingleCriterionWidget;
-import ua.com.fielden.platform.web.centre.api.crit.impl.EntityCriterionWidget;
-import ua.com.fielden.platform.web.centre.api.crit.impl.EntitySingleCriterionWidget;
-import ua.com.fielden.platform.web.centre.api.crit.impl.IntegerCriterionWidget;
-import ua.com.fielden.platform.web.centre.api.crit.impl.IntegerSingleCriterionWidget;
-import ua.com.fielden.platform.web.centre.api.crit.impl.MoneyCriterionWidget;
-import ua.com.fielden.platform.web.centre.api.crit.impl.MoneySingleCriterionWidget;
-import ua.com.fielden.platform.web.centre.api.crit.impl.StringCriterionWidget;
-import ua.com.fielden.platform.web.centre.api.crit.impl.StringSingleCriterionWidget;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.*;
+import ua.com.fielden.platform.web.centre.api.crit.impl.*;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointBuilder;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
@@ -167,6 +76,48 @@ import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.sse.IEventSource;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
+
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static java.lang.Boolean.FALSE;
+import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static java.util.stream.Collectors.*;
+import static org.apache.commons.lang3.StringUtils.join;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.validateRootType;
+import static ua.com.fielden.platform.domaintree.impl.CalculatedProperty.generateNameFrom;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.types.tuples.T3.t3;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.createEmptyCentre;
+import static ua.com.fielden.platform.web.centre.EgiConfigurations.*;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
+import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp.derivePropName;
+import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.RunAutomaticallyOptions.NO_CRITERIA_CLEARING;
+import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints.ALTERNATIVE_VIEW;
+import static ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl.CentreToolbar.selectView;
+import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalPropertyName;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalType;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
+import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
+import static ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.AbstractEntityAutocompletionWidget.createDefaultAdditionalProps;
 
 /**
  * Represents the entity centre.
@@ -876,6 +827,13 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      */
     public boolean isRunAutomatically() {
         return dslDefaultConfig.isRunAutomatically();
+    }
+
+    /**
+     * @return whether the centre should run automatically (by default; can be changed) and its criteria should be cleared in the process; only applies to default configurations
+     */
+    public boolean isRunAutomaticallyAndAllowsCritClearing() {
+        return dslDefaultConfig.isRunAutomatically() && !dslDefaultConfig.getRunAutomaticallyOptions().contains(NO_CRITERIA_CLEARING);
     }
 
     /**
