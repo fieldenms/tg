@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.companion;
 
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.joda.time.DateTime;
@@ -19,18 +21,20 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.FetchModelReconstructor;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.EntityFetcher;
+import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 
 import javax.persistence.OptimisticLockException;
 import java.lang.reflect.Field;
@@ -73,13 +77,13 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
     private final Supplier<Session> session;
     private final Supplier<String> transactionGuid;
-    private final Supplier<DbVersion> dbVersion;
+    private final IDbVersionProvider dbVersionProvider;
     
     private final Class<T> entityType;
     private final Class<? extends Comparable<?>> keyType;
-    private final Supplier<ICompanionObjectFinder> coFinder;
-    private final Supplier<EntityFetcher> entityFetcher;
-    private final Supplier<User> user;
+    private final ICompanionObjectFinder coFinder;
+    private final EntityFetcher entityFetcher;
+    private final IUserProvider userProvider;
     private final Supplier<DateTime> now;
     
     private final BiConsumer<T, List<String>> processAfterSaveEvent;
@@ -91,37 +95,38 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     private Boolean targetEntityTypeHasValidateOverridden;
     
     private final Logger logger;
-    
+
+    @Inject
     public PersistentEntitySaver(
-            final Supplier<Session> session,
-            final Supplier<String> transactionGuid,
-            final Supplier<DbVersion> dbVersion,
-            final Class<T> entityType,
-            final Class<? extends Comparable<?>> keyType,
-            final Supplier<EntityFetcher> entityFetcher,
-            final Supplier<User> user,
-            final Supplier<DateTime> now,
-            final Supplier<ICompanionObjectFinder> coFinder,
-            final BiConsumer<T, List<String>> processAfterSaveEvent,
-            final Consumer<MetaProperty<?>> assignBeforeSave,
-            final BiFunction<Long, fetch<T>, T> findById,
-            final Function<EntityResultQueryModel<T>, Boolean> entityExists,
-            final Logger logger) {
+            @Assisted final Supplier<Session> session,
+            @Assisted final Supplier<String> transactionGuid,
+            @Assisted final Class<T> entityType,
+            @Assisted final Class<? extends Comparable<?>> keyType,
+            @Assisted final BiConsumer<T, List<String>> processAfterSaveEvent,
+            @Assisted final Consumer<MetaProperty<?>> assignBeforeSave,
+            @Assisted final BiFunction<Long, fetch<T>, T> findById,
+            @Assisted final Function<EntityResultQueryModel<T>, Boolean> entityExists,
+            @Assisted final Logger logger,
+            final IDbVersionProvider dbVersionProvider,
+            final EntityFetcher entityFetcher,
+            final IUserProvider userProvider,
+            final IUniversalConstants universalConstants,
+            final ICompanionObjectFinder coFinder)
+    {
         this.session = session;
         this.transactionGuid = transactionGuid;
-        this.dbVersion = dbVersion;
         this.entityType = entityType;
         this.keyType = keyType;
-        this.entityFetcher = entityFetcher;
-        this.user = user;
-        this.now = now;
-        this.coFinder = coFinder;
         this.processAfterSaveEvent = processAfterSaveEvent;
         this.assignBeforeSave = assignBeforeSave;
-        
         this.findById = findById;
         this.entityExists = entityExists;
         this.logger = logger;
+        this.dbVersionProvider = dbVersionProvider;
+        this.entityFetcher = entityFetcher;
+        this.userProvider = userProvider;
+        this.now = universalConstants::now;
+        this.coFinder = coFinder;
     }
     
     /**
@@ -232,8 +237,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         // which pertain to required and marked as assign before save properties that must have values
         checkDirtyMarkedForAssignmentBeforeSaveProperties(entity);
         // let's make sure that entity is not a duplicate
-        final AggregatedResultQueryModel model = select(createQueryByKey(dbVersion.get(), entityType, keyType, false, entity.getKey())).yield().prop(AbstractEntity.ID).as(AbstractEntity.ID).modelAsAggregate();
-        final List<EntityAggregates> ids = entityFetcher.get().getEntities(session, from(model).lightweight().model());
+        final AggregatedResultQueryModel model = select(createQueryByKey(dbVersionProvider.dbVersion(), entityType, keyType, false, entity.getKey())).yield().prop(AbstractEntity.ID).as(AbstractEntity.ID).modelAsAggregate();
+        final List<EntityAggregates> ids = entityFetcher.getEntities(session, from(model).lightweight().model());
         final int count = ids.size();
         if (count == 1 && entity.getId().longValue() != ((Number) ids.get(0).get(AbstractEntity.ID)).longValue()) {
             throw new EntityAlreadyExists("%s [%s] already exists.".formatted(getEntityTitleAndDesc(entity.getType()).getKey(), entity));
@@ -395,14 +400,14 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
             // separately need to perform deactivation of deactivatable dependencies in case where the entity being saved is deactivated
             if (!activeProp.getValue()) {
-                final List<? extends ActivatableAbstractEntity<?>> deactivatables = findActiveDeactivatableDependencies((ActivatableAbstractEntity<?>) entity, coFinder.get());
+                final List<? extends ActivatableAbstractEntity<?>> deactivatables = findActiveDeactivatableDependencies((ActivatableAbstractEntity<?>) entity, coFinder);
                 for (final ActivatableAbstractEntity<?> deactivatable : deactivatables) {
                     deactivatable.set(ACTIVE, false);
                     final Result result = deactivatable.isValid();
                     if (result.isSuccessful()) {
                         // persisting of deactivatables should go through the logic of companion save
                         // and cannot be persisted by just using a call to Hibernate Session
-                        final CommonEntityDao co = coFinder.get().find(deactivatable.getType());
+                        final CommonEntityDao co = coFinder.find(deactivatable.getType());
                         co.save(deactivatable);
                     } else {
                         throw result;
@@ -473,7 +478,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      */
     private T2<Long, T> saveNewEntity(final T entity, final boolean skipRefetching, final Optional<fetch<T>> maybeFetch, final Session session) {
         // let's make sure that entity is not a duplicate
-        if (entityExists.apply(createQueryByKey(dbVersion.get(), entityType, keyType, false, entity.getKey()))) {
+        if (entityExists.apply(createQueryByKey(dbVersionProvider.dbVersion(), entityType, keyType, false, entity.getKey()))) {
             throw new EntityAlreadyExists(format("%s [%s] already exists.", getEntityTitleAndDesc(entity.getType()).getKey(), entity));
         }
 
@@ -515,7 +520,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                             session.detach(persistedEntity);
                             // the last invalid value would now be set to persistedEntity, which is proxied by Hibernate and cannot be serialised
                             // this is why we need to reset the last invalid value to the re-fetched value, which is effectively being revalidated
-                            final IEntityDao co = coFinder.get().find(value.getType(), true /* uninstrumented */);
+                            final IEntityDao co = coFinder.find(value.getType(), true /* uninstrumented */);
                             final ActivatableAbstractEntity<?> refetchedValue = (ActivatableAbstractEntity<?>) co.findById(value.getId(), FetchModelReconstructor.reconstruct(value));
                             prop.setLastInvalidValue(refetchedValue);
                             throw res;
@@ -596,7 +601,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      * @return
      */
     private User currUserOrException() {
-        final User currUser = user.get();
+        final User currUser = userProvider.getUser();
         if (currUser == null) {
             final String msg = "The current user is not defined.";
             logger.error(msg);

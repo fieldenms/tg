@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.companion;
 
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.exception.ConstraintViolationException;
@@ -49,22 +51,23 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
     private final Supplier<Session> session;
     private final Class<T> entityType;
     private final IEntityReader<T> reader;
-    private final Supplier<IDomainMetadata> domainMetadata;
-    private final Supplier<IDbVersionProvider> dbVersionProvider;
-    private final Supplier<EqlTables> eqlTables;
-    private final Supplier<QuerySourceInfoProvider> querySourceInfoProvider;
-    private final Supplier<IDates> dates;
+    private final IDomainMetadata domainMetadata;
+    private final IDbVersionProvider dbVersionProvider;
+    private final EqlTables eqlTables;
+    private final QuerySourceInfoProvider querySourceInfoProvider;
+    private final IDates dates;
     private final Supplier<EntityBatchDeleteByIdsOperation<T>> batchDeleteByIdsOp;
-    
+
+    @Inject
     public DeleteOperations(
-            final IEntityReader<T> reader,
-            final Supplier<Session> session,
-            final Class<T> entityType,
-            final Supplier<IDomainMetadata> domainMetadata,
-            final Supplier<IDbVersionProvider> dbVersionProvider,
-            final Supplier<EqlTables> eqlTables,
-            final Supplier<QuerySourceInfoProvider> querySourceInfoProvider,
-            final Supplier<IDates> dates) {
+            @Assisted final IEntityReader<T> reader,
+            @Assisted final Supplier<Session> session,
+            @Assisted final Class<T> entityType,
+            final IDomainMetadata domainMetadata,
+            final IDbVersionProvider dbVersionProvider,
+            final EqlTables eqlTables,
+            final QuerySourceInfoProvider querySourceInfoProvider,
+            final IDates dates) {
         this.reader = reader;
         this.session = session;
         this.entityType = entityType;
@@ -73,9 +76,9 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
         this.eqlTables = eqlTables;
         this.querySourceInfoProvider = querySourceInfoProvider;
         this.dates = dates;
-        this.batchDeleteByIdsOp = () -> new EntityBatchDeleteByIdsOperation<>(session.get(), eqlTables.get().getTableForEntityType(entityType));
+        this.batchDeleteByIdsOp = () -> new EntityBatchDeleteByIdsOperation<>(session.get(), eqlTables.getTableForEntityType(entityType));
     }
-    
+
     /**
      * A convenient default implementation for entity deletion, which should be used by overriding method {@link ua.com.fielden.platform.dao.CommonEntityDao#delete(AbstractEntity)}}.
      *
@@ -200,7 +203,7 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
         if (ActivatableAbstractEntity.class.isAssignableFrom(entityType)) {
             return defaultDelete(model, paramValues);
         } else {
-            return new EntityBatchDeleteByQueryModelOperation(domainMetadata.get(), dbVersionProvider.get(), eqlTables.get(), querySourceInfoProvider.get(), dates.get(), session)
+            return new EntityBatchDeleteByQueryModelOperation(domainMetadata, dbVersionProvider, eqlTables, querySourceInfoProvider, dates, session)
                     .deleteEntities(model, paramValues);
         }
     }

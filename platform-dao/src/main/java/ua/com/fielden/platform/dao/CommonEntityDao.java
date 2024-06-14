@@ -77,12 +77,12 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private IUserProvider up;
     private EntityFactory entityFactory;
     private EntityFetcher entityFetcher;
+    private DeleteOperations<T> deleteOps;
+    private PersistentEntitySaver<T> entitySaver;
     // ***
 
     private Session session;
     private String transactionGuid;
-    private final PersistentEntitySaver<T> entitySaver;
-    private final DeleteOperations<T> deleteOps;
 
     /** A guard against an accidental use of quick save to prevent its use for companions with overridden method <code>save</code>.
      *  Refer issue <a href='https://github.com/fieldenms/tg/issues/421'>#421</a> for more details. */
@@ -109,27 +109,20 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         this.keyType = AnnotationReflector.getKeyType(entityType);
 
         this.filter = filter;
+    }
 
-        deleteOps = new DeleteOperations<>(
-                this,
-                this::getSession,
-                entityType,
-                this::getDomainMetadata,
-                () -> dbVersionProvider,
-                () -> eqlTables,
-                () -> querySourceInfoProvider,
-                this::dates);
+    @Inject
+    protected void setDeleteOpsFactory(final DeleteOperationsFactory deleteOpsFactory) {
+        deleteOps = deleteOpsFactory.create(this, this::getSession, entityType);
+    }
 
-        entitySaver = new PersistentEntitySaver<>(
+    @Inject
+    protected void setPersistentEntitySaverFactory(final PersistentEntitySaverFactory factory) {
+        entitySaver = factory.create(
                 this::getSession,
                 this::getTransactionGuid,
-                this::getDbVersion,
                 entityType,
                 keyType,
-                this::entityFetcher,
-                this::getUser,
-                () -> getUniversalConstants().now(),
-                this::getCoFinder,
                 this::processAfterSaveEvent,
                 this::assignBeforeSave,
                 this::findById,
