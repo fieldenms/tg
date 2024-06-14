@@ -37,7 +37,6 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
             final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
             injector = new ApplicationInjectorFactory()
                     .add(new TgTestApplicationServerModule(applicationDomainProvider,
-                                                           applicationDomainProvider.domainTypes(),
                                                            SerialisationClassProvider.class,
                                                            ExampleDataFilter.class,
                                                            DefaultUniversalConstants.class,

@@ -7,9 +7,9 @@ import com.google.inject.name.Names;
 import jakarta.inject.Singleton;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
@@ -22,8 +22,6 @@ import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
 import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import static com.google.inject.Scopes.SINGLETON;
@@ -42,14 +40,9 @@ public abstract class TransactionalModule extends EntityModule {
     private static final String SESSION_FACTORY_FOR_SESSION_INTERCEPTOR = "SessionFactory for SessionInterceptor";
 
     private final Properties props;
-    private final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes;
 
-    public TransactionalModule(
-            final Properties props,
-            final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes)
-    {
+    public TransactionalModule(final Properties props) {
         this.props = props;
-        this.applicationEntityTypes = applicationEntityTypes;
     }
 
     @Override
@@ -68,9 +61,10 @@ public abstract class TransactionalModule extends EntityModule {
 
     @Provides
     @Singleton
-    IDomainMetadata provideDomainMetadata(final HibernateTypeMappings hibernateTypeMappings) {
+    IDomainMetadata provideDomainMetadata(final HibernateTypeMappings hibernateTypeMappings,
+                                          final IApplicationDomainProvider appDomainProvider) {
         return new DomainMetadataBuilder(hibernateTypeMappings,
-                                         applicationEntityTypes,
+                                         appDomainProvider.entityTypes(),
                                          HibernateConfigurationFactory.determineDbVersion(props))
                 .build();
     }

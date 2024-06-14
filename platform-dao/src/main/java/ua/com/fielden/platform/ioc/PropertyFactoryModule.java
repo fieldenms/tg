@@ -1,22 +1,18 @@
 package ua.com.fielden.platform.ioc;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
-
 import ua.com.fielden.platform.dao.CommonEntityAggregatesDao;
 import ua.com.fielden.platform.dao.EntityAggregatesDao;
 import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.DefaultCompanionObjectFinderImpl;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.property.DefaultMetaPropertyFactory;
 import ua.com.fielden.platform.entity.query.IEntityAggregates;
+
+import java.util.Properties;
 
 /**
  * Hibernate driven module required for correct instantiation of entities.
@@ -28,11 +24,8 @@ public class PropertyFactoryModule extends TransactionalModule {
 
     protected final EntityFactory entityFactory;
 
-    public PropertyFactoryModule(
-            final Properties props,
-            final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes)
-    {
-        super(props, applicationEntityTypes);
+    public PropertyFactoryModule(final Properties props) {
+        super(props);
         entityFactory = new EntityFactory() {};
     }
 

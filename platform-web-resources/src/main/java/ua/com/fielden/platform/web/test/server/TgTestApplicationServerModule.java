@@ -2,8 +2,6 @@ package ua.com.fielden.platform.web.test.server;
 
 import static java.lang.String.format;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -41,11 +39,10 @@ import ua.com.fielden.platform.web.annotations.AppUri;
 public class TgTestApplicationServerModule extends BasicWebServerModule {
     private final Class<? extends IUniversalConstants> universalConstantsImplType;
     private final Class<? extends IDates> datesImplType;
-    private final List<Class<? extends AbstractEntity<?>>> domainTypes;
+    private final IApplicationDomainProvider appDomainProvider;
 
     public TgTestApplicationServerModule(
-            final IApplicationDomainProvider applicationDomainProvider,
-            final List<Class<? extends AbstractEntity<?>>> domainTypes,
+            final IApplicationDomainProvider appDomainProvider,
             final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
             final Class<? extends IFilter> automaticDataFilterType,
             final Class<? extends IUniversalConstants> universalConstantsImplType,
@@ -53,7 +50,8 @@ public class TgTestApplicationServerModule extends BasicWebServerModule {
             final Properties props)
             throws Exception
     {
-        super(applicationDomainProvider, serialisationClassProviderType, automaticDataFilterType, null, props);
+        super(appDomainProvider, serialisationClassProviderType, automaticDataFilterType, null, props);
+        this.appDomainProvider = appDomainProvider;
         if (universalConstantsImplType == null) {
             throw new IllegalArgumentException("Missing implemementation for IUniversalConstants.");
         }
@@ -63,7 +61,6 @@ public class TgTestApplicationServerModule extends BasicWebServerModule {
 
         this.universalConstantsImplType = universalConstantsImplType;
         this.datesImplType = datesImplType;
-        this.domainTypes = domainTypes;
     }
 
     @Override
@@ -80,7 +77,7 @@ public class TgTestApplicationServerModule extends BasicWebServerModule {
         bind(IUniversalConstants.class).to(universalConstantsImplType).in(Scopes.SINGLETON);
 
         // dynamically bind DAO implementations for all companion objects
-        for (final Class<? extends AbstractEntity<?>> entityType : domainTypes) {
+        for (final Class<? extends AbstractEntity<?>> entityType : appDomainProvider.entityTypes()) {
             CompanionObjectAutobinder.bindCo(entityType, binder());
         }
 

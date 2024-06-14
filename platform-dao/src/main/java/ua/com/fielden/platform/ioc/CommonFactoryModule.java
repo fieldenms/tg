@@ -1,20 +1,14 @@
 package ua.com.fielden.platform.ioc;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.EntityQueryModule;
 
+import java.util.Properties;
+
 public class CommonFactoryModule extends PropertyFactoryModule {
 
-    public CommonFactoryModule(
-            final Properties props,
-            final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes)
-    {
-        super(props, applicationEntityTypes);
+    public CommonFactoryModule(final Properties props) {
+        super(props);
     }
 
     @Override

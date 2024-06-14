@@ -1,14 +1,8 @@
 package ua.com.fielden.platform.web.test.server;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
 import com.google.inject.Injector;
 import com.google.inject.binder.AnnotatedBindingBuilder;
-
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.validation.CanBuildReferenceHierarchyForEveryEntityValidator;
 import ua.com.fielden.platform.entity.validation.ICanBuildReferenceHierarchyForEntityValidator;
@@ -16,6 +10,8 @@ import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.ioc.IBasicWebApplicationServerModule;
+
+import java.util.Properties;
 
 /**
  * Guice injector module for TG Testing Server (WebApp-enabled).
@@ -29,7 +25,6 @@ public class TgTestWebApplicationServerModule extends TgTestApplicationServerMod
 
     public TgTestWebApplicationServerModule(
             final IApplicationDomainProvider applicationDomainProvider,
-            final List<Class<? extends AbstractEntity<?>>> domainTypes,
             final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
             final Class<? extends IFilter> automaticDataFilterType,
             final Class<? extends IUniversalConstants> universalConstantsImplType,
@@ -37,7 +32,7 @@ public class TgTestWebApplicationServerModule extends TgTestApplicationServerMod
             final Properties props)
             throws Exception
     {
-        super(applicationDomainProvider, domainTypes, serialisationClassProviderType, automaticDataFilterType, universalConstantsImplType, datesImplType, props);
+        super(applicationDomainProvider, serialisationClassProviderType, automaticDataFilterType, universalConstantsImplType, datesImplType, props);
         this.props = props;
     }
 

@@ -33,7 +33,6 @@ import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
 import ua.com.fielden.platform.web_api.GraphQLService;
 import ua.com.fielden.platform.web_api.IWebApi;
 
-import java.util.Map;
 import java.util.Properties;
 
 import static ua.com.fielden.platform.reflection.CompanionObjectAutobinder.bindCo;
@@ -72,7 +71,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
             final Class<? extends ISecurityTokenProvider> tokenProviderType,
             final Properties props)
     {
-        super(props, applicationDomainProvider.entityTypes());
+        super(props);
         this.props = props;
         this.tokenProviderType = tokenProviderType;
         this.applicationDomainProvider = applicationDomainProvider;
@@ -90,7 +89,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
             final Properties props)
             throws Exception
     {
-        super(props, applicationDomainProvider.entityTypes());
+        super(props);
         this.props = props;
         this.tokenProviderType = tokenProviderType;
         this.applicationDomainProvider = applicationDomainProvider;
