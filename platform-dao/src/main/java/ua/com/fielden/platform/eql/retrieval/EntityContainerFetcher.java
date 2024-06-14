@@ -10,10 +10,7 @@ import org.joda.time.Period;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
-import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.EntityContainer;
-import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.entity.query.QueryProcessingModel;
+import ua.com.fielden.platform.entity.query.*;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.entity.query.stream.ScrollableResultStream;
@@ -52,6 +49,7 @@ public class EntityContainerFetcher {
     private final Logger logger = getLogger(this.getClass());
 
     private final IDomainMetadata domainMetadata;
+    private final IDbVersionProvider dbVersionProvider;
     private final EqlTables eqlTables;
     private final QuerySourceInfoProvider querySourceInfoProvider;
     private final IFilter filter;
@@ -62,7 +60,7 @@ public class EntityContainerFetcher {
 
     @Inject
     public EntityContainerFetcher(
-            final IDomainMetadata domainMetadata,
+            final IDomainMetadata domainMetadata, final IDbVersionProvider dbVersionProvider,
             final EqlTables eqlTables,
             final QuerySourceInfoProvider querySourceInfoProvider,
             final IFilter filter,
@@ -72,6 +70,7 @@ public class EntityContainerFetcher {
             final EntityFactory entityFactory)
     {
         this.domainMetadata = domainMetadata;
+        this.dbVersionProvider = dbVersionProvider;
         this.eqlTables = eqlTables;
         this.querySourceInfoProvider = querySourceInfoProvider;
         this.filter = filter;
@@ -85,7 +84,7 @@ public class EntityContainerFetcher {
             final Session session, final QueryProcessingModel<E, ?> queryModel,
             final Integer pageNumber, final Integer pageCapacity)
     {
-        final QueryModelResult<E> modelResult = getModelResult(queryModel, domainMetadata.dbVersion(), filter,
+        final QueryModelResult<E> modelResult = getModelResult(queryModel, dbVersionProvider.dbVersion(), filter,
                                                                userProvider.getUsername(), dates, domainMetadata,
                                                                eqlTables, querySourceInfoProvider);
 
@@ -102,7 +101,7 @@ public class EntityContainerFetcher {
     public <E extends AbstractEntity<?>> Stream<List<EntityContainer<E>>> streamAndEnhanceContainers(
             final Session session, final QueryProcessingModel<E, ?> queryModel, final Optional<Integer> fetchSize)
     {
-        final QueryModelResult<E> modelResult = getModelResult(queryModel, domainMetadata.dbVersion(), filter,
+        final QueryModelResult<E> modelResult = getModelResult(queryModel, dbVersionProvider.dbVersion(), filter,
                                                                userProvider.getUsername(), dates, domainMetadata,
                                                                eqlTables, querySourceInfoProvider);
 

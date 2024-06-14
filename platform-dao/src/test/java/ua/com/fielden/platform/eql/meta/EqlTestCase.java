@@ -22,6 +22,7 @@ import java.util.Optional;
 
 import static java.util.Collections.emptyMap;
 import static ua.com.fielden.platform.entity.query.DbVersion.H2;
+import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
 import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 
 public abstract class EqlTestCase {
@@ -66,7 +67,8 @@ public abstract class EqlTestCase {
     private static final EqlTables EQL_TABLES;
 
     static {
-        DOMAIN_METADATA = new DomainMetadataBuilder(PLATFORM_HIBERNATE_TYPE_MAPPINGS, PlatformTestDomainTypes.entityTypes, H2)
+        DOMAIN_METADATA = new DomainMetadataBuilder(PLATFORM_HIBERNATE_TYPE_MAPPINGS, PlatformTestDomainTypes.entityTypes,
+                                                    constantDbVersion(H2))
                 .build();
         QUERY_SOURCE_INFO_PROVIDER = new QuerySourceInfoProvider(DOMAIN_METADATA);
         EQL_TABLES = new EqlTables(DOMAIN_METADATA);

@@ -10,13 +10,14 @@ import ua.com.fielden.platform.sample.domain.TgVehicle;
 import java.math.BigDecimal;
 import java.util.List;
 
+import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
 import static ua.com.fielden.platform.meta.TestDomainMetadata.wrap;
 import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 
 public class DomainMetadataTest {
 
     private final TestDomainMetadata domainMetadata = wrap(
-            new DomainMetadataBuilder(PLATFORM_HIBERNATE_TYPE_MAPPINGS, List.of(), DbVersion.MSSQL)
+            new DomainMetadataBuilder(PLATFORM_HIBERNATE_TYPE_MAPPINGS, List.of(), constantDbVersion(DbVersion.MSSQL))
                     .build());
 
     @Test

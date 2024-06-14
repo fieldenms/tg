@@ -17,6 +17,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.meta.PropertyHibernateTypeTest.Case.hasHibType;
 import static ua.com.fielden.platform.meta.PropertyHibernateTypeTest.Case.noHibType;
@@ -25,7 +26,7 @@ import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMap
 public class PropertyHibernateTypeTest {
 
     private final TestDomainMetadataGenerator generator = TestDomainMetadataGenerator.wrap(
-            new DomainMetadataGenerator(PLATFORM_HIBERNATE_TYPE_MAPPINGS, DbVersion.MSSQL));
+            new DomainMetadataGenerator(PLATFORM_HIBERNATE_TYPE_MAPPINGS, constantDbVersion(DbVersion.MSSQL)));
 
     @Test
     public void hibernate_type_is_attached() {

@@ -10,12 +10,13 @@ import ua.com.fielden.platform.sample.domain.TgFuelType;
 
 import java.util.List;
 
+import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
 import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 
 public class UnionEntityMetadataTest {
 
     private final TestDomainMetadataGenerator generator = TestDomainMetadataGenerator.wrap(
-            new DomainMetadataGenerator(PLATFORM_HIBERNATE_TYPE_MAPPINGS, DbVersion.MSSQL));
+            new DomainMetadataGenerator(PLATFORM_HIBERNATE_TYPE_MAPPINGS, constantDbVersion(DbVersion.MSSQL)));
 
     @Test
     public void union_entity_gets_union_nature() {

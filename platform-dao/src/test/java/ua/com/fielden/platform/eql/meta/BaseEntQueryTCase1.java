@@ -11,6 +11,7 @@ import java.math.BigInteger;
 import java.util.Date;
 
 import static ua.com.fielden.platform.entity.query.DbVersion.H2;
+import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
 import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 import static ua.com.fielden.platform.test.PlatformTestDomainTypes.entityTypes;
 
@@ -47,7 +48,7 @@ public class BaseEntQueryTCase1 {
     protected static final IDomainMetadata DOMAIN_METADATA;
 
     static {
-        DOMAIN_METADATA = new DomainMetadataBuilder(PLATFORM_HIBERNATE_TYPE_MAPPINGS, entityTypes, H2).build();
+        DOMAIN_METADATA = new DomainMetadataBuilder(PLATFORM_HIBERNATE_TYPE_MAPPINGS, entityTypes, constantDbVersion(H2)).build();
     }
 
 }

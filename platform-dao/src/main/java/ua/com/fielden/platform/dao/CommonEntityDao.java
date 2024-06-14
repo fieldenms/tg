@@ -22,6 +22,7 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityFetcher;
+import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -64,6 +65,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     // *** INJECTABLE FIELDS
     private IDomainMetadata domainMetadata;
+    private IDbVersionProvider dbVersionProvider;
     private QuerySourceInfoProvider querySourceInfoProvider;
     private EqlTables eqlTables;
     private IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
@@ -113,6 +115,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 this::getSession,
                 entityType,
                 this::getDomainMetadata,
+                () -> dbVersionProvider,
                 () -> eqlTables,
                 () -> querySourceInfoProvider,
                 this::dates);
@@ -137,6 +140,11 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Inject
     protected void setDomainMetadata(final IDomainMetadata domainMetadata) {
         this.domainMetadata = domainMetadata;
+    }
+
+    @Inject
+    protected void setDbVersionProvider(final IDbVersionProvider dbVersionProvider) {
+        this.dbVersionProvider = dbVersionProvider;
     }
 
     @Inject
@@ -196,7 +204,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     @Override
     public DbVersion getDbVersion() {
-        return domainMetadata.dbVersion();
+        return dbVersionProvider.dbVersion();
     }
 
     @Override

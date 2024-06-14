@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
 import ua.com.fielden.platform.eql.meta.EqlTables;
 import ua.com.fielden.platform.eql.meta.PropColumn;
@@ -38,15 +39,17 @@ public class HibernateMappingsGenerator {
 
     private final IDomainMetadata domainMetadata;
     private final EqlTables eqlTables;
-    private final DbVersion dbVersion;
+    private final IDbVersionProvider dbVersionProvider;
     private final PropertyMetadataUtils pmUtils;
 
     @Inject
-    public HibernateMappingsGenerator(final IDomainMetadata domainMetadata, final EqlTables eqlTables) {
+    public HibernateMappingsGenerator(final IDomainMetadata domainMetadata,
+                                      final IDbVersionProvider dbVersionProvider,
+                                      final EqlTables eqlTables) {
         this.eqlTables = eqlTables;
         this.domainMetadata = domainMetadata;
         this.pmUtils = domainMetadata.propertyMetadataUtils();
-        this.dbVersion = domainMetadata.dbVersion();
+        this.dbVersionProvider = dbVersionProvider;
     }
 
     public String generateMappings() {
@@ -64,7 +67,7 @@ public class HibernateMappingsGenerator {
                 .forEach(em -> {
                     try {
                         String tableName = eqlTables.getTableForEntityType(em.javaType()).name();
-                        sb.append(generateEntityClassMapping(domainMetadata, em, tableName, dbVersion));
+                        sb.append(generateEntityClassMapping(domainMetadata, em, tableName, dbVersionProvider.dbVersion()));
                     } catch (final Exception e) {
                         LOGGER.error(e);
                         throw new EqlMetadataGenerationException("Couldn't generate mapping for " + em, e);

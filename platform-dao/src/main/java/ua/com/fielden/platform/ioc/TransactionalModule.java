@@ -13,6 +13,7 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
+import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
 import ua.com.fielden.platform.ioc.session.SessionInterceptor;
@@ -27,6 +28,7 @@ import java.util.Properties;
 import static com.google.inject.Scopes.SINGLETON;
 import static com.google.inject.matcher.Matchers.annotatedWith;
 import static com.google.inject.matcher.Matchers.subclassesOf;
+import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
 import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 
 /**
@@ -57,15 +59,16 @@ public abstract class TransactionalModule extends EntityModule {
                         annotatedWith(SessionRequired.class), // having annotated methods
                         new SessionInterceptor(getProvider(Key.get(SessionFactory.class,
                                                                    Names.named(SESSION_FACTORY_FOR_SESSION_INTERCEPTOR)))));
+
+        bind(IDbVersionProvider.class).toInstance(constantDbVersion(HibernateConfigurationFactory.determineDbVersion(props)));
     }
 
     @Provides
     @Singleton
     IDomainMetadata provideDomainMetadata(final HibernateTypeMappings hibernateTypeMappings,
-                                          final IApplicationDomainProvider appDomainProvider) {
-        return new DomainMetadataBuilder(hibernateTypeMappings,
-                                         appDomainProvider.entityTypes(),
-                                         HibernateConfigurationFactory.determineDbVersion(props))
+                                          final IApplicationDomainProvider appDomainProvider,
+                                          final IDbVersionProvider dbVersionProvider) {
+        return new DomainMetadataBuilder(hibernateTypeMappings, appDomainProvider.entityTypes(), dbVersionProvider)
                 .build();
     }
 

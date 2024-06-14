@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleteByIdsOperation;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleteByQueryModelOperation;
+import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.meta.EqlTables;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
@@ -49,6 +50,7 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
     private final Class<T> entityType;
     private final IEntityReader<T> reader;
     private final Supplier<IDomainMetadata> domainMetadata;
+    private final Supplier<IDbVersionProvider> dbVersionProvider;
     private final Supplier<EqlTables> eqlTables;
     private final Supplier<QuerySourceInfoProvider> querySourceInfoProvider;
     private final Supplier<IDates> dates;
@@ -59,6 +61,7 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
             final Supplier<Session> session,
             final Class<T> entityType,
             final Supplier<IDomainMetadata> domainMetadata,
+            final Supplier<IDbVersionProvider> dbVersionProvider,
             final Supplier<EqlTables> eqlTables,
             final Supplier<QuerySourceInfoProvider> querySourceInfoProvider,
             final Supplier<IDates> dates) {
@@ -66,6 +69,7 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
         this.session = session;
         this.entityType = entityType;
         this.domainMetadata = domainMetadata;
+        this.dbVersionProvider = dbVersionProvider;
         this.eqlTables = eqlTables;
         this.querySourceInfoProvider = querySourceInfoProvider;
         this.dates = dates;
@@ -196,7 +200,7 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
         if (ActivatableAbstractEntity.class.isAssignableFrom(entityType)) {
             return defaultDelete(model, paramValues);
         } else {
-            return new EntityBatchDeleteByQueryModelOperation(domainMetadata.get(), eqlTables.get(), querySourceInfoProvider.get(), dates.get(), session)
+            return new EntityBatchDeleteByQueryModelOperation(domainMetadata.get(), dbVersionProvider.get(), eqlTables.get(), querySourceInfoProvider.get(), dates.get(), session)
                     .deleteEntities(model, paramValues);
         }
     }

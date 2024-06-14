@@ -9,13 +9,14 @@ import ua.com.fielden.platform.types.Money;
 import java.math.BigDecimal;
 import java.util.Currency;
 
+import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
 import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertPresent;
 
 public class CompositeTypeMetadataTest {
 
     private final DomainMetadataGenerator generator = new DomainMetadataGenerator(
-            PLATFORM_HIBERNATE_TYPE_MAPPINGS, DbVersion.MSSQL);
+            PLATFORM_HIBERNATE_TYPE_MAPPINGS, constantDbVersion(DbVersion.MSSQL));
 
     @Test
     public void composite_type_metadata_generation() {

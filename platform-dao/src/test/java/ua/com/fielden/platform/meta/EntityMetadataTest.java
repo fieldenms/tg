@@ -26,13 +26,14 @@ import java.util.List;
 import java.util.SortedSet;
 
 import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.KEY_MEMBER;
 import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 
 public class EntityMetadataTest {
 
     private final TestDomainMetadataGenerator generator = TestDomainMetadataGenerator.wrap(
-            new DomainMetadataGenerator(PLATFORM_HIBERNATE_TYPE_MAPPINGS, DbVersion.MSSQL));
+            new DomainMetadataGenerator(PLATFORM_HIBERNATE_TYPE_MAPPINGS, constantDbVersion(DbVersion.MSSQL)));
 
     @Test
     public void entity_annotated_with_MapEntityTo_gets_persistent_nature() {

@@ -13,6 +13,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoin;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
@@ -39,6 +40,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.*;
@@ -108,11 +110,13 @@ public class DynamicQueryBuilderSqlTest {
         domainTypes.add(EvenSlaverEntity.class);
 
         // TODO use dependency injection
-        final IDomainMetadata domainMetadata = new DomainMetadataBuilder(PLATFORM_HIBERNATE_TYPE_MAPPINGS, domainTypes, DbVersion.H2)
+        final IDbVersionProvider dbVersionProvider = constantDbVersion(DbVersion.H2);
+        final IDomainMetadata domainMetadata = new DomainMetadataBuilder(
+                PLATFORM_HIBERNATE_TYPE_MAPPINGS, domainTypes, dbVersionProvider)
                 .build();
         try {
             hibConf.addInputStream(new ByteArrayInputStream(
-                    new HibernateMappingsGenerator(domainMetadata, new EqlTables(domainMetadata))
+                    new HibernateMappingsGenerator(domainMetadata, dbVersionProvider, new EqlTables(domainMetadata))
                             .generateMappings().getBytes("UTF8")));
         } catch (final MappingException | UnsupportedEncodingException e) {
             throw new HibernateException("Could not add mappings.", e);

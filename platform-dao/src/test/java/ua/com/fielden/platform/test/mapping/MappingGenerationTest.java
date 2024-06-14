@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
 
 public class MappingGenerationTest {
 
@@ -32,15 +33,17 @@ public class MappingGenerationTest {
         domainTypes.add(DashboardRefreshFrequencyUnit.class);
         domainTypes.add(EntityCentreConfig.class);
 
+        final var dbVersionProvider = constantDbVersion(DbVersion.H2);
         final IDomainMetadata domainMetadata = new DomainMetadataBuilder(
                 HibernateTypeMappings.builder()
                         .put(boolean.class, YesNoType.INSTANCE)
                         .put(Boolean.class, YesNoType.INSTANCE)
                         .build(),
-                domainTypes, DbVersion.H2)
+                domainTypes, dbVersionProvider)
                 .build();
 
-        final String tgModelMapping = new HibernateMappingsGenerator(domainMetadata, new EqlTables(domainMetadata)).generateMappings();
+        final String tgModelMapping = new HibernateMappingsGenerator(domainMetadata, dbVersionProvider, new EqlTables(domainMetadata))
+                .generateMappings();
         final String expectedMapping = String.format("""
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE hibernate-mapping PUBLIC

@@ -15,12 +15,13 @@ import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.List;
 
+import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
 import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 
 public class PropertyMetadataUtilsTest {
 
     private final IDomainMetadata domainMetadata = new DomainMetadataBuilder(
-            PLATFORM_HIBERNATE_TYPE_MAPPINGS, List.of(), DbVersion.MSSQL)
+            PLATFORM_HIBERNATE_TYPE_MAPPINGS, List.of(), constantDbVersion(DbVersion.MSSQL))
             .build();
     private final PropertyMetadataUtils pmUtils = domainMetadata.propertyMetadataUtils();
 

@@ -2,6 +2,7 @@ package ua.com.fielden.platform.meta;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.meta.exceptions.DomainMetadataGenerationException;
 import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
 
@@ -19,15 +20,13 @@ public class DomainMetadataBuilder {
 
     private final DomainMetadataGenerator generator;
     private final Collection<? extends Class<? extends AbstractEntity<?>>> entityTypes;
-    private final DbVersion dbVersion;
 
     public DomainMetadataBuilder(final HibernateTypeMappings hibernateTypeMappings,
                                  final Collection<? extends Class<? extends AbstractEntity<?>>> entityTypes,
-                                 final DbVersion dbVersion)
+                                 final IDbVersionProvider dbVersionProvider)
     {
-        this.generator = new DomainMetadataGenerator(hibernateTypeMappings, dbVersion);
+        this.generator = new DomainMetadataGenerator(hibernateTypeMappings, dbVersionProvider);
         this.entityTypes = entityTypes.stream().distinct().collect(toImmutableList());
-        this.dbVersion = dbVersion;
     }
 
     public IDomainMetadata build() {
@@ -42,7 +41,7 @@ public class DomainMetadataBuilder {
                 .flatMap(type -> generator.forComposite(type).map(ctm -> t2(type, ctm)).stream())
                 .collect(toConcurrentMap(pair -> pair._1, pair -> pair._2));
 
-        return new DomainMetadataImpl(entityMetadataMap, compositeTypeMetadataMap, generator, dbVersion);
+        return new DomainMetadataImpl(entityMetadataMap, compositeTypeMetadataMap, generator);
     }
 
 }

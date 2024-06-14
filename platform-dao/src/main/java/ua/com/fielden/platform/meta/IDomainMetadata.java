@@ -54,10 +54,5 @@ public interface IDomainMetadata {
      * @param propPath  property path (dot-notation supported)
      */
     Optional<PropertyMetadata> forProperty(Class<?> enclosingType, CharSequence propPath);
-
-    // ****************************************
-    // * Temporary baggage from old metadata that can't be moved until dependency injection is properly configured.
-
-    DbVersion dbVersion();
-
+    
 }

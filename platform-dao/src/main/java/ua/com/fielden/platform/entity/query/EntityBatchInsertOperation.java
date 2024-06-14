@@ -46,15 +46,17 @@ import static java.util.stream.Collectors.toList;
  * @author TG Team
  */
 public class EntityBatchInsertOperation {
-    private final IDomainMetadata domainMetadata;
+
+    private final IDbVersionProvider dbVersionProvider;
     private final EntityBatchInsertTables entityBatchInsertTables;
     private final Supplier<TransactionalExecution> trExecSupplier;
 
     @Inject
     EntityBatchInsertOperation(final IDomainMetadata domainMetadata,
+                               final IDbVersionProvider dbVersionProvider,
                                final EntityBatchInsertTables entityBatchInsertTables,
                                @Assisted final Supplier<TransactionalExecution> trExecSupplier) {
-        this.domainMetadata = domainMetadata;
+        this.dbVersionProvider = dbVersionProvider;
         this.entityBatchInsertTables = entityBatchInsertTables;
         this.trExecSupplier = trExecSupplier;
     }
@@ -88,7 +90,7 @@ public class EntityBatchInsertOperation {
         final TableStructForBatchInsertion table = entityBatchInsertTables.getTableStructsForBatchInsertion(entities.get(0).getType());
         final String tableName = table.name();
         final List<String> columnNames = table.columns().stream().flatMap(x -> x.columnNames().stream()).collect(toList());
-        final String insertStmt = generateInsertStmt(tableName, columnNames, domainMetadata.dbVersion());
+        final String insertStmt = generateInsertStmt(tableName, columnNames, dbVersionProvider.dbVersion());
 
         final AtomicInteger insertedCount = new AtomicInteger(0);
 

@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.meta;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.meta.exceptions.DomainMetadataGenerationException;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -27,15 +26,12 @@ final class DomainMetadataImpl implements IDomainMetadata {
 
     DomainMetadataImpl(final Map<Class<? extends AbstractEntity<?>>, EntityMetadata> entityMetadataMap,
                        final Map<Class<?>, TypeMetadata.Composite> compositeTypeMetadataMap,
-                       final DomainMetadataGenerator generator,
-                       final DbVersion dbVersion) {
+                       final DomainMetadataGenerator generator) {
         this.entityMetadataMap = new ConcurrentHashMap<>(entityMetadataMap);
         this.compositeTypeMetadataMap = new ConcurrentHashMap<>(compositeTypeMetadataMap);
         this.generator = generator;
         this.pmUtils = new PropertyMetadataUtilsImpl(this, generator);
         this.emUtils = new EntityMetadataUtilsImpl();
-
-        this.dbVersion = dbVersion;
     }
 
     @Override
@@ -124,13 +120,4 @@ final class DomainMetadataImpl implements IDomainMetadata {
         };
     }
 
-    // ****************************************
-    // * Temporary baggage from old metadata that can't be moved until dependency injection is properly configured.
-
-    private final DbVersion dbVersion;
-
-    @Override
-    public DbVersion dbVersion() {
-        return dbVersion;
-    }
 }

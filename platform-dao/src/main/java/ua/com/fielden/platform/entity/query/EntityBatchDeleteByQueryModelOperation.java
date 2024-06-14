@@ -32,6 +32,7 @@ public class EntityBatchDeleteByQueryModelOperation {
     private static final Logger LOGGER = getLogger(EntityBatchDeleteByQueryModelOperation.class);
 
     private final IDomainMetadata domainMetadata;
+    private final IDbVersionProvider dbVersionProvider;
     private final EqlTables eqlTables;
     private final QuerySourceInfoProvider querySourceInfoProvider;
     private final IDates dates;
@@ -39,12 +40,14 @@ public class EntityBatchDeleteByQueryModelOperation {
 
     public EntityBatchDeleteByQueryModelOperation(
             final IDomainMetadata domainMetadata,
+            final IDbVersionProvider dbVersionProvider,
             final EqlTables eqlTables,
             final QuerySourceInfoProvider querySourceInfoProvider,
             final IDates dates,
             final Supplier<Session> session)
     {
         this.domainMetadata = domainMetadata;
+        this.dbVersionProvider = dbVersionProvider;
         this.eqlTables = eqlTables;
         this.querySourceInfoProvider = querySourceInfoProvider;
         this.dates = dates;
@@ -73,8 +76,8 @@ public class EntityBatchDeleteByQueryModelOperation {
                 new QueryProcessingModel(finalModel, null, null, paramValues, true),
                 null, empty(), dates, domainMetadata, eqlTables, querySourceInfoProvider);
         final ResultQuery3 entQuery3 = s2tr.item;
-        final String selectionSql = entQuery3.sql(domainMetadata.dbVersion());
-        final String deletionSql = produceDeletionSql(selectionSql, tableName, domainMetadata.dbVersion());
+        final String selectionSql = entQuery3.sql(dbVersionProvider.dbVersion());
+        final String deletionSql = produceDeletionSql(selectionSql, tableName, dbVersionProvider.dbVersion());
         return new DeletionModel(deletionSql, s2tr.updatedContext.getSqlParamValues());
     }
 
