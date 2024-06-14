@@ -43,28 +43,17 @@ public class TgTestApplicationServerModule extends BasicWebServerModule {
     private final Class<? extends IDates> datesImplType;
     private final List<Class<? extends AbstractEntity<?>>> domainTypes;
 
-    /**
-     * The constructor with the largest number of arguments.
-     *
-     * @param defaultHibernateTypes
-     * @param applicationEntityTypes
-     * @param domainTypes
-     * @param serialisationClassProviderType
-     * @param automaticDataFilterType
-     * @param universalConstantsType
-     * @param props
-     * @throws Exception
-     */
-    public TgTestApplicationServerModule(//
-    final Map<Class, Class> defaultHibernateTypes, //
-            final IApplicationDomainProvider applicationDomainProvider,//
-            final List<Class<? extends AbstractEntity<?>>> domainTypes,//
-            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
-            final Class<? extends IFilter> automaticDataFilterType, //
-            final Class<? extends IUniversalConstants> universalConstantsImplType,//
+    public TgTestApplicationServerModule(
+            final IApplicationDomainProvider applicationDomainProvider,
+            final List<Class<? extends AbstractEntity<?>>> domainTypes,
+            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
+            final Class<? extends IFilter> automaticDataFilterType,
+            final Class<? extends IUniversalConstants> universalConstantsImplType,
             final Class<? extends IDates> datesImplType,
-            final Properties props) throws Exception {
-        super(defaultHibernateTypes, applicationDomainProvider, serialisationClassProviderType, automaticDataFilterType, null, props);
+            final Properties props)
+            throws Exception
+    {
+        super(applicationDomainProvider, serialisationClassProviderType, automaticDataFilterType, null, props);
         if (universalConstantsImplType == null) {
             throw new IllegalArgumentException("Missing implemementation for IUniversalConstants.");
         }

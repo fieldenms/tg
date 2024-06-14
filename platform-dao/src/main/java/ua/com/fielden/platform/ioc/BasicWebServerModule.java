@@ -65,13 +65,14 @@ public class BasicWebServerModule extends CommonFactoryModule {
     private final Class<? extends IFilter> automaticDataFilterType;
     private final Class<? extends IAuthorisationModel> authorisationModelType;
 
-    public BasicWebServerModule(final Map<Class, Class> defaultHibernateTypes,
+    public BasicWebServerModule(
             final IApplicationDomainProvider applicationDomainProvider,
             final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
             final Class<? extends IFilter> automaticDataFilterType,
             final Class<? extends ISecurityTokenProvider> tokenProviderType,
-            final Properties props) {
-        super(props, defaultHibernateTypes, applicationDomainProvider.entityTypes());
+            final Properties props)
+    {
+        super(props, applicationDomainProvider.entityTypes());
         this.props = props;
         this.tokenProviderType = tokenProviderType;
         this.applicationDomainProvider = applicationDomainProvider;
@@ -80,14 +81,16 @@ public class BasicWebServerModule extends CommonFactoryModule {
         this.authorisationModelType = ServerAuthorisationModel.class;
     }
 
-    public BasicWebServerModule(final Map<Class, Class> defaultHibernateTypes,
+    public BasicWebServerModule(
             final IApplicationDomainProvider applicationDomainProvider,
             final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
             final Class<? extends IFilter> automaticDataFilterType,
             final Class<? extends IAuthorisationModel> authorisationModelType,
             final Class<? extends ISecurityTokenProvider> tokenProviderType,
-            final Properties props) throws Exception {
-        super(props, defaultHibernateTypes, applicationDomainProvider.entityTypes());
+            final Properties props)
+            throws Exception
+    {
+        super(props, applicationDomainProvider.entityTypes());
         this.props = props;
         this.tokenProviderType = tokenProviderType;
         this.applicationDomainProvider = applicationDomainProvider;

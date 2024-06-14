@@ -28,8 +28,11 @@ public class PropertyFactoryModule extends TransactionalModule {
 
     protected final EntityFactory entityFactory;
 
-    public PropertyFactoryModule(final Properties props, final Map<Class, Class> defaultHibernateTypes, final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes) {
-        super(props, defaultHibernateTypes, applicationEntityTypes);
+    public PropertyFactoryModule(
+            final Properties props,
+            final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes)
+    {
+        super(props, applicationEntityTypes);
         entityFactory = new EntityFactory() {};
     }
 

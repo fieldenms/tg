@@ -23,7 +23,7 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
         try {
             injector = new ApplicationInjectorFactory()
                     .add(new PlatformTestServerModule(
-                            PlatformTestHibernateSetup.getHibernateTypes(), new PlatformTestDomainTypes(),
+                            new PlatformTestDomainTypes(),
                             DefaultSerialisationClassProvider.class, DefaultFilter.class, SecurityTokenProvider.class,
                             getProperties(properties)))
                     .add(new NewUserNotifierMockBindingModule())

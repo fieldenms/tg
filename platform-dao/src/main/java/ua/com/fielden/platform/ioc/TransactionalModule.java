@@ -46,8 +46,8 @@ public abstract class TransactionalModule extends EntityModule {
 
     public TransactionalModule(
             final Properties props,
-            final Map<Class, Class> defaultHibernateTypes,
-            final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes) {
+            final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes)
+    {
         this.props = props;
         this.applicationEntityTypes = applicationEntityTypes;
     }

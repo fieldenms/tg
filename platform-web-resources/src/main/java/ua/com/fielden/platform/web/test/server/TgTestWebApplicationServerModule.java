@@ -28,15 +28,16 @@ public class TgTestWebApplicationServerModule extends TgTestApplicationServerMod
     private final Properties props;
 
     public TgTestWebApplicationServerModule(
-            final Map<Class, Class> defaultHibernateTypes,
             final IApplicationDomainProvider applicationDomainProvider,
             final List<Class<? extends AbstractEntity<?>>> domainTypes,
             final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
             final Class<? extends IFilter> automaticDataFilterType,
             final Class<? extends IUniversalConstants> universalConstantsImplType,
             final Class<? extends IDates> datesImplType,
-            final Properties props) throws Exception {
-        super(defaultHibernateTypes, applicationDomainProvider, domainTypes, serialisationClassProviderType, automaticDataFilterType, universalConstantsImplType, datesImplType, props);
+            final Properties props)
+            throws Exception
+    {
+        super(applicationDomainProvider, domainTypes, serialisationClassProviderType, automaticDataFilterType, universalConstantsImplType, datesImplType, props);
         this.props = props;
     }
 

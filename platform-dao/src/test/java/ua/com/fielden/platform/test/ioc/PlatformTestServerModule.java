@@ -50,13 +50,14 @@ public class PlatformTestServerModule extends BasicWebServerModule {
 
     private final List<Class<? extends AbstractEntity<?>>> domainTypes;
 
-    public PlatformTestServerModule(final Map<Class, Class> defaultHibernateTypes,
+    public PlatformTestServerModule(
             final IApplicationDomainProvider applicationDomainProvider,
             final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
             final Class<? extends IFilter> automaticDataFilterType,
             final Class<? extends ISecurityTokenProvider> tokenProviderType,
-            final Properties props) {
-        super(defaultHibernateTypes, applicationDomainProvider, serialisationClassProviderType, automaticDataFilterType, tokenProviderType, props);
+            final Properties props)
+    {
+        super(applicationDomainProvider, serialisationClassProviderType, automaticDataFilterType, tokenProviderType, props);
         domainTypes = applicationDomainProvider.entityTypes();
     }
 

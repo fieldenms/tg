@@ -39,7 +39,7 @@ public class TgTestApplicationConfiguration extends Component {
         try {
             // create application IoC module and injector
             final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
-            final TgTestWebApplicationServerModule module = new TgTestWebApplicationServerModule(HibernateSetup.getHibernateTypes(), applicationDomainProvider, applicationDomainProvider.domainTypes(), SerialisationClassProvider.class, ExampleDataFilter.class, DefaultUniversalConstants.class, DefaultDates.class, props);
+            final TgTestWebApplicationServerModule module = new TgTestWebApplicationServerModule(applicationDomainProvider, applicationDomainProvider.domainTypes(), SerialisationClassProvider.class, ExampleDataFilter.class, DefaultUniversalConstants.class, DefaultDates.class, props);
             injector = new ApplicationInjectorFactory().add(module).add(new NewUserEmailNotifierBindingModule()).getInjector();
 
             // create and configure REST server utility
