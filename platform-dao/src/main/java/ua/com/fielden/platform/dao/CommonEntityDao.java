@@ -32,7 +32,6 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
 import java.io.IOException;
@@ -64,7 +63,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private ICompanionObjectFinder coFinder;
     private Injector injector;
     private IUniversalConstants universalConstants;
-    private IDates dates;
     private IUserProvider up;
     private EntityFactory entityFactory;
     private EntityFetcher entityFetcher;
@@ -143,11 +141,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Inject
     protected void setUniversalConstants(final IUniversalConstants universalConstants) {
         this.universalConstants = universalConstants;
-    }
-
-    @Inject
-    protected void setDates(final IDates dates) {
-        this.dates = dates;
     }
 
     @Inject
@@ -347,14 +340,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     public IUniversalConstants getUniversalConstants() {
         return universalConstants;
-    }
-
-    /**
-     * <b>Deprecated</b>: request injection of {@link IDates}.
-     */
-    @Deprecated(forRemoval = true)
-    public IDates dates() {
-        return dates;
     }
 
     /**
