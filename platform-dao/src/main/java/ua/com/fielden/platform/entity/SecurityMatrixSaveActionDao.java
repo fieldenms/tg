@@ -26,7 +26,12 @@ import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 
 @EntityType(SecurityMatrixSaveAction.class)
-public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixSaveAction> implements SecurityMatrixSaveActionCo {
+public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixSaveAction> implements SecurityMatrixSaveActionCo{
+
+    @Inject
+    protected SecurityMatrixSaveActionDao(final IFilter filter) {
+        super(filter);
+    }
 
     @Override
     @SessionRequired
@@ -34,11 +39,10 @@ public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixS
         final Map<Long, UserRole> idRoleMap = getUserRoles(entity);
         if (!idRoleMap.isEmpty()) {
             final Set<SecurityRoleAssociation> addedAssociations = entity.getAssociationsToSave().entrySet().stream()
-                    .map(entry -> createSecurityRoleAssociations(entry.getKey(), entry.getValue(), idRoleMap))
-                    .flatMap(List::stream)
-                    .collect(Collectors.toSet());
-            final Set<SecurityRoleAssociation> removedAssociations = entity.getAssociationsToRemove().entrySet()
-                    .stream()
+                .map(entry -> createSecurityRoleAssociations(entry.getKey(), entry.getValue(), idRoleMap))
+                .flatMap(List::stream)
+                .collect(Collectors.toSet());
+            final Set<SecurityRoleAssociation> removedAssociations = entity.getAssociationsToRemove().entrySet().stream()
                     .map(entry -> createSecurityRoleAssociations(entry.getKey(), entry.getValue(), idRoleMap))
                     .flatMap(List::stream)
                     .collect(Collectors.toSet());
@@ -53,19 +57,15 @@ public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixS
     private List<SecurityRoleAssociation> createSecurityRoleAssociations(final String securityToken, final List<Integer> roleIds, final Map<Long, UserRole> idRoleMap) {
         final Class<? extends ISecurityToken> token = loadToken(securityToken);
         final SecurityRoleAssociationCo associationCo = co$(SecurityRoleAssociation.class);
-        return roleIds.stream().map(id -> associationCo.new_().setRole(idRoleMap.get(Long.valueOf(id.longValue())))
-                .setSecurityToken(token)).collect(Collectors.toList());
+        return roleIds.stream().map(id -> associationCo.new_().setRole(idRoleMap.get(Long.valueOf(id.longValue()))).setSecurityToken(token)).collect(Collectors.toList());
     }
 
     private Map<Long, UserRole> getUserRoles(final SecurityMatrixSaveAction entity) {
-        final Set<Integer> userRoleIds = Stream.concat(
-                entity.getAssociationsToSave().values().stream().flatMap(List::stream),
-                entity.getAssociationsToRemove().values().stream().flatMap(List::stream)).collect(Collectors.toSet());
+        final Set<Integer> userRoleIds = Stream.concat(entity.getAssociationsToSave().values().stream().flatMap(List::stream),
+                                    entity.getAssociationsToRemove().values().stream().flatMap(List::stream)).collect(Collectors.toSet());
         if (!userRoleIds.isEmpty()) {
-            final EntityResultQueryModel<UserRole> userRolesQuery = select(UserRole.class).where().prop("id").in()
-                    .values(userRoleIds.toArray()).model();
-            try (Stream<UserRole> stream = co(UserRole.class).stream(
-                    from(userRolesQuery).with(fetchKeyAndDescOnly(UserRole.class)).model())) {
+            final EntityResultQueryModel<UserRole> userRolesQuery = select(UserRole.class).where().prop("id").in().values(userRoleIds.toArray()).model();
+            try (Stream<UserRole> stream = co(UserRole.class).stream(from(userRolesQuery).with(fetchKeyAndDescOnly(UserRole.class)).model())) {
                 return stream.collect(Collectors.toMap(UserRole::getId, role -> role));
             }
         }
@@ -77,10 +77,8 @@ public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixS
         try {
             token = (Class<? extends ISecurityToken>) Class.forName(name);
         } catch (final ClassNotFoundException e) {
-            throw Result.failure(
-                    new IllegalStateException(String.format("Security token [%s] could not be found.", name)));
+            throw Result.failure(new IllegalStateException(String.format("Security token [%s] could not be found.", name)));
         }
         return token;
     }
-
 }

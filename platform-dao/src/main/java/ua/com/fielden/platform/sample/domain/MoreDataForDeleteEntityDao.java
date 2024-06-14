@@ -10,8 +10,14 @@ import ua.com.fielden.platform.entity.query.IFilter;
  * DAO implementation for companion object {@link MoreDataForDeleteEntityCo}.
  *
  * @author TG Team
+ *
  */
 @EntityType(MoreDataForDeleteEntity.class)
 public class MoreDataForDeleteEntityDao extends CommonEntityDao<MoreDataForDeleteEntity> implements MoreDataForDeleteEntityCo {
+
+    @Inject
+    public MoreDataForDeleteEntityDao(final IFilter filter) {
+        super(filter);
+    }
 
 }

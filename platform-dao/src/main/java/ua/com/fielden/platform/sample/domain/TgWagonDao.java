@@ -10,4 +10,9 @@ import com.google.inject.Inject;
 
 @EntityType(TgWagon.class)
 public class TgWagonDao extends CommonEntityDao<TgWagon> implements ITgWagon {
+
+    @Inject
+    protected TgWagonDao(final IFilter filter) {
+        super(filter);
+    }
 }

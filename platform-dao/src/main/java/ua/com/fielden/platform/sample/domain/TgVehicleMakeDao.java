@@ -10,10 +10,15 @@ import com.google.inject.Inject;
 
 /**
  * DAO for {@link TgVehicleMake} retrieval.
- *
+ * 
  * @author TG Team
  */
 
 @EntityType(TgVehicleMake.class)
 public class TgVehicleMakeDao extends CommonEntityDao<TgVehicleMake> implements ITgVehicleMake {
+
+    @Inject
+    protected TgVehicleMakeDao(final IFilter filter) {
+        super(filter);
+    }
 }

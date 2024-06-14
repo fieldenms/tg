@@ -10,8 +10,14 @@ import ua.com.fielden.platform.entity.query.IFilter;
  * DAO implementation for companion object {@link ITgWebApiEntitySyntheticMulti}.
  *
  * @author TG Team
+ *
  */
 @EntityType(TgWebApiEntitySyntheticMulti.class)
 public class TgWebApiEntitySyntheticMultiDao extends CommonEntityDao<TgWebApiEntitySyntheticMulti> implements ITgWebApiEntitySyntheticMulti {
-
+    
+    @Inject
+    public TgWebApiEntitySyntheticMultiDao(final IFilter filter) {
+        super(filter);
+    }
+    
 }

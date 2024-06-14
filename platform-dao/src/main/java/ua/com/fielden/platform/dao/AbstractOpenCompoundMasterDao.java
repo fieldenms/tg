@@ -86,7 +86,8 @@ public abstract class AbstractOpenCompoundMasterDao<T extends AbstractFunctional
     private final Map<String, Function<Object, Object>> additionalParameters = new HashMap<>();
 
     @Inject
-    protected AbstractOpenCompoundMasterDao(final IEntityAggregatesOperations coAggregates) {
+    protected AbstractOpenCompoundMasterDao(final IFilter filter, final IEntityAggregatesOperations coAggregates) {
+        super(filter);
         this.coAggregates = coAggregates;
     }
 

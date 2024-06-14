@@ -10,4 +10,9 @@ import com.google.inject.Inject;
 
 @EntityType(TgMakeCount.class)
 public class TgMakeCountDao extends CommonEntityDao<TgMakeCount> implements ITgMakeCount {
+
+    @Inject
+    protected TgMakeCountDao(final IFilter filter) {
+        super(filter);
+    }
 }

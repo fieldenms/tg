@@ -37,7 +37,8 @@ public class TgPersonDao extends CommonEntityDao<TgPerson> implements ITgPerson 
     private final Logger logger = getLogger(getClass());
 
     @Inject
-    protected TgPersonDao(final EntityFactory entityFactory, final IUser coUser) {
+    protected TgPersonDao(final IFilter filter, final EntityFactory entityFactory, final IUser coUser) {
+        super(filter);
         this.entityFactory = entityFactory;
         this.coUser = coUser;
     }

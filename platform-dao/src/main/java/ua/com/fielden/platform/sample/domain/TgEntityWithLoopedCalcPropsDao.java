@@ -28,7 +28,9 @@ public class TgEntityWithLoopedCalcPropsDao extends CommonEntityDao<TgEntityWith
     private final TgEntityWithLoopedCalcPropsMixin mixin;
     
     @Inject
-    public TgEntityWithLoopedCalcPropsDao() {
+    public TgEntityWithLoopedCalcPropsDao(final IFilter filter) {
+        super(filter);
+        
         mixin = new TgEntityWithLoopedCalcPropsMixin(this);
     }
     

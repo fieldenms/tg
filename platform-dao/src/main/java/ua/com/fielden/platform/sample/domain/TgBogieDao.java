@@ -9,6 +9,11 @@ import ua.com.fielden.platform.entity.query.IFilter;
 @EntityType(TgBogie.class)
 public class TgBogieDao extends CommonEntityDao<TgBogie> implements ITgBogie {
 
+    @Inject
+    protected TgBogieDao(final IFilter filter) {
+        super(filter);
+    }
+
     @Override
     public TgBogie new_() {
         return super.new_().setActive(true);

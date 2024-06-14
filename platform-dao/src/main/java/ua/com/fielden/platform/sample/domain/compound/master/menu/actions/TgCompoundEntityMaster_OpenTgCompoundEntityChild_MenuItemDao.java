@@ -9,13 +9,19 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.tokens.compound_master_menu.TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem_CanAccess_Token;
 
-/**
+/** 
  * DAO implementation for companion object {@link ITgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem}.
- *
+ * 
  * @author TG Team
+ *
  */
 @EntityType(TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem.class)
 public class TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItemDao extends CommonEntityDao<TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem> implements ITgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem {
+
+    @Inject
+    public TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItemDao(final IFilter filter) {
+        super(filter);
+    }
 
     @Override
     @SessionRequired

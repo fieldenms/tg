@@ -11,6 +11,11 @@ import ua.com.fielden.platform.error.Result;
 @EntityType(TgVehicle.class)
 public class TgVehicleDao extends CommonEntityDao<TgVehicle> implements ITgVehicle {
 
+    @Inject
+    protected TgVehicleDao(final IFilter filter) {
+        super(filter);
+    }
+
     @Override
     @SessionRequired
     public TgVehicle save(final TgVehicle vehicle) {
@@ -30,5 +35,4 @@ public class TgVehicleDao extends CommonEntityDao<TgVehicle> implements ITgVehic
         // the super.save relies on the fetch model reconstruction to re-fetch this instance
         return super.save(savedVehicle);
     }
-
 }

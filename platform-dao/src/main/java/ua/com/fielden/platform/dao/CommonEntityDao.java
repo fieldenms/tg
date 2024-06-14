@@ -95,14 +95,18 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     /**
      * The default constructor, which looks for annotation {@link EntityType} to identify the entity type automatically.
      * An exception is thrown if the annotation is missing.
+     *
+     * @param filter
      */
-    protected CommonEntityDao() {
+    protected CommonEntityDao(final IFilter filter) {
         final EntityType annotation = AnnotationReflector.getAnnotation(getClass(), EntityType.class);
         if (annotation == null) {
             throw new EntityCompanionException(format("Companion object [%s] is missing @EntityType annotation.", getClass().getName()));
         }
         this.entityType = (Class<T>) annotation.value();
         this.keyType = AnnotationReflector.getKeyType(entityType);
+
+        this.filter = filter;
 
         deleteOps = new DeleteOperations<>(
                 this,

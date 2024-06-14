@@ -11,8 +11,14 @@ import ua.com.fielden.platform.sample.domain.IEntityTwo;
  * DAO implementation for companion object {@link IEntityTwo}.
  *
  * @author Consultant/s
+ *
  */
 @EntityType(EntityTwo.class)
 public class EntityTwoDao extends CommonEntityDao<EntityTwo> implements IEntityTwo {
+
+    @Inject
+    public EntityTwoDao(final IFilter filter) {
+        super(filter);
+    }
 
 }

@@ -17,16 +17,20 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
  * DAO implementation for companion object {@link ITgDeletionTestEntity}.
  *
  * @author TG Team
+ *
  */
 @EntityType(TgDeletionTestEntity.class)
 public class TgDeletionTestEntityDao extends CommonEntityDao<TgDeletionTestEntity> implements ITgDeletionTestEntity {
+    @Inject
+    public TgDeletionTestEntityDao(final IFilter filter) {
+        super(filter);
+    }
 
     @Override
     @SessionRequired
     public TgDeletionTestEntity save(final TgDeletionTestEntity entity) {
         if (entity.isPersisted() && !moreData("newDeleteEntity").isPresent()) {
-            throw new NeedMoreData("Need to specify number from 1 to 10", MoreDataForDeleteEntity.class,
-                                   "newDeleteEntity");
+            throw new NeedMoreData("Need to specify number from 1 to 10", MoreDataForDeleteEntity.class, "newDeleteEntity");
         }
         return super.save(entity);
     }
@@ -52,5 +56,4 @@ public class TgDeletionTestEntityDao extends CommonEntityDao<TgDeletionTestEntit
     protected IFetchProvider<TgDeletionTestEntity> createFetchProvider() {
         return super.createFetchProvider().with("key", "desc");
     }
-
 }

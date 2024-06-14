@@ -19,8 +19,8 @@ import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityChild;
 public class OpenTgCompoundEntityMasterActionDao extends AbstractOpenCompoundMasterDao<OpenTgCompoundEntityMasterAction> implements IOpenTgCompoundEntityMasterAction {
 
     @Inject
-    public OpenTgCompoundEntityMasterActionDao(final IEntityAggregatesOperations coAggregates) {
-        super(coAggregates);
+    public OpenTgCompoundEntityMasterActionDao(final IFilter filter, final IEntityAggregatesOperations coAggregates) {
+        super(filter, coAggregates);
         addViewBinding(OpenTgCompoundEntityMasterAction.TGCOMPOUNDENTITYCHILDS, TgCompoundEntityChild.class, "tgCompoundEntity");
     }
 

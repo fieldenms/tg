@@ -25,9 +25,15 @@ import ua.com.fielden.platform.entity.query.IFilter;
  * DAO implementation for Attachments companion object.
  *
  * @author TG Air Team
+ *
  */
 
 public abstract class AbstractAttachmentDao<A extends AbstractAttachment<A, ?>> extends CommonEntityDao<A> {
+
+    @Inject
+    public AbstractAttachmentDao(final IFilter filter) {
+        super(filter);
+    }
 
     @Override
     @SessionRequired
@@ -67,14 +73,10 @@ public abstract class AbstractAttachmentDao<A extends AbstractAttachment<A, ?>> 
     protected IFetchProvider<A> createFetchProvider() {
         final String attachment = "attachment.";
         return super.createFetchProvider().with("attachedTo", "attachment",
-                                                DESC,
-                                                attachment + pn_TITLE, attachment + pn_SHA1,
-                                                attachment + pn_ORIG_FILE_NAME, attachment + pn_REV_NO,
-                                                attachment + pn_PREV_REVISION,
-                                                attachment + pn_PREV_REVISION + "." + pn_REV_NO,
-                                                attachment + pn_PREV_REVISION + "." + pn_LAST_REVISION,
-                                                attachment + pn_LAST_REVISION, attachment + pn_LAST_MODIFIED,
-                                                attachment + pn_MIME, attachment + pn_IS_LATEST_REV);
+                DESC,
+                attachment + pn_TITLE, attachment + pn_SHA1, attachment + pn_ORIG_FILE_NAME, attachment + pn_REV_NO,
+                attachment + pn_PREV_REVISION, attachment + pn_PREV_REVISION + "." + pn_REV_NO, attachment + pn_PREV_REVISION + "." + pn_LAST_REVISION,
+                attachment + pn_LAST_REVISION, attachment + pn_LAST_MODIFIED, attachment + pn_MIME, attachment + pn_IS_LATEST_REV);
     }
 
 }

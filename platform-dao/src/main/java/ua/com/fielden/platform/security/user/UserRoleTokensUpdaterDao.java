@@ -43,10 +43,12 @@ public class UserRoleTokensUpdaterDao extends CommonEntityDao<UserRoleTokensUpda
     
     @Inject
     public UserRoleTokensUpdaterDao(
-            final EntityFactory factory,
+            final IFilter filter, 
+            final EntityFactory factory, 
             final ISecurityTokenNodeTransformation tokenTransformation,
             final ISecurityTokenProvider securityTokenProvider
     ) {
+        super(filter);
         this.factory = factory;
         this.tokenTransformation = tokenTransformation;
         this.securityTokenProvider = securityTokenProvider;

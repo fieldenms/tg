@@ -10,8 +10,14 @@ import ua.com.fielden.platform.entity.query.IFilter;
  * DAO implementation for companion object {@link ITgEntityLongKey}.
  *
  * @author TG Team
+ *
  */
 @EntityType(TgEntityLongKey.class)
 public class TgEntityLongKeyDao extends CommonEntityDao<TgEntityLongKey> implements ITgEntityLongKey {
+
+    @Inject
+    public TgEntityLongKeyDao(final IFilter filter) {
+        super(filter);
+    }
 
 }

@@ -10,4 +10,9 @@ import com.google.inject.Inject;
 
 @EntityType(TgBogieLocation.class)
 public class TgBogieLocationDao extends CommonEntityDao<TgBogieLocation> implements ITgBogieLocation {
+
+    @Inject
+    protected TgBogieLocationDao(final IFilter filter) {
+        super(filter);
+    }
 }

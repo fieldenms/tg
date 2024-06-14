@@ -8,4 +8,9 @@ import ua.com.fielden.platform.entity.query.IFilter;
 
 @EntityType(TeAverageFuelUsage.class)
 public class TeAverageFuelUsageDao extends CommonEntityDao<TeAverageFuelUsage> implements ITeAverageFuelUsage {
+
+    @Inject
+    protected TeAverageFuelUsageDao(final IFilter filter) {
+        super(filter);
+    }
 }

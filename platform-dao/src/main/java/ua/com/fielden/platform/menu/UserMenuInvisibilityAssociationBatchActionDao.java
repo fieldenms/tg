@@ -21,7 +21,8 @@ public class UserMenuInvisibilityAssociationBatchActionDao extends CommonEntityD
     private final WebMenuItemInvisibilityCo coMenuItemInvisibility;
 
     @Inject
-    protected UserMenuInvisibilityAssociationBatchActionDao(final WebMenuItemInvisibilityCo coMenuItemInvisibility) {
+    protected UserMenuInvisibilityAssociationBatchActionDao(final IFilter filter, final WebMenuItemInvisibilityCo coMenuItemInvisibility) {
+        super(filter);
         this.coMenuItemInvisibility = coMenuItemInvisibility;
     }
 

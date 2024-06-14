@@ -20,7 +20,8 @@ public class TgFunctionalEntityWithCentreContextDao extends CommonEntityDao<TgFu
     private final ITgPersistentEntityWithProperties dao;
 
     @Inject
-    public TgFunctionalEntityWithCentreContextDao(final ITgPersistentEntityWithProperties dao) {
+    public TgFunctionalEntityWithCentreContextDao(final IFilter filter, final ITgPersistentEntityWithProperties dao) {
+        super(filter);
         this.dao = dao;
     }
 

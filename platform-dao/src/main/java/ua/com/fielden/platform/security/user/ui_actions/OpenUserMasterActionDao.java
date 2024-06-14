@@ -21,8 +21,8 @@ import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 public class OpenUserMasterActionDao extends AbstractOpenCompoundMasterDao<OpenUserMasterAction> implements OpenUserMasterActionCo {
 
     @Inject
-    public OpenUserMasterActionDao(final IEntityAggregatesOperations coAggregates) {
-        super(coAggregates);
+    public OpenUserMasterActionDao(final IFilter filter, final IEntityAggregatesOperations coAggregates) {
+        super(filter, coAggregates);
         addViewBinding(ROLES, UserAndRoleAssociation.class, "user");
     }
 

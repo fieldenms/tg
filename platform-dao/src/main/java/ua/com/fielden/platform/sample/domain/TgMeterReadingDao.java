@@ -10,10 +10,15 @@ import com.google.inject.Inject;
 
 /**
  * DAO for {@link TgMeterReading} retrieval.
- *
+ * 
  * @author TG Team
  */
 
 @EntityType(TgMeterReading.class)
 public class TgMeterReadingDao extends CommonEntityDao<TgMeterReading> implements ITgMeterReading {
+
+    @Inject
+    protected TgMeterReadingDao(final IFilter filter) {
+        super(filter);
+    }
 }

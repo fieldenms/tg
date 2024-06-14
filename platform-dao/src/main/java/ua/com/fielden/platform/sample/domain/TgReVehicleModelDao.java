@@ -8,4 +8,9 @@ import ua.com.fielden.platform.entity.query.IFilter;
 
 @EntityType(TgReVehicleModel.class)
 public class TgReVehicleModelDao extends CommonEntityDao<TgReVehicleModel> implements ITgReVehicleModel {
+
+    @Inject
+    protected TgReVehicleModelDao(final IFilter filter) {
+        super(filter);
+    }
 }

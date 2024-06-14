@@ -8,9 +8,15 @@ import ua.com.fielden.platform.persistence.types.EntityWithAutoAssignablePropert
 
 /**
  * A companion object implementation for {@link EntityWithAutoAssignableProperties} used for testing.
- *
+ * 
  * @author TG Team
+ * 
  */
 @EntityType(EntityWithAutoAssignableProperties.class)
 public class EntityWithAutoAssignablePropertiesDao extends CommonEntityDao<EntityWithAutoAssignableProperties> {
+
+    @Inject
+    protected EntityWithAutoAssignablePropertiesDao(final IFilter filter) {
+        super(filter);
+    }
 }

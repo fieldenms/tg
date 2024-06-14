@@ -9,4 +9,9 @@ import ua.com.fielden.platform.entity.query.IFilter;
 @EntityType(UnionEntityWithSkipExistsValidation.class)
 public class UnionEntityWithSkipExistsValidationDao extends CommonEntityDao<UnionEntityWithSkipExistsValidation> implements UnionEntityWithSkipExistsValidationCo {
 
+    @Inject
+    protected UnionEntityWithSkipExistsValidationDao(final IFilter filter) {
+        super(filter);
+    }
+
 }

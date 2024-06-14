@@ -10,4 +10,9 @@ import com.google.inject.Inject;
 
 @EntityType(TgOrgUnit1.class)
 public class TgOrgUnit1Dao extends CommonEntityDao<TgOrgUnit1> implements ITgOrgUnit1 {
+
+    @Inject
+    protected TgOrgUnit1Dao(final IFilter filter) {
+        super(filter);
+    }
 }

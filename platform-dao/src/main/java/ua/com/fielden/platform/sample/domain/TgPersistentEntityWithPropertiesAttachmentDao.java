@@ -9,15 +9,22 @@ import ua.com.fielden.platform.entity.query.IFilter;
 
 /**
  * DAO implementation for companion object {@link ITgPersistentEntityWithPropertiesAttachment}.
- *
+ * 
  * @author TG Team
+ *
  */
 @EntityType(TgPersistentEntityWithPropertiesAttachment.class)
 public class TgPersistentEntityWithPropertiesAttachmentDao extends CommonEntityDao<TgPersistentEntityWithPropertiesAttachment> implements ITgPersistentEntityWithPropertiesAttachment {
 
+    @Inject
+    protected TgPersistentEntityWithPropertiesAttachmentDao(final IFilter filter) {
+        super(filter);
+    }
+    
     @Override
     protected IFetchProvider<TgPersistentEntityWithPropertiesAttachment> createFetchProvider() {
         return super.createFetchProvider().with("master", "attachment");
     }
+
 
 }

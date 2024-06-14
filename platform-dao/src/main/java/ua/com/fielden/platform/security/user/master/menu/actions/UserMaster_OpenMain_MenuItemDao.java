@@ -13,9 +13,15 @@ import ua.com.fielden.security.tokens.compound_master_menu.UserMaster_OpenMain_M
  * DAO implementation for companion object {@link UserMaster_OpenMain_MenuItemCo}.
  *
  * @author TG Team
+ *
  */
 @EntityType(UserMaster_OpenMain_MenuItem.class)
 public class UserMaster_OpenMain_MenuItemDao extends CommonEntityDao<UserMaster_OpenMain_MenuItem> implements UserMaster_OpenMain_MenuItemCo {
+
+    @Inject
+    public UserMaster_OpenMain_MenuItemDao(final IFilter filter) {
+        super(filter);
+    }
 
     @Override
     @SessionRequired

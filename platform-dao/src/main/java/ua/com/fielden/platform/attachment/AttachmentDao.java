@@ -67,7 +67,10 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
     private final String attachmentsLocation;
 
     @Inject
-    protected AttachmentDao(final @Named("attachments.location") String attachmentsLocation) {
+    protected AttachmentDao(
+            final IFilter filter,
+            final @Named("attachments.location") String attachmentsLocation) {
+        super(filter);
         this.attachmentsLocation = attachmentsLocation;
     }
 

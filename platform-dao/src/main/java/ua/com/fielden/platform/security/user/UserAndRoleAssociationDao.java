@@ -19,11 +19,17 @@ import ua.com.fielden.platform.security.tokens.user.UserAndRoleAssociation_CanSa
 
 /**
  * DbDriven implementation of the {@link UserAndRoleAssociationCo}
- *
+ * 
  * @author TG Team
+ * 
  */
 @EntityType(UserAndRoleAssociation.class)
 public class UserAndRoleAssociationDao extends CommonEntityDao<UserAndRoleAssociation> implements UserAndRoleAssociationCo {
+
+    @Inject
+    protected UserAndRoleAssociationDao(final IFilter filter) {
+        super(filter);
+    }
 
     @Override
     @SessionRequired
@@ -57,5 +63,4 @@ public class UserAndRoleAssociationDao extends CommonEntityDao<UserAndRoleAssoci
     public IFetchProvider<UserAndRoleAssociation> createFetchProvider() {
         return FETCH_PROVIDER;
     }
-
 }

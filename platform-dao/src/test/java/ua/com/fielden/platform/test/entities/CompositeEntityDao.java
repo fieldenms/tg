@@ -11,4 +11,9 @@ import ua.com.fielden.platform.test.entities.ICompositeEntity;
 @EntityType(CompositeEntity.class)
 public class CompositeEntityDao extends CommonEntityDao<CompositeEntity> implements ICompositeEntity {
 
+    @Inject
+    protected CompositeEntityDao(IFilter filter) {
+        super(filter);
+    }
+
 }

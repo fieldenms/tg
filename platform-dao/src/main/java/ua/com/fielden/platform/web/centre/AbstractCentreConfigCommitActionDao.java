@@ -20,7 +20,8 @@ public abstract class AbstractCentreConfigCommitActionDao<T extends AbstractCent
     private static final String CONTINUATION_KEY = "overrideConfig";
     protected final ICriteriaEntityRestorer criteriaEntityRestorer;
     
-    public AbstractCentreConfigCommitActionDao(final ICriteriaEntityRestorer criteriaEntityRestorer) {
+    public AbstractCentreConfigCommitActionDao(final IFilter filter, final ICriteriaEntityRestorer criteriaEntityRestorer) {
+        super(filter);
         this.criteriaEntityRestorer = criteriaEntityRestorer;
     }
     

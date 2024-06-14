@@ -9,12 +9,17 @@ import java.util.Map;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import com.google.inject.Inject;
 
-/**
+/** 
  * DAO implementation for companion object {@link ITgCollectionalSerialisationChild}.
- *
+ * 
  * @author Developers
+ *
  */
 @EntityType(TgCollectionalSerialisationChild.class)
 public class TgCollectionalSerialisationChildDao extends CommonEntityDao<TgCollectionalSerialisationChild> implements ITgCollectionalSerialisationChild {
+    @Inject
+    public TgCollectionalSerialisationChildDao(final IFilter filter) {
+        super(filter);
+    }
 
 }

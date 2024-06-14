@@ -10,6 +10,11 @@ import ua.com.fielden.platform.entity.query.IFilter;
 @EntityType(TgWorkshop.class)
 public class TgWorkshopDao extends CommonEntityDao<TgWorkshop> implements ITgWorkshop {
 
+    @Inject
+    protected TgWorkshopDao(final IFilter filter) {
+        super(filter);
+    }
+
     @SessionRequired
     @Override
     public void delete(final TgWorkshop entity) {

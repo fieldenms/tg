@@ -11,13 +11,19 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
 
-/**
+/** 
  * DAO implementation for companion object {@link TgEntityWithPropertyDescriptorCo}.
- *
+ * 
  * @author Developers
+ *
  */
 @EntityType(TgEntityWithPropertyDescriptor.class)
 public class TgEntityWithPropertyDescriptorDao extends CommonEntityDao<TgEntityWithPropertyDescriptor> implements TgEntityWithPropertyDescriptorCo {
+
+    @Inject
+    public TgEntityWithPropertyDescriptorDao(final IFilter filter) {
+        super(filter);
+    }
 
     @Override
     @SessionRequired

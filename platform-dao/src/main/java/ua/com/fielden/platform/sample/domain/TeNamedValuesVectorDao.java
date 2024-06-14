@@ -8,4 +8,9 @@ import ua.com.fielden.platform.entity.query.IFilter;
 
 @EntityType(TeNamedValuesVector.class)
 public class TeNamedValuesVectorDao extends CommonEntityDao<TeNamedValuesVector> implements TeNamedValuesVectorCo {
+
+    @Inject
+    protected TeNamedValuesVectorDao(final IFilter filter) {
+        super(filter);
+    }
 }

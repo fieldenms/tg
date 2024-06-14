@@ -9,4 +9,9 @@ import ua.com.fielden.platform.entity.query.IFilter;
 @EntityType(TgModelCount.class)
 public class TgModelCountDao extends CommonEntityDao<TgModelCount> implements ITgModelCount {
 
+    @Inject
+    protected TgModelCountDao(IFilter filter) {
+        super(filter);
+    }
+
 }

@@ -35,7 +35,10 @@ public class UserSecretDao extends CommonEntityDao<UserSecret> implements UserSe
     private final SessionIdentifierGenerator crypto;
 
     @Inject
-    public UserSecretDao(final SessionIdentifierGenerator crypto) {
+    public UserSecretDao(
+            final SessionIdentifierGenerator crypto,
+            final IFilter filter) {
+        super(filter);
         this.crypto = crypto;
     }
 

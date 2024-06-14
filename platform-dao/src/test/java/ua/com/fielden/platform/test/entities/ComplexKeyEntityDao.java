@@ -9,4 +9,9 @@ import ua.com.fielden.platform.entity.query.IFilter;
 @EntityType(ComplexKeyEntity.class)
 public class ComplexKeyEntityDao extends CommonEntityDao<ComplexKeyEntity> implements IComplexKeyEntity {
 
+    @Inject
+    protected ComplexKeyEntityDao(IFilter filter) {
+        super(filter);
+    }
+
 }

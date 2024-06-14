@@ -10,4 +10,9 @@ import ua.com.fielden.platform.entity.query.IFilter;
 @EntityType(TgGeneratedEntityForTrippleDecAnalysisInsertionPoint.class)
 public class TgGeneratedEntityForTrippleDecAnalysisInsertionPointDao extends CommonEntityDao<TgGeneratedEntityForTrippleDecAnalysisInsertionPoint> implements IEntityDao<TgGeneratedEntityForTrippleDecAnalysisInsertionPoint> {
 
+    @Inject
+    protected TgGeneratedEntityForTrippleDecAnalysisInsertionPointDao(final IFilter filter) {
+        super(filter);
+    }
+
 }

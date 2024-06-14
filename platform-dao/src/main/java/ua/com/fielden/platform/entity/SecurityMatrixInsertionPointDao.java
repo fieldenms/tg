@@ -35,7 +35,10 @@ public class SecurityMatrixInsertionPointDao extends CommonEntityDao<SecurityMat
     private final ISecurityTokenNodeTransformation tokenTransformation;
 
     @Inject
-    public SecurityMatrixInsertionPointDao(final ISecurityTokenNodeTransformation tokenTransformation, final ISecurityTokenProvider securityTokenProvider) {
+    public SecurityMatrixInsertionPointDao(final IFilter filter,
+            final ISecurityTokenNodeTransformation tokenTransformation,
+            final ISecurityTokenProvider securityTokenProvider) {
+        super(filter);
         this.tokenProvider = securityTokenProvider;
         this.tokenTransformation = tokenTransformation;
     }

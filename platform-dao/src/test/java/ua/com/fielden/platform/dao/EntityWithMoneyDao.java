@@ -18,12 +18,18 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * A DAO for {@link EntityWithMoney} used for testing.
- *
+ * 
  * @author TG Team
+ * 
  */
 @EntityType(EntityWithMoney.class)
 public class EntityWithMoneyDao extends CommonEntityDao<EntityWithMoney> implements IEntityWithMoney {
     public static final String ERR_PURPOSEFUL_EXCEPTION = "Purposeful exception.";
+    
+    @Inject
+    protected EntityWithMoneyDao(final IFilter filter) {
+        super(filter);
+    }
 
     @SessionRequired
     public EntityWithMoney saveWithException(final EntityWithMoney entity) {
@@ -44,11 +50,11 @@ public class EntityWithMoneyDao extends CommonEntityDao<EntityWithMoney> impleme
         Thread.sleep(sleep);
         return new Pair<Session, Session>(ses, getSessionUnsafe());
     }
-
+    
     @SessionRequired
     public long streamProcessingWithinTransaction(final EntityResultQueryModel<EntityWithMoney> query) {
         long result = 0;
-        try (final Stream<EntityWithMoney> stream = stream(from(query).model())) {
+        try(final Stream<EntityWithMoney> stream = stream(from(query).model())) {
             result = result + stream.count();
         }
         result = result + count(query);
@@ -59,5 +65,4 @@ public class EntityWithMoneyDao extends CommonEntityDao<EntityWithMoney> impleme
     public EntityWithMoney superSave(final EntityWithMoney entity) {
         return super.save(entity);
     }
-
 }

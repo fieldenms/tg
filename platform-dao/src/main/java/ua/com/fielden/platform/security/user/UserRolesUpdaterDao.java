@@ -24,46 +24,45 @@ import ua.com.fielden.platform.security.user.UserRolesUpdater;
 import ua.com.fielden.platform.security.user.UserRolesUpdaterController;
 import ua.com.fielden.platform.types.tuples.T2;
 
-/**
+/** 
  * DAO implementation for companion object {@link UserRolesUpdaterCo}.
- *
+ * 
  * @author Developers
+ *
  */
 @EntityType(UserRolesUpdater.class)
 public class UserRolesUpdaterDao extends CommonEntityDao<UserRolesUpdater> implements UserRolesUpdaterCo {
-
+    
+    @Inject
+    public UserRolesUpdaterDao(final IFilter filter) {
+        super(filter);
+    }
+    
     @Override
     @SessionRequired
     @Authorise(User_CanSave_Token.class)
     public UserRolesUpdater save(final UserRolesUpdater action) {
-        final T2<UserRolesUpdater, User> actionAndUserBeingUpdated = validateAction(action, this, Long.class,
-                                                                                    new UserRolesUpdaterController(
-                                                                                            co(User.class),
-                                                                                            co$(UserRolesUpdater.class),
-                                                                                            this.<UserRoleCo, UserRole> co(
-                                                                                                    UserRole.class)));
+        final T2<UserRolesUpdater, User> actionAndUserBeingUpdated = validateAction(action, this, Long.class, new UserRolesUpdaterController(co(User.class), co$(UserRolesUpdater.class), this.<UserRoleCo, UserRole>co(UserRole.class)));
         final UserRolesUpdater actionToSave = actionAndUserBeingUpdated._1;
         final Map<Object, UserRole> availableRoles = toMapById(actionToSave.getRoles());
-
+        
         final Set<UserAndRoleAssociation> addedAssociations = new LinkedHashSet<>();
         for (final Long addedId : actionToSave.getAddedIds()) {
-            addedAssociations.add(co$(UserAndRoleAssociation.class).new_().setUser(actionAndUserBeingUpdated._2)
-                                          .setUserRole(availableRoles.get(addedId)));
+            addedAssociations.add(co$(UserAndRoleAssociation.class).new_().setUser(actionAndUserBeingUpdated._2).setUserRole(availableRoles.get(addedId)));
         }
 
         final Set<UserAndRoleAssociation> removedAssociations = new LinkedHashSet<>();
         for (final Long removedId : actionToSave.getRemovedIds()) {
-            removedAssociations.add(co$(UserAndRoleAssociation.class).new_().setUser(actionAndUserBeingUpdated._2)
-                                            .setUserRole(availableRoles.get(removedId)));
+            removedAssociations.add(co$(UserAndRoleAssociation.class).new_().setUser(actionAndUserBeingUpdated._2).setUserRole(availableRoles.get(removedId)));
         }
 
         final UserAndRoleAssociationBatchAction batchAction = new UserAndRoleAssociationBatchAction();
         batchAction.setSaveEntities(addedAssociations);
         batchAction.setRemoveEntities(removedAssociations);
         co$(UserAndRoleAssociationBatchAction.class).save(batchAction);
-
+        
         // after the association changes were successfully saved, the action should also be saved:
         return super.save(actionToSave);
     }
-
+    
 }

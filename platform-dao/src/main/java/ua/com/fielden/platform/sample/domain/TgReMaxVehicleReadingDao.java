@@ -8,4 +8,9 @@ import ua.com.fielden.platform.entity.query.IFilter;
 
 @EntityType(TgReMaxVehicleReading.class)
 public class TgReMaxVehicleReadingDao extends CommonEntityDao<TgReMaxVehicleReading> implements TgReMaxVehicleReadingCo {
+
+    @Inject
+    protected TgReMaxVehicleReadingDao(final IFilter filter) {
+        super(filter);
+    }
 }

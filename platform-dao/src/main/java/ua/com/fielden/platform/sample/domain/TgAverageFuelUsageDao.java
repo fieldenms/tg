@@ -10,4 +10,9 @@ import com.google.inject.Inject;
 
 @EntityType(TgAverageFuelUsage.class)
 public class TgAverageFuelUsageDao extends CommonEntityDao<TgAverageFuelUsage> implements ITgAverageFuelUsage {
+
+    @Inject
+    protected TgAverageFuelUsageDao(final IFilter filter) {
+        super(filter);
+    }
 }

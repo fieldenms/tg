@@ -23,7 +23,9 @@ public class UserAndRoleAssociationBatchActionDao extends CommonEntityDao<UserAn
     private final UserAndRoleAssociationCo associationDao;
 
     @Inject
-    public UserAndRoleAssociationBatchActionDao(final UserAndRoleAssociationCo associationDao) {
+    public UserAndRoleAssociationBatchActionDao(final UserAndRoleAssociationCo associationDao, final IFilter filter) {
+        super(filter);
+
         this.associationDao = associationDao;
     }
 

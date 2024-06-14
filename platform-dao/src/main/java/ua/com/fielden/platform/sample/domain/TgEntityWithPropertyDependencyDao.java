@@ -13,9 +13,14 @@ import com.google.inject.Inject;
  * DAO implementation for companion object {@link ITgEntityWithPropertyDependency}.
  *
  * @author Developers
+ *
  */
 @EntityType(TgEntityWithPropertyDependency.class)
 public class TgEntityWithPropertyDependencyDao extends CommonEntityDao<TgEntityWithPropertyDependency> implements ITgEntityWithPropertyDependency {
+    @Inject
+    public TgEntityWithPropertyDependencyDao(final IFilter filter) {
+        super(filter);
+    }
 
     @Override
     public IFetchProvider<TgEntityWithPropertyDependency> createFetchProvider() {
@@ -29,5 +34,4 @@ public class TgEntityWithPropertyDependencyDao extends CommonEntityDao<TgEntityW
     public int batchDelete(final Collection<Long> entitiesIds) {
         return defaultBatchDelete(entitiesIds);
     }
-
 }

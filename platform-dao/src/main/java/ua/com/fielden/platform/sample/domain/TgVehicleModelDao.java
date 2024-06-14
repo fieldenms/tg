@@ -10,4 +10,9 @@ import com.google.inject.Inject;
 
 @EntityType(TgVehicleModel.class)
 public class TgVehicleModelDao extends CommonEntityDao<TgVehicleModel> implements ITgVehicleModel {
+
+    @Inject
+    protected TgVehicleModelDao(final IFilter filter) {
+        super(filter);
+    }
 }

@@ -70,7 +70,8 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
     private final Set<Class<? extends AbstractEntity<?>>> systemTypesToExclude;
 
     @Inject
-    public ReferenceHierarchyDao(final IEntityAggregatesOperations coAggregates, final IApplicationDomainProvider applicationDomainProvider) {
+    public ReferenceHierarchyDao(final IFilter filter, final IEntityAggregatesOperations coAggregates, final IApplicationDomainProvider applicationDomainProvider) {
+        super(filter);
         this.coAggregates = coAggregates;
         this.dependenciesMetadata = DataDependencyQueriesGenerator.produceDependenciesMetadata(applicationDomainProvider.entityTypes());
         this.systemTypesToExclude = new HashSet<>();

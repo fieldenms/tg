@@ -11,9 +11,15 @@ import ua.com.fielden.platform.entity.query.IFilter;
  * DAO for {@link ITgOriginator}
  *
  * @author TG Team
+ *
  */
 @EntityType(TgOriginator.class)
 public class TgOriginatorDao extends CommonEntityDao<TgOriginator> implements ITgOriginator {
+
+    @Inject
+    protected TgOriginatorDao(final IFilter filter) {
+        super(filter);
+    }
 
     @Override
     protected IFetchProvider<TgOriginator> createFetchProvider() {

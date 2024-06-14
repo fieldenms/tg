@@ -29,7 +29,8 @@ public class UserMenuVisibilityAssociatorDao extends CommonEntityDao<UserMenuVis
     private final IUserProvider userProvider;
 
     @Inject
-    protected UserMenuVisibilityAssociatorDao(final IUserProvider userProvider) {
+    protected UserMenuVisibilityAssociatorDao(final IFilter filter, final IUserProvider userProvider) {
+        super(filter);
         this.userProvider = userProvider;
     }
 

@@ -6,14 +6,20 @@ import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 
-/**
+/** 
  * DAO implementation for companion object {@link ITgDummyAction}.
- *
+ * 
  * @author Developers
+ *
  */
 @EntityType(TgDummyAction.class)
 public class TgDummyActionDao extends CommonEntityDao<TgDummyAction> implements ITgDummyAction {
-
+    
+    @Inject
+    public TgDummyActionDao(final IFilter filter) {
+        super(filter);
+    }
+    
     @Override
     public TgDummyAction save(TgDummyAction entity) {
         // let's introduce some delay to demonstrate action in progress spinner

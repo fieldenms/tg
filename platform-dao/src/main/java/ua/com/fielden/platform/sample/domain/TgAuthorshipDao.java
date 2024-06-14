@@ -8,10 +8,15 @@ import com.google.inject.Inject;
 
 /**
  * DAO implementation for companion object {@link ITgAuthorship}.
- *
+ * 
  * @author Developers
+ * 
  */
 @EntityType(TgAuthorship.class)
 public class TgAuthorshipDao extends CommonEntityDao<TgAuthorship> implements ITgAuthorship {
+    @Inject
+    public TgAuthorshipDao(final IFilter filter) {
+        super(filter);
+    }
 
 }

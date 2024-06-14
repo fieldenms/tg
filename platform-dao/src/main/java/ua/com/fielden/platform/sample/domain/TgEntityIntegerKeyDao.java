@@ -10,8 +10,14 @@ import ua.com.fielden.platform.entity.query.IFilter;
  * DAO implementation for companion object {@link ITgEntityIntegerKey}.
  *
  * @author TG Team
+ *
  */
 @EntityType(TgEntityIntegerKey.class)
 public class TgEntityIntegerKeyDao extends CommonEntityDao<TgEntityIntegerKey> implements ITgEntityIntegerKey {
+
+    @Inject
+    public TgEntityIntegerKeyDao(final IFilter filter) {
+        super(filter);
+    }
 
 }

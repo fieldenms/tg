@@ -11,8 +11,14 @@ import ua.com.fielden.platform.entity.query.IFilter;
  * DAO implementation for companion object {@link ITgCentreDiffSerialisation}.
  *
  * @author TG Team
+ *
  */
 @EntityType(TgCentreDiffSerialisation.class)
 public class TgCentreDiffSerialisationDao extends CommonEntityDao<TgCentreDiffSerialisation> implements ITgCentreDiffSerialisation {
-
+    
+    @Inject
+    public TgCentreDiffSerialisationDao(final IFilter filter) {
+        super(filter);
+    }
+    
 }

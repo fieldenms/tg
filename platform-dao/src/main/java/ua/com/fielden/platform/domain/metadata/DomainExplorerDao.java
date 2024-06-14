@@ -14,4 +14,9 @@ import ua.com.fielden.platform.entity.query.IFilter;
 @EntityType(DomainExplorer.class)
 public class DomainExplorerDao extends CommonEntityDao<DomainExplorer> implements DomainExplorerCo {
 
+    @Inject
+    protected DomainExplorerDao(final IFilter filter) {
+        super(filter);
+    }
+
 }

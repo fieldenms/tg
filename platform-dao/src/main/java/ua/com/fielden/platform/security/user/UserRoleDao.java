@@ -27,11 +27,17 @@ import ua.com.fielden.platform.security.user.UserRole;
 
 /**
  * Db driven implementation of the {@link UserRoleCo}.
- *
+ * 
  * @author TG Team
+ * 
  */
 @EntityType(UserRole.class)
 public class UserRoleDao extends CommonEntityDao<UserRole> implements UserRoleCo {
+
+    @Inject
+    protected UserRoleDao(final IFilter filter) {
+        super(filter);
+    }
 
     @Override
     @SessionRequired
@@ -47,26 +53,25 @@ public class UserRoleDao extends CommonEntityDao<UserRole> implements UserRoleCo
             return new ArrayList<UserRole>();
         }
 
-        final EntityResultQueryModel<UserRole> model = select(UserRole.class).where().prop(AbstractEntity.ID).in()
-                .values(ids).model();
+        final EntityResultQueryModel<UserRole> model = select(UserRole.class).where().prop(AbstractEntity.ID).in().values(ids).model();
         final OrderingModel orderBy = orderBy().prop(AbstractEntity.KEY).asc().model();
         return getAllEntities(from(model).with(orderBy).model());
     }
-
+    
     @Override
     @SessionRequired
     @Authorise(UserRole_CanSave_Token.class)
     public UserRole save(final UserRole entity) {
         return super.save(entity);
     }
-
+    
     @Override
     @SessionRequired
     @Authorise(UserRole_CanDelete_Token.class)
     public int batchDelete(Collection<Long> entitiesIds) {
         return defaultBatchDelete(entitiesIds);
     }
-
+    
     @Override
     public IFetchProvider<UserRole> createFetchProvider() {
         return super.createFetchProvider()

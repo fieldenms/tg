@@ -19,7 +19,8 @@ public class CentreConfigConfigureActionDao extends CommonEntityDao<CentreConfig
     private final ICriteriaEntityRestorer criteriaEntityRestorer;
     
     @Inject
-    public CentreConfigConfigureActionDao(final ICriteriaEntityRestorer criteriaEntityRestorer) {
+    public CentreConfigConfigureActionDao(final IFilter filter, final ICriteriaEntityRestorer criteriaEntityRestorer) {
+        super(filter);
         this.criteriaEntityRestorer = criteriaEntityRestorer;
     }
     

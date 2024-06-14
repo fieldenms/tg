@@ -16,31 +16,37 @@ import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.error.Result;
 
-/**
+/** 
  * DAO implementation for companion object {@link ITgCloseLeaveExample}.
- *
+ * 
  * @author Developers
+ *
  */
 @EntityType(TgCloseLeaveExample.class)
 public class TgCloseLeaveExampleDao extends CommonEntityDao<TgCloseLeaveExample> implements ITgCloseLeaveExample {
-
+    
+    @Inject
+    public TgCloseLeaveExampleDao(final IFilter filter) {
+        super(filter);
+    }
+    
     @Override
     @SessionRequired
     public int batchDelete(final Collection<Long> entitiesIds) {
         return defaultBatchDelete(entitiesIds);
     }
-
+    
     @Override
     @SessionRequired
     public int batchDelete(final List<TgCloseLeaveExample> entities) {
         return defaultBatchDelete(entities);
     }
-
+    
     @Override
     protected IFetchProvider<TgCloseLeaveExample> createFetchProvider() {
         return super.createFetchProvider().with("key", "desc");
     }
-
+    
     @SessionRequired
     @Override
     public TgCloseLeaveExample save(final TgCloseLeaveExample entity) {
@@ -51,15 +57,14 @@ public class TgCloseLeaveExampleDao extends CommonEntityDao<TgCloseLeaveExample>
         }
         final boolean wasPersisted = entity.isPersisted();
         final TgCloseLeaveExample savedEntity = super.save(entity);
-
+        
         if (!wasPersisted) {
             // Also create and save an instance of detail entity
             final ITgCloseLeaveExampleDetail coDetail = co$(TgCloseLeaveExampleDetail.class);
-            final TgCloseLeaveExampleDetail detailEntity = (TgCloseLeaveExampleDetail) coDetail.new_()
-                    .setKey(savedEntity).setDesc(savedEntity.getKey() + " detail");
+            final TgCloseLeaveExampleDetail detailEntity = (TgCloseLeaveExampleDetail) coDetail.new_().setKey(savedEntity).setDesc(savedEntity.getKey() + " detail");
             coDetail.save(detailEntity);
         }
         return savedEntity;
     }
-
+    
 }

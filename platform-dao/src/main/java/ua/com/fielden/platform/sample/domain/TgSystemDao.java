@@ -12,14 +12,20 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
-/**
+/** 
  * DAO implementation for companion object {@link ITgSystem}.
- *
+ * 
  * @author Developers
+ *
  */
 @EntityType(TgSystem.class)
 public class TgSystemDao extends CommonEntityDao<TgSystem> implements ITgSystem {
-
+    
+    @Inject
+    public TgSystemDao(final IFilter filter) {
+        super(filter);
+    }
+    
     @Override
     public void delete(TgSystem entity) {
         defaultDelete(entity);
@@ -51,10 +57,10 @@ public class TgSystemDao extends CommonEntityDao<TgSystem> implements ITgSystem 
     }
 
     @Override
-    public int batchDelete(final List<TgSystem> entities) {
+    public int batchDelete(final List<TgSystem> entities){
         return defaultBatchDelete(entities);
     }
-
+    
     @Override
     public int batchDeleteByPropertyValues(final String propName, final Collection<Long> propEntitiesIds) {
         return defaultBatchDeleteByPropertyValues(propName, propEntitiesIds);
@@ -64,5 +70,5 @@ public class TgSystemDao extends CommonEntityDao<TgSystem> implements ITgSystem 
     public <E extends AbstractEntity<?>> int batchDeleteByPropertyValues(final String propName, final List<E> propEntities) {
         return defaultBatchDeleteByPropertyValues(propName, propEntities);
     }
-
+    
 }

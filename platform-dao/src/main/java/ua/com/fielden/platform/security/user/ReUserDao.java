@@ -10,8 +10,14 @@ import ua.com.fielden.platform.entity.query.IFilter;
  * DAO implementation for companion object {@link ReUserCo}.
  *
  * @author TG Team
+ *
  */
 @EntityType(ReUser.class)
 public class ReUserDao extends CommonEntityDao<ReUser> implements ReUserCo {
+
+    @Inject
+    public ReUserDao(final IFilter filter) {
+        super(filter);
+    }
 
 }

@@ -48,7 +48,8 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
     private final ISecurityTokenProvider securityTokenProvider;
 
     @Inject
-    public EntityExportActionDao(final ICriteriaEntityRestorer criteriaEntityRestorer, final IAuthorisationModel authorisationModel, final ISecurityTokenProvider securityTokenProvider) {
+    public EntityExportActionDao(final IFilter filter, final ICriteriaEntityRestorer criteriaEntityRestorer, final IAuthorisationModel authorisationModel, final ISecurityTokenProvider securityTokenProvider) {
+        super(filter);
         this.criteriaEntityRestorer = criteriaEntityRestorer;
         this.authorisationModel = authorisationModel;
         this.securityTokenProvider = securityTokenProvider;

@@ -8,10 +8,15 @@ import ua.com.fielden.platform.entity.query.IFilter;
 
 /**
  * DAO for {@link TgVehicleMake} retrieval.
- *
+ * 
  * @author TG Team
  */
 
 @EntityType(TeVehicleMake.class)
 public class TeVehicleMakeDao extends CommonEntityDao<TeVehicleMake> implements ITeVehicleMake {
+
+    @Inject
+    protected TeVehicleMakeDao(final IFilter filter) {
+        super(filter);
+    }
 }

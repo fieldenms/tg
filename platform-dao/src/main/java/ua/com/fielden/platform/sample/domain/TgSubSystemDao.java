@@ -11,11 +11,17 @@ import ua.com.fielden.platform.entity.query.IFilter;
  * DAO implementation for companion object {@link ITgSubSystem}.
  *
  * @author Developers
+ *
  */
 @EntityType(TgSubSystem.class)
 public class TgSubSystemDao extends CommonEntityDao<TgSubSystem> implements ITgSubSystem {
 
     public static final String DEFAULT_VALUE_FOR_PROPERTY_EXPLANATION = "Default explanation";
+
+    @Inject
+    public TgSubSystemDao(final IFilter filter) {
+        super(filter);
+    }
 
     @Override
     protected void assignBeforeSave(final MetaProperty<?> prop) {

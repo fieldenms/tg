@@ -11,9 +11,15 @@ import ua.com.fielden.platform.entity.query.IFilter;
  * DAO implementation for companion object {@link UserLocatorCo}.
  *
  * @author TG Team
+ *
  */
 @EntityType(UserLocator.class)
 public class UserLocatorDao extends CommonEntityDao<UserLocator> implements UserLocatorCo {
+
+    @Inject
+    public UserLocatorDao(final IFilter filter) {
+        super(filter);
+    }
 
     @Override
     protected IFetchProvider<UserLocator> createFetchProvider() {
