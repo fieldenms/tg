@@ -1,26 +1,18 @@
 package ua.com.fielden.platform.meta;
 
-import com.google.inject.Injector;
-import org.hibernate.dialect.Dialect;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.eql.dbschema.ColumnDefinitionExtractor;
-import ua.com.fielden.platform.eql.dbschema.TableDdl;
 import ua.com.fielden.platform.meta.exceptions.DomainMetadataGenerationException;
-import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
-import ua.com.fielden.platform.utils.StreamUtils;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
-import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.lang.String.format;
-import static java.util.Objects.requireNonNullElseGet;
-import static ua.com.fielden.platform.persistence.HibernateConstants.H_BOOLEAN;
 import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
 
 final class DomainMetadataImpl implements IDomainMetadata {
@@ -29,26 +21,21 @@ final class DomainMetadataImpl implements IDomainMetadata {
     private final Map<Class<? extends AbstractEntity<?>>, EntityMetadata> entityMetadataMap;
     /** Mutable map, may be populated with composite types for which metadata is generated ad-hoc. */
     private final Map<Class<?>, TypeMetadata.Composite> compositeTypeMetadataMap;
-    private final Collection<? extends Class<? extends AbstractEntity<?>>> entityTypes;
     private final DomainMetadataGenerator generator;
     private final PropertyMetadataUtils pmUtils;
     private final EntityMetadataUtils emUtils;
 
     DomainMetadataImpl(final Map<Class<? extends AbstractEntity<?>>, EntityMetadata> entityMetadataMap,
                        final Map<Class<?>, TypeMetadata.Composite> compositeTypeMetadataMap,
-                       final Collection<? extends Class<? extends AbstractEntity<?>>> entityTypes,
                        final DomainMetadataGenerator generator,
-                       final HibernateTypeMappings hibernateTypeMappings,
                        final DbVersion dbVersion) {
         this.entityMetadataMap = new ConcurrentHashMap<>(entityMetadataMap);
         this.compositeTypeMetadataMap = new ConcurrentHashMap<>(compositeTypeMetadataMap);
-        this.entityTypes = entityTypes.stream().distinct().collect(toImmutableList());
         this.generator = generator;
         this.pmUtils = new PropertyMetadataUtilsImpl(this, generator);
         this.emUtils = new EntityMetadataUtilsImpl();
 
         this.dbVersion = dbVersion;
-        this.hibernateTypeMappings = hibernateTypeMappings;
     }
 
     @Override
@@ -140,43 +127,7 @@ final class DomainMetadataImpl implements IDomainMetadata {
     // ****************************************
     // * Temporary baggage from old metadata that can't be moved until dependency injection is properly configured.
 
-    private final HibernateTypeMappings hibernateTypeMappings;
     private final DbVersion dbVersion;
-
-    /**
-     * Generates DDL statements for creating tables, primary keys, indices and foreign keys for all persistent entity types,
-     * which includes domain entities and auxiliary platform entities.
-     */
-    @Override
-    public List<String> generateDatabaseDdl(final Dialect dialect) {
-        return generateDatabaseDdl_(dialect, entityTypes.stream());
-    }
-
-    @Override
-    public List<String> generateDatabaseDdl(final Dialect dialect, final Class<? extends AbstractEntity<?>> type,
-                                            final Class<? extends AbstractEntity<?>>... types) {
-        return generateDatabaseDdl_(dialect, StreamUtils.of(type, types));
-    }
-
-    private List<String> generateDatabaseDdl_(final Dialect dialect, final Stream<? extends Class<? extends AbstractEntity<?>>> types) {
-        final ColumnDefinitionExtractor columnDefinitionExtractor = new ColumnDefinitionExtractor(hibernateTypeMappings);
-
-        final Set<String> ddlTables = new LinkedHashSet<>();
-        final Set<String> ddlFKs = new LinkedHashSet<>();
-
-        types.filter(EntityUtils::isPersistedEntityType).forEach(entityType -> {
-            final TableDdl tableDefinition = new TableDdl(columnDefinitionExtractor, entityType);
-            ddlTables.add(tableDefinition.createTableSchema(dialect, ""));
-            ddlTables.add(tableDefinition.createPkSchema(dialect));
-            ddlTables.addAll(tableDefinition.createIndicesSchema(dialect));
-            ddlFKs.addAll(tableDefinition.createFkSchema(dialect));
-        });
-
-        final List<String> ddl = new LinkedList<>();
-        ddl.addAll(ddlTables);
-        ddl.addAll(ddlFKs);
-        return ddl;
-    }
 
     @Override
     public DbVersion dbVersion() {

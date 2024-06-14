@@ -22,6 +22,7 @@ import fielden.test_app.close_leave.TgCloseLeaveExample;
 import ua.com.fielden.platform.algorithm.search.ISearchAlgorithm;
 import ua.com.fielden.platform.algorithm.search.bfs.BreadthFirstSearch;
 import ua.com.fielden.platform.basic.config.exceptions.ApplicationConfigurationException;
+import ua.com.fielden.platform.ddl.IDdlGenerator;
 import ua.com.fielden.platform.devdb_support.DomainDrivenDataPopulation;
 import ua.com.fielden.platform.devdb_support.SecurityTokenAssociator;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -140,7 +141,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
         // use TG DDL generation or
         // Hibernate DDL generation final List<String> createDdl = DbUtils.generateSchemaByHibernate()
-        final List<String> createDdl = config.getInstance(IDomainMetadata.class).generateDatabaseDdl(dialect);
+        final List<String> createDdl = config.getInstance(IDdlGenerator.class).generateDatabaseDdl(dialect);
         final List<String> ddl = dialect instanceof H2Dialect ?           DbUtils.prependDropDdlForH2(createDdl) :
                                  dialect instanceof PostgreSQL82Dialect ? DbUtils.prependDropDdlForPostgresql(createDdl) :
                                                                           DbUtils.prependDropDdlForSqlServer(createDdl);

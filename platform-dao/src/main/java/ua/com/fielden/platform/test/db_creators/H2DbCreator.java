@@ -14,9 +14,9 @@ import java.util.Properties;
 
 import org.hibernate.dialect.Dialect;
 
+import ua.com.fielden.platform.ddl.IDdlGenerator;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.meta.EntityMetadata;
-import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.DbCreator;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
@@ -44,8 +44,8 @@ public class H2DbCreator extends DbCreator {
      * Generates DDL for creation of a test database.
      */
     @Override
-    protected List<String> genDdl(final IDomainMetadata domainMetaData, final Dialect dialect) {
-        final List<String> createDdl = domainMetaData.generateDatabaseDdl(dialect);
+    protected List<String> genDdl(final IDdlGenerator ddlGenerator, final Dialect dialect) {
+        final List<String> createDdl = ddlGenerator.generateDatabaseDdl(dialect);
         return DbUtils.prependDropDdlForH2(createDdl);
     }
 

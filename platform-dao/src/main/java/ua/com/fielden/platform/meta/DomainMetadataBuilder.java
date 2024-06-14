@@ -20,13 +20,11 @@ public class DomainMetadataBuilder {
     private final DomainMetadataGenerator generator;
     private final Collection<? extends Class<? extends AbstractEntity<?>>> entityTypes;
     private final DbVersion dbVersion;
-    private final HibernateTypeMappings hibernateTypeMappings;
 
     public DomainMetadataBuilder(final HibernateTypeMappings hibernateTypeMappings,
                                  final Collection<? extends Class<? extends AbstractEntity<?>>> entityTypes,
                                  final DbVersion dbVersion)
     {
-        this.hibernateTypeMappings = hibernateTypeMappings;
         this.generator = new DomainMetadataGenerator(hibernateTypeMappings, dbVersion);
         this.entityTypes = entityTypes.stream().distinct().collect(toImmutableList());
         this.dbVersion = dbVersion;
@@ -44,8 +42,7 @@ public class DomainMetadataBuilder {
                 .flatMap(type -> generator.forComposite(type).map(ctm -> t2(type, ctm)).stream())
                 .collect(toConcurrentMap(pair -> pair._1, pair -> pair._2));
 
-        return new DomainMetadataImpl(entityMetadataMap, compositeTypeMetadataMap, entityTypes, generator,
-                                      hibernateTypeMappings, dbVersion);
+        return new DomainMetadataImpl(entityMetadataMap, compositeTypeMetadataMap, generator, dbVersion);
     }
 
 }

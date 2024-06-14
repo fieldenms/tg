@@ -1,10 +1,8 @@
 package ua.com.fielden.platform.meta;
 
-import org.hibernate.dialect.Dialect;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -59,15 +57,6 @@ public interface IDomainMetadata {
 
     // ****************************************
     // * Temporary baggage from old metadata that can't be moved until dependency injection is properly configured.
-
-    // TODO create a separate service for this
-    /**
-     * Generates DDL statements for creating tables, primary keys, indices and foreign keys for all persistent entity types, which includes domain entities and auxiliary platform entities.
-     */
-    List<String> generateDatabaseDdl(final Dialect dialect);
-
-    List<String> generateDatabaseDdl(final Dialect dialect, final Class<? extends AbstractEntity<?>> type,
-                                     final Class<? extends AbstractEntity<?>>... types);
 
     DbVersion dbVersion();
 
