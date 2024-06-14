@@ -19,17 +19,13 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityFetcher;
 import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.eql.meta.EqlTables;
-import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
-import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
@@ -64,14 +60,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private final Logger logger = getLogger(this.getClass());
 
     // *** INJECTABLE FIELDS
-    private IDomainMetadata domainMetadata;
     private IDbVersionProvider dbVersionProvider;
-    private QuerySourceInfoProvider querySourceInfoProvider;
-    private EqlTables eqlTables;
-    private IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
     private ICompanionObjectFinder coFinder;
     private Injector injector;
-    private IFilter filter;
     private IUniversalConstants universalConstants;
     private IDates dates;
     private IUserProvider up;
@@ -97,10 +88,15 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     /**
      * The default constructor, which looks for annotation {@link EntityType} to identify the entity type automatically.
      * An exception is thrown if the annotation is missing.
-     *
-     * @param filter
+     * <p>
+     * <b>Deprecated</b>: use the no-arg constructor ({@code super} call is not needed anymore)
      */
+    @Deprecated(forRemoval = true)
     protected CommonEntityDao(final IFilter filter) {
+        this();
+    }
+
+    protected CommonEntityDao() {
         final EntityType annotation = AnnotationReflector.getAnnotation(getClass(), EntityType.class);
         if (annotation == null) {
             throw new EntityCompanionException(format("Companion object [%s] is missing @EntityType annotation.", getClass().getName()));
@@ -108,7 +104,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         this.entityType = (Class<T>) annotation.value();
         this.keyType = AnnotationReflector.getKeyType(entityType);
 
-        this.filter = filter;
     }
 
     @Inject
@@ -131,28 +126,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     @Inject
-    protected void setDomainMetadata(final IDomainMetadata domainMetadata) {
-        this.domainMetadata = domainMetadata;
-    }
-
-    @Inject
     protected void setDbVersionProvider(final IDbVersionProvider dbVersionProvider) {
         this.dbVersionProvider = dbVersionProvider;
-    }
-
-    @Inject
-    protected void setQuerySourceInfoProvider(final QuerySourceInfoProvider querySourceInfoProvider) {
-        this.querySourceInfoProvider = querySourceInfoProvider;
-    }
-
-    @Inject
-    protected void setEqlTables(final EqlTables eqlTables) {
-        this.eqlTables = eqlTables;
-    }
-
-    @Inject
-    protected void setIdOnlyProxiedEntityTypeCache(final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
-        this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
     }
 
     @Inject
@@ -163,11 +138,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Inject
     protected void setInjector(final Injector injector) {
         this.injector = injector;
-    }
-
-    @Inject
-    protected void setFilter(final IFilter filter) {
-        this.filter = filter;
     }
 
     @Inject
@@ -366,21 +336,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return WorkbookExporter.convertToGZipByteArray(WorkbookExporter.export(stream(query), propertyNames, propertyTitles));
     }
 
-    public IDomainMetadata getDomainMetadata() {
-        return domainMetadata;
-    }
-
-    public IIdOnlyProxiedEntityTypeCache getIdOnlyProxiedEntityTypeCache() {
-        return idOnlyProxiedEntityTypeCache;
-    }
-
     @Override
     public User getUser() {
         return up.getUser();
-    }
-
-    public IFilter getFilter() {
-        return filter;
     }
 
     protected ICompanionObjectFinder getCoFinder() {
@@ -391,6 +349,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return universalConstants;
     }
 
+    /**
+     * <b>Deprecated</b>: request injection of {@link IDates}.
+     */
+    @Deprecated(forRemoval = true)
     public IDates dates() {
         return dates;
     }
