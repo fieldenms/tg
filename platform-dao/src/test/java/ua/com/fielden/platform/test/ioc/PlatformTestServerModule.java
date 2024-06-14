@@ -36,7 +36,6 @@ import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -75,7 +74,10 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(new TypeLiteral<Cache<String, UserSession>>(){}).annotatedWith(SessionCache.class).toProvider(TestSessionCacheBuilder.class).in(Scopes.SINGLETON);
 
         bind(IUserProvider.class).to(ThreadLocalUserProvider.class).in(Scopes.SINGLETON);
-        // bind DAO
+    }
+
+    @Override
+    protected void bindDomainCos(final IApplicationDomainProvider appDomainProvider) {
         //	bind(IWheelsetDao.class).to(WheelsetDao.class);
         //	bind(IWorkshopDao2.class).to(WorkshopDao2.class);
         //	bind(IWheelsetClassDao.class).to(WheelsetClassDao.class);
@@ -187,7 +189,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         //       however, not all test domain entities actually have companions, hence manual binding...
         //       this should really be corrected at some stage
         // dynamically bind DAO implementations for all companion objects
-        // for (final Class<? extends AbstractEntity<?>> entityType : domainTypes) {
+        // for (final Class<? extends AbstractEntity<?>> entityType : appDomainProvider.domainTypes()) {
         //     CompanionObjectAutobinder.bindCo(entityType, binder());
         // }
     }

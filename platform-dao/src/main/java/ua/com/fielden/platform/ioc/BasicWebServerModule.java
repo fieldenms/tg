@@ -12,16 +12,11 @@ import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
 import ua.com.fielden.platform.dao.GeneratedEntityDao;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
-import ua.com.fielden.platform.domain.PlatformDomainTypes;
-import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.menu.Action;
-import ua.com.fielden.platform.menu.UserMenuInvisibilityAssociationBatchActionCo;
-import ua.com.fielden.platform.menu.UserMenuInvisibilityAssociationBatchActionDao;
-import ua.com.fielden.platform.ref_hierarchy.AbstractTreeEntry;
-import ua.com.fielden.platform.security.*;
+import ua.com.fielden.platform.security.IAuthorisationModel;
+import ua.com.fielden.platform.security.ServerAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenController;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.provider.SecurityTokenController;
@@ -35,8 +30,6 @@ import ua.com.fielden.platform.web_api.IWebApi;
 
 import java.util.Properties;
 
-import static ua.com.fielden.platform.reflection.CompanionObjectAutobinder.bindCo;
-
 /**
  * Basic IoC module for server web applications, which should be enhanced by the application specific IoC module.
  *
@@ -44,8 +37,7 @@ import static ua.com.fielden.platform.reflection.CompanionObjectAutobinder.bindC
  * <ul>
  * <li>Applications settings (refer {@link IApplicationSettings});
  * <li>Serialisation mechanism;
- * <li>All essential DAO interfaces such as {@link IFilter}, {@link ICompanionObjectFinder}, {@link IValueMatcherFactory}, {@link IUser}, {@link IAuthorisationModel} and
- * more;
+ * <li>Essential DAO interfaces such as {@link IFilter}, {@link IValueMatcherFactory}, {@link IUser}, {@link IAuthorisationModel} and more;
  * <li>Provides application main menu configuration related DAO bindings.
  * </ul>
  * <p>
@@ -55,7 +47,7 @@ import static ua.com.fielden.platform.reflection.CompanionObjectAutobinder.bindC
  * @author TG Team
  *
  */
-public class BasicWebServerModule extends CommonFactoryModule {
+public class BasicWebServerModule extends CompanionModule {
 
     private final Properties props;
     private final Class<? extends ISecurityTokenProvider> tokenProviderType;
@@ -71,7 +63,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
             final Class<? extends ISecurityTokenProvider> tokenProviderType,
             final Properties props)
     {
-        super(props);
+        super(props, applicationDomainProvider);
         this.props = props;
         this.tokenProviderType = tokenProviderType;
         this.applicationDomainProvider = applicationDomainProvider;
@@ -89,7 +81,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
             final Properties props)
             throws Exception
     {
-        super(props);
+        super(props, applicationDomainProvider);
         this.props = props;
         this.tokenProviderType = tokenProviderType;
         this.applicationDomainProvider = applicationDomainProvider;
@@ -141,13 +133,6 @@ public class BasicWebServerModule extends CommonFactoryModule {
 
         bind(ICriteriaGenerator.class).to(CriteriaGenerator.class).in(Singleton.class);
         bind(IGeneratedEntityController.class).to(GeneratedEntityDao.class);
-
-        PlatformDomainTypes.typesNotDependentOnWebUI.stream()
-            .filter(type -> !AbstractTreeEntry.class.isAssignableFrom(type) && !Action.class.isAssignableFrom(type)) // these entity types have no companions
-            .forEach(type -> bindCo(type, binder()));
-        bind(IUserAndRoleAssociationBatchAction.class).to(UserAndRoleAssociationBatchActionDao.class);
-        bind(UserMenuInvisibilityAssociationBatchActionCo.class).to(UserMenuInvisibilityAssociationBatchActionDao.class);
-        bind(ISecurityRoleAssociationBatchAction.class).to(SecurityRoleAssociationBatchActionDao.class);
 
         bind(ISecurityTokenController.class).to(SecurityTokenController.class);
         bind(IAuthorisationModel.class).to(authorisationModelType);

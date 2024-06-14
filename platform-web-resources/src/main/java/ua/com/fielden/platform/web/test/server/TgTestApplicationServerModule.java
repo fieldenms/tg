@@ -1,22 +1,14 @@
 package ua.com.fielden.platform.web.test.server;
 
-import static java.lang.String.format;
-
-import java.util.Properties;
-import java.util.concurrent.TimeUnit;
-
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
-
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.ioc.BasicWebServerModule;
-import ua.com.fielden.platform.reflection.CompanionObjectAutobinder;
 import ua.com.fielden.platform.security.annotations.SessionCache;
 import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
@@ -30,6 +22,11 @@ import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.annotations.AppUri;
 
+import java.util.Properties;
+import java.util.concurrent.TimeUnit;
+
+import static java.lang.String.format;
+
 /**
  * Guice injector module for TG Testing Server.
  *
@@ -39,7 +36,6 @@ import ua.com.fielden.platform.web.annotations.AppUri;
 public class TgTestApplicationServerModule extends BasicWebServerModule {
     private final Class<? extends IUniversalConstants> universalConstantsImplType;
     private final Class<? extends IDates> datesImplType;
-    private final IApplicationDomainProvider appDomainProvider;
 
     public TgTestApplicationServerModule(
             final IApplicationDomainProvider appDomainProvider,
@@ -51,7 +47,6 @@ public class TgTestApplicationServerModule extends BasicWebServerModule {
             throws Exception
     {
         super(appDomainProvider, serialisationClassProviderType, automaticDataFilterType, null, props);
-        this.appDomainProvider = appDomainProvider;
         if (universalConstantsImplType == null) {
             throw new IllegalArgumentException("Missing implemementation for IUniversalConstants.");
         }
@@ -75,11 +70,6 @@ public class TgTestApplicationServerModule extends BasicWebServerModule {
 
         bind(IDates.class).to(datesImplType).in(Scopes.SINGLETON);
         bind(IUniversalConstants.class).to(universalConstantsImplType).in(Scopes.SINGLETON);
-
-        // dynamically bind DAO implementations for all companion objects
-        for (final Class<? extends AbstractEntity<?>> entityType : appDomainProvider.entityTypes()) {
-            CompanionObjectAutobinder.bindCo(entityType, binder());
-        }
 
         // the following bindings are well suited for a test server
         bindConstant().annotatedWith(SessionHashingKey.class).to("This is a hasing key, which is used to hash session data for a test server.");
