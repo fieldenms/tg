@@ -23,7 +23,7 @@ import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 
-public class EntityFetcher {
+final class EntityFetcher implements IEntityFetcher {
 
     private final Logger logger = getLogger(this.getClass());
 
@@ -40,10 +40,12 @@ public class EntityFetcher {
         this.entityFactory = entityFactory;
     }
 
+    @Override
     public <E extends AbstractEntity<?>> List<E> getEntities(final Session session, final QueryExecutionModel<E, ?> queryModel) {
         return getEntitiesOnPage(session, queryModel, null, null);
     }
 
+    @Override
     public <E extends AbstractEntity<?>> List<E>
     getEntitiesOnPage(final Session session, final QueryExecutionModel<E, ?> queryModel,
                       final Integer pageNumber, final Integer pageCapacity) {
@@ -86,6 +88,7 @@ public class EntityFetcher {
                         : new EntityRetrievalModel<E>(fetchModel, domainMetadata));
     }
     
+    @Override
     public <E extends AbstractEntity<?>> Stream<E>
     streamEntities(final Session session, final QueryExecutionModel<E, ?> queryModel, final Optional<Integer> fetchSize) {
         try {

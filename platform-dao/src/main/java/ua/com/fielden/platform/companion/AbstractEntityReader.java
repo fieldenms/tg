@@ -29,7 +29,7 @@ import ua.com.fielden.platform.dao.exceptions.UnexpectedNumberOfReturnedEntities
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.EntityFetcher;
+import ua.com.fielden.platform.entity.query.IEntityFetcher;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -63,7 +63,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
 
     protected abstract boolean instrumented();
 
-    protected abstract EntityFetcher entityFetcher();
+    protected abstract IEntityFetcher entityFetcher();
 
     ///////////////////////////////////////////////////////////
     /////////////// Entity reader API methods /////////////////

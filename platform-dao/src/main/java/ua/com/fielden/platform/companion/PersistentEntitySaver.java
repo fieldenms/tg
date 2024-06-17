@@ -23,8 +23,8 @@ import ua.com.fielden.platform.entity.fetch.FetchModelReconstructor;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.EntityFetcher;
 import ua.com.fielden.platform.entity.query.IDbVersionProvider;
+import ua.com.fielden.platform.entity.query.IEntityFetcher;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -83,7 +83,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     private final Class<T> entityType;
     private final Class<? extends Comparable<?>> keyType;
     private final ICompanionObjectFinder coFinder;
-    private final EntityFetcher entityFetcher;
+    private final IEntityFetcher entityFetcher;
     private final IUserProvider userProvider;
     private final Supplier<DateTime> now;
     
@@ -109,7 +109,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             @Assisted final Function<EntityResultQueryModel<T>, Boolean> entityExists,
             @Assisted final Logger logger,
             final IDbVersionProvider dbVersionProvider,
-            final EntityFetcher entityFetcher,
+            final IEntityFetcher entityFetcher,
             final IUserProvider userProvider,
             final IUniversalConstants universalConstants,
             final ICompanionObjectFinder coFinder)
@@ -663,14 +663,14 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     // doesn't support generic factory methods.
     static final class FactoryImpl implements Factory {
         private final IDbVersionProvider dbVersionProvider;
-        private final EntityFetcher entityFetcher;
+        private final IEntityFetcher entityFetcher;
         private final IUserProvider userProvider;
         private final IUniversalConstants universalConstants;
         private final ICompanionObjectFinder coFinder;
 
         @Inject
         FactoryImpl(final IDbVersionProvider dbVersionProvider,
-                    final EntityFetcher entityFetcher,
+                    final IEntityFetcher entityFetcher,
                     final IUserProvider userProvider,
                     final IUniversalConstants universalConstants,
                     final ICompanionObjectFinder coFinder) {

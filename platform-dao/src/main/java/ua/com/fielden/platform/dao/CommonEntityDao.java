@@ -19,10 +19,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.EntityFetcher;
-import ua.com.fielden.platform.entity.query.IDbVersionProvider;
-import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.*;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
@@ -65,7 +62,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private IUniversalConstants universalConstants;
     private IUserProvider up;
     private EntityFactory entityFactory;
-    private EntityFetcher entityFetcher;
+    private IEntityFetcher entityFetcher;
     private DeleteOperations<T> deleteOps;
     private PersistentEntitySaver<T> entitySaver;
     // ***
@@ -154,7 +151,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     @Inject
-    protected void setEntityFetcher(final EntityFetcher entityFetcher) {
+    protected void setEntityFetcher(final IEntityFetcher entityFetcher) {
         this.entityFetcher = entityFetcher;
     }
 
@@ -164,7 +161,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     @Override
-    protected EntityFetcher entityFetcher() {
+    protected IEntityFetcher entityFetcher() {
         return entityFetcher;
     }
 
