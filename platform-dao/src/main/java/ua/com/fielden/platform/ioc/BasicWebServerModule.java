@@ -12,6 +12,7 @@ import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
 import ua.com.fielden.platform.dao.GeneratedEntityDao;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
@@ -28,6 +29,7 @@ import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
 import ua.com.fielden.platform.web_api.GraphQLService;
 import ua.com.fielden.platform.web_api.IWebApi;
 
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -58,12 +60,13 @@ public class BasicWebServerModule extends CompanionModule {
 
     public BasicWebServerModule(
             final IApplicationDomainProvider applicationDomainProvider,
+            final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
             final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
             final Class<? extends IFilter> automaticDataFilterType,
             final Class<? extends ISecurityTokenProvider> tokenProviderType,
             final Properties props)
     {
-        super(props, applicationDomainProvider);
+        super(props, domainEntityTypes);
         this.props = props;
         this.tokenProviderType = tokenProviderType;
         this.applicationDomainProvider = applicationDomainProvider;
@@ -74,6 +77,7 @@ public class BasicWebServerModule extends CompanionModule {
 
     public BasicWebServerModule(
             final IApplicationDomainProvider applicationDomainProvider,
+            final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
             final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
             final Class<? extends IFilter> automaticDataFilterType,
             final Class<? extends IAuthorisationModel> authorisationModelType,
@@ -81,7 +85,7 @@ public class BasicWebServerModule extends CompanionModule {
             final Properties props)
             throws Exception
     {
-        super(props, applicationDomainProvider);
+        super(props, domainEntityTypes);
         this.props = props;
         this.tokenProviderType = tokenProviderType;
         this.applicationDomainProvider = applicationDomainProvider;

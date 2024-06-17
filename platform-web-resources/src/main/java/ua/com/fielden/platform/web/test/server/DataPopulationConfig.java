@@ -34,9 +34,10 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
             props.setProperty("email.smtp", "localhost");
             props.setProperty("email.fromAddress", "tg@localhost");
 
-            final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
+            final ApplicationDomain appDomain = new ApplicationDomain();
             injector = new ApplicationInjectorFactory()
-                    .add(new TgTestApplicationServerModule(applicationDomainProvider,
+                    .add(new TgTestApplicationServerModule(appDomain,
+                                                           appDomain.domainTypes(),
                                                            SerialisationClassProvider.class,
                                                            ExampleDataFilter.class,
                                                            DefaultUniversalConstants.class,

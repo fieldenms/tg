@@ -21,9 +21,11 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
 
     public PlatformDomainDrivenTestCaseConfiguration(final Properties properties) {
         try {
+            final var appDomainProvider = new PlatformTestDomainTypes();
             injector = new ApplicationInjectorFactory()
                     .add(new PlatformTestServerModule(
-                            new PlatformTestDomainTypes(),
+                            appDomainProvider,
+                            appDomainProvider.entityTypes(),
                             DefaultSerialisationClassProvider.class, DefaultFilter.class, SecurityTokenProvider.class,
                             getProperties(properties)))
                     .add(new NewUserNotifierMockBindingModule())

@@ -38,8 +38,10 @@ public class TgTestApplicationConfiguration extends Component {
         // /////////////////////////////////////////////////////
         try {
             // create application IoC module and injector
+            final var appDomain = new ApplicationDomain();
             final TgTestWebApplicationServerModule module = new TgTestWebApplicationServerModule(
-                    new ApplicationDomain(),
+                    appDomain,
+                    appDomain.domainTypes(),
                     SerialisationClassProvider.class,
                     ExampleDataFilter.class,
                     DefaultUniversalConstants.class,

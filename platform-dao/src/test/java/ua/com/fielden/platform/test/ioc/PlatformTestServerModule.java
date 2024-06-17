@@ -47,17 +47,15 @@ import java.util.concurrent.TimeUnit;
  */
 public class PlatformTestServerModule extends BasicWebServerModule {
 
-    private final List<Class<? extends AbstractEntity<?>>> domainTypes;
-
     public PlatformTestServerModule(
             final IApplicationDomainProvider applicationDomainProvider,
+            final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
             final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
             final Class<? extends IFilter> automaticDataFilterType,
             final Class<? extends ISecurityTokenProvider> tokenProviderType,
             final Properties props)
     {
-        super(applicationDomainProvider, serialisationClassProviderType, automaticDataFilterType, tokenProviderType, props);
-        domainTypes = applicationDomainProvider.entityTypes();
+        super(applicationDomainProvider, domainEntityTypes, serialisationClassProviderType, automaticDataFilterType, tokenProviderType, props);
     }
 
     @Override
@@ -77,7 +75,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
     }
 
     @Override
-    protected void bindDomainCos(final IApplicationDomainProvider appDomainProvider) {
+    protected void bindDomainCos(final List<Class<? extends AbstractEntity<?>>> domainEntityTypes) {
         //	bind(IWheelsetDao.class).to(WheelsetDao.class);
         //	bind(IWorkshopDao2.class).to(WorkshopDao2.class);
         //	bind(IWheelsetClassDao.class).to(WheelsetClassDao.class);

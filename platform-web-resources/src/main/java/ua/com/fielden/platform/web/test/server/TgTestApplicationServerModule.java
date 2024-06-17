@@ -7,6 +7,7 @@ import com.google.inject.Provider;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.ioc.BasicWebServerModule;
 import ua.com.fielden.platform.security.annotations.SessionCache;
@@ -22,6 +23,7 @@ import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.annotations.AppUri;
 
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -39,6 +41,7 @@ public class TgTestApplicationServerModule extends BasicWebServerModule {
 
     public TgTestApplicationServerModule(
             final IApplicationDomainProvider appDomainProvider,
+            final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
             final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
             final Class<? extends IFilter> automaticDataFilterType,
             final Class<? extends IUniversalConstants> universalConstantsImplType,
@@ -46,7 +49,7 @@ public class TgTestApplicationServerModule extends BasicWebServerModule {
             final Properties props)
             throws Exception
     {
-        super(appDomainProvider, serialisationClassProviderType, automaticDataFilterType, null, props);
+        super(appDomainProvider, domainEntityTypes, serialisationClassProviderType, automaticDataFilterType, null, props);
         if (universalConstantsImplType == null) {
             throw new IllegalArgumentException("Missing implemementation for IUniversalConstants.");
         }

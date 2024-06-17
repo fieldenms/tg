@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.ioc;
 
 import com.google.inject.Singleton;
-import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.dao.CommonEntityAggregatesDao;
 import ua.com.fielden.platform.dao.EntityAggregatesDao;
 import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
@@ -20,6 +19,7 @@ import ua.com.fielden.platform.security.IUserAndRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.SecurityRoleAssociationBatchActionDao;
 import ua.com.fielden.platform.security.UserAndRoleAssociationBatchActionDao;
 
+import java.util.List;
 import java.util.Properties;
 
 import static ua.com.fielden.platform.reflection.CompanionObjectAutobinder.bindCo;
@@ -29,11 +29,12 @@ import static ua.com.fielden.platform.reflection.CompanionObjectAutobinder.bindC
  */
 public class CompanionModule extends CommonFactoryModule {
 
-    private final IApplicationDomainProvider appDomainProvider;
+    private final List<Class<? extends AbstractEntity<?>>> domainEntityTypes;
 
-    public CompanionModule(final Properties props, final IApplicationDomainProvider appDomainProvider) {
+    public CompanionModule(final Properties props,
+                           final List<Class<? extends AbstractEntity<?>>> domainEntityTypes) {
         super(props);
-        this.appDomainProvider = appDomainProvider;
+        this.domainEntityTypes = domainEntityTypes;
     }
 
     @Override
@@ -41,7 +42,7 @@ public class CompanionModule extends CommonFactoryModule {
         super.configure();
 
         bind(ICompanionObjectFinder.class).to(DefaultCompanionObjectFinderImpl.class).in(Singleton.class);
-        bindDomainCos(appDomainProvider);
+        bindDomainCos(domainEntityTypes);
         bindPlatformCos();
 
         bind(IEntityAggregatesOperations.class).to(EntityAggregatesDao.class);
@@ -52,8 +53,8 @@ public class CompanionModule extends CommonFactoryModule {
         bind(ISecurityRoleAssociationBatchAction.class).to(SecurityRoleAssociationBatchActionDao.class);
     }
 
-    protected void bindDomainCos(final IApplicationDomainProvider appDomainProvider) {
-        for (final Class<? extends AbstractEntity<?>> entityType : appDomainProvider.entityTypes()) {
+    protected void bindDomainCos(final List<Class<? extends AbstractEntity<?>>> domainEntityTypes) {
+        for (final Class<? extends AbstractEntity<?>> entityType : domainEntityTypes) {
             CompanionObjectAutobinder.bindCo(entityType, binder());
         }
     }
