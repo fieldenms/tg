@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 import static java.util.stream.Collectors.toConcurrentMap;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
-@Singleton // TODO replace by a per-IDomainMetadata instance scope
+@Singleton
 public class EqlTables {
 
     private final Map<Class<? extends AbstractEntity<?>>, EqlTable> tables;

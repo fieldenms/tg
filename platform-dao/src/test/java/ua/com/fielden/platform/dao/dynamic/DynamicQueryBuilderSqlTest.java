@@ -109,7 +109,6 @@ public class DynamicQueryBuilderSqlTest {
         domainTypes.add(SlaveEntity.class);
         domainTypes.add(EvenSlaverEntity.class);
 
-        // TODO use dependency injection
         final IDbVersionProvider dbVersionProvider = constantDbVersion(DbVersion.H2);
         final IDomainMetadata domainMetadata = new DomainMetadataBuilder(
                 PLATFORM_HIBERNATE_TYPE_MAPPINGS, domainTypes, dbVersionProvider)

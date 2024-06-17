@@ -15,7 +15,6 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -23,16 +22,11 @@ import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDb
 
 public class MappingGenerationTest {
 
-    // TODO use dependency injection
     @Test
-    public void dump_mapping_for_type_wity_byte_array_property() {
-        final List<Class<? extends AbstractEntity<?>>> domainTypes = new ArrayList<>();
-        domainTypes.add(User.class);
-        domainTypes.add(MainMenuItem.class);
-        domainTypes.add(DashboardRefreshFrequency.class);
-        domainTypes.add(DashboardRefreshFrequencyUnit.class);
-        domainTypes.add(EntityCentreConfig.class);
-
+    public void hibernate_mappings_are_generated() {
+        final List<Class<? extends AbstractEntity<?>>> domainTypes = List.of(
+                User.class, MainMenuItem.class, DashboardRefreshFrequency.class,
+                DashboardRefreshFrequencyUnit.class, EntityCentreConfig.class);
         final var dbVersionProvider = constantDbVersion(DbVersion.H2);
         final IDomainMetadata domainMetadata = new DomainMetadataBuilder(
                 HibernateTypeMappings.builder()
@@ -42,9 +36,9 @@ public class MappingGenerationTest {
                 domainTypes, dbVersionProvider)
                 .build();
 
-        final String tgModelMapping = new HibernateMappingsGenerator(domainMetadata, dbVersionProvider, new EqlTables(domainMetadata))
+        final String actualMappings = new HibernateMappingsGenerator(domainMetadata, dbVersionProvider, new EqlTables(domainMetadata))
                 .generateMappings();
-        final String expectedMapping = String.format("""
+        final String expectedMappings = """
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE hibernate-mapping PUBLIC
 "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
@@ -124,8 +118,9 @@ public class MappingGenerationTest {
 \t<property name="ssoOnly" column="SSOONLY_" type="org.hibernate.type.YesNoType"/>
 </class>
 
-</hibernate-mapping>""", Integer.MAX_VALUE);
-        assertEquals("Incorrect mapping.", expectedMapping, tgModelMapping);
+</hibernate-mapping>""";
+
+        assertEquals("Incorrect mappings.", expectedMappings, actualMappings);
     }
 
 }

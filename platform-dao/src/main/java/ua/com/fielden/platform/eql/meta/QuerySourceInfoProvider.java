@@ -31,7 +31,7 @@ import static ua.com.fielden.platform.meta.PropertyMetadataKeys.REQUIRED;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
-@Singleton // TODO replace by a per-IDomainMetadata instance scope
+@Singleton
 public class QuerySourceInfoProvider {
     private static final Logger LOGGER = getLogger(QuerySourceInfoProvider.class);
 

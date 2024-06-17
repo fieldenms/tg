@@ -20,7 +20,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
-@Singleton // TODO replace by a per-IDomainMetadata instance scope
+@Singleton
 public class EntityBatchInsertTables {
 
     private final Map<String, TableStructForBatchInsertion> tables;
