@@ -105,12 +105,12 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     @Inject
-    protected void setDeleteOpsFactory(final DeleteOperationsFactory deleteOpsFactory) {
+    protected void setDeleteOpsFactory(final DeleteOperations.Factory deleteOpsFactory) {
         deleteOps = deleteOpsFactory.create(this, this::getSession, entityType);
     }
 
     @Inject
-    protected void setPersistentEntitySaverFactory(final PersistentEntitySaverFactory factory) {
+    protected void setPersistentEntitySaverFactory(final PersistentEntitySaver.Factory factory) {
         entitySaver = factory.create(
                 this::getSession,
                 this::getTransactionGuid,

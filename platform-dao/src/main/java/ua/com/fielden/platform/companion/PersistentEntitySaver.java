@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.companion;
 
+import com.google.inject.ImplementedBy;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import org.apache.logging.log4j.Logger;
@@ -127,6 +128,20 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         this.userProvider = userProvider;
         this.now = universalConstants::now;
         this.coFinder = coFinder;
+    }
+
+    @ImplementedBy(FactoryImpl.class)
+    public interface Factory {
+        <E extends AbstractEntity<?>> PersistentEntitySaver<E> create(
+                final Supplier<Session> session,
+                final Supplier<String> transactionGuid,
+                final Class<E> entityType,
+                final Class<? extends Comparable<?>> keyType,
+                final BiConsumer<E, List<String>> processAfterSaveEvent,
+                final Consumer<MetaProperty<?>> assignBeforeSave,
+                final BiFunction<Long, fetch<E>, E> findById,
+                final Function<EntityResultQueryModel<E>, Boolean> entityExists,
+                final Logger logger);
     }
     
     /**
@@ -644,5 +659,43 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         }
     }
 
+    // This factory must be implemented by hand since com.google.inject.assistedinject.FactoryModuleBuilder
+    // doesn't support generic factory methods.
+    static final class FactoryImpl implements Factory {
+        private final IDbVersionProvider dbVersionProvider;
+        private final EntityFetcher entityFetcher;
+        private final IUserProvider userProvider;
+        private final IUniversalConstants universalConstants;
+        private final ICompanionObjectFinder coFinder;
+
+        @Inject
+        FactoryImpl(final IDbVersionProvider dbVersionProvider,
+                    final EntityFetcher entityFetcher,
+                    final IUserProvider userProvider,
+                    final IUniversalConstants universalConstants,
+                    final ICompanionObjectFinder coFinder) {
+            this.dbVersionProvider = dbVersionProvider;
+            this.entityFetcher = entityFetcher;
+            this.userProvider = userProvider;
+            this.universalConstants = universalConstants;
+            this.coFinder = coFinder;
+        }
+
+        public <E extends AbstractEntity<?>> PersistentEntitySaver<E> create(
+                final Supplier<Session> session,
+                final Supplier<String> transactionGuid,
+                final Class<E> entityType,
+                final Class<? extends Comparable<?>> keyType,
+                final BiConsumer<E, List<String>> processAfterSaveEvent,
+                final Consumer<MetaProperty<?>> assignBeforeSave,
+                final BiFunction<Long, fetch<E>, E> findById,
+                final Function<EntityResultQueryModel<E>, Boolean> entityExists,
+                final Logger logger)
+        {
+            return new PersistentEntitySaver<>(session, transactionGuid, entityType, keyType, processAfterSaveEvent,
+                                               assignBeforeSave, findById, entityExists, logger,
+                                               dbVersionProvider, entityFetcher, userProvider, universalConstants, coFinder);
+        }
+    }
 
 }
