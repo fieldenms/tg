@@ -26,7 +26,7 @@ public class MasterInfo extends AbstractEntity<String> {
     private String width;
 
     @IsProperty
-    @Title("Hegiht")
+    @Title("Height")
     private String height;
 
     @IsProperty
@@ -173,4 +173,5 @@ public class MasterInfo extends AbstractEntity<String> {
     public String getRelativePropertyName() {
         return relativePropertyName;
     }
+
 }

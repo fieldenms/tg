@@ -345,7 +345,7 @@ public enum StandardActions {
                 final Optional<String> iconStyle,
                 final Optional<IPreAction> preAction) {
             final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey();
-            final String desc = format("Export selected %s entities", entityTitle);
+            final String desc = "Export %s".formatted(entityTitle);
 
             final IEntityCentreContextSelectorDone<AbstractEntity<?>> contextConfig = context().withSelectionCrit().withSelectedEntities().withComputation(computation.orElse((entity, context) -> entityType));
 
@@ -401,7 +401,7 @@ public enum StandardActions {
                 final Optional<String> iconStyle,
                 final Optional<IPreAction> preAction) {
             final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey();
-            final String desc = format("Export selected %s entities", entityTitle);
+            final String desc = "Export %s".formatted(entityTitle);
 
             final IEntityCentreContextSelectorDone<AbstractEntity<?>> contextConfig = context().withSelectionCrit().withSelectedEntities().withMasterEntity().withComputation(computation.orElse((entity, context) -> entityType));
 

@@ -19,13 +19,15 @@ public class EntityExportActionProducer extends DefaultEntityProducerWithContext
     }
 
     @Override
-    protected EntityExportAction provideDefaultValues(final EntityExportAction entity) {
+    protected EntityExportAction provideDefaultValues(final EntityExportAction action) {
         if (selectionCritNotEmpty()) {
-            entity.setCentreContextHolder(selectionCrit().centreContextHolder());
+            action.setCentreContextHolder(selectionCrit().centreContextHolder());
             if (selectedEntitiesNotEmpty()) {
-                entity.setSelectedEntityIds(selectedEntityIds());
+                action.setSelectedEntityIds(selectedEntityIds());
+                action.setExportSelected(true);
             }
         }
-        return entity;
+        return action;
     }
+
 }
