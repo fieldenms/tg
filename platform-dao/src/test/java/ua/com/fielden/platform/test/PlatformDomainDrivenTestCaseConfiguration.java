@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.test;
 
 import com.google.inject.Injector;
-import ua.com.fielden.platform.entity.query.DefaultFilter;
+import ua.com.fielden.platform.entity.query.NoDataFilter;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
@@ -26,7 +26,7 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
                     .add(new PlatformTestServerModule(
                             appDomainProvider,
                             appDomainProvider.entityTypes(),
-                            DefaultSerialisationClassProvider.class, DefaultFilter.class, SecurityTokenProvider.class,
+                            DefaultSerialisationClassProvider.class, NoDataFilter.class, SecurityTokenProvider.class,
                             getProperties(properties)))
                     .add(new NewUserNotifierMockBindingModule())
                     .getInjector();

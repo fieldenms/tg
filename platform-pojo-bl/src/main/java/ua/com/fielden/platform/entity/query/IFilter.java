@@ -16,8 +16,9 @@ import javax.annotation.Nullable;
  * @author TG Team
  * 
  */
-@ImplementedBy(DefaultFilter.class)
+@ImplementedBy(NoDataFilter.class)
 public interface IFilter {
 
     <ET extends AbstractEntity<?>> ConditionModel enhance(Class<ET> entityType, String typeAlias, final @Nullable String username);
+
 }
