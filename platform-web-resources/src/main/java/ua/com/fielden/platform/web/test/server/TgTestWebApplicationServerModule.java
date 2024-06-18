@@ -33,7 +33,6 @@ public class TgTestWebApplicationServerModule extends TgTestApplicationServerMod
             final Class<? extends IUniversalConstants> universalConstantsImplType,
             final Class<? extends IDates> datesImplType,
             final Properties props)
-            throws Exception
     {
         super(applicationDomainProvider, domainEntityTypes, serialisationClassProviderType, automaticDataFilterType, universalConstantsImplType, datesImplType, props);
         this.props = props;

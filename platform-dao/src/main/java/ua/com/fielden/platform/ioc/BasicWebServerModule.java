@@ -83,7 +83,6 @@ public class BasicWebServerModule extends CompanionModule {
             final Class<? extends IAuthorisationModel> authorisationModelType,
             final Class<? extends ISecurityTokenProvider> tokenProviderType,
             final Properties props)
-            throws Exception
     {
         super(props, domainEntityTypes);
         this.props = props;

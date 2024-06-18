@@ -47,7 +47,6 @@ public class TgTestApplicationServerModule extends BasicWebServerModule {
             final Class<? extends IUniversalConstants> universalConstantsImplType,
             final Class<? extends IDates> datesImplType,
             final Properties props)
-            throws Exception
     {
         super(appDomainProvider, domainEntityTypes, serialisationClassProviderType, automaticDataFilterType, null, props);
         if (universalConstantsImplType == null) {
