@@ -10,9 +10,14 @@ import ua.com.fielden.platform.eql.dbschema.TableDdl;
 import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
 import ua.com.fielden.platform.utils.EntityUtils;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
+
+import static com.google.common.collect.ImmutableList.toImmutableList;
 
 class DdlGeneratorImpl implements IDdlGenerator {
 
@@ -55,10 +60,8 @@ class DdlGeneratorImpl implements IDdlGenerator {
             ddlFKs.addAll(tableDefinition.createFkSchema(dialect));
         });
 
-        final List<String> ddl = new LinkedList<>();
-        ddl.addAll(ddlTables);
-        ddl.addAll(ddlFKs);
-        return ddl;
+        return Stream.concat(ddlTables.stream(), ddlFKs.stream())
+                .collect(toImmutableList());
     }
 
 }
