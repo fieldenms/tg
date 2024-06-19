@@ -124,7 +124,16 @@ const TgFileProcessingBehaviorImpl = {
         this._uploadInput.type = "file";
         this._uploadInput.capture="environment"; // this is to indicate a preference for the outward-facing camera on mobile devices
         this._uploadInput.onchange = function () {
-            this._handleFiles(this._uploadInput.files);
+            try {
+                this._handleFiles(this._uploadInput.files);
+            } catch (error) {
+                if (this.fpErrorHandler) {
+                    console.error(error);
+                    this.fpErrorHandler(error);
+                } else {
+                    throw error;
+                }
+            }
         }.bind(this);
     },
 
