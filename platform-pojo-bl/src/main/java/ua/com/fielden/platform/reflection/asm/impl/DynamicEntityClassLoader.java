@@ -136,7 +136,7 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
      * {@code modifiedClass(origType, typeMaker -> typeMaker.addProperties(...).modifyProperties(...).addClassAnnotations(...))}<br><br>
      * Please note that {@code modifyTypeName(newTypeName)} call may not be used in {@code modifyType} function -- {@link DynamicTypeNamingService#nextTypeName(String)} will be assigned automatically.
      * 
-     * @param typeName
+     * @param origType
      * @param modifyType
      * @return
      */
