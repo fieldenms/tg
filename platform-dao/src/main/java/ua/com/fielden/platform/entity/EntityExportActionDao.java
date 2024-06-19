@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity;
 
+import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.poi.ss.util.WorkbookUtil.validateSheetName;
@@ -13,10 +15,7 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Stream;
 
 import com.google.inject.Inject;
@@ -33,6 +32,7 @@ import ua.com.fielden.platform.file_reports.WorkbookExporter;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.interfaces.IEntityMasterUrlProvider;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
 /**
@@ -46,13 +46,20 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
     private final ICriteriaEntityRestorer criteriaEntityRestorer;
     private final IAuthorisationModel authorisationModel;
     private final ISecurityTokenProvider securityTokenProvider;
+    private final IEntityMasterUrlProvider entityMasterUrlProvider;
 
     @Inject
-    public EntityExportActionDao(final IFilter filter, final ICriteriaEntityRestorer criteriaEntityRestorer, final IAuthorisationModel authorisationModel, final ISecurityTokenProvider securityTokenProvider) {
+    public EntityExportActionDao(
+            final ICriteriaEntityRestorer criteriaEntityRestorer,
+            final IAuthorisationModel authorisationModel,
+            final ISecurityTokenProvider securityTokenProvider,
+            final IEntityMasterUrlProvider entityMasterUrlProvider,
+            final IFilter filter) {
         super(filter);
         this.criteriaEntityRestorer = criteriaEntityRestorer;
         this.authorisationModel = authorisationModel;
         this.securityTokenProvider = securityTokenProvider;
+        this.entityMasterUrlProvider = entityMasterUrlProvider;
     }
 
     @Override
@@ -90,7 +97,7 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         entity.setMime("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
         try {
-            entity.setData(WorkbookExporter.convertToByteArray(WorkbookExporter.export(entities, propAndTitles, dynamicProperties, titles)));
+            entity.setData(WorkbookExporter.convertToByteArray(WorkbookExporter.export(entities, propAndTitles, dynamicProperties, titles, entityMasterUrlProvider)));
         } catch (final IOException e) {
             throw failure("An exception occurred during the data export.", e);
         } finally {
