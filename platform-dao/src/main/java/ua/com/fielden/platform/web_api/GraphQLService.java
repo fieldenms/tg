@@ -75,14 +75,13 @@ public class GraphQLService implements IWebApi {
      * Creates GraphQLService instance based on {@code applicationDomainProvider} which contains all entity types.
      * <p>
      * We start by building dictionary of all our custom GraphQL types from existing domain entity types.
-     * Then we create GraphQL type for quering (aka GraphQL {@code query}) and assign it to the schema.
+     * Then we create GraphQL type for querying (aka GraphQL {@code query}) and assign it to the schema.
      *
      * @param maxQueryDepth -- the maximum depth of GraphQL query that are permitted to be executed.
      * @param applicationDomainProvider
      * @param coFinder
      * @param dates
-     * @param authorisationModelProvider -- Guice {@link Provider} for {@link IAuthorisationModel}; would create auth model to authorise running of Web API queries and their {@link FieldVisibility}
-     * @param securityTokensPackageName
+     * @param authorisationModel -- Guice {@link Provider} for {@link IAuthorisationModel}; would create auth model to authorise running of Web API queries and their {@link FieldVisibility}
      * @param securityTokenProvider
      */
     @Inject
@@ -201,7 +200,7 @@ public class GraphQLService implements IWebApi {
      * @param dates
      * @param codeRegistryBuilder -- a place to register root data fetchers
      * @param authorisationModel -- authorises running of Web API queries
-     * @param securityTokensPackageName
+     * @param securityTokenProvider
      * @return
      */
     private static GraphQLObjectType createQueryType(final Set<Class<? extends AbstractEntity<?>>> dictionary, final ICompanionObjectFinder coFinder, final IDates dates, final GraphQLCodeRegistry.Builder codeRegistryBuilder, final IAuthorisationModel authorisationModel, final ISecurityTokenProvider securityTokenProvider) {
