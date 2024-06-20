@@ -1,10 +1,13 @@
 package ua.com.fielden.platform.eql.retrieval;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.QueryProcessingModel;
 import ua.com.fielden.platform.eql.meta.EqlTables;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
+import ua.com.fielden.platform.eql.retrieval.records.QueryModelResult;
+import ua.com.fielden.platform.eql.retrieval.records.YieldedColumn;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.queries.ResultQuery1;
@@ -13,10 +16,15 @@ import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.queries.ResultQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.enhance.PathsToTreeTransformer;
 import ua.com.fielden.platform.eql.stage3.queries.ResultQuery3;
+import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.IDates;
 
+import java.util.List;
 import java.util.Optional;
+
+import static java.util.Collections.unmodifiableList;
+import static java.util.stream.Collectors.toList;
 
 /**
  * A entry point for transforming an EQL query to SQL.
@@ -56,4 +64,21 @@ public class EqlQueryTransformer {
                                                                     domainMetadata, eqlTables);
         return query2.transform(context2);
     }
+
+    protected static <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(
+            final QueryProcessingModel<E, ?> qem, final DbVersion dbVersion, final IFilter filter,
+            final Optional<String> username, final IDates dates, final IDomainMetadata domainMetadata,
+            final EqlTables eqlTables, final QuerySourceInfoProvider querySourceInfoProvider)
+    {
+        final TransformationResultFromStage2To3<ResultQuery3> tr = transform(qem, filter, username, dates,
+                                                                             domainMetadata, eqlTables, querySourceInfoProvider);
+        final ResultQuery3 entQuery3 = tr.item;
+        final String sql = entQuery3.sql(dbVersion);
+        return new QueryModelResult<E>((Class<E>) entQuery3.resultType, sql, getYieldedColumns(entQuery3.yields), tr.updatedContext.getSqlParamValues(), qem.fetchModel);
+    }
+
+    private static List<YieldedColumn> getYieldedColumns(final Yields3 model) {
+        return unmodifiableList(model.getYields().stream().map(yield -> new YieldedColumn(yield.alias, yield.type, yield.column)).collect(toList()));
+    }
+
 }
