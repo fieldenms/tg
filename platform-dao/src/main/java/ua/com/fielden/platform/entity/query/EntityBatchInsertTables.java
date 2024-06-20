@@ -21,7 +21,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 @Singleton
-public class EntityBatchInsertTables {
+final class EntityBatchInsertTables {
 
     private final Map<String, TableStructForBatchInsertion> tables;
 

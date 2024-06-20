@@ -1,13 +1,10 @@
-package ua.com.fielden.platform.entity;
+package ua.com.fielden.platform.entity.query;
 
 import org.junit.Test;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityAlreadyExists;
 import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation;
-import ua.com.fielden.platform.entity.query.EntityBatchInsertTables;
-import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.test.entities.TgEntityWithManyPropTypes;
