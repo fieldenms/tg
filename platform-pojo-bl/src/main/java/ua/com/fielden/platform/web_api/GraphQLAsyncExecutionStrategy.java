@@ -11,31 +11,33 @@ import java.util.concurrent.CompletableFuture;
 import static org.apache.logging.log4j.LogManager.getLogger;
 
 /**
- * Standard graphql-java {@link AsyncExecutionStrategy} with exception logging.
- * Method {@link AsyncExecutionStrategy#resolveFieldWithInfo(ExecutionContext, ExecutionStrategyParameters)} covers other exceptions,
- *  not covered on "value fetching" phase using 'exceptionHandler'. Mostly this contains exceptions during "value completion" phase, e.g. when scalars got coerced.
+ * A standard graphql-java {@link AsyncExecutionStrategy} with exception logging.
+ * Method {@link AsyncExecutionStrategy#resolveFieldWithInfo(ExecutionContext, ExecutionStrategyParameters)} covers exceptions that are not covered during the "value fetching" phase using 'exceptionHandler'.
+ * This mainly pertains to exceptions that may get thrown during the "value completion" phase (e.g., when scalars get coerced).
+ *
+ * @author TG Team
  */
 public class GraphQLAsyncExecutionStrategy extends AsyncExecutionStrategy {
     private static final Logger LOGGER = getLogger(GraphQLAsyncExecutionStrategy.class);
 
     /**
-     * The standard graphql execution strategy that runs fields asynchronously
+     * A standard GraphQL execution strategy that processes fields asynchronously.
      */
     public GraphQLAsyncExecutionStrategy() {
         super();
     }
 
     /**
-     * Creates a execution strategy that uses the provided exception handler
+     * Creates an execution strategy that uses the provided exception handler.
      *
-     * @param exceptionHandler the exception handler to use
+     * @param exceptionHandler an exception handler.
      */
-    public GraphQLAsyncExecutionStrategy(DataFetcherExceptionHandler exceptionHandler) {
+    public GraphQLAsyncExecutionStrategy(final DataFetcherExceptionHandler exceptionHandler) {
         super(exceptionHandler);
     }
 
     @Override
-    protected Object resolveFieldWithInfo(ExecutionContext executionContext, ExecutionStrategyParameters parameters) {
+    protected Object resolveFieldWithInfo(final ExecutionContext executionContext, final ExecutionStrategyParameters parameters) {
         final var result = super.resolveFieldWithInfo(executionContext, parameters);
         if (result instanceof CompletableFuture<?> cf) {
             cf.whenComplete((r, ex) -> {
@@ -46,4 +48,5 @@ public class GraphQLAsyncExecutionStrategy extends AsyncExecutionStrategy {
         }
         return result;
     }
+
 }

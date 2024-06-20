@@ -147,7 +147,7 @@ public class GraphQLService implements IWebApi {
     }
 
     /**
-     * Executes Web API query by using internal {@link GraphQL} service with predefined schema.
+     * Executes Web API query by using internal {@link GraphQL} service with a predefined schema.
      * <p>
      * {@inheritDoc}
      */
@@ -175,7 +175,7 @@ public class GraphQLService implements IWebApi {
     }
 
     /**
-     * Creates map of GraphQL dictionary (aka GraphQL "additional types") and corresponding entity types.
+     * Creates a GraphQL dictionary (aka GraphQL "additional types") for entity types.
      * <p>
      * The set of resultant types can be smaller than those derived upon. See {@link #createGraphQLTypeFor(Class)} for more details.
      * 
@@ -223,9 +223,9 @@ public class GraphQLService implements IWebApi {
     }
 
     /**
-     * Creates {@link Optional} GraphQL object type for {@code entityType}d entities querying.
+     * Creates {@link Optional} GraphQL object type for querying data of type {@code entityType}.
      * <p>
-     * The {@code entityType} will not have corresponding {@link GraphQLObjectType} only if there are no suitable fields for querying.
+     * {@code entityType} would not have a corresponding {@link GraphQLObjectType} only if there are no suitable fields for querying.
      * 
      * @param entityType
      * @return
