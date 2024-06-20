@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.retrieval;
 
 import com.google.inject.Inject;
+import jakarta.inject.Singleton;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Query;
 import org.hibernate.ScrollMode;
@@ -40,6 +41,7 @@ import static ua.com.fielden.platform.eql.retrieval.EntityResultTreeBuilder.buil
 import static ua.com.fielden.platform.eql.retrieval.HibernateScalarsExtractor.getSortedScalars;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
+@Singleton
 final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
 
     private final Logger logger = getLogger(this.getClass());
