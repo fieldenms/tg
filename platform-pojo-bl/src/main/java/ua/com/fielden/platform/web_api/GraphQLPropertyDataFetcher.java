@@ -14,6 +14,8 @@ import static org.apache.logging.log4j.LogManager.getLogger;
  * This is a default {@link DataFetcher} used in TG Web API implementation. It is similar to graphql-java's {@link PropertyDataFetcher}, but only considers entities as the source.
  * <p>
  * For a root GraphQL field fetcher, that actually fetches a complete data graph using EQL, see {@link RootEntityFetcher}.
+ *
+ * @author TG Team
  */
 @PublicApi
 public class GraphQLPropertyDataFetcher<T> implements DataFetcher<T> {

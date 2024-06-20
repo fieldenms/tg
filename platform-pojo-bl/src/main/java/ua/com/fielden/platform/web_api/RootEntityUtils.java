@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web_api;
 
 import graphql.GraphQLContext;
+import graphql.execution.CoercedVariables;
 import graphql.execution.ValuesResolver;
 import graphql.language.*;
 import graphql.schema.GraphQLArgument;
@@ -70,7 +71,7 @@ public class RootEntityUtils {
      * This is a part of GraphQL spec.
      */
     private static final String __TYPENAME = "__typename";
-    public static final String ORDER_PRIORITIES_ARE_NOT_DISTINCT = "Order priorities are not distinct.";
+    public static final String WARN_ORDER_PRIORITIES_ARE_NOT_DISTINCT = "Order priorities are not distinct.";
     static final String QUERY_TYPE_NAME = "Query";
     private static final Logger LOGGER = getLogger(RootEntityUtils.class);
     
@@ -126,7 +127,7 @@ public class RootEntityUtils {
             ))
             .flatMap(orderingProperty -> orderingProperty.isPresent() ? Stream.of(orderingProperty.get()) : Stream.empty())
             .collect(toList()); // exclude empty values
-        final Optional<String> optionalWarning = propOrderingWithPriorities.stream().map(t3 -> t3._3).distinct().count() < propOrderingWithPriorities.size() ? of(ORDER_PRIORITIES_ARE_NOT_DISTINCT) : empty(); // in case where order priorities are not distinct, return non-intrusive warning (with data still present)
+        final Optional<String> optionalWarning = propOrderingWithPriorities.stream().map(t3 -> t3._3).distinct().count() < propOrderingWithPriorities.size() ? of(WARN_ORDER_PRIORITIES_ARE_NOT_DISTINCT) : empty(); // in case where order priorities are not distinct, return non-intrusive warning (with data still present)
         final List<Pair<String, Ordering>> specifiedOrderingProperties = propOrderingWithPriorities.stream()
             .sorted((p1, p2) -> p1._3.compareTo(p2._3)) // sort by ordering priority
             .map(prop -> pair(prop._1, prop._2)) // get (name; Ordering) only -- without priority 
@@ -191,7 +192,7 @@ public class RootEntityUtils {
      * @param property
      * @param arguments -- pair of {@link GraphQLArgument} definitions and corresponding resolved {@link Argument} instances (which contain actual values)
      * @param variables -- existing coerced variable values by names in the query
-     * @param codeRegistry -- code registry that is used only to take care of field visibility during {@link ValuesResolver#getArgumentValues(List, List, Map)} conversion
+     * @param codeRegistry -- code registry that is used only to take care of field visibility during {@link ValuesResolver#getArgumentValues(GraphQLCodeRegistry, List, List, CoercedVariables, GraphQLContext, Locale)} conversion
      * @param context -- context in current data fetching request
      * @param locale -- locale in current data fetching request
      * 
@@ -257,7 +258,7 @@ public class RootEntityUtils {
      * @param property
      * @param arguments -- pair of {@link GraphQLArgument} definitions and corresponding resolved {@link Argument} instances (which contain actual values)
      * @param variables -- existing coerced variable values by names in the query
-     * @param codeRegistry -- code registry that is used only to take care of field visibility during {@link ValuesResolver#getArgumentValues(List, List, Map)} conversion
+     * @param codeRegistry -- code registry that is used only to take care of field visibility during {@link ValuesResolver#getArgumentValues(GraphQLCodeRegistry, List, List, CoercedVariables, GraphQLContext, Locale)} conversion
      * @param context -- context in current data fetching request
      * @param locale -- locale in current data fetching request
      * 
@@ -295,7 +296,7 @@ public class RootEntityUtils {
      * @param what
      * @param arguments -- pair of {@link GraphQLArgument} definitions and corresponding resolved {@link Argument} instances (which contain actual values)
      * @param variables -- existing coerced variable values by names in the query
-     * @param codeRegistry -- code registry that is used only to take care of field visibility during {@link ValuesResolver#getArgumentValues(List, List, Map)} conversion
+     * @param codeRegistry -- code registry that is used only to take care of field visibility during {@link ValuesResolver#getArgumentValues(GraphQLCodeRegistry, List, List, CoercedVariables, GraphQLContext, Locale)} conversion
      * @param context -- context in current data fetching request
      * @param locale -- locale in current data fetching request
      * @param significantLimit
