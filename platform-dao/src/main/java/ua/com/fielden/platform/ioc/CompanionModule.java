@@ -1,13 +1,10 @@
 package ua.com.fielden.platform.ioc;
 
-import com.google.inject.Singleton;
 import ua.com.fielden.platform.dao.CommonEntityAggregatesDao;
 import ua.com.fielden.platform.dao.EntityAggregatesDao;
 import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.factory.DefaultCompanionObjectFinderImpl;
-import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.IEntityAggregates;
 import ua.com.fielden.platform.menu.Action;
 import ua.com.fielden.platform.menu.UserMenuInvisibilityAssociationBatchActionCo;
@@ -41,7 +38,6 @@ public class CompanionModule extends CommonFactoryModule {
     protected void configure() {
         super.configure();
 
-        bind(ICompanionObjectFinder.class).to(DefaultCompanionObjectFinderImpl.class).in(Singleton.class);
         bindDomainCos(domainEntityTypes);
         bindPlatformCos();
 

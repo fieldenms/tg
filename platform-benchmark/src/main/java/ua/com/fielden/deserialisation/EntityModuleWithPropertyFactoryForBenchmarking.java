@@ -5,9 +5,7 @@ import com.google.inject.Scopes;
 import com.google.inject.name.Names;
 
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
-import ua.com.fielden.platform.entity.factory.DefaultCompanionObjectFinderImpl;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
 import ua.com.fielden.platform.entity.meta.AbstractMetaPropertyFactory;
@@ -64,7 +62,6 @@ class EntityModuleWithPropertyFactoryForBenchmarking extends EntityModule {
         bindConstant().annotatedWith(Names.named("email.fromAddress")).to("tests@tg.org"); 
         
         bind(IApplicationDomainProvider.class).to(ApplicationDomain.class);
-        bind(ICompanionObjectFinder.class).to(DefaultCompanionObjectFinderImpl.class).in(Scopes.SINGLETON);
         bind(IDates.class).to(DatesForBenchmarking.class).in(Scopes.SINGLETON);
         bind(IUniversalConstants.class).to(UniversalConstantsForBenchmarking.class).in(Scopes.SINGLETON);
     }

@@ -3,15 +3,12 @@ package ua.com.fielden.platform.sample.domain.crit_gen;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
-
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
-import ua.com.fielden.platform.entity.factory.DefaultCompanionObjectFinderImpl;
-import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.sample.domain.ITgSystem;
@@ -45,7 +42,6 @@ public class CriteriaGeneratorTestModule extends EntityModuleWithPropertyFactory
         bind(ITopLevelEntity.class).to(TopLevelEntityDaoStub.class);
         bind(ILastLevelEntity.class).to(LastLevelEntityDaoStub.class);
         bind(ISecondLevelEntity.class).to(SecondLevelEntityDaoStub.class);
-        bind(ICompanionObjectFinder.class).to(DefaultCompanionObjectFinderImpl.class).in(Scopes.SINGLETON);
         bind(IGeneratedEntityController.class).to(GeneratedEntityControllerStub.class).in(Scopes.SINGLETON);
         bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
         bind(ICriteriaGenerator.class).to(CriteriaGenerator.class).in(Scopes.SINGLETON);
