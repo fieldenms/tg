@@ -16,6 +16,7 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
+import ua.com.fielden.platform.web.interfaces.IEntityMasterUrlProvider;
 
 /**
  * DAO implementation for companion object {@link IExportAction}.
@@ -27,13 +28,16 @@ import ua.com.fielden.platform.file_reports.WorkbookExporter;
 public class ExportActionDao extends CommonEntityDao<ExportAction> implements IExportAction {
 
     private final ITgPersistentEntityWithProperties co;
+    private final IEntityMasterUrlProvider entityMasterUrlProvider;
 
     @Inject
     public ExportActionDao(
             final ITgPersistentEntityWithProperties co,
-            final IFilter filter) {
+            final IFilter filter,
+            final IEntityMasterUrlProvider entityMasterUrlProvider) {
         super(filter);
         this.co = co;
+        this.entityMasterUrlProvider = entityMasterUrlProvider;
     }
 
     @Override
@@ -47,7 +51,7 @@ public class ExportActionDao extends CommonEntityDao<ExportAction> implements IE
         try {
             entity.setFileName("export-of-TgPersistentEntityWithProperties.xlsx");
             entity.setMime("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-            final byte[] data = convertToByteArray(WorkbookExporter.export(entitiesToExport.stream(), new String[] {"key", "desc"}, new String[] {"key", "desc"}));
+            final byte[] data = convertToByteArray(WorkbookExporter.export(entitiesToExport.stream(), new String[] {"key", "desc"}, new String[] {"key", "desc"}, entityMasterUrlProvider));
             entity.setData(data);
         } catch (final Exception e) {
             e.printStackTrace();
