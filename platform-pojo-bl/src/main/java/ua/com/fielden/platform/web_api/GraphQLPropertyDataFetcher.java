@@ -11,10 +11,9 @@ import static graphql.Assert.assertNotNull;
 import static org.apache.logging.log4j.LogManager.getLogger;
 
 /**
- * This is the default {@link DataFetcher} used in TG Web API implementation. It is similar to graphql-java's {@link PropertyDataFetcher}, but only considers entities as a source.
- * Currently, there is no support for other sources.
+ * This is a default {@link DataFetcher} used in TG Web API implementation. It is similar to graphql-java's {@link PropertyDataFetcher}, but only considers entities as the source.
  * <p>
- * For root GraphQL field fetcher, that actually fetches all data graph using EQL, see {@link RootEntityFetcher}.
+ * For a root GraphQL field fetcher, that actually fetches a complete data graph using EQL, see {@link RootEntityFetcher}.
  */
 @PublicApi
 public class GraphQLPropertyDataFetcher<T> implements DataFetcher<T> {
@@ -23,16 +22,16 @@ public class GraphQLPropertyDataFetcher<T> implements DataFetcher<T> {
     private final String propertyName;
 
     /**
-     * This constructor will use the property name and examine the {@link DataFetchingEnvironment#getSource()} object (entity) using {@link AbstractEntity#get(String)} method.
+     * This constructor accepts a property name, which should not be {@code null}.
      *
-     * @param propertyName the name of the property to retrieve
+     * @param propertyName a name of the property to retrieve.
      */
     public GraphQLPropertyDataFetcher(final String propertyName) {
         this.propertyName = assertNotNull(propertyName);
     }
 
     /**
-     * Returns a data fetcher that will use the property name to examine the {@link DataFetchingEnvironment#getSource()} object (entity) using {@link AbstractEntity#get(String)} method.
+     * Returns a data fetcher for property name that examines a {@link DataFetchingEnvironment#getSource()} object (entity) using {@link AbstractEntity#get(String)} method.
      * <p>
      * For example :
      * <pre>
@@ -43,10 +42,10 @@ public class GraphQLPropertyDataFetcher<T> implements DataFetcher<T> {
      * }
      * </pre>
      *
-     * @param propertyName the name of the property to retrieve
-     * @param <T>          the type of result
+     * @param propertyName a name of the property to retrieve
+     * @param <T>          a type of result
      *
-     * @return a new {@link DataFetcher} using the provided {@code propertyName} as its source of values
+     * @return a new {@link DataFetcher} for {@code propertyName} as its source of values
      */
     public static <T> GraphQLPropertyDataFetcher<T> fetching(String propertyName) {
         return new GraphQLPropertyDataFetcher<>(propertyName);

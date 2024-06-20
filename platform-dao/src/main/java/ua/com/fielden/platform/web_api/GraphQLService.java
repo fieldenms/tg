@@ -100,7 +100,7 @@ public class GraphQLService implements IWebApi {
             }
             this.maxQueryDepth = maxQueryDepth;
 
-            LOGGER.info("\tmaxQueryDepth = " + maxQueryDepth);
+            LOGGER.info("\tmaxQueryDepth = {}", maxQueryDepth);
             final GraphQLCodeRegistry.Builder codeRegistryBuilder = newCodeRegistry();
 
             LOGGER.info("\tBuilding dictionary...");

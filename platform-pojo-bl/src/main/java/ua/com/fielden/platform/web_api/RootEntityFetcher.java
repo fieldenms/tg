@@ -72,7 +72,7 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
     
     /**
      * Checks whether {@code entityType} can be executed by current user and returns error if not.
-     * Otherwise, finds an uninstrumented reader for the {@link #entityType} and retrieves first {@link #PAGE_CAPACITY} entities.<p>
+     * Otherwise, finds an uninstrumented reader for the {@link #entityType} and retrieves first {@link FieldSchema#PAGE_CAPACITY} entities.<p>
      * {@inheritDoc}
      */
     @Override
