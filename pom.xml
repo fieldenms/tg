@@ -79,7 +79,8 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <junit.version>4.13.2</junit.version>
-        <posgresql.version>42.7.2</posgresql.version>
+        <posgresql.version>42.7.3</posgresql.version>
+        <mssql.version>12.6.2.jre11</mssql.version>
     </properties>
 
     <modules>
