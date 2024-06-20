@@ -14,7 +14,6 @@ import ua.com.fielden.platform.dao.exceptions.EntityAlreadyExists;
 import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation.TableStructForBatchInsertion.PropColumnInfo;
-import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.StreamUtils;
 
 import java.sql.PreparedStatement;
@@ -52,8 +51,7 @@ public class EntityBatchInsertOperation {
     private final Supplier<TransactionalExecution> trExecSupplier;
 
     @Inject
-    EntityBatchInsertOperation(final IDomainMetadata domainMetadata,
-                               final IDbVersionProvider dbVersionProvider,
+    EntityBatchInsertOperation(final IDbVersionProvider dbVersionProvider,
                                final EntityBatchInsertTables entityBatchInsertTables,
                                @Assisted final Supplier<TransactionalExecution> trExecSupplier) {
         this.dbVersionProvider = dbVersionProvider;
