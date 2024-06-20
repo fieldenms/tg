@@ -12,8 +12,10 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 
@@ -77,21 +79,22 @@ public class DynamicEntityKeyTest {
     }
 
     @Test
-    public void test_that_creation_of_the_key_failes_for_duplicate_order_annotations() {
+    public void test_that_creation_of_the_key_fails_for_duplicate_order_annotations() {
         try {
             new EntityWithDuplicateOrder();
             fail("Should have failed with duplicate order exception.");
-        } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
+        } catch (final ReflectionException ex) {
+            assertEquals("Could not get key members for type [class ua.com.fielden.platform.entity.DynamicEntityKeyTest$EntityWithDuplicateOrder]", ex.getMessage());
+            assertEquals("ua.com.fielden.platform.reflection.exceptions.ReflectionException: Annotation [ua.com.fielden.platform.entity.annotation.CompositeKeyMember] in class [ua.com.fielden.platform.entity.DynamicEntityKeyTest$EntityWithDuplicateOrder] for property [property2] has a duplicate order value of [1], which is already present in property [protected java.lang.Long ua.com.fielden.platform.entity.DynamicEntityKeyTest$EntityWithDuplicateOrder.property1].", ex.getCause().getMessage());
         }
     }
 
     @Test
-    public void test_that_creation_of_the_key_failes_for_entity_with_no_key_members() {
+    public void test_that_creation_of_the_key_fails_for_entity_with_no_key_members() {
         try {
             new EntityWithoutKeyMembers();
             fail("Should have failed for an entity with a simple key.");
-        } catch (final Exception ex) {
+        } catch (final EntityDefinitionException ex) {
             assertEquals("Composite key should have at least one member.", ex.getMessage());
         }
     }
