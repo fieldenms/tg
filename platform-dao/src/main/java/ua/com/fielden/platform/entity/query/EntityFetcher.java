@@ -25,16 +25,16 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 
 final class EntityFetcher implements IEntityFetcher {
 
-    private final Logger logger = getLogger(this.getClass());
+    private static final Logger LOGGER = getLogger(EntityFetcher.class);
 
     private final EntityContainerFetcher entityContainerFetcher;
     private final IDomainMetadata domainMetadata;
     private final EntityFactory entityFactory;
 
     @Inject
-    public EntityFetcher(final EntityContainerFetcher entityContainerFetcher,
-                         final IDomainMetadata domainMetadata,
-                         final EntityFactory entityFactory) {
+    EntityFetcher(final EntityContainerFetcher entityContainerFetcher,
+                  final IDomainMetadata domainMetadata,
+                  final EntityFactory entityFactory) {
         this.entityContainerFetcher = entityContainerFetcher;
         this.domainMetadata = domainMetadata;
         this.entityFactory = entityFactory;
@@ -61,11 +61,11 @@ final class EntityFetcher implements IEntityFetcher {
             final Period pd = new Period(st, new DateTime());
 
             final String entityTypeName = queryModel.getQueryModel().getResultType() != null ? queryModel.getQueryModel().getResultType().getSimpleName() : "?";
-            logger.debug(format("Duration: %s m %s s %s ms. Entities (%s) count: %s.", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), entityTypeName, result.size()));
+            LOGGER.debug(format("Duration: %s m %s s %s ms. Entities (%s) count: %s.", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), entityTypeName, result.size()));
 
             return result;
         } catch (final Exception e) {
-            logger.error(e);
+            LOGGER.error(e);
             throw new IllegalStateException(e);
         }
     }
@@ -100,7 +100,7 @@ final class EntityFetcher implements IEntityFetcher {
                         .map(this::instantiateFromContainers)
                         .flatMap(List::stream);
         } catch (final Exception e) {
-            logger.error(e);
+            LOGGER.error(e);
             throw new EntityFetcherException("Could not stream entities.", e);
         }
     }

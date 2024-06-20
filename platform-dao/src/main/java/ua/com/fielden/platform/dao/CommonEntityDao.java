@@ -60,7 +60,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private ICompanionObjectFinder coFinder;
     private Injector injector;
     private IUniversalConstants universalConstants;
-    private IUserProvider up;
+    private IUserProvider userProvider;
     private EntityFactory entityFactory;
     private IEntityFetcher entityFetcher;
     private DeleteOperations<T> deleteOps;
@@ -98,7 +98,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
         this.entityType = (Class<T>) annotation.value();
         this.keyType = AnnotationReflector.getKeyType(entityType);
-
     }
 
     @Inject
@@ -141,8 +140,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     @Inject
-    protected void setUp(final IUserProvider up) {
-        this.up = up;
+    protected void setUserProvider(final IUserProvider userProvider) {
+        this.userProvider = userProvider;
     }
 
     @Inject
@@ -328,7 +327,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     @Override
     public User getUser() {
-        return up.getUser();
+        return userProvider.getUser();
     }
 
     protected ICompanionObjectFinder getCoFinder() {
