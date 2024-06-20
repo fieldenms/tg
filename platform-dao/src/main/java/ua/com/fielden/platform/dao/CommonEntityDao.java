@@ -23,6 +23,7 @@ import ua.com.fielden.platform.entity.query.*;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
+import ua.com.fielden.platform.ioc.session.SessionInterceptor;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
@@ -67,7 +68,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private PersistentEntitySaver<T> entitySaver;
     // ***
 
+    /** Session-scoped. Set by {@link SessionInterceptor} */
     private Session session;
+
+    /** Session-scoped. Set by {@link SessionInterceptor} */
     private String transactionGuid;
 
     /** A guard against an accidental use of quick save to prevent its use for companions with overridden method <code>save</code>.
