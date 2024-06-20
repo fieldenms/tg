@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query;
 
 import com.google.inject.Inject;
+import jakarta.inject.Singleton;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.joda.time.DateTime;
@@ -23,6 +24,7 @@ import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 
+@Singleton
 final class EntityFetcher implements IEntityFetcher {
 
     private static final Logger LOGGER = getLogger(EntityFetcher.class);
