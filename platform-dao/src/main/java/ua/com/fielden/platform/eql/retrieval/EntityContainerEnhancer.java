@@ -31,13 +31,13 @@ public class EntityContainerEnhancer {
     private static final Integer BATCH_SIZE = 990;
     // private static final Logger logger = getLogger(EntityContainerEnhancer.class);
 
-    private final EntityContainerFetcher fetcher;
+    private final IEntityContainerFetcher fetcher;
     private final IDomainMetadata domainMetadata;
     private final PropertyMetadataUtils propMetadataUtils;
     private final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
 
     protected EntityContainerEnhancer(
-            final EntityContainerFetcher fetcher,
+            final IEntityContainerFetcher fetcher,
             final IDomainMetadata domainMetadata,
             final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache)
     {

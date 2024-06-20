@@ -11,7 +11,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.exceptions.EntityFetcherException;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.eql.retrieval.EntityContainerFetcher;
+import ua.com.fielden.platform.eql.retrieval.IEntityContainerFetcher;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.DefinersExecutor;
 
@@ -29,12 +29,12 @@ final class EntityFetcher implements IEntityFetcher {
 
     private static final Logger LOGGER = getLogger(EntityFetcher.class);
 
-    private final EntityContainerFetcher entityContainerFetcher;
+    private final IEntityContainerFetcher entityContainerFetcher;
     private final IDomainMetadata domainMetadata;
     private final EntityFactory entityFactory;
 
     @Inject
-    EntityFetcher(final EntityContainerFetcher entityContainerFetcher,
+    EntityFetcher(final IEntityContainerFetcher entityContainerFetcher,
                   final IDomainMetadata domainMetadata,
                   final EntityFactory entityFactory) {
         this.entityContainerFetcher = entityContainerFetcher;

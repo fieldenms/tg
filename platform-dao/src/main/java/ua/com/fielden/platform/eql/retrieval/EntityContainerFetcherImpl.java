@@ -40,7 +40,7 @@ import static ua.com.fielden.platform.eql.retrieval.EntityResultTreeBuilder.buil
 import static ua.com.fielden.platform.eql.retrieval.HibernateScalarsExtractor.getSortedScalars;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
-public class EntityContainerFetcher {
+final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
 
     private final Logger logger = getLogger(this.getClass());
 
@@ -55,7 +55,7 @@ public class EntityContainerFetcher {
     private final EntityFactory entityFactory;
 
     @Inject
-    public EntityContainerFetcher(
+    EntityContainerFetcherImpl(
             final IDomainMetadata domainMetadata, final IDbVersionProvider dbVersionProvider,
             final EqlTables eqlTables,
             final QuerySourceInfoProvider querySourceInfoProvider,
@@ -76,6 +76,7 @@ public class EntityContainerFetcher {
         this.entityFactory = entityFactory;
     }
 
+    @Override
     public <E extends AbstractEntity<?>> List<EntityContainer<E>> listAndEnhanceContainers(
             final Session session, final QueryProcessingModel<E, ?> queryModel,
             final Integer pageNumber, final Integer pageCapacity)
@@ -94,6 +95,7 @@ public class EntityContainerFetcher {
                 .enhance(session, result, modelResult.fetchModel(), queryModel.getParamValues());
     }
 
+    @Override
     public <E extends AbstractEntity<?>> Stream<List<EntityContainer<E>>> streamAndEnhanceContainers(
             final Session session, final QueryProcessingModel<E, ?> queryModel, final Optional<Integer> fetchSize)
     {
