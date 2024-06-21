@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.entity.meta.impl;
 
 import com.google.inject.Inject;
-
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -23,20 +22,22 @@ public abstract class AbstractBeforeChangeEventHandler<T> implements IBeforeChan
     @Inject
     private IDates dates;
 
-    @Override
+    /**
+     * Returns an instance of a companion object for entity of {@code type} as {@link IEntityReader}.
+     *
+     * @param type
+     * @return
+     */
     public <R extends IEntityReader<E>, E extends AbstractEntity<?>> R co(final Class<E> type) {
-        if (coFinder == null) {
-            throw new BceOrAceInitException("Companion object finder has not been instantiatiated.");
-        }
-        
         return coFinder.findAsReader(type, true);
     }
 
-    @Override
-    public IDates dates() {
-        if (dates == null) {
-            throw new BceOrAceInitException("IDates has not been instantiated.");
-        }
+    /**
+     * Returns {@link ua.com.fielden.platform.utils.IDates} instance to provide access to dates API in validators (pre-conditions).
+     *
+     * @return
+     */
+    protected IDates dates() {
         return dates;
     }
     

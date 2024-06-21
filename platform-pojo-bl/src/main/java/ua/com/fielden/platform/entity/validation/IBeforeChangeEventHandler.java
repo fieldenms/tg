@@ -1,13 +1,10 @@
 package ua.com.fielden.platform.entity.validation;
 
-import java.lang.annotation.Annotation;
-import java.util.Set;
-
-import ua.com.fielden.platform.companion.IEntityReader;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.utils.IDates;
+
+import java.lang.annotation.Annotation;
+import java.util.Set;
 
 /**
  * Contract that should be implemented by any class to be used as an Entity property before change event handler.
@@ -41,26 +38,5 @@ public interface IBeforeChangeEventHandler<T> {
      * @return
      */
     Result handle(final MetaProperty<T> property, final T newValue, final Set<Annotation> mutatorAnnotations);
-
-    /**
-     * Returns a narrowed down to the reader contract companion object for the given entity type.
-     * By default this method throws {@link UnsupportedOperationException} exception. 
-     * 
-     * @param type
-     * @return
-     */
-    default <R extends IEntityReader<E>, E extends AbstractEntity<?>> R co(final Class<E> type) {
-        throw new UnsupportedOperationException("This method is not implemented by default. Use [AbstractBeforeChangeEventHandler] as the base type to inherit the implementation.");
-    }
-
-    /**
-     * Returns {@link ua.com.fielden.platform.utils.IDates} instance for dates API easy access.
-     * By default this method throws {@link UnsupportedOperationException} exception.
-     *
-     * @return
-     */
-    default IDates dates() {
-        throw new UnsupportedOperationException("This method is not implemented by default. Use [AbstractBeforeChangeEventHandler] as the base type to inherit the implementation.");
-    }
 
 }
