@@ -22,6 +22,7 @@ import java.nio.file.Paths;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 /**
@@ -143,8 +144,8 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
                     .setInputStream(new ByteArrayInputStream("some data".getBytes()));
             coAttachmentUploader.save(newUpload2).getKey();
             fail("Attempts to save a duplicate attachment in the same transaction should have failed due to the transaction rollback.");
-        } catch (final Exception ex) {
-            System.out.println(ex);
+        } catch (final Result ex) {
+            assertEquals("Attachment [readme.txt | SHA1: BAF34551FECB48ACC3DA868EB85E1B6DAC9DE356] could not be located.", ex.getMessage());
         } finally {
             // let's do clean up by deleting just uploaded file
             if (uploadedFile != null) {
