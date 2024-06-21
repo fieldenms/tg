@@ -1,22 +1,29 @@
 package ua.com.fielden.platform.file_reports;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.Arrays;
-
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.joda.time.DateTime;
 import org.junit.Test;
-
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity.EnumType;
 import ua.com.fielden.platform.domaintree.testing.ShortSlaveEntity;
 import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.types.Money;
+
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
+import java.util.Arrays;
+import java.util.stream.Stream;
+
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
 
 public class WorkbookExporterTest {
 
@@ -26,7 +33,7 @@ public class WorkbookExporterTest {
         entityToExport.setDateProp(new DateTime(2000, 1, 1, 0, 0).toDate());
         final String[] propertyNames = { "dateProp" };
         final String[] propertyTitles = { "Date property" };
-        final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles).getSheetAt(0);
+        final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         assertEquals("Date property of the exported row is incorrect", new DateTime(2000, 1, 1, 0, 0).toDate(), exportedRow.getCell(0).getDateCellValue());
     }
@@ -37,7 +44,7 @@ public class WorkbookExporterTest {
         entityToExport.setDateTimeProp(new DateTime(2000, 1, 1, 0, 0));
         final String[] propertyNames = { "dateTimeProp" };
         final String[] propertyTitles = { "Date Time property" };
-        final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles).getSheetAt(0);
+        final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         assertEquals("Date time property of the exported row is incorrect", new DateTime(2000, 1, 1, 0, 0).toDate(), exportedRow.getCell(0).getDateCellValue());
     }
@@ -48,7 +55,7 @@ public class WorkbookExporterTest {
         entityToExport.setBooleanProp(true);
         final String[] propertyNames = { "booleanProp" };
         final String[] propertyTitles = { "Boolean property" };
-        final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles).getSheetAt(0);
+        final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         assertEquals("Boolean property of the exported row is incorrect", true, exportedRow.getCell(0).getBooleanCellValue());
     }
@@ -60,7 +67,7 @@ public class WorkbookExporterTest {
         entityToExport.setMoneyProp(amount);
         final String[] propertyNames = { "moneyProp" };
         final String[] propertyTitles = { "Money property" };
-        final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles).getSheetAt(0);
+        final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         final DataFormatter formatter = new DataFormatter();
         final String formattedCellValue = formatter.formatCellValue(exportedRow.getCell(0));
@@ -74,7 +81,7 @@ public class WorkbookExporterTest {
         entityToExport.setStringProp("master1");
         final String[] propertyNames = { "stringProp" };
         final String[] propertyTitles = { "String property" };
-        final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles).getSheetAt(0);
+        final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         assertEquals("String property of the exported row is incorrect", "master1", exportedRow.getCell(0).getStringCellValue());
     }
@@ -89,7 +96,7 @@ public class WorkbookExporterTest {
         entityToExport.setStringProp(value);
         final String[] propertyNames = { "stringProp" };
         final String[] propertyTitles = { "String property" };
-        final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles).getSheetAt(0);
+        final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         assertEquals("String property of the exported row is incorrect", value, exportedRow.getCell(0).getStringCellValue());
     }
@@ -100,7 +107,7 @@ public class WorkbookExporterTest {
         entityToExport.setIntegerProp(Integer.valueOf(1));
         final String[] propertyNames = { "integerProp" };
         final String[] propertyTitles = { "Integer property" };
-        final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles).getSheetAt(0);
+        final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         assertEquals("Integer property of the exported row is incorrect", Double.valueOf(1), Double.valueOf(exportedRow.getCell(0).getNumericCellValue()));
     }
@@ -111,7 +118,7 @@ public class WorkbookExporterTest {
         entityToExport.setDoubleProp(null);
         final String[] propertyNames = { "doubleProp" };
         final String[] propertyTitles = { "Double property" };
-        final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles).getSheetAt(0);
+        final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         assertEquals("Null property should have blank style", CellType.BLANK, exportedRow.getCell(0).getCellType());
     }
@@ -122,7 +129,7 @@ public class WorkbookExporterTest {
         entityToExport.setEnumProp(EnumType.ONE);
         final String[] propertyNames = { "enumProp" };
         final String[] propertyTitles = { "Enumeration property" };
-        final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles).getSheetAt(0);
+        final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         assertEquals("Enum property of the exported row is incorrect", "ONE", exportedRow.getCell(0).getStringCellValue());
     }
@@ -137,9 +144,106 @@ public class WorkbookExporterTest {
         entityToExport.setEntityProp(slave1);
         final String[] propertyNames = { "entityProp" };
         final String[] propertyTitles = { "Entity property" };
-        final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles).getSheetAt(0);
+        final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         assertEquals("Entity property of the exported row is incorrect", "master key1 1", exportedRow.getCell(0).getStringCellValue());
+    }
+
+    @Test
+    public void exporting_entities_with_this_included_associates_the_main_hyperlink_with_those_cells() {
+        final MasterEntity entityToExport = new MasterEntity();
+        entityToExport.setKey("master key1");
+        final SlaveEntity slave1 = new SlaveEntity();
+        slave1.setMasterEntityProp(entityToExport);
+        slave1.setIntegerProp(Integer.valueOf(1));
+        entityToExport.setEntityProp(slave1);
+        final String[] propertyNames = { "", "entityProp" };
+        final String[] propertyTitles = { "This", "Entity property" };
+        final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles, entity -> of("http://tgdev.com")).getSheetAt(0);
+        final Row exportedRow = sheet.getRow(1);
+
+        assertEquals("Unexpected cell value for ”this”.", "master key1", exportedRow.getCell(0).getStringCellValue());
+        assertNotNull("Hyperlinks are expected to be associated with cells for “this”.", exportedRow.getCell(0).getHyperlink());
+
+        assertEquals("Unexpected cell value for entity-typed property “entityProp”", "master key1 1", exportedRow.getCell(1).getStringCellValue());
+        assertNull("Hyperlinks are not expected for non-key entity-typed property “entityProp”", exportedRow.getCell(1).getHyperlink());
+    }
+
+    @Test
+    public void exporting_entities_with_key_included_associates_the_main_hyperlink_with_those_cells() {
+        final MasterEntity entityToExport = new MasterEntity();
+        entityToExport.setKey("master key1");
+        final String[] propertyNames = { "key", "entityProp" };
+        final String[] propertyTitles = { "Key", "Entity property" };
+        final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles, entity -> of("http://tgdev.com")).getSheetAt(0);
+        final Row exportedRow = sheet.getRow(1);
+        assertEquals("Unexpected cell value for ”this”.", "master key1", exportedRow.getCell(0).getStringCellValue());
+        assertNotNull("Hyperlinks are expected to be associated with cells for “key”.", exportedRow.getCell(0).getHyperlink());
+    }
+
+    @Test
+    public void exporting_composite_entities_without_this_but_with_key_members_included_associates_the_main_hyperlink_with_those_cells() {
+        final MasterEntity master = new MasterEntity();
+        master.setKey("master key1");
+        final SlaveEntity entityToExport = new SlaveEntity();
+        entityToExport.setMasterEntityProp(master); // key member 1
+        entityToExport.setIntegerProp(Integer.valueOf(1)); // key member 2
+
+        final String[] propertyNames = { "masterEntityProp", "integerProp" };
+        final String[] propertyTitles = { "Master Entity", "integer property" };
+        final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles, entity -> of("http://tgdev.com")).getSheetAt(0);
+        final Row exportedRow = sheet.getRow(1);
+
+        assertEquals("Unexpected cell value for ”masterEntityProp”.", "master key1", exportedRow.getCell(0).getStringCellValue());
+        assertNotNull("Hyperlinks are expected to be associated with cells for “masterEntityProp”.", exportedRow.getCell(0).getHyperlink());
+
+        assertEquals("Unexpected cell value for property “integerProp”", 1d, exportedRow.getCell(1).getNumericCellValue(), 0);
+        assertNotNull("Hyperlinks are expected to be associated with cells for “integerProp”.", exportedRow.getCell(1).getHyperlink());
+    }
+
+    @Test
+    public void exporting_composite_entities_without_master_but_with_an_entity_typed_key_member_included_witch_has_master_associates_hyperlink_with_those_cells() {
+        final MasterEntity master = new MasterEntity();
+        master.setKey("master key1");
+        final SlaveEntity entityToExport = new SlaveEntity();
+        entityToExport.setMasterEntityProp(master); // key member 1
+        entityToExport.setIntegerProp(Integer.valueOf(1)); // key member 2
+
+        final String[] propertyNames = { "masterEntityProp", "integerProp" };
+        final String[] propertyTitles = { "Master Entity", "integer property" };
+        final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles, entity -> entity instanceof SlaveEntity ? empty() : of("http://tgdev.com")).getSheetAt(0);
+        final Row exportedRow = sheet.getRow(1);
+
+        assertEquals("Unexpected cell value for ”masterEntityProp”.", "master key1", exportedRow.getCell(0).getStringCellValue());
+        assertNotNull("Hyperlinks are expected for be associated with cells for “masterEntityProp”.", exportedRow.getCell(0).getHyperlink());
+
+        assertEquals("Unexpected cell value for property “integerProp”", 1d, exportedRow.getCell(1).getNumericCellValue(), 0);
+        assertNull("Hyperlinks are not expected to be associated with cells for “integerProp”.", exportedRow.getCell(1).getHyperlink());
+    }
+
+    @Test
+    public void hyperlinks_can_be_provided_explicitly_per_entity_and_per_property() {
+        final MasterEntity master = new MasterEntity();
+        master.setKey("master key1");
+        master.setBigDecimalProp(new BigDecimal("10.42"));
+        final SlaveEntity entityToExport = new SlaveEntity();
+        entityToExport.setMasterEntityProp(master); // key member 1
+        entityToExport.setIntegerProp(Integer.valueOf(1)); // key member 2
+
+        final var propertyNames = new String[] { "masterEntityProp", "masterEntityProp.bigDecimalProp", "integerProp" };
+        final var propertyTitles = new String[] { "Master Entity", "Master Entity Bid Decimal Prop", "integer property" };
+        final var hyperlinksForEntityToExport = mapOf(t2("masterEntityProp", "https://tgdev.com/#/master/1"), t2("masterEntityProp.bigDecimalProp", "https://tgdev.com/#/master/1"), t2("integerProp", "https://tgdev.com/#/master/1"));
+        final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), Stream.of(hyperlinksForEntityToExport), propertyNames, propertyTitles).getSheetAt(0);
+        final Row exportedRow = sheet.getRow(1);
+
+        assertEquals("Unexpected cell value for ”masterEntityProp”.", "master key1", exportedRow.getCell(0).getStringCellValue());
+        assertNotNull("Hyperlinks are expected for be associated with cells for “masterEntityProp”.", exportedRow.getCell(0).getHyperlink());
+
+        assertEquals("Unexpected cell value for property “masterEntityProp.bigDecimalProp”", new BigDecimal("10.42"), new BigDecimal(exportedRow.getCell(1).getNumericCellValue(), new MathContext(4, RoundingMode.HALF_UP)));
+        assertNotNull("Hyperlinks are expected to be associated with cells for “masterEntityProp.bigDecimalProp”.", exportedRow.getCell(1).getHyperlink());
+
+        assertEquals("Unexpected cell value for property “integerProp”", 1d, exportedRow.getCell(2).getNumericCellValue(), 0);
+        assertNotNull("Hyperlinks are expected to be associated with cells for “integerProp”.", exportedRow.getCell(2).getHyperlink());
     }
 
     @Test
@@ -155,7 +259,7 @@ public class WorkbookExporterTest {
         entityToExport.setCollection(Arrays.asList(slave1, slave2));
         final String[] propertyNames = { "collection" };
         final String[] propertyTitles = { "Collection property" };
-        final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles).getSheetAt(0);
+        final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         assertEquals("Collectional property of the exported row is incorrect", "master key1 1, master key1 2", exportedRow.getCell(0).getStringCellValue());
     }
@@ -179,7 +283,7 @@ public class WorkbookExporterTest {
         entityToExport.setShortCollection(Arrays.asList(shortSlave1, shortSlave2));
         final String[] propertyNames = { "shortCollection" };
         final String[] propertyTitles = { "Short collection" };
-        final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles).getSheetAt(0);
+        final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         assertEquals("Short collection property of the exported row is incorrect", "master key1 1, master key1 2", exportedRow.getCell(0).getStringCellValue());
     }
@@ -190,7 +294,7 @@ public class WorkbookExporterTest {
         entityToExport.set("dateProp", new DateTime(2000, 1, 1, 0, 0).toDate());
         final String[] propertyNames = { "dateProp" };
         final String[] propertyTitles = { "Date property" };
-        final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles).getSheetAt(0);
+        final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         assertEquals("Date property of the exported entity aggregates is incorrect", new DateTime(2000, 1, 1, 0, 0).toDate(), exportedRow.getCell(0).getDateCellValue());
     }
@@ -201,7 +305,7 @@ public class WorkbookExporterTest {
         entityToExport.set("dateTimeProp", new DateTime(2000, 1, 1, 0, 0));
         final String[] propertyNames = { "dateTimeProp" };
         final String[] propertyTitles = { "Date Time property" };
-        final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles).getSheetAt(0);
+        final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         assertEquals("Date time property of the exported entity aggregates is incorrect", new DateTime(2000, 1, 1, 0, 0).toDate(), exportedRow.getCell(0).getDateCellValue());
     }
@@ -212,7 +316,7 @@ public class WorkbookExporterTest {
         entityToExport.set("booleanProp", true);
         final String[] propertyNames = { "booleanProp" };
         final String[] propertyTitles = { "Boolean property" };
-        final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles).getSheetAt(0);
+        final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         assertEquals("Boolean property of the exported entity aggregates is incorrect", true, exportedRow.getCell(0).getBooleanCellValue());
     }
@@ -224,7 +328,7 @@ public class WorkbookExporterTest {
         entityToExport.set("moneyProp", amount);
         final String[] propertyNames = { "moneyProp" };
         final String[] propertyTitles = { "Money property" };
-        final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles).getSheetAt(0);
+        final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         final DataFormatter formatter = new DataFormatter();
         final String formattedCellValue = formatter.formatCellValue(exportedRow.getCell(0));
@@ -238,7 +342,7 @@ public class WorkbookExporterTest {
         entityToExport.set("stringProp", "master1");
         final String[] propertyNames = { "stringProp" };
         final String[] propertyTitles = { "String property" };
-        final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles).getSheetAt(0);
+        final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         assertEquals("String property of the exported entity aggregates is incorrect", "master1", exportedRow.getCell(0).getStringCellValue());
     }
@@ -249,7 +353,7 @@ public class WorkbookExporterTest {
         entityToExport.set("integerProp", Integer.valueOf(1));
         final String[] propertyNames = { "integerProp" };
         final String[] propertyTitles = { "Integer property" };
-        final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles).getSheetAt(0);
+        final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         assertEquals("Integer property of the exported entity aggregates is incorrect", Double.valueOf(1), Double.valueOf(exportedRow.getCell(0).getNumericCellValue()));
     }
@@ -260,7 +364,7 @@ public class WorkbookExporterTest {
         entityToExport.set("doubleProp", null);
         final String[] propertyNames = { "doubleProp" };
         final String[] propertyTitles = { "Double property" };
-        final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles).getSheetAt(0);
+        final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         assertEquals("Entity aggregate's null property should have blank style", CellType.BLANK, exportedRow.getCell(0).getCellType());
     }
@@ -271,7 +375,7 @@ public class WorkbookExporterTest {
         entityToExport.set("enumProp", EnumType.ONE);
         final String[] propertyNames = { "enumProp" };
         final String[] propertyTitles = { "Enumeration property" };
-        final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles).getSheetAt(0);
+        final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         assertEquals("Enum property of the exported entity aggregates is incorrect", "ONE", exportedRow.getCell(0).getStringCellValue());
     }
@@ -287,7 +391,7 @@ public class WorkbookExporterTest {
         entityToExport.set("entityProp", slave1);
         final String[] propertyNames = { "entityProp" };
         final String[] propertyTitles = { "Entity property" };
-        final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles).getSheetAt(0);
+        final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         assertEquals("Entity property of the exported entity aggregates is incorrect", "master key1 1", exportedRow.getCell(0).getStringCellValue());
     }
@@ -306,7 +410,7 @@ public class WorkbookExporterTest {
         entityToExport.set("collection", Arrays.asList(slave1, slave2));
         final String[] propertyNames = { "collection" };
         final String[] propertyTitles = { "Collection property" };
-        final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles).getSheetAt(0);
+        final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         assertEquals("Collectional property of the exported entity aggregates is incorrect", "master key1 1, master key1 2", exportedRow.getCell(0).getStringCellValue());
     }
@@ -333,8 +437,9 @@ public class WorkbookExporterTest {
         entityToExport.set("shortCollection", Arrays.asList(shortSlave1, shortSlave2));
         final String[] propertyNames = { "shortCollection" };
         final String[] propertyTitles = { "Short collection" };
-        final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles).getSheetAt(0);
+        final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         assertEquals("Short collection property of the exported row is incorrect", "master key1 1, master key1 2", exportedRow.getCell(0).getStringCellValue());
     }
+
 }

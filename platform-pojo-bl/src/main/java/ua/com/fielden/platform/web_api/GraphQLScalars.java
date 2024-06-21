@@ -1,40 +1,32 @@
 package ua.com.fielden.platform.web_api;
-import static graphql.schema.GraphQLScalarType.newScalar;
-import static java.lang.String.format;
-import static org.joda.time.format.ISODateTimeFormat.basicDate;
-import static org.joda.time.format.ISODateTimeFormat.date;
-import static org.joda.time.format.ISODateTimeFormat.dateElementParser;
-import static org.joda.time.format.ISODateTimeFormat.time;
-import static org.joda.time.format.ISODateTimeFormat.timeElementParser;
-import static ua.com.fielden.platform.types.either.Either.left;
-import static ua.com.fielden.platform.types.either.Either.right;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
+
+import com.google.inject.Inject;
+import graphql.language.FloatValue;
+import graphql.language.IntValue;
+import graphql.language.StringValue;
+import graphql.schema.*;
+import graphql.schema.GraphQLScalarType.Builder;
+import org.apache.logging.log4j.Logger;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.DateTimeFormatterBuilder;
+import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
+import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.either.Either;
+import ua.com.fielden.platform.utils.IDates;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Date;
 import java.util.Map;
 
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.DateTimeFormatterBuilder;
-
-import com.google.inject.Inject;
-
-import graphql.language.FloatValue;
-import graphql.language.IntValue;
-import graphql.language.StringValue;
-import graphql.schema.Coercing;
-import graphql.schema.CoercingParseLiteralException;
-import graphql.schema.CoercingParseValueException;
-import graphql.schema.CoercingSerializeException;
-import graphql.schema.GraphQLScalarType;
-import graphql.schema.GraphQLScalarType.Builder;
-import ua.com.fielden.platform.types.Colour;
-import ua.com.fielden.platform.types.Hyperlink;
-import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.either.Either;
-import ua.com.fielden.platform.utils.IDates;
+import static graphql.schema.GraphQLScalarType.newScalar;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static org.joda.time.format.ISODateTimeFormat.*;
+import static ua.com.fielden.platform.types.either.Either.left;
+import static ua.com.fielden.platform.types.either.Either.right;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 
 /**
  * TG-specific GraphQL Web API scalar type implementations.
@@ -42,8 +34,11 @@ import ua.com.fielden.platform.utils.IDates;
  * @author TG Team
  *
  */
-public class TgScalars {
-    private static final String UNEXPECTED_TYPE_ERROR = "Expected [%] but was [%].";
+public class GraphQLScalars {
+    private static final Logger LOGGER = getLogger(GraphQLScalars.class);
+    private static final String ERR_UNEXPECTED_TYPE = "Expected [%s] but was [%s].";
+    private static final String ERR_ARGUMENT_VARIABLES_ARE_NOT_SUPPORTED = "%s argument variables are not supported.";
+    private static final String ERR_ARGUMENT_LITERALS_ARE_NOT_SUPPORTED = "%s argument literals are not supported.";
 
     @Inject
     private static IDates dates;
@@ -55,7 +50,7 @@ public class TgScalars {
      * @return
      */
     private static Builder newScalarType(final String title) {
-        return newScalar().name(title).description(format("%s type.", title));
+        return newScalar().name(title).description("%s type.".formatted(title));
     }
     
     /**
@@ -66,7 +61,7 @@ public class TgScalars {
      * @return
      */
     private static <R> Either<String, R> error(final String expected, final Object unexpected) {
-        return left(format(UNEXPECTED_TYPE_ERROR, expected, unexpected.getClass().getSimpleName()));
+        return left(ERR_UNEXPECTED_TYPE.formatted(expected, unexpected.getClass().getSimpleName()));
     }
     
     /////////////////////////////////////////////////////////////// SCALAR TYPES WITHOUT ARGUMENTS ///////////////////////////////////////////////////////////////
@@ -107,17 +102,25 @@ public class TgScalars {
         
         @Override
         default O serialize(final Object dataFetcherResult) {
-            return convertDataFetcherResult(dataFetcherResult).orElseThrow((error) -> new CoercingSerializeException(error));
+            return convertDataFetcherResult(dataFetcherResult).orElseThrow(error -> {
+                final var ex = new CoercingSerializeException(error);
+                LOGGER.error(ex.getMessage(), ex);
+                return ex;
+            });
         }
         
         @Override
         default Object parseValue(final Object variableInput) {
-            throw new CoercingParseValueException(format("%s argument variables not supported.", title()));
+            final var ex = new CoercingParseValueException(ERR_ARGUMENT_VARIABLES_ARE_NOT_SUPPORTED.formatted(title()));
+            LOGGER.error(ex.getMessage(), ex);
+            throw ex;
         }
         
         @Override
         default Object parseLiteral(final Object argumentInput) {
-            throw new CoercingParseLiteralException(format("%s argument literals not supported.", title()));
+            final var ex = new CoercingParseLiteralException(ERR_ARGUMENT_LITERALS_ARE_NOT_SUPPORTED.formatted(title()));
+            LOGGER.error(ex.getMessage(), ex);
+            throw ex;
         }
     }
     
@@ -177,7 +180,11 @@ public class TgScalars {
         
         @Override
         default O serialize(final Object dataFetcherResult) {
-            return convertDataFetcherResult(dataFetcherResult).orElseThrow((error) -> new CoercingSerializeException(error));
+            return convertDataFetcherResult(dataFetcherResult).orElseThrow(error -> {
+                final var ex = new CoercingSerializeException(error);
+                LOGGER.error(ex.getMessage(), ex);
+                return ex;
+            });
         }
         
         /**
@@ -190,7 +197,11 @@ public class TgScalars {
         
         @Override
         default I parseValue(final Object variableInput) {
-            return convertVariableInput(variableInput).orElseThrow((error) -> new CoercingParseValueException(error));
+            return convertVariableInput(variableInput).orElseThrow(error -> {
+                final var ex = new CoercingParseValueException(error);
+                LOGGER.error(ex.getMessage(), ex);
+                return ex;
+            });
         }
         
         /**
@@ -203,7 +214,11 @@ public class TgScalars {
         
         @Override
         default I parseLiteral(final Object literalInput) {
-            return convertLiteralInput(literalInput).orElseThrow((error) -> new CoercingParseLiteralException(error));
+            return convertLiteralInput(literalInput).orElseThrow(error -> {
+                final var ex = new CoercingParseLiteralException(error);
+                LOGGER.error(ex.getMessage(), ex);
+                return ex;
+            });
         }
         
     }
@@ -282,7 +297,9 @@ public class TgScalars {
     /**
      * GraphQL scalar implementation for {@link Date} type.
      */
-    public static final GraphQLScalarType GraphQLDate = newScalarType("Date").coercing(new TgCoercing<Date, Map<String, Object>>() {
+    public static final GraphQLScalarType GraphQLDate = newScalar().name("Date")
+            .description("Date type.\n\nInput formats:  \n20221002  \n\"2022\"  \n\"2022-10\"  \n\"2022-10-02\"  \n\"2022-10-02 14\"  \n\"2022-10-02 14:07\"  \n\"2022-10-02 14:07:19\"  \n\"2022-10-02 14:07:19.999\"")
+            .coercing(new TgCoercing<Date, Map<String, Object>>() {
         private final DateTimeFormatter basicDateParser = basicDate();
         private final DateTimeFormatter dateTimeParser = new DateTimeFormatterBuilder()
             .append(dateElementParser())
@@ -314,7 +331,7 @@ public class TgScalars {
             try {
                 return right(formatter.withZone(dates.timeZone()).parseDateTime(input).toDate()); // request time-zone is used here (or default for independent time-zone mode)
             } catch (final IllegalArgumentException e) {
-                return left(format(UNEXPECTED_TYPE_ERROR, "number-like or string-based " + title(), input));
+                return left(ERR_UNEXPECTED_TYPE.formatted("number-like or string-based " + title(), input));
             }
         }
         

@@ -9,7 +9,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.security.AuthorisationInterceptor;
 import ua.com.fielden.platform.security.Authorise;
-import ua.com.fielden.platform.web_api.TgScalars;
+import ua.com.fielden.platform.web_api.GraphQLScalars;
 
 import java.lang.reflect.Method;
 
@@ -49,10 +49,10 @@ public abstract class EntityModule extends AbstractModule implements IModuleWith
                 annotatedWith(Authorise.class), // having annotated methods
                 ai); // the interceptor
 
-        // request static IDates injection into TgScalars;
+        // request static IDates injection into GraphQLScalars;
         // static injection occurs at the time when an injector is created
         // this guarantees that different implementations of IDates will be injected based on IDates binding in IoC modules that define the binding configuration;
-        requestStaticInjection(TgScalars.class);
+        requestStaticInjection(GraphQLScalars.class);
     }
 
     @Override
