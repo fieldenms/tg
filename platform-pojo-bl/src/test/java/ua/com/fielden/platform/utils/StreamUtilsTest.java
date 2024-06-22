@@ -181,11 +181,17 @@ public class StreamUtilsTest {
     
     @Test
     public void can_zip_streams_of_different_size() {
-        assertEquals(listOf(0, 2, 4), zip(Stream.of(0, 1, 2), Stream.of(0, 1, 2, 3), (x, y) -> x+y).collect(toList()));
-        assertEquals(listOf(0, 2, 4), zip(Stream.of(0, 1, 2, 3), Stream.of(0, 1, 2), (x, y) -> x+y).collect(toList()));
-        assertEquals(listOf(), zip(Stream.<Integer>empty(), Stream.of(0, 1, 2), (x, y) -> x+y).collect(toList()));
-        assertEquals(listOf(), zip(Stream.of(0, 1, 2), Stream.<Integer>empty(), (x, y) -> x+y).collect(toList()));
-        
+        assertEquals(listOf(0, 2, 4), zip(Stream.of(0, 1, 2), Stream.of(0, 1, 2, 3), (x, y) -> x+y).toList());
+        assertEquals(listOf(0, 2, 4), zip(Stream.of(0, 1, 2, 3), Stream.of(0, 1, 2), (x, y) -> x+y).toList());
+        assertEquals(listOf(), zip(Stream.<Integer>empty(), Stream.of(0, 1, 2), (x, y) -> x+y).toList());
+        assertEquals(listOf(), zip(Stream.of(0, 1, 2), Stream.<Integer>empty(), (x, y) -> x+y).toList());
+    }
+
+    @Test
+    public void can_zip_finite_with_infinite() {
+        final AtomicInteger ai = new AtomicInteger(0);
+        assertEquals(listOf(0, 2, 4), zip(Stream.of(0, 1, 2), Stream.generate(ai::getAndIncrement), (x, y) -> x+y).toList());
+        assertEquals(listOf(1, 2, 3), zip(Stream.generate(() -> 1), Stream.of(0, 1, 2), (x, y) -> x+y).toList());
     }
 
     @Test
@@ -268,6 +274,19 @@ public class StreamUtilsTest {
     @Test
     public void foldLeft_processes_stream_elements_sequentially_from_left_to_right() {
         assertEquals("one-two-three", foldLeft(Stream.of("two-", "three"), "one-", String::concat));
+    }
+
+    @Test
+    public void supplyIfEmpty_returns_equivalent_stream_if_original_is_not_empty() {
+        final var xs = CollectionUtil.listOf(1, 2);
+        final var xsEquivalent = StreamUtils.supplyIfEmpty(xs.stream(), () -> 0).toList();
+        assertEquals(xs, xsEquivalent);
+    }
+
+    @Test
+    public void supplyIfEmpty_returns_alternative_stream_if_original_is_empty() {
+        final var xsAlternative = StreamUtils.supplyIfEmpty(Stream.empty(), () -> 0).limit(3).toList();
+        assertEquals(CollectionUtil.listOf(0, 0, 0), xsAlternative);
     }
 
 }

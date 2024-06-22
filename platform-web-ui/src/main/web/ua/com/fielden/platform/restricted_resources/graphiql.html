@@ -1,26 +1,21 @@
-<html> <!-- https://github.com/graphql/graphiql/tree/master/packages/graphiql#cdn-bundle -- source of simple index.html file for GraphiQL editor -->
+<html> <!-- https://github.com/graphql/graphiql/tree/main/examples/graphiql-cdn -- source of simple index.html file for GraphiQL editor -->
     <meta charset="UTF-8"> <!-- this is important to avoid weird symbols appearing in GraphiQL editor -->
     <head>
         <title>TG GraphiQL</title>
         <link href="/resources/graphiql/graphiql.min.css" rel="stylesheet" />
     </head>
     <body style="margin: 0;">
-        <div id="graphiql" style="height: 100vh;"></div>
+        <div id="graphiql" style="height: 100vh;">Loading...</div>
         <script crossorigin src="/resources/graphiql/react.production.min.js"></script>
         <script crossorigin src="/resources/graphiql/react-dom.production.min.js"></script>
         <script crossorigin src="/resources/graphiql/graphiql.min.js"></script>
         <script>
-            const graphQLFetcher = graphQLParams =>
-                fetch('/graphiql', { // this is our Web API entry point for GraphiQL POST request
-                    method: 'post',
-                    headers: { 'Content-Type': 'application/json', 'Time-Zone': Intl.DateTimeFormat().resolvedOptions().timeZone },
-                    body: JSON.stringify(graphQLParams),
-                })
-                .then(response => response.json())
-                .catch(() => response.text());
-            ReactDOM.render(
-                React.createElement(GraphiQL, { fetcher: graphQLFetcher }),
-                document.getElementById('graphiql'),
+            const graphQLFetcher = GraphiQL.createFetcher({
+                url: '/graphiql', // this is our Web API entry point for GraphiQL POST request
+                headers: { 'Time-Zone': Intl.DateTimeFormat().resolvedOptions().timeZone }
+            });
+            ReactDOM.createRoot(document.getElementById('graphiql')).render(
+                React.createElement(GraphiQL, { fetcher: graphQLFetcher, defaultEditorToolsVisibility: true })
             );
         </script>
     </body>
