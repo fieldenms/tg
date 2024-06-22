@@ -154,7 +154,7 @@ public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTree
                 criteriaMetaProp.setLastInvalidValue(metaProp.getLastInvalidValue());
                 criteriaMetaProp.setAssigned(metaProp.isAssigned());
                 criteriaMetaProp.setEditable(metaProp.isEditable());
-                criteriaMetaProp.setRequired(metaProp.isRequired());
+                criteriaMetaProp.setRequired(metaProp.isRequired(), metaProp.getCustomErrorMsgForRequiredness());
                 if (firstFailure != null) {
                     // In case where property is invalid there is a pair of values: valid and attempted.
                     // Valid value usually represents the value, that was previously set.

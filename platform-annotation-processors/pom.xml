@@ -49,12 +49,6 @@
             <artifactId>javapoet</artifactId>
             <version>1.13.0</version>
         </dependency>
-        <dependency>
-            <groupId>com.google.auto.service</groupId>
-            <artifactId>auto-service</artifactId>
-            <version>1.0.1</version>
-            <scope>provided</scope>
-        </dependency>
         <!-- https://mvnrepository.com/artifact/com.google.testing.compile/compile-testing -->
         <dependency>
             <groupId>com.google.testing.compile</groupId>

@@ -26,8 +26,7 @@ public class ConcurrentAccessToCompanionObjectsTest extends AbstractDaoTestCase 
             public void run() {
                 try {
                     res = co.getSessionWithDelay(200);
-                    System.out.println(format("first started with [%s] -- ended with [%s]", System.identityHashCode(res.getKey()), System.identityHashCode(res.getValue())));
-                    
+                    // System.out.println(format("first started with [%s] -- ended with [%s]", System.identityHashCode(res.getKey()), System.identityHashCode(res.getValue())));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -43,7 +42,7 @@ public class ConcurrentAccessToCompanionObjectsTest extends AbstractDaoTestCase 
                 try {
                     Thread.sleep(50);
                     final Pair<Session, Session> p = co.getSessionWithDelay(1);
-                    System.out.println(format("second started with [%s] -- ended with [%s]", System.identityHashCode(p.getKey()), System.identityHashCode(p.getValue())));
+                    // System.out.println(format("second started with [%s] -- ended with [%s]", System.identityHashCode(p.getKey()), System.identityHashCode(p.getValue())));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

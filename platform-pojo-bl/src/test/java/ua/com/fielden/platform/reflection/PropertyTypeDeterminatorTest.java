@@ -166,14 +166,14 @@ public class PropertyTypeDeterminatorTest {
         try {
             penultAndLast = PropertyTypeDeterminator.penultAndLast("property3");
             fail("property3 is not dot-notation therefore RuntimeException should be thrown");
-        } catch (final Exception e) {
-            System.out.println(e.getMessage());
+        } catch (final ReflectionException ex) {
+            assertEquals("Should be dot-notation.", ex.getMessage());
         }
         try {
             penultAndLast = PropertyTypeDeterminator.penultAndLast("getProperty3()");
             fail("getProperty3() is not dot-notation therefore RuntimeException should be thrown");
-        } catch (final Exception e) {
-            System.out.println(e.getMessage());
+        } catch (final ReflectionException ex) {
+            assertEquals("Should be dot-notation.", ex.getMessage());
         }
     }
 

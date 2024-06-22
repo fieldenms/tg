@@ -284,7 +284,7 @@ public class StreamUtilsTest {
     }
 
     @Test
-    public void supplyIfEmpty_returns_alternative_stream_if_original_is_not_empty() {
+    public void supplyIfEmpty_returns_alternative_stream_if_original_is_empty() {
         final var xsAlternative = StreamUtils.supplyIfEmpty(Stream.empty(), () -> 0).limit(3).toList();
         assertEquals(CollectionUtil.listOf(0, 0, 0), xsAlternative);
     }
