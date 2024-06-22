@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.web_api;
 
-import static graphql.Scalars.GraphQLBigDecimal;
 import static graphql.Scalars.GraphQLBoolean;
 import static graphql.Scalars.GraphQLInt;
-import static graphql.Scalars.GraphQLLong;
 import static graphql.Scalars.GraphQLString;
+import static graphql.scalars.ExtendedScalars.GraphQLBigDecimal;
+import static graphql.scalars.ExtendedScalars.GraphQLLong;
 import static graphql.schema.GraphQLArgument.newArgument;
 import static graphql.schema.GraphQLEnumType.newEnum;
 import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
@@ -34,10 +34,10 @@ import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
-import static ua.com.fielden.platform.web_api.TgScalars.GraphQLColour;
-import static ua.com.fielden.platform.web_api.TgScalars.GraphQLDate;
-import static ua.com.fielden.platform.web_api.TgScalars.GraphQLHyperlink;
-import static ua.com.fielden.platform.web_api.TgScalars.GraphQLMoney;
+import static ua.com.fielden.platform.web_api.GraphQLScalars.GraphQLColour;
+import static ua.com.fielden.platform.web_api.GraphQLScalars.GraphQLDate;
+import static ua.com.fielden.platform.web_api.GraphQLScalars.GraphQLHyperlink;
+import static ua.com.fielden.platform.web_api.GraphQLScalars.GraphQLMoney;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;

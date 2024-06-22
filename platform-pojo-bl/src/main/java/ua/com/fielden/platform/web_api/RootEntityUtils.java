@@ -1,67 +1,14 @@
 package ua.com.fielden.platform.web_api;
 
-import static java.lang.Byte.valueOf;
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
-import static java.util.stream.Stream.concat;
-import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.ASCENDING;
-import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.DESCENDING;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity_centre.review.DynamicParamBuilder.getPropertyValues;
-import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createConditionProperty;
-import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createQuery;
-import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.createEmptyQueryProperty;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.types.tuples.T3.t3;
-import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
-import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumentedWithKeyAndDesc;
-import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isString;
-import static ua.com.fielden.platform.utils.Pair.pair;
-import static ua.com.fielden.platform.web_api.FieldSchema.FROM;
-import static ua.com.fielden.platform.web_api.FieldSchema.LIKE;
-import static ua.com.fielden.platform.web_api.FieldSchema.ORDER;
-import static ua.com.fielden.platform.web_api.FieldSchema.ORDER_ARGUMENT;
-import static ua.com.fielden.platform.web_api.FieldSchema.TO;
-import static ua.com.fielden.platform.web_api.FieldSchema.VALUE;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Stream;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
+import graphql.GraphQLContext;
+import graphql.execution.CoercedVariables;
 import graphql.execution.ValuesResolver;
-import graphql.language.Argument;
-import graphql.language.Field;
-import graphql.language.FragmentDefinition;
-import graphql.language.FragmentSpread;
-import graphql.language.InlineFragment;
-import graphql.language.Selection;
-import graphql.language.SelectionSet;
+import graphql.language.*;
 import graphql.schema.GraphQLArgument;
 import graphql.schema.GraphQLCodeRegistry;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLSchema;
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -78,6 +25,40 @@ import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Stream;
+
+import static graphql.execution.CoercedVariables.of;
+import static graphql.execution.ValuesResolver.getArgumentValues;
+import static java.lang.Byte.valueOf;
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Stream.concat;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.ASCENDING;
+import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.DESCENDING;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity_centre.review.DynamicParamBuilder.getPropertyValues;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.createEmptyQueryProperty;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createConditionProperty;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createQuery;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.types.tuples.T3.t3;
+import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
+import static ua.com.fielden.platform.utils.Pair.pair;
+import static ua.com.fielden.platform.web_api.FieldSchema.*;
+
 /**
  * Contains querying utility methods for root fields in GraphQL query / mutation schemas.
  * 
@@ -90,19 +71,21 @@ public class RootEntityUtils {
      * This is a part of GraphQL spec.
      */
     private static final String __TYPENAME = "__typename";
-    public static final String ORDER_PRIORITIES_ARE_NOT_DISTINCT = "Order priorities are not distinct.";
+    public static final String WARN_ORDER_PRIORITIES_ARE_NOT_DISTINCT = "Order priorities are not distinct.";
     static final String QUERY_TYPE_NAME = "Query";
-    private static final Logger LOGGER = LogManager.getLogger(RootEntityUtils.class);
+    private static final Logger LOGGER = getLogger(RootEntityUtils.class);
     
     /**
      * Returns function for generation of EQL query execution model for retrieving {@code rootField} and its selection set in GraphQL query or mutation [and optional warning about ordering].
      * The argument of function is {@link IDates} instance from which 'now' moment can properly be retrieved and used for date property filtering.
      * 
      * @param rootField -- root field for GraphQL query or mutation
-     * @param variables -- existing variable values by names in the query; they can be used in {@code rootField.selectionSet}
+     * @param variables -- existing coerced variable values by names in the query; they can be used in {@code rootField.selectionSet}
      * @param fragmentDefinitions -- fragment definitions by names in the query; {@code rootField.selectionSet} can contain fragment spreads based on that definitions
      * @param entityType
      * @param schema -- GraphQL schema to assist with resolving of argument values
+     * @param context -- context in current data fetching request
+     * @param locale -- locale in current data fetching request
      * @return
      */
     public static <T extends AbstractEntity<?>> Function<IDates, T2<Optional<String>, QueryExecutionModel<T, EntityResultQueryModel<T>>>> generateQueryModelFrom(
@@ -110,7 +93,9 @@ public class RootEntityUtils {
         final Map<String, Object> variables,
         final Map<String, FragmentDefinition> fragmentDefinitions,
         final Class<T> entityType,
-        final GraphQLSchema schema
+        final GraphQLSchema schema,
+        final GraphQLContext context,
+        final Locale locale
     ) {
         final SelectionSet selectionSet = rootField.getSelectionSet();
         // convert selectionSet to concrete properties (their dot-notated names) with their arguments
@@ -125,7 +110,9 @@ public class RootEntityUtils {
                 propertyAndArguments.getKey(),
                 propertyAndArguments.getValue(),
                 variables,
-                schema.getCodeRegistry()
+                schema.getCodeRegistry(),
+                context,
+                locale
             ))
             .collect(toList());
         final List<T3<String, Ordering, Byte>> propOrderingWithPriorities = propertiesAndArguments.entrySet().stream()
@@ -134,11 +121,13 @@ public class RootEntityUtils {
                 propertyAndArguments.getKey(),
                 propertyAndArguments.getValue(),
                 variables,
-                schema.getCodeRegistry()
+                schema.getCodeRegistry(),
+                context,
+                locale
             ))
             .flatMap(orderingProperty -> orderingProperty.isPresent() ? Stream.of(orderingProperty.get()) : Stream.empty())
             .collect(toList()); // exclude empty values
-        final Optional<String> optionalWarning = propOrderingWithPriorities.stream().map(t3 -> t3._3).distinct().count() < propOrderingWithPriorities.size() ? of(ORDER_PRIORITIES_ARE_NOT_DISTINCT) : empty(); // in case where order priorities are not distinct, return non-intrusive warning (with data still present)
+        final Optional<String> optionalWarning = propOrderingWithPriorities.stream().map(t3 -> t3._3).distinct().count() < propOrderingWithPriorities.size() ? of(WARN_ORDER_PRIORITIES_ARE_NOT_DISTINCT) : empty(); // in case where order priorities are not distinct, return non-intrusive warning (with data still present)
         final List<Pair<String, Ordering>> specifiedOrderingProperties = propOrderingWithPriorities.stream()
             .sorted((p1, p2) -> p1._3.compareTo(p2._3)) // sort by ordering priority
             .map(prop -> pair(prop._1, prop._2)) // get (name; Ordering) only -- without priority 
@@ -202,8 +191,10 @@ public class RootEntityUtils {
      * @param entityType
      * @param property
      * @param arguments -- pair of {@link GraphQLArgument} definitions and corresponding resolved {@link Argument} instances (which contain actual values)
-     * @param variables -- existing variable values by names in the query
-     * @param codeRegistry -- code registry that is used only to take care of field visibility during {@link ValuesResolver#getArgumentValues(List, List, Map)} conversion
+     * @param variables -- existing coerced variable values by names in the query
+     * @param codeRegistry -- code registry that is used only to take care of field visibility during {@link ValuesResolver#getArgumentValues(GraphQLCodeRegistry, List, List, CoercedVariables, GraphQLContext, Locale)} conversion
+     * @param context -- context in current data fetching request
+     * @param locale -- locale in current data fetching request
      * 
      * @return
      */
@@ -212,7 +203,9 @@ public class RootEntityUtils {
         final String property,
         final T2<List<GraphQLArgument>, List<Argument>> arguments,
         final Map<String, Object> variables,
-        final GraphQLCodeRegistry codeRegistry
+        final GraphQLCodeRegistry codeRegistry,
+        final GraphQLContext context,
+        final Locale locale
     ) {
         final QueryProperty queryProperty = createEmptyQueryProperty(entityType, property);
         final Class<?> type = queryProperty.getType();
@@ -224,7 +217,7 @@ public class RootEntityUtils {
         // We argue that values resolving logic is error-prone and must follow standard guidelines from ValuesResolver.
         // These guidelines include a) resolving from argument literals b) resolving from raw variable values c) scalar values coercion etc.
         // Please follow these guidelines even if ValuesResolver will be made even more private, however this is unlikely scenario.
-        final Map<String, Object> argumentValues = new ValuesResolver().getArgumentValues(codeRegistry, arguments._1, arguments._2, variables);
+        final Map<String, Object> argumentValues = getArgumentValues(codeRegistry, arguments._1, arguments._2, of(variables), context, locale);
         
         if (isString(type)) {
             ofNullable(argumentValues.get(LIKE)).ifPresent(value -> {
@@ -264,8 +257,10 @@ public class RootEntityUtils {
      * 
      * @param property
      * @param arguments -- pair of {@link GraphQLArgument} definitions and corresponding resolved {@link Argument} instances (which contain actual values)
-     * @param variables -- existing variable values by names in the query
-     * @param codeRegistry -- code registry that is used only to take care of field visibility during {@link ValuesResolver#getArgumentValues(List, List, Map)} conversion
+     * @param variables -- existing coerced variable values by names in the query
+     * @param codeRegistry -- code registry that is used only to take care of field visibility during {@link ValuesResolver#getArgumentValues(GraphQLCodeRegistry, List, List, CoercedVariables, GraphQLContext, Locale)} conversion
+     * @param context -- context in current data fetching request
+     * @param locale -- locale in current data fetching request
      * 
      * @return
      */
@@ -273,7 +268,9 @@ public class RootEntityUtils {
         final String property,
         final T2<List<GraphQLArgument>, List<Argument>> arguments,
         final Map<String, Object> variables,
-        final GraphQLCodeRegistry codeRegistry
+        final GraphQLCodeRegistry codeRegistry,
+        final GraphQLContext context,
+        final Locale locale
     ) {
         // The following @Internal API (ValuesResolver) is used for argument value resolving.
         // It is not really clear why this API is @Internal though.
@@ -282,7 +279,7 @@ public class RootEntityUtils {
         // We argue that values resolving logic is error-prone and must follow standard guidelines from ValuesResolver.
         // These guidelines include a) resolving from argument literals b) resolving from raw variable values c) scalar values coercion etc.
         // Please follow these guidelines even if ValuesResolver will be made even more private, however this is unlikely scenario.
-        final Map<String, Object> argumentValues = new ValuesResolver().getArgumentValues(codeRegistry, arguments._1, arguments._2, variables);
+        final Map<String, Object> argumentValues = getArgumentValues(codeRegistry, arguments._1, arguments._2, of(variables), context, locale);
         
         return ofNullable(argumentValues.get(ORDER))
             .map(val -> {
@@ -298,8 +295,10 @@ public class RootEntityUtils {
      * 
      * @param what
      * @param arguments -- pair of {@link GraphQLArgument} definitions and corresponding resolved {@link Argument} instances (which contain actual values)
-     * @param variables -- existing variable values by names in the query
-     * @param codeRegistry -- code registry that is used only to take care of field visibility during {@link ValuesResolver#getArgumentValues(List, List, Map)} conversion
+     * @param variables -- existing coerced variable values by names in the query
+     * @param codeRegistry -- code registry that is used only to take care of field visibility during {@link ValuesResolver#getArgumentValues(GraphQLCodeRegistry, List, List, CoercedVariables, GraphQLContext, Locale)} conversion
+     * @param context -- context in current data fetching request
+     * @param locale -- locale in current data fetching request
      * @param significantLimit
      * 
      * @return
@@ -309,6 +308,8 @@ public class RootEntityUtils {
         final T2<List<GraphQLArgument>, List<Argument>> arguments,
         final Map<String, Object> variables,
         final GraphQLCodeRegistry codeRegistry,
+        final GraphQLContext context,
+        final Locale locale,
         final int significantLimit
     ) {
         // The following @Internal API (ValuesResolver) is used for argument value resolving.
@@ -318,7 +319,7 @@ public class RootEntityUtils {
         // We argue that values resolving logic is error-prone and must follow standard guidelines from ValuesResolver.
         // These guidelines include a) resolving from argument literals b) resolving from raw variable values c) scalar values coercion etc.
         // Please follow these guidelines even if ValuesResolver will be made even more private, however this is unlikely scenario.
-        final Map<String, Object> argumentValues = new ValuesResolver().getArgumentValues(codeRegistry, arguments._1, arguments._2, variables);
+        final Map<String, Object> argumentValues = getArgumentValues(codeRegistry, arguments._1, arguments._2, of(variables), context, locale);
         
         return ofNullable(argumentValues.get(what)).map(val -> (int) val).filter(val -> val >= significantLimit); // value less than significantLimit will be ignored
     }
@@ -402,12 +403,10 @@ public class RootEntityUtils {
             for (final Selection selection: selectionSet.getSelections()) {
                 if (selection instanceof Field) {
                     selectionFields.add((Field) selection);
-                } else if (selection instanceof FragmentSpread) {
-                    final FragmentSpread fragmentSpread = (FragmentSpread) selection;
+                } else if (selection instanceof final FragmentSpread fragmentSpread) {
                     final FragmentDefinition fragmentDefinition = fragmentDefinitions.get(fragmentSpread.getName());
                     selectionFields.addAll(toFields(fragmentDefinition.getSelectionSet(), fragmentDefinitions));
-                } else if (selection instanceof InlineFragment) {
-                    final InlineFragment inlineFragment = (InlineFragment) selection;
+                } else if (selection instanceof final InlineFragment inlineFragment) {
                     selectionFields.addAll(toFields(inlineFragment.getSelectionSet(), fragmentDefinitions));
                 } else {
                     // this is the only three types of possible selections; log warning if something else appeared
