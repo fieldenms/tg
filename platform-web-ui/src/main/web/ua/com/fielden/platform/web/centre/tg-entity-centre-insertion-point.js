@@ -132,19 +132,20 @@ const template = html`
             <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, alternativeView)]]">
                 <span class="title-text truncate" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
                 <div class="layout horizontal centre">
-                    <paper-icon-button class="title-bar-button expand-collapse-button" icon="icons:open-in-new" on-tap="_expandCollapseTap" tooltip-text$="[[_expandButtonTooltip(detachedView)]]"></paper-icon-button>
+                    <paper-icon-button class="title-bar-button" icon="[[_minimiseButton(_minimised)]]" on-tap="_toggleMinimised" tooltip-text$="[[_minimisedTooltip(_minimised)]]" disabled="[[detachedView]]"></paper-icon-button>
+                    <paper-icon-button class="title-bar-button expand-collapse-button" icon="icons:open-in-new" on-tap="_expandCollapseTap" tooltip-text$="[[_expandButtonTooltip(detachedView)]]" disabled="[[_minimised]]"></paper-icon-button>
                 </div>
             </div>
-            <tg-responsive-toolbar id="viewToolbar" hidden$="[[!_isToolbarVisible(detachedView, alternativeView, isAttached)]]">
+            <tg-responsive-toolbar id="viewToolbar" hidden$="[[!_isToolbarVisible(_minimised, detachedView, alternativeView, isAttached)]]">
                 <slot id="entitySpecificActions" slot="entity-specific-action" name="entity-specific-action"></slot>
                 <slot id="standartActions" slot="standart-action" name="standart-action"></slot>
             </tg-responsive-toolbar>
-            <div id="loadableContent" class="relative flex">
+            <div hidden$="[[_minimised]]" id="loadableContent" class="relative flex">
                 <tg-element-loader id="elementLoader"></tg-element-loader>
             </div>
             <div class="lock-layer" lock$="[[lock]]"></div>
         </div>
-        <iron-icon id="resizer" hidden="[[_resizingDisabled(detachedView, alternativeView, withoutResizing)]]" icon="tg-icons:resize-bottom-right" on-tap="_clearLocalStorage" on-track="_resizeInsertionPoint" tooltip-text="Drag to resize<br>Double tap to reset height"></iron-icon>
+        <iron-icon id="resizer" hidden="[[_resizingDisabled(_minimised, detachedView, alternativeView, withoutResizing)]]" icon="tg-icons:resize-bottom-right" on-tap="_clearLocalStorage" on-track="_resizeInsertionPoint" tooltip-text="Drag to resize<br>Double tap to reset height"></iron-icon>
     </div>
     <tg-toast id="toaster"></tg-toast>
 `;
@@ -327,6 +328,11 @@ Polymer({
         _height: {
             type: String,
             observer: "_heightChanged"
+        },
+
+        _minimised: {
+            type: Boolean,
+            value: false
         }
     },
 
@@ -615,8 +621,8 @@ Polymer({
      * @param {Boolean} alternativeView - is insertion point an alternative view?
      * @param {Boolean} withoutResizing - is insertion point is resizable?
      */
-    _resizingDisabled: function (detachedView, alternativeView, withoutResizing) {
-        return detachedView || alternativeView || withoutResizing;
+    _resizingDisabled: function (_minimised, detachedView, alternativeView, withoutResizing) {
+        return _minimised || detachedView || alternativeView || withoutResizing;
     },
 
     /**
@@ -695,11 +701,23 @@ Polymer({
     },
 
     _expandButtonTooltip: function (detachedView) {
-        return detachedView ? "Collapse" : "Expand";
+        return detachedView ? "Collapse" : "Maximise";
     },
 
-    _isToolbarVisible: function (detachedView, alternativeView, isAttached) {
-        return (detachedView || alternativeView) && (isAttached && (this.$.entitySpecificActions.assignedNodes().length > 0 || this.$.standartActions.assignedNodes().length > 0));
+    _minimiseButton: function (_minimised) {
+        return _minimised ? "tg-icons:expandMin" : "tg-icons:collapseMin";
+    },
+
+    _toggleMinimised: function (e) {
+        this._minimised = !this._minimised; 
+    },
+
+    _minimisedTooltip: function(_minimised) {
+        return _minimised ? "Restore": "Minimize";
+    },
+
+    _isToolbarVisible: function (_minimised, detachedView, alternativeView, isAttached) {
+        return !_minimised && (detachedView || alternativeView) && (isAttached && (this.$.entitySpecificActions.assignedNodes().length > 0 || this.$.standartActions.assignedNodes().length > 0));
     },
 
     /**
