@@ -47,11 +47,11 @@ public class TgTestApplicationServerModule extends BasicWebServerModule {
      * The constructor with the largest number of arguments.
      *
      * @param defaultHibernateTypes
-     * @param applicationEntityTypes
+     * @param applicationDomainProvider
      * @param domainTypes
      * @param serialisationClassProviderType
      * @param automaticDataFilterType
-     * @param universalConstantsType
+     * @param universalConstantsImplType
      * @param props
      * @throws Exception
      */
@@ -66,10 +66,10 @@ public class TgTestApplicationServerModule extends BasicWebServerModule {
             final Properties props) throws Exception {
         super(defaultHibernateTypes, applicationDomainProvider, serialisationClassProviderType, automaticDataFilterType, null, props);
         if (universalConstantsImplType == null) {
-            throw new IllegalArgumentException("Missing implemementation for IUniversalConstants.");
+            throw new IllegalArgumentException("Missing implementation for IUniversalConstants.");
         }
         if (datesImplType == null) {
-            throw new IllegalArgumentException("Missing implemementation for IDates.");
+            throw new IllegalArgumentException("Missing implementation for IDates.");
         }
 
         this.universalConstantsImplType = universalConstantsImplType;
