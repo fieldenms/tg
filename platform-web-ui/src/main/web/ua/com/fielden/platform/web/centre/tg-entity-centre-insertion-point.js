@@ -8,6 +8,7 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
+import { IronFitBehavior } from "/resources/polymer/@polymer/iron-fit-behavior/iron-fit-behavior.js";
 import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
@@ -84,6 +85,7 @@ const template = html`
 
         paper-icon-button.title-bar-button {
             padding: 0;
+            margin-left: 8px;
             width: 24px;
             height: 24px;
             stroke: var(--paper-grey-100);
@@ -94,6 +96,10 @@ const template = html`
         paper-icon-button.title-bar-button:hover {
             stroke: var(--paper-grey-300);
             fill: var(--paper-grey-300);
+            color: var(--paper-grey-300);
+        }
+
+        paper-icon-button.title-bar-button[disabled] {
             color: var(--paper-grey-300);
         }
 
@@ -132,7 +138,8 @@ const template = html`
             <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, alternativeView)]]">
                 <span class="title-text truncate" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
                 <div class="layout horizontal centre">
-                    <paper-icon-button class="title-bar-button" icon="[[_minimiseButton(_minimised)]]" on-tap="_toggleMinimised" tooltip-text$="[[_minimisedTooltip(_minimised)]]" disabled="[[detachedView]]"></paper-icon-button>
+                    <paper-icon-button class="title-bar-button" icon="[[_pinButtonIcon(_unpinned)]]" on-tap="_togglePin" tooltip-text$="[[_pinTooltip(_unpinned)]]"></paper-icon-button>
+                    <paper-icon-button class="title-bar-button" icon="[[_minimiseButtonIcon(_minimised)]]" on-tap="_toggleMinimised" tooltip-text$="[[_minimisedTooltip(_minimised)]]" disabled="[[detachedView]]"></paper-icon-button>
                     <paper-icon-button class="title-bar-button expand-collapse-button" icon="icons:open-in-new" on-tap="_expandCollapseTap" tooltip-text$="[[_expandButtonTooltip(detachedView)]]" disabled="[[_minimised]]"></paper-icon-button>
                 </div>
             </div>
@@ -331,6 +338,11 @@ Polymer({
         },
 
         _minimised: {
+            type: Boolean,
+            value: false
+        },
+
+        _unpinned: {
             type: Boolean,
             value: false
         }
@@ -704,7 +716,9 @@ Polymer({
         return detachedView ? "Collapse" : "Maximise";
     },
 
-    _minimiseButton: function (_minimised) {
+    /******************** minimise button related logic *************************/
+
+    _minimiseButtonIcon: function (_minimised) {
         return _minimised ? "tg-icons:expandMin" : "tg-icons:collapseMin";
     },
 
@@ -714,6 +728,20 @@ Polymer({
 
     _minimisedTooltip: function(_minimised) {
         return _minimised ? "Restore": "Minimize";
+    },
+
+    /******************** pin button related logic *************************/
+
+    _pinButtonIcon: function(_unpinned) {
+        return _unpinned ? "tg-icons:pin" : "tg-icons:unpin";
+    },
+
+    _togglePin: function (e) {
+        this._unpinned = !this._unpinned; 
+    },
+
+    _pinTooltip: function (_unpinned) {
+        return _unpinned ? "Pin": "Unpin";
     },
 
     _isToolbarVisible: function (_minimised, detachedView, alternativeView, isAttached) {
