@@ -56,14 +56,7 @@ const template = html`
             min-width: fit-content;
             @apply --shadow-elevation-2dp;
         }
-        #pm[detached] {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
+        
         .title-bar {
             height: 44px;
             min-height: 44px;
@@ -103,10 +96,6 @@ const template = html`
             color: var(--paper-grey-300);
         }
 
-        #pm[detached] paper-icon-button.expand-collapse-button {
-            transform: scale(-1, -1);
-        }
-
         #loadableContent {
             z-index:0;
         }
@@ -133,17 +122,17 @@ const template = html`
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning tg-entity-centre-styles paper-material-styles"></style>
-    <div id="pm" class="layout vertical flex" detached$="[[detachedView]]">
+    <div id="pm" class="layout vertical flex">
         <div id="insertionPointContent" tabindex$="[[_getTabIndex(alternativeView)]]" class="layout vertical flex relative">
             <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, alternativeView)]]">
                 <span class="title-text truncate" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
                 <div class="layout horizontal centre">
-                    <paper-icon-button class="title-bar-button" icon="[[_pinButtonIcon(_unpinned)]]" on-tap="_togglePin" tooltip-text$="[[_pinTooltip(_unpinned)]]"></paper-icon-button>
-                    <paper-icon-button class="title-bar-button" icon="[[_minimiseButtonIcon(_minimised)]]" on-tap="_toggleMinimised" tooltip-text$="[[_minimisedTooltip(_minimised)]]" disabled="[[detachedView]]"></paper-icon-button>
-                    <paper-icon-button class="title-bar-button expand-collapse-button" icon="icons:open-in-new" on-tap="_expandCollapseTap" tooltip-text$="[[_expandButtonTooltip(detachedView)]]" disabled="[[_minimised]]"></paper-icon-button>
+                    <paper-icon-button class="title-bar-button" icon="[[_detachButtonIcon(_detached)]]" on-tap="_toggleDetach" tooltip-text$="[[_detachTooltip(_detached)]]"></paper-icon-button>
+                    <paper-icon-button class="title-bar-button" icon="[[_minimiseButtonIcon(_minimised)]]" on-tap="_toggleMinimised" tooltip-text$="[[_minimisedTooltip(_minimised)]]" disabled="[[_maximised]]"></paper-icon-button>
+                    <paper-icon-button class="title-bar-button" style$="_maximiseButtonStyle(_maximised)" icon="icons:open-in-new" on-tap="_toggleMaximise" tooltip-text$="[[_maximiseButtonTooltip(_maximised)]]" disabled="[[_minimised]]"></paper-icon-button>
                 </div>
             </div>
-            <tg-responsive-toolbar id="viewToolbar" hidden$="[[!_isToolbarVisible(_minimised, detachedView, alternativeView, isAttached)]]">
+            <tg-responsive-toolbar id="viewToolbar" hidden$="[[!_isToolbarVisible(_minimised, _maximised, alternativeView, isAttached)]]">
                 <slot id="entitySpecificActions" slot="entity-specific-action" name="entity-specific-action"></slot>
                 <slot id="standartActions" slot="standart-action" name="standart-action"></slot>
             </tg-responsive-toolbar>
@@ -152,7 +141,7 @@ const template = html`
             </div>
             <div class="lock-layer" lock$="[[lock]]"></div>
         </div>
-        <iron-icon id="resizer" hidden="[[_resizingDisabled(_minimised, detachedView, alternativeView, withoutResizing)]]" icon="tg-icons:resize-bottom-right" on-tap="_clearLocalStorage" on-track="_resizeInsertionPoint" tooltip-text="Drag to resize<br>Double tap to reset height"></iron-icon>
+        <iron-icon id="resizer" hidden$="[[_resizingDisabled(_minimised, _maximised, alternativeView, withoutResizing)]]" icon="tg-icons:resize-bottom-right" on-tap="_clearLocalStorage" on-track="_resizeInsertionPoint" tooltip-text="Drag to resize<br>Double tap to reset height"></iron-icon>
     </div>
     <tg-toast id="toaster"></tg-toast>
 `;
@@ -163,6 +152,7 @@ Polymer({
     is: 'tg-entity-centre-insertion-point',
 
     behaviors: [
+        IronFitBehavior,
         IronResizableBehavior,
         IronA11yKeysBehavior,
         TgTooltipBehavior,
@@ -192,17 +182,10 @@ Polymer({
             type: Boolean,
             value: false
         },
-        /**
-         * Determnes whether insertion point is in the detachedView mode or not.
-         */
-        detachedView: {
-            type: Boolean,
-            value: false
-        },
 
         opened: {
             type: Boolean,
-            computed: "_isOpened(detachedView)"
+            computed: "_isOpened(_maximised)"
         },
 
         /**
@@ -337,18 +320,26 @@ Polymer({
             observer: "_heightChanged"
         },
 
+        /**
+         * Determnes whether insertion point is _maximised or not.
+         */
+        _maximised: {
+            type: Boolean,
+            value: false
+        },
+
         _minimised: {
             type: Boolean,
             value: false
         },
 
-        _unpinned: {
+        _detached: {
             type: Boolean,
             value: false
         }
     },
 
-    observers: ['_adjustView(detachedView, alternativeView, _height)', '_restoreFromLocalStorage(_element, contextRetriever)'],
+    observers: ['_adjustView(_maximised, _detached, alternativeView, _height)', '_restoreFromLocalStorage(_element, contextRetriever)'],
 
     ready: function () {
         this.triggerElement = this.$.insertionPointContent;
@@ -375,26 +366,12 @@ Polymer({
         }
     },
 
-    showDialog: function () {
-        this.detachedView = true;
-        InsertionPointManager.addInsertionPoint(this);
-        this.$.insertionPointContent.focus();
-    },
-
-    closeDialog: function () {
-        this.detachedView = false;
-        InsertionPointManager.removeInsertionPoint(this);
-        if (this.contextRetriever && this.contextRetriever().$.centreResultContainer) {
-            this.contextRetriever().$.centreResultContainer.focus();
-        }
-    },
-
     skipHistoryAction: function () {
-        return !(this.contextRetriever && this.contextRetriever()._visible && this.detachedView);
+        return !(this.contextRetriever && this.contextRetriever()._visible && this._maximised);
     },
 
-    _isOpened: function (detachedView) {
-        return detachedView;
+    _isOpened: function (_maximised) {
+        return _maximised;
     },
 
     _getElement: function (customAction) {
@@ -527,13 +504,13 @@ Polymer({
                     if (promise) {
                         return promise
                             .then(function () {
-                                self._adjustView(self.detachedView, self.alternativeView, self._height);
+                                self._adjustView(self._maximised, self._detached, self.alternativeView, self._height);
                                 customAction.restoreActiveElement();
                             });
                     } else {
                         return Promise.resolve()
                             .then(function () {
-                                self._adjustView(self.detachedView, self.alternativeView, self._height);
+                                self._adjustView(self._maximised, self._detached, self.alternativeView, self._height);
                                 customAction.restoreActiveElement();
                             });
                     }
@@ -569,7 +546,7 @@ Polymer({
     /**
      * Assigns sizes for insertion point depending on several states in which it can be: attached / detached (non-alternative view) and alternative view.
      */
-    _adjustView: function (detachedView, alternativeView, height) {
+    _adjustView: function (_maximised, _detached, alternativeView, height) {
         this.$.loadableContent.style.removeProperty("width");
         this.$.loadableContent.style.removeProperty("height");
         this.$.loadableContent.style.removeProperty("min-width");
@@ -577,7 +554,7 @@ Polymer({
         this.$.pm.style.removeProperty("margin");
         this.style.removeProperty("width");
         this.style.removeProperty("height");
-        if (!detachedView) {
+        if (!_maximised) {
             if (this.$.elementLoader.prefDim) {
                 const prefDim = this.$.elementLoader.prefDim;
                 this.$.loadableContent.style.minWidth = prefDim.width() + prefDim.widthUnit;
@@ -617,24 +594,15 @@ Polymer({
         }
     },
 
-    _expandCollapseTap: function (event) {
-        if (this.detachedView) {
-            this.closeDialog();
-        } else {
-            this.showDialog();
-        }
-        tearDownEvent(event);
-    },
-
     /**
      * Determines whether resizing is available for this insertion point. 
      * 
-     * @param {Boolean} detachedView - is insertion point in detached mode?
+     * @param {Boolean} _maximised - is insertion point maximised?
      * @param {Boolean} alternativeView - is insertion point an alternative view?
      * @param {Boolean} withoutResizing - is insertion point is resizable?
      */
-    _resizingDisabled: function (_minimised, detachedView, alternativeView, withoutResizing) {
-        return _minimised || detachedView || alternativeView || withoutResizing;
+    _resizingDisabled: function (_minimised, _maximised, alternativeView, withoutResizing) {
+        return _minimised || _maximised || alternativeView || withoutResizing;
     },
 
     /**
@@ -708,12 +676,22 @@ Polymer({
         return !alternativeView && !!shortDesc;
     },
 
-    _resetButtonVisible: function (detachedView, withoutResizing, alternativeView) {
-        return !withoutResizing && !detachedView && !alternativeView;
+    _resetButtonVisible: function (_maximised, withoutResizing, alternativeView) {
+        return !withoutResizing && !_maximised && !alternativeView;
     },
 
-    _expandButtonTooltip: function (detachedView) {
-        return detachedView ? "Collapse" : "Maximise";
+    /******************** maximise button related logic *************************/
+
+    _maximiseButtonStyle: function (_maximised) {
+        return _maximised ? "transform: scale(-1, -1)" : "";
+    },
+
+    _toggleMaximise: function (e) {
+        this._maximised = !this._maximised; 
+    },
+
+    _maximiseButtonTooltip: function (_maximised) {
+        return _maximised ? "Collapse" : "Maximise";
     },
 
     /******************** minimise button related logic *************************/
@@ -730,22 +708,42 @@ Polymer({
         return _minimised ? "Restore": "Minimize";
     },
 
-    /******************** pin button related logic *************************/
+    /******************** detach button related logic *************************/
 
-    _pinButtonIcon: function(_unpinned) {
-        return _unpinned ? "tg-icons:pin" : "tg-icons:unpin";
+    _detachButtonIcon: function(_detached) {
+        return _detached ? "tg-icons:pin" : "tg-icons:unpin";
     },
 
-    _togglePin: function (e) {
-        this._unpinned = !this._unpinned; 
+    _toggleDetach: function (e) {
+        if (this._detached) {
+            this._closeDialog();
+        } else {
+            this._showDialog();
+        }
+        tearDownEvent(e);
+        this._detached = !this._detached; 
     },
 
-    _pinTooltip: function (_unpinned) {
-        return _unpinned ? "Pin": "Unpin";
+    _detachTooltip: function (_detached) {
+        return _detached ? "Attach": "Detach";
     },
 
-    _isToolbarVisible: function (_minimised, detachedView, alternativeView, isAttached) {
-        return !_minimised && (detachedView || alternativeView) && (isAttached && (this.$.entitySpecificActions.assignedNodes().length > 0 || this.$.standartActions.assignedNodes().length > 0));
+    _showDialog: function () {
+        InsertionPointManager.addInsertionPoint(this);
+        this.$.insertionPointContent.focus();
+    },
+
+    _closeDialog: function () {
+        InsertionPointManager.removeInsertionPoint(this);
+        if (this.contextRetriever && this.contextRetriever().$.centreResultContainer) {
+            this.contextRetriever().$.centreResultContainer.focus();
+        }
+    },
+
+    /*************************************************************************/
+
+    _isToolbarVisible: function (_minimised, _maximised, alternativeView, isAttached) {
+        return !_minimised && (_maximised || alternativeView) && (isAttached && (this.$.entitySpecificActions.assignedNodes().length > 0 || this.$.standartActions.assignedNodes().length > 0));
     },
 
     /**
