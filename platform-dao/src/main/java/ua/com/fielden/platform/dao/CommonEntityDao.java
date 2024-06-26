@@ -2,6 +2,7 @@ package ua.com.fielden.platform.dao;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.Provider;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
@@ -19,7 +20,10 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.query.*;
+import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.IDbVersionProvider;
+import ua.com.fielden.platform.entity.query.IEntityFetcher;
+import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
@@ -34,6 +38,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
@@ -42,6 +47,8 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 import static ua.com.fielden.platform.types.either.Either.left;
 import static ua.com.fielden.platform.types.either.Either.right;
+import static ua.com.fielden.platform.utils.Lazy.lazyP;
+import static ua.com.fielden.platform.utils.Lazy.lazyS;
 
 /**
  * This is a base class for db-aware implementations of entity companions.
@@ -64,8 +71,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private IUserProvider userProvider;
     private EntityFactory entityFactory;
     private IEntityFetcher entityFetcher;
-    private DeleteOperations<T> deleteOps;
-    private PersistentEntitySaver<T> entitySaver;
+    private Supplier<DeleteOperations<T>> deleteOps;
+    private Supplier<PersistentEntitySaver<T>> entitySaver;
     // ***
 
     /** Session-scoped. Set by {@link SessionInterceptor} */
@@ -105,13 +112,13 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     @Inject
-    protected void setDeleteOpsFactory(final DeleteOperations.Factory deleteOpsFactory) {
-        deleteOps = deleteOpsFactory.create(this, this::getSession, entityType);
+    protected void setDeleteOpsFactory(final Provider<DeleteOperations.Factory> deleteOpsFactory) {
+        deleteOps = lazyP(() -> deleteOpsFactory.get().create(this, this::getSession, entityType));
     }
 
     @Inject
-    protected void setPersistentEntitySaverFactory(final PersistentEntitySaver.Factory factory) {
-        entitySaver = factory.create(
+    protected void setPersistentEntitySaverFactory(final Provider<PersistentEntitySaver.Factory> factory) {
+        entitySaver = lazyS(() -> factory.get().create(
                 this::getSession,
                 this::getTransactionGuid,
                 entityType,
@@ -120,7 +127,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 this::assignBeforeSave,
                 this::findById,
                 this::exists,
-                logger);
+                logger));
     }
 
     @Inject
@@ -225,7 +232,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         } else if (!entity.isPersistent()) {
             throw new EntityCompanionException(format("Quick save is not supported for non-persistent entity [%s].", entityType.getName()));
         } else {
-            final Long id = entitySaver.coreSave(entity, true, empty())._1;
+            final Long id = entitySaver.get().coreSave(entity, true, empty())._1;
             if (id == null) {
                 throw new EntityCompanionException(format("Saving of entity [%s] did not return its ID.", entityType.getName()));
             }
@@ -241,7 +248,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         } else if (!entity.isPersistent()) {
             return entity;
         } else {
-            return entitySaver.save(entity);
+            return entitySaver.get().save(entity);
         }
     }
 
@@ -264,7 +271,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     protected Either<Long, T> save(final T entity, final Optional<fetch<T>> maybeFetch) {
         // if maybeFetch is empty then we skip re-fetching
         final boolean skipRefetching = !maybeFetch.isPresent();
-        final T2<Long, T> result = entitySaver.coreSave(entity, skipRefetching, maybeFetch);
+        final T2<Long, T> result = entitySaver.get().coreSave(entity, skipRefetching, maybeFetch);
         return skipRefetching ? left(result._1) : right(result._2);
     }
 
@@ -518,7 +525,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected void defaultDelete(final T entity) {
-        deleteOps.defaultDelete(entity);
+        deleteOps.get().defaultDelete(entity);
     }
 
     /**
@@ -529,7 +536,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected void defaultDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
-        deleteOps.defaultDelete(model, paramValues);
+        deleteOps.get().defaultDelete(model, paramValues);
     }
 
     /**
@@ -539,7 +546,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected void defaultDelete(final EntityResultQueryModel<T> model) {
-        deleteOps.defaultDelete(model);
+        deleteOps.get().defaultDelete(model);
     }
 
     /**
@@ -551,7 +558,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected int defaultBatchDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
-        return deleteOps.defaultBatchDelete(model, paramValues);
+        return deleteOps.get().defaultBatchDelete(model, paramValues);
     }
 
     /**
@@ -562,7 +569,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected int defaultBatchDelete(final EntityResultQueryModel<T> model) {
-        return deleteOps.defaultBatchDelete(model);
+        return deleteOps.get().defaultBatchDelete(model);
     }
 
     /**
@@ -584,7 +591,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected int defaultBatchDelete(final Collection<Long> entitiesIds) {
-        return deleteOps.defaultBatchDelete(entitiesIds);
+        return deleteOps.get().defaultBatchDelete(entitiesIds);
     }
 
     /**
@@ -597,7 +604,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected int defaultBatchDeleteByPropertyValues(final String propName, final Collection<Long> entitiesIds) {
-        return deleteOps.defaultBatchDeleteByPropertyValues(propName, entitiesIds);
+        return deleteOps.get().defaultBatchDeleteByPropertyValues(propName, entitiesIds);
     }
 
     /**
@@ -609,7 +616,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected <E extends AbstractEntity<?>> int defaultBatchDeleteByPropertyValues(final String propName, final List<E> propEntities) {
-        return deleteOps.defaultBatchDeleteByPropertyValues(propName, propEntities);
+        return deleteOps.get().defaultBatchDeleteByPropertyValues(propName, propEntities);
     }
 
     @Override
