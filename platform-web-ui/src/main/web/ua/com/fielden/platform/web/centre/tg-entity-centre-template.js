@@ -149,7 +149,7 @@ Polymer({
     },
     
     created: function () {
-        const self = this;
+        const self = this;@NO_CRITERIA_CLEARING
         self.retrieveAll = @retrieveAll;
         @sseRefreshCountdown
     },
