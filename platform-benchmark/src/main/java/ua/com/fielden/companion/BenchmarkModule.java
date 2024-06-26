@@ -6,7 +6,7 @@ import com.google.inject.Module;
 import com.google.inject.*;
 import com.google.inject.util.Modules;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
-import ua.com.fielden.platform.entity.query.DefaultFilter;
+import ua.com.fielden.platform.entity.query.NoDataFilter;
 import ua.com.fielden.platform.ioc.BasicWebServerModule;
 import ua.com.fielden.platform.security.annotations.SessionCache;
 import ua.com.fielden.platform.security.annotations.SessionHashingKey;
@@ -18,7 +18,6 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
 import ua.com.fielden.platform.serialisation.api.impl.DefaultSerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.impl.IdOnlyProxiedEntityTypeCacheForTests;
-import ua.com.fielden.platform.test.PlatformTestHibernateSetup;
 
 import java.util.List;
 import java.util.Properties;
@@ -40,10 +39,10 @@ class BenchmarkModule extends BasicWebServerModule  {
     }
 
     private BenchmarkModule(final Properties props) {
-        super(PlatformTestHibernateSetup.getHibernateTypes(),
-              List::of,
+        super(List::of,
+              List.of(),
               DefaultSerialisationClassProvider.class,
-              DefaultFilter.class,
+              NoDataFilter.class,
               SecurityTokenProvider.class,
               props);
     }
