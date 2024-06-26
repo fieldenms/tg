@@ -6,7 +6,6 @@ import com.google.inject.Module;
 import com.google.inject.*;
 import com.google.inject.util.Modules;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
-import ua.com.fielden.platform.entity.query.NoDataFilter;
 import ua.com.fielden.platform.ioc.BasicWebServerModule;
 import ua.com.fielden.platform.security.annotations.SessionCache;
 import ua.com.fielden.platform.security.annotations.SessionHashingKey;
@@ -42,7 +41,6 @@ class BenchmarkModule extends BasicWebServerModule  {
         super(List::of,
               List.of(),
               DefaultSerialisationClassProvider.class,
-              NoDataFilter.class,
               SecurityTokenProvider.class,
               props);
     }

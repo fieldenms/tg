@@ -8,7 +8,6 @@ import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.ioc.BasicWebServerModule;
 import ua.com.fielden.platform.security.annotations.SessionCache;
 import ua.com.fielden.platform.security.annotations.SessionHashingKey;
@@ -43,12 +42,11 @@ public class TgTestApplicationServerModule extends BasicWebServerModule {
             final IApplicationDomainProvider appDomainProvider,
             final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
             final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
-            final Class<? extends IFilter> automaticDataFilterType,
             final Class<? extends IUniversalConstants> universalConstantsImplType,
             final Class<? extends IDates> datesImplType,
             final Properties props)
     {
-        super(appDomainProvider, domainEntityTypes, serialisationClassProviderType, automaticDataFilterType, null, props);
+        super(appDomainProvider, domainEntityTypes, serialisationClassProviderType, null, props);
         if (universalConstantsImplType == null) {
             throw new IllegalArgumentException("Missing implemementation for IUniversalConstants.");
         }

@@ -15,7 +15,6 @@ import ua.com.fielden.platform.entity.functional.centre.CentreContextHolderDao;
 import ua.com.fielden.platform.entity.functional.centre.ICentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.ISavingInfoHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolderDao;
-import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamicRequirednessCo;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamicRequirednessDao;
 import ua.com.fielden.platform.ioc.BasicWebServerModule;
@@ -51,11 +50,10 @@ public class PlatformTestServerModule extends BasicWebServerModule {
             final IApplicationDomainProvider applicationDomainProvider,
             final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
             final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
-            final Class<? extends IFilter> automaticDataFilterType,
             final Class<? extends ISecurityTokenProvider> tokenProviderType,
             final Properties props)
     {
-        super(applicationDomainProvider, domainEntityTypes, serialisationClassProviderType, automaticDataFilterType, tokenProviderType, props);
+        super(applicationDomainProvider, domainEntityTypes, serialisationClassProviderType, tokenProviderType, props);
     }
 
     @Override

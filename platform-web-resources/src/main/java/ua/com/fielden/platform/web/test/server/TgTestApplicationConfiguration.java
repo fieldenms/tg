@@ -43,11 +43,14 @@ public class TgTestApplicationConfiguration extends Component {
                     appDomain,
                     appDomain.domainTypes(),
                     SerialisationClassProvider.class,
-                    ExampleDataFilter.class,
                     DefaultUniversalConstants.class,
                     DefaultDates.class,
                     props);
-            injector = new ApplicationInjectorFactory().add(module).add(new NewUserEmailNotifierBindingModule()).getInjector();
+            injector = new ApplicationInjectorFactory()
+                    .add(module)
+                    .add(new DataFilterModule())
+                    .add(new NewUserEmailNotifierBindingModule())
+                    .getInjector();
 
             // create and configure REST server utility
             final RestServerUtil serverRestUtil = injector.getInstance(RestServerUtil.class);

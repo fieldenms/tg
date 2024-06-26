@@ -43,7 +43,7 @@ import static ua.com.fielden.platform.web_api.GraphQLService.WARN_INSUFFICIENT_M
  * <ul>
  * <li>Applications settings (refer {@link IApplicationSettings});
  * <li>Serialisation mechanism;
- * <li>Essential DAO interfaces such as {@link IFilter}, {@link IValueMatcherFactory}, {@link IUser}, {@link IAuthorisationModel} and more;
+ * <li>Essential DAO interfaces {@link IValueMatcherFactory}, {@link IUser}, {@link IAuthorisationModel} and more;
  * <li>Provides application main menu configuration related DAO bindings.
  * </ul>
  * <p>
@@ -60,14 +60,12 @@ public class BasicWebServerModule extends CompanionModule {
     private final Class<? extends ISecurityTokenProvider> tokenProviderType;
     private final IApplicationDomainProvider applicationDomainProvider;
     private final Class<? extends ISerialisationClassProvider> serialisationClassProviderType;
-    private final Class<? extends IFilter> automaticDataFilterType;
     private final Class<? extends IAuthorisationModel> authorisationModelType;
 
     public BasicWebServerModule(
             final IApplicationDomainProvider applicationDomainProvider,
             final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
             final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
-            final Class<? extends IFilter> automaticDataFilterType,
             final Class<? extends ISecurityTokenProvider> tokenProviderType,
             final Properties props)
     {
@@ -76,7 +74,6 @@ public class BasicWebServerModule extends CompanionModule {
         this.tokenProviderType = tokenProviderType;
         this.applicationDomainProvider = applicationDomainProvider;
         this.serialisationClassProviderType = serialisationClassProviderType;
-        this.automaticDataFilterType = automaticDataFilterType;
         this.authorisationModelType = ServerAuthorisationModel.class;
     }
 
@@ -84,7 +81,6 @@ public class BasicWebServerModule extends CompanionModule {
             final IApplicationDomainProvider applicationDomainProvider,
             final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
             final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
-            final Class<? extends IFilter> automaticDataFilterType,
             final Class<? extends IAuthorisationModel> authorisationModelType,
             final Class<? extends ISecurityTokenProvider> tokenProviderType,
             final Properties props)
@@ -94,7 +90,6 @@ public class BasicWebServerModule extends CompanionModule {
         this.tokenProviderType = tokenProviderType;
         this.applicationDomainProvider = applicationDomainProvider;
         this.serialisationClassProviderType = serialisationClassProviderType;
-        this.automaticDataFilterType = automaticDataFilterType;
         this.authorisationModelType = authorisationModelType;
     }
 
@@ -142,8 +137,7 @@ public class BasicWebServerModule extends CompanionModule {
         bind(ISerialisationClassProvider.class).to(serialisationClassProviderType).in(Singleton.class);
         bind(ISerialiser.class).to(Serialiser.class).in(Singleton.class);
 
-        // bind DAO and any other implementations of the required application controllers
-        bind(IFilter.class).to(automaticDataFilterType); // UserDrivenFilter.class
+        requireBinding(IFilter.class);
 
         bind(ICriteriaGenerator.class).to(CriteriaGenerator.class).in(Singleton.class);
         bind(IGeneratedEntityController.class).to(GeneratedEntityDao.class);

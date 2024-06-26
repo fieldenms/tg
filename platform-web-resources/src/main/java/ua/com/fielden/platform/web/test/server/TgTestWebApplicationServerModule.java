@@ -4,7 +4,6 @@ import com.google.inject.Injector;
 import com.google.inject.binder.AnnotatedBindingBuilder;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.validation.CanBuildReferenceHierarchyForEveryEntityValidator;
 import ua.com.fielden.platform.entity.validation.ICanBuildReferenceHierarchyForEntityValidator;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
@@ -29,12 +28,11 @@ public class TgTestWebApplicationServerModule extends TgTestApplicationServerMod
             final IApplicationDomainProvider applicationDomainProvider,
             final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
             final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
-            final Class<? extends IFilter> automaticDataFilterType,
             final Class<? extends IUniversalConstants> universalConstantsImplType,
             final Class<? extends IDates> datesImplType,
             final Properties props)
     {
-        super(applicationDomainProvider, domainEntityTypes, serialisationClassProviderType, automaticDataFilterType, universalConstantsImplType, datesImplType, props);
+        super(applicationDomainProvider, domainEntityTypes, serialisationClassProviderType, universalConstantsImplType, datesImplType, props);
         this.props = props;
     }
 
