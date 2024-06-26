@@ -26,7 +26,8 @@
 
 	<properties>
 		<jmh.version>1.26</jmh.version>
-        <uberjar.name>benchmarks</uberjar.name>
+		<h2.version>2.2.224</h2.version>
+		<uberjar.name>benchmarks</uberjar.name>
 	</properties>
 
 	<dependencies>
@@ -56,6 +57,14 @@
 			<artifactId>jmh-generator-annprocess</artifactId>
 			<version>${jmh.version}</version>
 			<scope>provided</scope>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.postgresql/postgresql -->
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<version>${h2.version}</version>
+			<scope>runtime</scope>
 		</dependency>
 
 	</dependencies>
