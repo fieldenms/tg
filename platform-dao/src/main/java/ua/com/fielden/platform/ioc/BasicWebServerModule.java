@@ -129,6 +129,7 @@ public class BasicWebServerModule extends CompanionModule {
 
         bind(ISecurityTokenController.class).to(SecurityTokenController.class);
         bind(IAuthorisationModel.class).to(authorisationModelType);
+        install(new AuthorisationModule());
 
         // bind value matcher factory to support autocompleters
         // TODO is this binding really needed for the server side???
