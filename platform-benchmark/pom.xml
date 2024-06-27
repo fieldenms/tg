@@ -26,7 +26,6 @@
 
 	<properties>
 		<jmh.version>1.26</jmh.version>
-		<h2.version>2.2.224</h2.version>
 		<uberjar.name>benchmarks</uberjar.name>
 	</properties>
 
@@ -59,11 +58,10 @@
 			<scope>provided</scope>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/org.postgresql/postgresql -->
 		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
-			<version>${h2.version}</version>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>${posgresql.version}</version>
 			<scope>runtime</scope>
 		</dependency>
 
