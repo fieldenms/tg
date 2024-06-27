@@ -4,6 +4,7 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
+import ua.com.fielden.platform.entity.ioc.IModuleWithInjector;
 import ua.com.fielden.platform.entity.property.DefaultMetaPropertyFactory;
 
 import java.util.Properties;
@@ -14,7 +15,7 @@ import java.util.Properties;
  * @author TG Team
  *
  */
-public class PropertyFactoryModule extends TransactionalModule {
+public class PropertyFactoryModule extends TransactionalModule implements IModuleWithInjector {
 
     private final EntityFactory entityFactory;
 
@@ -33,7 +34,6 @@ public class PropertyFactoryModule extends TransactionalModule {
 
     @Override
     public void setInjector(final Injector injector) {
-        super.setInjector(injector);
         entityFactory.setInjector(injector);
         final IMetaPropertyFactory mfp = injector.getInstance(IMetaPropertyFactory.class);
         mfp.setInjector(injector);

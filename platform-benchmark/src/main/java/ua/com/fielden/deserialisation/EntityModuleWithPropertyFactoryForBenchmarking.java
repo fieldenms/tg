@@ -8,6 +8,7 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
+import ua.com.fielden.platform.entity.ioc.IModuleWithInjector;
 import ua.com.fielden.platform.entity.meta.AbstractMetaPropertyFactory;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
@@ -25,7 +26,7 @@ import ua.com.fielden.platform.web.test.config.ApplicationDomain;
  * 
  * @author TG Team
  */
-class EntityModuleWithPropertyFactoryForBenchmarking extends EntityModule {
+class EntityModuleWithPropertyFactoryForBenchmarking extends EntityModule implements IModuleWithInjector {
 
     protected final EntityFactory entityFactory;
 
@@ -76,7 +77,6 @@ class EntityModuleWithPropertyFactoryForBenchmarking extends EntityModule {
 
     @Override
     public void setInjector(final Injector injector) {
-        super.setInjector(injector);
         entityFactory.setInjector(injector);
         final IMetaPropertyFactory mfp = injector.getInstance(IMetaPropertyFactory.class);
         mfp.setInjector(injector);

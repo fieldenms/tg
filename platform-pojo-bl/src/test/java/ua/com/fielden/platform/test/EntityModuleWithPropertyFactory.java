@@ -3,6 +3,7 @@ package ua.com.fielden.platform.test;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
+import ua.com.fielden.platform.entity.ioc.IModuleWithInjector;
 import ua.com.fielden.platform.entity.meta.AbstractMetaPropertyFactory;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.validation.*;
@@ -22,7 +23,7 @@ import com.google.inject.Injector;
  * 
  * @author TG Team
  */
-public class EntityModuleWithPropertyFactory extends EntityModule {
+public class EntityModuleWithPropertyFactory extends EntityModule implements IModuleWithInjector {
 
     protected final EntityFactory entityFactory;
 
@@ -68,7 +69,6 @@ public class EntityModuleWithPropertyFactory extends EntityModule {
 
     @Override
     public void setInjector(final Injector injector) {
-        super.setInjector(injector);
         entityFactory.setInjector(injector);
         final IMetaPropertyFactory mfp = injector.getInstance(IMetaPropertyFactory.class);
         mfp.setInjector(injector);

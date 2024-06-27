@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.entity.ioc;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Injector;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.matcher.Matcher;
 import org.aopalliance.intercept.MethodInterceptor;
@@ -9,6 +8,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.security.AuthorisationInterceptor;
 import ua.com.fielden.platform.security.Authorise;
+import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.web_api.GraphQLScalars;
 
 import java.lang.reflect.Method;
@@ -20,9 +20,7 @@ import static com.google.inject.matcher.Matchers.*;
  *
  * @author TG Team
  */
-public abstract class EntityModule extends AbstractModule implements IModuleWithInjector {
-
-    private final AuthorisationInterceptor ai = new AuthorisationInterceptor();
+public abstract class EntityModule extends AbstractModule {
 
     /**
      * Synthetic methods should not be intercepted.
@@ -47,7 +45,7 @@ public abstract class EntityModule extends AbstractModule implements IModuleWith
         // authorisation interceptor
         bindInterceptor(any(), // match any class
                 annotatedWith(Authorise.class), // having annotated methods
-                ai); // the interceptor
+                new AuthorisationInterceptor(getProvider(IAuthorisationModel.class))); // the interceptor
 
         // request static IDates injection into GraphQLScalars;
         // static injection occurs at the time when an injector is created
@@ -58,11 +56,6 @@ public abstract class EntityModule extends AbstractModule implements IModuleWith
     @Override
     protected void bindInterceptor(final Matcher<? super Class<?>> classMatcher, final Matcher<? super Method> methodMatcher, final MethodInterceptor... interceptors) {
         super.bindInterceptor(classMatcher, noSyntheticMethodMatcher.and(methodMatcher), interceptors);
-    }
-
-    @Override
-    public void setInjector(final Injector injector) {
-        ai.setInjector(injector);
     }
 
 }

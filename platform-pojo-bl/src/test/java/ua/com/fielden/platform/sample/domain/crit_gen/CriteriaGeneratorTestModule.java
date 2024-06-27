@@ -12,6 +12,8 @@ import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.sample.domain.ITgSystem;
+import ua.com.fielden.platform.security.IAuthorisationModel;
+import ua.com.fielden.platform.security.NoAuthorisation;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
@@ -50,6 +52,7 @@ public class CriteriaGeneratorTestModule extends EntityModuleWithPropertyFactory
         bind(ITgSystem.class).to(TgSystemDaoStub.class);
         bind(IDates.class).to(DatesForTesting.class).in(Scopes.SINGLETON);
         bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class).in(Scopes.SINGLETON);
+        bind(IAuthorisationModel.class).to(NoAuthorisation.class);
     }
 
 }
