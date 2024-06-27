@@ -1,20 +1,16 @@
 package ua.com.fielden.platform.entity.property;
 
-import java.util.concurrent.ExecutionException;
-
 import com.google.inject.Inject;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.meta.AbstractMetaPropertyFactory;
-import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
-import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
-import ua.com.fielden.platform.utils.IDates;
+
+import java.util.concurrent.ExecutionException;
 
 /**
  * DAO driven {@link IMetaPropertyFactory} implementation.
@@ -27,12 +23,7 @@ public class DefaultMetaPropertyFactory extends AbstractMetaPropertyFactory {
     private final ICompanionObjectFinder coFinder;
 
     @Inject
-    public DefaultMetaPropertyFactory(
-            final DomainValidationConfig domainConfig,
-            final DomainMetaPropertyConfig domainMetaConfig,
-            final ICompanionObjectFinder coFinder,
-            final IDates dates) {
-        super(domainConfig, domainMetaConfig, dates);
+    public DefaultMetaPropertyFactory(final ICompanionObjectFinder coFinder) {
         this.coFinder = coFinder;
     }
 
