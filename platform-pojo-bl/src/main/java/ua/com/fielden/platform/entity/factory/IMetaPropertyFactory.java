@@ -1,13 +1,11 @@
 package ua.com.fielden.platform.entity.factory;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-
-import com.google.inject.Injector;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 
 /**
  * This is a preliminary interface for a meta-property factory.
@@ -48,10 +46,4 @@ public interface IMetaPropertyFactory {
             final AbstractEntity<?> entity,//
             final Field propertyField) throws Exception;
 
-    /**
-     * Sets injector, which can be used for instantiation of property before and after event handlers.
-     *
-     * @param injector
-     */
-    void setInjector(final Injector injector);
 }

@@ -1,18 +1,12 @@
 package ua.com.fielden.deserialisation;
 
-import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.name.Names;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
-import ua.com.fielden.platform.entity.ioc.IModuleWithInjector;
-import ua.com.fielden.platform.entity.meta.AbstractMetaPropertyFactory;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
-import ua.com.fielden.platform.entity.validation.HappyValidator;
-import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
@@ -24,7 +18,7 @@ import ua.com.fielden.platform.web.test.config.ApplicationDomain;
  * 
  * @author TG Team
  */
-class EntityModuleWithPropertyFactoryForBenchmarking extends EntityModule implements IModuleWithInjector {
+class EntityModuleWithPropertyFactoryForBenchmarking extends EntityModule {
 
     public EntityModuleWithPropertyFactoryForBenchmarking() {}
 
@@ -41,14 +35,7 @@ class EntityModuleWithPropertyFactoryForBenchmarking extends EntityModule implem
         //////////////////////////////////////////////
         //////////// bind property factory ///////////
         //////////////////////////////////////////////
-        bind(IMetaPropertyFactory.class).toInstance(new AbstractMetaPropertyFactory(domainValidationConfig, domainMetaPropertyConfig, new DatesForBenchmarking()) {
-
-            @Override
-            protected IBeforeChangeEventHandler createEntityExists(final EntityExists anotation) {
-                return new HappyValidator();
-            }
-
-        });
+        bind(IMetaPropertyFactory.class).to(MetaPropertyFactoryForBenchmarking.class);
         
         bindConstant().annotatedWith(Names.named("app.name")).to("Unit Tests");
         bindConstant().annotatedWith(Names.named("email.smtp")).to("192.168.1.8");
@@ -65,12 +52,6 @@ class EntityModuleWithPropertyFactoryForBenchmarking extends EntityModule implem
 
     public DomainMetaPropertyConfig getDomainMetaPropertyConfig() {
         return domainMetaPropertyConfig;
-    }
-
-    @Override
-    public void setInjector(final Injector injector) {
-        final IMetaPropertyFactory mfp = injector.getInstance(IMetaPropertyFactory.class);
-        mfp.setInjector(injector);
     }
 
 }

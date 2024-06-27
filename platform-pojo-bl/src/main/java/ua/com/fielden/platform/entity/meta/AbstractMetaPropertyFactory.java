@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.google.inject.Inject;
 import org.joda.time.DateTime;
 
 import com.google.common.cache.Cache;
@@ -510,8 +511,9 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         return propHandler;
     }
 
-    @Override
+    @Inject
     public void setInjector(final Injector injector) {
         this.injector = injector;
     }
+
 }

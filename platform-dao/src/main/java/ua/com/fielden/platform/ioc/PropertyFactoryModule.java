@@ -1,10 +1,8 @@
 package ua.com.fielden.platform.ioc;
 
-import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
-import ua.com.fielden.platform.entity.ioc.IModuleWithInjector;
 import ua.com.fielden.platform.entity.property.DefaultMetaPropertyFactory;
 
 import java.util.Properties;
@@ -15,7 +13,7 @@ import java.util.Properties;
  * @author TG Team
  *
  */
-public class PropertyFactoryModule extends TransactionalModule implements IModuleWithInjector {
+public class PropertyFactoryModule extends TransactionalModule {
 
     public PropertyFactoryModule(final Properties props) {
         super(props);
@@ -29,9 +27,4 @@ public class PropertyFactoryModule extends TransactionalModule implements IModul
         requireBinding(EntityFactory.class);
     }
 
-    @Override
-    public void setInjector(final Injector injector) {
-        final IMetaPropertyFactory mfp = injector.getInstance(IMetaPropertyFactory.class);
-        mfp.setInjector(injector);
-    }
 }

@@ -1,16 +1,17 @@
 package ua.com.fielden.platform.test;
 
-import com.google.inject.Injector;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
-import ua.com.fielden.platform.entity.ioc.IModuleWithInjector;
-import ua.com.fielden.platform.entity.meta.AbstractMetaPropertyFactory;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
-import ua.com.fielden.platform.entity.validation.*;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
+import ua.com.fielden.platform.entity.validation.CanBuildReferenceHierarchyForEveryEntityValidator;
+import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
+import ua.com.fielden.platform.entity.validation.ICanBuildReferenceHierarchyForEntityValidator;
 import ua.com.fielden.platform.ref_hierarchy.IReferenceHierarchy;
 import ua.com.fielden.platform.sample.domain.ReferenceHierarchyDaoStub;
 import ua.com.fielden.platform.test.ioc.DatesForTesting;
+import ua.com.fielden.platform.utils.IDates;
+
+import static com.google.inject.Scopes.SINGLETON;
 
 /**
  * This Guice module ensures that all observable and validatable properties are handled correctly. In addition to {@link EntityModule}, this module binds
@@ -20,7 +21,7 @@ import ua.com.fielden.platform.test.ioc.DatesForTesting;
  * 
  * @author TG Team
  */
-public class EntityModuleWithPropertyFactory extends EntityModule implements IModuleWithInjector {
+public class EntityModuleWithPropertyFactory extends EntityModule {
 
     public EntityModuleWithPropertyFactory() {}
 
@@ -37,17 +38,11 @@ public class EntityModuleWithPropertyFactory extends EntityModule implements IMo
         //////////////////////////////////////////////
         //////////// bind property factory ///////////
         //////////////////////////////////////////////
-        bind(IMetaPropertyFactory.class).toInstance(new AbstractMetaPropertyFactory(domainValidationConfig, domainMetaPropertyConfig, new DatesForTesting()) {
-
-            @Override
-            protected IBeforeChangeEventHandler createEntityExists(final EntityExists anotation) {
-                return new HappyValidator();
-            }
-
-        });
+        bind(IMetaPropertyFactory.class).to(TestMetaPropertyFactory.class);
 
         bind(IReferenceHierarchy.class).to(ReferenceHierarchyDaoStub.class);
         bind(ICanBuildReferenceHierarchyForEntityValidator.class).to(CanBuildReferenceHierarchyForEveryEntityValidator.class);
+        bind(IDates.class).to(DatesForTesting.class).in(SINGLETON);
     }
 
     public DomainValidationConfig getDomainValidationConfig() {
@@ -56,12 +51,6 @@ public class EntityModuleWithPropertyFactory extends EntityModule implements IMo
 
     public DomainMetaPropertyConfig getDomainMetaPropertyConfig() {
         return domainMetaPropertyConfig;
-    }
-
-    @Override
-    public void setInjector(final Injector injector) {
-        final IMetaPropertyFactory mfp = injector.getInstance(IMetaPropertyFactory.class);
-        mfp.setInjector(injector);
     }
 
 }

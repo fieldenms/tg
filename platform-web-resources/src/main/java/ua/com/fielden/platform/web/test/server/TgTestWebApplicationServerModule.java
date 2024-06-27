@@ -4,6 +4,7 @@ import com.google.inject.Injector;
 import com.google.inject.binder.AnnotatedBindingBuilder;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.ioc.IModuleWithInjector;
 import ua.com.fielden.platform.entity.validation.CanBuildReferenceHierarchyForEveryEntityValidator;
 import ua.com.fielden.platform.entity.validation.ICanBuildReferenceHierarchyForEntityValidator;
 import ua.com.fielden.platform.utils.IDates;
@@ -19,7 +20,7 @@ import java.util.Properties;
  * @author TG Team
  *
  */
-public class TgTestWebApplicationServerModule extends TgTestApplicationServerModule implements IBasicWebApplicationServerModule {
+public class TgTestWebApplicationServerModule extends TgTestApplicationServerModule implements IBasicWebApplicationServerModule, IModuleWithInjector {
 
     private final Properties props;
 
@@ -43,7 +44,6 @@ public class TgTestWebApplicationServerModule extends TgTestApplicationServerMod
 
     @Override
     public void setInjector(final Injector injector) {
-        super.setInjector(injector);
         initWebApp(injector);
     }
 
