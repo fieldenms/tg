@@ -2,9 +2,7 @@ package ua.com.fielden.platform.test;
 
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
-import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.validation.CanBuildReferenceHierarchyForEveryEntityValidator;
-import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.entity.validation.ICanBuildReferenceHierarchyForEntityValidator;
 import ua.com.fielden.platform.ref_hierarchy.IReferenceHierarchy;
 import ua.com.fielden.platform.sample.domain.ReferenceHierarchyDaoStub;
@@ -23,11 +21,6 @@ import static com.google.inject.Scopes.SINGLETON;
  */
 public class EntityModuleWithPropertyFactory extends EntityModule {
 
-    public EntityModuleWithPropertyFactory() {}
-
-    private final DomainValidationConfig domainValidationConfig = new DomainValidationConfig();
-    private final DomainMetaPropertyConfig domainMetaPropertyConfig = new DomainMetaPropertyConfig();
-
     /**
      * 
      * Please note that order of validator execution is also defined by the order of binding.
@@ -43,14 +36,6 @@ public class EntityModuleWithPropertyFactory extends EntityModule {
         bind(IReferenceHierarchy.class).to(ReferenceHierarchyDaoStub.class);
         bind(ICanBuildReferenceHierarchyForEntityValidator.class).to(CanBuildReferenceHierarchyForEveryEntityValidator.class);
         bind(IDates.class).to(DatesForTesting.class).in(SINGLETON);
-    }
-
-    public DomainValidationConfig getDomainValidationConfig() {
-        return domainValidationConfig;
-    }
-
-    public DomainMetaPropertyConfig getDomainMetaPropertyConfig() {
-        return domainMetaPropertyConfig;
     }
 
 }
