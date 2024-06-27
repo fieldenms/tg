@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.test;
 
-import ua.com.fielden.platform.entity.factory.EntityFactory;
+import com.google.inject.Injector;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
 import ua.com.fielden.platform.entity.ioc.IModuleWithInjector;
@@ -9,11 +9,8 @@ import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.validation.*;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.ref_hierarchy.IReferenceHierarchy;
-import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchy;
 import ua.com.fielden.platform.sample.domain.ReferenceHierarchyDaoStub;
 import ua.com.fielden.platform.test.ioc.DatesForTesting;
-
-import com.google.inject.Injector;
 
 /**
  * This Guice module ensures that all observable and validatable properties are handled correctly. In addition to {@link EntityModule}, this module binds
@@ -25,12 +22,7 @@ import com.google.inject.Injector;
  */
 public class EntityModuleWithPropertyFactory extends EntityModule implements IModuleWithInjector {
 
-    protected final EntityFactory entityFactory;
-
-    public EntityModuleWithPropertyFactory() {
-        entityFactory = new EntityFactory() {
-        };
-    }
+    public EntityModuleWithPropertyFactory() {}
 
     private final DomainValidationConfig domainValidationConfig = new DomainValidationConfig();
     private final DomainMetaPropertyConfig domainMetaPropertyConfig = new DomainMetaPropertyConfig();
@@ -42,7 +34,6 @@ public class EntityModuleWithPropertyFactory extends EntityModule implements IMo
     @Override
     protected void configure() {
         super.configure();
-        bind(EntityFactory.class).toInstance(entityFactory);
         //////////////////////////////////////////////
         //////////// bind property factory ///////////
         //////////////////////////////////////////////
@@ -69,7 +60,6 @@ public class EntityModuleWithPropertyFactory extends EntityModule implements IMo
 
     @Override
     public void setInjector(final Injector injector) {
-        entityFactory.setInjector(injector);
         final IMetaPropertyFactory mfp = injector.getInstance(IMetaPropertyFactory.class);
         mfp.setInjector(injector);
     }

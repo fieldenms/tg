@@ -17,24 +17,20 @@ import java.util.Properties;
  */
 public class PropertyFactoryModule extends TransactionalModule implements IModuleWithInjector {
 
-    private final EntityFactory entityFactory;
-
     public PropertyFactoryModule(final Properties props) {
         super(props);
-        entityFactory = new EntityFactory() {};
     }
 
     @Override
     protected void configure() {
         super.configure();
-        bind(EntityFactory.class).toInstance(entityFactory);
         // bind property factory
         bind(IMetaPropertyFactory.class).to(DefaultMetaPropertyFactory.class).in(Singleton.class);
+        requireBinding(EntityFactory.class);
     }
 
     @Override
     public void setInjector(final Injector injector) {
-        entityFactory.setInjector(injector);
         final IMetaPropertyFactory mfp = injector.getInstance(IMetaPropertyFactory.class);
         mfp.setInjector(injector);
     }

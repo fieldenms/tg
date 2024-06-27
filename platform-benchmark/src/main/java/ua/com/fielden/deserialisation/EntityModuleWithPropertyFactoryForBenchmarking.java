@@ -3,9 +3,7 @@ package ua.com.fielden.deserialisation;
 import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.name.Names;
-
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
 import ua.com.fielden.platform.entity.ioc.IModuleWithInjector;
@@ -28,12 +26,7 @@ import ua.com.fielden.platform.web.test.config.ApplicationDomain;
  */
 class EntityModuleWithPropertyFactoryForBenchmarking extends EntityModule implements IModuleWithInjector {
 
-    protected final EntityFactory entityFactory;
-
-    public EntityModuleWithPropertyFactoryForBenchmarking() {
-        entityFactory = new EntityFactory() {
-        };
-    }
+    public EntityModuleWithPropertyFactoryForBenchmarking() {}
 
     private final DomainValidationConfig domainValidationConfig = new DomainValidationConfig();
     private final DomainMetaPropertyConfig domainMetaPropertyConfig = new DomainMetaPropertyConfig();
@@ -45,7 +38,6 @@ class EntityModuleWithPropertyFactoryForBenchmarking extends EntityModule implem
     @Override
     protected void configure() {
         super.configure();
-        bind(EntityFactory.class).toInstance(entityFactory);
         //////////////////////////////////////////////
         //////////// bind property factory ///////////
         //////////////////////////////////////////////
@@ -77,7 +69,6 @@ class EntityModuleWithPropertyFactoryForBenchmarking extends EntityModule implem
 
     @Override
     public void setInjector(final Injector injector) {
-        entityFactory.setInjector(injector);
         final IMetaPropertyFactory mfp = injector.getInstance(IMetaPropertyFactory.class);
         mfp.setInjector(injector);
     }
