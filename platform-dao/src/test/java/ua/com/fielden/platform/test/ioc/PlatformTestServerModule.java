@@ -3,10 +3,10 @@ package ua.com.fielden.platform.test.ioc;
 import com.google.common.base.Ticker;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.inject.Inject;
-import com.google.inject.Provider;
+import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
+import jakarta.inject.Singleton;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -67,7 +67,6 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(Ticker.class).to(TickerForSessionCache.class).in(Scopes.SINGLETON);
         bind(IDates.class).to(DatesForTesting.class).in(Scopes.SINGLETON);
         bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class).in(Scopes.SINGLETON);
-        bind(new TypeLiteral<Cache<String, UserSession>>(){}).annotatedWith(SessionCache.class).toProvider(TestSessionCacheBuilder.class).in(Scopes.SINGLETON);
 
         bind(IUserProvider.class).to(ThreadLocalUserProvider.class).in(Scopes.SINGLETON);
     }
@@ -190,26 +189,17 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         // }
     }
 
-    public static class TestSessionCacheBuilder implements Provider<Cache<String, UserSession>> {
-
-        private final Cache<String, UserSession> cache;
-
-        @Inject
-        public TestSessionCacheBuilder(final Ticker ticker) {
-            cache = CacheBuilder.newBuilder()
-                    // all authenticators should be evicted from the cache in 2 minutes time after that have been
-                    // put into the cache
-                    .expireAfterWrite(2, TimeUnit.MINUTES)
-                    // the ticker controls the eviction time
-                    // the injected instance is initialised with IUniversalConstants.now() as its start time
-                    .ticker(ticker)
-                    .build();
-        }
-
-        @Override
-        public Cache<String, UserSession> get() {
-            return cache;
-        }
-
+    @Provides
+    @Singleton
+    @SessionCache Cache<String, UserSession> provideSessionCache(final Ticker ticker) {
+        return CacheBuilder.newBuilder()
+                // all authenticators should be evicted from the cache in 2 minutes time after that have been
+                // put into the cache
+                .expireAfterWrite(2, TimeUnit.MINUTES)
+                // the ticker controls the eviction time
+                // the injected instance is initialised with IUniversalConstants.now() as its start time
+                .ticker(ticker)
+                .build();
     }
+
 }

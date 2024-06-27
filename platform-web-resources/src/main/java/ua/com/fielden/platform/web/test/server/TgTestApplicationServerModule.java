@@ -2,10 +2,9 @@ package ua.com.fielden.platform.web.test.server;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.inject.Inject;
-import com.google.inject.Provider;
+import com.google.inject.Provides;
 import com.google.inject.Scopes;
-import com.google.inject.TypeLiteral;
+import com.google.inject.Singleton;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.ioc.BasicWebServerModule;
@@ -75,25 +74,16 @@ public class TgTestApplicationServerModule extends BasicWebServerModule {
         bindConstant().annotatedWith(SessionHashingKey.class).to("This is a hasing key, which is used to hash session data for a test server.");
         bindConstant().annotatedWith(TrustedDeviceSessionDuration.class).to(60 * 24 * 3); // three days
         bindConstant().annotatedWith(UntrustedDeviceSessionDuration.class).to(2); // five minutes
-        bind(new TypeLiteral<Cache<String, UserSession>>() {
-        }).annotatedWith(SessionCache.class).toProvider(SessionCacheBuilder.class).in(Scopes.SINGLETON);
-        
+
         bindConstant().annotatedWith(AppUri.class).to(format("https://%s:%s%s", getProps().get("web.domain"), getProps().get("port"), getProps().get("web.path")));
     }
 
-    private static class SessionCacheBuilder implements Provider<Cache<String, UserSession>> {
-
-        private final Cache<String, UserSession> cache;
-
-        @Inject
-        public SessionCacheBuilder(final @UntrustedDeviceSessionDuration int untrustedDeviceSessionDurationMins) {
-            cache = CacheBuilder.newBuilder().expireAfterWrite(untrustedDeviceSessionDurationMins / 2, TimeUnit.MINUTES).build();
-        }
-
-        @Override
-        public Cache<String, UserSession> get() {
-            return cache;
-        }
-
+    @Provides
+    @Singleton
+    @SessionCache Cache<String, UserSession> provideSessionCache(final @UntrustedDeviceSessionDuration int untrustedDeviceSessionDurationMins) {
+        return CacheBuilder.newBuilder()
+                .expireAfterWrite(untrustedDeviceSessionDurationMins / 2, TimeUnit.MINUTES)
+                .build();
     }
+
 }

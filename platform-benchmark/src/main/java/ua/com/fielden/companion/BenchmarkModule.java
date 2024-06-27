@@ -2,8 +2,10 @@ package ua.com.fielden.companion;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.inject.AbstractModule;
 import com.google.inject.Module;
-import com.google.inject.*;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.util.Modules;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.ioc.BasicWebServerModule;
@@ -52,24 +54,14 @@ class BenchmarkModule extends BasicWebServerModule  {
         bindConstant().annotatedWith(SessionHashingKey.class).to("This is a hasing key, which is used to hash session data for a test server.");
         bindConstant().annotatedWith(TrustedDeviceSessionDuration.class).to(60 * 24 * 3); // three days
         bindConstant().annotatedWith(UntrustedDeviceSessionDuration.class).to(2); // five minutes
-        bind(new TypeLiteral<Cache<String, UserSession>>() {}).annotatedWith(SessionCache.class)
-                .toProvider(SessionCacheBuilder.class).in(Scopes.SINGLETON);
 
         bind(IUserProvider.class).to(ThreadLocalUserProvider.class);
     }
 
-    private static class SessionCacheBuilder implements Provider<Cache<String, UserSession>> {
-        private final Cache<String, UserSession> cache;
-
-        @Inject
-        public SessionCacheBuilder(final @UntrustedDeviceSessionDuration int untrustedDeviceSessionDurationMins) {
-            cache = CacheBuilder.newBuilder().expireAfterWrite(untrustedDeviceSessionDurationMins / 2, TimeUnit.MINUTES).build();
-        }
-
-        @Override
-        public Cache<String, UserSession> get() {
-            return cache;
-        }
+    @Provides
+    @Singleton
+    @SessionCache Cache<String, UserSession> provideSessionCache() {
+        return CacheBuilder.newBuilder().expireAfterWrite(2, TimeUnit.MINUTES).build();
     }
 
 }
