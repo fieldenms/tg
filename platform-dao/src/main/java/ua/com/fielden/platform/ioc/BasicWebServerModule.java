@@ -22,7 +22,6 @@ import ua.com.fielden.platform.security.ServerAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenController;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.provider.SecurityTokenController;
-import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -57,7 +56,6 @@ public class BasicWebServerModule extends CompanionModule {
     private static final Logger LOGGER = getLogger(BasicWebServerModule.class);
 
     private final Properties props;
-    private final Class<? extends ISecurityTokenProvider> tokenProviderType;
     private final IApplicationDomainProvider applicationDomainProvider;
     private final Class<? extends ISerialisationClassProvider> serialisationClassProviderType;
     private final Class<? extends IAuthorisationModel> authorisationModelType;
@@ -66,12 +64,10 @@ public class BasicWebServerModule extends CompanionModule {
             final IApplicationDomainProvider applicationDomainProvider,
             final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
             final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
-            final Class<? extends ISecurityTokenProvider> tokenProviderType,
             final Properties props)
     {
         super(props, domainEntityTypes);
         this.props = props;
-        this.tokenProviderType = tokenProviderType;
         this.applicationDomainProvider = applicationDomainProvider;
         this.serialisationClassProviderType = serialisationClassProviderType;
         this.authorisationModelType = ServerAuthorisationModel.class;
@@ -82,12 +78,10 @@ public class BasicWebServerModule extends CompanionModule {
             final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
             final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
             final Class<? extends IAuthorisationModel> authorisationModelType,
-            final Class<? extends ISecurityTokenProvider> tokenProviderType,
             final Properties props)
     {
         super(props, domainEntityTypes);
         this.props = props;
-        this.tokenProviderType = tokenProviderType;
         this.applicationDomainProvider = applicationDomainProvider;
         this.serialisationClassProviderType = serialisationClassProviderType;
         this.authorisationModelType = authorisationModelType;
@@ -128,11 +122,7 @@ public class BasicWebServerModule extends CompanionModule {
 
         bind(IApplicationSettings.class).to(ApplicationSettings.class).in(Singleton.class);
         bind(IApplicationDomainProvider.class).toInstance(applicationDomainProvider);
-        if (tokenProviderType != null) {
-            bind(ISecurityTokenProvider.class).to(tokenProviderType).in(Singleton.class);
-        } else {
-            bind(ISecurityTokenProvider.class).to(SecurityTokenProvider.class).in(Singleton.class);
-        }
+        requireBinding(ISecurityTokenProvider.class);
         // serialisation related binding
         bind(ISerialisationClassProvider.class).to(serialisationClassProviderType).in(Singleton.class);
         bind(ISerialiser.class).to(Serialiser.class).in(Singleton.class);

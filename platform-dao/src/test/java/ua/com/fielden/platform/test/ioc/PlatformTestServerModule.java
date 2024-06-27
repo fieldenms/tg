@@ -25,7 +25,6 @@ import ua.com.fielden.platform.security.annotations.SessionCache;
 import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDuration;
-import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
@@ -50,10 +49,9 @@ public class PlatformTestServerModule extends BasicWebServerModule {
             final IApplicationDomainProvider applicationDomainProvider,
             final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
             final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
-            final Class<? extends ISecurityTokenProvider> tokenProviderType,
             final Properties props)
     {
-        super(applicationDomainProvider, domainEntityTypes, serialisationClassProviderType, tokenProviderType, props);
+        super(applicationDomainProvider, domainEntityTypes, serialisationClassProviderType, props);
     }
 
     @Override

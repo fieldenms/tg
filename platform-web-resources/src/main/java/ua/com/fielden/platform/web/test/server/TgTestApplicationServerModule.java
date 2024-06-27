@@ -45,7 +45,7 @@ public class TgTestApplicationServerModule extends BasicWebServerModule {
             final Class<? extends IDates> datesImplType,
             final Properties props)
     {
-        super(appDomainProvider, domainEntityTypes, serialisationClassProviderType, null, props);
+        super(appDomainProvider, domainEntityTypes, serialisationClassProviderType, props);
         if (universalConstantsImplType == null) {
             throw new IllegalArgumentException("Missing implemementation for IUniversalConstants.");
         }
