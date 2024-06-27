@@ -1,11 +1,7 @@
 package ua.com.fielden.platform.web.test.server;
 
-import java.util.Properties;
-
-import org.restlet.Component;
-
 import com.google.inject.Injector;
-
+import org.restlet.Component;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserEmailNotifierBindingModule;
 import ua.com.fielden.platform.utils.DefaultDates;
@@ -22,6 +18,8 @@ import ua.com.fielden.platform.web.resources.webui.LoginInitiateResetResource;
 import ua.com.fielden.platform.web.resources.webui.LoginResource;
 import ua.com.fielden.platform.web.resources.webui.LogoutResource;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
+
+import java.util.Properties;
 
 /**
  * Configuration point for Web UI Testing Server.
@@ -42,7 +40,6 @@ public class TgTestApplicationConfiguration extends Component {
             final TgTestWebApplicationServerModule module = new TgTestWebApplicationServerModule(
                     appDomain,
                     appDomain.domainTypes(),
-                    SerialisationClassProvider.class,
                     DefaultUniversalConstants.class,
                     DefaultDates.class,
                     props);

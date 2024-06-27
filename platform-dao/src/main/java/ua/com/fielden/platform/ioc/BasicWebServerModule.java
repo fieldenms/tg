@@ -57,33 +57,28 @@ public class BasicWebServerModule extends CompanionModule {
 
     private final Properties props;
     private final IApplicationDomainProvider applicationDomainProvider;
-    private final Class<? extends ISerialisationClassProvider> serialisationClassProviderType;
     private final Class<? extends IAuthorisationModel> authorisationModelType;
 
     public BasicWebServerModule(
             final IApplicationDomainProvider applicationDomainProvider,
             final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
-            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
             final Properties props)
     {
         super(props, domainEntityTypes);
         this.props = props;
         this.applicationDomainProvider = applicationDomainProvider;
-        this.serialisationClassProviderType = serialisationClassProviderType;
         this.authorisationModelType = ServerAuthorisationModel.class;
     }
 
     public BasicWebServerModule(
             final IApplicationDomainProvider applicationDomainProvider,
             final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
-            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
             final Class<? extends IAuthorisationModel> authorisationModelType,
             final Properties props)
     {
         super(props, domainEntityTypes);
         this.props = props;
         this.applicationDomainProvider = applicationDomainProvider;
-        this.serialisationClassProviderType = serialisationClassProviderType;
         this.authorisationModelType = authorisationModelType;
     }
 
@@ -124,7 +119,7 @@ public class BasicWebServerModule extends CompanionModule {
         bind(IApplicationDomainProvider.class).toInstance(applicationDomainProvider);
         requireBinding(ISecurityTokenProvider.class);
         // serialisation related binding
-        bind(ISerialisationClassProvider.class).to(serialisationClassProviderType).in(Singleton.class);
+        requireBinding(ISerialisationClassProvider.class);
         bind(ISerialiser.class).to(Serialiser.class).in(Singleton.class);
 
         requireBinding(IFilter.class);

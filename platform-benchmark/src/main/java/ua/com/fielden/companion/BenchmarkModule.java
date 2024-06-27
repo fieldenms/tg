@@ -41,7 +41,6 @@ class BenchmarkModule extends BasicWebServerModule  {
     private BenchmarkModule(final Properties props) {
         super(List::of,
               List.of(),
-              DefaultSerialisationClassProvider.class,
               props);
     }
 

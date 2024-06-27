@@ -38,7 +38,6 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
             injector = new ApplicationInjectorFactory()
                     .add(new TgTestApplicationServerModule(appDomain,
                                                            appDomain.domainTypes(),
-                                                           SerialisationClassProvider.class,
                                                            DefaultUniversalConstants.class,
                                                            DefaultDates.class, props))
                     .add(new NewUserNotifierMockBindingModule())

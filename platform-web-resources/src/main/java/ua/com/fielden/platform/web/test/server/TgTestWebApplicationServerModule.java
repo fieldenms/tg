@@ -6,7 +6,6 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.validation.CanBuildReferenceHierarchyForEveryEntityValidator;
 import ua.com.fielden.platform.entity.validation.ICanBuildReferenceHierarchyForEntityValidator;
-import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.ioc.IBasicWebApplicationServerModule;
@@ -27,12 +26,11 @@ public class TgTestWebApplicationServerModule extends TgTestApplicationServerMod
     public TgTestWebApplicationServerModule(
             final IApplicationDomainProvider applicationDomainProvider,
             final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
-            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
             final Class<? extends IUniversalConstants> universalConstantsImplType,
             final Class<? extends IDates> datesImplType,
             final Properties props)
     {
-        super(applicationDomainProvider, domainEntityTypes, serialisationClassProviderType, universalConstantsImplType, datesImplType, props);
+        super(applicationDomainProvider, domainEntityTypes, universalConstantsImplType, datesImplType, props);
         this.props = props;
     }
 

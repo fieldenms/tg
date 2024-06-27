@@ -16,7 +16,6 @@ import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IAuthenticationModel;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
-import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.annotations.AppUri;
@@ -40,12 +39,11 @@ public class TgTestApplicationServerModule extends BasicWebServerModule {
     public TgTestApplicationServerModule(
             final IApplicationDomainProvider appDomainProvider,
             final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
-            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
             final Class<? extends IUniversalConstants> universalConstantsImplType,
             final Class<? extends IDates> datesImplType,
             final Properties props)
     {
-        super(appDomainProvider, domainEntityTypes, serialisationClassProviderType, props);
+        super(appDomainProvider, domainEntityTypes, props);
         if (universalConstantsImplType == null) {
             throw new IllegalArgumentException("Missing implemementation for IUniversalConstants.");
         }

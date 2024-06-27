@@ -28,7 +28,6 @@ import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDurati
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
-import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.test.entities.*;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
@@ -48,10 +47,9 @@ public class PlatformTestServerModule extends BasicWebServerModule {
     public PlatformTestServerModule(
             final IApplicationDomainProvider applicationDomainProvider,
             final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
-            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
             final Properties props)
     {
-        super(applicationDomainProvider, domainEntityTypes, serialisationClassProviderType, props);
+        super(applicationDomainProvider, domainEntityTypes, props);
     }
 
     @Override

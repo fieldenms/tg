@@ -3,7 +3,6 @@ package ua.com.fielden.platform.test;
 import com.google.inject.Injector;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
-import ua.com.fielden.platform.serialisation.api.impl.DefaultSerialisationClassProvider;
 import ua.com.fielden.platform.test.ioc.PlatformTestServerModule;
 
 import java.util.Properties;
@@ -24,7 +23,6 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
                     .add(new PlatformTestServerModule(
                             appDomainProvider,
                             appDomainProvider.entityTypes(),
-                            DefaultSerialisationClassProvider.class,
                             getProperties(properties)))
                     .add(new NewUserNotifierMockBindingModule())
                     .getInjector();
