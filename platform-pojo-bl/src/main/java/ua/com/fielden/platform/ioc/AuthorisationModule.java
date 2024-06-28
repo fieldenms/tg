@@ -7,6 +7,7 @@ import ua.com.fielden.platform.security.IAuthorisationModel;
 
 import static com.google.inject.matcher.Matchers.annotatedWith;
 import static com.google.inject.matcher.Matchers.any;
+import static ua.com.fielden.platform.ioc.Matchers.notSyntheticMethod;
 
 public final class AuthorisationModule extends AbstractModule {
 
@@ -14,7 +15,7 @@ public final class AuthorisationModule extends AbstractModule {
     protected void configure() {
         // authorisation interceptor
         bindInterceptor(any(), // match any class
-                        annotatedWith(Authorise.class), // having annotated methods
+                        notSyntheticMethod().and(annotatedWith(Authorise.class)), // having annotated methods
                         new AuthorisationInterceptor(getProvider(IAuthorisationModel.class))); // the interceptor
 
     }
