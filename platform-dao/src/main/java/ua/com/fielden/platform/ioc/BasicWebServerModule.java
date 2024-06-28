@@ -67,6 +67,9 @@ public class BasicWebServerModule extends CompanionModule {
         super(props, domainEntityTypes);
         this.props = props;
         this.applicationDomainProvider = applicationDomainProvider;
+        // Currently there is no good way of binding the default implementation of IAuthorisationModel other than
+        // having multiple constructors in this module. Good old @ImplementedBy can't be used because the default
+        // implementations resides in platform-dao, while the interface in platform-pojo-bl.
         this.authorisationModelType = ServerAuthorisationModel.class;
     }
 
