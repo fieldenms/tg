@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.entity.ioc;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.matcher.Matcher;
 import org.aopalliance.intercept.MethodInterceptor;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -12,6 +11,7 @@ import java.lang.reflect.Method;
 
 import static com.google.inject.matcher.Matchers.annotatedWith;
 import static com.google.inject.matcher.Matchers.subclassesOf;
+import static ua.com.fielden.platform.ioc.Matchers.notSyntheticMethod;
 
 /**
  * This Guice module ensures that properties for all {@link AbstractEntity} descendants are provided with an intercepter handling validation and observation.
@@ -19,16 +19,6 @@ import static com.google.inject.matcher.Matchers.subclassesOf;
  * @author TG Team
  */
 public abstract class EntityModule extends AbstractModule {
-
-    /**
-     * Synthetic methods should not be intercepted.
-     */
-    private final AbstractMatcher<Method> noSyntheticMethodMatcher = new AbstractMatcher<Method>() {
-        @Override
-        public boolean matches(final Method method) {
-            return !method.isSynthetic();
-        }
-    };
 
     /**
      * Binds intercepter for observable property mutators to ensure property change observation and validation. Only descendants of {@link AbstractEntity} are processed.
@@ -48,7 +38,7 @@ public abstract class EntityModule extends AbstractModule {
 
     @Override
     protected void bindInterceptor(final Matcher<? super Class<?>> classMatcher, final Matcher<? super Method> methodMatcher, final MethodInterceptor... interceptors) {
-        super.bindInterceptor(classMatcher, noSyntheticMethodMatcher.and(methodMatcher), interceptors);
+        super.bindInterceptor(classMatcher, notSyntheticMethod().and(methodMatcher), interceptors);
     }
 
 }
