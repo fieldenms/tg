@@ -32,26 +32,13 @@ import static java.lang.String.format;
  *
  */
 public class TgTestApplicationServerModule extends BasicWebServerModule {
-    private final Class<? extends IUniversalConstants> universalConstantsImplType;
-    private final Class<? extends IDates> datesImplType;
 
     public TgTestApplicationServerModule(
             final IApplicationDomainProvider appDomainProvider,
             final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
-            final Class<? extends IUniversalConstants> universalConstantsImplType,
-            final Class<? extends IDates> datesImplType,
             final Properties props)
     {
         super(appDomainProvider, domainEntityTypes, props);
-        if (universalConstantsImplType == null) {
-            throw new IllegalArgumentException("Missing implemementation for IUniversalConstants.");
-        }
-        if (datesImplType == null) {
-            throw new IllegalArgumentException("Missing implemementation for IDates.");
-        }
-
-        this.universalConstantsImplType = universalConstantsImplType;
-        this.datesImplType = datesImplType;
     }
 
     @Override
@@ -64,8 +51,8 @@ public class TgTestApplicationServerModule extends BasicWebServerModule {
         // bind authentication model
         bind(IAuthenticationModel.class).to(TgTestAppAuthenticationModel.class);
 
-        bind(IDates.class).to(datesImplType);
-        bind(IUniversalConstants.class).to(universalConstantsImplType);
+        requireBinding(IDates.class);
+        requireBinding(IUniversalConstants.class);
 
         // the following bindings are well suited for a test server
         bindConstant().annotatedWith(SessionHashingKey.class).to("This is a hasing key, which is used to hash session data for a test server.");

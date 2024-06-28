@@ -4,8 +4,6 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
-import ua.com.fielden.platform.utils.DefaultDates;
-import ua.com.fielden.platform.utils.DefaultUniversalConstants;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
 import java.util.Properties;
@@ -36,10 +34,7 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
 
             final ApplicationDomain appDomain = new ApplicationDomain();
             injector = new ApplicationInjectorFactory()
-                    .add(new TgTestApplicationServerModule(appDomain,
-                                                           appDomain.domainTypes(),
-                                                           DefaultUniversalConstants.class,
-                                                           DefaultDates.class, props))
+                    .add(new TgTestApplicationServerModule(appDomain, appDomain.domainTypes(), props))
                     .add(new NewUserNotifierMockBindingModule())
                     .add(new DataFilterModule())
                     .getInjector();

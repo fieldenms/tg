@@ -40,8 +40,6 @@ public class TgTestApplicationConfiguration extends Component {
             final TgTestWebApplicationServerModule module = new TgTestWebApplicationServerModule(
                     appDomain,
                     appDomain.domainTypes(),
-                    DefaultUniversalConstants.class,
-                    DefaultDates.class,
                     props);
             injector = new ApplicationInjectorFactory()
                     .add(module)

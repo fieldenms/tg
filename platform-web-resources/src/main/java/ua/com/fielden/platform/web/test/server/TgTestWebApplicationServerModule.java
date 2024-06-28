@@ -7,8 +7,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ioc.IModuleWithInjector;
 import ua.com.fielden.platform.entity.validation.CanBuildReferenceHierarchyForEveryEntityValidator;
 import ua.com.fielden.platform.entity.validation.ICanBuildReferenceHierarchyForEntityValidator;
-import ua.com.fielden.platform.utils.IDates;
-import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.ioc.IBasicWebApplicationServerModule;
 
 import java.util.List;
@@ -27,11 +25,9 @@ public class TgTestWebApplicationServerModule extends TgTestApplicationServerMod
     public TgTestWebApplicationServerModule(
             final IApplicationDomainProvider applicationDomainProvider,
             final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
-            final Class<? extends IUniversalConstants> universalConstantsImplType,
-            final Class<? extends IDates> datesImplType,
             final Properties props)
     {
-        super(applicationDomainProvider, domainEntityTypes, universalConstantsImplType, datesImplType, props);
+        super(applicationDomainProvider, domainEntityTypes, props);
         this.props = props;
     }
 
