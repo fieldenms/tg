@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.antlr.tokens;
 
 import java.util.Objects;
 
+import static java.util.Objects.requireNonNull;
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.ENDASDECIMAL;
 
 public final class EndAsDecimalToken extends AbstractParameterisedEqlToken {
@@ -11,8 +12,8 @@ public final class EndAsDecimalToken extends AbstractParameterisedEqlToken {
 
     public EndAsDecimalToken(final Integer precision, final Integer scale) {
         super(ENDASDECIMAL, "endAsDecimal");
-        this.precision = precision;
-        this.scale = scale;
+        this.precision = requireNonNull(precision);
+        this.scale = requireNonNull(scale);
     }
 
     @Override

@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.antlr.tokens;
 
 import java.util.Objects;
 
+import static java.util.Objects.requireNonNull;
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.PROP;
 
 public final class PropToken extends AbstractParameterisedEqlToken {
@@ -10,7 +11,7 @@ public final class PropToken extends AbstractParameterisedEqlToken {
 
     public PropToken(String propPath) {
         super(PROP, "prop");
-        this.propPath = propPath;
+        this.propPath = requireNonNull(propPath);
     }
 
     public String parametersText() {

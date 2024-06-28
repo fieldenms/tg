@@ -5,6 +5,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import java.util.Objects;
 import java.util.Optional;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.empty;
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.CRITCONDITION;
 
@@ -22,8 +23,8 @@ public final class CritConditionToken extends AbstractParameterisedEqlToken {
             final Optional<Object> defaultValue) {
         super(CRITCONDITION, "critCondition");
         this.collectionQueryStart = collectionQueryStart;
-        this.prop = prop;
-        this.critProp = critProp;
+        this.prop = requireNonNull(prop);
+        this.critProp = requireNonNull(critProp);
         this.defaultValue = defaultValue;
     }
 
