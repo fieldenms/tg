@@ -56,6 +56,15 @@ const template = html`
             min-width: fit-content;
             @apply --shadow-elevation-2dp;
         }
+
+        #pm[maximised] {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
         
         .title-bar {
             height: 44px;
@@ -122,14 +131,14 @@ const template = html`
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning tg-entity-centre-styles paper-material-styles"></style>
-    <div id="pm" class="layout vertical flex">
+    <div id="pm" class="layout vertical flex" maximised$="[[_maximised]]">
         <div id="insertionPointContent" tabindex$="[[_getTabIndex(alternativeView)]]" class="layout vertical flex relative">
             <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, alternativeView)]]">
                 <span class="title-text truncate" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
                 <div class="layout horizontal centre">
                     <paper-icon-button class="title-bar-button" icon="[[_detachButtonIcon(_detached)]]" on-tap="_toggleDetach" tooltip-text$="[[_detachTooltip(_detached)]]"></paper-icon-button>
                     <paper-icon-button class="title-bar-button" icon="[[_minimiseButtonIcon(_minimised)]]" on-tap="_toggleMinimised" tooltip-text$="[[_minimisedTooltip(_minimised)]]" disabled="[[_maximised]]"></paper-icon-button>
-                    <paper-icon-button class="title-bar-button" style$="_maximiseButtonStyle(_maximised)" icon="icons:open-in-new" on-tap="_toggleMaximise" tooltip-text$="[[_maximiseButtonTooltip(_maximised)]]" disabled="[[_minimised]]"></paper-icon-button>
+                    <paper-icon-button class="title-bar-button" style$="[[_maximiseButtonStyle(_maximised)]]" icon="icons:open-in-new" on-tap="_toggleMaximise" tooltip-text$="[[_maximiseButtonTooltip(_maximised)]]" disabled="[[_minimised]]"></paper-icon-button>
                 </div>
             </div>
             <tg-responsive-toolbar id="viewToolbar" hidden$="[[!_isToolbarVisible(_minimised, _maximised, alternativeView, isAttached)]]">
@@ -315,6 +324,11 @@ Polymer({
             type: Object
         },
 
+        _width: {
+            type: String,
+            observer: "_heightChanged"
+        },
+
         _height: {
             type: String,
             observer: "_heightChanged"
@@ -345,6 +359,8 @@ Polymer({
         this.triggerElement = this.$.insertionPointContent;
         this.addEventListener('tg-config-uuid-before-change', tearDownEvent); // prevent propagating of centre config UUID event to the top (tg-view-with-menu) to avoid browser URI change
         this.addEventListener('tg-config-uuid-changed', tearDownEvent); // prevent propagating of centre config UUID event to the top (tg-view-with-menu) to avoid configUuid change on parent standalone centre
+        this.sizingTarget = this.$.pm;
+        this.positionTarget = document.body;
     },
 
     attached: function () {
@@ -649,7 +665,7 @@ Polymer({
                     }
                     break;
                 case 'end':
-                    if (document.styleSheets.length > 0) {
+                    if (document.styleSheets.length > 0 && document.styleSheets[0].cssRules.length > 0) {
                         document.styleSheets[0].deleteRule(0);
                     }
                     break;
@@ -687,11 +703,29 @@ Polymer({
     },
 
     _toggleMaximise: function (e) {
+        if (this._maximised) {
+            this._closeDialog();
+        } else {
+            this._showDialog();
+        }
         this._maximised = !this._maximised; 
+        tearDownEvent(e);
     },
 
     _maximiseButtonTooltip: function (_maximised) {
         return _maximised ? "Collapse" : "Maximise";
+    },
+
+    _showDialog: function () {
+        InsertionPointManager.addInsertionPoint(this);
+        this.$.insertionPointContent.focus();
+    },
+
+    _closeDialog: function () {
+        InsertionPointManager.removeInsertionPoint(this);
+        if (this.contextRetriever && this.contextRetriever().$.centreResultContainer) {
+            this.contextRetriever().$.centreResultContainer.focus();
+        }
     },
 
     /******************** minimise button related logic *************************/
@@ -716,9 +750,9 @@ Polymer({
 
     _toggleDetach: function (e) {
         if (this._detached) {
-            this._closeDialog();
+            this._attachDialog();
         } else {
-            this._showDialog();
+            this._detachDialog();
         }
         tearDownEvent(e);
         this._detached = !this._detached; 
@@ -728,15 +762,15 @@ Polymer({
         return _detached ? "Attach": "Detach";
     },
 
-    _showDialog: function () {
-        InsertionPointManager.addInsertionPoint(this);
-        this.$.insertionPointContent.focus();
+    _attachDialog: function() {
+        if (!this._maximised) {
+            this.resetFit();
+        }
     },
 
-    _closeDialog: function () {
-        InsertionPointManager.removeInsertionPoint(this);
-        if (this.contextRetriever && this.contextRetriever().$.centreResultContainer) {
-            this.contextRetriever().$.centreResultContainer.focus();
+    _detachDialog: function () {
+        if (!this._maximised) {
+            this.refit();
         }
     },
 
