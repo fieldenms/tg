@@ -16,14 +16,11 @@ import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDurati
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
-import ua.com.fielden.platform.serialisation.api.impl.DefaultSerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.impl.IdOnlyProxiedEntityTypeCacheForTests;
 
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
-
-import static com.google.inject.Scopes.SINGLETON;
 
 class BenchmarkModule extends BasicWebServerModule  {
 
@@ -33,7 +30,7 @@ class BenchmarkModule extends BasicWebServerModule  {
                     @Override
                     protected void configure() {
                         // override by a test version because the main one breaks due to an error related to class loaders
-                        bind(IIdOnlyProxiedEntityTypeCache.class).to(IdOnlyProxiedEntityTypeCacheForTests.class).in(SINGLETON);
+                        bind(IIdOnlyProxiedEntityTypeCache.class).to(IdOnlyProxiedEntityTypeCacheForTests.class);
                     }
                 });
     }

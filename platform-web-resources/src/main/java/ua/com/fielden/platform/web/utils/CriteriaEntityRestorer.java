@@ -5,6 +5,7 @@ import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.cr
 
 import com.google.inject.Inject;
 
+import jakarta.inject.Singleton;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -28,6 +29,7 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
  * @author TG Team
  *
  */
+@Singleton
 public class CriteriaEntityRestorer implements ICriteriaEntityRestorer {
     private final ICompanionObjectFinder companionFinder;
     private final IUserProvider userProvider;

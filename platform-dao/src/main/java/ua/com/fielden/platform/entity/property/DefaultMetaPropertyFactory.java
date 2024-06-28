@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.property;
 
 import com.google.inject.Inject;
+import jakarta.inject.Singleton;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -18,6 +19,7 @@ import java.util.concurrent.ExecutionException;
  * @author TG Team
  *
  */
+@Singleton
 public class DefaultMetaPropertyFactory extends AbstractMetaPropertyFactory {
 
     private final ICompanionObjectFinder coFinder;

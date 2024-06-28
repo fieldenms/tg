@@ -52,7 +52,7 @@ public abstract class TransactionalModule extends EntityModule {
         super.configure();
 
         bind(HibernateTypeMappings.class).toInstance(PLATFORM_HIBERNATE_TYPE_MAPPINGS);
-        bind(IIdOnlyProxiedEntityTypeCache.class).to(IdOnlyProxiedEntityTypeCache.class).in(SINGLETON);
+        bind(IIdOnlyProxiedEntityTypeCache.class).to(IdOnlyProxiedEntityTypeCache.class);
 
         // bind SessionRequired interceptor
         bindInterceptor(subclassesOf(ISessionEnabled.class), // match only DAO derived from  CommonEntityDao

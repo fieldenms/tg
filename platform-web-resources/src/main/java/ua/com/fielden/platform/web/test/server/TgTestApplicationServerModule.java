@@ -3,7 +3,6 @@ package ua.com.fielden.platform.web.test.server;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.inject.Provides;
-import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -61,12 +60,12 @@ public class TgTestApplicationServerModule extends BasicWebServerModule {
 
         /////////////////////////////// application specific ////////////////////////////
         // bind IUserProvider
-        bind(IUserProvider.class).to(ThreadLocalUserProvider.class).in(Scopes.SINGLETON);
+        bind(IUserProvider.class).to(ThreadLocalUserProvider.class);
         // bind authentication model
         bind(IAuthenticationModel.class).to(TgTestAppAuthenticationModel.class);
 
-        bind(IDates.class).to(datesImplType).in(Scopes.SINGLETON);
-        bind(IUniversalConstants.class).to(universalConstantsImplType).in(Scopes.SINGLETON);
+        bind(IDates.class).to(datesImplType);
+        bind(IUniversalConstants.class).to(universalConstantsImplType);
 
         // the following bindings are well suited for a test server
         bindConstant().annotatedWith(SessionHashingKey.class).to("This is a hasing key, which is used to hash session data for a test server.");

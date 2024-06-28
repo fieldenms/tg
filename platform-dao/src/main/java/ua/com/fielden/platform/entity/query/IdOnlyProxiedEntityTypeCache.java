@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query;
 
 import com.google.inject.Inject;
+import jakarta.inject.Singleton;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
@@ -19,6 +20,7 @@ import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 
+@Singleton
 public class IdOnlyProxiedEntityTypeCache implements IIdOnlyProxiedEntityTypeCache {
 
     private final Map<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>> typesMap;

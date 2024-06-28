@@ -1,6 +1,5 @@
 package ua.com.fielden.deserialisation;
 
-import com.google.inject.Scopes;
 import com.google.inject.name.Names;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
@@ -42,8 +41,8 @@ class EntityModuleWithPropertyFactoryForBenchmarking extends EntityModule {
         bindConstant().annotatedWith(Names.named("email.fromAddress")).to("tests@tg.org"); 
         
         bind(IApplicationDomainProvider.class).to(ApplicationDomain.class);
-        bind(IDates.class).to(DatesForBenchmarking.class).in(Scopes.SINGLETON);
-        bind(IUniversalConstants.class).to(UniversalConstantsForBenchmarking.class).in(Scopes.SINGLETON);
+        bind(IDates.class).to(DatesForBenchmarking.class);
+        bind(IUniversalConstants.class).to(UniversalConstantsForBenchmarking.class);
     }
 
     public DomainValidationConfig getDomainValidationConfig() {

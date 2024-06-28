@@ -35,7 +35,7 @@ public class EntityModuleWithPropertyFactory extends EntityModule {
 
         bind(IReferenceHierarchy.class).to(ReferenceHierarchyDaoStub.class);
         bind(ICanBuildReferenceHierarchyForEntityValidator.class).to(CanBuildReferenceHierarchyForEveryEntityValidator.class);
-        bind(IDates.class).to(DatesForTesting.class).in(SINGLETON);
+        bind(IDates.class).to(DatesForTesting.class);
     }
 
 }

@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.test;
 
-import com.google.inject.Scopes;
 import com.google.inject.name.Names;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
@@ -32,9 +31,9 @@ public final class CommonTestEntityModuleWithPropertyFactory extends EntityModul
         bindConstant().annotatedWith(Names.named("email.fromAddress")).to("tests@tg.org"); 
         
         bind(IApplicationDomainProvider.class).to(ApplicationDomain.class);
-        bind(IDates.class).to(DatesForTesting.class).in(Scopes.SINGLETON);
-        bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class).in(Scopes.SINGLETON);
-        bind(ITgPersistentEntityWithProperties.class).to(TgPersistentEntityWithPropertiesDaoStub.class).in(Scopes.SINGLETON);
+        bind(IDates.class).to(DatesForTesting.class);
+        bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class);
+        bind(ITgPersistentEntityWithProperties.class).to(TgPersistentEntityWithPropertiesDaoStub.class);
     }
     
 }

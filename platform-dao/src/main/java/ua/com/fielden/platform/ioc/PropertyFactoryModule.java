@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.ioc;
 
-import com.google.inject.Singleton;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.property.DefaultMetaPropertyFactory;
@@ -23,7 +22,7 @@ public class PropertyFactoryModule extends TransactionalModule {
     protected void configure() {
         super.configure();
         // bind property factory
-        bind(IMetaPropertyFactory.class).to(DefaultMetaPropertyFactory.class).in(Singleton.class);
+        bind(IMetaPropertyFactory.class).to(DefaultMetaPropertyFactory.class);
         requireBinding(EntityFactory.class);
     }
 

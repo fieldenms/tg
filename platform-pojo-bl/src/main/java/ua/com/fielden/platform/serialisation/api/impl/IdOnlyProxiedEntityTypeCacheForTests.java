@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.serialisation.api.impl;
 
+import jakarta.inject.Singleton;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxyEntity;
@@ -18,6 +19,7 @@ import static ua.com.fielden.platform.entity.proxy.EntityProxyContainer.proxy;
  * @author TG Team
  *
  */
+@Singleton
 public class IdOnlyProxiedEntityTypeCacheForTests implements IIdOnlyProxiedEntityTypeCache {
 
     private final Map<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>> typesMap = buildMap();

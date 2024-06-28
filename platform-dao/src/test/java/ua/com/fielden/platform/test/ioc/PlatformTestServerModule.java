@@ -60,11 +60,11 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bindConstant().annotatedWith(TrustedDeviceSessionDuration.class).to(60 * 24 * 3); // three days
         bindConstant().annotatedWith(UntrustedDeviceSessionDuration.class).to(5); // 5 minutes
 
-        bind(Ticker.class).to(TickerForSessionCache.class).in(Scopes.SINGLETON);
-        bind(IDates.class).to(DatesForTesting.class).in(Scopes.SINGLETON);
-        bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class).in(Scopes.SINGLETON);
+        bind(Ticker.class).to(TickerForSessionCache.class);
+        bind(IDates.class).to(DatesForTesting.class);
+        bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class);
 
-        bind(IUserProvider.class).to(ThreadLocalUserProvider.class).in(Scopes.SINGLETON);
+        bind(IUserProvider.class).to(ThreadLocalUserProvider.class);
     }
 
     @Override

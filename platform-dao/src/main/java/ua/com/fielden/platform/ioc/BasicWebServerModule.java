@@ -115,16 +115,16 @@ public class BasicWebServerModule extends CompanionModule {
         bindConstant().annotatedWith(Names.named("dates.finYearStartDay")).to(Integer.valueOf(props.getProperty("dates.finYearStartDay", "1"))); // 1 - the first day of the month
         bindConstant().annotatedWith(Names.named("dates.finYearStartMonth")).to(Integer.valueOf(props.getProperty("dates.finYearStartMonth", "7"))); // 7 - July, the 1st of July is the start of Fin Year in Australia
 
-        bind(IApplicationSettings.class).to(ApplicationSettings.class).in(Singleton.class);
+        bind(IApplicationSettings.class).to(ApplicationSettings.class);
         bind(IApplicationDomainProvider.class).toInstance(applicationDomainProvider);
         requireBinding(ISecurityTokenProvider.class);
         // serialisation related binding
         requireBinding(ISerialisationClassProvider.class);
-        bind(ISerialiser.class).to(Serialiser.class).in(Singleton.class);
+        bind(ISerialiser.class).to(Serialiser.class);
 
         requireBinding(IFilter.class);
 
-        bind(ICriteriaGenerator.class).to(CriteriaGenerator.class).in(Singleton.class);
+        bind(ICriteriaGenerator.class).to(CriteriaGenerator.class);
         bind(IGeneratedEntityController.class).to(GeneratedEntityDao.class);
 
         bind(ISecurityTokenController.class).to(SecurityTokenController.class);
@@ -133,11 +133,11 @@ public class BasicWebServerModule extends CompanionModule {
 
         // bind value matcher factory to support autocompleters
         // TODO is this binding really needed for the server side???
-        bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Singleton.class);
+        bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class);
 
         if (webApiPresent) { // in case where Web API has been turned-on in application.properties ...
             // ... bind Web API to platform-dao GraphQL-based implementation
-            bind(IWebApi.class).to(GraphQLService.class).in(Singleton.class);
+            bind(IWebApi.class).to(GraphQLService.class);
         }
     }
 

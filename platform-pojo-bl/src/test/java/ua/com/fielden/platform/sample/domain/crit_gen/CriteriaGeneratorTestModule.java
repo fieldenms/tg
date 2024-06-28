@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.sample.domain.crit_gen;
 
-import com.google.inject.Scopes;
-import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
@@ -39,19 +37,19 @@ public class CriteriaGeneratorTestModule extends EntityModuleWithPropertyFactory
         bindConstant().annotatedWith(Names.named("workflow")).to("development");
         bindConstant().annotatedWith(Names.named("auth.mode")).to("SSO");
 
-        bind(IApplicationSettings.class).to(ApplicationSettings.class).in(Singleton.class);
+        bind(IApplicationSettings.class).to(ApplicationSettings.class);
         bind(IApplicationDomainProvider.class).to(ApplicationDomain.class);
         bind(ITopLevelEntity.class).to(TopLevelEntityDaoStub.class);
         bind(ILastLevelEntity.class).to(LastLevelEntityDaoStub.class);
         bind(ISecondLevelEntity.class).to(SecondLevelEntityDaoStub.class);
-        bind(IGeneratedEntityController.class).to(GeneratedEntityControllerStub.class).in(Scopes.SINGLETON);
-        bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
-        bind(ICriteriaGenerator.class).to(CriteriaGenerator.class).in(Scopes.SINGLETON);
-        bind(ISerialiser.class).to(StubSerialiser.class).in(Scopes.SINGLETON);
-        bind(ISerialisationClassProvider.class).to(StubSerialisationClassProvider.class).in(Scopes.SINGLETON);
+        bind(IGeneratedEntityController.class).to(GeneratedEntityControllerStub.class);
+        bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class);
+        bind(ICriteriaGenerator.class).to(CriteriaGenerator.class);
+        bind(ISerialiser.class).to(StubSerialiser.class);
+        bind(ISerialisationClassProvider.class).to(StubSerialisationClassProvider.class);
         bind(ITgSystem.class).to(TgSystemDaoStub.class);
-        bind(IDates.class).to(DatesForTesting.class).in(Scopes.SINGLETON);
-        bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class).in(Scopes.SINGLETON);
+        bind(IDates.class).to(DatesForTesting.class);
+        bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class);
         bind(IAuthorisationModel.class).to(NoAuthorisation.class);
     }
 
