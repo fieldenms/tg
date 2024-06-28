@@ -4,8 +4,6 @@ import com.google.inject.name.Names;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
-import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
-import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
@@ -20,9 +18,6 @@ import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 class EntityModuleWithPropertyFactoryForBenchmarking extends EntityModule {
 
     public EntityModuleWithPropertyFactoryForBenchmarking() {}
-
-    private final DomainValidationConfig domainValidationConfig = new DomainValidationConfig();
-    private final DomainMetaPropertyConfig domainMetaPropertyConfig = new DomainMetaPropertyConfig();
 
     /**
      * 
@@ -43,14 +38,6 @@ class EntityModuleWithPropertyFactoryForBenchmarking extends EntityModule {
         bind(IApplicationDomainProvider.class).to(ApplicationDomain.class);
         bind(IDates.class).to(DatesForBenchmarking.class);
         bind(IUniversalConstants.class).to(UniversalConstantsForBenchmarking.class);
-    }
-
-    public DomainValidationConfig getDomainValidationConfig() {
-        return domainValidationConfig;
-    }
-
-    public DomainMetaPropertyConfig getDomainMetaPropertyConfig() {
-        return domainMetaPropertyConfig;
     }
 
 }
