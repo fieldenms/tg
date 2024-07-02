@@ -8,7 +8,6 @@
     </parent>
 
     <artifactId>platform-annotation-processors</artifactId>
-    <version>1.4.6.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Trident Genesis Platform Annotation Processors</name>
