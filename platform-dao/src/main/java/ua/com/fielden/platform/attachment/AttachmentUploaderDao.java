@@ -38,7 +38,7 @@ import ua.com.fielden.platform.rx.AbstractSubjectKind;
 import ua.com.fielden.platform.security.user.User;
 
 /**
- * DAO implementation for companion object {@link IAttachmentUploader}.
+ * DAO implementation for companion object {@link AttachmentUploaderCo}.
  * <p>
  * It has two responsibilities:
  * <ul>
@@ -50,7 +50,7 @@ import ua.com.fielden.platform.security.user.User;
  *
  */
 @EntityType(AttachmentUploader.class)
-public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> implements IAttachmentUploader {
+public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> implements AttachmentUploaderCo {
 
     private static final int DEBUG_DELAY_PROCESSING_TIME_MILLIS = 0;
     private static final Random RND = new Random(100);
@@ -155,7 +155,6 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
         return uploader;
     }
 
-    private static String[] restrictedFileTypes = new String[] {"application/x-msdownload", "application/octet-stream", "application/vnd.microsoft.portable-executable"};
     private static Result canAcceptFile(final AttachmentUploader uploader, final Path tmpPath, final User user) throws IOException {
         try (final InputStream is = Files.newInputStream(tmpPath);
              final BufferedInputStream bis = new BufferedInputStream(is)) {
@@ -169,7 +168,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             // application/x-tika-msoffice  application/msword
 
             LOGGER.debug(format("Mime type for uploaded file [%s] identified as [%s], the provided is [%s].", uploader.getOrigFileName(), mediaType, uploader.getMime()));
-            if (Stream.of(restrictedFileTypes).anyMatch(rft -> mediaType.toString().contains(rft))) {
+            if (Stream.of(RESTRICTED_FILE_TYPES).anyMatch(rft -> mediaType.toString().contains(rft))) {
                 LOGGER.warn(format("An attempt to load file [%s] with a restricted mime type identified as [%s] (provided a [%s]) by user [%s].", uploader.getOrigFileName(), mediaType, uploader.getMime(), user));
                 return Result.failuref("Files of type [%s] are not supported.", mediaType);
             }
