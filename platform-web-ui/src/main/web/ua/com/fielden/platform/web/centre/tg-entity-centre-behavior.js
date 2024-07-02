@@ -10,6 +10,77 @@ import { TgReflector } from '/app/tg-reflector.js';
 import { TgElementSelectorBehavior, queryElements } from '/resources/components/tg-element-selector-behavior.js';
 import { TgDelayedActionBehavior } from '/resources/components/tg-delayed-action-behavior.js';
 import { getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
+import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
+
+/**
+ * Insertion point manager that is local for entity centre to manage detached or maximised insertion points
+ */
+class EntityCentreInsertionPointManager {
+
+    constructor() {
+        this._insertionPoints = [];
+    }
+
+    /**
+     * Adds new insertion point to manage its z index.
+     * 
+     * @param {Object} insertionPoint - insertion point to manage
+     */
+    add (insertionPoint) {
+        if (this._insertionPoints.indexOf(insertionPoint) >= 0) {
+            this.bringToFront(insertionPoint);
+        } else {
+            this._insertionPoints.push(insertionPoint);
+            this._setZ(insertionPoint, this._insertionPoints.length);
+        }
+    }
+
+    /**
+     * Stops managing insertion point z-index and removes from global insertion point manager
+     * 
+     * @param {Object} insertionPoint - insertion point to stop manage
+     */
+    remove (insertionPoint) {
+        const idx = this._insertionPoints.indexOf(insertionPoint);
+        if (idx >= 0) {
+            this.bringToFront(indexShift);
+            this._insertionPoints.splice(idx, 1);
+            this._setZ(insertionPoint, 0);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Brings to front the specified insertion point. 
+     * 
+     * @param {Object} insertionPoint - insertion point to bring to front
+     */
+    bringToFront (insertionPoint) {
+        const zIndex = _getZ(insertionPoint);
+        if (zIndex > 0) {
+            this._insertionPoints.forEach(p => {
+                const z = this._getZ(p);
+                if (z > zIndex) {
+                    this._setZ(p, z - 1);
+                }
+            });
+            this._setZ(insertionPoint, this._insertionPoints.length);
+        }
+    }
+
+    _getZ (insertionPoint) {
+        return +insertionPoint.$.pm.style.zIndex;
+    }
+
+    _setZ (insertionPoint, z) {
+        if (z <= 0 ) {
+            insertionPoint.$.pm.style.removeProperty("z-index");
+        } else {
+            insertionPoint.$.pm.style.zIndex = z;
+        }
+    }
+}
 
 const generateCriteriaName = function (root, property, suffix) {
     const rootName = root.substring(0, 1).toLowerCase() + root.substring(1) + "_";
@@ -423,6 +494,14 @@ const TgEntityCentreBehaviorImpl = {
             value: false
         },
 
+        /**
+         * Insertion point manager for this entity centre.
+         */
+        insertionPointManager: {
+            type: Object,
+            value: null
+        }
+
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
         //////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -757,6 +836,7 @@ const TgEntityCentreBehaviorImpl = {
 
     created: function () {
         this._reflector = new TgReflector();
+        this.insertionPointManager = new EntityCentreInsertionPointManager();
     },
 
     /**

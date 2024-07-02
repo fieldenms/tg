@@ -29,12 +29,8 @@ import '/resources/polymer/@polymer/paper-styles/element-styles/paper-material-s
 import '/resources/polymer/@polymer/neon-animation/animations/fade-in-animation.js';
 import '/resources/polymer/@polymer/neon-animation/animations/fade-out-animation.js';
 import '/resources/centre/tg-entity-centre-styles.js';
-import { tearDownEvent, getKeyEventTarget, getRelativePos } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, getKeyEventTarget, getRelativePos, localStorageKey } from '/resources/reflection/tg-polymer-utils.js';
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
-
-const insertionPointKey = function(centre, element) {
-    return `${centre.userName}_${centre.miType}_${element.tagName}`;
-};
 
 const template = html`
     <style>
@@ -324,16 +320,6 @@ Polymer({
             type: Object
         },
 
-        _width: {
-            type: String,
-            observer: "_heightChanged"
-        },
-
-        _height: {
-            type: String,
-            observer: "_heightChanged"
-        },
-
         /**
          * Determnes whether insertion point is _maximised or not.
          */
@@ -353,7 +339,7 @@ Polymer({
         }
     },
 
-    observers: ['_adjustView(_maximised, _detached, alternativeView, _height)', '_restoreFromLocalStorage(_element, contextRetriever)'],
+    observers: ['_adjustView(_minimised, _maximised, _detached, alternativeView)', '_restoreFromLocalStorage(_element, contextRetriever)'],
 
     ready: function () {
         this.triggerElement = this.$.insertionPointContent;
@@ -520,13 +506,13 @@ Polymer({
                     if (promise) {
                         return promise
                             .then(function () {
-                                self._adjustView(self._maximised, self._detached, self.alternativeView, self._height);
+                                self._adjustView(self._minimised, self._maximised, self._detached, self.alternativeView);
                                 customAction.restoreActiveElement();
                             });
                     } else {
                         return Promise.resolve()
                             .then(function () {
-                                self._adjustView(self._maximised, self._detached, self.alternativeView, self._height);
+                                self._adjustView(self._minimised, self._maximised, self._detached, self.alternativeView);
                                 customAction.restoreActiveElement();
                             });
                     }
@@ -562,14 +548,42 @@ Polymer({
     /**
      * Assigns sizes for insertion point depending on several states in which it can be: attached / detached (non-alternative view) and alternative view.
      */
-    _adjustView: function (_maximised, _detached, alternativeView, height) {
-        this.$.loadableContent.style.removeProperty("width");
-        this.$.loadableContent.style.removeProperty("height");
-        this.$.loadableContent.style.removeProperty("min-width");
-        this.$.loadableContent.style.removeProperty("min-height");
-        this.$.pm.style.removeProperty("margin");
-        this.style.removeProperty("width");
-        this.style.removeProperty("height");
+    _adjustView: function (_minimised, _maximised, _detached, alternativeView) {
+        this._resetStyles();//First reset styles to initilise only those whicj are applicable for specific state.
+
+        if (alternativeView) {
+            this.$.loadableContent.style.width = "100%";
+            this.$.loadableContent.style.height = "100%";
+        } else {
+
+            if (_detached || _maximised) { //Fixed position only if it is maximised or detached
+                this.$.pm.style.position = "fixed";
+            }
+
+            if (_minimised) { //minimised insertion point might be detached or attached but not maximised
+                this.$.pm.style.height = "44px";
+            } else if (_maximised) { // minimised and maximised is mutually exclusive states, only one of them can be true or none of them.
+                this.$.pm.style.top = "0";
+                this.$.pm.style.left = "0";
+                this.$.pm.style.width = "100%";
+                this.$.pm.style.height = "100%";
+                this.$.loadableContent.style.width = "100%";
+                this.$.loadableContent.style.height = "100%";
+            }
+
+            if (_detached) {
+
+            }
+        }
+
+        if (_detached) {
+            //TODO set position and dimension from local storage or preferred one
+            //TODO if it is not maximised then make it also fixed
+            //TODO set proper z-index
+        } else {
+            //TODO set height from local storage or preferred one
+        }
+
         if (!_maximised) {
             if (this.$.elementLoader.prefDim) {
                 const prefDim = this.$.elementLoader.prefDim;
@@ -588,6 +602,25 @@ Polymer({
         }
         this.updateStyles();
         this.notifyResize();
+    },
+
+    /**
+     * Resets styles. This is needed in case if insertion point changes it's state like minimised, maximised and attach/detach, also if it is alternative view. 
+     */
+    _resetStyles: function () {
+        this.$.loadableContent.style.removeProperty("width");
+        this.$.loadableContent.style.removeProperty("height");
+        this.$.loadableContent.style.removeProperty("min-width");
+        this.$.loadableContent.style.removeProperty("min-height");
+        this.$.pm.style.removeProperty("margin");
+        this.$.pm.style.removeProperty("top");
+        this.$.pm.style.removeProperty("left");
+        this.$.pm.style.removeProperty("width");
+        this.$.pm.style.removeProperty("height");
+        this.$.pm.style.removeProperty("position");
+        this.$.pm.style.removeProperty("z-index");
+        this.style.removeProperty("width");
+        this.style.removeProperty("height");
     },
 
     _restoreFromLocalStorage: function(_element, contextRetriever) {
@@ -799,5 +832,10 @@ Polymer({
         if (this.resultView) {
             this.resultView._findParentCentre().$.egi._shortcutPressed(e);
         }
+    },
+
+    _generateKey: function (name) {
+        const extendedName = `${(this.contextRetriever() && this.contextRetriever().miType) || ""}_${(this._element && this._element) || this._element.tagName}_${name}`;
+        return localStorageKey(extendedName);
     },
 });
