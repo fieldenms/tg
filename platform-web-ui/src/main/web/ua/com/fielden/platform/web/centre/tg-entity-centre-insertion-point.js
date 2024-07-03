@@ -32,6 +32,15 @@ import '/resources/centre/tg-entity-centre-styles.js';
 import { tearDownEvent, getKeyEventTarget, getRelativePos, localStorageKey } from '/resources/reflection/tg-polymer-utils.js';
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 
+const ST_MINIMISED = 'minimised';
+
+const ST_DETACHED_WIDTH = 'detachedWidth';
+const ST_DETACHED_HEIGHT = 'detachedHeight';
+const ST_PREF_WIDTH = 'prefWidth';
+const ST_PREF_HEIGHT = 'prefHeight';
+
+const ST_ATTACHE_HEIGHT = 'attacheHeight';
+
 const template = html`
     <style>
         :host {
@@ -325,12 +334,14 @@ Polymer({
          */
         _maximised: {
             type: Boolean,
-            value: false
+            value: false,
+            observer: "_maximisedChanged"
         },
 
         _minimised: {
             type: Boolean,
-            value: false
+            value: false,
+            observer: "_minimisedChanged"
         },
 
         _detached: {
@@ -749,9 +760,27 @@ Polymer({
         return _maximised ? "Collapse" : "Maximise";
     },
 
-    _showDialog: function () {
-        InsertionPointManager.addInsertionPoint(this);
-        this.$.insertionPointContent.focus();
+    _maximisedChanged: function (newValue) {
+        if (!this.alternativeView && !this._minimised) {
+            if (newValue) {
+                this.$.pm.style.top = "0";
+                this.$.pm.style.left = "0";
+                this.$.pm.style.width = "100%";
+                this.$.pm.style.height = "100%";
+                this.$.loadableContent.style.width = "100%";
+                this.$.loadableContent.style.height = "100%";
+                this.$.pm.style.position = "fixed";
+                this.contextRetriever().insertionPointManager.add(this);
+                InsertionPointManager.addInsertionPoint(this);
+                this.$.insertionPointContent.focus();
+            } else {
+                if (this._detached) {
+
+                } else {
+
+                }
+            }
+        }
     },
 
     _closeDialog: function () {
@@ -768,11 +797,23 @@ Polymer({
     },
 
     _toggleMinimised: function (e) {
-        this._minimised = !this._minimised; 
+        this._minimised = !this._minimised;
+        this._persistState(ST_MINIMISED, this._minimised); 
     },
 
     _minimisedTooltip: function(_minimised) {
         return _minimised ? "Restore": "Minimize";
+    },
+
+    _minimisedChanged: function (newValue) {
+        if (!this.alternativeView && !this._maximised) {
+            if (newValue) {
+                this.$.pm.style.height = "44px"; //44px - the height of title bar
+            } else {
+                this.$.pm.style.removeProperty("height");
+                this._setDimension();
+            }
+        }
     },
 
     /******************** detach button related logic *************************/
@@ -807,7 +848,37 @@ Polymer({
         }
     },
 
-    /*************************************************************************/
+    /****************Miscellaneous methods for restoring size and dimension***********************/
+    _setDimension: function () {
+        if (this._detached) {
+            let dimToApply = this._getDim(ST_DETACHED_WIDTH, ST_DETACHED_HEIGHT);
+            if (!dimToApply) {
+                dimToApply = this._getDim(ST_PREF_WIDTH, ST_PREF_HEIGHT);
+            }
+            if (!dimToApply) {
+                dimToApply = this._getPrefDim();
+            }
+            if (dimToApply) {
+                this.$.loadableContent.style.width = dimToApply[0];
+                this.$.loadableContent.style.height = dimToApply[1];
+            }
+        } else {
+            let heightToApply = this._getProp(ST_ATTACHE_HEIGHT);
+            if (!heightToApply) {
+                const prefDim = this._getPrefDim();
+                heightToApply = prefDim && prefDim[1];
+            }
+            if (heightToApply) {
+                this.$.loadableContent.style.height = dimToApply[1];
+            }
+        }
+    },
+
+    _setPosition: function () {
+
+    },
+
+    /*********************************************************************************************/
 
     _isToolbarVisible: function (_minimised, _maximised, alternativeView, isAttached) {
         return !_minimised && (_maximised || alternativeView) && (isAttached && (this.$.entitySpecificActions.assignedNodes().length > 0 || this.$.standartActions.assignedNodes().length > 0));
@@ -838,4 +909,31 @@ Polymer({
         const extendedName = `${(this.contextRetriever() && this.contextRetriever().miType) || ""}_${(this._element && this._element) || this._element.tagName}_${name}`;
         return localStorageKey(extendedName);
     },
+
+    _persistState: function (key, value) {
+        if (value) {
+            localStorage.setItem(this._generateKey(key), value);
+        } else {
+            localStorage.removeItem(this._generateKey(key));
+        }
+    },
+
+    _getDim: function (widthKey, heightKey) {
+        const width = localStorage.getItem(this._generateKey(widthKey));
+        const height = localStorage.getItem(this._generateKey(heightKey));
+        if (width && height) {
+            return [width, height];
+        }
+    },
+
+    _getPrefDim: function () {
+        const prefDim = this.$.elementLoader.prefDim;
+        if (prefDim) {
+            dimToApply = [prefDim.width() + prefDim.widthUnit, prefDim.height() + prefDim.heightUnit]
+        }
+    },
+
+    _getProp: function (key) {
+        return localStorage.getItem(this._generateKey(key));
+    }
 });
