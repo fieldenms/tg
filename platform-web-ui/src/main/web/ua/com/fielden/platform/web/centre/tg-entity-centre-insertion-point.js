@@ -33,11 +33,15 @@ import { tearDownEvent, getKeyEventTarget, getRelativePos, localStorageKey } fro
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 
 const ST_MINIMISED = 'minimised';
+const ST_MAXIMISED = 'maximised';
+const ST_DETACHED = 'detached';
 
 const ST_DETACHED_WIDTH = 'detachedWidth';
 const ST_DETACHED_HEIGHT = 'detachedHeight';
 const ST_PREF_WIDTH = 'prefWidth';
 const ST_PREF_HEIGHT = 'prefHeight';
+const ST_POS_X = "posX";
+const ST_POS_Y = "posY";
 
 const ST_ATTACHE_HEIGHT = 'attacheHeight';
 
@@ -346,7 +350,8 @@ Polymer({
 
         _detached: {
             type: Boolean,
-            value: false
+            value: false,
+            observer: "_detachedChanged"
         }
     },
 
@@ -747,12 +752,8 @@ Polymer({
     },
 
     _toggleMaximise: function (e) {
-        if (this._maximised) {
-            this._closeDialog();
-        } else {
-            this._showDialog();
-        }
-        this._maximised = !this._maximised; 
+        this._maximised = !this._maximised;
+        this._persistState(ST_MAXIMISED, this._maximised);
         tearDownEvent(e);
     },
 
@@ -774,20 +775,28 @@ Polymer({
                 InsertionPointManager.addInsertionPoint(this);
                 this.$.insertionPointContent.focus();
             } else {
-                if (this._detached) {
-
-                } else {
-
+                this.$.pm.style.removeProperty("top");
+                this.$.pm.style.removeProperty("left");
+                this.$.pm.style.removeProperty("width");
+                this.$.pm.style.removeProperty("height");
+                this.$.loadableContent.style.removeProperty("width");
+                this.$.loadableContent.style.removeProperty("height");
+                InsertionPointManager.removeInsertionPoint(this);
+                if (!this._detached) {
+                    this.contextRetriever().insertionPointManager.remove(this);
+                    if (this.contextRetriever && this.contextRetriever().$.centreResultContainer) {
+                        this.contextRetriever().$.centreResultContainer.focus();
+                    }
+                    this.$.pm.style.removeProperty("position");
                 }
+                this._setDimension();
+                this._setPosition();
             }
         }
     },
 
-    _closeDialog: function () {
-        InsertionPointManager.removeInsertionPoint(this);
-        if (this.contextRetriever && this.contextRetriever().$.centreResultContainer) {
-            this.contextRetriever().$.centreResultContainer.focus();
-        }
+    closeDialog: function () {
+        this._toggleMaximise();
     },
 
     /******************** minimise button related logic *************************/
@@ -798,7 +807,8 @@ Polymer({
 
     _toggleMinimised: function (e) {
         this._minimised = !this._minimised;
-        this._persistState(ST_MINIMISED, this._minimised); 
+        this._persistState(ST_MINIMISED, this._minimised);
+        tearDownEvent(e); 
     },
 
     _minimisedTooltip: function(_minimised) {
@@ -823,17 +833,21 @@ Polymer({
     },
 
     _toggleDetach: function (e) {
-        if (this._detached) {
-            this._attachDialog();
-        } else {
-            this._detachDialog();
-        }
+        this._detached = !this._detached;
+        this._persistState(ST_DETACHED, this._detached);
         tearDownEvent(e);
-        this._detached = !this._detached; 
     },
 
     _detachTooltip: function (_detached) {
         return _detached ? "Attach": "Detach";
+    },
+
+    _detachedChanged: function (newValue) {
+        if (newValue) {
+            
+        } else {
+
+        }
     },
 
     _attachDialog: function() {
@@ -851,9 +865,9 @@ Polymer({
     /****************Miscellaneous methods for restoring size and dimension***********************/
     _setDimension: function () {
         if (this._detached) {
-            let dimToApply = this._getDim(ST_DETACHED_WIDTH, ST_DETACHED_HEIGHT);
+            let dimToApply = this._getPair(ST_DETACHED_WIDTH, ST_DETACHED_HEIGHT);
             if (!dimToApply) {
-                dimToApply = this._getDim(ST_PREF_WIDTH, ST_PREF_HEIGHT);
+                dimToApply = this._getPair(ST_PREF_WIDTH, ST_PREF_HEIGHT);
             }
             if (!dimToApply) {
                 dimToApply = this._getPrefDim();
@@ -875,7 +889,15 @@ Polymer({
     },
 
     _setPosition: function () {
-
+        if (this._detached) {
+            let posToApply = this._getPair(ST_POS_X, ST_POS_Y);
+            if (posToApply) {
+                this.$.pm.style.top = posToApply[0];
+                this.$.pm.style.left = posToApply[1];
+            } else {
+                this.refit();
+            }
+        }
     },
 
     /*********************************************************************************************/
@@ -918,18 +940,18 @@ Polymer({
         }
     },
 
-    _getDim: function (widthKey, heightKey) {
-        const width = localStorage.getItem(this._generateKey(widthKey));
-        const height = localStorage.getItem(this._generateKey(heightKey));
-        if (width && height) {
-            return [width, height];
-        }
-    },
-
     _getPrefDim: function () {
         const prefDim = this.$.elementLoader.prefDim;
         if (prefDim) {
             dimToApply = [prefDim.width() + prefDim.widthUnit, prefDim.height() + prefDim.heightUnit]
+        }
+    },
+
+    _getPair: function (_1, _2) {
+        const pair_1 = localStorage.getItem(this._generateKey(_1));
+        const pair_2 = localStorage.getItem(this._generateKey(_2));
+        if (pair_1 && pair_2) {
+            return [pair_1, pair_2];
         }
     },
 
