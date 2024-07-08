@@ -185,7 +185,8 @@ Polymer({
         alternativeView: {
             type: Boolean,
             value: false,
-            reflectToAttribute: true
+            reflectToAttribute: true,
+            observer: "_alternativeViewChanged"
         },
 
         /**
@@ -355,7 +356,7 @@ Polymer({
         }
     },
 
-    observers: ['_adjustView(_minimised, _maximised, _detached, alternativeView)', '_restoreFromLocalStorage(_element, contextRetriever)'],
+    observers: ['_restoreFromLocalStorage(_element, contextRetriever)'], /*'_adjustView(_minimised, _maximised, _detached, alternativeView)', */
 
     ready: function () {
         this.triggerElement = this.$.insertionPointContent;
@@ -522,13 +523,13 @@ Polymer({
                     if (promise) {
                         return promise
                             .then(function () {
-                                self._adjustView(self._minimised, self._maximised, self._detached, self.alternativeView);
+                                //self._adjustView(self._minimised, self._maximised, self._detached, self.alternativeView);
                                 customAction.restoreActiveElement();
                             });
                     } else {
                         return Promise.resolve()
                             .then(function () {
-                                self._adjustView(self._minimised, self._maximised, self._detached, self.alternativeView);
+                                //self._adjustView(self._minimised, self._maximised, self._detached, self.alternativeView);
                                 customAction.restoreActiveElement();
                             });
                     }
@@ -565,59 +566,59 @@ Polymer({
      * Assigns sizes for insertion point depending on several states in which it can be: attached / detached (non-alternative view) and alternative view.
      */
     _adjustView: function (_minimised, _maximised, _detached, alternativeView) {
-        this._resetStyles();//First reset styles to initilise only those whicj are applicable for specific state.
+        // this._resetStyles();//First reset styles to initilise only those whicj are applicable for specific state.
 
-        if (alternativeView) {
-            this.$.loadableContent.style.width = "100%";
-            this.$.loadableContent.style.height = "100%";
-        } else {
+        // if (alternativeView) {
+        //     this.$.loadableContent.style.width = "100%";
+        //     this.$.loadableContent.style.height = "100%";
+        // } else {
 
-            if (_detached || _maximised) { //Fixed position only if it is maximised or detached
-                this.$.pm.style.position = "fixed";
-            }
+        //     if (_detached || _maximised) { //Fixed position only if it is maximised or detached
+        //         this.$.pm.style.position = "fixed";
+        //     }
 
-            if (_minimised) { //minimised insertion point might be detached or attached but not maximised
-                this.$.pm.style.height = "44px";
-            } else if (_maximised) { // minimised and maximised is mutually exclusive states, only one of them can be true or none of them.
-                this.$.pm.style.top = "0";
-                this.$.pm.style.left = "0";
-                this.$.pm.style.width = "100%";
-                this.$.pm.style.height = "100%";
-                this.$.loadableContent.style.width = "100%";
-                this.$.loadableContent.style.height = "100%";
-            }
+        //     if (_minimised) { //minimised insertion point might be detached or attached but not maximised
+        //         this.$.pm.style.height = "44px";
+        //     } else if (_maximised) { // minimised and maximised is mutually exclusive states, only one of them can be true or none of them.
+        //         this.$.pm.style.top = "0";
+        //         this.$.pm.style.left = "0";
+        //         this.$.pm.style.width = "100%";
+        //         this.$.pm.style.height = "100%";
+        //         this.$.loadableContent.style.width = "100%";
+        //         this.$.loadableContent.style.height = "100%";
+        //     }
 
-            if (_detached) {
+        //     if (_detached) {
 
-            }
-        }
+        //     }
+        // }
 
-        if (_detached) {
-            //TODO set position and dimension from local storage or preferred one
-            //TODO if it is not maximised then make it also fixed
-            //TODO set proper z-index
-        } else {
-            //TODO set height from local storage or preferred one
-        }
+        // if (_detached) {
+        //     //TODO set position and dimension from local storage or preferred one
+        //     //TODO if it is not maximised then make it also fixed
+        //     //TODO set proper z-index
+        // } else {
+        //     //TODO set height from local storage or preferred one
+        // }
 
-        if (!_maximised) {
-            if (this.$.elementLoader.prefDim) {
-                const prefDim = this.$.elementLoader.prefDim;
-                this.$.loadableContent.style.minWidth = prefDim.width() + prefDim.widthUnit;
-                this.$.loadableContent.style.minHeight = height ? height : prefDim.height() + prefDim.heightUnit;
-            } 
-            if (alternativeView) {
-                this.style.width = "100%";
-                this.style.height = "100%";
-            } else {
-                this.$.pm.style["margin"] = "10px";
-            }
-        } else {
-            this.$.loadableContent.style.width = "100%";
-            this.$.loadableContent.style.height = "100%";
-        }
-        this.updateStyles();
-        this.notifyResize();
+        // if (!_maximised) {
+        //     if (this.$.elementLoader.prefDim) {
+        //         const prefDim = this.$.elementLoader.prefDim;
+        //         this.$.loadableContent.style.minWidth = prefDim.width() + prefDim.widthUnit;
+        //         this.$.loadableContent.style.minHeight = height ? height : prefDim.height() + prefDim.heightUnit;
+        //     } 
+        //     if (alternativeView) {
+        //         this.style.width = "100%";
+        //         this.style.height = "100%";
+        //     } else {
+        //         this.$.pm.style["margin"] = "10px";
+        //     }
+        // } else {
+        //     this.$.loadableContent.style.width = "100%";
+        //     this.$.loadableContent.style.height = "100%";
+        // }
+        // this.updateStyles();
+        // this.notifyResize();
     },
 
     /**
@@ -641,10 +642,9 @@ Polymer({
 
     _restoreFromLocalStorage: function(_element, contextRetriever) {
         if (_element && contextRetriever) {
-            const height = localStorage.getItem(insertionPointKey(contextRetriever(), _element));
-            if (height) {
-                this._height = height;
-            }
+            this._minimised = !!(this._getProp(ST_MINIMISED) && true);
+            this._maximised = !!(this._getProp(ST_MAXIMISED) && true);
+            this._detached = !!(this._getProp(ST_DETACHED) && true);
         }
     },
 
@@ -753,7 +753,7 @@ Polymer({
 
     _toggleMaximise: function (e) {
         this._maximised = !this._maximised;
-        this._persistState(ST_MAXIMISED, this._maximised);
+        this._saveState(ST_MAXIMISED, this._maximised);
         tearDownEvent(e);
     },
 
@@ -762,8 +762,11 @@ Polymer({
     },
 
     _maximisedChanged: function (newValue) {
-        if (!this.alternativeView && !this._minimised) {
+        if (this.contextRetriever && !this.alternativeView && !this._minimised) {
             if (newValue) {
+                if (!this._detached && !this._getPair(ST_DETACHED_WIDTH, ST_DETACHED_HEIGHT)) {
+                    this._saveDimensions();
+                }
                 this.$.pm.style.top = "0";
                 this.$.pm.style.left = "0";
                 this.$.pm.style.width = "100%";
@@ -807,7 +810,7 @@ Polymer({
 
     _toggleMinimised: function (e) {
         this._minimised = !this._minimised;
-        this._persistState(ST_MINIMISED, this._minimised);
+        this._saveState(ST_MINIMISED, this._minimised);
         tearDownEvent(e); 
     },
 
@@ -816,7 +819,7 @@ Polymer({
     },
 
     _minimisedChanged: function (newValue) {
-        if (!this.alternativeView && !this._maximised) {
+        if (this.contextRetriever && !this.alternativeView && !this._maximised) {
             if (newValue) {
                 this.$.pm.style.height = "44px"; //44px - the height of title bar
             } else {
@@ -834,7 +837,7 @@ Polymer({
 
     _toggleDetach: function (e) {
         this._detached = !this._detached;
-        this._persistState(ST_DETACHED, this._detached);
+        this._saveState(ST_DETACHED, this._detached);
         tearDownEvent(e);
     },
 
@@ -843,10 +846,29 @@ Polymer({
     },
 
     _detachedChanged: function (newValue) {
-        if (newValue) {
-            
-        } else {
-
+        if (this.contextRetriever && !this.alternativeView && !this._maximised) {
+            if (newValue) {
+                if (!this._getPair(ST_DETACHED_WIDTH, ST_DETACHED_HEIGHT)) {
+                    this._saveDimensions();
+                }
+                this.$.pm.style.position = "fixed";
+                this.contextRetriever().insertionPointManager.add(this);
+                this.$.insertionPointContent.focus();
+            } else {
+                this.$.pm.style.removeProperty("top");
+                this.$.pm.style.removeProperty("left");
+                this.$.pm.style.removeProperty("width");
+                this.$.pm.style.removeProperty("height");
+                this.$.loadableContent.style.removeProperty("width");
+                this.$.loadableContent.style.removeProperty("height");
+                this.$.pm.style.removeProperty("position");
+                this.contextRetriever().insertionPointManager.remove(this);
+                if (this.contextRetriever && this.contextRetriever().$.centreResultContainer) {
+                    this.contextRetriever().$.centreResultContainer.focus();
+                }
+            }
+            this._setDimension();
+            this._setPosition();
         }
     },
 
@@ -859,6 +881,16 @@ Polymer({
     _detachDialog: function () {
         if (!this._maximised) {
             this.refit();
+        }
+    },
+
+    _alternativeViewChanged: function (newValue) {
+        if (newValue) {
+            this.style.width = "100%";
+            this.style.height = "100%";
+        } else {
+            this.style.removeProperty("width");
+            this.style.removeProperty("height");
         }
     },
 
@@ -883,7 +915,7 @@ Polymer({
                 heightToApply = prefDim && prefDim[1];
             }
             if (heightToApply) {
-                this.$.loadableContent.style.height = dimToApply[1];
+                this.$.loadableContent.style.height = heightToApply[1];
             }
         }
     },
@@ -932,7 +964,7 @@ Polymer({
         return localStorageKey(extendedName);
     },
 
-    _persistState: function (key, value) {
+    _saveState: function (key, value) {
         if (value) {
             localStorage.setItem(this._generateKey(key), value);
         } else {
@@ -940,10 +972,18 @@ Polymer({
         }
     },
 
+    _saveDimensions: function () {
+        const rect = this.$.loadableContent.getBoundingClientRect();
+        if (rect && rect.width && rect.height) {
+            localStorage.setItem(ST_DETACHED_WIDTH, rect.width + "px");
+            localStorage.setItem(ST_DETACHED_HEIGHT, rect.height + "px");
+        }
+    },
+
     _getPrefDim: function () {
         const prefDim = this.$.elementLoader.prefDim;
         if (prefDim) {
-            dimToApply = [prefDim.width() + prefDim.widthUnit, prefDim.height() + prefDim.heightUnit]
+            return [prefDim.width() + prefDim.widthUnit, prefDim.height() + prefDim.heightUnit];
         }
     },
 
