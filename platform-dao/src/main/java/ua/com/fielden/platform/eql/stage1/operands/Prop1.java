@@ -21,6 +21,7 @@ import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
+import ua.com.fielden.platform.types.RichText;
 
 public class Prop1 implements ISingleOperand1<Prop2> {
 
@@ -54,13 +55,20 @@ public class Prop1 implements ISingleOperand1<Prop2> {
         throw new EqlStage1ProcessingException(ERR_CANNOT_RESOLVE_PROPERTY.formatted(propPath));
     }
 
-    public static final List<AbstractQuerySourceItem<?>> enhancePath(final List<AbstractQuerySourceItem<?>> originalPath) {
-        final AbstractQuerySourceItem<?> lastResolutionItem = originalPath.get(originalPath.size() - 1);
-        if (lastResolutionItem instanceof QuerySourceItemForComponentType<?> lastResolutionItemAsComponent && lastResolutionItemAsComponent.getSubitems().size() == 1) {
-            final List<AbstractQuerySourceItem<?>> enhancedPath = new ArrayList<>(originalPath);
-            final AbstractQuerySourceItem<?> autoResolvedItem = lastResolutionItemAsComponent.getSubitems().values().iterator().next();
-            enhancedPath.add(autoResolvedItem);
-            return enhancedPath;
+    public static List<AbstractQuerySourceItem<?>> enhancePath(final List<AbstractQuerySourceItem<?>> originalPath) {
+        final AbstractQuerySourceItem<?> last = originalPath.get(originalPath.size() - 1);
+        if (last instanceof QuerySourceItemForComponentType<?> lastComponent) {
+            if (lastComponent.getSubitems().size() == 1) {
+                final List<AbstractQuerySourceItem<?>> enhancedPath = new ArrayList<>(originalPath);
+                final AbstractQuerySourceItem<?> autoResolvedItem = lastComponent.getSubitems().values().iterator().next();
+                enhancedPath.add(autoResolvedItem);
+                return enhancedPath;
+            }
+            else if (lastComponent.javaType() == RichText.class) {
+                final var enhancedPath = new ArrayList<>(originalPath);
+                enhancedPath.add(lastComponent.getSubitems().get(RichText._coreText));
+                return enhancedPath;
+            }
         }
         return originalPath;
     }
