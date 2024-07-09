@@ -1,16 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.sources.enhance;
 
-import static java.util.Collections.unmodifiableList;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
-
+import com.google.common.collect.ImmutableList;
+import ua.com.fielden.platform.eql.exceptions.EqlStage2ProcessingException;
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForComponentType;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForUnionType;
@@ -18,11 +9,16 @@ import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sources.HelperNodeForImplicitJoins;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.enhance.PathsToTreeTransformer.AbstractLinks;
+import ua.com.fielden.platform.eql.stage3.operands.Prop3;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
 
+import java.util.*;
+
+import static java.util.Collections.unmodifiableList;
+
 /**
- * A collection of helper methods to perform core logic of {@link PathToTreeTransformer}.
+ * A collection of helper methods to perform core logic of {@link PathsToTreeTransformer}.
  *
  * @author TG Team
  */
@@ -34,7 +30,7 @@ public class PathToTreeTransformerUtils {
         return new PendingTail(new Prop2Lite(prop.propPath, prop.source.id()), convertPathToChunks(prop.getPath()));
     }
 
-    public static final List<SourceTails> groupBySource(final Set<Prop2> props) {
+    public static List<SourceTails> groupBySource(final Set<Prop2> props) {
         final SortedMap<Integer, T2<ISource2<?>, List<PendingTail>>> result = new TreeMap<>(); //need predictable order for testing purposes
         for (final Prop2 prop : props) {
             final T2<ISource2<?>, List<PendingTail>> existing = result.get(prop.source.id());
@@ -72,9 +68,6 @@ public class PathToTreeTransformerUtils {
 
     /**
      * Obtains unique set of first chunks (only calculated) from the list of pending tails.
-     *
-     * @param props
-     * @return
      */
     public static Collection<PropChunk> getFirstCalcChunks(final List<PendingTail> props) {
         final SortedMap<String, PropChunk> result = new TreeMap<>(); //need predictable order for testing purposes
@@ -91,10 +84,6 @@ public class PathToTreeTransformerUtils {
 
     /**
      * Establishes proper sequence of helper nodes to be used for JOINs generation later on.
-     *
-     * @param all
-     * @param dependentCalcPropOrderFromMetadata
-     * @return
      */
     public static List<HelperNodeForImplicitJoins> orderHelperNodes(final List<HelperNodeForImplicitJoins> all, final List<String> dependentCalcPropOrderFromMetadata) {
         final Map<String, HelperNodeForImplicitJoins> dependentCalcPropNodes = new HashMap<>();
@@ -124,26 +113,24 @@ public class PathToTreeTransformerUtils {
         return result;
     }
 
-    public static List<PropChunk> convertPathToChunks(final List<AbstractQuerySourceItem<?>> propPath) {
-        final List<PropChunk> result = new ArrayList<>();
+    private static ImmutableList<PropChunk> convertPathToChunks(final List<AbstractQuerySourceItem<?>> propPath) {
+        final var chunks = ImmutableList.<PropChunk>builder();
+
         String currentPropName = null;
         for (final AbstractQuerySourceItem<?> querySourceInfoItem : propPath) {
             currentPropName = (currentPropName != null) ? currentPropName + "." + querySourceInfoItem.name : querySourceInfoItem.name;
             if (!isHeaderProperty(querySourceInfoItem)) {
                 // need to finalise and reset currentPropName
-                result.add(new PropChunk(currentPropName, querySourceInfoItem));
+                chunks.add(new PropChunk(currentPropName, querySourceInfoItem));
                 currentPropName = null;
             }
         }
 
-        return result;
+        return chunks.build();
     }
 
     /**
-     * A predicate that determines whether {@code querySourceItem} represents a header for a component or union type property.
-     *
-     * @param querySourceItem
-     * @return
+     * Determines whether {@code querySourceItem} represents a header for a component or union type property.
      */
     public static boolean isHeaderProperty(final AbstractQuerySourceItem<?> querySourceItem) {
         return querySourceItem instanceof QuerySourceItemForComponentType || querySourceItem instanceof QuerySourceItemForUnionType;
@@ -165,37 +152,38 @@ public class PathToTreeTransformerUtils {
         return resolutionsData;
     }
 
-    static record SourceTails(ISource2<?> source, List<PendingTail> tails) {
+    record SourceTails(ISource2<?> source, List<PendingTail> tails) {
     }
 
- // there are 2 types: 1) tail corresponds to link, 2) tail is shorter (as left side being converted into nodes)
-    static record PendingTail(Prop2Lite link, List<PropChunk> tail) {
+    /**
+     * There are 2 types:
+     * <ol>
+     *   <li> tail corresponds to link
+     *   <li> tail is shorter (as left side being converted into nodes)
+     * </ol>
+     */
+    record PendingTail(Prop2Lite link, List<PropChunk> tail) {
         public PendingTail {
             if (tail.isEmpty()) {
                 throw new EqlStage2ProcessingException("Tail cannot be empty. Link: %s".formatted(link));
             }
-            tail = List.copyOf(tail);
+            tail = ImmutableList.copyOf(tail);
         }
     }
 
-    static record FirstChunkGroup(
-            PropChunk firstChunk,
-            List<Prop2Lite> origins, // originals props for which `firstChunk` happened to be the last PropChunk in their pending tail
-            List<PendingTail> tails // tails that follow `firstChunk`
-    ) {
-    }
+    /**
+     * @param origins originals props for which {@link #firstChunk} happened to be the last PropChunk in their pending tail
+     * @param tails   tails that follow {@link #firstChunk}
+     */
+    record FirstChunkGroup(PropChunk firstChunk, List<Prop2Lite> origins, List<PendingTail> tails) {}
 
     /**
-     * Lightweight representation of the respective {@code Prop2} instance -- contains all ingredients of {@code Prop2} identity.
+     * Lightweight representation of {@link Prop2} taht contains all ingredients of its identity.
+     * <p>
+     * Used to build associations between {@link Prop2} and a corresponding {@link Prop3}.
      *
-     * Used within the process of building associations between {@code Prop2} and the corresponding {@code Prop3} item.
-     *
-     * @param propPath -- propPath from the respective existing {@code Prop2} instance
-     *
-     * @param sourceId -- {@code source.id()} from the respective existing {@code Prop2} instance
-     *
-     * @author TG Team
-     *
+     * @param propPath  propPath from a corresponding existing {@link Prop2}
+     * @param sourceId  {@link ISource2#id()} from a corresponding existing {@link Prop2}
      */
-    static record Prop2Lite (String propPath, Integer sourceId) {}
+    record Prop2Lite (String propPath, Integer sourceId) {}
 }
