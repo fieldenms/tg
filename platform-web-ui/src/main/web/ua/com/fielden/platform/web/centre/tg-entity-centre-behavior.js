@@ -43,7 +43,7 @@ class EntityCentreInsertionPointManager {
     remove (insertionPoint) {
         const idx = this._insertionPoints.indexOf(insertionPoint);
         if (idx >= 0) {
-            this.bringToFront(indexShift);
+            this.bringToFront(insertionPoint);
             this._insertionPoints.splice(idx, 1);
             this._setZ(insertionPoint, 0);
             return true;
@@ -57,7 +57,7 @@ class EntityCentreInsertionPointManager {
      * @param {Object} insertionPoint - insertion point to bring to front
      */
     bringToFront (insertionPoint) {
-        const zIndex = _getZ(insertionPoint);
+        const zIndex = this._getZ(insertionPoint);
         if (zIndex > 0) {
             this._insertionPoints.forEach(p => {
                 const z = this._getZ(p);
