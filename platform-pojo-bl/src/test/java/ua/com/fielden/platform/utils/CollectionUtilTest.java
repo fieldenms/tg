@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.utils;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterators;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.test_utils.TestUtils;
@@ -302,6 +305,22 @@ public class CollectionUtilTest {
         final var list = new ArrayList<>();
         list.add(null);
         assertEmpty(firstNullable(list));
+    }
+
+    @Test
+    public void concatSet_returns_a_set_resulting_from_concatenating_given_iterables() {
+        assertEquals(Set.of(), concatSet());
+        assertEquals(Set.of("a"), concatSet(List.of("a")));
+        assertEquals(Set.of("a", "b"), concatSet(List.of("a"), Set.of("b")));
+        assertEquals(Set.of("a", "b"), concatSet(List.of("a"), Set.of("b", "a"), List.of("b")));
+    }
+
+    @Test
+    public void concatList_returns_a_list_resulting_from_concatenating_given_iterables() {
+        assertEquals(List.of(), concatList());
+        assertEquals(List.of("a"), concatList(List.of("a")));
+        assertEquals(List.of("a", "b"), concatList(List.of("a"), Set.of("b")));
+        assertEquals(List.of("a", "b", "a", "b"), concatList(List.of("a"), Set.of("b", "a"), List.of("b")));
     }
 
 }
