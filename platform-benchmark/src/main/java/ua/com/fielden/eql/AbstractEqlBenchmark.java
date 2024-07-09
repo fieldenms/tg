@@ -1,40 +1,51 @@
 package ua.com.fielden.eql;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
-import org.hibernate.type.YesNoType;
-import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
-import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.entity.query.generation.ioc.HelperIocModule;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
+import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
-import ua.com.fielden.platform.eql.meta.SimpleUserFilter;
-import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
-import ua.com.fielden.platform.persistence.types.*;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
 import ua.com.fielden.platform.sample.domain.*;
-import ua.com.fielden.platform.test.PlatformTestDomainTypes;
-import ua.com.fielden.platform.types.Colour;
-import ua.com.fielden.platform.types.Hyperlink;
-import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.utils.IDates;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Properties;
 import java.util.Random;
 
-import static ua.com.fielden.platform.entity.query.DbVersion.H2;
+import static ua.com.fielden.eql.BenchmarkModule.newBenchmarkModule;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * Base class for benchmarks. Contains EQL expressions of various kinds and complexity in their raw unparsed form.
  * It is up to subclasses to perform the desired transformation of those expressions via {@link #finish(QueryModel)}.
+ *
+ * <h3> Running benchmarks </h3>
+ *
+ * The following command should be used to run a benchmark based on this class, assuming the current working directory
+ * is this module (platform-benchmark).
+ * <pre>
+ java -jar target/benchmarks.jar \
+ -p propertiesFile="src/main/resources/AbstractEqlBenchmark.properties" \
+ -prof gc \
+ "ua.com.fielden.eql.$SPECIFIC_BENCHMARK"
+ </pre>
  */
+@State(Scope.Benchmark)
 public abstract class AbstractEqlBenchmark {
+
+    // required for correct initialisation of Guice modules
+    @Param("") String propertiesFile;
+
+    private EqlRandomGenerator eqlGenerator;
+
+    protected EqlRandomGenerator eqlRandomGenerator() {
+        return eqlGenerator;
+    }
 
     @Benchmark
     public void simple_query(final Blackhole blackhole) {
@@ -282,7 +293,7 @@ public abstract class AbstractEqlBenchmark {
 
     @Benchmark
     public void generated_conditions_x10(final Blackhole blackhole) {
-        final var model = ELQ_GENERATOR.conditions(
+        final var model = eqlGenerator.conditions(
                         select(TgPerson.class).where().val(1).isNotNull(),
                         10)
                 .model();
@@ -292,7 +303,7 @@ public abstract class AbstractEqlBenchmark {
 
     @Benchmark
     public void generated_conditions_x20(final Blackhole blackhole) {
-        final var model = ELQ_GENERATOR.conditions(
+        final var model = eqlGenerator.conditions(
                         select(TgPerson.class).where().val(1).isNotNull(),
                         20)
                 .model();
@@ -307,27 +318,27 @@ public abstract class AbstractEqlBenchmark {
 
     // -------------------- SUPPORTING CODE --------------------
 
-    protected static final Map<Class, Class> hibTypeDefaults = new HashMap<>();
-    protected static final Injector injector = Guice.createInjector(new HibernateUserTypesModule(), new HelperIocModule());
-    protected static final IDates dates = injector.getInstance(IDates.class);
-    protected static final IFilter filter = new SimpleUserFilter();
+    @Setup(Level.Trial)
+    public void setup() throws IOException {
+        if (!Files.isReadable(Path.of(propertiesFile))) {
+            throw new IllegalStateException("Can't read file: %s".formatted(propertiesFile));
+        }
 
-    protected static final DomainMetadata DOMAIN_METADATA;
-    protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER;
+        final var properties = new Properties();
+        try (final var in = new FileInputStream(propertiesFile)) {
+            properties.load(in);
+        }
 
-    static {
-        hibTypeDefaults.put(boolean.class, YesNoType.class);
-        hibTypeDefaults.put(Boolean.class, YesNoType.class);
-        hibTypeDefaults.put(Date.class, DateTimeType.class);
-        hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
-        hibTypeDefaults.put(PropertyDescriptor.class, PropertyDescriptorType.class);
-        hibTypeDefaults.put(Colour.class, ColourType.class);
-        hibTypeDefaults.put(Hyperlink.class, HyperlinkType.class);
+        final var injector = new ApplicationInjectorFactory(Workflows.development)
+                .add(newBenchmarkModule(properties))
+                .add(new NewUserNotifierMockBindingModule())
+                .getInjector();
 
-        DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, injector, PlatformTestDomainTypes.entityTypes, H2);
-        DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
+        eqlGenerator = new EqlRandomGenerator(new Random(9375679861L));
+
+        afterSetup(injector);
     }
 
-    protected static final EqlRandomGenerator ELQ_GENERATOR = new EqlRandomGenerator(new Random(9375679861L));
+    protected void afterSetup(final Injector injector) {}
 
 }
