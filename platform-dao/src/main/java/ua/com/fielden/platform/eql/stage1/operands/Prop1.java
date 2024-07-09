@@ -12,7 +12,10 @@ import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.types.RichText;
 
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptySet;
@@ -34,7 +37,6 @@ public class Prop1 implements ISingleOperand1<Prop2> {
 
     @Override
     public Prop2 transform(final TransformationContextFromStage1To2 context) {
-
         final Iterator<List<ISource2<? extends ISource3>>> it = context.sourcesForNestedQueries.iterator();
         if (external) {
             it.next();
@@ -82,19 +84,16 @@ public class Prop1 implements ISingleOperand1<Prop2> {
     }
 
     private static PropResolution resolveProp(final List<ISource2<? extends ISource3>> sources, final Prop1 prop) {
-        final List<PropResolution> result = new ArrayList<>();
-        for (final ISource2<? extends ISource3> source : sources) {
-            final PropResolution resolution = resolvePropAgainstSource(source, prop);
-            if (resolution != null) {
-                result.add(resolution);
-            }
-        }
+        final List<PropResolution> result = sources.stream()
+                .map(source -> resolvePropAgainstSource(source, prop))
+                .filter(Objects::nonNull)
+                .toList();
 
         if (result.size() > 1) {
             throw new EqlStage1ProcessingException(format("Ambiguity while resolving prop [%s]", prop.propPath));
         }
 
-        return result.size() == 1 ? result.get(0) : null;
+        return result.size() == 1 ? result.getFirst() : null;
     }
 
     @Override
