@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.utils;
 
+import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
@@ -293,6 +294,11 @@ public final class CollectionUtil {
         // creating a new iterator bears a cost, try to avoid it
         final E elt = xs instanceof SequencedCollection<E> seq ? seq.getFirst() : xs.iterator().next();
         return Optional.ofNullable(elt);
+    }
+
+    public static <X> ImmutableList<X> append1(final Iterable<? extends X> xs, final X x) {
+        final var builder = ImmutableList.<X>builderWithExpectedSize((xs instanceof Collection<?> c ? c.size() : 0) + 1);
+        return builder.addAll(xs).add(x).build();
     }
 
     public static final class CollectionBuilder<C extends Collection<E>, E> {
