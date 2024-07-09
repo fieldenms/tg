@@ -211,6 +211,31 @@ public class StreamUtils {
     }
 
     /**
+     * Constructs a zipped stream.
+     */
+    public static <A, B, Z> Stream<Z> zip(
+            final Collection<? extends A> xs, final Collection<? extends B> ys,
+            final BiFunction<? super A, ? super B, ? extends Z> combine)
+    {
+        return zip(xs.stream(), ys.stream(), combine);
+    }
+
+    /**
+     * Performs an action for each pair of elements from given sources. Terminates upon reaching the end of the shorter source.
+     */
+    public static <X, Y> void zipDo(
+            final Collection<? extends X> xs, final Collection<? extends Y> ys,
+            final BiConsumer<? super X, ? super Y> action)
+    {
+        final Iterator<? extends X> xIt = xs.iterator();
+        final Iterator<? extends Y> yIt = ys.iterator();
+
+        while (xIt.hasNext() && yIt.hasNext()) {
+            action.accept(xIt.next(), yIt.next());
+        }
+    }
+
+    /**
      * Splits stream {@code source} into a windowed stream where elements from {@code source} are placed in groups of size {@code windowSize}.
      * The last group may have its size less than the {@code windowSize}.
      *
@@ -248,6 +273,14 @@ public class StreamUtils {
                 sink.accept(type.cast(item));
             }
         };
+    }
+
+    /**
+     * Returns a stream that is the result of concatenating given streams.
+     */
+    @SafeVarargs
+    public static <T> Stream<T> concat(final Stream<? extends T>... streams) {
+        return Stream.of(streams).flatMap(Function.identity());
     }
 
     /**

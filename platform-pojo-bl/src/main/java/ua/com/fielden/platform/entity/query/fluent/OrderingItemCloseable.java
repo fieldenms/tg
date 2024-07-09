@@ -7,12 +7,13 @@ final class OrderingItemCloseable //
 		extends OrderingItem //
 		implements IOrderingItemCloseable {
 
-    public OrderingItemCloseable(final Tokens tokens) {
-        super(tokens);
-    }
-    
+	public OrderingItemCloseable(final EqlSentenceBuilder builder) {
+		super(builder);
+	}
+
 	@Override
 	public OrderingModel model() {
-		return new OrderingModel(getTokens().getValues());
+		return new OrderingModel(builder.model().getTokenSource());
 	}
+
 }

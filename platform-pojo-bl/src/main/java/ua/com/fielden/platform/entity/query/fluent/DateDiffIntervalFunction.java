@@ -8,50 +8,51 @@ abstract class DateDiffIntervalFunction<T, ET extends AbstractEntity<?>> //
 		extends AbstractQueryLink //
 		implements IDateDiffIntervalFunction<T, ET> {
 
-    protected DateDiffIntervalFunction(final Tokens tokens) {
-        super(tokens);
-    }
-    
-	protected abstract T nextForDateDiffIntervalFunction(final Tokens tokens);
+	protected DateDiffIntervalFunction(final EqlSentenceBuilder builder) {
+		super(builder);
+	}
+
+	protected abstract T nextForDateDiffIntervalFunction(final EqlSentenceBuilder builder);
 
 	@Override
 	public IDateDiffFunction<T, ET> seconds() {
-		return createDateDiffFunction(getTokens().secondsInterval());
+		return createDateDiffFunction(builder.secondsInterval());
 	}
 
 	@Override
 	public IDateDiffFunction<T, ET> minutes() {
-		return createDateDiffFunction(getTokens().minutesInterval());
+		return createDateDiffFunction(builder.minutesInterval());
 	}
 
 	@Override
 	public IDateDiffFunction<T, ET> hours() {
-		return createDateDiffFunction(getTokens().hoursInterval());
+		return createDateDiffFunction(builder.hoursInterval());
 	}
 
 	@Override
 	public IDateDiffFunction<T, ET> days() {
-		return createDateDiffFunction(getTokens().daysInterval());
+		return createDateDiffFunction(builder.daysInterval());
 	}
 
 	@Override
 	public IDateDiffFunction<T, ET> months() {
-		return createDateDiffFunction(getTokens().monthsInterval());
+		return createDateDiffFunction(builder.monthsInterval());
 	}
 
 	@Override
 	public IDateDiffFunction<T, ET> years() {
-		return createDateDiffFunction(getTokens().yearsInterval());
+		return createDateDiffFunction(builder.yearsInterval());
 	}
-	
-	private DateDiffFunction<T, ET> createDateDiffFunction(final Tokens tokens) {
-		return new DateDiffFunction<T, ET>(tokens) {
+
+	private DateDiffFunction<T, ET> createDateDiffFunction(final EqlSentenceBuilder builder) {
+		return new DateDiffFunction<T, ET>(builder) {
 
 			@Override
-			protected T nextForDateDiffFunction(final Tokens tokens) {
-				return DateDiffIntervalFunction.this.nextForDateDiffIntervalFunction(tokens);
+			protected T nextForDateDiffFunction(final EqlSentenceBuilder builder) {
+				return DateDiffIntervalFunction.this.nextForDateDiffIntervalFunction(builder);
 			}
 
 		};
-	}	
+	}
+
 }

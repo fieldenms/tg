@@ -8,12 +8,13 @@ class JoinOn<ET extends AbstractEntity<?>> //
 		extends AbstractQueryLink //
 		implements IJoinCondition<ET> {
 
-    public JoinOn(final Tokens tokens) {
-        super(tokens);
-    }
-    
+	public JoinOn(final EqlSentenceBuilder builder) {
+		super(builder);
+	}
+
 	@Override
 	public IJoinWhere0<ET> on() {
-		return new JoinWhere0<ET>(getTokens().on());
+		return new JoinWhere0<ET>(builder.on());
 	}
+
 }

@@ -6,34 +6,35 @@ abstract class CaseWhenFunctionEnd<T> //
 		extends AbstractQueryLink //
 		implements ICaseWhenFunctionEnd<T> {
 
-    protected CaseWhenFunctionEnd(final Tokens tokens) {
-        super(tokens);
-    }
-    
-	protected abstract T nextForCaseWhenFunctionEnd(final Tokens tokens);
+	protected CaseWhenFunctionEnd(final EqlSentenceBuilder builder) {
+		super(builder);
+	}
+
+	protected abstract T nextForCaseWhenFunctionEnd(final EqlSentenceBuilder builder);
 
 	@Override
 	public T end() {
-		return nextForCaseWhenFunctionEnd(getTokens().endOfFunction());
+		return nextForCaseWhenFunctionEnd(builder.endOfFunction());
 	}
 
 	@Override
 	public T endAsInt() {
-		return nextForCaseWhenFunctionEnd(getTokens().endOfFunction(TypeCastAsInteger.INSTANCE));
+		return nextForCaseWhenFunctionEnd(builder.endAsInt());
 	}
 
 	@Override
 	public T endAsBool() {
-		return nextForCaseWhenFunctionEnd(getTokens().endOfFunction(TypeCastAsBoolean.INSTANCE));
+		return nextForCaseWhenFunctionEnd(builder.endAsBool());
 	}
 
 	@Override
 	public T endAsStr(final int length) {
-		return nextForCaseWhenFunctionEnd(getTokens().endOfFunction(TypeCastAsString.getInstance(length)));
+		return nextForCaseWhenFunctionEnd(builder.endAsStr(length));
 	}
 
 	@Override
 	public T endAsDecimal(final int presicion, final int scale) {
-		return nextForCaseWhenFunctionEnd(getTokens().endOfFunction(TypeCastAsDecimal.getInstance(presicion, scale)));
+		return nextForCaseWhenFunctionEnd(builder.endAsDecimal(presicion, scale));
 	}
+
 }

@@ -6,7 +6,6 @@ import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.eql.stage1.operands.Prop1.enhancePath;
 import static ua.com.fielden.platform.eql.stage2.KeyPropertyExtractor.extract;
 import static ua.com.fielden.platform.eql.stage2.KeyPropertyExtractor.needsExtraction;
-import static ua.com.fielden.platform.eql.stage2.conditions.Conditions2.EMPTY_CONDITIONS;
 import static ua.com.fielden.platform.eql.stage2.sundries.GroupBys2.EMPTY_GROUP_BYS;
 import static ua.com.fielden.platform.eql.stage2.sundries.OrderBys2.EMPTY_ORDER_BYS;
 
@@ -46,6 +45,8 @@ import ua.com.fielden.platform.eql.stage2.sundries.Yields2;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
+import static ua.com.fielden.platform.eql.stage2.conditions.Conditions2.EMPTY_CONDITIONS;
+import static ua.com.fielden.platform.eql.stage2.conditions.Conditions2.conditions;
 /**
  * Base class for stage 1 data structures representing an EQL query, suitable for transformation into stage 2.
  * There are four kinds of structures for representing queries depending on its usage:
@@ -151,7 +152,7 @@ public abstract class AbstractQuery1 {
         if (originalConditions.ignore()) {
             return udfConditions2.ignore() ? EMPTY_CONDITIONS : udfConditions2;
         } else {
-            return udfConditions2.ignore() ? originalConditions : new Conditions2(false, asList(asList(udfConditions2, originalConditions)));
+            return udfConditions2.ignore() ? originalConditions : conditions(false, asList(asList(udfConditions2, originalConditions)));
         }
     }
 

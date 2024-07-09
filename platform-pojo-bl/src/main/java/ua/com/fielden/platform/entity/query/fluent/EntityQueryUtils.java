@@ -21,44 +21,44 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
 public class EntityQueryUtils {
     public static <T extends AbstractEntity<?>> IFromAlias<T> select(final Class<T> entityType) {
-        return new FromAlias<>(new Tokens().from(entityType));
+        return new FromAlias<>(new EqlSentenceBuilder().from(entityType));
     }
 
     @SafeVarargs
     public static <T extends AbstractEntity<?>> IFromAlias<T> select(final EntityResultQueryModel<T>... sourceQueryModels) {
-        return new FromAlias<>(new Tokens().from(sourceQueryModels));
+        return new FromAlias<>(new EqlSentenceBuilder().from(sourceQueryModels));
     }
 
     public static <T extends AbstractEntity<?>> IFromAlias<T> select(final EntityResultQueryModel<T> sourceQueryModel) {
-        return new FromAlias<>(new Tokens().from(sourceQueryModel));
+        return new FromAlias<>(new EqlSentenceBuilder().from(sourceQueryModel));
     }
 
     public static IFromAlias<EntityAggregates> select(final AggregatedResultQueryModel... sourceQueryModels) {
-        return new FromAlias<>(new Tokens().from(sourceQueryModels));
+        return new FromAlias<>(new EqlSentenceBuilder().from(sourceQueryModels));
     }
 
     public static IFromAlias<EntityAggregates> select(final AggregatedResultQueryModel sourceQueryModel) {
-        return new FromAlias<>(new Tokens().from(new AggregatedResultQueryModel[] { sourceQueryModel }));
+        return new FromAlias<>(new EqlSentenceBuilder().from(new AggregatedResultQueryModel[] { sourceQueryModel }));
     }
 
     public static <T extends AbstractEntity<?>> IFromNone<T> select() {
-        return new FromNone<>(new Tokens().from());
+        return new FromNone<>(new EqlSentenceBuilder().from());
     }
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	public static IStandAloneExprOperand expr() {
-		return new StandAloneExpOperand(new Tokens());
+		return new StandAloneExpOperand(new EqlSentenceBuilder().expr());
 	}
 
 	public static <ET extends AbstractEntity<?>> IStandAloneConditionOperand<ET> cond() {
-		return new StandAloneConditionOperand<>(new Tokens());
+		return new StandAloneConditionOperand<>(new EqlSentenceBuilder().cond());
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	public static IOrderingItem orderBy() {
-		return new OrderingItem(new Tokens());
+		return new OrderingItem(new EqlSentenceBuilder().orderBy());
 	}
 
 	public static <T extends AbstractEntity<?>> Builder<T, EntityResultQueryModel<T>> from(

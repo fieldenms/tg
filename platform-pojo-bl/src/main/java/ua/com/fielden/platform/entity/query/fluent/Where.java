@@ -9,19 +9,20 @@ abstract class Where<T1 extends IComparisonOperator<T2, ET>, T2 extends ILogical
 		extends WhereWithoutNesting<T1, T2, ET> //
 		implements IWhere<T1, T2, T3, ET> {
 
-    protected Where(final Tokens tokens) {
-        super(tokens);
-    }
-    
-	protected abstract T3 nextForWhere(final Tokens tokens);
+	protected Where(final EqlSentenceBuilder builder) {
+		super(builder);
+	}
+
+	protected abstract T3 nextForWhere(final EqlSentenceBuilder builder);
 
 	@Override
 	public T3 begin() {
-		return nextForWhere(getTokens().beginCondition(false));
+		return nextForWhere(builder.beginCondition(false));
 	}
 
 	@Override
 	public T3 notBegin() {
-		return nextForWhere(getTokens().beginCondition(true));
+		return nextForWhere(builder.beginCondition(true));
 	}
+
 }

@@ -8,50 +8,51 @@ abstract class DateAddIntervalUnit<T, ET extends AbstractEntity<?>> //
 		extends AbstractQueryLink //
 		implements IDateAddIntervalUnit<T, ET> {
 
-    protected DateAddIntervalUnit(final Tokens tokens) {
-        super(tokens);
-    }
-    
-	protected abstract T nextForDateAddIntervalUnit(final Tokens tokens);
+	protected DateAddIntervalUnit(final EqlSentenceBuilder builder) {
+		super(builder);
+	}
+
+	protected abstract T nextForDateAddIntervalUnit(final EqlSentenceBuilder builder);
 
 	@Override
 	public IDateAddIntervalFunctionTo<T, ET> seconds() {
-		return createDateAddIntervalFunctionTo(getTokens().secondsInterval());
+		return createDateAddIntervalFunctionTo(builder.secondsInterval());
 	}
-	
+
 	@Override
 	public IDateAddIntervalFunctionTo<T, ET> minutes() {
-		return createDateAddIntervalFunctionTo(getTokens().minutesInterval());
+		return createDateAddIntervalFunctionTo(builder.minutesInterval());
 	}
 
 	@Override
 	public IDateAddIntervalFunctionTo<T, ET> hours() {
-		return createDateAddIntervalFunctionTo(getTokens().hoursInterval());
+		return createDateAddIntervalFunctionTo(builder.hoursInterval());
 	}
 
 	@Override
 	public IDateAddIntervalFunctionTo<T, ET> days() {
-		return createDateAddIntervalFunctionTo(getTokens().daysInterval());
+		return createDateAddIntervalFunctionTo(builder.daysInterval());
 	}
 
 	@Override
 	public IDateAddIntervalFunctionTo<T, ET> months() {
-		return createDateAddIntervalFunctionTo(getTokens().monthsInterval());
+		return createDateAddIntervalFunctionTo(builder.monthsInterval());
 	}
 
 	@Override
 	public IDateAddIntervalFunctionTo<T, ET> years() {
-		return createDateAddIntervalFunctionTo(getTokens().yearsInterval());
+		return createDateAddIntervalFunctionTo(builder.yearsInterval());
 	}
 
-	private IDateAddIntervalFunctionTo<T, ET> createDateAddIntervalFunctionTo(final Tokens tokens) {
-		return new DateAddIntervalFunctionTo<T, ET>(tokens) {
+	private IDateAddIntervalFunctionTo<T, ET> createDateAddIntervalFunctionTo(final EqlSentenceBuilder builder) {
+		return new DateAddIntervalFunctionTo<T, ET>(builder) {
 
 			@Override
-			protected T nextForDateAddIntervalFunctionTo(final Tokens tokens) {
-				return DateAddIntervalUnit.this.nextForDateAddIntervalUnit(tokens);
+			protected T nextForDateAddIntervalFunctionTo(final EqlSentenceBuilder builder) {
+				return DateAddIntervalUnit.this.nextForDateAddIntervalUnit(builder);
 			}
 
 		};
 	}
+
 }

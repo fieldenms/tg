@@ -7,14 +7,15 @@ abstract class ExprOperationOrEnd<T1, T2, ET extends AbstractEntity<?>> //
 		extends ArithmeticalOperator<T1> //
 		implements IExprOperationOrEnd<T1, T2, ET> {
 
-    protected ExprOperationOrEnd(final Tokens tokens) {
-        super(tokens);
-    }
-    
-	protected abstract T2 nextForExprOperationOrEnd(final Tokens tokens);
+	protected ExprOperationOrEnd(final EqlSentenceBuilder builder) {
+		super(builder);
+	}
+
+	protected abstract T2 nextForExprOperationOrEnd(final EqlSentenceBuilder builder);
 
 	@Override
 	public T2 endExpr() {
-		return nextForExprOperationOrEnd(getTokens().endExpression());
+		return nextForExprOperationOrEnd(builder.endExpression());
 	}
+
 }

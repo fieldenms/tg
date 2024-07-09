@@ -9,46 +9,47 @@ abstract class FunctionCompoundCondition0<T, ET extends AbstractEntity<?>> //
 		extends AbstractQueryLink //
 		implements IFunctionCompoundCondition0<T, ET> {
 
-    protected FunctionCompoundCondition0(final Tokens tokens) {
-        super(tokens);
-    }
-    
-	protected abstract T nextForFunctionCompoundCondition0(final Tokens tokens);
+	protected FunctionCompoundCondition0(final EqlSentenceBuilder builder) {
+		super(builder);
+	}
+
+	protected abstract T nextForFunctionCompoundCondition0(final EqlSentenceBuilder builder);
 
 	@Override
 	public ICaseWhenFunctionArgument<T, ET> then() {
-		return createCaseWhenFunctionArgument(getTokens());
+		return createCaseWhenFunctionArgument(builder.then());
 	}
 
 	@Override
 	public IFunctionWhere0<T, ET> and() {
-		return createFunctionWhere0(getTokens().and());
+		return createFunctionWhere0(builder.and());
 	}
 
 	@Override
 	public IFunctionWhere0<T, ET> or() {
-		return createFunctionWhere0(getTokens().or());
+		return createFunctionWhere0(builder.or());
 	}
-	
-	private FunctionWhere0<T, ET> createFunctionWhere0(final Tokens tokens) {
-		return new FunctionWhere0<T, ET>(tokens) {
+
+	private FunctionWhere0<T, ET> createFunctionWhere0(final EqlSentenceBuilder builder) {
+		return new FunctionWhere0<T, ET>(builder) {
 
 			@Override
-			protected T nextForFunctionWhere0(final Tokens tokens) {
-				return FunctionCompoundCondition0.this.nextForFunctionCompoundCondition0(tokens);
+			protected T nextForFunctionWhere0(final EqlSentenceBuilder builder) {
+				return FunctionCompoundCondition0.this.nextForFunctionCompoundCondition0(builder);
 			}
 
 		};
 	}
-	
-	private CaseWhenFunctionArgument<T, ET> createCaseWhenFunctionArgument(final Tokens tokens) {
-		return new CaseWhenFunctionArgument<T, ET>(tokens) {
+
+	private CaseWhenFunctionArgument<T, ET> createCaseWhenFunctionArgument(final EqlSentenceBuilder builder) {
+		return new CaseWhenFunctionArgument<T, ET>(builder) {
 
 			@Override
-			protected T nextForCaseWhenFunctionArgument(final Tokens tokens) {
-				return FunctionCompoundCondition0.this.nextForFunctionCompoundCondition0(tokens);
+			protected T nextForCaseWhenFunctionArgument(final EqlSentenceBuilder builder) {
+				return FunctionCompoundCondition0.this.nextForFunctionCompoundCondition0(builder);
 			}
 
 		};
 	}
+
 }

@@ -10,41 +10,42 @@ abstract class SetOfOperands<T, ET extends AbstractEntity<?>> //
 		extends SingleOperand<T, ET> //
 		implements IComparisonSetOperand<T> {
 
-    protected SetOfOperands(final Tokens tokens) {
-        super(tokens);
-    }
-    
+	protected SetOfOperands(final EqlSentenceBuilder builder) {
+		super(builder);
+	}
+
 	@Override
 	public <E extends Object> T values(final E... values) {
 		if (values.length == 0) {
 			throw new EqlException("At least one value is expected when calling [values].");
 		} else {
-			return nextForSingleOperand(getTokens().setOfValues(values));
+			return nextForSingleOperand(builder.setOfValues(values));
 		}
 	}
 
 	@Override
 	public T props(final String... properties) {
-		return nextForSingleOperand(getTokens().setOfProps(properties));
+		return nextForSingleOperand(builder.setOfProps(properties));
 	}
-	
-    @Override
-    public T props(final IConvertableToPath... properties) {
-        return nextForSingleOperand(getTokens().setOfProps(properties));
-    }
+
+	@Override
+	public T props(final IConvertableToPath... properties) {
+		return nextForSingleOperand(builder.setOfProps(properties));
+	}
 
 	@Override
 	public T params(final String... paramNames) {
-		return nextForSingleOperand(getTokens().setOfParams(paramNames));
+		return nextForSingleOperand(builder.setOfParams(paramNames));
 	}
 
 	@Override
 	public T iParams(final String... paramNames) {
-		return nextForSingleOperand(getTokens().setOfIParams(paramNames));
+		return nextForSingleOperand(builder.setOfIParams(paramNames));
 	}
 
 	@Override
 	public T model(final SingleResultQueryModel model) {
-		return nextForSingleOperand(getTokens().model(model));
+		return nextForSingleOperand(builder.model(model));
 	}
+
 }
