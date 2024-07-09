@@ -171,6 +171,9 @@ public class PathToTreeTransformerUtils {
  // there are 2 types: 1) tail corresponds to link, 2) tail is shorter (as left side being converted into nodes)
     static record PendingTail(Prop2Lite link, List<PropChunk> tail) {
         public PendingTail {
+            if (tail.isEmpty()) {
+                throw new EqlStage2ProcessingException("Tail cannot be empty. Link: %s".formatted(link));
+            }
             tail = List.copyOf(tail);
         }
     }
