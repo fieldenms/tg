@@ -16,6 +16,9 @@ import org.commonmark.renderer.text.TextContentRenderer;
  */
 public record RichText(String formattedText, String coreText) {
 
+    public static final String _formattedText = "formattedText";
+    public static final String _coreText = "coreText";
+
     public static RichText fromMarkdown(final String input) {
         final Node root = Parser.builder().build().parse(input);
         final String coreText = TextContentRenderer.builder().build().render(root);
