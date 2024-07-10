@@ -227,12 +227,17 @@ public class StreamUtils {
             final Collection<? extends X> xs, final Collection<? extends Y> ys,
             final BiConsumer<? super X, ? super Y> action)
     {
-        final Iterator<? extends X> xIt = xs.iterator();
-        final Iterator<? extends Y> yIt = ys.iterator();
+        IteratorUtils.zipDo(xs.iterator(), ys.iterator(), action);
+    }
 
-        while (xIt.hasNext() && yIt.hasNext()) {
-            action.accept(xIt.next(), yIt.next());
-        }
+    /**
+     * Performs an action for each pair of elements from given sources. Terminates upon reaching the end of the shorter source.
+     */
+    public static <X, Y> void zipDo(
+            final BaseStream<? extends X, ?> xs, final BaseStream<? extends Y, ?> ys,
+            final BiConsumer<? super X, ? super Y> action)
+    {
+        IteratorUtils.zipDo(xs.iterator(), ys.iterator(), action);
     }
 
     /**
