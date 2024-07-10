@@ -6,9 +6,12 @@ import ua.com.fielden.platform.dashboard.DashboardRefreshFrequencyUnit;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
+import ua.com.fielden.platform.eql.dbschema.PropertyInlinerImpl;
 import ua.com.fielden.platform.eql.meta.EqlTables;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.persistence.types.EntityWithMoney;
+import ua.com.fielden.platform.sample.domain.TgUnionHolder;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
@@ -25,13 +28,15 @@ public class MappingGenerationTest {
     public void hibernate_mappings_are_generated() {
         final List<Class<? extends AbstractEntity<?>>> domainTypes = List.of(
                 User.class, MainMenuItem.class, DashboardRefreshFrequency.class,
-                DashboardRefreshFrequencyUnit.class, EntityCentreConfig.class);
+                DashboardRefreshFrequencyUnit.class, EntityCentreConfig.class,
+                EntityWithMoney.class, TgUnionHolder.class);
         final var dbVersionProvider = constantDbVersion(DbVersion.H2);
         final IDomainMetadata domainMetadata = new DomainMetadataBuilder(
                 PLATFORM_HIBERNATE_TYPE_MAPPINGS, domainTypes, dbVersionProvider)
                 .build();
 
-        final String actualMappings = new HibernateMappingsGenerator(domainMetadata, dbVersionProvider, new EqlTables(domainMetadata))
+        final String actualMappings = new HibernateMappingsGenerator(domainMetadata, dbVersionProvider, new EqlTables(domainMetadata),
+                                                                     new PropertyInlinerImpl(domainMetadata))
                 .generateMappings();
         final String expectedMappings = """
 <?xml version="1.0" encoding="UTF-8"?>

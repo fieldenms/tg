@@ -12,13 +12,14 @@ import java.util.Optional;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
+// TODO reduce visibility after configuring tests to use Injector
 @Singleton
-final class PropertyInlinerImpl implements PropertyInliner {
+public final class PropertyInlinerImpl implements PropertyInliner {
 
     private final IDomainMetadata domainMetadata;
 
     @Inject
-    PropertyInlinerImpl(final IDomainMetadata domainMetadata) {
+    public PropertyInlinerImpl(final IDomainMetadata domainMetadata) {
         this.domainMetadata = domainMetadata;
     }
 

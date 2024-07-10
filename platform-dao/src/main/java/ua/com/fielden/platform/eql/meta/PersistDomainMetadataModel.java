@@ -6,6 +6,7 @@ import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.dao.exceptions.DbException;
 import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.eql.dbschema.PropertyInlinerImpl;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -26,6 +27,7 @@ import static java.util.stream.Collectors.toSet;
  * @author TG Team
  *
  */
+// TODO make this class injectable and replace static with instance methods (a breaking change)
 public class PersistDomainMetadataModel {
     final static String CRITERION = "[selection criterion]";
     final static String DOMAINTYPE_INSERT_STMT = "INSERT INTO DOMAINTYPE_(_ID, KEY_, DESC_, DBTABLE_, ENTITYTYPEDESC_, ENTITY_, PROPSCOUNT_, _VERSION) VALUES(?, ?, ?, ?, ?, ?, ?, ?);";
@@ -49,7 +51,7 @@ public class PersistDomainMetadataModel {
             emptyExistingMetadata(trEx);
 
             final Set<Class<? extends AbstractEntity<?>>> domainTypesForIntrospection = entityTypes.stream().filter(EntityUtils::isIntrospectionAllowed).collect(toSet());
-            final var generator = new DomainMetadataModelGenerator(domainMetadata);
+            final var generator = new DomainMetadataModelGenerator(domainMetadata, new PropertyInlinerImpl(domainMetadata));
             final Map<Class<?>, DomainTypeData> typesMap = generator.generateDomainTypesData(domainTypesForIntrospection);
 
             LOGGER.info("Inserting metadata about domain entity types...");
