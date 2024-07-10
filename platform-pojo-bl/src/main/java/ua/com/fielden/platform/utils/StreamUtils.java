@@ -7,6 +7,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.*;
 import java.util.stream.BaseStream;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -349,6 +350,13 @@ public class StreamUtils {
         else {
             return Stream.generate(supplier);
         }
+    }
+
+    /**
+     * Returns an infinite stream of integers starting from the given one.
+     */
+    public static IntStream integers(final int start) {
+        return IntStream.iterate(start, i -> i + 1);
     }
 
 }
