@@ -6,6 +6,7 @@ import ua.com.fielden.platform.meta.PropertyMetadata;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static java.util.Collections.unmodifiableMap;
 import static ua.com.fielden.platform.utils.StreamUtils.collectToImmutableMap;
@@ -45,6 +46,10 @@ record DomainTypeData(
 
     public Integer getKeyMemberIndex(final String keyMember) {
         return keyMembersIndices.get(keyMember);
+    }
+
+    public Optional<PropertyMetadata> getProperty(final String name) {
+        return Optional.ofNullable(props.get(name));
     }
 
 }

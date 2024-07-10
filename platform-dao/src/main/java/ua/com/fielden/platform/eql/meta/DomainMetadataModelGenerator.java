@@ -15,6 +15,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static java.util.Collections.emptyList;
+import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isExcluded;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.eql.meta.DomainTypeData.domainTypeData;
@@ -139,13 +140,7 @@ public final class DomainMetadataModelGenerator {
                         prelDesc,
                         entityType.getKeyMemberIndex(pm.name()),
                         pm.is(REQUIRED),
-                        determinePropColumn(entityType.superType() == null
-                                                    ? pm
-                                                    : superTypeDtd.props()
-                                                              .get(pm.name()) != null
-                                                            ? superTypeDtd.props()
-                                                            .get(pm.name())
-                                                            : pm),
+                        determinePropColumn(ofNullable(superTypeDtd).flatMap(it -> it.getProperty(pm.name())).orElse(pm)),
                         position);
                 result.add(domainPropertyData);
 
