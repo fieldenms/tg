@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.utils;
 
+import com.google.common.collect.ImmutableMap;
 import ua.com.fielden.platform.streaming.SequentialGroupingStream;
 import ua.com.fielden.platform.types.tuples.T2;
 
@@ -357,6 +358,36 @@ public class StreamUtils {
      */
     public static IntStream integers(final int start) {
         return IntStream.iterate(start, i -> i + 1);
+    }
+
+    /**
+     * Builds an immutable map from streams of keys and values.
+     * Terminates upon reaching the end of the shorter stream.
+     *
+     * @param ks  stream of keys
+     * @param vs  stream of values
+     */
+    public static <K, V> ImmutableMap<K, V> collectToImmutableMap(final BaseStream<? extends K, ?> ks,
+                                                                  final BaseStream<? extends V, ?> vs) {
+        final var builder = ImmutableMap.<K, V>builder();
+        zipDo(ks, vs, builder::put);
+        return builder.build();
+    }
+
+    /**
+     * Builds an immutable map from 2 streams by applying given functions to obtain keys and values.
+     * Terminates upon reaching the end of the shorter stream.
+     *
+     * @param kf  function that produces keys
+     * @param vf  function that produces values
+     */
+    public static <X, Y, K, V> ImmutableMap<K, V> collectToImmutableMap(final BaseStream<X, ?> xs,
+                                                                        final BaseStream<Y, ?> ys,
+                                                                        final BiFunction<? super X, ? super Y, K> kf,
+                                                                        final BiFunction<? super X, ? super Y, V> vf) {
+        final var builder = ImmutableMap.<K, V>builder();
+        zipDo(xs, ys, (x, y) -> builder.put(kf.apply(x, y), vf.apply(x, y)));
+        return builder.build();
     }
 
 }

@@ -4,6 +4,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.types.tuples.T2;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -287,6 +288,19 @@ public class StreamUtilsTest {
     public void supplyIfEmpty_returns_alternative_stream_if_original_is_empty() {
         final var xsAlternative = StreamUtils.supplyIfEmpty(Stream.empty(), () -> 0).limit(3).toList();
         assertEquals(CollectionUtil.listOf(0, 0, 0), xsAlternative);
+    }
+
+    @Test
+    public void collectToImmutableMap_terminates_upon_reaching_the_shorter_stream() {
+        assertEquals(Map.of("a", 1), collectToImmutableMap(Stream.of("a", "b"), Stream.of(1)));
+        assertEquals(Map.of(), collectToImmutableMap(Stream.of(), Stream.of(1)));
+    }
+
+    @Test
+    public void collectToImmutableMap_applies_given_functions_to_produce_keys_and_values() {
+        assertEquals(Map.of("", 0, "cdecde", 6),
+                     collectToImmutableMap(Stream.of("ab", "cde"), Stream.of(0, 2),
+                                           (s, i) -> s.repeat(i), (s, i) -> i * s.length()));
     }
 
 }
