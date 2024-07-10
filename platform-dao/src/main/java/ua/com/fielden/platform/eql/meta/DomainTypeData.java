@@ -2,16 +2,14 @@ package ua.com.fielden.platform.eql.meta;
 
 import com.google.common.collect.ImmutableMap;
 import ua.com.fielden.platform.meta.PropertyMetadata;
-import ua.com.fielden.platform.types.tuples.T2;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.IntStream;
 
-import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static java.util.Collections.unmodifiableMap;
-import static ua.com.fielden.platform.utils.StreamUtils.zip;
+import static ua.com.fielden.platform.utils.StreamUtils.collectToImmutableMap;
+import static ua.com.fielden.platform.utils.StreamUtils.integers;
 
 record DomainTypeData(
         Class<?> type,
@@ -39,8 +37,7 @@ record DomainTypeData(
 
         final Map<String, Integer> keyMembersIndicesMap = keyMembers.isEmpty()
                 ? ImmutableMap.of("key", 0)
-                : zip(keyMembers.stream(), IntStream.iterate(1, i -> i + 1).boxed(), T2::t2)
-                        .collect(toImmutableMap(t2 -> t2._1.name(), t2 -> t2._2));
+                : collectToImmutableMap(keyMembers.stream().map(PropertyMetadata::name), integers(1));
 
         return new DomainTypeData(type, superType, id, key, desc, isEntity, dbTable, entityTypeDesc, propsCount,
                                   keyMembersIndicesMap, unmodifiableMap(propsMap));
