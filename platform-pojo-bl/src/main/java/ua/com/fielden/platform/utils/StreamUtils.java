@@ -7,10 +7,7 @@ import ua.com.fielden.platform.types.tuples.T2;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.*;
-import java.util.stream.BaseStream;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
+import java.util.stream.*;
 
 /**
  * A set of convenient APIs for working with {@link Stream}.
@@ -358,6 +355,13 @@ public class StreamUtils {
      */
     public static IntStream integers(final int start) {
         return IntStream.iterate(start, i -> i + 1);
+    }
+
+    /**
+     * Returns an infinite stream of longs starting from the given one.
+     */
+    public static LongStream longs(final long start) {
+        return LongStream.iterate(start, l -> l + 1);
     }
 
     /**

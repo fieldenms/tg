@@ -93,7 +93,7 @@ public final class DomainMetadataModelGenerator {
         });
 
         return collectToImmutableMap(distinct(hs, H::type),
-                                     integers(1).boxed(),
+                                     longs(1),
                                      (h, i) -> h.type(),
                                      (h, i) -> h.f().apply(i));
     }
