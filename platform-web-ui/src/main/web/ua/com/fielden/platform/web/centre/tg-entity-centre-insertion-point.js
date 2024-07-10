@@ -45,34 +45,28 @@ const ST_POS_Y = "posY";
 
 const ST_ATTACHED_HEIGHT = 'attachedHeight';
 
-const titleBarHeight = "44px";
-const insertionPointMargin = "10px";
-
 const template = html`
     <style>
         :host {
             @apply --layout-vertical;
-            overflow: auto;
+            overflow: hidden;
+            background: white;
+            border-radius: 2px;
+            position: relative;
+        }
+
+        :host(:not([detached]):not([maximised]):not([alternative-view])) {
+            margin: 10px;
+        }
+
+        :host(:not([maximised]):not([alternative-view])) {
+            @apply --shadow-elevation-2dp;
         }
 
         .truncate {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-        }
-
-        #pm {
-            position: relative;
-            background: white;
-            border-radius: 2px;
-        }
-
-        #pm:not([detached]):not([maximised]):not([alternative-view]) {
-            margin: 10px;
-        }
-
-        #pm:not([maximised]):not([alternative-view]) {
-            @apply --shadow-elevation-2dp;
         }
 
         .title-bar {
@@ -114,8 +108,8 @@ const template = html`
             color: var(--paper-grey-300);
         }
 
-        #loadableContent {
-            z-index:0;
+        #insertionPointBody {
+            overflow: auto;
         }
 
         #resizer {
@@ -140,27 +134,25 @@ const template = html`
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning tg-entity-centre-styles paper-material-styles"></style>
-    <div id="pm" class="layout vertical flex" maximised$="[[maximised]]" minimised$="[[minimised]]" detached$="[[detached]]" alternative-view$="[[alterrnative-view]]">
-        <div id="insertionPointContent" tabindex$="[[_getTabIndex(alternativeView)]]" class="layout vertical flex relative">
-            <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, alternativeView)]]">
-                <span class="title-text truncate" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
-                <div class="layout horizontal centre">
-                    <paper-icon-button class="title-bar-button" icon="[[_detachButtonIcon(detached)]]" on-tap="_toggleDetach" tooltip-text$="[[_detachTooltip(detached)]]"></paper-icon-button>
-                    <paper-icon-button class="title-bar-button" icon="[[_minimiseButtonIcon(minimised)]]" on-tap="_toggleMinimised" tooltip-text$="[[_minimisedTooltip(minimised)]]" disabled="[[maximised]]"></paper-icon-button>
-                    <paper-icon-button class="title-bar-button" style$="[[_maximiseButtonStyle(maximised)]]" icon="icons:open-in-new" on-tap="_toggleMaximise" tooltip-text$="[[_maximiseButtonTooltip(maximised)]]" disabled="[[minimised]]"></paper-icon-button>
-                </div>
-            </div>
-            <tg-responsive-toolbar id="viewToolbar" hidden$="[[!_isToolbarVisible(minimised, maximised, alternativeView, isAttached)]]">
-                <slot id="entitySpecificActions" slot="entity-specific-action" name="entity-specific-action"></slot>
-                <slot id="standartActions" slot="standart-action" name="standart-action"></slot>
-            </tg-responsive-toolbar>
-            <div hidden$="[[minimised]]" id="loadableContent" class="relative flex">
-                <tg-element-loader id="elementLoader"></tg-element-loader>
-            </div>
-            <div class="lock-layer" lock$="[[lock]]"></div>
+    <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, alternativeView)]]">
+        <span class="title-text truncate" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
+        <div class="layout horizontal centre">
+            <paper-icon-button class="title-bar-button" icon="[[_detachButtonIcon(detached)]]" on-tap="_toggleDetach" tooltip-text$="[[_detachTooltip(detached)]]"></paper-icon-button>
+            <paper-icon-button class="title-bar-button" icon="[[_minimiseButtonIcon(minimised)]]" on-tap="_toggleMinimised" tooltip-text$="[[_minimisedTooltip(minimised)]]" disabled="[[maximised]]"></paper-icon-button>
+            <paper-icon-button class="title-bar-button" style$="[[_maximiseButtonStyle(maximised)]]" icon="icons:open-in-new" on-tap="_toggleMaximise" tooltip-text$="[[_maximiseButtonTooltip(maximised)]]" disabled="[[minimised]]"></paper-icon-button>
         </div>
-        <iron-icon id="resizer" hidden$="[[_resizingDisabled(minimised, maximised, alternativeView, withoutResizing)]]" icon="tg-icons:resize-bottom-right" on-tap="_clearLocalStorage" on-track="_resizeInsertionPoint" tooltip-text="Drag to resize<br>Double tap to reset height"></iron-icon>
     </div>
+    <div id="insertionPointBody" class="relative flex layout vertical">
+        <tg-responsive-toolbar id="viewToolbar" hidden$="[[!_isToolbarVisible(maximised, alternativeView)]]">
+            <slot id="entitySpecificActions" slot="entity-specific-action" name="entity-specific-action"></slot>
+            <slot id="standartActions" slot="standart-action" name="standart-action"></slot>
+        </tg-responsive-toolbar>
+        <div id="loadableContent" class="flex layout horizontal">
+            <tg-element-loader id="elementLoader"></tg-element-loader>
+        </div>
+        <div class="lock-layer" lock$="[[lock]]"></div>
+    </div>
+    <iron-icon id="resizer" hidden$="[[_resizingDisabled(minimised, maximised, alternativeView, withoutResizing)]]" icon="tg-icons:resize-bottom-right" on-tap="_clearLocalStorage" on-track="_resizeInsertionPoint" tooltip-text="Drag to resize<br>Double tap to reset height"></iron-icon>
     <tg-toast id="toaster"></tg-toast>
 `;
 
@@ -339,24 +331,24 @@ Polymer({
          */
         maximised: {
             type: Boolean,
-            eflectToAttribute: true,
+            reflectToAttribute: true,
             observer: "_maximisedChanged"
         },
 
         minimised: {
             type: Boolean,
-            eflectToAttribute: true,
+            reflectToAttribute: true,
             observer: "_minimisedChanged"
         },
 
         detached: {
             type: Boolean,
-            eflectToAttribute: true,
+            reflectToAttribute: true,
             observer: "_detachedChanged"
         }
     },
 
-    observers: ['_restoreFromLocalStorage(_element, contextRetriever)'], /*'_adjustView(minimised, maximised, detached, alternativeView)', */
+    observers: ['_restoreFromLocalStorage(_element, contextRetriever)'],
 
     ready: function () {
         this.triggerElement = this.$.insertionPointContent;
@@ -521,13 +513,11 @@ Polymer({
                     if (promise) {
                         return promise
                             .then(function () {
-                                //self._adjustView(self.minimised, self.maximised, self.detached, self.alternativeView);
                                 customAction.restoreActiveElement();
                             });
                     } else {
                         return Promise.resolve()
                             .then(function () {
-                                //self._adjustView(self.minimised, self.maximised, self.detached, self.alternativeView);
                                 customAction.restoreActiveElement();
                             });
                     }
@@ -559,84 +549,6 @@ Polymer({
      * Performs custom tasks before leaving this insertion point. This is stub  right now to conform switching to alternative views API in entity centre behavior.
      */
     leave: function () {},
-
-    /**
-     * Assigns sizes for insertion point depending on several states in which it can be: attached / detached (non-alternative view) and alternative view.
-     */
-    _adjustView: function (minimised, maximised, detached, alternativeView) {
-        // this._resetStyles();//First reset styles to initilise only those whicj are applicable for specific state.
-
-        // if (alternativeView) {
-        //     this.$.loadableContent.style.width = "100%";
-        //     this.$.loadableContent.style.height = "100%";
-        // } else {
-
-        //     if (detached || maximised) { //Fixed position only if it is maximised or detached
-        //         this.$.pm.style.position = "fixed";
-        //     }
-
-        //     if (minimised) { //minimised insertion point might be detached or attached but not maximised
-        //         this.$.pm.style.height = "44px";
-        //     } else if (maximised) { // minimised and maximised is mutually exclusive states, only one of them can be true or none of them.
-        //         this.$.pm.style.top = "0";
-        //         this.$.pm.style.left = "0";
-        //         this.$.pm.style.width = "100%";
-        //         this.$.pm.style.height = "100%";
-        //         this.$.loadableContent.style.width = "100%";
-        //         this.$.loadableContent.style.height = "100%";
-        //     }
-
-        //     if (detached) {
-
-        //     }
-        // }
-
-        // if (detached) {
-        //     //TODO set position and dimension from local storage or preferred one
-        //     //TODO if it is not maximised then make it also fixed
-        //     //TODO set proper z-index
-        // } else {
-        //     //TODO set height from local storage or preferred one
-        // }
-
-        // if (!maximised) {
-        //     if (this.$.elementLoader.prefDim) {
-        //         const prefDim = this.$.elementLoader.prefDim;
-        //         this.$.loadableContent.style.minWidth = prefDim.width() + prefDim.widthUnit;
-        //         this.$.loadableContent.style.minHeight = height ? height : prefDim.height() + prefDim.heightUnit;
-        //     } 
-        //     if (alternativeView) {
-        //         this.style.width = "100%";
-        //         this.style.height = "100%";
-        //     } else {
-        //         this.$.pm.style["margin"] = "10px";
-        //     }
-        // } else {
-        //     this.$.loadableContent.style.width = "100%";
-        //     this.$.loadableContent.style.height = "100%";
-        // }
-        // this.updateStyles();
-        // this.notifyResize();
-    },
-
-    /**
-     * Resets styles. This is needed in case if insertion point changes it's state like minimised, maximised and attach/detach, also if it is alternative view. 
-     */
-    _resetStyles: function () {
-        this.$.loadableContent.style.removeProperty("width");
-        this.$.loadableContent.style.removeProperty("height");
-        this.$.loadableContent.style.removeProperty("min-width");
-        this.$.loadableContent.style.removeProperty("min-height");
-        this.$.pm.style.removeProperty("margin");
-        this.$.pm.style.removeProperty("top");
-        this.$.pm.style.removeProperty("left");
-        this.$.pm.style.removeProperty("width");
-        this.$.pm.style.removeProperty("height");
-        this.$.pm.style.removeProperty("position");
-        this.$.pm.style.removeProperty("z-index");
-        this.style.removeProperty("width");
-        this.style.removeProperty("height");
-    },
 
     _restoreFromLocalStorage: function(_element, contextRetriever) {
         if (_element && contextRetriever) {
@@ -760,43 +672,27 @@ Polymer({
     },
 
     _maximisedChanged: function (newValue) {
-        if (this.contextRetriever && !this.alternativeView && !this.minimised) {
+        if (this.contextRetriever) {
             if (newValue) {
                 if (!this.detached) {
                     if (!this._getPair(ST_DETACHED_WIDTH, ST_DETACHED_HEIGHT)) {
                         this._saveDimensions();
                     }
-                    this.$.loadableContent.style.removeProperty("min-width");
-                    this.$.loadableContent.style.removeProperty("min-height");
                 }
-                this.style.top = "0";
-                this.style.left = "0";
-                this.style.width = "100%";
-                this.style.height = "100%";
-                this.style.position = "fixed";
-                //this.$.loadableContent.style.width = "100%";
-                //this.$.loadableContent.style.height = "100%";
                 this.contextRetriever().insertionPointManager.add(this);
                 InsertionPointManager.addInsertionPoint(this);
-                this.$.insertionPointContent.focus();
+                this.focus();
             } else {
-                this.style.removeProperty("top");
-                this.style.removeProperty("left");
-                this.style.removeProperty("width");
-                this.style.removeProperty("height");
-                this.$.loadableContent.style.removeProperty("width");
-                this.$.loadableContent.style.removeProperty("height");
                 InsertionPointManager.removeInsertionPoint(this);
                 if (!this.detached) {
                     this.contextRetriever().insertionPointManager.remove(this);
                     if (this.contextRetriever && this.contextRetriever().$.centreResultContainer) {
                         this.contextRetriever().$.centreResultContainer.focus();
                     }
-                    this.style.removeProperty("position");
                 }
-                this._setDimension();
-                this._setPosition();
             }
+            this._setDimension();
+            this._setPosition();
         }
     },
 
@@ -821,13 +717,14 @@ Polymer({
     },
 
     _minimisedChanged: function (newValue) {
-        if (this.contextRetriever && !this.alternativeView && !this.maximised) {
+        if (this.contextRetriever) {
             if (newValue) {
-                this.style.height = "44px"; //44px - the height of title bar
-            } else {
-                this.style.removeProperty("height");
-                this._setDimension();
+                if (!this._getPair(ST_DETACHED_WIDTH, ST_DETACHED_HEIGHT)) {
+                    this._saveDimensions();
+                }
             }
+            this._setDimension();
+            this._setPosition();
         }
     },
 
@@ -848,24 +745,14 @@ Polymer({
     },
 
     _detachedChanged: function (newValue) {
-        if (this.contextRetriever && !this.alternativeView && !this.maximised) {
+        if (this.contextRetriever) {
             if (newValue) {
                 if (!this._getPair(ST_DETACHED_WIDTH, ST_DETACHED_HEIGHT)) {
                     this._saveDimensions();
                 }
-                this.style.position = "fixed";
-                //this.$.loadableContent.style.removeProperty("min-width");
-                //this.$.loadableContent.style.removeProperty("min-height");
                 this.contextRetriever().insertionPointManager.add(this);
-                this.$.insertionPointContent.focus();
+                this.focus();
             } else {
-                this.style.removeProperty("top");
-                this.style.removeProperty("left");
-                this.style.removeProperty("width");
-                this.style.removeProperty("height");
-                //this.$.loadableContent.style.removeProperty("width");
-                //this.$.loadableContent.style.removeProperty("height");
-                this.style.removeProperty("position");
                 this.contextRetriever().insertionPointManager.remove(this);
                 if (this.contextRetriever && this.contextRetriever().$.centreResultContainer) {
                     this.contextRetriever().$.centreResultContainer.focus();
@@ -877,12 +764,10 @@ Polymer({
     },
 
     _alternativeViewChanged: function (newValue) {
-        if (newValue) {
-            this.style.width = "100%";
-            this.style.height = "100%";
-        } else {
-            this.style.removeProperty("width");
-            this.style.removeProperty("height");
+        if (this.contextRetriever) {
+            this.setAttribute('tabindex', this._getTabIndex(newValue));
+            this._setDimension();
+            this._setPosition();
         }
     },
 
@@ -896,34 +781,69 @@ Polymer({
             if (!dimToApply) {
                 dimToApply = this._getPrefDim();
             }
-            if (dimToApply) {
-                this.style.width = dimToApply[0];
-                this.style.height = dimToApply[1];
+            if (!this.minimised && !this.maximised) {
+                this.style.width = dimToApply && dimToApply[0];
+                this.style.height = dimToApply && dimToApply[1];
+            } else if (this.maximised && !this.minimised) {
+                this.style.width = '100%';
+                this.style.height = '100%';
+            } else if (this.minimised && !this.maximised) {
+                this.style.height = this._titleBarHeight();
+                this.style.width = dimToApply && dimToApply[0];
             }
         } else {
-            let heightToApply = this._getProp(ST_ATTACHED_HEIGHT);
-            const prefDim = this._getPrefDim();
-            this.style.width = prefDim && prefDim[0];
-            this.style.height = heightToApply || (prefDim && prefDim[1]);
+            if (this.alternativeView) {
+                this.style.width = "100%";
+                this.style.height = "100%";
+            } else {
+                const heightToApply = this._getProp(ST_ATTACHED_HEIGHT);
+                const prefDim = this._getPrefDim();
+                if (!this.minimised && !this.maximised) {
+                    this.style.width = prefDim && prefDim[0];
+                    this.style.height = heightToApply || (prefDim && prefDim[1]);
+                } else if (this.maximised && !this.minimised) {
+                    this.style.width = '100%';
+                    this.style.height = '100%';
+                } else if (this.minimised && !this.maximised) {
+                    this.style.height = this._titleBarHeight();
+                    this.style.width = prefDim && prefDim[0];
+                }
+            }
         }
     },
 
     _setPosition: function () {
         if (this.detached) {
-            let posToApply = this._getPair(ST_POS_X, ST_POS_Y);
-            if (posToApply) {
-                this.style.top = posToApply[0];
-                this.style.left = posToApply[1];
+            this.style.position = "fixed";
+            if (!this.maximised) {
+                let posToApply = this._getPair(ST_POS_X, ST_POS_Y);
+                if (posToApply) {
+                    this.style.top = posToApply[0];
+                    this.style.left = posToApply[1];
+                } else {
+                    this.refit();
+                }
             } else {
-                this.refit();
+                this.style.top = "0";
+                this.style.left = "0";
+            }
+        } else {
+            if (!this.maximised) {
+                this.style.removeProperty('position');
+                this.style.removeProperty('top');
+                this.style.removeProperty('left');
+            } else {
+                this.style.position = "fixed";
+                this.style.top = "0";
+                this.style.left = "0";
             }
         }
     },
 
     /*********************************************************************************************/
 
-    _isToolbarVisible: function (minimised, maximised, alternativeView, isAttached) {
-        return !minimised && (maximised || alternativeView) && (isAttached && (this.$.entitySpecificActions.assignedNodes().length > 0 || this.$.standartActions.assignedNodes().length > 0));
+    _isToolbarVisible: function (maximised, alternativeView) {
+        return (maximised || alternativeView) && (this.$.entitySpecificActions.assignedNodes().length > 0 || this.$.standartActions.assignedNodes().length > 0);
     },
 
     /**
@@ -961,7 +881,7 @@ Polymer({
     },
 
     _saveDimensions: function () {
-        const rect = this.$.loadableContent.getBoundingClientRect();
+        const rect = this.getBoundingClientRect();
         if (rect && rect.width && rect.height) {
             localStorage.setItem(this._generateKey(ST_DETACHED_WIDTH), rect.width + "px");
             localStorage.setItem(this._generateKey(ST_DETACHED_HEIGHT), rect.height + "px");
@@ -971,8 +891,14 @@ Polymer({
     _getPrefDim: function () {
         const prefDim = this.$.elementLoader.prefDim;
         if (prefDim) {
-            return [prefDim.width() + prefDim.widthUnit, prefDim.height() + prefDim.heightUnit];
+            const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
+            const height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
+            return [width, prefDim.heightUnit === '%' ? height : `calc(${height} + ${this._titleBarHeight()})`];
         }
+    },
+
+    _titleBarHeight: function() {
+        return this._hasTitleBar(this.shortDesc, this.alternativeView) ? '44px' : '0px';
     },
 
     _getPair: function (_1, _2) {

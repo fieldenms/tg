@@ -70,14 +70,14 @@ class EntityCentreInsertionPointManager {
     }
 
     _getZ (insertionPoint) {
-        return +insertionPoint.$.pm.style.zIndex;
+        return +insertionPoint.style.zIndex;
     }
 
     _setZ (insertionPoint, z) {
         if (z <= 0 ) {
-            insertionPoint.$.pm.style.removeProperty("z-index");
+            insertionPoint.style.removeProperty("z-index");
         } else {
-            insertionPoint.$.pm.style.zIndex = z;
+            insertionPoint.style.zIndex = z;
         }
     }
 }
