@@ -18,7 +18,6 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
  * This class is responsible for pre-processing of values passed as parameters to EQL queries (this covers both {@code .val()} and {@code .param()}).
  *
  * @author TG Team
- *
  */
 public class ValuePreprocessor {
 
@@ -46,7 +45,6 @@ public class ValuePreprocessor {
         return values.map(this::convertValue);
     }
 
-    /** Ensures that values of special types such as {@link Class} or {@link PropertyDescriptor} are converted to String. */
     private Object convertValue(final Object value) {
         return switch (value) {
             case PropertyDescriptor<?> it -> it.toString();
