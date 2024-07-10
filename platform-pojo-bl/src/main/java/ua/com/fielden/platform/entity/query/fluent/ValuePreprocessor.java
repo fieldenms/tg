@@ -6,6 +6,7 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.RichText;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -61,6 +62,8 @@ public class ValuePreprocessor {
             result = entity.getId() == null && !(isPersistedEntityType(type) || isSyntheticEntityType(type) || isUnionEntityType(type)) ? entity.getKey() : entity.getId();
         } else if (value instanceof Money) {
             result = ((Money) value).getAmount();
+        } else if (value instanceof RichText richText) {
+            result = richText.coreText();
         } else {
             result = value;
         }
