@@ -1,12 +1,15 @@
 package ua.com.fielden.platform.entity.query.fetching;
 
 import org.junit.Test;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.persistence.types.EntityWithRichText;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.RichText;
 
 import static java.lang.String.join;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.dao.QueryExecutionModel.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.types.RichText._coreText;
 import static ua.com.fielden.platform.types.RichText._formattedText;
@@ -39,9 +42,15 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
                                            .model()));
     }
 
-    @Override
-    protected void populateDomain() {
-        super.populateDomain();
+    @Test
+    public void RichText_value_is_interpreted_as_its_core_text() {
+        final var richText = RichText.fromMarkdown("`cons` **does not** evaluate its arguments in a *lazy* language.");
+        final var entityAgg = co(EntityAggregates.class).getEntity(
+                from(select().yield()
+                             .caseWhen().val(richText.coreText()).eq().val(richText).then().val("true").otherwise().val("false").end()
+                             .as("x").modelAsAggregate())
+                        .model());
+        assertEquals(entityAgg.get("x"), "true");
     }
 
 }
