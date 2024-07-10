@@ -41,15 +41,18 @@ public class HibernateMappingsGenerator {
     private final EqlTables eqlTables;
     private final IDbVersionProvider dbVersionProvider;
     private final PropertyMetadataUtils pmUtils;
+    private final PropertyInliner propertyInliner;
 
     @Inject
     public HibernateMappingsGenerator(final IDomainMetadata domainMetadata,
                                       final IDbVersionProvider dbVersionProvider,
-                                      final EqlTables eqlTables) {
+                                      final EqlTables eqlTables,
+                                      final PropertyInliner propertyInliner) {
         this.eqlTables = eqlTables;
         this.domainMetadata = domainMetadata;
         this.pmUtils = domainMetadata.propertyMetadataUtils();
         this.dbVersionProvider = dbVersionProvider;
+        this.propertyInliner = propertyInliner;
     }
 
     public String generateMappings() {
@@ -214,29 +217,27 @@ public class HibernateMappingsGenerator {
         if (pmUtils.isPropEntityType(prop, EntityMetadata::isUnion)) {
             return generateUnionEntityPropertyMapping(prop);
         }
-        // potential multi-column mapping
-        else if (prop.type().isComposite() || pmUtils.isPropEntityType(prop, EntityMetadata::isUnion)) {
-            final List<PropColumn> subColumns = pmUtils.subProperties(prop).stream()
-                    .flatMap(subProp -> subProp.asPersistent().stream())
-                    .map(subProp -> subProp.data().column())
-                    .toList();
-
-            final Either<PropColumn, List<String>> column = subColumns.size() == 1
-                    ? left(subColumns.getFirst())
-                    : right(subColumns.stream().map(c -> c.name).toList());
-            return generatePlainPropertyMapping(prop.name(), column, prop.hibType().getClass().getName());
-        }
-        else if (pmUtils.isPropEntityType(prop, EntityMetadata::isPersistent)) {
-            final var et = prop.type().asEntity().orElseThrow();
-            if (KEY.equals(prop.name())) {
-                return generateOneToOnePropertyMapping(prop.name(), et.javaType());
-            } else {
-                return generateManyToOnePropertyMapping(prop.name(), prop.data().column().name, et.javaType());
-            }
-        }
-        else {
-            return generatePlainPropertyMapping(prop.name(), left(prop.data().column()), prop.hibType().getClass().getName());
-        }
+        return propertyInliner.inline(prop)
+                .map(props -> props.stream().map(p -> p.data().column()).toList())
+                .map(columns -> {
+                    final Either<PropColumn, List<String>> column = columns.size() == 1
+                            ? left(columns.getFirst())
+                            : right(columns.stream().map(c -> c.name).toList());
+                    return generatePlainPropertyMapping(prop.name(), column, prop.hibType().getClass().getName());
+                })
+                .orElseGet(() -> {
+                    if (pmUtils.isPropEntityType(prop, EntityMetadata::isPersistent)) {
+                        final var et = prop.type().asEntity().orElseThrow();
+                        if (KEY.equals(prop.name())) {
+                            return generateOneToOnePropertyMapping(prop.name(), et.javaType());
+                        } else {
+                            return generateManyToOnePropertyMapping(prop.name(), prop.data().column().name, et.javaType());
+                        }
+                    }
+                    else {
+                        return generatePlainPropertyMapping(prop.name(), left(prop.data().column()), prop.hibType().getClass().getName());
+                    }
+                });
     }
 
     private static IllegalArgumentException unexpectedPropNature(Object prop, Object expectedNature) {

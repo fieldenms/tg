@@ -2,7 +2,11 @@ package ua.com.fielden.platform.eql.meta;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.meta.*;
+import ua.com.fielden.platform.eql.dbschema.PropertyInliner;
+import ua.com.fielden.platform.meta.EntityMetadata;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.meta.PropertyMetadata;
+import ua.com.fielden.platform.meta.PropertyTypeMetadata;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -24,9 +28,11 @@ import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 public final class DomainMetadataModelGenerator {
 
     private final IDomainMetadata domainMetadata;
+    private final PropertyInliner propertyInliner;
 
-    public DomainMetadataModelGenerator(final IDomainMetadata domainMetadata) {
+    public DomainMetadataModelGenerator(final IDomainMetadata domainMetadata, final PropertyInliner propertyInliner) {
         this.domainMetadata = domainMetadata;
+        this.propertyInliner = propertyInliner;
     }
 
     public Map<Class<?>, DomainTypeData> generateDomainTypesData(final Set<Class<? extends AbstractEntity<?>>> entityTypes) {
@@ -102,7 +108,6 @@ public final class DomainMetadataModelGenerator {
     }
 
     public List<DomainPropertyData> generateDomainPropsData(final Map<Class<?>, DomainTypeData> typesMap) {
-        final PropertyMetadataUtils pmUtils = domainMetadata.propertyMetadataUtils();
         final List<DomainPropertyData> result = new ArrayList<>();
 
         long id = typesMap.size();
@@ -140,26 +145,31 @@ public final class DomainMetadataModelGenerator {
                                                                                       : pm),
                                                   position));
 
-                // adding subproperties of union type properties
-                if (pmUtils.isPropEntityType(pm.type(), EntityMetadata::isUnion)) {
-                    final List<PropertyMetadata> subProps = pmUtils.subProperties(pm);
-                    final long holderId = id;
-                    int subItemPosition = 0;
-                    for (final var spm : subProps.stream().flatMap(spm -> spm.asPersistent().stream()).toList()) {
-                        id = id + 1;
-                        subItemPosition = subItemPosition + 1;
-                        final Pair<String, String> titleAndDesc = getTitleAndDesc(spm.name(), propJavaType);
-                        result.add(new DomainPropertyData(id,
-                                                          spm.name(),
-                                                          null,
-                                                          holderId,
-                                                          typesMap.get((Class<?>) spm.type().javaType()).id(),
-                                                          titleAndDesc.getKey(),
-                                                          titleAndDesc.getValue(),
-                                                          null,
-                                                          false,
-                                                          spm.data().column().name,
-                                                          subItemPosition));
+                // subproperties
+                if (pm.isPersistent()) {
+                    final var ppm = pm.asPersistent().orElseThrow();
+                    final var optSubProps = propertyInliner.inline(ppm)
+                            // ignore single-component composite types, they are treated as primitive types
+                            .filter(props -> !ppm.type().isComposite() || props.size() > 1);
+                    if (optSubProps.isPresent()) {
+                        final long holderId = id;
+                        int subItemPosition = 0;
+                        for (final var subProp : optSubProps.get().stream().flatMap(spm -> spm.asPersistent().stream()).toList()) {
+                            id = id + 1;
+                            subItemPosition = subItemPosition + 1;
+                            final var titleAndDesc = getTitleAndDesc(subProp.name(), propJavaType);
+                            result.add(new DomainPropertyData(id,
+                                                              subProp.name(),
+                                                              null,
+                                                              holderId,
+                                                              typesMap.get((Class<?>) subProp.type().javaType()).id(),
+                                                              titleAndDesc.getKey(),
+                                                              titleAndDesc.getValue(),
+                                                              null,
+                                                              false,
+                                                              subProp.data().column().name,
+                                                              subItemPosition));
+                        }
                     }
                 }
             }
@@ -171,15 +181,12 @@ public final class DomainMetadataModelGenerator {
     private @Nullable String determinePropColumn(final PropertyMetadata pm) {
         return switch (pm) {
             case PropertyMetadata.CritOnly $ -> CRITERION;
-            case PropertyMetadata.Persistent ppm ->
-                    domainMetadata.propertyMetadataUtils().isPropEntityType(ppm, EntityMetadata::isUnion)
-                            ? null : ppm.data().column().name;
-            default -> {
-                final var subProps = domainMetadata.propertyMetadataUtils().subProperties(pm);
-                yield subProps.size() == 1
-                        ? subProps.getFirst().asPersistent().map(pspm -> pspm.data().column().name).orElse(null)
-                        : null;
-            }
+            case PropertyMetadata.Persistent it -> propertyInliner.inline(it)
+                    .filter(ps -> ps.size() == 1)
+                    .map(List::getFirst)
+                    .map(prop -> prop.data().column().name)
+                    .orElse(null);
+            default -> null;
         };
     }
 
