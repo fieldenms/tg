@@ -129,21 +129,25 @@ public final class DomainMetadataModelGenerator {
 
                 final var propJavaType = (Class<?>) pm.type().javaType();
                 final DomainTypeData superTypeDtd = typesMap.get(entityType.superType());
-                result.add(new DomainPropertyData(id,
-                                                  pm.name(),
-                                                  entityType.id(),
-                                                  null,
-                                                  typesMap.get(propJavaType).id(),
-                                                  prelTitle,
-                                                  prelDesc,
-                                                  entityType.getKeyMemberIndex(pm.name()),
-                                                  pm.is(REQUIRED),
-                                                  determinePropColumn(entityType.superType() == null
-                                                                              ? pm
-                                                                              : superTypeDtd.props().get(pm.name()) != null
-                                                                                      ? superTypeDtd.props().get(pm.name())
-                                                                                      : pm),
-                                                  position));
+                final var domainPropertyData = new DomainPropertyData(
+                        id,
+                        pm.name(),
+                        entityType,
+                        null,
+                        typesMap.get(propJavaType),
+                        prelTitle,
+                        prelDesc,
+                        entityType.getKeyMemberIndex(pm.name()),
+                        pm.is(REQUIRED),
+                        determinePropColumn(entityType.superType() == null
+                                                    ? pm
+                                                    : superTypeDtd.props()
+                                                              .get(pm.name()) != null
+                                                            ? superTypeDtd.props()
+                                                            .get(pm.name())
+                                                            : pm),
+                        position);
+                result.add(domainPropertyData);
 
                 // subproperties
                 if (pm.isPersistent()) {
@@ -152,7 +156,6 @@ public final class DomainMetadataModelGenerator {
                             // ignore single-component composite types, they are treated as primitive types
                             .filter(props -> !ppm.type().isComposite() || props.size() > 1);
                     if (optSubProps.isPresent()) {
-                        final long holderId = id;
                         int subItemPosition = 0;
                         for (final var subProp : optSubProps.get().stream().flatMap(spm -> spm.asPersistent().stream()).toList()) {
                             id = id + 1;
@@ -161,8 +164,8 @@ public final class DomainMetadataModelGenerator {
                             result.add(new DomainPropertyData(id,
                                                               subProp.name(),
                                                               null,
-                                                              holderId,
-                                                              typesMap.get((Class<?>) subProp.type().javaType()).id(),
+                                                              domainPropertyData,
+                                                              typesMap.get((Class<?>) subProp.type().javaType()),
                                                               titleAndDesc.getKey(),
                                                               titleAndDesc.getValue(),
                                                               null,

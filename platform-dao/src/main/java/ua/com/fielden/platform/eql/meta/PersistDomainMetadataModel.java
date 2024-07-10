@@ -123,9 +123,11 @@ public class PersistDomainMetadataModel {
                             pst.setString(2, propType.name());
                             pst.setString(3, propType.title());
                             pst.setString(4, propType.desc());
-                            setNullableLongParameter(5, propType.holderAsDomainType(), pst);
-                            setNullableLongParameter(6, propType.holderAsDomainProperty(), pst);
-                            pst.setLong(7, propType.domainType());
+                            setNullableLongParameter(5, propType.holderAsDomainType() == null ? null : propType.holderAsDomainType().id(),
+                                                     pst);
+                            setNullableLongParameter(6, propType.holderAsDomainProperty() == null ? null : propType.holderAsDomainProperty().id(),
+                                                     pst);
+                            pst.setLong(7, propType.domainType().id());
                             setNullableIntegerParameter(8, propType.keyIndex(), pst);
                             setBooleanParameter(9, propType.required(), pst);
                             pst.setString(10, propType.dbColumn());

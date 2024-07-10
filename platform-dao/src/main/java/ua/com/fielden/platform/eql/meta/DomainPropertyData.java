@@ -3,9 +3,9 @@ package ua.com.fielden.platform.eql.meta;
 record DomainPropertyData(
         long id,
         String name,
-        Long holderAsDomainType,
-        Long holderAsDomainProperty,
-        long domainType,
+        DomainTypeData holderAsDomainType,
+        DomainPropertyData holderAsDomainProperty,
+        DomainTypeData domainType,
         String title,
         String desc,
         Integer keyIndex,
