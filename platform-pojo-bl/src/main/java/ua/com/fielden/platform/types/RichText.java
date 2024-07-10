@@ -8,6 +8,8 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 
 import java.util.Objects;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Rich text is text which has attributes beyond those of plain text (e.g., styles such as color, boldface, italic), and
  * is expressed in some markup language (e.g., Markdown).
@@ -35,6 +37,8 @@ public final class RichText {
      * @param coreText      text without markup (its length is always less than or equal to that of formatted text)
      */
     public RichText(final String formattedText, final String coreText) {
+        requireNonNull(formattedText);
+        requireNonNull(coreText);
         this.formattedText = formattedText;
         this.coreText = coreText;
     }
