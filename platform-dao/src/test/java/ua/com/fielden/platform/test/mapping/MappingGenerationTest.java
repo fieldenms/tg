@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.test.mapping;
 
-import org.hibernate.type.YesNoType;
 import org.junit.Test;
 import ua.com.fielden.platform.dashboard.DashboardRefreshFrequency;
 import ua.com.fielden.platform.dashboard.DashboardRefreshFrequencyUnit;
@@ -10,7 +9,6 @@ import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
 import ua.com.fielden.platform.eql.meta.EqlTables;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.IDomainMetadata;
-import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
@@ -19,6 +17,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
+import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 
 public class MappingGenerationTest {
 
@@ -29,11 +28,7 @@ public class MappingGenerationTest {
                 DashboardRefreshFrequencyUnit.class, EntityCentreConfig.class);
         final var dbVersionProvider = constantDbVersion(DbVersion.H2);
         final IDomainMetadata domainMetadata = new DomainMetadataBuilder(
-                HibernateTypeMappings.builder()
-                        .put(boolean.class, YesNoType.INSTANCE)
-                        .put(Boolean.class, YesNoType.INSTANCE)
-                        .build(),
-                domainTypes, dbVersionProvider)
+                PLATFORM_HIBERNATE_TYPE_MAPPINGS, domainTypes, dbVersionProvider)
                 .build();
 
         final String actualMappings = new HibernateMappingsGenerator(domainMetadata, dbVersionProvider, new EqlTables(domainMetadata))
@@ -74,7 +69,7 @@ public class MappingGenerationTest {
 \t<property name="configUuid" column="CONFIGUUID_" type="org.hibernate.type.StringType"/>
 \t<many-to-one name="dashboardRefreshFrequency" class="ua.com.fielden.platform.dashboard.DashboardRefreshFrequency" column="DASHBOARDREFRESHFREQUENCY_"/>
 \t<property name="dashboardable" column="DASHBOARDABLE_" type="org.hibernate.type.YesNoType"/>
-\t<property name="dashboardableDate" column="DASHBOARDABLEDATE_" type="org.hibernate.type.TimestampType"/>
+\t<property name="dashboardableDate" column="DASHBOARDABLEDATE_" type="ua.com.fielden.platform.persistence.types.DateTimeType"/>
 \t<property name="desc" column="DESC_" type="org.hibernate.type.StringType"/>
 \t<many-to-one name="menuItem" class="ua.com.fielden.platform.ui.config.MainMenuItem" column="ID_MAIN_MENU"/>
 \t<many-to-one name="owner" class="ua.com.fielden.platform.security.user.User" column="ID_CRAFT"/>
@@ -108,11 +103,11 @@ public class MappingGenerationTest {
 \t<property name="base" column="BASE_" type="org.hibernate.type.YesNoType"/>
 \t<many-to-one name="basedOnUser" class="ua.com.fielden.platform.security.user.User" column="BASEDONUSER_"/>
 \t<many-to-one name="createdBy" class="ua.com.fielden.platform.security.user.User" column="CREATEDBY_"/>
-\t<property name="createdDate" column="CREATEDDATE_" type="org.hibernate.type.TimestampType"/>
+\t<property name="createdDate" column="CREATEDDATE_" type="ua.com.fielden.platform.persistence.types.DateTimeType"/>
 \t<property name="createdTransactionGuid" column="CREATEDTRANSACTIONGUID_" type="org.hibernate.type.StringType"/>
 \t<property name="email" column="EMAIL_" type="org.hibernate.type.StringType"/>
 \t<many-to-one name="lastUpdatedBy" class="ua.com.fielden.platform.security.user.User" column="LASTUPDATEDBY_"/>
-\t<property name="lastUpdatedDate" column="LASTUPDATEDDATE_" type="org.hibernate.type.TimestampType"/>
+\t<property name="lastUpdatedDate" column="LASTUPDATEDDATE_" type="ua.com.fielden.platform.persistence.types.DateTimeType"/>
 \t<property name="lastUpdatedTransactionGuid" column="LASTUPDATEDTRANSACTIONGUID_" type="org.hibernate.type.StringType"/>
 \t<property name="refCount" column="REFCOUNT_" type="org.hibernate.type.IntegerType"/>
 \t<property name="ssoOnly" column="SSOONLY_" type="org.hibernate.type.YesNoType"/>
