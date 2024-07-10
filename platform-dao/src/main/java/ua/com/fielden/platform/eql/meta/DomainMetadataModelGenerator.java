@@ -8,7 +8,6 @@ import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata;
-import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
 
 import javax.annotation.Nullable;
@@ -66,18 +65,18 @@ public final class DomainMetadataModelGenerator {
                 final Optional<Class<?>> optPropJavaType = switch (prop.type()) {
                     case PropertyTypeMetadata.Composite it -> Optional.of(it.javaType());
                     case PropertyTypeMetadata.Primitive it -> Optional.of(it.javaType());
+                    // inherited from old code, not sure why entities with metadata are filtered
                     case PropertyTypeMetadata.Entity it when domainMetadata.forType(it.javaType()).isEmpty()
                                                              || !entityTypes.contains(it.javaType())
                             -> Optional.of(it.javaType());
                     default -> Optional.empty();
                 };
                 return optPropJavaType.map(propJavaType -> new H(propJavaType, id -> {
-                    final List<PropertyMetadata.Persistent> subItems = domainMetadata.propertyMetadataUtils().subProperties(prop).stream()
-                            .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
-                            .toList();
-
-                    final int propsCount = !subItems.isEmpty() && !(Money.class.equals(propJavaType) && subItems.size() == 1)
-                            ? subItems.size() : 0;
+                    final int propsCount = prop.asPersistent().flatMap(propertyInliner::inline)
+                            // ignore single-component composite types; not sure why, but this has been in the old code
+                            .filter(props_ -> !prop.type().isComposite() || props_.size() > 1)
+                            .map(Collection::size)
+                            .orElse(0);
                     final var subTypeTitleAndDesc = isUnionEntityType(propJavaType)
                             ? getEntityTitleAndDesc((Class<? extends AbstractUnionEntity>) propJavaType)
                             : null;
