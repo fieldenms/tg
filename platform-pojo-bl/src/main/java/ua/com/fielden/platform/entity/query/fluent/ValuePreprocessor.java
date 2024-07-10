@@ -48,25 +48,22 @@ public class ValuePreprocessor {
 
     /** Ensures that values of special types such as {@link Class} or {@link PropertyDescriptor} are converted to String. */
     private Object convertValue(final Object value) {
-        final Object result;
-        if (value instanceof PropertyDescriptor ||
-            value instanceof Class ||
-            value instanceof Colour ||
-            value instanceof Enum ||
-            value instanceof Hyperlink ||
-            value instanceof DynamicEntityKey) {
-            result = value.toString();
-        } else if (value instanceof AbstractEntity) {
-            final AbstractEntity<?> entity = (AbstractEntity<?>) value;
-            final Class<? extends AbstractEntity<?>> type = entity.getType();
-            result = entity.getId() == null && !(isPersistedEntityType(type) || isSyntheticEntityType(type) || isUnionEntityType(type)) ? entity.getKey() : entity.getId();
-        } else if (value instanceof Money) {
-            result = ((Money) value).getAmount();
-        } else if (value instanceof RichText richText) {
-            result = richText.coreText();
-        } else {
-            result = value;
-        }
-        return result;
+        return switch (value) {
+            case PropertyDescriptor<?> it -> it.toString();
+            case Class<?>              it -> it.toString();
+            case Colour                it -> it.toString();
+            case Enum<?>               it -> it.toString();
+            case Hyperlink             it -> it.toString();
+            case DynamicEntityKey      it -> it.toString();
+            case AbstractEntity<?> entity -> {
+                final var type = entity.getType();
+                yield entity.getId() == null && !(isPersistedEntityType(type) || isSyntheticEntityType(type) || isUnionEntityType(type))
+                        ? entity.getKey() : entity.getId();
+            }
+            case Money money -> money.getAmount();
+            case RichText richText -> richText.coreText();
+            case null, default -> value;
+        };
     }
+
 }
