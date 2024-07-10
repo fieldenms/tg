@@ -9,6 +9,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.*;
 import java.util.stream.*;
 
+import static java.util.Spliterators.spliteratorUnknownSize;
+import static ua.com.fielden.platform.utils.IteratorUtils.distinctIterator;
+
 /**
  * A set of convenient APIs for working with {@link Stream}.
  * 
@@ -102,35 +105,11 @@ public class StreamUtils {
     }
 
     /**
-     * Returns a stream of distinct elements from {@code stream}, where unique identity of an element is determined by {@code uidMapper}.
-     * <p>
-     * It is required that the return type of {@code uidMapper} has proper implementation of {@code hashCode()} and {@code equals()}.
-     * <p>
-     * The order of the original stream's elements is preserved.
-     *
-     * @param stream
-     * @param uidMapper a function that maps the original element to its unique identity.
-     * @return
+     * Equivalent of {@link IteratorUtils#distinctIterator(Iterator, Function)} but for streams.
      */
-    public static <T, R> Stream<T> distinct(final Stream<T> stream, final Function<T, R> uidMapper) {
-        return StreamSupport.stream(distinct(stream.spliterator(), uidMapper), false);
-    }
-
-    private static <T, R> Spliterator<T> distinct(final Spliterator<T> splitr, final Function<T, R> uidMapper) {
-        return new Spliterators.AbstractSpliterator<T>(splitr.estimateSize(), 0) {
-            final LinkedHashSet<R> uniqs = new LinkedHashSet<>();
-
-            @Override
-            public boolean tryAdvance(final Consumer<? super T> consumer) {
-                return splitr.tryAdvance(elem -> {
-                    final R uid = uidMapper.apply(elem);
-                    if (!uniqs.contains(uid)) {
-                        consumer.accept(elem);
-                        uniqs.add(uid);
-                    }
-                });
-            }
-        };
+    public static <T, U> Stream<T> distinct(final Stream<T> stream, final Function<T, U> classifier) {
+        return StreamSupport.stream(spliteratorUnknownSize(distinctIterator(stream.iterator(), classifier), 0),
+                                    false);
     }
 
     /**
