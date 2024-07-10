@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.meta;
 
+import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.eql.dbschema.PropertyInliner;
@@ -12,9 +13,9 @@ import ua.com.fielden.platform.utils.Pair;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.LongFunction;
 import java.util.stream.Stream;
 
-import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isExcluded;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
@@ -25,6 +26,7 @@ import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitl
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.entityTypeHierarchy;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
+import static ua.com.fielden.platform.utils.StreamUtils.*;
 
 public final class DomainMetadataModelGenerator {
 
@@ -37,63 +39,63 @@ public final class DomainMetadataModelGenerator {
     }
 
     public Map<Class<?>, DomainTypeData> generateDomainTypesData(final Set<Class<? extends AbstractEntity<?>>> entityTypes) {
-        final Map<Class<?>, DomainTypeData> result = new HashMap<>();
-        long id = 0;
-        for (final Class<? extends AbstractEntity<?>> entityType : entityTypes) {
+        // helper type for intermediate results
+        // f is called with an ID
+        record H (Class<?> type, LongFunction<DomainTypeData> f) {}
+
+        final Stream<H> hs = entityTypes.stream().flatMap(entityType -> {
             final var em = domainMetadata.forEntity(entityType);
-            id = id + 1;
-            final Pair<String, String> typeTitleAndDesc = getEntityTitleAndDesc(entityType);
             final List<? extends PropertyMetadata> props = em.properties().stream()
                     .filter(pm -> !pm.name().equals(VERSION) && !pm.type().isCollectional() && !pm.type().isCompositeKey()
                                   && !(pm.isPlain() && em.isPersistent()))
                     .toList();
 
-            final Optional<EntityMetadata.Persistent> persistentBase = persistentBaseForSynthetic(em);
-            final Optional<String> tableName = persistentBase.or(em::asPersistent).map(pem -> pem.data().tableName());
+            final Stream<H> entityTypeS = Stream.of(
+                    new H(entityType, id -> {
+                        final var typeTitleAndDesc = getEntityTitleAndDesc(entityType);
+                        final Optional<EntityMetadata.Persistent> persistentBase = persistentBaseForSynthetic(em);
+                        final Optional<String> tableName = persistentBase.or(em::asPersistent).map(pem -> pem.data().tableName());
+                        return domainTypeData(entityType, persistentBase.map(EntityMetadata::javaType).orElse(null),
+                                              id, entityType.getName(), typeTitleAndDesc.getKey(),
+                                              true, tableName.orElse(null), typeTitleAndDesc.getValue(), props.size(),
+                                              domainMetadata.entityMetadataUtils().compositeKeyMembers(em),
+                                              props);
+                    }));
 
-            result.put(entityType,
-                       domainTypeData(entityType, persistentBase.map(EntityMetadata::javaType).orElse(null),
-                                      id, entityType.getName(), typeTitleAndDesc.getKey(),
-                                      true, tableName.orElse(null), typeTitleAndDesc.getValue(), props.size(),
-                                      domainMetadata.entityMetadataUtils().compositeKeyMembers(em),
-                                      props));
-
-            // collecting primitive, union,custom user types and pure types (like XXXGroupingProperty) from props
-            for (final PropertyMetadata pm : props) {
-                final Optional<Class<?>> optPropJavaType = switch (pm.type()) {
-                    case PropertyTypeMetadata.Composite    it -> Optional.of(it.javaType());
-                    case PropertyTypeMetadata.Primitive    it -> Optional.of(it.javaType());
-                    case PropertyTypeMetadata.Entity       it when domainMetadata.forType(it.javaType()).isEmpty()
-                                                                   || !entityTypes.contains(it.javaType())
-                                                                      && !result.containsKey(it.javaType())
+            final Stream<H> propsS = props.stream().map(prop -> {
+                final Optional<Class<?>> optPropJavaType = switch (prop.type()) {
+                    case PropertyTypeMetadata.Composite it -> Optional.of(it.javaType());
+                    case PropertyTypeMetadata.Primitive it -> Optional.of(it.javaType());
+                    case PropertyTypeMetadata.Entity it when domainMetadata.forType(it.javaType()).isEmpty()
+                                                             || !entityTypes.contains(it.javaType())
                             -> Optional.of(it.javaType());
                     default -> Optional.empty();
                 };
-
-                if (optPropJavaType.isPresent()) {
-                    // can't use ifPresent due to local variable "id"
-                    final Class<?> propJavaType = optPropJavaType.get();
-                    id = id + 1;
-
-                    final List<PropertyMetadata.Persistent> subItems = domainMetadata.propertyMetadataUtils().subProperties(pm).stream()
+                return optPropJavaType.map(propJavaType -> new H(propJavaType, id -> {
+                    final List<PropertyMetadata.Persistent> subItems = domainMetadata.propertyMetadataUtils().subProperties(prop).stream()
                             .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
                             .toList();
 
                     final int propsCount = !subItems.isEmpty() && !(Money.class.equals(propJavaType) && subItems.size() == 1)
                             ? subItems.size() : 0;
-                    final Pair<String, String> subTypeTitleAndDesc = isUnionEntityType(propJavaType)
+                    final var subTypeTitleAndDesc = isUnionEntityType(propJavaType)
                             ? getEntityTitleAndDesc((Class<? extends AbstractUnionEntity>) propJavaType)
                             : null;
                     final String title = subTypeTitleAndDesc != null ? subTypeTitleAndDesc.getKey() : propJavaType.getSimpleName();
                     final String titleDesc = subTypeTitleAndDesc != null ? subTypeTitleAndDesc.getValue() : propJavaType.getSimpleName();
-                    result.put(propJavaType,
-                               domainTypeData(propJavaType, null, id, propJavaType.getName(), title, false,
-                                              null, titleDesc, propsCount, emptyList(), emptyList()));
-                }
-            }
-        }
 
-        return result;
+                    return domainTypeData(propJavaType, null, id, propJavaType.getName(), title, false,
+                                          null, titleDesc, propsCount, ImmutableList.of(), ImmutableList.of());
+                }));
+            }).flatMap(Optional::stream);
+
+            return Stream.concat(entityTypeS, propsS);
+        });
+
+        return collectToImmutableMap(distinct(hs, H::type),
+                                     integers(1).boxed(),
+                                     (h, i) -> h.type(),
+                                     (h, i) -> h.f().apply(i));
     }
 
     /**
