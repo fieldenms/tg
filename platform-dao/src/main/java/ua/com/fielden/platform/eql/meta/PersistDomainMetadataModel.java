@@ -84,17 +84,17 @@ public class PersistDomainMetadataModel {
                     // batch insert statements
                     batch.forEach(propType -> {
                         try {
-                            pst.setLong(1, propType.id);
-                            pst.setString(2, propType.key);
-                            pst.setString(3, propType.desc);
-                            pst.setString(4, propType.dbTable);
-                            pst.setString(5, propType.entityTypeDesc);
-                            setBooleanParameter(6, propType.isEntity, pst);
-                            pst.setInt(7, propType.propsCount);
+                            pst.setLong(1, propType.id());
+                            pst.setString(2, propType.key());
+                            pst.setString(3, propType.desc());
+                            pst.setString(4, propType.dbTable());
+                            pst.setString(5, propType.entityTypeDesc());
+                            setBooleanParameter(6, propType.isEntity(), pst);
+                            pst.setInt(7, propType.propsCount());
                             pst.setInt(8, 0);
                             pst.addBatch();
                         } catch (final SQLException ex) {
-                            final String error = format("Could not create insert for [%s].", propType.key);
+                            final String error = format("Could not create insert for [%s].", propType.key());
                             throw new DbException(error, ex);
                         }
                     });
@@ -117,21 +117,21 @@ public class PersistDomainMetadataModel {
                 try (final PreparedStatement pst = conn.prepareStatement(DOMAINPROPERTY_INSERT_STMT)) {
                     batch.forEach(propType -> {
                         try {
-                            pst.setLong(1, propType.id);
-                            pst.setString(2, propType.name);
-                            pst.setString(3, propType.title);
-                            pst.setString(4, propType.desc);
-                            setNullableLongParameter(5, propType.holderAsDomainType, pst);
-                            setNullableLongParameter(6, propType.holderAsDomainProperty, pst);
-                            pst.setLong(7, propType.domainType);
-                            setNullableIntegerParameter(8, propType.keyIndex, pst);
-                            setBooleanParameter(9, propType.required, pst);
-                            pst.setString(10, propType.dbColumn);
-                            pst.setInt(11, propType.position);
+                            pst.setLong(1, propType.id());
+                            pst.setString(2, propType.name());
+                            pst.setString(3, propType.title());
+                            pst.setString(4, propType.desc());
+                            setNullableLongParameter(5, propType.holderAsDomainType(), pst);
+                            setNullableLongParameter(6, propType.holderAsDomainProperty(), pst);
+                            pst.setLong(7, propType.domainType());
+                            setNullableIntegerParameter(8, propType.keyIndex(), pst);
+                            setBooleanParameter(9, propType.required(), pst);
+                            pst.setString(10, propType.dbColumn());
+                            pst.setInt(11, propType.position());
                             pst.setInt(12, 0);
                             pst.addBatch();
                         } catch (final SQLException ex) {
-                            final String error = format("Could not create insert for [%s].", propType.name);
+                            final String error = format("Could not create insert for [%s].", propType.name());
                             throw new DbException(error, ex);
                         }
                     });

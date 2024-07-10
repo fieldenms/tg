@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 import static java.util.Collections.emptyList;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isExcluded;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.eql.meta.DomainTypeData.domainTypeData;
 import static ua.com.fielden.platform.eql.meta.PersistDomainMetadataModel.CRITERION;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.REQUIRED;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
@@ -44,11 +45,11 @@ public final class DomainMetadataModelGenerator {
             final Optional<String> tableName = persistentBase.or(em::asPersistent).map(pem -> pem.data().tableName());
 
             result.put(entityType,
-                       new DomainTypeData(entityType, persistentBase.map(EntityMetadata::javaType).orElse(null),
-                                                                     id, entityType.getName(), typeTitleAndDesc.getKey(),
-                                                                     true, tableName.orElse(null), typeTitleAndDesc.getValue(), props.size(),
-                                                                     domainMetadata.entityMetadataUtils().compositeKeyMembers(em),
-                                                                     props));
+                       domainTypeData(entityType, persistentBase.map(EntityMetadata::javaType).orElse(null),
+                                      id, entityType.getName(), typeTitleAndDesc.getKey(),
+                                      true, tableName.orElse(null), typeTitleAndDesc.getValue(), props.size(),
+                                      domainMetadata.entityMetadataUtils().compositeKeyMembers(em),
+                                      props));
 
             // collecting primitive, union,custom user types and pure types (like XXXGroupingProperty) from props
             for (final PropertyMetadata pm : props) {
@@ -79,8 +80,8 @@ public final class DomainMetadataModelGenerator {
                     final String title = subTypeTitleAndDesc != null ? subTypeTitleAndDesc.getKey() : propJavaType.getSimpleName();
                     final String titleDesc = subTypeTitleAndDesc != null ? subTypeTitleAndDesc.getValue() : propJavaType.getSimpleName();
                     result.put(propJavaType,
-                               new DomainTypeData(propJavaType, null, id, propJavaType.getName(), title, false,
-                                                  null, titleDesc, propsCount, emptyList(), emptyList()));
+                               domainTypeData(propJavaType, null, id, propJavaType.getName(), title, false,
+                                              null, titleDesc, propsCount, emptyList(), emptyList()));
                 }
             }
         }
@@ -106,36 +107,36 @@ public final class DomainMetadataModelGenerator {
 
         long id = typesMap.size();
         for (final DomainTypeData entityType : typesMap.values()) {
-            if (!entityType.isEntity) {
+            if (!entityType.isEntity()) {
                 continue;
             }
             int position = 0;
-            for (final PropertyMetadata pm : entityType.getProps().values()) {
-                if (isExcluded(entityType.type, pm.name())) {
+            for (final PropertyMetadata pm : entityType.props().values()) {
+                if (isExcluded(entityType.type(), pm.name())) {
                     continue;
                 }
 
                 id = id + 1;
                 position = position + 1;
-                final Pair<String, String> prelTitleAndDesc = getTitleAndDesc(pm.name(), entityType.type);
+                final Pair<String, String> prelTitleAndDesc = getTitleAndDesc(pm.name(), entityType.type());
                 final String prelTitle = prelTitleAndDesc.getKey();
                 final String prelDesc = prelTitleAndDesc.getValue();
 
                 final var propJavaType = (Class<?>) pm.type().javaType();
-                final DomainTypeData superTypeDtd = typesMap.get(entityType.superType);
+                final DomainTypeData superTypeDtd = typesMap.get(entityType.superType());
                 result.add(new DomainPropertyData(id,
                                                   pm.name(),
-                                                  entityType.id,
+                                                  entityType.id(),
                                                   null,
-                                                  typesMap.get(propJavaType).id,
+                                                  typesMap.get(propJavaType).id(),
                                                   prelTitle,
                                                   prelDesc,
                                                   entityType.getKeyMemberIndex(pm.name()),
                                                   pm.is(REQUIRED),
-                                                  determinePropColumn(entityType.superType == null
+                                                  determinePropColumn(entityType.superType() == null
                                                                               ? pm
-                                                                              : superTypeDtd.getProps().get(pm.name()) != null
-                                                                                      ? superTypeDtd.getProps().get(pm.name())
+                                                                              : superTypeDtd.props().get(pm.name()) != null
+                                                                                      ? superTypeDtd.props().get(pm.name())
                                                                                       : pm),
                                                   position));
 
@@ -152,7 +153,7 @@ public final class DomainMetadataModelGenerator {
                                                           spm.name(),
                                                           null,
                                                           holderId,
-                                                          typesMap.get((Class<?>) spm.type().javaType()).id,
+                                                          typesMap.get((Class<?>) spm.type().javaType()).id(),
                                                           titleAndDesc.getKey(),
                                                           titleAndDesc.getValue(),
                                                           null,
