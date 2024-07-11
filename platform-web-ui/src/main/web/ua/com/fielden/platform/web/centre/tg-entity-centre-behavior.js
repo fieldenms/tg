@@ -87,7 +87,6 @@ const createColumnAction = function (entityCentre) {
     }.bind(actionModel);
     actionModel.postActionSuccess = function (functionalEntity) {
         // update disablement of save button after changing column widths
-        entityCentre.$.selection_criteria._centreChanged = functionalEntity.get('centreChanged');
         entityCentre.$.selection_criteria._centreDirty = functionalEntity.get('centreDirty');
     };
     actionModel.postActionError = function (functionalEntity) { };
@@ -116,7 +115,6 @@ const createPreferredViewUpdaterAction = function (entityCentre) {
     }.bind(actionModel);
     actionModel.postActionSuccess = function (functionalEntity) {
         // update disablement of save button after changing column widths
-        entityCentre.$.selection_criteria._centreChanged = functionalEntity.get('centreChanged');
         entityCentre.$.selection_criteria._centreDirty = functionalEntity.get('centreDirty');
         if (functionalEntity.get('preferredView') !== entityCentre.preferredView) {
             entityCentre.async(actionModel._run, 100);

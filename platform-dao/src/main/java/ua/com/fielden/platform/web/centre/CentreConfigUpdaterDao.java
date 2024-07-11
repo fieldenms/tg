@@ -1,6 +1,10 @@
 package ua.com.fielden.platform.web.centre;
 
+import static ua.com.fielden.platform.entity.CollectionModificationUtils.validateAction;
+import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.applyNewOrderVisibilityAndSorting;
+
 import com.google.inject.Inject;
+
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -9,9 +13,6 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
-
-import static ua.com.fielden.platform.entity.CollectionModificationUtils.validateAction;
-import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.applyNewOrderVisibilityAndSorting;
 
 /**
  * DAO implementation for companion object {@link CentreConfigUpdaterCo}.
@@ -51,9 +52,7 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
         actionToSave.setTriggerRerun(actionToSave.getProperty("pageCapacity").isChangedFromOriginal() || actionToSave.getProperty("sortingVals").isChangedFromOriginal());
         if (!actionToSave.isTriggerRerun()) {
             // in case where neither sorting nor pageCapacity has changed from previous value (and re-running will not occur), we need to send 'centreDirty' parameter and bind it to SAVE button disablement
-            final boolean centreChanged = criteriaEntityBeingUpdated.isCentreChanged();
-            actionToSave.setCentreChanged(centreChanged);
-            actionToSave.setCentreDirty(criteriaEntityBeingUpdated.isCentreDirty(centreChanged));
+            actionToSave.setCentreDirty(criteriaEntityBeingUpdated.isCentreDirty());
         }
 
         // we need to be able to continue 'change pageCapacity/sort/order/visibility' activities after successful save -- all essential properties should be reset to reflect 'newly applied' 'pageCapacity/sort/order/visibility' inside original values

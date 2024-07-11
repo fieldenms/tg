@@ -56,6 +56,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -422,11 +423,9 @@ public class CriteriaResource extends AbstractWebResource {
             final DeviceProfile device = device();
             final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = createCriteriaEntityWithoutConflicts(modifiedPropertiesHolder, companionFinder, critGenerator, miType, saveAsName, user, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
             final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = appliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
-            final boolean centreChanged = isFreshCentreChanged(updatedFreshCentre, updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder));
             final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(
                 createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
-                centreChanged,
-                appliedCriteriaEntity.centreDirtyCalculator().apply(saveAsName).apply(centreChanged),
+                appliedCriteriaEntity.centreDirtyCalculator().apply(saveAsName).apply(() -> updatedFreshCentre),
                 createStaleCriteriaMessage((String) modifiedPropertiesHolder.get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, critGenerator, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion)
             );
             customObject.put(VALIDATION_COUNTER, modifiedPropertiesHolder.get(VALIDATION_COUNTER));
@@ -451,13 +450,11 @@ public class CriteriaResource extends AbstractWebResource {
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, user, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
-        final boolean centreChanged = isFreshCentreChanged(updatedFreshCentre, updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder));
         return restUtil.rawListJsonRepresentation(
             appliedCriteriaEntity,
             createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
                 createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
-                centreChanged,
-                appliedCriteriaEntity.centreDirtyCalculator().apply(saveAsName).apply(centreChanged),
+                appliedCriteriaEntity.centreDirtyCalculator().apply(saveAsName).apply(() -> updatedFreshCentre),
                 of(saveAsName),
                 of(configUuid),
                 of(appliedCriteriaEntity.centreRunAutomatically(saveAsName)), // in case if configuration is runAutomatically perform client-side auto-running (first time loading, changing browser's URI e.g by tapping Back / Forward buttons)
@@ -491,7 +488,6 @@ public class CriteriaResource extends AbstractWebResource {
                 appliedCriteriaEntity,
                 createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
                         createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
-                        false,
                         isDefaultOrLink(saveAsName) || isInherited(saveAsName, () -> loadableConfigurations(user, miType, device, companionFinder, sharingModel).apply(of(saveAsName)).stream()), // if not [default, link, inherited] then it is own save-as; after discarding it is always not changed -- checking of isFreshCentreChanged is not needed
                         of(saveAsName),
                         empty(),
@@ -851,7 +847,7 @@ public class CriteriaResource extends AbstractWebResource {
      * @return
      */
     private static Map<String, Object> updateResultantCustomObject(
-            final Function<Optional<String>, Function<Boolean, Boolean>> centreDirtyCalculator,
+            final Function<Optional<String>, Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Boolean>> centreDirtyCalculator,
             final Class<? extends MiWithConfigurationSupport<?>> miType,
             final Optional<String> saveAsName,
             final User user,
@@ -864,9 +860,7 @@ public class CriteriaResource extends AbstractWebResource {
             final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
             final ICompanionObjectFinder companionFinder) {
-        final boolean centreChanged = isFreshCentreChanged(updatedFreshCentre, updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder));
-        resultantCustomObject.put(CENTRE_CHANGED, centreChanged);
-        resultantCustomObject.put(CENTRE_DIRTY, centreDirtyCalculator.apply(saveAsName).apply(centreChanged));
+        resultantCustomObject.put(CENTRE_DIRTY, centreDirtyCalculator.apply(saveAsName).apply(() -> updatedFreshCentre));
         resultantCustomObject.put(META_VALUES, createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)));
 
         // Resultant custom object contains information whether selection criteria is stale (config button colour).

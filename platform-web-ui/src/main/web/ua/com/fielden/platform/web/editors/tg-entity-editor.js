@@ -21,7 +21,6 @@ import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
 const AUTOCOMPLETE_ACTIVE_ONLY_KEY = '@@activeOnly';
 const AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY = '@@activeOnlyChanged';
-const CENTRE_CHANGED_KEY = '@@centreChanged';
 const CENTRE_DIRTY_KEY = '@@centreDirty';
 const LOAD_MORE_DATA_KEY = '@@loadMoreData';
 
@@ -540,13 +539,6 @@ export class TgEntityEditor extends TgEditor {
             },
 
             /**
-             * Callback for updating parent's _centreChanged with new value. Needed in activatable autocompleters that update 'autocomplete active only' option and thus may change centre dirtiness.
-             */
-            _updateCentreChanged: {
-                type: Function
-            },
-
-            /**
              * Callback for updating parent's _centreDirty with new value. Needed in activatable autocompleters that update 'autocomplete active only' option and thus may change centre dirtiness.
              */
             _updateCentreDirty: {
@@ -846,7 +838,6 @@ export class TgEntityEditor extends TgEditor {
 
         this._activeOnly = typeof customObject[AUTOCOMPLETE_ACTIVE_ONLY_KEY] === 'undefined' ? null : customObject[AUTOCOMPLETE_ACTIVE_ONLY_KEY];
         const activeOnlyChanged = typeof customObject[AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY] === 'undefined' ? null : customObject[AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY];
-        const centreChanged = typeof customObject[CENTRE_CHANGED_KEY] === 'undefined' ? null : customObject[CENTRE_CHANGED_KEY];
         const centreDirty = typeof customObject[CENTRE_DIRTY_KEY] === 'undefined' ? null : customObject[CENTRE_DIRTY_KEY];
         const loadMoreData = typeof customObject[LOAD_MORE_DATA_KEY] === 'undefined' ? false : customObject[LOAD_MORE_DATA_KEY];
 
@@ -855,9 +846,6 @@ export class TgEntityEditor extends TgEditor {
 
         let wasNewValueObserved = false;
         let indexOfFirstNewValue = -1;
-        if (centreChanged !== null) { // only update if received from server
-            this._updateCentreChanged(centreChanged);
-        }
         if (centreDirty !== null) { // only update if received from server
             this._updateCentreDirty(centreDirty);
         }

@@ -1,5 +1,24 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.util.Optional.ofNullable;
+import static ua.com.fielden.platform.entity.IContextDecomposer.AUTOCOMPLETE_ACTIVE_ONLY_KEY;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
+import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCentreContext;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntityWithoutConflicts;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaValidationPrototype;
+import static ua.com.fielden.platform.web.resources.webui.EntityAutocompletionResource.prepSearchString;
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.restlet.Context;
@@ -7,6 +26,7 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Post;
+
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -35,23 +55,6 @@ import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import static java.util.Optional.ofNullable;
-import static ua.com.fielden.platform.entity.IContextDecomposer.AUTOCOMPLETE_ACTIVE_ONLY_KEY;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
-import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.*;
-import static ua.com.fielden.platform.web.centre.CentreUtils.isFreshCentreChanged;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.*;
-import static ua.com.fielden.platform.web.resources.webui.EntityAutocompletionResource.prepSearchString;
-import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
-import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
-
 /**
  * The web resource for entity autocompletion serves as a back-end mechanism of searching entities by search strings and using additional parameters.
  *
@@ -60,7 +63,6 @@ import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentre
  */
 public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> extends AbstractWebResource {
     public static final String AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY = "@@activeOnlyChanged";
-    private static final String CENTRE_CHANGED_KEY = "@@centreChanged";
     private static final String CENTRE_DIRTY_KEY = "@@centreDirty";
     public static final String LOAD_MORE_DATA_KEY = "@@loadMoreData";
     
@@ -203,16 +205,13 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 final Optional<Boolean> activeOnlyChangedFromClientOpt = ofNullable((Boolean) centreContextHolder.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY)); // non-empty only for 'active only' button tap (always with 'true' value inside)
 
                 // based on whether 'active only' arrived from client, apply it or not, and calculate centre dirtiness
-                final Optional<Boolean> centreChangedOpt = activeOnlyFromClientOpt.map(activeOnlyFromClient -> {
+                final Optional<Boolean> centreDirtyOpt = activeOnlyFromClientOpt.map(activeOnlyFromClient -> {
                     final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = enhancedCentreEntityQueryCriteria.adjustCentre(centreManager -> { // always apply 'activeOnly' that arrived from client; i.e. override saved value with client-side one -- no interference with possibly opened same centre configuration in other browser's tab
                         centreManager.getFirstTick().setAutocompleteActiveOnly(centre.getEntityType(), origPropName, activeOnlyFromClient);
                     });
-                    return isFreshCentreChanged(updatedFreshCentre, updateCentre(user, miType, SAVED_CENTRE_NAME, enhancedCentreEntityQueryCriteria.saveAsName(), device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder));
-                });
-                final Optional<Boolean> centreDirtyOpt = activeOnlyFromClientOpt.map(activeOnlyFromClient -> {
                     return enhancedCentreEntityQueryCriteria.centreDirtyCalculator() // the centre may become dirty; need to retrieve and send this information
-                            .apply(enhancedCentreEntityQueryCriteria.saveAsName())
-                            .apply(centreChangedOpt.get()); // do it efficiently without the need to retrieve fresh centre again
+                        .apply(enhancedCentreEntityQueryCriteria.saveAsName())
+                        .apply(() -> updatedFreshCentre); // do it efficiently without the need to retrieve fresh centre again
                 });
                 final boolean activeOnly = activeOnlyFromClientOpt.orElseGet(() -> enhancedCentreEntityQueryCriteria.freshCentre().getFirstTick().getAutocompleteActiveOnly(centre.getEntityType(), origPropName));
 
@@ -222,7 +221,6 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 // return all the necessary custom data back to the client
                 customObject.put(AUTOCOMPLETE_ACTIVE_ONLY_KEY, activeOnly);
                 activeOnlyChangedFromClientOpt.ifPresent(activeOnlyChanged -> customObject.put(AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY, activeOnlyChanged));
-                centreChangedOpt.ifPresent(centreChanged -> customObject.put(CENTRE_CHANGED_KEY, centreChanged));
                 centreDirtyOpt.ifPresent(centreDirty -> customObject.put(CENTRE_DIRTY_KEY, centreDirty));
             }
 
