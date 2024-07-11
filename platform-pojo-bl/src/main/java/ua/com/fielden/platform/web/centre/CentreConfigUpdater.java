@@ -1,28 +1,16 @@
 package ua.com.fielden.platform.web.centre;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.Dependent;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Required;
-import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
-import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
-import ua.com.fielden.platform.entity.annotation.mutator.Handler;
-import ua.com.fielden.platform.entity.annotation.mutator.PropParam;
-import ua.com.fielden.platform.entity.annotation.mutator.StrParam;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.mutator.*;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.validation.GreaterOrEqualValidator;
 import ua.com.fielden.platform.entity.validation.GreaterValidator;
 import ua.com.fielden.platform.entity.validation.MaxValueValidator;
 import ua.com.fielden.platform.web.centre.definers.CentreConfigUpdaterSortingValsDefiner;
+
+import java.util.*;
 
 /**
  * Functional entity for updating centre configuration: centre's column visibility / order and centre's sorting.
@@ -54,6 +42,10 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
     @IsProperty
     @Title(value = "Centre Dirty", desc = "Indicates whether successful saving of this entity actually changed centre configuration or it is New (aka default, link or inherited). Only populated when centre sorting wasn't changed.")
     private boolean centreDirty;
+
+    @IsProperty
+    @Title(value = "Centre Changed", desc = "Indicates whether successful saving of this entity actually changed centre configuration. Only populated when centre sorting wasn't changed.")
+    private boolean centreChanged;
 
     @IsProperty
     @Title(value = "Page Capacity", desc = "The maximum number of entities retrieved.")
@@ -121,6 +113,16 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
 
     public Integer getPageCapacity() {
         return pageCapacity;
+    }
+
+    @Observable
+    public CentreConfigUpdater setCentreChanged(final boolean centreChanged) {
+        this.centreChanged = centreChanged;
+        return this;
+    }
+
+    public boolean isCentreChanged() {
+        return centreChanged;
     }
 
     @Observable

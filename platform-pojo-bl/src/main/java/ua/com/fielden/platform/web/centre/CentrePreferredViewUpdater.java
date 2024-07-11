@@ -1,14 +1,10 @@
 package ua.com.fielden.platform.web.centre;
 
-import static ua.com.fielden.platform.entity.NoKey.NO_KEY;
-
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.NoKey;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
+
+import static ua.com.fielden.platform.entity.NoKey.NO_KEY;
 
 /**
  * Entity to update centre's preferred view.
@@ -28,6 +24,10 @@ public class CentrePreferredViewUpdater extends AbstractFunctionalEntityWithCent
     @Title(value = "Centre dirty?", desc = "Indicates whether successful saving of this entity actually changed the centre configuration or it is 'new' (i.e. default, link or inherited).")
     private boolean centreDirty;
 
+    @IsProperty
+    @Title(value = "Centre changed?", desc = "Indicates whether successful saving of this entity actually changed the centre configuration.")
+    private boolean centreChanged;
+
     public CentrePreferredViewUpdater() {
         setKey(NO_KEY);
     }
@@ -40,6 +40,16 @@ public class CentrePreferredViewUpdater extends AbstractFunctionalEntityWithCent
 
     public Integer getPreferredView() {
         return preferredView;
+    }
+
+    @Observable
+    public CentrePreferredViewUpdater setCentreChanged(final boolean centreChanged) {
+        this.centreChanged = centreChanged;
+        return this;
+    }
+
+    public boolean isCentreChanged() {
+        return centreChanged;
     }
 
     @Observable

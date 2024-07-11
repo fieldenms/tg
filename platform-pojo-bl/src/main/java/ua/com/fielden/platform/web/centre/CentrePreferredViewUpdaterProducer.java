@@ -31,7 +31,9 @@ public class CentrePreferredViewUpdaterProducer extends DefaultEntityProducerWit
                 action.setPreferredView(preferredView);
                 centreManager.setPreferredView(preferredView);
             });
-            action.setCentreDirty(criteriaEntityBeingUpdated.isCentreDirty());
+            final boolean centreChanged = criteriaEntityBeingUpdated.isCentreChanged();
+            action.setCentreChanged(centreChanged);
+            action.setCentreDirty(criteriaEntityBeingUpdated.isCentreDirty(centreChanged));
         }
         return action;
     }

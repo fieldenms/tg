@@ -1,13 +1,12 @@
 package ua.com.fielden.platform.web.centre;
 
-import java.util.Map;
-
 import com.google.inject.Inject;
-
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
+
+import java.util.Map;
 
 /**
  * A producer for new instances of entity {@link CentreColumnWidthConfigUpdater}.
@@ -41,7 +40,9 @@ public class CentreColumnWidthConfigUpdaterProducer extends DefaultEntityProduce
                 });
             });
             // centre will be changed after this action; changes can be discarded using DISCARD button on selection criteria
-            action.setCentreDirty(criteriaEntityBeingUpdated.isCentreDirty());
+            final boolean centreChanged = criteriaEntityBeingUpdated.isCentreChanged();
+            action.setCentreChanged(centreChanged);
+            action.setCentreDirty(criteriaEntityBeingUpdated.isCentreDirty(centreChanged));
         }
         return action;
     }

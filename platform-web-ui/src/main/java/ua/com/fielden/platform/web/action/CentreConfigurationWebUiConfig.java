@@ -1,13 +1,20 @@
 package ua.com.fielden.platform.web.action;
 
+import com.google.inject.Injector;
+import ua.com.fielden.platform.web.centre.*;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
+import ua.com.fielden.platform.web.minijs.JsCode;
+import ua.com.fielden.platform.web.view.master.EntityMaster;
+import ua.com.fielden.platform.web.view.master.api.IMaster;
+import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
+
 import static java.util.Optional.empty;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_DEFAULT_WIDTH;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
-import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
-import static ua.com.fielden.platform.web.interfaces.ILayout.Device.MOBILE;
-import static ua.com.fielden.platform.web.interfaces.ILayout.Device.TABLET;
+import static ua.com.fielden.platform.web.interfaces.ILayout.Device.*;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.html;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
@@ -16,38 +23,6 @@ import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkGridF
 import static ua.com.fielden.platform.web.view.master.EntityMaster.noUiFunctionalMaster;
 import static ua.com.fielden.platform.web.view.master.api.actions.MasterActions.REFRESH;
 import static ua.com.fielden.platform.web.view.master.api.actions.MasterActions.SAVE;
-
-import com.google.inject.Injector;
-
-import ua.com.fielden.platform.web.centre.AbstractCentreConfigCommitAction;
-import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
-import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdaterProducer;
-import ua.com.fielden.platform.web.centre.CentreConfigConfigureAction;
-import ua.com.fielden.platform.web.centre.CentreConfigConfigureActionProducer;
-import ua.com.fielden.platform.web.centre.CentreConfigDeleteAction;
-import ua.com.fielden.platform.web.centre.CentreConfigDeleteActionProducer;
-import ua.com.fielden.platform.web.centre.CentreConfigDuplicateAction;
-import ua.com.fielden.platform.web.centre.CentreConfigDuplicateActionProducer;
-import ua.com.fielden.platform.web.centre.CentreConfigEditAction;
-import ua.com.fielden.platform.web.centre.CentreConfigEditActionProducer;
-import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
-import ua.com.fielden.platform.web.centre.CentreConfigLoadActionProducer;
-import ua.com.fielden.platform.web.centre.CentreConfigNewAction;
-import ua.com.fielden.platform.web.centre.CentreConfigNewActionProducer;
-import ua.com.fielden.platform.web.centre.CentreConfigSaveAction;
-import ua.com.fielden.platform.web.centre.CentreConfigSaveActionProducer;
-import ua.com.fielden.platform.web.centre.CentreConfigShareAction;
-import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
-import ua.com.fielden.platform.web.centre.CentreConfigUpdaterProducer;
-import ua.com.fielden.platform.web.centre.CentrePreferredViewUpdater;
-import ua.com.fielden.platform.web.centre.CentrePreferredViewUpdaterProducer;
-import ua.com.fielden.platform.web.centre.OverrideCentreConfig;
-import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
-import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
-import ua.com.fielden.platform.web.minijs.JsCode;
-import ua.com.fielden.platform.web.view.master.EntityMaster;
-import ua.com.fielden.platform.web.view.master.api.IMaster;
-import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
 /**
  * Web UI configuration for centre actions.
@@ -129,6 +104,7 @@ public class CentreConfigurationWebUiConfig {
                                     + "        return self.retrieve().then(function () { self.run(undefined, true); });\n"
                                     + "    } else {\n"
                                     + "        self.$.egi.adjustColumnsVisibility(functionalEntity.get('chosenIds').map(column => column === 'this' ? '' : column));\n"
+                                    + "        self.$.selection_criteria._centreChanged = functionalEntity.get('centreChanged');\n"
                                     + "        self.$.selection_criteria._centreDirty = functionalEntity.get('centreDirty');\n"
                                     + "    }\n"
                                     + ""))

@@ -143,11 +143,28 @@ const TgSelectionCriteriaBehaviorImpl = {
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         /**
+         * Indicates whether currently loaded centre configuration is changed [default, link, inherited, own save-as].
+         */
+        _centreChanged: {
+            type: Boolean,
+            value: false
+        },
+
+        /**
          * Indicates whether currently loaded centre configuration is [default, link or inherited] or changed [own save-as].
          */
         _centreDirty: {
             type: Boolean,
             value: false
+        },
+
+        /**
+         * Indicates whether currently loaded centre configuration is changed [default, link, inherited, own save-as] or criteria editors are being edited at the moment.
+         */
+        _centreChangedOrEdited: {
+            type: Boolean,
+            computed: '_calculateCentreChangedOrEdited(_centreChanged, _editedPropsExist)',
+            notify: true
         },
 
         /**
@@ -274,6 +291,13 @@ const TgSelectionCriteriaBehaviorImpl = {
         },
 
         /**
+         * Callback for updating _centreChanged with new value. Can be bound to child elements, e.g. activatable autocompleters that update 'autocomplete active only' option.
+         */
+        _updateCentreChanged: {
+            type: Function
+        },
+
+        /**
          * Callback for updating _centreDirty with new value. Can be bound to child elements, e.g. activatable autocompleters that update 'autocomplete active only' option.
          */
         _updateCentreDirty: {
@@ -299,6 +323,10 @@ const TgSelectionCriteriaBehaviorImpl = {
 
         this.staleCriteriaMessage = null;
 
+        self._updateCentreChanged = newCentreChanged => {
+            this._centreChanged = newCentreChanged;
+        };
+
         self._updateCentreDirty = newCentreDirty => {
             this._centreDirty = newCentreDirty;
         };
@@ -313,6 +341,7 @@ const TgSelectionCriteriaBehaviorImpl = {
                     pageCount: customObject.pageCount,
                     pageNumber: customObject.pageNumber,
                     metaValues: customObject.metaValues,
+                    centreChanged: customObject.centreChanged,
                     centreDirty: customObject.centreDirty,
                     renderingHints: customObject.renderingHints || [],
                     dynamicColumns: customObject.dynamicColumns || {},
@@ -357,6 +386,7 @@ const TgSelectionCriteriaBehaviorImpl = {
                 this.postRun(null, null, result);
             } else {
                 this._setPropertyModel(result.metaValues);
+                this._centreChanged = result.centreChanged;
                 this._centreDirty = result.centreDirty;
 
                 const messages = this._toastMessages("Running", criteriaEntity);
@@ -440,6 +470,7 @@ const TgSelectionCriteriaBehaviorImpl = {
             this.staleCriteriaMessage = customObject.staleCriteriaMessage;
         }
         this._setPropertyModel(customObject.metaValues);
+        this._centreChanged = customObject.centreChanged;
         this._centreDirty = customObject.centreDirty;
         if (typeof customObject.saveAsDesc !== 'undefined') {
             this.saveAsDesc = customObject.saveAsDesc;
@@ -634,6 +665,10 @@ const TgSelectionCriteriaBehaviorImpl = {
     },
     _canLast: function (pageNumber, pageCount) {
         return !(pageNumber + 1 >= pageCount);
+    },
+
+    _calculateCentreChangedOrEdited: function (centreChanged, _editedPropsExist) {
+        return _editedPropsExist || (centreChanged === true);
     },
 
     _calculateCentreDirtyOrEdited: function (centreDirty, _editedPropsExist) {

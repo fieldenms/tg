@@ -1,17 +1,6 @@
 package ua.com.fielden.platform.entity_centre.review.criteria;
 
-import static java.util.Optional.empty;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
-
 import com.google.inject.Inject;
-
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.dashboard.DashboardRefreshFrequency;
@@ -26,6 +15,16 @@ import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
+
+import static java.util.Optional.empty;
 
 /**
  * This class is the base class to enhance with criteria and resultant properties.
@@ -61,8 +60,9 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Function<Optional<String>, Boolean> centreRunAutomaticallyGetter;
     private Supplier<Boolean> defaultRunAutomaticallySupplier;
     private Function<Optional<String>, Optional<String>> centreConfigUuidGetter;
-    private Supplier<Boolean> centreDirtyGetter;
-    private Function<Optional<String>, Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Boolean>> centreDirtyCalculator;
+    private Function<Boolean, Boolean> centreDirtyGetter;
+    private Supplier<Boolean> centreChangedGetter;
+    private Function<Optional<String>, Function<Boolean, Boolean>> centreDirtyCalculator;
     private Function<Optional<String>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> criteriaValidationPrototypeCreator;
     private Function<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>, Function<Optional<String>, Function<Optional<Optional<String>>, Function<Optional<Integer>, Function<Optional<Optional<String>>, Map<String, Object>>>>>> centreCustomObjectGetter;
     /**
@@ -80,7 +80,6 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     /**
      * Constructs {@link EnhancedCentreEntityQueryCriteria} with specified {@link IValueMatcherFactory}. Needed mostly for instantiating through injector.
      *
-     * @param entityDao
      * @param valueMatcherFactory
      */
     @SuppressWarnings("rawtypes")
@@ -351,20 +350,28 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return criteriaValidationPrototypeCreator.apply(saveAsName);
     }
 
-    public void setCentreDirtyCalculator(final Function<Optional<String>, Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Boolean>> centreDirtyCalculator) {
+    public void setCentreDirtyCalculator(final Function<Optional<String>, Function<Boolean, Boolean>> centreDirtyCalculator) {
         this.centreDirtyCalculator = centreDirtyCalculator;
     }
 
-    public Function<Optional<String>, Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Boolean>> centreDirtyCalculator() {
+    public Function<Optional<String>, Function<Boolean, Boolean>> centreDirtyCalculator() {
         return centreDirtyCalculator;
     }
 
-    public void setCentreDirtyGetter(final Supplier<Boolean> centreDirtyGetter) {
+    public void setCentreDirtyGetter(final Function<Boolean, Boolean> centreDirtyGetter) {
         this.centreDirtyGetter = centreDirtyGetter;
     }
 
-    public boolean isCentreDirty() {
-        return centreDirtyGetter.get();
+    public boolean isCentreDirty(final boolean centreChanged) {
+        return centreDirtyGetter.apply(centreChanged);
+    }
+
+    public void setCentreChangedGetter(final Supplier<Boolean> centreChangedGetter) {
+        this.centreChangedGetter = centreChangedGetter;
+    }
+
+    public boolean isCentreChanged() {
+        return centreChangedGetter.get();
     }
 
     public void setExportQueryRunner(final Function<Map<String, Object>, Stream<AbstractEntity<?>>> exportQueryRunner) {
