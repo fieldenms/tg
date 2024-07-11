@@ -3,6 +3,7 @@ package ua.com.fielden.platform.utils;
 import org.junit.Test;
 import ua.com.fielden.platform.types.tuples.T2;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -179,7 +180,23 @@ public class StreamUtilsTest {
         assertEquals(List.of(pair("one", 1), pair("two", 2)), 
                 StreamUtils.distinct(elements.stream(), Pair::getKey).toList());
     }
-    
+
+    @Test
+    public void distinct_returns_a_stream_whose_spliterator_provides_distinct_elements() {
+        final var splitr = StreamUtils.distinct(Stream.of("fun", "proc", "function", "routine"), s -> s.charAt(0)).spliterator();
+        final var distinct = new ArrayList<String>();
+        splitr.forEachRemaining(distinct::add);
+        assertEquals(List.of("fun", "proc", "routine"), distinct);
+    }
+
+    @Test
+    public void distinct_returns_a_stream_whose_iterator_provides_distinct_elements() {
+        final var iter = StreamUtils.distinct(Stream.of("fun", "proc", "function", "routine"), s -> s.charAt(0)).iterator();
+        final var distinct = new ArrayList<String>();
+        iter.forEachRemaining(distinct::add);
+        assertEquals(List.of("fun", "proc", "routine"), distinct);
+    }
+
     @Test
     public void can_zip_streams_of_different_size() {
         assertEquals(listOf(0, 2, 4), zip(Stream.of(0, 1, 2), Stream.of(0, 1, 2, 3), (x, y) -> x+y).toList());
