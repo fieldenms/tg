@@ -1,16 +1,5 @@
 package ua.com.fielden.platform.domaintree.centre.impl;
 
-import static java.lang.String.format;
-import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.areDifferent;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation.IAddToCriteriaTickRepresentation;
@@ -19,12 +8,7 @@ import ua.com.fielden.platform.domaintree.centre.IOrderingManager;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.IWidthManager;
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager;
-import ua.com.fielden.platform.domaintree.impl.EnhancementLinkedRootsSet;
-import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
-import ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap;
-import ua.com.fielden.platform.domaintree.impl.EnhancementSet;
+import ua.com.fielden.platform.domaintree.impl.*;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum;
@@ -32,6 +16,12 @@ import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+
+import java.util.*;
+
+import static java.lang.String.format;
+import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.areDifferent;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 /**
  * Criteria (entity centre) domain tree manager. Includes support for checking (from base {@link AbstractDomainTreeManager}). <br>
@@ -607,7 +597,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         }
 
         @Override
-        public boolean equals(final Object obj) {
+        public boolean selectionCriteriaEquals(final Object obj) {
             if (this == obj) {
                 return true;
             }
@@ -618,13 +608,6 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
                 return false;
             }
             final AddToCriteriaTickManager other = (AddToCriteriaTickManager) obj;
-            if (columnsNumber == null) {
-                if (other.columnsNumber != null) {
-                    return false;
-                }
-            } else if (!columnsNumber.equals(other.columnsNumber)) {
-                return false;
-            }
             if (rootTypes == null) {
                 if (other.rootTypes != null) {
                     return false;
@@ -660,6 +643,22 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
                 return false;
             }
             if (!propertiesValues2.equals(other.propertiesValues2)) {
+                return false;
+            }
+            return true;
+        }
+
+        @Override
+        public boolean equals(final Object obj) {
+            if (!selectionCriteriaEquals(obj)) {
+                return false;
+            }
+            final AddToCriteriaTickManager other = (AddToCriteriaTickManager) obj;
+            if (columnsNumber == null) {
+                if (other.columnsNumber != null) {
+                    return false;
+                }
+            } else if (!columnsNumber.equals(other.columnsNumber)) {
                 return false;
             }
             if (!propertiesAutocompleteActiveOnly.equals(other.propertiesAutocompleteActiveOnly)) {

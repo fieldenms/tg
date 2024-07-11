@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.domaintree.centre;
 
-import java.util.List;
-
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
@@ -12,6 +10,8 @@ import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum;
 import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
 import ua.com.fielden.platform.types.tuples.T2;
+
+import java.util.List;
 
 /**
  * This interface defines how domain tree can be managed for <b>entity centres</b>. <br>
@@ -736,6 +736,12 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          */
         @Override
         IAddToCriteriaTickManager moveToTheEnd(final Class<?> root, final String what);
+
+        /**
+         * Indicates whether selection criteria portion of this tick manager equals to selection criteria portion of other tick manager.
+         */
+        boolean selectionCriteriaEquals(final Object obj);
+
     }
 
     /**
