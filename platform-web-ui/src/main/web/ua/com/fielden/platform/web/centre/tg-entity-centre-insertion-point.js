@@ -34,10 +34,10 @@ import { UnreportableError } from '/resources/components/tg-global-error-handler
 
 const ST_MINIMISED = 'minimised';
 const ST_MAXIMISED = 'maximised';
-const ST_DETACHED = 'detached';
+const ST_DETACHED_VIEW = 'detachedView';
 
-const ST_DETACHED_WIDTH = 'detachedWidth';
-const ST_DETACHED_HEIGHT = 'detachedHeight';
+const ST_DETACHED_VIEW_WIDTH = 'detachedWidth';
+const ST_DETACHED_VIEW_HEIGHT = 'detachedHeight';
 const ST_PREF_WIDTH = 'prefWidth';
 const ST_PREF_HEIGHT = 'prefHeight';
 const ST_POS_X = "posX";
@@ -55,7 +55,7 @@ const template = html`
             position: relative;
         }
 
-        :host(:not([detached]):not([maximised]):not([alternative-view])) {
+        :host(:not([detached-view]):not([maximised]):not([alternative-view])) {
             margin: 10px;
         }
 
@@ -137,7 +137,7 @@ const template = html`
     <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, alternativeView)]]">
         <span class="title-text truncate" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
         <div class="layout horizontal centre">
-            <paper-icon-button class="title-bar-button" icon="[[_detachButtonIcon(detached)]]" on-tap="_toggleDetach" tooltip-text$="[[_detachTooltip(detached)]]"></paper-icon-button>
+            <paper-icon-button class="title-bar-button" icon="[[_detachButtonIcon(detachedView)]]" on-tap="_toggleDetach" tooltip-text$="[[_detachTooltip(detachedView)]]"></paper-icon-button>
             <paper-icon-button class="title-bar-button" icon="[[_minimiseButtonIcon(minimised)]]" on-tap="_toggleMinimised" tooltip-text$="[[_minimisedTooltip(minimised)]]" disabled="[[maximised]]"></paper-icon-button>
             <paper-icon-button class="title-bar-button" style$="[[_maximiseButtonStyle(maximised)]]" icon="icons:open-in-new" on-tap="_toggleMaximise" tooltip-text$="[[_maximiseButtonTooltip(maximised)]]" disabled="[[minimised]]"></paper-icon-button>
         </div>
@@ -147,7 +147,7 @@ const template = html`
             <slot id="entitySpecificActions" slot="entity-specific-action" name="entity-specific-action"></slot>
             <slot id="standartActions" slot="standart-action" name="standart-action"></slot>
         </tg-responsive-toolbar>
-        <div id="loadableContent" class="flex layout horizontal">
+        <div id="loadableContent" class="flex layout horizontal relative">
             <tg-element-loader id="elementLoader"></tg-element-loader>
         </div>
         <div class="lock-layer" lock$="[[lock]]"></div>
@@ -341,10 +341,10 @@ Polymer({
             observer: "_minimisedChanged"
         },
 
-        detached: {
+        detachedView: {
             type: Boolean,
             reflectToAttribute: true,
-            observer: "_detachedChanged"
+            observer: "_detachedViewChanged"
         }
     },
 
@@ -354,6 +354,9 @@ Polymer({
         this.triggerElement = this.$.insertionPointContent;
         this.addEventListener('tg-config-uuid-before-change', tearDownEvent); // prevent propagating of centre config UUID event to the top (tg-view-with-menu) to avoid browser URI change
         this.addEventListener('tg-config-uuid-changed', tearDownEvent); // prevent propagating of centre config UUID event to the top (tg-view-with-menu) to avoid configUuid change on parent standalone centre
+        this.positionTarget = document.body;
+        this.horizontalAlign = 'center';
+        this.verticalAlign = 'middle';
     },
 
     attached: function () {
@@ -554,7 +557,7 @@ Polymer({
         if (_element && contextRetriever) {
             this.minimised = !!(this._getProp(ST_MINIMISED) && true);
             this.maximised = !!(this._getProp(ST_MAXIMISED) && true);
-            this.detached = !!(this._getProp(ST_DETACHED) && true);
+            this.detachedView = !!(this._getProp(ST_DETACHED_VIEW) && true);
         }
     },
 
@@ -674,8 +677,8 @@ Polymer({
     _maximisedChanged: function (newValue) {
         if (this.contextRetriever) {
             if (newValue) {
-                if (!this.detached) {
-                    if (!this._getPair(ST_DETACHED_WIDTH, ST_DETACHED_HEIGHT)) {
+                if (!this.detachedView) {
+                    if (!this._getPair(ST_DETACHED_VIEW_WIDTH, ST_DETACHED_VIEW_HEIGHT)) {
                         this._saveDimensions();
                     }
                 }
@@ -684,7 +687,7 @@ Polymer({
                 this.focus();
             } else {
                 InsertionPointManager.removeInsertionPoint(this);
-                if (!this.detached) {
+                if (!this.detachedView) {
                     this.contextRetriever().insertionPointManager.remove(this);
                     if (this.contextRetriever && this.contextRetriever().$.centreResultContainer) {
                         this.contextRetriever().$.centreResultContainer.focus();
@@ -693,6 +696,7 @@ Polymer({
             }
             this._setDimension();
             this._setPosition();
+            this.notifyResize();
         }
     },
 
@@ -719,7 +723,7 @@ Polymer({
     _minimisedChanged: function (newValue) {
         if (this.contextRetriever) {
             if (newValue) {
-                if (!this._getPair(ST_DETACHED_WIDTH, ST_DETACHED_HEIGHT)) {
+                if (!this._getPair(ST_DETACHED_VIEW_WIDTH, ST_DETACHED_VIEW_HEIGHT)) {
                     this._saveDimensions();
                 }
             }
@@ -730,29 +734,29 @@ Polymer({
 
     /******************** detach button related logic *************************/
 
-    _detachButtonIcon: function(detached) {
-        return detached ? "tg-icons:pin" : "tg-icons:unpin";
+    _detachButtonIcon: function(detachedView) {
+        return detachedView ? "tg-icons:pin" : "tg-icons:unpin";
     },
 
     _toggleDetach: function (e) {
-        this.detached = !this.detached;
-        this._saveState(ST_DETACHED, this.detached);
+        this.detachedView = !this.detachedView;
+        this._saveState(ST_DETACHED_VIEW, this.detachedView);
         tearDownEvent(e);
     },
 
-    _detachTooltip: function (detached) {
-        return detached ? "Attach": "Detach";
+    _detachTooltip: function (detachedView) {
+        return detachedView ? "Attach": "Detach";
     },
 
-    _detachedChanged: function (newValue) {
+    _detachedViewChanged: function (newValue) {
         if (this.contextRetriever) {
             if (newValue) {
-                if (!this._getPair(ST_DETACHED_WIDTH, ST_DETACHED_HEIGHT)) {
+                if (!this._getPair(ST_DETACHED_VIEW_WIDTH, ST_DETACHED_VIEW_HEIGHT)) {
                     this._saveDimensions();
                 }
                 this.contextRetriever().insertionPointManager.add(this);
                 this.focus();
-            } else {
+            } else if (!this.maximised){
                 this.contextRetriever().insertionPointManager.remove(this);
                 if (this.contextRetriever && this.contextRetriever().$.centreResultContainer) {
                     this.contextRetriever().$.centreResultContainer.focus();
@@ -773,8 +777,8 @@ Polymer({
 
     /****************Miscellaneous methods for restoring size and dimension***********************/
     _setDimension: function () {
-        if (this.detached) {
-            let dimToApply = this._getPair(ST_DETACHED_WIDTH, ST_DETACHED_HEIGHT);
+        if (this.detachedView) {
+            let dimToApply = this._getPair(ST_DETACHED_VIEW_WIDTH, ST_DETACHED_VIEW_HEIGHT);
             if (!dimToApply) {
                 dimToApply = this._getPair(ST_PREF_WIDTH, ST_PREF_HEIGHT);
             }
@@ -813,7 +817,7 @@ Polymer({
     },
 
     _setPosition: function () {
-        if (this.detached) {
+        if (this.detachedView) {
             this.style.position = "fixed";
             if (!this.maximised) {
                 let posToApply = this._getPair(ST_POS_X, ST_POS_Y);
@@ -838,6 +842,15 @@ Polymer({
                 this.style.left = "0";
             }
         }
+    },
+
+    refit: function() {
+        IronFitBehavior.refit.call(this);
+
+        // There is a need to reset max-width and max-height styles after every refit call.
+        // This is necessary to make dialog being able to 'maximise' to large dimensions.
+        this.style.removeProperty('max-height');
+        this.style.removeProperty('max-width');
     },
 
     /*********************************************************************************************/
@@ -883,8 +896,8 @@ Polymer({
     _saveDimensions: function () {
         const rect = this.getBoundingClientRect();
         if (rect && rect.width && rect.height) {
-            localStorage.setItem(this._generateKey(ST_DETACHED_WIDTH), rect.width + "px");
-            localStorage.setItem(this._generateKey(ST_DETACHED_HEIGHT), rect.height + "px");
+            localStorage.setItem(this._generateKey(ST_DETACHED_VIEW_WIDTH), rect.width + "px");
+            localStorage.setItem(this._generateKey(ST_DETACHED_VIEW_HEIGHT), rect.height + "px");
         }
     },
 
