@@ -70,6 +70,17 @@ public final class RichText {
         return new RichText(sanitized, coreText);
     }
 
+    /**
+     * Creates {@link RichText} from Markdown without sanitizing the input, hence <i>unsafe</i>.
+     * <p>
+     * This is effectively an escape hatch, and is therefore private, accessible only via reflection. This method should
+     * be used <b>strictly in safe contexts</b> (i.e., when it is guaranteed that the formatted text had been sanitized),
+     * e.g., when constructring values retrieved from the database.
+     */
+    private static RichText fromMarkdownUnsafe(final String formattedText, final String coreText) {
+        return new RichText(formattedText, coreText);
+    }
+
     public String formattedText() {
         return formattedText;
     }
