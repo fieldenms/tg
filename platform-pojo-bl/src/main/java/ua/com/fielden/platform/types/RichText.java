@@ -1,7 +1,11 @@
 package ua.com.fielden.platform.types;
 
+import org.commonmark.node.AbstractVisitor;
+import org.commonmark.node.HtmlBlock;
+import org.commonmark.node.HtmlInline;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
+import org.commonmark.renderer.markdown.MarkdownRenderer;
 import org.commonmark.renderer.text.TextContentRenderer;
 import org.owasp.html.HtmlChangeListener;
 import org.owasp.html.HtmlPolicyBuilder;
@@ -14,6 +18,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
@@ -64,10 +69,8 @@ public final class RichText {
      * Throws an exception if embedded HTML is deemed to be unsafe.
      */
     public static RichText fromMarkdown(final String input) {
-        final String sanitized = sanitizeMarkdown(input).getInstanceOrElseThrow();
-        final Node root = Parser.builder().build().parse(sanitized);
-        final String coreText = TextContentRenderer.builder().build().render(root);
-        return new RichText(sanitized, coreText);
+        final RichText richText = sanitizeMarkdown(input).getInstanceOrElseThrow();
+        return richText;
     }
 
     /**
@@ -107,10 +110,20 @@ public final class RichText {
         return "RichText[\n%s\n]".formatted(formattedText);
     }
 
+    /**
+     * Sanitizes the input and returns a successful result if the input is safe, otherwise returns a failure.
+     * <p>
+     * Sanitization is performed only for those parts of the input that contain HTML:
+     * <a href="https://spec.commonmark.org/0.31.2/#html-blocks">HTML Blocks</a> and
+     * <a href="https://spec.commonmark.org/0.31.2/#raw-html">Raw HTML (Inline HTML)</a>.
+     * This selective sanitization avoids messing up other, non-HTML parts of the input.
+     *
+     * @return Result of RichText
+     */
     static Result sanitizeMarkdown(final String input) {
         // consider invalid if there are policy violations
         final List<String> violations = new ArrayList<>();
-        final String sanitized = POLICY_FACTORY.sanitize(input, new HtmlChangeListener<>() {
+        final var listener = new HtmlChangeListener<>() {
             @Override
             public void discardedTag(@Nullable Object context, String elementName) {
                 violations.add("Violating tag: %s".formatted(elementName));
@@ -120,14 +133,37 @@ public final class RichText {
             public void discardedAttributes(@Nullable Object context, String tagName, String... attributeNames) {
                 violations.add("Tag [%s] has violating attributes: %s".formatted(tagName, String.join(", ", attributeNames)));
             }
-        }, null);
+        };
+        final Function<String, String> sanitize = in -> POLICY_FACTORY.sanitize(in, listener, null);
+
+        final Node root = Parser.builder().build().parse(input);
+
+        root.accept(new AbstractVisitor() {
+            @Override
+            public void visit(HtmlBlock htmlBlock) {
+                htmlBlock.setLiteral(sanitize.apply(htmlBlock.getLiteral()));
+                // this kind of node does not have children, so we need not process them, but let's do it just in case of parser bugs
+                visitChildren(htmlBlock);
+            }
+
+            @Override
+            public void visit(HtmlInline htmlInline) {
+                htmlInline.setLiteral(sanitize.apply(htmlInline.getLiteral()));
+                // this kind of node does not have children, so we need not process them, but let's do it just in case of parser bugs
+                visitChildren(htmlInline);
+            }
+        });
+
         if (!violations.isEmpty()) {
             return failure(input, "Input contains unsafe HTML:\n" +
-                    zip(violations.stream(), integers(1).boxed(), (e, i) -> "%s. %s".formatted(i, e))
-                            .collect(joining("\n")));
+                                  zip(violations.stream(), integers(1).boxed(), (e, i) -> "%s. %s".formatted(i, e))
+                                          .collect(joining("\n")));
         }
-        // always use sanitizer's output as successful value
-        return successful(sanitized);
+
+        // reconstruct from sanitized parse tree
+        final String formattedText = MarkdownRenderer.builder().build().render(root);
+        final String coreText = TextContentRenderer.builder().build().render(root);
+        return successful(new RichText(formattedText, coreText));
     }
 
     // @formatter:off
