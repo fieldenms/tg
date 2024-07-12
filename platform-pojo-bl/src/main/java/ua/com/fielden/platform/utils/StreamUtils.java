@@ -344,6 +344,43 @@ public class StreamUtils {
     }
 
     /**
+     * Pairs each elements of a stream with a number and applies the given function to obtain an element of
+     * the resulting stream. Numbers are drawn from an infinite stream starting from {@code start} and increasing by 1.
+     */
+    public static <X, Y> Stream<Y> enumerate(final BaseStream<X, ?> xs, final int start, final EnumerateF<? super X, Y> f) {
+        // construct an iterator by hand instead of using zip() to avoid boxing of integers
+        final Iterator<Y> ysIterator = new Iterator<Y>() {
+            final Iterator<X> xsIterator = xs.iterator();
+            int i = start;
+
+            @Override
+            public boolean hasNext() {
+                return xsIterator.hasNext();
+            }
+
+            @Override
+            public Y next() {
+                final Y y = f.apply(xsIterator.next(), i);
+                i += 1;
+                return y;
+            }
+        };
+        return StreamSupport.stream(spliteratorUnknownSize(ysIterator, 0), false);
+    }
+
+    /**
+     * {@link #enumerate(BaseStream, int, EnumerateF)} starting from 0.
+     */
+    public static <X, Y> Stream<Y> enumerate(final BaseStream<X, ?> xs, final EnumerateF<? super X, Y> f) {
+        return enumerate(xs, 0, f);
+    }
+
+    @FunctionalInterface
+    public interface EnumerateF<X, Y> {
+        Y apply(X x, int i);
+    }
+
+    /**
      * Builds an immutable map from streams of keys and values.
      * Terminates upon reaching the end of the shorter stream.
      *

@@ -320,4 +320,16 @@ public class StreamUtilsTest {
                                            (s, i) -> s.repeat(i), (s, i) -> i * s.length()));
     }
 
+    @Test
+    public void enumerate_pairs_each_stream_element_with_its_sequential_number_starting_from_0_by_default() {
+        assertEquals(List.of("0:a", "1:b"),
+                     enumerate(Stream.of("a", "b"), (x, i) -> "%s:%s".formatted(i, x)).toList());
+    }
+
+    @Test
+    public void enumerate_pairs_each_stream_element_with_its_sequential_number_starting_from_the_given_one() {
+        assertEquals(List.of("4:a", "5:b"),
+                     enumerate(Stream.of("a", "b"), 4, (x, i) -> "%s:%s".formatted(i, x)).toList());
+    }
+
 }
