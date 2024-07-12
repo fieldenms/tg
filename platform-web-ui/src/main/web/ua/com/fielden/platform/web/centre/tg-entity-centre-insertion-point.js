@@ -134,7 +134,7 @@ const template = html`
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning tg-entity-centre-styles paper-material-styles"></style>
-    <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, alternativeView)]]">
+    <div id="titleBar" class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, alternativeView)]]" on-track="_moveDialog">
         <span class="title-text truncate" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
         <div class="layout horizontal centre">
             <paper-icon-button class="title-bar-button" icon="[[_detachButtonIcon(detachedView)]]" on-tap="_toggleDetach" tooltip-text$="[[_detachTooltip(detachedView)]]"></paper-icon-button>
@@ -637,6 +637,41 @@ Polymer({
     },
 
     /**
+     * 
+     * @param {Event} e - An event that is dipatched on title bar mouse move evnt.
+     */
+    _moveDialog: function(e) {
+        const target = e.target;
+        if (target === this.$.titleBar && !this.maximised && this.detachedView) {
+            switch (e.detail.state) {
+                case 'start':
+                    this.$.titleBar.style.cursor = 'move';
+                    this._windowHeight = window.innerHeight;
+                    this._windowWidth = window.innerWidth;
+                    break;
+                case 'track':
+                    const _titleBarDimensions = this.$.titleBar.getBoundingClientRect();
+                    const leftNeedsChange = _titleBarDimensions.right + e.detail.ddx >= 44 && _titleBarDimensions.left + e.detail.ddx <= this._windowWidth - 44;
+                    if (leftNeedsChange) {
+                        this.style.left = _titleBarDimensions.left + e.detail.ddx + 'px';
+                    }
+                    const topNeedsChange = _titleBarDimensions.top + e.detail.ddy >= 0 && _titleBarDimensions.bottom + e.detail.ddy <= this._windowHeight;
+                    if (topNeedsChange) {
+                        this.style.top = _titleBarDimensions.top + e.detail.ddy + 'px';
+                    }
+                    if (leftNeedsChange || topNeedsChange) {
+                        this._savePosition();
+                    }
+                    break;
+                case 'end':
+                    this.$.titleBar.style.removeProperty('cursor');
+                    break;
+            }
+        }
+        tearDownEvent(e);
+    },
+
+    /**
      * Updates the insertion point's height if height property changes
      * 
      * @param {String} newValue - new insertion point's height
@@ -822,24 +857,24 @@ Polymer({
             if (!this.maximised) {
                 let posToApply = this._getPair(ST_POS_X, ST_POS_Y);
                 if (posToApply) {
-                    this.style.top = posToApply[0];
-                    this.style.left = posToApply[1];
+                    this.style.left = posToApply[0];
+                    this.style.top = posToApply[1];
                 } else {
                     this.refit();
                 }
             } else {
-                this.style.top = "0";
                 this.style.left = "0";
+                this.style.top = "0";
             }
         } else {
             if (!this.maximised) {
                 this.style.removeProperty('position');
-                this.style.removeProperty('top');
                 this.style.removeProperty('left');
+                this.style.removeProperty('top');
             } else {
                 this.style.position = "fixed";
-                this.style.top = "0";
                 this.style.left = "0";
+                this.style.top = "0";
             }
         }
     },
@@ -898,6 +933,13 @@ Polymer({
         if (rect && rect.width && rect.height) {
             localStorage.setItem(this._generateKey(ST_DETACHED_VIEW_WIDTH), rect.width + "px");
             localStorage.setItem(this._generateKey(ST_DETACHED_VIEW_HEIGHT), rect.height + "px");
+        }
+    },
+
+    _savePosition: function () {
+        if (this.style.left && this.style.top) {
+            localStorage.setItem(this._generateKey(ST_POS_Y), this.style.top);
+            localStorage.setItem(this._generateKey(ST_POS_X), this.style.left);
         }
     },
 
