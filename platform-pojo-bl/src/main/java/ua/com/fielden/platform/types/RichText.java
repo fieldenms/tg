@@ -7,19 +7,18 @@ import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.markdown.MarkdownRenderer;
 import org.commonmark.renderer.text.TextContentRenderer;
-import org.owasp.html.HtmlChangeListener;
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.owasp.html.SimpleHtmlChangeListener;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Function;
 
+import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 import static org.owasp.html.Sanitizers.*;
@@ -122,38 +121,26 @@ public final class RichText {
      */
     static Result sanitizeMarkdown(final String input) {
         // consider invalid if there are policy violations
-        final List<String> violations = new ArrayList<>();
-        final var listener = new HtmlChangeListener<>() {
-            @Override
-            public void discardedTag(@Nullable Object context, String elementName) {
-                violations.add("Violating tag: %s".formatted(elementName));
-            }
-
-            @Override
-            public void discardedAttributes(@Nullable Object context, String tagName, String... attributeNames) {
-                violations.add("Tag [%s] has violating attributes: %s".formatted(tagName, String.join(", ", attributeNames)));
-            }
-        };
-        final Function<String, String> sanitize = in -> POLICY_FACTORY.sanitize(in, listener, null);
-
+        final var sanitizer = new Sanitizer();
         final Node root = Parser.builder().build().parse(input);
 
         root.accept(new AbstractVisitor() {
             @Override
             public void visit(HtmlBlock htmlBlock) {
-                htmlBlock.setLiteral(sanitize.apply(htmlBlock.getLiteral()));
+                htmlBlock.setLiteral(sanitizer.sanitize(htmlBlock.getLiteral()));
                 // this kind of node does not have children, so we need not process them, but let's do it just in case of parser bugs
                 visitChildren(htmlBlock);
             }
 
             @Override
             public void visit(HtmlInline htmlInline) {
-                htmlInline.setLiteral(sanitize.apply(htmlInline.getLiteral()));
+                htmlInline.setLiteral(sanitizer.sanitize(htmlInline.getLiteral()));
                 // this kind of node does not have children, so we need not process them, but let's do it just in case of parser bugs
                 visitChildren(htmlInline);
             }
         });
 
+        final var violations = sanitizer.violations();
         if (!violations.isEmpty()) {
             return failure(input, "Input contains unsafe HTML:\n" +
                                   zip(violations.stream(), integers(1).boxed(), (e, i) -> "%s. %s".formatted(i, e))
@@ -161,9 +148,34 @@ public final class RichText {
         }
 
         // reconstruct from sanitized parse tree
+        // NOTE MarkdownRenderer is lossy, it is unable to reconstruct some nodes correctly (see its javadoc)
         final String formattedText = MarkdownRenderer.builder().build().render(root);
         final String coreText = TextContentRenderer.builder().build().render(root);
         return successful(new RichText(formattedText, coreText));
+    }
+
+    private static final class Sanitizer {
+        private final List<String> violations = new ArrayList<>();
+
+        private final SimpleHtmlChangeListener listener = new SimpleHtmlChangeListener() {
+            @Override
+            public void discardedTag(String elementName) {
+                violations.add("Violating tag: %s".formatted(elementName));
+            }
+
+            @Override
+            public void discardedAttributes(String tagName, String... attributeNames) {
+                violations.add("Tag [%s] has violating attributes: %s".formatted(tagName, String.join(", ", attributeNames)));
+            }
+        };
+
+        public String sanitize(final String input) {
+            return listener.sanitize(POLICY_FACTORY, input);
+        }
+
+        public List<String> violations() {
+            return unmodifiableList(violations);
+        }
     }
 
     // @formatter:off
