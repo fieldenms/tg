@@ -24,8 +24,7 @@ import static java.util.stream.Collectors.joining;
 import static org.owasp.html.Sanitizers.*;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
-import static ua.com.fielden.platform.utils.StreamUtils.integers;
-import static ua.com.fielden.platform.utils.StreamUtils.zip;
+import static ua.com.fielden.platform.utils.StreamUtils.enumerate;
 
 /**
  * Rich text is text which has attributes beyond those of plain text (e.g., styles such as color, boldface, italic), and
@@ -143,7 +142,7 @@ public final class RichText {
         final var violations = sanitizer.violations();
         if (!violations.isEmpty()) {
             return failure(input, "Input contains unsafe HTML:\n" +
-                                  zip(violations.stream(), integers(1).boxed(), (e, i) -> "%s. %s".formatted(i, e))
+                                  enumerate(violations.stream(), 1, (e, i) -> "%s. %s".formatted(i, e))
                                           .collect(joining("\n")));
         }
 
