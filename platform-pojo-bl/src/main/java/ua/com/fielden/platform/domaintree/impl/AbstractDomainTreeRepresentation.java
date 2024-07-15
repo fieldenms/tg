@@ -114,7 +114,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     /**
      * Constructs recursively the list of properties using given list of fields.
      *
-     * @param rootType
+     * @param managedType
      * @param path
      * @param fieldsAndKeys
      * @return
@@ -476,7 +476,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @param root
      * @param property
      * @param addCollectionalElementType
-     *            -- true => then correct element type of collectional property will be added to set, otherwise a {@link Collection.class} will be added.
+     *            -- true => then correct element type of collectional property will be added to set, otherwise a {@link Collection} will be added.
      * @return
      */
     protected static Set<Class<?>> typesInHierarchy(final Class<?> root, final String property, final boolean addCollectionalElementType) {
@@ -607,7 +607,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * Please note that you can only mutate this list with methods {@link List#add(Object)} and {@link List#remove(Object)} to correctly reflect the changes on depending objects.
      * (e.g. UI tree models, checked properties etc.)
      *
-     * @param root
+     * @param managedType
      * @return
      */
     @Override

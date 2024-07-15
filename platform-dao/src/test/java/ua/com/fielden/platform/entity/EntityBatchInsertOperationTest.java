@@ -7,7 +7,6 @@ import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.test.entities.TgEntityWithManyPropTypes;

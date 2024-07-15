@@ -4,7 +4,6 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;

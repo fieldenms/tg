@@ -12,8 +12,9 @@ public interface IUserTypeInstantiate {
     /**
      * Should provide object instantiation based on the passed argument.
      * 
-     * @param arguments
+     * @param argument
      * @return
      */
-    Object instantiate(Object argument, EntityFactory factory);
+    Object instantiate(final Object argument, final EntityFactory factory);
+
 }
