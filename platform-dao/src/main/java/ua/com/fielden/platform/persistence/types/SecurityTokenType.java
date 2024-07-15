@@ -1,17 +1,19 @@
 package ua.com.fielden.platform.persistence.types;
 
+import static java.lang.String.format;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.UserType;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.security.ISecurityToken;
+import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.types.markers.ISecurityTokenType;
 
 /**
@@ -21,6 +23,8 @@ import ua.com.fielden.platform.types.markers.ISecurityTokenType;
  */
 public class SecurityTokenType implements UserType, ISecurityTokenType {
 
+    public static final SecurityTokenType INSTANCE = new SecurityTokenType();
+    
     private static final int[] SQL_TYPES = { Types.VARCHAR };
 
     @Override
@@ -41,7 +45,7 @@ public class SecurityTokenType implements UserType, ISecurityTokenType {
             try {
                 result = Class.forName(name);
             } catch (final ClassNotFoundException e) {
-                throw new HibernateException("Security token for value '" + name + "' could not be found");
+                throw new SecurityException("Security token for value '" + name + "' could not be found");
             }
         }
         return result;
@@ -52,7 +56,7 @@ public class SecurityTokenType implements UserType, ISecurityTokenType {
         try {
             return Class.forName((String) argument);
         } catch (final Exception e) {
-            throw new RuntimeException("Could not instantiate instance of '" + SecurityTokenType.class.getName() + " with value [" + argument + "] due to: " + e.getMessage());
+            throw new SecurityException(format("Could not instantiate instance of [%s] with value [%s] due to: %s", SecurityTokenType.class.getName(), argument, e.getMessage()));
         }
     }
 

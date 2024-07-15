@@ -20,6 +20,16 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 public interface IWebUiBuilder {
 
     /**
+     * Specifies the main environmental top panel style and it's water-mark.
+     *
+     * @param backgroundColour -- a background HTML colour for the top panel, e.g. #44750C.
+     * @param watermark -- a text to be as a custom label in the middle of the top panel.
+     * @param cssWatermark -- CSS to style the watermark text, e.g. font-weight:bold;opacity:0.5.
+     * @return
+     */
+    IWebUiBuilder withTopPanelStyle(final Optional<String> backgroundColour, final Optional<String> watermark, final Optional<String> cssWatermark);
+
+    /**
      * Set the minimal desktop width.
      *
      * @param width

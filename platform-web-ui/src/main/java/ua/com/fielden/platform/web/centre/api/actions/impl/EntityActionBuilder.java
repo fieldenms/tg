@@ -1,6 +1,13 @@
 package ua.com.fielden.platform.web.centre.api.actions.impl;
 
-import org.apache.commons.lang.StringUtils;
+import static java.util.Arrays.asList;
+
+import java.util.HashSet;
+import java.util.Set;
+
+import org.apache.commons.lang3.StringUtils;
+
+import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
@@ -21,14 +28,13 @@ import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder6;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder7;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder7a;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder8;
+import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder8a;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder9;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.compound.Compound;
-
-import com.google.inject.Injector;
 
 public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntityActionBuilder<T>, IEntityActionBuilder0<T>, IEntityActionBuilder0WithViews<T>, IEntityActionBuilder1<T>, IEntityActionBuilder2<T>, IEntityActionBuilder3<T>, IEntityActionBuilder4<T>, IEntityActionBuilder4IconStyle<T>, IEntityActionBuilder5<T>, IEntityActionBuilder6<T>, IEntityActionBuilder7<T> {
     private Injector injector;
@@ -44,7 +50,7 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
     private IPostAction successPostAction;
     private IPostAction errorPostAction;
     private PrefDim prefDimForView;
-    private boolean returnNoAction;
+    private final Set<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>> excludeInsertionPoints = new HashSet<>();
     private boolean shouldRefreshParentCentreAfterSave = true;
 
     /**
@@ -64,19 +70,19 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
      * @return
      */
     public static <T extends AbstractEntity<?>> IEntityActionBuilder0WithViews<T> action(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity, final Injector injector, final IWebUiBuilder builder) {
-        final EntityActionBuilder<T> actionBuilder = new EntityActionBuilder<T>();
+        final EntityActionBuilder<T> actionBuilder = new EntityActionBuilder<>();
         actionBuilder.injector = injector;
         actionBuilder.builder = builder;
         return actionBuilder.addAction(functionalEntity);
     }
 
     /**
-     * Constructs entity action configuration that indicates the need to remove the default action if any.
+     * Starting point to entity edit action configuration.
      *
      * @return
      */
-    public static <T extends AbstractFunctionalEntityWithCentreContext<?>> IEntityActionBuilder7a<T> actionOff() {
-        return new EntityActionBuilder<T>().noAction();
+    public static <T extends AbstractEntity<?>> IEntityActionBuilder0<T> editAction() {
+        return new EntityActionBuilder<>();
     }
 
     private EntityActionBuilder() {
@@ -84,23 +90,20 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
 
     @Override
     public EntityActionConfig build() {
-        if (returnNoAction) {
-            return EntityActionConfig.createNoActionConfig();
-        } else {
-            return EntityActionConfig.createActionConfig(
-                    functionalEntity,
-                    context,
-                    icon,
-                    iconStyle,
-                    shortDesc,
-                    longDesc,
-                    shortcut,
-                    preAciton,
-                    successPostAction,
-                    errorPostAction,
-                    prefDimForView,
-                    shouldRefreshParentCentreAfterSave);
-        }
+        return EntityActionConfig.createActionConfig(
+            functionalEntity,
+            context,
+            icon,
+            iconStyle,
+            shortDesc,
+            longDesc,
+            shortcut,
+            preAciton,
+            successPostAction,
+            errorPostAction,
+            prefDimForView,
+            shouldRefreshParentCentreAfterSave,
+            excludeInsertionPoints);
     }
 
     @Override
@@ -199,12 +202,6 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
         return this;
     }
 
-    @Override
-    public IEntityActionBuilder7a<T> noAction() {
-        this.returnNoAction = true;
-        return this;
-    }
-
 	@Override
 	public IEntityActionBuilder8<T> prefDimForView(final PrefDim dim) {
 		this.prefDimForView = dim;
@@ -212,7 +209,7 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
 	}
 
 	@Override
-	public IEntityActionBuilder9<T> withNoParentCentreRefresh() {
+	public IEntityActionBuilder8a<T> withNoParentCentreRefresh() {
 		this.shouldRefreshParentCentreAfterSave = false;
 		return this;
 	}
@@ -226,6 +223,14 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
     @Override
     public IEntityActionBuilder0<T> withView(final EntityMaster<?> embeddedMaster) {
         builder.register(Compound.detailsMaster(functionalEntity, builder.register(embeddedMaster), injector));
+        return this;
+    }
+
+    @Override
+    public IEntityActionBuilder9<T> withNoInsertionPointsRefresh(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> firstInsertionPoint, final Class<? extends AbstractFunctionalEntityWithCentreContext<?>>... otherInsertionPoints) {
+        excludeInsertionPoints.clear();
+        excludeInsertionPoints.add(firstInsertionPoint);
+        excludeInsertionPoints.addAll(asList(otherInsertionPoints));
         return this;
     }
 }

@@ -23,7 +23,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 public abstract class AbstractCentreConfigAction extends AbstractFunctionalEntityWithCentreContext<NoKey> {
     public static final String CUSTOM_OBJECT_PROPERTY_NAME = "customObject";
     public static final String APPLIED_CRITERIA_ENTITY_NAME = "appliedCriteriaEntity";
-    public static final String WAS_RUN_NAME = "wasRun";
     
     public AbstractCentreConfigAction() {
         setKey(NO_KEY);

@@ -1,13 +1,14 @@
 package ua.com.fielden.platform.attachment;
 
 import static java.util.Collections.emptySet;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.util.stream.Stream;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
 
@@ -28,7 +29,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 @EntityType(AttachmentsUploadAction.class)
 public class AttachmentsUploadActionDao extends CommonEntityDao<AttachmentsUploadAction> implements IAttachmentsUploadAction {
 
-    private static final Logger LOGGER = Logger.getLogger(AttachmentsUploadActionDao.class);
+    private static final Logger LOGGER = getLogger(AttachmentsUploadActionDao.class);
     
     @Inject
     protected AttachmentsUploadActionDao(final IFilter filter) {

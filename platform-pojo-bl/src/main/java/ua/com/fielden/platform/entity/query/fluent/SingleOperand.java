@@ -3,7 +3,6 @@ package ua.com.fielden.platform.entity.query.fluent;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IConcatFunctionArgument;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateAddIntervalFunctionArgument;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateAddIntervalFunctionTo;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateDiffIntervalFunction;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionLastArgument;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionWhere0;
@@ -12,6 +11,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISingleOperand;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 		extends AbstractQueryLink //
@@ -68,6 +68,11 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 		return prop(propertyName.toString());
 	}
 
+    @Override
+    public T prop(final IConvertableToPath propertyName) {
+        return prop(propertyName.toPath());
+    }
+
 	@Override
 	public T extProp(final String propertyName) {
 		return nextForSingleOperand(getTokens().extProp(propertyName));
@@ -77,6 +82,11 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 	public T extProp(final Enum propertyName) {
 		return extProp(propertyName.toString());
 	}
+
+    @Override
+    public T extProp(final IConvertableToPath propertyName) {
+        return extProp(propertyName.toPath());
+    }
 
 	@Override
 	public T expr(final ExpressionModel expr) {

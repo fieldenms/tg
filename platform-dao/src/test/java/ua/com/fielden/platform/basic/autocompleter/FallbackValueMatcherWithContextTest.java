@@ -38,7 +38,7 @@ public class FallbackValueMatcherWithContextTest extends AbstractDaoTestCase {
         final FallbackValueMatcherWithContext<TgCategory, TgCategory> matcher = new FallbackValueMatcherWithContext<>(co(TgCategory.class), true);
 
         final List<TgCategory> result = matcher.findMatches("%");
-        assertEquals(9, result.size());
+        assertEquals(10, result.size());
 
         assertEquals("AA10000FAX", result.get(0).getKey());
         assertEquals("AA20000MET", result.get(1).getKey());
@@ -48,7 +48,8 @@ public class FallbackValueMatcherWithContextTest extends AbstractDaoTestCase {
         assertEquals("BAT1", result.get(5).getKey());
         assertEquals("CAT1", result.get(6).getKey());
         assertEquals("CAT3", result.get(7).getKey());
-        assertEquals("WNMETFAX", result.get(8).getKey());
+        assertEquals("METFAX", result.get(8).getKey());
+        assertEquals("WNMETFAX", result.get(9).getKey());
     }
 
     @Test
@@ -79,45 +80,81 @@ public class FallbackValueMatcherWithContextTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void matching_is_done_key_from_start_then_key_anywhere_then_desc_anywere_case_1() {
+    public void matching_anywhere_is_done_by_key_anywhere_then_desc_anywere_case_1() {
+        final FallbackValueMatcherWithContext<TgCategory, TgCategory> matcher = new FallbackValueMatcherWithContext<>(co(TgCategory.class), true);
+
+        final List<TgCategory> result = matcher.findMatches("%METFAX%");
+        assertEquals(7, result.size());
+        assertEquals("AAMETFAX", result.get(0).getKey());
+        assertEquals("METFAX", result.get(1).getKey());
+        assertEquals("WNMETFAX", result.get(2).getKey());
+        assertEquals("AA10000FAX", result.get(3).getKey());
+        assertEquals("AA20000MET", result.get(4).getKey());
+        assertEquals("AA5000", result.get(5).getKey());
+        assertEquals("AA7500", result.get(6).getKey());
+    }
+
+    @Test
+    public void matching_anywhere_is_done_by_key_anywhere_then_desc_anywere_case_2() {
+        final FallbackValueMatcherWithContext<TgCategory, TgCategory> matcher = new FallbackValueMatcherWithContext<>(co(TgCategory.class), true);
+
+        final List<TgCategory> result = matcher.findMatches("%MET%");
+        assertEquals(7, result.size());
+        assertEquals("AA20000MET", result.get(0).getKey());
+        assertEquals("AAMETFAX", result.get(1).getKey());
+        assertEquals("METFAX", result.get(2).getKey());
+        assertEquals("WNMETFAX", result.get(3).getKey());
+        assertEquals("AA10000FAX", result.get(4).getKey());
+        assertEquals("AA5000", result.get(5).getKey());
+        assertEquals("AA7500", result.get(6).getKey());
+    }
+
+    @Test
+    public void matching_anywhere_is_done_by_key_anywhere_then_desc_anywere_case_3() {
+        final FallbackValueMatcherWithContext<TgCategory, TgCategory> matcher = new FallbackValueMatcherWithContext<>(co(TgCategory.class), true);
+
+        final List<TgCategory> result = matcher.findMatches("%FAX%");
+        assertEquals(7, result.size());
+        assertEquals("AA10000FAX", result.get(0).getKey());
+        assertEquals("AAMETFAX", result.get(1).getKey());
+        assertEquals("METFAX", result.get(2).getKey());
+        assertEquals("WNMETFAX", result.get(3).getKey());
+        assertEquals("AA20000MET", result.get(4).getKey());
+        assertEquals("AA5000", result.get(5).getKey());
+        assertEquals("AA7500", result.get(6).getKey());
+    }
+
+    @Test
+    public void matching_from_start_is_done_by_key_from_start_then_desc_from_start() {
         final FallbackValueMatcherWithContext<TgCategory, TgCategory> matcher = new FallbackValueMatcherWithContext<>(co(TgCategory.class), true);
 
         final List<TgCategory> result = matcher.findMatches("METFAX%");
-        assertEquals(6, result.size());
-        assertEquals("AAMETFAX", result.get(0).getKey());
-        assertEquals("WNMETFAX", result.get(1).getKey());
-        assertEquals("AA10000FAX", result.get(2).getKey());
-        assertEquals("AA20000MET", result.get(3).getKey());
-        assertEquals("AA5000", result.get(4).getKey());
-        assertEquals("AA7500", result.get(5).getKey());
+        assertEquals(2, result.size());
+        assertEquals("METFAX", result.get(0).getKey());
+        assertEquals("AA5000", result.get(1).getKey());
     }
 
     @Test
-    public void matching_is_done_key_from_start_then_key_anywhere_then_desc_anywere_case_2() {
+    public void matching_from_end_is_done_by_key_from_end_then_desc_from_end() {
         final FallbackValueMatcherWithContext<TgCategory, TgCategory> matcher = new FallbackValueMatcherWithContext<>(co(TgCategory.class), true);
 
-        final List<TgCategory> result = matcher.findMatches("MET%");
-        assertEquals(6, result.size());
-        assertEquals("AA20000MET", result.get(0).getKey());
-        assertEquals("AAMETFAX", result.get(1).getKey());
-        assertEquals("WNMETFAX", result.get(2).getKey());
-        assertEquals("AA10000FAX", result.get(3).getKey());
-        assertEquals("AA5000", result.get(4).getKey());
-        assertEquals("AA7500", result.get(5).getKey());
-    }
-
-    @Test
-    public void matching_is_done_key_from_start_then_key_anywhere_then_desc_anywere_case_3() {
-        final FallbackValueMatcherWithContext<TgCategory, TgCategory> matcher = new FallbackValueMatcherWithContext<>(co(TgCategory.class), true);
-
-        final List<TgCategory> result = matcher.findMatches("FAX%");
-        assertEquals(6, result.size());
+        final List<TgCategory> result = matcher.findMatches("%FAX");
+        assertEquals(5, result.size());
         assertEquals("AA10000FAX", result.get(0).getKey());
         assertEquals("AAMETFAX", result.get(1).getKey());
-        assertEquals("WNMETFAX", result.get(2).getKey());
-        assertEquals("AA20000MET", result.get(3).getKey());
-        assertEquals("AA5000", result.get(4).getKey());
-        assertEquals("AA7500", result.get(5).getKey());
+        assertEquals("METFAX", result.get(2).getKey());
+        assertEquals("WNMETFAX", result.get(3).getKey());
+        assertEquals("AA20000MET", result.get(4).getKey());
+    }
+
+    @Override
+    public boolean saveDataPopulationScriptToFile() {
+        return false;
+    }
+
+    @Override
+    public boolean useSavedDataPopulationScript() {
+        return false;
     }
 
     @Override
@@ -126,6 +163,10 @@ public class FallbackValueMatcherWithContextTest extends AbstractDaoTestCase {
 
         final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
         constants.setNow(dateTime("2016-05-17 16:36:57"));
+
+        if (useSavedDataPopulationScript()) {
+            return;
+        }
 
         save(new_(User.class, "USER_1").setBase(true));
 
@@ -140,9 +181,10 @@ public class FallbackValueMatcherWithContextTest extends AbstractDaoTestCase {
         save(new_(TgCategory.class, "CHMETFAX", "Met Service, Fax, Christchurch Tower").setActive(false));
         save(new_(TgCategory.class, "WNMETFAX", "Met Service, Fax, Wellington Tower").setActive(true));
         save(new_(TgCategory.class, "AA10000FAX", "HF, Metfax, 10000kHz").setActive(true));
-        save(new_(TgCategory.class, "AA20000MET", "HF, Metfax, 20000kHz").setActive(true));
-        save(new_(TgCategory.class, "AA5000", "HF, Metfax, 5000kHz").setActive(true));
+        save(new_(TgCategory.class, "AA20000MET", "HF, 20000kHz, Metfax").setActive(true));
+        save(new_(TgCategory.class, "AA5000", "Metfax, HF, 5000kHz").setActive(true));
         save(new_(TgCategory.class, "AA7500", "HF, Metfax, 7500kHz").setActive(true));
+        save(new_(TgCategory.class, "METFAX", "Met Service, Fax, Another Wellington Tower").setActive(true));
 
         save(new_(EntityWithMoney.class, "KEY1", "desc for KEY1").setMoney(new Money("20.00")).setDateTimeProperty(date("2017-06-01 11:00:55")));
         save(new_(EntityWithMoney.class, "KEY2", "desc for KEY2").setMoney(new Money("42.00")).setDateTimeProperty(date("2017-06-01 11:00:55")));

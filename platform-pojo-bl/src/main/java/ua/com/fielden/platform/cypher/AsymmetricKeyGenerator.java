@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.cypher;
 
-import java.security.SignatureException;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -14,9 +11,6 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Date;
-
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
 
 /**
  * A class for generation of private/public key pair for the RSA algorithm.
@@ -122,7 +116,7 @@ public class AsymmetricKeyGenerator {
         System.out.println("\nIs private key restored correctly: " + HexString.bufferToHex(privateKey.getEncoded()).equals(gen.getStrPrivateKey()));
         System.out.println("Is public key restored correctly: " + HexString.bufferToHex(publicKey.getEncoded()).equals(gen.getStrPublicKey()));
 
-        final String encryptedValue = new Cypher().encrypt("http://www.restlet.org", gen.getStrPrivateKey());
+        final String encryptedValue = new AsymmetricCypher().encrypt("http://www.restlet.org", gen.getStrPrivateKey());
         System.out.println("http://www.restlet.org: " + encryptedValue);
     }
 }

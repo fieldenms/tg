@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.web.centre.api;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 
 /**
@@ -19,6 +18,6 @@ public interface ICentre<T extends AbstractEntity<?>> {
      *
      * @return
      */
-    IRenderable buildFor(final DeviceProfile device);
+    IRenderable buildFor();
 
 }

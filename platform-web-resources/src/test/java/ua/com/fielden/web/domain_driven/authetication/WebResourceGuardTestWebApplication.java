@@ -47,6 +47,12 @@ class WebResourceGuardTestWebApplication extends Application {
 
         // setup resource guard for the whole router
         final AbstractWebResourceGuard guard = new AbstractWebResourceGuard(getContext(), "tgdev.com", "/", injector) {
+            
+            @Override
+            protected boolean enforceUserSessionEvictionWhenDbSessionIsMissing() {
+                return true;
+            }
+            
             @Override
             protected User getUser(final String username) {
                 if (getCurrUser() == null) {

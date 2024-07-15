@@ -20,7 +20,7 @@ public interface ICompanionObjectFinder {
      * <p>
      * Should not, buy may return <code>null</code>.
      * <p>
-     * If uninstrumentation is request, but a corresponding companion object does not support it then a runtime exception {@link EntityCompanionException} is thrown.
+     * If uninstrumentation is requested, but a corresponding companion object does not support it then a runtime exception {@link EntityCompanionException} is thrown.
      * 
      * @param type An entity type whose companion object is requested.
      * @param uninstrumented If <code>true</code> then there will be an attempt to produce a companion object that read entities as uninstrumeted instances.

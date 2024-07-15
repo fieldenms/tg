@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.serialisation.jackson.entities;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 
@@ -11,6 +12,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
  *
  */
 @KeyType(String.class)
+@DescTitle("Description")
 @EntityTitle(value = "Empty entity", desc = "The entity without any properties for testing")
 public class EmptyEntity extends AbstractEntity<String> {
 

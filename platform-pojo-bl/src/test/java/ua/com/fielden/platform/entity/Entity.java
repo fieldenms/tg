@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.entity;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -70,7 +69,7 @@ public class Entity extends AbstractEntity<String> {
 
     @IsProperty
     @Invisible
-    @Final(persistentOnly = false)
+    @Final(persistedOnly = false)
     private Double finalProperty;
     
     @IsProperty(value = Double.class, linkProperty = "--stub to pass tests--")

@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.centre;
 
+import static java.util.Optional.empty;
 import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
 
 import java.util.LinkedHashSet;
 
@@ -42,17 +44,22 @@ public class CentreConfigLoadActionProducer extends AbstractFunctionalEntityForC
             entity.setCentreContextHolder(selectionCrit().centreContextHolder());
             
             // provide loadable configurations into the action
-            entity.setCentreConfigurations(new LinkedHashSet<>(selectionCrit().loadableCentreConfigs()));
+            entity.setCentreConfigurations(new LinkedHashSet<>(selectionCrit().loadableCentreConfigs().apply(empty())));
             
-            if (entity.getCentreConfigurations().isEmpty()) {
-                throw failure(ERR_NO_CONFIGURATIONS_TO_LOAD);
+            if (chosenPropertyEqualsTo("load-from-uri")) {
+                entity.setSkipUi(true);
+                entity.setChosenIds(linkedSetOf("load-from-uri")); // trigger validator for 'chosenIds'; see CentreConfigLoadActionChosenIdsValidator for more details
+            } else {
+                if (entity.getCentreConfigurations().isEmpty()) {
+                    throw failure(ERR_NO_CONFIGURATIONS_TO_LOAD);
+                }
+                
+                final LinkedHashSet<String> chosenIds = new LinkedHashSet<>();
+                selectionCrit().saveAsName().ifPresent(chosenIds::add);
+                
+                // provide chosenIds into the action
+                entity.setChosenIds(chosenIds);
             }
-            
-            final LinkedHashSet<String> chosenIds = new LinkedHashSet<>();
-            selectionCrit().saveAsName().ifPresent(chosenIds::add);
-            
-            // provide chosenIds into the action
-            entity.setChosenIds(chosenIds);
         }
         
         return entity;

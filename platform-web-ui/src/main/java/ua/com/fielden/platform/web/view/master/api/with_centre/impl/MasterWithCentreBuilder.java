@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.view.master.api.with_centre.impl;
 
 import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 
 import java.util.Optional;
 
@@ -18,8 +20,9 @@ public class MasterWithCentreBuilder<T extends AbstractFunctionalEntityWithCentr
     private Class<T> type;
     private EntityCentre<?> entityCentre;
     private boolean saveOnActivate = false;
-    private Optional<JsCode> customCode = Optional.empty();
-    private Optional<JsCode> customCodeOnAttach = Optional.empty();
+    private Optional<JsCode> customCode = empty();
+    private Optional<JsCode> customCodeOnAttach = empty();
+    private Optional<JsCode> customImports = empty();
 
     @Override
     public IMasterWithCentre0<T> forEntityWithSaveOnActivate(final Class<T> type) {
@@ -39,7 +42,7 @@ public class MasterWithCentreBuilder<T extends AbstractFunctionalEntityWithCentr
 
     @Override
     public IMaster<T> done() {
-        return new MasterWithCentre<>(type, saveOnActivate, entityCentre, customCode, customCodeOnAttach);
+        return new MasterWithCentre<>(type, saveOnActivate, entityCentre, customCode, customCodeOnAttach, customImports);
     }
     
     
@@ -66,4 +69,16 @@ public class MasterWithCentreBuilder<T extends AbstractFunctionalEntityWithCentr
         this.customCodeOnAttach = Optional.of(customCode);
         return this;
     }
+
+    /**
+     * Injects custom JavaScript imports into respective master implementation.
+     *
+     * @param customImports
+     * @return
+     */
+    public MasterWithCentreBuilder<T> injectCustomImports(final JsCode customImports) {
+        this.customImports = of(customImports);
+        return this;
+    }
+
 }

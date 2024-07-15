@@ -13,24 +13,24 @@ import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.master.MasterInfo;
 
 /**
- * Master entity object.
+ * The entity type to represent serialisable entity types for client-side handling.
+ * `tg-reflector` defines how this data are interpreted.
+ * <p>
+ * <code>null</code> values are not serialised. This can be used to reduce resultant JSON.
  *
- * @author Developers
+ * @author TG Team
  *
  */
 @KeyType(String.class)
 @KeyTitle(value = "Entity Type Name", desc = "Entity Type Name description")
 @CompanionObject(IEntityType.class)
 public class EntityType extends AbstractEntity<String> {
-    @IsProperty
-    @Title(value = "Identifier", desc = "Identifier of the type in context of other types for serialisation")
-    private String _identifier;
-
     @IsProperty(String.class)
     @Title(value = "Composite Keys", desc = "Composite key property names")
-    private List<String> _compositeKeyNames = new ArrayList<>();
+    private final List<String> _compositeKeyNames = new ArrayList<>();
 
     @IsProperty
     @Title(value = "Composite Key Separator", desc = "Separator for composite key members (for autocompletion)")
@@ -46,32 +46,102 @@ public class EntityType extends AbstractEntity<String> {
 
     @IsProperty(EntityTypeProp.class)
     @Title(value = "Entity Type Properties", desc = "A map of entity type properties by their names")
-    private Map<String, EntityTypeProp> _props = new LinkedHashMap<>();
+    private final Map<String, EntityTypeProp> _props = new LinkedHashMap<>();
 
     @IsProperty
     @Title(value = "Is Persistent?", desc = "Indicated whether the associated entity type represents a persistent entity.")
-    private boolean _persistent;
-    
+    private Boolean _persistent;
+
     @IsProperty
     @Title(value = "Should Display Description?", desc = "Indicates whether editors for values of this type should display values descriptions")
     private Boolean _displayDesc;
-    
+
     @IsProperty
     @Title(value = "Is Continuation?", desc = "Indicates whether the associated entity type represents a continuation entity.")
-    private boolean _continuation;
-    
+    private Boolean _continuation;
+
     @IsProperty
-    @Title(value = "Is Union?", desc = "Indicates whether the associated entity type represents an union entity.")
-    private boolean _union;
-    
+    @Title(value = "Union Common Properties", desc = "The list of common properties (can be empty) in case if the associated entity type represents union entity type; null otherwise.")
+    private List<String> _unionCommonProps; // intentionally null (i.e. not serialised) to differentiate between [empty set of common properties for union entity type] and [non-union entity type]
+
+    @IsProperty
+    @Title(value = "Union Properties", desc = "The list of union properties in case if asscoiated entity type represents union entity type; null otherwise")
+    private List<String> _unionProps;
+
+    @IsProperty
+    @Title(value = "Compound Opener Type", desc = "Represents main persistent type for this compound master opener (if it is of such kind, empty otherwise).")
+    private String _compoundOpenerType;
+
+    @IsProperty
+    @Title(value = "Is Compound Menu Item?", desc = "Indicates whether the associated entity type represents menu item entity in compound master.")
+    private Boolean _compoundMenuItem;
+
+    @IsProperty
+    @Title(value = "Entity Master", desc = "Entity Master Data")
+    private MasterInfo _entityMaster;
+
+    @IsProperty
+    @Title(value = "New Entity Master", desc = "Entity master data for new entity action")
+    private MasterInfo _newEntityMaster;
+
     @Observable
-    public EntityType set_union(final boolean _union) {
-        this._union = _union;
+    public EntityType set_newEntityMaster(final MasterInfo _newEntityMaster) {
+        this._newEntityMaster = _newEntityMaster;
         return this;
     }
 
-    public boolean is_union() {
-        return _union;
+    public MasterInfo get_newEntityMaster() {
+        return _newEntityMaster;
+    }
+
+    @Observable
+    public EntityType set_entityMaster(final MasterInfo _entityMaster) {
+        this._entityMaster = _entityMaster;
+        return this;
+    }
+
+    public MasterInfo get_entityMaster() {
+        return _entityMaster;
+    }
+
+    @Observable
+    public EntityType set_compoundMenuItem(final Boolean _compoundMenuItem) {
+        this._compoundMenuItem = _compoundMenuItem;
+        return this;
+    }
+
+    public Boolean is_compoundMenuItem() {
+        return _compoundMenuItem;
+    }
+
+    @Observable
+    public EntityType set_compoundOpenerType(final String value) {
+        this._compoundOpenerType = value;
+        return this;
+    }
+
+    public String get_compoundOpenerType() {
+        return _compoundOpenerType;
+    }
+
+    @Observable
+    public EntityType set_unionCommonProps(final List<String> value) {
+        this._unionCommonProps = value;
+        return this;
+    }
+
+    public List<String> get_unionCommonProps() {
+        return _unionCommonProps;
+    }
+
+    @Observable
+    public EntityType set_unionProps(final List<String> _unionProps) {
+        this._unionProps = _unionProps;
+        return this;
+    }
+
+    public List<String> get_unionProps() {
+        return _unionProps;
     }
 
     @Observable
@@ -83,24 +153,24 @@ public class EntityType extends AbstractEntity<String> {
     public Boolean get_displayDesc() {
         return _displayDesc;
     }
-    
+
     @Observable
-    public EntityType set_persistent(final boolean _persistent) {
+    public EntityType set_persistent(final Boolean _persistent) {
         this._persistent = _persistent;
         return this;
     }
 
-    public boolean is_persistent() {
+    public Boolean is_persistent() {
         return _persistent;
     }
-    
+
     @Observable
-    public EntityType set_continuation(final boolean _continuation) {
+    public EntityType set_continuation(final Boolean _continuation) {
         this._continuation = _continuation;
         return this;
     }
 
-    public boolean is_continuation() {
+    public Boolean is_continuation() {
         return _continuation;
     }
 
@@ -154,15 +224,5 @@ public class EntityType extends AbstractEntity<String> {
 
     public List<String> get_compositeKeyNames() {
         return Collections.unmodifiableList(_compositeKeyNames);
-    }
-    
-    @Observable
-    public EntityType set_identifier(final String _identifier) {
-        this._identifier = _identifier;
-        return this;       
-    }      
-    
-    public String get_identifier() {
-        return _identifier;
     }
 }

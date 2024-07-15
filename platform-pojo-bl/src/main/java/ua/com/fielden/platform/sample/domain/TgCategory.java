@@ -11,6 +11,8 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Master entity object.
@@ -24,6 +26,9 @@ import ua.com.fielden.platform.entity.validation.annotation.Final;
 @MapEntityTo
 @DescTitle(value = "Desc", desc = "Some desc description")
 public class TgCategory extends ActivatableAbstractEntity<String> {
+    private static final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(TgCategory.class);
+    public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
+    public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
 
     @IsProperty
     @MapTo
@@ -41,7 +46,7 @@ public class TgCategory extends ActivatableAbstractEntity<String> {
     
     @IsProperty
     @MapTo
-    @Final(persistentOnly = false)
+    @Final(persistedOnly = false)
     @Title(value = "Immediately Final")
     private Integer immediatelyFinalProp;
 

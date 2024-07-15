@@ -21,5 +21,16 @@ public interface IApplicationSettings {
 
     String securityTokensPackageName();
 
-    String workflow();
+    Workflows workflow();
+    
+    AuthMode authMode();
+    
+    /**
+     * Defines 2 possible authentication modes – Reduced Sigh-On (RSO) and Single Sign-On (SSO).
+     * Authentication mode is used to guide the login workflow.
+     *
+     */
+    public enum AuthMode {
+        RSO, SSO;
+    }
 }

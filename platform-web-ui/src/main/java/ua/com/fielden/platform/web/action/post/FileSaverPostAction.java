@@ -22,14 +22,16 @@ public class FileSaverPostAction implements IPostAction {
     @Override
     public JsCode build() {
         final JsCode jsCode = new JsCode(
-                "var byteCharacters = atob(functionalEntity.data);"
-              + "var byteNumbers = new Uint8Array(byteCharacters.length);\n"
-              + "for (var index = 0; index < byteCharacters.length; index++) {\n"
+                "const byteCharacters = atob(functionalEntity.data);"
+              + "const byteNumbers = new Uint8Array(byteCharacters.length);\n"
+              + "for (let index = 0; index < byteCharacters.length; index++) {\n"
               + "     byteNumbers[index] = byteCharacters.charCodeAt(index);\n"
               + "}\n"
-              + "var data = new Blob([byteNumbers], {type: functionalEntity.mime});\n"
+              + "const data = new Blob([byteNumbers], {type: functionalEntity.mime});\n"
               + "saveAs(data, functionalEntity.fileName);\n"
-              + "self.$.egi.clearPageSelection(); \n");
+              + "if (self.$.egi && self.$.egi.clearPageSelection) {\n"
+              + "    self.$.egi.clearPageSelection();\n"
+              + "}\n");
         return jsCode;
     }
 

@@ -15,6 +15,7 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.types.Money;
 
 @KeyTitle("Fuel Usages")
 @KeyType(DynamicEntityKey.class)
@@ -41,6 +42,10 @@ public class TgFuelUsage extends AbstractEntity<DynamicEntityKey> {
     @Title(value = "Fuel Qty", desc = "Fuel Qty")
     private BigDecimal qty;
 
+    @IsProperty(precision = 18, scale = 4)
+    @MapTo
+    private Money pricePerLitre;
+    
     @IsProperty
     @Required
     @MapTo
@@ -83,5 +88,15 @@ public class TgFuelUsage extends AbstractEntity<DynamicEntityKey> {
     public TgFuelUsage setQty(final BigDecimal qty) {
         this.qty = qty;
         return this;
+    }
+    
+    @Observable
+    public TgFuelUsage setPricePerLitre(final Money pricePerLitre) {
+        this.pricePerLitre = pricePerLitre;
+        return this;
+    }
+
+    public Money getPricePerLitre() {
+        return pricePerLitre;
     }
 }

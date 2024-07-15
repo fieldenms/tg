@@ -2,7 +2,7 @@ package ua.com.fielden.platform.web.centre.api.crit.impl;
 
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -16,7 +16,7 @@ import ua.com.fielden.platform.web.centre.widgets.EntityMultiCritAutocompletionW
  * @author TG Team
  *
  */
-public class EntityCriterionWidget extends AbstractMultiCriterionWidget {
+public class EntityCriterionWidget extends AbstractCriterionWidget {
 
     /**
      * Creates an instance of {@link EntityCriterionWidget} for specified entity type and property name.
@@ -25,7 +25,7 @@ public class EntityCriterionWidget extends AbstractMultiCriterionWidget {
      * @param propertyName
      */
     public EntityCriterionWidget(final Class<? extends AbstractEntity<?>> root, final Class<?> managedType, final String propertyName, final List<Pair<String, Boolean>> additionalProps, final CentreContextConfig centreContextConfig) {
-        super(root, "centre/criterion/multi/tg-multi-criterion", propertyName,
+        super(root, "centre/criterion/tg-criterion", propertyName,
                 new EntityMultiCritAutocompletionWidget(
                         AbstractCriterionWidget.generateSingleTitleDesc(root, managedType, propertyName),
                         AbstractCriterionWidget.generateSingleName(root, managedType, propertyName),

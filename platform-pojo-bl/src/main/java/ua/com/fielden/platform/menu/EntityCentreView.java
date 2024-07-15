@@ -15,15 +15,10 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyTitle(value = "Key", desc = "Some key description")
 @CompanionObject(IEntityCentreView.class)
 public class EntityCentreView extends AbstractView {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @Title(value = "UUID", desc = "UUID")
     private String uuid;
-
-    @IsProperty
-    @Title(value = "Autorun", desc = "Should run automaticaly")
-    private boolean autoRun;
 
     @IsProperty
     @Title(value = "Enforce post save refresh", desc = "Should run centre after save")
@@ -31,6 +26,20 @@ public class EntityCentreView extends AbstractView {
 
     @IsProperty
     private String uri;
+
+    @IsProperty
+    @Title(value = "Event Source Class", desc = "SSE event source")
+    private String eventSourceClass;
+
+    @Observable
+    public EntityCentreView setEventSourceClass(final String eventSourceClass) {
+        this.eventSourceClass = eventSourceClass;
+        return this;
+    }
+
+    public String getEventSourceClass() {
+        return eventSourceClass;
+    }
 
     @Observable
     public EntityCentreView setUri(final String uri) {
@@ -53,16 +62,6 @@ public class EntityCentreView extends AbstractView {
     }
 
     @Observable
-    public EntityCentreView setAutoRun(final boolean autoRun) {
-        this.autoRun = autoRun;
-        return this;
-    }
-
-    public boolean getAutoRun() {
-        return autoRun;
-    }
-
-    @Observable
     public EntityCentreView setUuid(final String uuid) {
         this.uuid = uuid;
         return this;
@@ -71,7 +70,5 @@ public class EntityCentreView extends AbstractView {
     public String getUuid() {
         return uuid;
     }
-
-
 
 }

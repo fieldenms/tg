@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.criteria.generator.impl;
 
-import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.generateCriteriaPropertyName;
+import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.critName;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.getCriteriaProperty;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.isSecondParam;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
@@ -21,7 +21,7 @@ import ua.com.fielden.platform.error.Result;
 /**
  * {@link IAfterChangeEventHandler} that synchronises entity query criteria values with domain tree model values.
  * <p>
- * In case where this {@link IAfterChangeEventHandler} is actioned for crit-only single property, then validation process 
+ * In case where this {@link IAfterChangeEventHandler} is actioned for crit-only single property, then validation process
  * will be kicked in through 'critOnlySinglePrototype'.
  *
  * @author TG Team
@@ -31,15 +31,15 @@ import ua.com.fielden.platform.error.Result;
  */
 public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTreeManagerAndEnhancer, T extends AbstractEntity<?>> implements IAfterChangeEventHandler<Object> {
     public static final Long CRITERIA_ENTITY_ID = 333L;
-    // private static final Logger LOGGER = Logger.getLogger(SynchroniseCriteriaWithModelHandler.class);
-    
+    // private static final Logger LOGGER = getLogger(SynchroniseCriteriaWithModelHandler.class);
+
     @Override
     public void handle(final MetaProperty<Object> property, final Object newValue) {
         // criteria entity and property
         final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteriaEntity = (EntityQueryCriteria<CDTME, T, IEntityDao<T>>) property.getEntity();
         final Class<?> criteriaType = criteriaEntity.getType();
         final String criteriaPropName = property.getName();
-        
+
         // real entity and property from which criteria entity and property were generated
         final Class<AbstractEntity<?>> entityType = (Class<AbstractEntity<?>>) criteriaEntity.getEntityClass();
         final String propName = getCriteriaProperty(criteriaType, criteriaPropName);
@@ -49,11 +49,11 @@ public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTree
             // LOGGER.error(format("\t\t\toriginal property [%s] is ...", propName));
             // set corresponding critOnlySinglePrototype's property which will trigger all necessary validations / definers and dependent properties processing
             criteriaEntity.critOnlySinglePrototypeInit(entityType, CRITERIA_ENTITY_ID).set(propName, newValue);
-            
+
             // Need to clear requiredness errors on each application of criteria entity property (crit-only single), not just on initial creation of critOnlySinglePrototype.
             // This is required to mimic 'new entity' application which permits empty required values.
             clearRequiredness(criteriaEntity.critOnlySinglePrototype(), entityType);
-            
+
             // take a snapshot of all needed crit-only single prop information to be applied back against criteriaEntity
             final Stream<MetaProperty<?>> snapshot = criteriaEntity.critOnlySinglePrototype().nonProxiedProperties().filter(metaProp -> isCritOnlySingle(entityType, metaProp.getName()));
             // apply the snapshot against criteriaEntity
@@ -64,10 +64,10 @@ public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTree
             updateTreeManagerProperty(criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getFirstTick(), entityType, propName, newValue, criteriaType, criteriaPropName);
         }
     }
-    
+
     /**
      * Clears requiredness errors for <code>cosPrototype</code>'s crit-only single properties.
-     * 
+     *
      * @param cosPrototype
      * @param entityType
      */
@@ -84,10 +84,10 @@ public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTree
         });
         // LOGGER.error(format("\tclearing requiredness...done"));
     }
-    
+
     /**
      * Updates domain tree criteria tick with the <code>newValue</code>.
-     * 
+     *
      * @param criteriaTick
      * @param entityType
      * @param propName
@@ -107,8 +107,8 @@ public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTree
                 LOGGER.error(format("\t\t\t\tupdateTreeManagerProperty: propName = [%s] current value unchanged [%s]...", propName, currValue));
             }
         }*/
-        final IAddToCriteriaTickManager v = !areDifferent(currValue, newValue) ? criteriaTick : 
-               isSecond                      ? criteriaTick.setValue2(entityType, propName, newValue) 
+        final IAddToCriteriaTickManager v = !areDifferent(currValue, newValue) ? criteriaTick :
+               isSecond                      ? criteriaTick.setValue2(entityType, propName, newValue)
                                              : criteriaTick.setValue(entityType, propName, newValue);
         /*if (isCritOnlySingle(entityType, propName)) {
             if (!equalsEx(currValue, newValue)) {
@@ -119,10 +119,10 @@ public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTree
         }*/
         return v;
     }
-    
+
     /**
      * Indicates whether two values are different including the case of 'mock not found entity' values.
-     * 
+     *
      * @param value1
      * @param value2
      * @return
@@ -130,31 +130,31 @@ public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTree
     public static boolean areDifferent(final Object value1, final Object value2) {
         return !equalsEx(value1, value2) || isMockNotFoundEntity(value1) && isMockNotFoundEntity(value2) && !equalsEx(((AbstractEntity) value1).getDesc(), ((AbstractEntity) value2).getDesc());
     }
-    
+
     /**
      * Applies the <code>snapshot</code> of crit-only meta-properties from critOnlySinglePrototype entity against <code>criteriaEntity</code>.
-     * 
+     *
      * @param criteriaEntity
      * @param snapshot
      */
     public static <CDTME extends ICentreDomainTreeManagerAndEnhancer, T extends AbstractEntity<?>> void applySnapshot(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteriaEntity, final Stream<MetaProperty<?>> snapshot) {
         final Class<?> criteriaType = criteriaEntity.getType();
         final Class<?> entityType = criteriaEntity.getEntityClass();
-        
+
         // all validations / definers need to be turned off
         criteriaEntity.beginInitialising();
         snapshot.forEach(metaProp -> {
-            final String criteriaPropName = generateCriteriaPropertyName(metaProp.getEntity().getType(), metaProp.getName());
+            final String criteriaPropName = critName(metaProp.getEntity().getType(), metaProp.getName());
             criteriaEntity.getPropertyOptionally(criteriaPropName).ifPresent(mp -> { // several crit-only single properties of original entity could be NOT added to selection criteria: need to ignore them
                 final MetaProperty<Object> criteriaMetaProp = (MetaProperty<Object>) mp;
-                // the order of meta-info application is synced with EntityJsonDeserialiser; all properties are copied excluding prevValue, valueChangeCount and visible -- it is believed that these props are not relevant for critOnlySinglePrototype lifecycle 
+                // the order of meta-info application is synced with EntityJsonDeserialiser; all properties are copied excluding prevValue, valueChangeCount and visible -- it is believed that these props are not relevant for critOnlySinglePrototype lifecycle
                 final Result firstFailure = metaProp.getFirstFailure();
-                criteriaMetaProp.setDomainValidationResult(firstFailure == null ? metaProp.getFirstWarning() : firstFailure);
+                criteriaMetaProp.setDomainValidationResult(firstFailure == null ? metaProp.getFirstValidResult() : firstFailure);
                 criteriaMetaProp.setOriginalValue(metaProp.getOriginalValue());
                 criteriaMetaProp.setLastInvalidValue(metaProp.getLastInvalidValue());
                 criteriaMetaProp.setAssigned(metaProp.isAssigned());
                 criteriaMetaProp.setEditable(metaProp.isEditable());
-                criteriaMetaProp.setRequired(metaProp.isRequired());
+                criteriaMetaProp.setRequired(metaProp.isRequired(), metaProp.getCustomErrorMsgForRequiredness());
                 if (firstFailure != null) {
                     // In case where property is invalid there is a pair of values: valid and attempted.
                     // Valid value usually represents the value, that was previously set.

@@ -43,6 +43,7 @@ public class CollectionalEditorWidget extends AbstractWidget {
     private String headerPropertyName = AbstractEntity.KEY;
     private String descriptionPropertyName = AbstractEntity.DESC;
     private boolean reorderable = false;
+    private boolean staticOrder = false;
 
     public CollectionalEditorWidget(final Pair<String, String> titleAndDesc, final String propertyName) {
         super("editors/tg-collectional-editor", titleAndDesc, propertyName);
@@ -63,12 +64,17 @@ public class CollectionalEditorWidget extends AbstractWidget {
         this.reorderable = true;
     }
 
+    public void makeStaticOrder() {
+        this.staticOrder = true;
+    }
+
     @Override
     protected Map<String, Object> createCustomAttributes() {
         final Map<String, Object> customAttr = super.createCustomAttributes();
         customAttr.put("header-property-name", headerPropertyName);
         customAttr.put("description-property-name", descriptionPropertyName);
         customAttr.put("can-reorder-items", reorderable);
+        customAttr.put("static-order", staticOrder);
         return customAttr;
     }
 }

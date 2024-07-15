@@ -8,10 +8,13 @@ import com.google.inject.Injector;
 import com.google.inject.binder.AnnotatedBindingBuilder;
 
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
-import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.validation.CanBuildReferenceHierarchyForEveryEntityValidator;
+import ua.com.fielden.platform.entity.validation.ICanBuildReferenceHierarchyForEntityValidator;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
+import ua.com.fielden.platform.utils.IDates;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.ioc.IBasicWebApplicationServerModule;
 
 /**
@@ -22,10 +25,7 @@ import ua.com.fielden.platform.web.ioc.IBasicWebApplicationServerModule;
  */
 public class TgTestWebApplicationServerModule extends TgTestApplicationServerModule implements IBasicWebApplicationServerModule {
 
-    private final String domainName;
-    private final String path;
-    private final int port;
-    private final Workflows workflow;
+    private final Properties props;
 
     public TgTestWebApplicationServerModule(
             final Map<Class, Class> defaultHibernateTypes,
@@ -33,18 +33,18 @@ public class TgTestWebApplicationServerModule extends TgTestApplicationServerMod
             final List<Class<? extends AbstractEntity<?>>> domainTypes,
             final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
             final Class<? extends IFilter> automaticDataFilterType,
+            final Class<? extends IUniversalConstants> universalConstantsImplType,
+            final Class<? extends IDates> datesImplType,
             final Properties props) throws Exception {
-        super(defaultHibernateTypes, applicationDomainProvider, domainTypes, serialisationClassProviderType, automaticDataFilterType, props);
-        this.domainName = props.getProperty("web.domain");
-        this.path = props.getProperty("web.path");
-        this.port = Integer.valueOf(props.getProperty("port"));
-        this.workflow = Workflows.valueOf(props.getProperty("workflow"));
+        super(defaultHibernateTypes, applicationDomainProvider, domainTypes, serialisationClassProviderType, automaticDataFilterType, universalConstantsImplType, datesImplType, props);
+        this.props = props;
     }
 
     @Override
     protected void configure() {
         super.configure();
-        bindWebAppResources(new WebUiConfig(domainName, port, workflow, path));
+        bind(ICanBuildReferenceHierarchyForEntityValidator.class).to(CanBuildReferenceHierarchyForEveryEntityValidator.class);
+        bindWebAppResources(new WebUiConfig(props));
     }
 
     @Override

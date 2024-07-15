@@ -13,7 +13,6 @@ import ua.com.fielden.platform.entity.annotation.Observable;
  */
 @KeyType(String.class)
 public class TopLevelEntity extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     private EntityBeingModified prop1;

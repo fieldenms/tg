@@ -20,47 +20,47 @@ import ua.com.fielden.platform.entity.annotation.Title;
 public class EntityTypeProp extends AbstractEntity<String> {
 
     @IsProperty
-    @Title(value = "Secrete", desc = "Determines whether the property represents 'secrete' property (e.g. passwords etc.)")
+    @Title(value = "Secrete", desc = "Determines whether the property represents 'secrete' property (e.g. passwords etc.).")
     private Boolean _secrete;
 
     @IsProperty
-    @Title(value = "Upper Case", desc = "Determines whether the property represents 'upper-case' property")
+    @Title(value = "Upper Case", desc = "Determines whether the property represents 'upper-case' property.")
     private Boolean _upperCase;
 
     @IsProperty
-    @Title(value = "Title", desc = "The title of the property")
+    @Title(value = "Title", desc = "The title of the property.")
     private String _title;
 
     @IsProperty
-    @Title(value = "Description", desc = "The description of the property")
+    @Title(value = "Description", desc = "The description of the property.")
     private String _desc;
 
     @IsProperty
-    @Title(value = "Crit Only", desc = "Determines whether the property is for criteria only")
+    @Title(value = "Crit Only", desc = "Determines whether the property is for criteria only.")
     private Boolean _critOnly;
 
     @IsProperty
-    @Title(value = "Result Only", desc = "Determines whether the property is for result only")
+    @Title(value = "Result Only", desc = "Determines whether the property is for result only.")
     private Boolean _resultOnly;
 
     @IsProperty
-    @Title(value = "Ignore", desc = "Determines whether the property should be ignored for UI elements")
+    @Title(value = "Ignore", desc = "Determines whether the property should be ignored for UI elements.")
     private Boolean _ignore;
 
     @IsProperty
-    @Title(value = "Length", desc = "Represents the length of the underlying db column and can be used for UI editors construction")
+    @Title(value = "Length", desc = "Represents the length of the underlying db column and can be used for UI editors construction.")
     private Long _length;
 
     @IsProperty
-    @Title(value = "Precision", desc = "Represents the precision of the underlying db column and can be used for UI editors construction")
+    @Title(value = "Precision", desc = "Represents the precision of the underlying db column and can be used for UI editors construction.")
     private Long _precision;
 
     @IsProperty
-    @Title(value = "Scale", desc = "Represents the scale of the underlying db column and can be used for UI editors construction")
+    @Title(value = "Scale", desc = "Represents the scale of the underlying db column and can be used for UI editors construction.")
     private Long _scale;
 
     @IsProperty
-    @Title(value = "TimeZone", desc = "TimeZone of date-typed property")
+    @Title(value = "TimeZone", desc = "TimeZone of date-typed property.")
     private String _timeZone;
 
     @IsProperty
@@ -74,6 +74,48 @@ public class EntityTypeProp extends AbstractEntity<String> {
     @IsProperty
     @Title(value = "Show Trailing Zeros?", desc = "Should display trailing zeros?")
     private boolean _trailingZeros;
+
+    @IsProperty
+    @Title(value = "Display  pattern", desc = "Pattern that is used to display value for entity type property.")
+    private String _displayAs;
+
+    @IsProperty
+    @Title(value = "Type Name", desc = "Name of property type. Full class names for entity-typed properties (prepended with ':'), simple class names for others. Empty if not supported.")
+    private String _typeName;
+
+    @IsProperty
+    @Title(value = "Short Collection Key", desc = "Non-parent composite key member of this short collectional property's element type (non-empty only if it is short collection).")
+    private String _shortCollectionKey;
+
+    @Observable
+    public EntityTypeProp set_shortCollectionKey(final String _shortCollectionKey) {
+        this._shortCollectionKey = _shortCollectionKey;
+        return this;
+    }
+
+    public String get_shortCollectionKey() {
+        return _shortCollectionKey;
+    }
+
+    @Observable
+    public EntityTypeProp set_typeName(final String _typeName) {
+        this._typeName = _typeName;
+        return this;
+    }
+
+    public String get_typeName() {
+        return _typeName;
+    }
+
+    @Observable
+    public EntityTypeProp set_displayAs(final String _displayAs) {
+        this._displayAs = _displayAs;
+        return this;
+    }
+
+    public String get_displayAs() {
+        return _displayAs;
+    }
 
     @Observable
     public EntityTypeProp set_trailingZeros(final boolean _trailingZeros) {

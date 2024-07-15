@@ -1,41 +1,78 @@
 {
-  "name": "sinon-chai",
+  "_from": "sinon-chai@^2.10.0",
+  "_id": "sinon-chai@2.14.0",
+  "_inBundle": false,
+  "_integrity": "sha512-9stIF1utB0ywNHNT7RgiXbdmen8QDCRsrTjw+G9TgKt1Yexjiv8TOWZ6WHsTPz57Yky3DIswZvEqX8fpuHNDtQ==",
+  "_location": "/sinon-chai",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "range",
+    "registry": true,
+    "raw": "sinon-chai@^2.10.0",
+    "name": "sinon-chai",
+    "escapedName": "sinon-chai",
+    "rawSpec": "^2.10.0",
+    "saveSpec": null,
+    "fetchSpec": "^2.10.0"
+  },
+  "_requiredBy": [
+    "/wct-browser-legacy"
+  ],
+  "_resolved": "https://registry.npmjs.org/sinon-chai/-/sinon-chai-2.14.0.tgz",
+  "_shasum": "da7dd4cc83cd6a260b67cca0f7a9fdae26a1205d",
+  "_spec": "sinon-chai@^2.10.0",
+  "_where": "/home/oleh/workspace/tg/platform-web-ui/src/main/resources/node_modules/wct-browser-legacy",
+  "author": {
+    "name": "Domenic Denicola",
+    "email": "d@domenic.me",
+    "url": "https://domenic.me/"
+  },
+  "bugs": {
+    "url": "https://github.com/domenic/sinon-chai/issues"
+  },
+  "bundleDependencies": false,
+  "deprecated": false,
   "description": "Extends Chai with assertions for the Sinon.JS mocking framework.",
+  "devDependencies": {
+    "chai": "^4.1.0",
+    "eslint": "^3.19.0",
+    "istanbul": "~0.4.5",
+    "mocha": "^3.4.2",
+    "opener": "^1.4.3",
+    "sinon": "^4.0.0"
+  },
+  "files": [
+    "lib"
+  ],
+  "homepage": "https://github.com/domenic/sinon-chai#readme",
   "keywords": [
-    "sinon",
     "chai",
+    "chai-plugin",
+    "browser",
+    "vendor",
+    "mocks-and-spies",
+    "sinon",
     "testing",
     "spies",
     "stubs",
     "mocks"
   ],
-  "version": "2.8.0",
-  "author": "Domenic Denicola <d@domenic.me> (https://domenic.me/)",
   "license": "(BSD-2-Clause OR WTFPL)",
-  "repository": "domenic/sinon-chai",
   "main": "./lib/sinon-chai.js",
-  "files": [
-    "lib"
-  ],
-  "scripts": {
-    "test": "npm run test-chai-1-9-2 && npm run test-chai-2-3-0 && npm run test-chai-3-0-0",
-    "test-chai-1-9-2": "npm install chai@1.9.2 && mocha",
-    "test-chai-2-3-0": "npm install chai@2.3.0 && mocha",
-    "test-chai-3-0-0": "npm install chai@3.0.0 && mocha",
-    "lint": "jshint ./lib",
-    "cover": "istanbul cover node_modules/mocha/bin/_mocha && opener ./coverage/lcov-report/lib/sinon-chai.js.html"
-  },
+  "name": "sinon-chai",
   "peerDependencies": {
-    "chai": ">=1.9.2 <4",
-    "sinon": ">=1.4.0 <2"
+    "chai": ">=1.9.2 <5",
+    "sinon": "^1.4.0 || ^2.1.0 || ^3.0.0 || ^4.0.0"
   },
-  "devDependencies": {
-    "chai": "^3.0.0",
-    "coffee-script": "~1.8.0",
-    "istanbul": "~0.3.2",
-    "jshint": "^2.5.6",
-    "mocha": "^1.21.4",
-    "opener": "^1.4.0",
-    "sinon": "^1.10.3"
-  }
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/domenic/sinon-chai.git"
+  },
+  "scripts": {
+    "cover": "istanbul cover node_modules/mocha/bin/_mocha && opener ./coverage/lcov-report/lib/sinon-chai.js.html",
+    "lint": "eslint .",
+    "test": "mocha",
+    "test-travis": "npm install chai@$CHAI_VERSION && npm install sinon@$SINON_VERSION && npm install && npm test"
+  },
+  "version": "2.14.0"
 }

@@ -1,9 +1,12 @@
 package ua.com.fielden.platform.security.session;
 
 import java.util.Date;
+import java.util.Optional;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
+
+import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  * This is a convenient abstraction for representing a user session authenticator.
@@ -16,13 +19,21 @@ public final class Authenticator {
 
     public final String username;
     public final String seriesId;
-    public final long expiryTime;
+    public final Optional<Date> expiryTime;
+    public final long version;
     public final String hash;
 
     public final String token;
     private final String value;
 
     public Authenticator(
+            final String token,
+            final String hash) {
+        this(Optional.empty(), token, hash);
+    }
+
+    public Authenticator(
+            final Optional<Date> expiryTime,
             final String token,
             final String hash) {
         if (StringUtils.isEmpty(token) || StringUtils.isEmpty(hash)) {
@@ -36,16 +47,19 @@ public final class Authenticator {
 
         this.username = tokenParts[0];
         this.seriesId = tokenParts[1];
-        this.expiryTime = Long.parseLong(tokenParts[2]);
+        this.version = Long.parseLong(tokenParts[2]);
         this.hash = hash;
+        this.expiryTime = expiryTime;
 
         this.token = token;
 
         this.value = new StringBuilder()
             .append(token).append(AUTHENTICATOR_SEPARATOR)
             .append(hash).toString();
+ 
     }
 
+    
     /**
      * Constructs a token from the provided parts.
      *
@@ -57,17 +71,17 @@ public final class Authenticator {
     public static String mkToken(
             final String username,
             final String seriesId,
-            final Date expiryTime) {
+            final long version) {
         if (StringUtils.isEmpty(username) ||
             StringUtils.isEmpty(seriesId) ||
-            expiryTime == null) {
+            version < 0) {
                 throw new IllegalArgumentException("Token argumens are invalid.");
             }
 
         return new StringBuilder()
             .append(username).append(AUTHENTICATOR_SEPARATOR)
             .append(seriesId).append(AUTHENTICATOR_SEPARATOR)
-            .append(expiryTime.getTime()).toString();
+            .append(version).toString();
 
     }
 
@@ -87,14 +101,14 @@ public final class Authenticator {
             throw new IllegalArgumentException("The provided string does not represent a valid authenticator.");
         }
 
-        final Date expiryDate;
+        final long version;
         try {
-            expiryDate = new DateTime(Long.parseLong(parts[2])).toDate();
+            version = Long.parseLong(parts[2]);
         } catch (final NumberFormatException e) {
             throw new IllegalArgumentException("The provided string does not represent a valid authenticator");
         }
 
-        final String token = mkToken(parts[0], parts[1], expiryDate);
+        final String token = mkToken(parts[0], parts[1], version);
 
         return new Authenticator(token, parts[3]);
     }
@@ -104,13 +118,26 @@ public final class Authenticator {
      *
      * @return
      */
-    public DateTime getExpiryTime() {
-        return new DateTime(expiryTime);
+    public Optional<DateTime> getExpiryTime() {
+        return expiryTime.map(DateTime::new);
     }
 
     @Override
     public int hashCode() {
         return value.hashCode();
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof Authenticator)) {
+            return false;
+        }
+
+        final Authenticator that = (Authenticator) obj;
+        return EntityUtils.equalsEx(this.value, that.value);
     }
 
     @Override

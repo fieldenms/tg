@@ -22,12 +22,9 @@ import ua.com.fielden.platform.associations.one2one.DetailEntityForOneToOneAssoc
 import ua.com.fielden.platform.associations.one2one.MasterEntityWithOneToOneAssociation;
 import ua.com.fielden.platform.associations.test_entities.EntityWithManyToOneAssociations;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.Entity;
-import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.ParamAnnotation;
 import ua.com.fielden.platform.entity.annotation.mutator.DateParam;
@@ -38,15 +35,12 @@ import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.reflection.asm.api.NewProperty;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.test_entities.ComplexKeyEntity;
 import ua.com.fielden.platform.reflection.test_entities.SecondLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.SimplePartEntity;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityForReflector;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityHolder;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
-import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -210,19 +204,21 @@ public class ReflectorTest {
     }
 
     @Test
-    public void test_annotataion_params() {
+    public void handler_annotation_has_correct_number_of_params() {
         final List<String> params = Reflector.annotataionParams(Handler.class);
-        assertEquals("Unexpected number of annotation parameters.", 10, params.size());
+        assertEquals("Unexpected number of annotation parameters.", 12, params.size());
         assertTrue(params.contains("value"));
         assertTrue(params.contains("non_ordinary"));
         assertTrue(params.contains("clazz"));
         assertTrue(params.contains("integer"));
         assertTrue(params.contains("str"));
+        assertTrue(params.contains("prop"));
         assertTrue(params.contains("dbl"));
         assertTrue(params.contains("date"));
         assertTrue(params.contains("date_time"));
         assertTrue(params.contains("money"));
         assertTrue(params.contains("enumeration"));
+        assertTrue(params.contains("bool"));
     }
 
     @Test
@@ -315,18 +311,18 @@ public class ReflectorTest {
     }
 
     @Test
-    public void assigning_static_final_fields_is_supported() throws NoSuchFieldException, SecurityException {
-        assertTrue(AbstractEntity.STRICT_MODEL_VERIFICATION);
-        assertTrue(ComplexKeyEntity.STRICT_MODEL_VERIFICATION);
+    public void assigning_private_static_fields_is_supported() throws NoSuchFieldException, SecurityException {
+        assertTrue(AbstractEntity.isStrictModelVerification());
+        assertTrue(ComplexKeyEntity.isStrictModelVerification());
 
         try {
             Reflector.assignStatic(AbstractEntity.class.getDeclaredField("STRICT_MODEL_VERIFICATION"), false);
-            assertFalse(AbstractEntity.STRICT_MODEL_VERIFICATION);
-            assertFalse(ComplexKeyEntity.STRICT_MODEL_VERIFICATION);
+            assertFalse(AbstractEntity.isStrictModelVerification());
+            assertFalse(ComplexKeyEntity.isStrictModelVerification());
         } finally {
             Reflector.assignStatic(AbstractEntity.class.getDeclaredField("STRICT_MODEL_VERIFICATION"), true);
-            assertTrue(AbstractEntity.STRICT_MODEL_VERIFICATION);
-            assertTrue(ComplexKeyEntity.STRICT_MODEL_VERIFICATION);
+            assertTrue(AbstractEntity.isStrictModelVerification());
+            assertTrue(ComplexKeyEntity.isStrictModelVerification());
         }
     }
 

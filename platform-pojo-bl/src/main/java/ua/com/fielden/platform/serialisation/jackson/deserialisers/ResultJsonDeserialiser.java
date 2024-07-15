@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 
+import ua.com.fielden.platform.error.Informative;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
@@ -20,7 +21,7 @@ import ua.com.fielden.platform.web.utils.PropertyConflict;
  * Deserialiser for {@link Result} type.
  * <p>
  * Deserialises into {@link Result} instance of concrete subtype defined in '@resultType'; deserialises message, exception and 'instance' using its type information in '@instanceType'.
- * 
+ *
  * @author TG Team
  *
  */
@@ -59,8 +60,12 @@ public class ResultJsonDeserialiser extends StdDeserializer<Result> {
         // instantiate the result; warning type checking is required only when instance and message are not null
         if (ex != null) {
             return PropertyConflict.class.equals(resultType) ? new PropertyConflict(instance, ex.getMessage()) : new Result(instance, ex);
+        } else if (Warning.class.equals(resultType)) {
+            return new Warning(instance, message);
+        } else if (Informative.class.equals(resultType)){
+            return new Informative(instance, message);
         } else {
-            return Warning.class.equals(resultType) ? new Warning(instance, message) : new Result(instance, message);
+            return new Result(instance, message);
         }
     }
 }

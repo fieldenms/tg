@@ -16,11 +16,9 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
-import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
-import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.ioc.session.SessionInterceptor;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
@@ -33,8 +31,6 @@ import ua.com.fielden.platform.persistence.ProxyInterceptor;
  */
 public abstract class TransactionalModule extends EntityModule {
     protected final SessionFactory sessionFactory;
-    private final DomainValidationConfig domainValidationConfig = new DomainValidationConfig();
-    private final DomainMetaPropertyConfig domainMetaPropertyConfig = new DomainMetaPropertyConfig();
     private final DomainMetadata domainMetadata;
     private final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
     private final ProxyInterceptor interceptor;
@@ -45,9 +41,9 @@ public abstract class TransactionalModule extends EntityModule {
      * Creates transactional module, which holds references to instances of {@link SessionFactory} and {@link DomainMetadata}. All descending classes needs to provide those two
      * parameters.
      *
-     * @param sessionFactory
-     * @param mappingExtractor
-     * @throws Exception
+     * @param props
+     * @param defaultHibernateTypes
+     * @param applicationEntityTypes
      */
     public TransactionalModule(
             final Properties props, 
@@ -75,16 +71,6 @@ public abstract class TransactionalModule extends EntityModule {
         interceptor.setFactory(factory);
     }
 
-    public TransactionalModule(final SessionFactory sessionFactory, final DomainMetadata domainMetadata, final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
-        interceptor = null;
-        hibernateUtil = null;
-        applicationEntityTypes = null;
-
-        this.sessionFactory = sessionFactory;
-        this.domainMetadata = domainMetadata;
-        this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
-    }
-
     @Override
     protected void configure() {
         super.configure();
@@ -108,18 +94,6 @@ public abstract class TransactionalModule extends EntityModule {
                 annotatedWith(SessionRequired.class), // having annotated methods
                 new SessionInterceptor(sessionFactory) // the intercepter
         );
-        // bind DomainValidationConfig
-        bind(DomainValidationConfig.class).toInstance(domainValidationConfig);
-        // bind DomainMetaPropertyConfig
-        bind(DomainMetaPropertyConfig.class).toInstance(domainMetaPropertyConfig);
-    }
-
-    public DomainValidationConfig getDomainValidationConfig() {
-        return domainValidationConfig;
-    }
-
-    public DomainMetaPropertyConfig getDomainMetaPropertyConfig() {
-        return domainMetaPropertyConfig;
     }
 
     public DomainMetadata getDomainMetadata() {
@@ -133,4 +107,5 @@ public abstract class TransactionalModule extends EntityModule {
     protected List<Class<? extends AbstractEntity<?>>> getApplicationEntityTypes() {
         return Collections.unmodifiableList(applicationEntityTypes);
     }
+
 }

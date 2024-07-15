@@ -1,8 +1,12 @@
 package ua.com.fielden.platform.ui.config;
 
+import java.util.Date;
+
+import ua.com.fielden.platform.dashboard.DashboardRefreshFrequency;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
@@ -10,9 +14,14 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.SkipDefaultStringKeyMemberValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
+import ua.com.fielden.platform.entity.validation.RestrictCommasValidator;
+import ua.com.fielden.platform.entity.validation.RestrictExtraWhitespaceValidator;
+import ua.com.fielden.platform.entity.validation.RestrictNonPrintableCharactersValidator;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
+import ua.com.fielden.platform.ui.config.definers.EntityCentreConfigDashboardableDefiner;
 
 /**
  * A type designed for storing entity centres in a binary format, which can be used for storing configurations in databases, files etc.
@@ -39,9 +48,10 @@ import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle("Configuration key")
-@CompanionObject(IEntityCentreConfig.class)
+@CompanionObject(EntityCentreConfigCo.class)
 @MapEntityTo("ENTITY_CENTRE_CONFIG")
 @DescTitle("Description")
+@DenyIntrospection
 public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> {
 
     @IsProperty
@@ -54,23 +64,100 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
     @CompositeKeyMember(2)
     @Title(value = "Title", desc = "Entity configuration title.")
     @MapTo("TITLE")
+    @SkipDefaultStringKeyMemberValidation({RestrictNonPrintableCharactersValidator.class, RestrictExtraWhitespaceValidator.class, RestrictCommasValidator.class})
     private String title;
 
     @IsProperty
     @CompositeKeyMember(3)
-    @Title(value = "Corresponding menu item", desc = "A property to specify a main menu item to which this configuration belongs")
+    @Title(value = "Corresponding menu item", desc = "A property to specify a main menu item to which this configuration belongs.")
     @MapTo("ID_MAIN_MENU")
     private MainMenuItem menuItem;
 
     @IsProperty
-    @Title(value = "Is principal?", desc = "Indicates whether this configuration is the principal one and thus corresponds to a main menu item")
+    @Title(value = "Is principal?", desc = "Indicates whether this configuration is the principal one and thus corresponds to a main menu item.")
     @MapTo("IS_PRINCIPAL")
     private boolean principal = false;
 
     @IsProperty
-    @Title(value = "Is preferred?", desc = "Indicates whether this configuration is preferred over the others on the same menu item")
+    @Title(value = "Is preferred?", desc = "Indicates whether this configuration is preferred over the others on the same menu item.")
     @MapTo
     private boolean preferred = false;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Config UUID", desc = "UUID of centre configuration [represented by this EntityCentreConfig instance] for the user that created it (SAVED or FRESH surrogate kind) or other users with which it was shared / based-on (FRESH surrogate kind only).")
+    private String configUuid;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Dashboardable?", desc = "Indicates whether this configuration is dashboardable i.e. it is present in owner's dashboard or dashboards of users with which it was shared / based-on.")
+    @AfterChange(EntityCentreConfigDashboardableDefiner.class)
+    private boolean dashboardable = false;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Dashboardable Date", desc = "Date when this configuration was made dashboardable.")
+    private Date dashboardableDate;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Dashboard Refresh Frequency", desc = "Defines how frequently this configuration should be refreshed as part of the dashboard refresh lifecycle.")
+    private DashboardRefreshFrequency dashboardRefreshFrequency;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Run Automatically?", desc = "Defines whether this configuration should be auto run upon loading.")
+    private boolean runAutomatically = false;
+
+    @Observable
+    public EntityCentreConfig setRunAutomatically(final boolean runAutomatically) {
+        this.runAutomatically = runAutomatically;
+        return this;
+    }
+
+    public boolean isRunAutomatically() {
+        return runAutomatically;
+    }
+
+    @Observable
+    public EntityCentreConfig setDashboardRefreshFrequency(final DashboardRefreshFrequency dashboardRefreshFrequency) {
+        this.dashboardRefreshFrequency = dashboardRefreshFrequency;
+        return this;
+    }
+
+    public DashboardRefreshFrequency getDashboardRefreshFrequency() {
+        return dashboardRefreshFrequency;
+    }
+
+    @Observable
+    public EntityCentreConfig setDashboardableDate(final Date dashboardableDate) {
+        this.dashboardableDate = dashboardableDate;
+        return this;
+    }
+
+    public Date getDashboardableDate() {
+        return dashboardableDate;
+    }
+
+    @Observable
+    public EntityCentreConfig setDashboardable(final boolean dashboardable) {
+        this.dashboardable = dashboardable;
+        return this;
+    }
+
+    public boolean isDashboardable() {
+        return dashboardable;
+    }
+
+    @Observable
+    public EntityCentreConfig setConfigUuid(final String configUuid) {
+        this.configUuid = configUuid;
+        return this;
+    }
+
+    public String getConfigUuid() {
+        return configUuid;
+    }
 
     public boolean isPreferred() {
         return preferred;
@@ -120,6 +207,12 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
     public EntityCentreConfig setTitle(final String title) {
         this.title = title;
         return this;
+    }
+
+    @Override
+    @Observable
+    public EntityCentreConfig setConfigBody(final byte[] configBody) {
+        return (EntityCentreConfig) super.setConfigBody(configBody);
     }
 
 }

@@ -154,7 +154,7 @@ Simply run `make release-major`, `make release-minor`, or `make-release-patch`
 and it will automatically do the following:
 
  - Build chai.js
- - Bump the version numbers accross the project
+ - Bump the version numbers across the project
  - Make a commit within git
 
 All you need to do is push the commit up and make a pull request, one of the core contributors will merge it and publish a release.
@@ -163,7 +163,7 @@ All you need to do is push the commit up and make a pull request, one of the cor
 
 Anyone who is a core contributor (see the [Core Contributors Heading in the Readme](https://github.com/chaijs/chai#core-contributors)) can publish a release:
 
-1. Go to te [Releases page on Github](https://github.com/chaijs/chai/releases)
+1. Go to the [Releases page on Github](https://github.com/chaijs/chai/releases)
 2. Hit "Draft a new release" (if you can't see this, you're not a core contributor!)
 3. Write human-friendly Release Notes based on changelog.
   - The release title is "x.x.x / YYYY-MM-DD" (where x.x.x is the version number)
@@ -212,3 +212,7 @@ Feel free to reach out to any of the core-contributors with you questions or con
   - GH: [@keithamus](https://github.com/keithamus)
   - TW: [@keithamus](http://twitter.com/keithamus)
   - IRC: keithamus
+- Lucas Fernandes da Costa
+  - GH: [@lucasfcosta](https://github.com/lucasfcosta)
+  - TW: [@lfernandescosta](https://twitter.com/lfernandescosta)
+  - IRC: lucasfcosta

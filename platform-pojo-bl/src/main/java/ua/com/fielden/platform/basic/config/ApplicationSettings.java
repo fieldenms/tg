@@ -18,7 +18,8 @@ public class ApplicationSettings implements IApplicationSettings {
     private final String packagePath;
     private final String pathToSecurityTokens;
     private final String securityTokensPackageName;
-    private final String workflow;
+    private final Workflows workflow;
+    private final AuthMode authMode;
     private final String smtpServer;
     private final String fromAddress;
 
@@ -31,6 +32,7 @@ public class ApplicationSettings implements IApplicationSettings {
             final @Named("tokens.path") String pathToSecurityTokens,//
             final @Named("tokens.package") String securityTokensPackageName,//
             final @Named("workflow") String workflow,
+            final @Named("auth.mode") String authMode,
             final @Named("email.smtp") String smtpServer,
             final @Named("email.fromAddress") String fromAddress) {
         this.appName = appName;
@@ -39,7 +41,8 @@ public class ApplicationSettings implements IApplicationSettings {
         this.packagePath = packagePath;
         this.pathToSecurityTokens = pathToSecurityTokens;
         this.securityTokensPackageName = securityTokensPackageName;
-        this.workflow = workflow;
+        this.workflow = Workflows.valueOf(workflow.toLowerCase());
+        this.authMode = AuthMode.valueOf(authMode.toUpperCase());
         this.smtpServer = smtpServer;
         this.fromAddress = fromAddress;
     }
@@ -98,7 +101,7 @@ public class ApplicationSettings implements IApplicationSettings {
     }
 
     @Override
-    public String workflow() {
+    public Workflows workflow() {
         return workflow;
     }
 
@@ -108,6 +111,11 @@ public class ApplicationSettings implements IApplicationSettings {
 
     public String getFromAddress() {
         return fromAddress;
+    }
+
+    @Override
+    public AuthMode authMode() {
+        return authMode;
     }
 
 }

@@ -7,7 +7,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import java.math.BigDecimal;
 import java.util.Date;
 
-import ua.com.fielden.platform.entity.AbstractPersistentEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
@@ -33,6 +33,7 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
 import ua.com.fielden.platform.sample.domain.definers.CosWithACEDefiner;
 import ua.com.fielden.platform.sample.domain.definers.RequirednessDefiner;
+import ua.com.fielden.platform.sample.domain.definers.TgPersistentEntityWithPropertiesEntityPropDefiner;
 import ua.com.fielden.platform.sample.domain.validators.CosConcreteValueProhibitedValidator;
 import ua.com.fielden.platform.sample.domain.validators.CosEmptyValueProhibitedValidator;
 import ua.com.fielden.platform.sample.domain.validators.CosWithValidatorValidator;
@@ -57,7 +58,7 @@ import ua.com.fielden.platform.types.Money;
 @MapEntityTo
 @DescTitle(value = "Desc", desc = "Some desc description")
 @DisplayDescription
-public class TgPersistentEntityWithProperties extends AbstractPersistentEntity<String> {
+public class TgPersistentEntityWithProperties extends AbstractFunctionalEntityWithCentreContext<String> { // yet persistent (@MapEntityTo); has been marked as functional to be able to add it as the action of editing itself
     @IsProperty
     @MapTo
     @Title(value = "Integer prop", desc = "Integer prop desc")
@@ -67,6 +68,7 @@ public class TgPersistentEntityWithProperties extends AbstractPersistentEntity<S
     @MapTo
     @Title(value = "Entity prop", desc = "Entity prop desc")
     @BeforeChange(@Handler(EntityValidator.class))
+    @AfterChange(TgPersistentEntityWithPropertiesEntityPropDefiner.class)
     private TgPersistentEntityWithProperties entityProp;
 
     @IsProperty(precision = 18, scale = 5)
@@ -111,7 +113,7 @@ public class TgPersistentEntityWithProperties extends AbstractPersistentEntity<S
     @Title(value = "Conflicting prop", desc = "Conflicting prop desc")
     private String conflictingProp;
 
-    @IsProperty
+    @IsProperty(displayAs="#2vs#1v")
     @MapTo
     @Title(value = "Composite prop", desc = "Composite prop desc")
     private TgPersistentCompositeEntity compositeProp;
@@ -188,17 +190,17 @@ public class TgPersistentEntityWithProperties extends AbstractPersistentEntity<S
     @MapTo
     @Title(value = "Hyperlink", desc = "A property of type Hyperlink.")
     private Hyperlink hyperlinkProp;
-    
+
     @IsProperty
     @MapTo
     @Title(value = "Proxy prop", desc = "Property to test proxiness (not added to fetch provider)")
     private TgPersistentEntityWithProperties proxyProp;
-    
+
     @IsProperty
     @MapTo
     @Title(value = "Id-only proxy prop", desc = "Property to test id-only proxiness (added to fetch provider but provided with id-only proxy instance)")
     private TgPersistentEntityWithProperties idOnlyProxyProp;
-    
+
     ////////////////////////////////////////// CRIT-ONLY SINGLE PROPERTIES (SELECTION CRITERIA VALIDATION / DEFINING #979) //////////////////////////////////////////
     // INITIAL
     @IsProperty
@@ -206,360 +208,375 @@ public class TgPersistentEntityWithProperties extends AbstractPersistentEntity<S
     @CritOnly(SINGLE)
     @Required
     private TgPersistentEntityWithProperties cosStaticallyRequired;
-    
+
     @IsProperty
     @Title("cosStaticallyReadonly")
     @CritOnly(SINGLE)
     @Readonly
     private TgPersistentEntityWithProperties cosStaticallyReadonly;
-    
+
     @IsProperty
     @Title("cosEmptyValueProhibited")
     @CritOnly(SINGLE)
     @BeforeChange(@Handler(CosEmptyValueProhibitedValidator.class))
     private TgPersistentEntityWithProperties cosEmptyValueProhibited;
-    
+
     @IsProperty
     @Title("cosConcreteValueProhibited")
     @CritOnly(SINGLE)
     @BeforeChange(@Handler(CosConcreteValueProhibitedValidator.class))
     private TgPersistentEntityWithProperties cosConcreteValueProhibited;
-    
+
     @IsProperty
     @Title("cosStaticallyRequiredWithDefaultValue")
     @CritOnly(SINGLE)
     @Required
     private TgPersistentEntityWithProperties cosStaticallyRequiredWithDefaultValue;
-    
+
     @IsProperty
     @Title("cosStaticallyReadonlyWithDefaultValue")
     @CritOnly(SINGLE)
     @Readonly
     private TgPersistentEntityWithProperties cosStaticallyReadonlyWithDefaultValue;
-    
+
     // CHANGE
     @IsProperty
     @Title("cosWithValidator")
     @CritOnly(SINGLE)
     @BeforeChange(@Handler(CosWithValidatorValidator.class))
     private TgPersistentEntityWithProperties cosWithValidator;
-    
+
     @IsProperty
     @Title("cosWithDependency")
     @CritOnly(SINGLE)
     @Dependent("cosWithValidator")
     private TgPersistentEntityWithProperties cosWithDependency;
-    
+
     @IsProperty
     @Title("cosWithWarner")
     @CritOnly(SINGLE)
     @BeforeChange(@Handler(CosWithWarnerValidator.class))
     private TgPersistentEntityWithProperties cosWithWarner;
-    
+
     @IsProperty
     @Title("cosStaticallyRequiredWithNonEmptyDefaultValue")
     @CritOnly(SINGLE)
     @Required
     private TgPersistentEntityWithProperties cosStaticallyRequiredWithNonEmptyDefaultValue;
-    
+
     @IsProperty
     @Title("cosWithACE1")
     @CritOnly(SINGLE)
     @AfterChange(CosWithACEDefiner.class)
     private TgPersistentEntityWithProperties cosWithACE1;
-    
+
     @IsProperty
     @Title("cosWithACE1Child1")
     @CritOnly(SINGLE)
     private TgPersistentEntityWithProperties cosWithACE1Child1;
-    
+
     @IsProperty
     @Title("cosWithACE1Child2")
     @CritOnly(SINGLE)
     private TgPersistentEntityWithProperties cosWithACE1Child2;
-    
+
     @IsProperty
     @Title("cosWithACE1WithDefaultValue")
     @CritOnly(SINGLE)
     @AfterChange(CosWithACEDefiner.class)
     private TgPersistentEntityWithProperties cosWithACE1WithDefaultValue;
-    
+
     @IsProperty
     @Title("cosWithACE1WithDefaultValueChild1")
     @CritOnly(SINGLE)
     private TgPersistentEntityWithProperties cosWithACE1WithDefaultValueChild1;
-    
+
     @IsProperty
     @Title("cosWithACE1WithDefaultValueChild2")
     @CritOnly(SINGLE)
     private TgPersistentEntityWithProperties cosWithACE1WithDefaultValueChild2;
-    
+
     @IsProperty
     @Title("cosWithACE2")
     @CritOnly(SINGLE)
     @AfterChange(CosWithACEDefiner.class)
     private TgPersistentEntityWithProperties cosWithACE2;
-    
+
     @IsProperty
     @Title("cosWithACE2Child1")
     @CritOnly(SINGLE)
     private TgPersistentEntityWithProperties cosWithACE2Child1;
-    
+
     @IsProperty
     @Title("cosWithACE2Child2")
     @CritOnly(SINGLE)
     private TgPersistentEntityWithProperties cosWithACE2Child2;
-    
+
     @IsProperty
     @Title("cosWithACE2WithDefaultValue")
     @CritOnly(SINGLE)
     @AfterChange(CosWithACEDefiner.class)
     private TgPersistentEntityWithProperties cosWithACE2WithDefaultValue;
-    
+
     @IsProperty
     @Title("cosWithACE2WithDefaultValueChild1")
     @CritOnly(SINGLE)
     private TgPersistentEntityWithProperties cosWithACE2WithDefaultValueChild1;
-    
+
     @IsProperty
     @Title("cosWithACE2WithDefaultValueChild2")
     @CritOnly(SINGLE)
     private TgPersistentEntityWithProperties cosWithACE2WithDefaultValueChild2;
-    
+
     @IsProperty(TgPersistentEntityWithProperties.class)
     @MapTo
     private PropertyDescriptor<TgPersistentEntityWithProperties> propertyDescriptorProp;
-    
+
+    @IsProperty
+    @MapTo
+    @Title("Completed?")
+    private boolean completed = false;
+
+    @Observable
+    public TgPersistentEntityWithProperties setCompleted(final boolean completed) {
+        this.completed = completed;
+        return this;
+    }
+
+    public boolean isCompleted() {
+        return completed;
+    }
+
     @Observable
     public TgPersistentEntityWithProperties setPropertyDescriptorProp(final PropertyDescriptor<TgPersistentEntityWithProperties> propertyDescriptorProp) {
         this.propertyDescriptorProp = propertyDescriptorProp;
         return this;
     }
-    
+
     public PropertyDescriptor<TgPersistentEntityWithProperties> getPropertyDescriptorProp() {
         return propertyDescriptorProp;
     }
-    
+
     @Observable
     public TgPersistentEntityWithProperties setCosWithACE2WithDefaultValueChild2(final TgPersistentEntityWithProperties cosWithACE2WithDefaultValueChild2) {
         this.cosWithACE2WithDefaultValueChild2 = cosWithACE2WithDefaultValueChild2;
         return this;
     }
-    
+
     public TgPersistentEntityWithProperties getCosWithACE2WithDefaultValueChild2() {
         return cosWithACE2WithDefaultValueChild2;
     }
-    
+
     @Observable
     public TgPersistentEntityWithProperties setCosWithACE2WithDefaultValueChild1(final TgPersistentEntityWithProperties cosWithACE2WithDefaultValueChild1) {
         this.cosWithACE2WithDefaultValueChild1 = cosWithACE2WithDefaultValueChild1;
         return this;
     }
-    
+
     public TgPersistentEntityWithProperties getCosWithACE2WithDefaultValueChild1() {
         return cosWithACE2WithDefaultValueChild1;
     }
-    
+
     @Observable
     public TgPersistentEntityWithProperties setCosWithACE2WithDefaultValue(final TgPersistentEntityWithProperties cosWithACE2WithDefaultValue) {
         this.cosWithACE2WithDefaultValue = cosWithACE2WithDefaultValue;
         return this;
     }
-    
+
     public TgPersistentEntityWithProperties getCosWithACE2WithDefaultValue() {
         return cosWithACE2WithDefaultValue;
     }
-    
+
     @Observable
     public TgPersistentEntityWithProperties setCosWithACE2Child2(final TgPersistentEntityWithProperties cosWithACE2Child2) {
         this.cosWithACE2Child2 = cosWithACE2Child2;
         return this;
     }
-    
+
     public TgPersistentEntityWithProperties getCosWithACE2Child2() {
         return cosWithACE2Child2;
     }
-    
+
     @Observable
     public TgPersistentEntityWithProperties setCosWithACE2Child1(final TgPersistentEntityWithProperties cosWithACE2Child1) {
         this.cosWithACE2Child1 = cosWithACE2Child1;
         return this;
     }
-    
+
     public TgPersistentEntityWithProperties getCosWithACE2Child1() {
         return cosWithACE2Child1;
     }
-    
+
     @Observable
     public TgPersistentEntityWithProperties setCosWithACE2(final TgPersistentEntityWithProperties cosWithACE2) {
         this.cosWithACE2 = cosWithACE2;
         return this;
     }
-    
+
     public TgPersistentEntityWithProperties getCosWithACE2() {
         return cosWithACE2;
     }
-    
+
     @Observable
     public TgPersistentEntityWithProperties setCosWithACE1WithDefaultValueChild2(final TgPersistentEntityWithProperties cosWithACE1WithDefaultValueChild2) {
         this.cosWithACE1WithDefaultValueChild2 = cosWithACE1WithDefaultValueChild2;
         return this;
     }
-    
+
     public TgPersistentEntityWithProperties getCosWithACE1WithDefaultValueChild2() {
         return cosWithACE1WithDefaultValueChild2;
     }
-    
+
     @Observable
     public TgPersistentEntityWithProperties setCosWithACE1WithDefaultValueChild1(final TgPersistentEntityWithProperties cosWithACE1WithDefaultValueChild1) {
         this.cosWithACE1WithDefaultValueChild1 = cosWithACE1WithDefaultValueChild1;
         return this;
     }
-    
+
     public TgPersistentEntityWithProperties getCosWithACE1WithDefaultValueChild1() {
         return cosWithACE1WithDefaultValueChild1;
     }
-    
+
     @Observable
     public TgPersistentEntityWithProperties setCosWithACE1WithDefaultValue(final TgPersistentEntityWithProperties cosWithACE1WithDefaultValue) {
         this.cosWithACE1WithDefaultValue = cosWithACE1WithDefaultValue;
         return this;
     }
-    
+
     public TgPersistentEntityWithProperties getCosWithACE1WithDefaultValue() {
         return cosWithACE1WithDefaultValue;
     }
-    
+
     @Observable
     public TgPersistentEntityWithProperties setCosWithACE1Child2(final TgPersistentEntityWithProperties cosWithACE1Child2) {
         this.cosWithACE1Child2 = cosWithACE1Child2;
         return this;
     }
-    
+
     public TgPersistentEntityWithProperties getCosWithACE1Child2() {
         return cosWithACE1Child2;
     }
-    
+
     @Observable
     public TgPersistentEntityWithProperties setCosWithACE1Child1(final TgPersistentEntityWithProperties cosWithACE1Child1) {
         this.cosWithACE1Child1 = cosWithACE1Child1;
         return this;
     }
-    
+
     public TgPersistentEntityWithProperties getCosWithACE1Child1() {
         return cosWithACE1Child1;
     }
-    
+
     @Observable
     public TgPersistentEntityWithProperties setCosWithACE1(final TgPersistentEntityWithProperties cosWithACE1) {
         this.cosWithACE1 = cosWithACE1;
         return this;
     }
-    
+
     public TgPersistentEntityWithProperties getCosWithACE1() {
         return cosWithACE1;
     }
-    
+
     @Observable
     public TgPersistentEntityWithProperties setCosStaticallyRequiredWithNonEmptyDefaultValue(final TgPersistentEntityWithProperties cosStaticallyRequiredWithNonEmptyDefaultValue) {
         this.cosStaticallyRequiredWithNonEmptyDefaultValue = cosStaticallyRequiredWithNonEmptyDefaultValue;
         return this;
     }
-    
+
     public TgPersistentEntityWithProperties getCosStaticallyRequiredWithNonEmptyDefaultValue() {
         return cosStaticallyRequiredWithNonEmptyDefaultValue;
     }
-    
+
     @Observable
     public TgPersistentEntityWithProperties setCosWithWarner(final TgPersistentEntityWithProperties cosWithWarner) {
         this.cosWithWarner = cosWithWarner;
         return this;
     }
-    
+
     public TgPersistentEntityWithProperties getCosWithWarner() {
         return cosWithWarner;
     }
-    
+
     @Observable
     public TgPersistentEntityWithProperties setCosWithDependency(final TgPersistentEntityWithProperties cosWithDependency) {
         this.cosWithDependency = cosWithDependency;
         return this;
     }
-    
+
     public TgPersistentEntityWithProperties getCosWithDependency() {
         return cosWithDependency;
     }
-    
+
     @Observable
     public TgPersistentEntityWithProperties setCosWithValidator(final TgPersistentEntityWithProperties cosWithValidator) {
         this.cosWithValidator = cosWithValidator;
         return this;
     }
-    
+
     public TgPersistentEntityWithProperties getCosWithValidator() {
         return cosWithValidator;
     }
-    
+
     @Observable
     public TgPersistentEntityWithProperties setCosStaticallyReadonlyWithDefaultValue(final TgPersistentEntityWithProperties cosStaticallyReadonlyWithDefaultValue) {
         this.cosStaticallyReadonlyWithDefaultValue = cosStaticallyReadonlyWithDefaultValue;
         return this;
     }
-    
+
     public TgPersistentEntityWithProperties getCosStaticallyReadonlyWithDefaultValue() {
         return cosStaticallyReadonlyWithDefaultValue;
     }
-    
+
     @Observable
     public TgPersistentEntityWithProperties setCosStaticallyRequiredWithDefaultValue(final TgPersistentEntityWithProperties cosStaticallyRequiredWithDefaultValue) {
         this.cosStaticallyRequiredWithDefaultValue = cosStaticallyRequiredWithDefaultValue;
         return this;
     }
-    
+
     public TgPersistentEntityWithProperties getCosStaticallyRequiredWithDefaultValue() {
         return cosStaticallyRequiredWithDefaultValue;
     }
-    
+
     @Observable
     public TgPersistentEntityWithProperties setCosConcreteValueProhibited(final TgPersistentEntityWithProperties cosConcreteValueProhibited) {
         this.cosConcreteValueProhibited = cosConcreteValueProhibited;
         return this;
     }
-    
+
     public TgPersistentEntityWithProperties getCosConcreteValueProhibited() {
         return cosConcreteValueProhibited;
     }
-    
+
     @Observable
     public TgPersistentEntityWithProperties setCosEmptyValueProhibited(final TgPersistentEntityWithProperties cosEmptyValueProhibited) {
         this.cosEmptyValueProhibited = cosEmptyValueProhibited;
         return this;
     }
-    
+
     public TgPersistentEntityWithProperties getCosEmptyValueProhibited() {
         return cosEmptyValueProhibited;
     }
-    
+
     @Observable
     public TgPersistentEntityWithProperties setCosStaticallyReadonly(final TgPersistentEntityWithProperties cosStaticallyReadonly) {
         this.cosStaticallyReadonly = cosStaticallyReadonly;
         return this;
     }
-    
+
     public TgPersistentEntityWithProperties getCosStaticallyReadonly() {
         return cosStaticallyReadonly;
     }
-    
+
     @Observable
     public TgPersistentEntityWithProperties setCosStaticallyRequired(final TgPersistentEntityWithProperties cosStaticallyRequired) {
         this.cosStaticallyRequired = cosStaticallyRequired;
         return this;
     }
-    
+
     public TgPersistentEntityWithProperties getCosStaticallyRequired() {
         return cosStaticallyRequired;
     }
-    
+
     @Observable
     public TgPersistentEntityWithProperties setIdOnlyProxyProp(final TgPersistentEntityWithProperties idOnlyProxyProp) {
         this.idOnlyProxyProp = idOnlyProxyProp;
@@ -828,5 +845,20 @@ public class TgPersistentEntityWithProperties extends AbstractPersistentEntity<S
     public Integer getNumberOfAttachments() {
         return numberOfAttachments;
     }
+
+//    Use this as additional logic for manual testing of BindSavedPropertyPostActionSuccess/Error; relaxed for web test in tg-entity-master.html
+//    @Override
+//    public Result isEditable() {
+//        // fallback to original implementation (i.e. comment following lines) if there is a need to make completed instance not completed again
+//        final Result defaultResult = super.isEditable();
+//        if (!defaultResult.isSuccessful()) {
+//            return defaultResult;
+//        }
+//        if (!isCompleted() || isDirty()) {
+//            return successful(this);
+//        } else {
+//            return failure(this, "Completed instance is not editable.");
+//        }
+//    }
 
 }

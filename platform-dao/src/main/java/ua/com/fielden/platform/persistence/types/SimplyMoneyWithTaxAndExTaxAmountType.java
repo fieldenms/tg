@@ -27,6 +27,8 @@ import ua.com.fielden.platform.types.markers.ISimplyMoneyWithTaxAndExTaxAmountTy
  */
 public class SimplyMoneyWithTaxAndExTaxAmountType extends AbstractCompositeUserType implements ISimplyMoneyWithTaxAndExTaxAmountType {
 
+    public static final SimplyMoneyWithTaxAndExTaxAmountType INSTANCE = new SimplyMoneyWithTaxAndExTaxAmountType();
+    
     @Override
     public String[] getPropertyNames() {
         return new String[] { "exTaxAmount", "taxAmount" };

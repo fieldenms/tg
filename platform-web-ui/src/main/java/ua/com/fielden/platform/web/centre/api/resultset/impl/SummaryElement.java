@@ -56,6 +56,7 @@ public class SummaryElement implements IRenderable, IImportable {
         attrs.put("type", egiRepresentationFor(DynamicEntityClassLoader.getOriginalType(this.propertyType)));
         attrs.put("column-title", this.titleDesc.getKey());
         attrs.put("column-desc", this.titleDesc.getValue());
+        attrs.put("slot", "summary-property");
         return attrs;
     }
 

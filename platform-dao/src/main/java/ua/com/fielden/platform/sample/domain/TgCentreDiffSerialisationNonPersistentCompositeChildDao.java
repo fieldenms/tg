@@ -22,7 +22,7 @@ public class TgCentreDiffSerialisationNonPersistentCompositeChildDao extends Com
     }
     
     @Override
-    public TgCentreDiffSerialisationNonPersistentCompositeChild findByKeyAndFetch(final fetch<TgCentreDiffSerialisationNonPersistentCompositeChild> fetchModel, final Object... keyValues) {
+    public TgCentreDiffSerialisationNonPersistentCompositeChild findByKeyAndFetch(final boolean filtered, final fetch<TgCentreDiffSerialisationNonPersistentCompositeChild> fetchModel, final Object... keyValues) {
         return TgCentreDiffSerialisationNonPersistentCompositeChild.GroupingProperty.findByKey((String) keyValues[0]).map(v -> v.value).orElse(null);
     }
     

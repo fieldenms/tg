@@ -1,6 +1,14 @@
 package ua.com.fielden.platform.web.view.master.api.with_master.impl;
 
+import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+
+import org.apache.commons.lang3.StringUtils;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dom.DomElement;
@@ -17,9 +25,9 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
     private final IRenderable renderable;
 
     public AbstractMasterWithMaster(final Class<T> entityType, final Class<? extends AbstractEntity<?>> embededMasterType, final boolean shouldRefreshParentCentreAfterSave) {
-        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
-                .replace("<!--@imports-->", "<link rel='import' href='/app/tg-element-loader.html'>\n")
-                .replace("@entity_type", entityType.getSimpleName())
+        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
+                .replace(IMPORTS, "import '/resources/element_loader/tg-element-loader.js';\n" + StringUtils.join(getAdditionalImports(), "\n"))
+                .replace(ENTITY_TYPE, flattenedNameOf(entityType))
                 .replace("<!--@tg-entity-master-content-->",
                           "<tg-element-loader id='loader' context='[[_createContextHolderForEmbeddedViews]]' context-property='getMasterEntity' "
                         + "    import=" + getImportUri(embededMasterType)
@@ -30,7 +38,7 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
                 .replace("//@ready-callback",
                         "this.masterWithMaster = true;\n" +
                         "this._focusEmbededView = function () {\n" +
-                        "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.focusView) {\n" +
+                        "    if (this.wasLoaded() && this.$.loader.loadedElement.focusView) {\n" +
                         "        this.$.loader.loadedElement.focusView();\n" +
                         "    }\n" +
                         "}.bind(this);\n" +
@@ -44,12 +52,12 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
                         "    return false;\n" +
                         "}.bind(self);\n" +
                         "this._focusNextEmbededView = function (e) {\n" +
-                        "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.focusNextView) {\n" +
+                        "    if (this.wasLoaded() && this.$.loader.loadedElement.focusNextView) {\n" +
                         "        this.$.loader.loadedElement.focusNextView(e);\n" +
                         "    }\n" +
                         "}.bind(this);\n" +
                         "this._focusPreviousEmbededView = function (e) {\n" +
-                        "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.focusPreviousView) {\n" +
+                        "    if (this.wasLoaded() && this.$.loader.loadedElement.focusPreviousView) {\n" +
                         "        this.$.loader.loadedElement.focusPreviousView(e);\n" +
                         "    }\n" +
                         "}.bind(this);\n" +
@@ -78,6 +86,10 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
             }
         };
     }
+
+    protected List<String> getAdditionalImports() {
+        return new ArrayList<>();
+    };
 
     /**
      * Returns the implementation for the after load listener of embedded master.

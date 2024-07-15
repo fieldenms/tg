@@ -9,13 +9,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 
-import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.ICollectionModificationController;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.security.provider.ISecurityTokenNodeTransformation;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.provider.SecurityTokenNode;
-import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
@@ -26,19 +25,19 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  */
 public class UserRoleTokensUpdaterController implements ICollectionModificationController<UserRole, UserRoleTokensUpdater, String, SecurityTokenInfo> {
     private final EntityFactory factory;
-    private final SecurityTokenProvider securityTokenProvider;
+    private final ISecurityTokenProvider securityTokenProvider;
     private final ISecurityTokenNodeTransformation tokenTransformation;
     private final IEntityDao<UserRole> coUserRole;
     private final IEntityDao<UserRoleTokensUpdater> co$UserRoleTokensUpdater;
 
     public UserRoleTokensUpdaterController(
             final EntityFactory factory, 
-            final IApplicationSettings applicationSettings, 
             final IEntityDao<UserRole> coUserRole, 
             final IEntityDao<UserRoleTokensUpdater> co$UserRoleTokensUpdater,
-            final ISecurityTokenNodeTransformation tokenTransformation) {
+            final ISecurityTokenNodeTransformation tokenTransformation,
+            final ISecurityTokenProvider securityTokenProvider) {
         this.factory = factory;
-        this.securityTokenProvider = new SecurityTokenProvider(applicationSettings.pathToSecurityTokens(), applicationSettings.securityTokensPackageName());
+        this.securityTokenProvider = securityTokenProvider;
         this.tokenTransformation = tokenTransformation;
         this.coUserRole = coUserRole;
         this.co$UserRoleTokensUpdater = co$UserRoleTokensUpdater;
@@ -61,7 +60,7 @@ public class UserRoleTokensUpdaterController implements ICollectionModificationC
 
     @Override
     public Collection<SecurityTokenInfo> refetchAvailableItems(final UserRole masterEntity) {
-        return loadAvailableTokens(securityTokenProvider, factory);
+        return lineariseTokens(tokenTransformation.transform(securityTokenProvider.getTopLevelSecurityTokenNodes()), factory);
     }
 
     @Override
@@ -72,10 +71,6 @@ public class UserRoleTokensUpdaterController implements ICollectionModificationC
     @Override
     public Long persistedActionVersion(final Long masterEntityId) {
         return persistedActionVersionFor(masterEntityId, co$UserRoleTokensUpdater);
-    }
-
-    private Set<SecurityTokenInfo> loadAvailableTokens(final SecurityTokenProvider securityTokenProvider, final EntityFactory factory) {
-        return lineariseTokens(tokenTransformation.transform(securityTokenProvider.getTopLevelSecurityTokenNodes()), factory);
     }
 
     private static Set<SecurityTokenInfo> lineariseTokens(final SortedSet<SecurityTokenNode> topLevelTokenNodes, final EntityFactory factory) {

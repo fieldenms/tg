@@ -7,6 +7,7 @@ import java.util.Date;
 
 import ua.com.fielden.platform.attachment.definers.AssignAttachmentTitle;
 import ua.com.fielden.platform.attachment.definers.UpdateAttachmentRevNo;
+import ua.com.fielden.platform.attachment.validators.AttachmentTitleValidator;
 import ua.com.fielden.platform.attachment.validators.CanBeUsedAsLastAttachmentRev;
 import ua.com.fielden.platform.attachment.validators.CanBeUsedAsPrevAttachmentRev;
 import ua.com.fielden.platform.attachment.validators.IsRevNoAlignedWithPrevRevision;
@@ -15,6 +16,7 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.Dependent;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.DisplayDescription;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -25,11 +27,16 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Required;
+import ua.com.fielden.platform.entity.annotation.RestrictCreationByUsers;
+import ua.com.fielden.platform.entity.annotation.SkipDefaultStringKeyMemberValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.entity.validation.MaxLengthValidator;
+import ua.com.fielden.platform.entity.validation.RestrictCommasValidator;
+import ua.com.fielden.platform.entity.validation.RestrictExtraWhitespaceValidator;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -58,6 +65,7 @@ import ua.com.fielden.platform.utils.Pair;
 @DisplayDescription
 @MapEntityTo
 @CompanionObject(IAttachment.class)
+@RestrictCreationByUsers
 public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     public static final String HYPERLINK = "[hyperlink]";
     public static final String pn_TITLE = "title";
@@ -75,10 +83,12 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
     public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
 
-    @IsProperty
+    @IsProperty(length = 2048)
     @MapTo
     @Title(value = "Title or Link", desc = "A convenient document title or a link to an external resource")
     @CompositeKeyMember(1)
+    @BeforeChange({@Handler(MaxLengthValidator.class), @Handler(AttachmentTitleValidator.class)})
+    @SkipDefaultStringKeyMemberValidation({RestrictExtraWhitespaceValidator.class, RestrictCommasValidator.class}) // see AttachmentTitleValidator for more details
     private String title;
 
     @IsProperty
@@ -86,15 +96,17 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     @Title(value = "SHA1", desc = "A unique SHA1-based checksum of the file referenced by this attachment.")
     @CompositeKeyMember(2)
     @Readonly
-    @Final(persistentOnly = false)
+    @Final(persistedOnly = false)
     private String sha1;
 
-    @IsProperty
+    @IsProperty(length = 2048)
     @MapTo
     @Title(value = "File Name", desc = "The file name of the uploaded document or a link indication.")
     @Readonly
     @Required
-    @Final(persistentOnly = false)
+    @Final(persistedOnly = false)
+    @Dependent(pn_TITLE)
+    @BeforeChange(@Handler(MaxLengthValidator.class))
     @AfterChange(AssignAttachmentTitle.class)
     private String origFileName;
 
@@ -102,14 +114,14 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     @MapTo
     @Title(value = "Last Modified", desc = "The date/time of the last file modification.")
     @Readonly
-    @Final(persistentOnly = false)
+    @Final(persistedOnly = false)
     private Date lastModified;
 
     @IsProperty
     @MapTo
     @Title(value = "MIME", desc = "File MIME type.")
     @Readonly
-    @Final(persistentOnly = false)
+    @Final(persistedOnly = false)
     private String mime;
 
     @IsProperty
@@ -152,6 +164,15 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
      * The last revision should not be modifiable in any other circumstances.
      */
     private boolean allowLastRevisionUpdate = false;
+
+    /**
+     *  A convenient predicate determining whether an attachment represents a hyperlink.
+     *
+     * @return
+     */
+    public boolean isHyperlinkAttachment() {
+        return HYPERLINK.equals(getOrigFileName());
+    }
 
     public boolean isLastRevisionUpdateAllowed() {
         return allowLastRevisionUpdate;

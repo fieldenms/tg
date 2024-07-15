@@ -16,7 +16,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
  *
  */
 @KeyType(NoKey.class)
-@CompanionObject(IOverrideCentreConfig.class)
+@CompanionObject(OverrideCentreConfigCo.class)
 @EntityTitle(value = "Override Configuration", desc = "Override existing centre cnfiguration")
 public class OverrideCentreConfig extends AbstractFunctionalEntityWithCentreContext<NoKey> implements IContinuationData {
     

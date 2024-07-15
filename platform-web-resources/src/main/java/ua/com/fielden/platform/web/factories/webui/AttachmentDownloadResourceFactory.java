@@ -9,6 +9,8 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.utils.IDates;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.AttachmentDownloadResource;
 
@@ -21,11 +23,14 @@ import ua.com.fielden.platform.web.resources.webui.AttachmentDownloadResource;
 public class AttachmentDownloadResourceFactory extends Restlet {
     private final RestServerUtil restUtil;
     private final ICompanionObjectFinder companionFinder;
-    
+    private final IDeviceProvider deviceProvider;
+    private final IDates dates;
 
     public AttachmentDownloadResourceFactory(final Injector injector) {
         this.companionFinder = injector.getInstance(ICompanionObjectFinder.class);
         this.restUtil = injector.getInstance(RestServerUtil.class);
+        this.deviceProvider = injector.getInstance(IDeviceProvider.class);
+        this.dates = injector.getInstance(IDates.class);
     }
 
     @Override
@@ -36,6 +41,8 @@ public class AttachmentDownloadResourceFactory extends Restlet {
             new AttachmentDownloadResource(
                     restUtil,
                     companionFinder.find(Attachment.class),
+                    deviceProvider,
+                    dates,
                     getContext(), request, response).handle();
         }
     }

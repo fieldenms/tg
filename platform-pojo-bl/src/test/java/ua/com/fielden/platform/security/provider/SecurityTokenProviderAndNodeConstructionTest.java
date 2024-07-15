@@ -2,23 +2,27 @@ package ua.com.fielden.platform.security.provider;
 
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.longDesc;
 import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.shortDesc;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.SortedSet;
-import java.util.stream.Collectors;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.security.tokens.open_simple_master.UserMaster_CanOpen_Token;
+import ua.com.fielden.security.tokens.open_compound_master.OpenUserMasterAction_CanOpen_Token;
+
 /**
  * A test case to ensure correct configuration of security tokens as provided for security tooling (the tree structure).
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class SecurityTokenProviderAndNodeConstructionTest {
 
@@ -51,13 +55,13 @@ public class SecurityTokenProviderAndNodeConstructionTest {
     }
 
     @Test
-    public void testThatSecurityTokenHierarchyIsDeterminedCorrectly() throws Exception {
+    public void security_token_hierarchy_is_determined_correctly_for_the_specified_path_and_package() {
         final SecurityTokenProvider provider = new SecurityTokenProvider("target/test-classes", "ua.com.fielden.platform.security.provider");
         final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
-        assertEquals("Incorrect number of top security tokens.", 11, topNodes.size());
+        assertEquals("Incorrect number of top security tokens.", 37, topNodes.size());
 
         // skip attachment related security tokens before getting iterator nodesWithSkippedAttachmentTokens
-        final Iterator<SecurityTokenNode> superIter = topNodes.stream().skip(3).collect(toList()).iterator();
+        final Iterator<SecurityTokenNode> superIter = topNodes.stream().skip(18).collect(toList()).iterator();
 
         final SecurityTokenNode top1 = superIter.next();
         assertEquals("Incorrect first top token.", Top1LevelSecurityToken.class, top1.getToken());
@@ -70,4 +74,31 @@ public class SecurityTokenProviderAndNodeConstructionTest {
         assertEquals("Incorrect second top token.", Top2LevelSecurityToken.class, top2.getToken());
         assertEquals("Incorrect number of sub tokens.", 0, top2.getSubTokenNodes().size());
     }
+
+    @Test
+    public void security_token_hierarchy_cannot_be_build_if_tokens_have_duplicate_simple_class_name() {
+        try {
+            new SecurityTokenProvider("target/test-classes", "ua.com.fielden.platform.security");
+            fail("Security token provider did not detect duplicate tokens.");
+        } catch (final ua.com.fielden.platform.security.exceptions.SecurityException ex) {
+            assertEquals(SecurityTokenProvider.ERR_DUPLICATE_SECURITY_TOKENS, ex.getMessage());
+        }
+    }
+
+    @Test
+    public void security_token_provider_can_be_used_to_exclude_standard_tokens() {
+        final SecurityTokenProvider standardProvider = new SecurityTokenProvider("target/test-classes", "ua.com.fielden.platform.security.provider");
+        assertTrue(standardProvider.getTokenByName(UserMaster_CanOpen_Token.class.getSimpleName()).isPresent());
+        final SecurityTokenProvider providerWithExclution = new SecurityTokenProvider("target/test-classes", "ua.com.fielden.platform.security.provider", setOf(), setOf(UserMaster_CanOpen_Token.class));
+        assertFalse(providerWithExclution.getTokenByName(UserMaster_CanOpen_Token.class.getSimpleName()).isPresent());
+    }
+
+    @Test
+    public void security_token_provider_can_be_used_to_include_extra_tokens() {
+        final SecurityTokenProvider standardProvider = new SecurityTokenProvider("target/test-classes", "ua.com.fielden.platform.security.provider");
+        assertFalse(standardProvider.getTokenByName(OpenUserMasterAction_CanOpen_Token.class.getSimpleName()).isPresent());
+        final SecurityTokenProvider providerWithExclution = new SecurityTokenProvider("target/test-classes", "ua.com.fielden.platform.security.provider", setOf(OpenUserMasterAction_CanOpen_Token.class), setOf());
+        assertTrue(providerWithExclution.getTokenByName(OpenUserMasterAction_CanOpen_Token.class.getSimpleName()).isPresent());
+    }
+
 }

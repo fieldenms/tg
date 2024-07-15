@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValidationResult;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
@@ -29,7 +30,6 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
@@ -40,10 +40,8 @@ import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithOtherEnt
 import ua.com.fielden.platform.serialisation.jackson.entities.FactoryForTestingEntities;
 import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
 import ua.com.fielden.platform.types.Colour;
-import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
-import ua.com.fielden.platform.ui.menu.sample.MiEmptyEntity;
-import ua.com.fielden.platform.ui.menu.sample.MiEntityWithOtherEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -59,14 +57,14 @@ public class SerialisationTestResource extends AbstractWebResource {
     private final RestServerUtil restUtil;
     private final List<AbstractEntity<?>> entities = new ArrayList<>();
 
-    public SerialisationTestResource(final RestServerUtil restUtil, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response, final FactoryForTestingEntities testingEntitiesFactory, final List<AbstractEntity<?>> entities) {
-        super(context, request, response, deviceProvider);
+    public SerialisationTestResource(final RestServerUtil restUtil, final IDeviceProvider deviceProvider, final IDates dates, final Context context, final Request request, final Response response, final FactoryForTestingEntities testingEntitiesFactory, final List<AbstractEntity<?>> entities) {
+        super(context, request, response, deviceProvider, dates);
         this.restUtil = restUtil;
         this.entities.addAll(entities);
     }
     
-    public SerialisationTestResource(final RestServerUtil restUtil, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response, final FactoryForTestingEntities testingEntitiesFactory) {
-        this(restUtil, deviceProvider, context, request, response, testingEntitiesFactory, createEntities(restUtil, testingEntitiesFactory));
+    public SerialisationTestResource(final RestServerUtil restUtil, final IDeviceProvider deviceProvider, final IDates dates, final Context context, final Request request, final Response response, final FactoryForTestingEntities testingEntitiesFactory) {
+        this(restUtil, deviceProvider, dates, context, request, response, testingEntitiesFactory, createEntities(restUtil, testingEntitiesFactory));
     }
 
     /**
@@ -91,7 +89,7 @@ public class SerialisationTestResource extends AbstractWebResource {
     @Get
     public Representation sendSerialisedEntities() {
         return handleUndesiredExceptions(getResponse(), () -> {
-            return restUtil.listJSONRepresentation(this.entities);
+            return restUtil.listJsonRepresentation(this.entities);
         }, restUtil);
     }
 
@@ -432,13 +430,13 @@ public class SerialisationTestResource extends AbstractWebResource {
                 factory.createEntityWithHyperlink(),
                 factory.createUninstrumentedEntity(true, EntityWithOtherEntity.class),
                 factory.createInstrumentedEntity(true, EntityWithOtherEntity.class),
-                factory.createUninstrumentedGeneratedEntity(true, EntityWithOtherEntity.class, MiEntityWithOtherEntity.class)._1,
-                factory.createInstrumentedGeneratedEntity(true, EntityWithOtherEntity.class, MiEntityWithOtherEntity.class)._1,
+                factory.createUninstrumentedGeneratedEntity(true, EntityWithOtherEntity.class)._1,
+                factory.createInstrumentedGeneratedEntity(true, EntityWithOtherEntity.class)._1,
                 createAndSetIdOnlyProxy(factory.createUninstrumentedEntity(false, EntityWithOtherEntity.class), restUtil.getSerialiser()),
                 createAndSetIdOnlyProxy(factory.createInstrumentedEntity(false, EntityWithOtherEntity.class), restUtil.getSerialiser()),
                 factory.createInstrumentedEntity(false, EntityWithOtherEntity.class).set("prop", createIdOnlyProxy(restUtil.getSerialiser())), // here idOnlyProxy instance really goes into lastInvalidValue due to EntityExistsValidator. It is worthwhile not to remove this weird case for additional checking.
-                createAndSetIdOnlyProxy(factory.createUninstrumentedGeneratedEntity(false, EntityWithOtherEntity.class, MiEntityWithOtherEntity.class)._1, restUtil.getSerialiser()),
-                createAndSetIdOnlyProxy(factory.createInstrumentedGeneratedEntity(false, EntityWithOtherEntity.class, MiEntityWithOtherEntity.class)._1, restUtil.getSerialiser()));
+                createAndSetIdOnlyProxy(factory.createUninstrumentedGeneratedEntity(false, EntityWithOtherEntity.class)._1, restUtil.getSerialiser()),
+                createAndSetIdOnlyProxy(factory.createInstrumentedGeneratedEntity(false, EntityWithOtherEntity.class)._1, restUtil.getSerialiser()));
     }
     
     private static AbstractEntity<?> createAndSetIdOnlyProxy(final AbstractEntity<?> entity, final ISerialiser serialiser) {
@@ -452,18 +450,11 @@ public class SerialisationTestResource extends AbstractWebResource {
     }
     
     private static AbstractEntity<String> createGeneratedEntity(final ISerialiser serialiser, final boolean instrumented) {
-        final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
-        
         final Class<AbstractEntity<?>> emptyEntityTypeEnhanced;
-        try {
-            emptyEntityTypeEnhanced = (Class<AbstractEntity<?>>) 
-                    cl.startModification(EmptyEntity.class)
-                        .modifyTypeName(nextTypeName(EmptyEntity.class.getName()))
-                        .addClassAnnotations(new MiTypeAnnotation().newInstance(MiEmptyEntity.class))
-                    .endModification();
-        } catch (final ClassNotFoundException e) {
-            throw Result.failure(e);
-        }
+        final Class<? extends AbstractEntity<?>> tmp = startModification(EmptyEntity.class)
+                .modifyTypeName(nextTypeName(EmptyEntity.class.getName()))
+                .endModification();
+        emptyEntityTypeEnhanced = (Class<AbstractEntity<?>>) tmp;
         final TgJackson tgJackson = (TgJackson) serialiser.getEngine(SerialiserEngines.JACKSON);
         tgJackson.registerNewEntityType(emptyEntityTypeEnhanced);
         

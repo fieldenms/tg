@@ -14,6 +14,7 @@ public class EntityManipulationMaster<T extends AbstractEntityManipulationAction
         return "{" +
                 "   currentState: 'EDIT', " +
                 "   centreUuid: this.centreUuid, " +
+                "   excludeInsertionPoints: this.excludeInsertionPoints, " +
                 "   entityId: " + bindingEntityName + ".entityId, " +
                 "   entityType: " + bindingEntityName + ".entityType, " +
                 "   shouldRefreshParentCentreAfterSave: " + shouldRefreshParentCentreAfterSave +

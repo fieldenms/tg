@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.expression.exception.semantic;
 
+import ua.com.fielden.platform.exceptions.AbstractPlatformCheckedException;
 import ua.com.fielden.platform.expression.IExpressionErrorPosition;
 import ua.com.fielden.platform.expression.IExpressionOffendingToken;
 import ua.com.fielden.platform.expression.Token;
@@ -11,7 +12,7 @@ import ua.com.fielden.platform.expression.Token;
  * @author TG Team
  * 
  */
-public abstract class SemanticException extends Exception implements IExpressionErrorPosition, IExpressionOffendingToken {
+public abstract class SemanticException extends AbstractPlatformCheckedException implements IExpressionErrorPosition, IExpressionOffendingToken {
 
     private final Integer errorPosition;
     private final Token token;

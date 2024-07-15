@@ -56,15 +56,15 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     }
 
     public static Object createDtm_for_AbstractAnalysisDomainTreeRepresentationTest() {
-        return new AbstractAnalysisDomainTreeRepresentation1(serialiser(), createRootTypes_for_AbstractAnalysisDomainTreeRepresentationTest());
+        return new AbstractAnalysisDomainTreeRepresentation1(factory(), createRootTypes_for_AbstractAnalysisDomainTreeRepresentationTest());
     }
 
     public static Object createIrrelevantDtm_for_AbstractAnalysisDomainTreeRepresentationTest() {
-        return new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_AbstractAnalysisDomainTreeRepresentationTest());
+        return new CentreDomainTreeManagerAndEnhancer(factory(), createRootTypes_for_AbstractAnalysisDomainTreeRepresentationTest());
     }
 
     protected static Set<Class<?>> createRootTypes_for_AbstractAnalysisDomainTreeRepresentationTest() {
-        final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractDomainTreeRepresentationTest());
+        final Set<Class<?>> rootTypes = new HashSet<>(createRootTypes_for_AbstractDomainTreeRepresentationTest());
         rootTypes.add(SlaveEntity.class);
         rootTypes.add(EntityWithCompositeKey.class);
         rootTypes.add(EntityWithKeyTitleAndWithAEKeyType.class);
@@ -392,7 +392,7 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
         assertEquals("Default value is incorrect.", Arrays.asList(), dtm().getSecondTick().orderedPropertiesByDefault(EntityWithKeyTitleAndWithAEKeyType.class));
 
         // Alter DEFAULT and check //
-        final List<Pair<String, Ordering>> ordering = Arrays.asList(new Pair<String, Ordering>("integerProp", Ordering.ASCENDING), new Pair<String, Ordering>("moneyProp", Ordering.DESCENDING));
+        final List<Pair<String, Ordering>> ordering = Arrays.asList(new Pair<>("integerProp", Ordering.ASCENDING), new Pair<>("moneyProp", Ordering.DESCENDING));
         dtm().getSecondTick().setOrderedPropertiesByDefault(MasterEntity.class, ordering);
         assertEquals("Default value is incorrect.", ordering, dtm().getSecondTick().orderedPropertiesByDefault(MasterEntity.class));
     }

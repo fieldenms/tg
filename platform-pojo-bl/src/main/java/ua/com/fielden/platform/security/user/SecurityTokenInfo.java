@@ -17,7 +17,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
  */
 @KeyType(String.class)
 @KeyTitle(value = "Class Name", desc = "The Class Name of this security token.")
-@CompanionObject(ISecurityTokenInfo.class)
+@CompanionObject(SecurityTokenInfoCo.class)
 @DescTitle(value = "Description", desc = "Description of this security token")
 public class SecurityTokenInfo extends AbstractEntity<String> {
     

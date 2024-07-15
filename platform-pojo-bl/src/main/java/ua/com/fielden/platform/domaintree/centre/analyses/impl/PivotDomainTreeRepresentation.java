@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.domaintree.centre.analyses.impl;
 
-import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.Set;
 
@@ -8,10 +7,8 @@ import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.IWidthRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
-import ua.com.fielden.platform.domaintree.impl.EnhancementLinkedRootsSet;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
-import ua.com.fielden.platform.domaintree.impl.EnhancementSet;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -24,18 +21,18 @@ public class PivotDomainTreeRepresentation extends AbstractAnalysisDomainTreeRep
     /**
      * A <i>representation</i> constructor for the first time instantiation.
      * 
-     * @param serialiser
+     * @param entityFactory
      * @param rootTypes
      */
-    public PivotDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-        this(serialiser, rootTypes, createSet(), new PivotAddToDistributionTickRepresentation(), new PivotAddToAggregationTickRepresentation());
+    public PivotDomainTreeRepresentation(final EntityFactory entityFactory, final Set<Class<?>> rootTypes) {
+        this(entityFactory, rootTypes, createSet(), new PivotAddToDistributionTickRepresentation(), new PivotAddToAggregationTickRepresentation());
     }
 
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
      */
-    protected PivotDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final PivotAddToDistributionTickRepresentation firstTick, final PivotAddToAggregationTickRepresentation secondTick) {
-        super(serialiser, rootTypes, excludedProperties, firstTick, secondTick);
+    protected PivotDomainTreeRepresentation(final EntityFactory entityFactory, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final PivotAddToDistributionTickRepresentation firstTick, final PivotAddToAggregationTickRepresentation secondTick) {
+        super(entityFactory, rootTypes, excludedProperties, firstTick, secondTick);
     }
 
     @Override
@@ -206,24 +203,4 @@ public class PivotDomainTreeRepresentation extends AbstractAnalysisDomainTreeRep
         propertiesWidths.put(key(root, property), width);
     }
 
-    /**
-     * A specific Kryo serialiser for {@link PivotDomainTreeRepresentation}.
-     * 
-     * @author TG Team
-     * 
-     */
-    public static class PivotDomainTreeRepresentationSerialiser extends AbstractDomainTreeRepresentationSerialiser<PivotDomainTreeRepresentation> {
-        public PivotDomainTreeRepresentationSerialiser(final ISerialiser serialiser) {
-            super(serialiser);
-        }
-
-        @Override
-        public PivotDomainTreeRepresentation read(final ByteBuffer buffer) {
-            final EnhancementLinkedRootsSet rootTypes = readValue(buffer, EnhancementLinkedRootsSet.class);
-            final EnhancementSet excludedProperties = readValue(buffer, EnhancementSet.class);
-            final PivotAddToDistributionTickRepresentation firstTick = readValue(buffer, PivotAddToDistributionTickRepresentation.class);
-            final PivotAddToAggregationTickRepresentation secondTick = readValue(buffer, PivotAddToAggregationTickRepresentation.class);
-            return new PivotDomainTreeRepresentation(serialiser(), rootTypes, excludedProperties, firstTick, secondTick);
-        }
-    }
 }

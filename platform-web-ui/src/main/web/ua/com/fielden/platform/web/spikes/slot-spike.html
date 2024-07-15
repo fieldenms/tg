@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Slot example</title>
+    <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js'></script>
+    <script type="module">
+        import './slot-origin.js';
+    </script>
+    <style>
+        html {
+            overflow: hidden;
+        }
+        body {
+            font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+        }
+    </style>
+</head>
+
+<body unresolved class="fullbleed">
+    <slot-origin>
+            <input type="text" slot="input-origin">
+    </slot-origin>
+</body>
+
+</html>

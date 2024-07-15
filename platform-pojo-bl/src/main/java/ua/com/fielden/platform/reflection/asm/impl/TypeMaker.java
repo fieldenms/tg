@@ -1,271 +1,548 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
-import java.io.InputStream;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.stream.Collectors.toCollection;
+import static ua.com.fielden.platform.cypher.Checksum.sha256;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getCachedClass;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
+
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
-import org.apache.commons.lang.StringUtils;
-import org.kohsuke.asm5.ClassReader;
-import org.kohsuke.asm5.ClassWriter;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.description.modifier.Ownership;
+import net.bytebuddy.description.modifier.ParameterManifestation;
+import net.bytebuddy.description.modifier.Visibility;
+import net.bytebuddy.dynamic.DynamicType;
+import net.bytebuddy.dynamic.DynamicType.Builder.MethodDefinition;
+import net.bytebuddy.dynamic.DynamicType.Builder.MethodDefinition.ReceiverTypeDefinition;
+import net.bytebuddy.dynamic.TargetType;
+import net.bytebuddy.dynamic.scaffold.MethodGraph;
+import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
+import net.bytebuddy.implementation.FieldAccessor;
+import net.bytebuddy.implementation.FixedValue;
+import net.bytebuddy.implementation.Implementation;
+import net.bytebuddy.implementation.MethodDelegation;
+import net.bytebuddy.implementation.SuperMethodCall;
+import net.bytebuddy.implementation.bind.annotation.Argument;
+import net.bytebuddy.implementation.bind.annotation.This;
+import net.bytebuddy.pool.TypePool;
+import ua.com.fielden.platform.entity.Accessor;
+import ua.com.fielden.platform.entity.Mutator;
+import ua.com.fielden.platform.entity.annotation.Generated;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.factory.ObservableAnnotation;
+import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.reflection.asm.annotation.GeneratedAnnotation;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
-import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.reflection.asm.exceptions.CollectionalPropertyInitializationException;
+import ua.com.fielden.platform.reflection.asm.exceptions.TypeMakerException;
+import ua.com.fielden.platform.types.tuples.T2;
 
 /**
- * A class that is responsible for creation for a single new class based on the provided API.
+ * This class provides an API for modifying types at runtime by means of bytecode manipulation.
+ * <p>
+ * To use this API start with {@link #startModification(Class)}, then perform any other modifications, and end with
+ * {@link #endModification()} which loads the modified type and returns the corresponding {@link Class}.
+ * <p>
+ * <i>Notes on implicit modifications performed by the API:</i>
+ * <ul>
+ *   <li>
+ *   Generated types will have an additional method generated for accessing the original type, unless the original type itself 
+ *   is a generated type, in which case the mentioned method will be inherited by the resultant generated type.
+ *   The mentioned method is named as defined by {@link #GET_ORIG_TYPE_METHOD_NAME} constant.
+ *   </li>
+ *   <li>
+ *   In case a generated type's name is not explicitly set with {@link #modifyTypeName(String)}, a unique name is generated, prefixed
+ *   by the original type's name.
+ *   </li>
+ * </ul>
+ * <i>Notes on using the API:</i>
+ * <ul>
+ *   <li>
+ *   Certain classes, such as those that are a part of the Java platform, cannot be modified. 
+ *   For details refer to the implementation of {@link #skipAdaptation(String)}.
+ *   </li>
+ * </ul>
+ * 
+ * @param <T> The original type, on which the modified type is based on.
  * 
  * @author TG Team
  *
  */
-public class TypeMaker {
+public class TypeMaker<T> {
 
-    private static final String NEW_SUPERTYPE_NAME_IS_NULL_OR_EMPTY = "New supertype name is 'null' or empty.";
-    private static final String CURRENT_TYPE_OR_NAME_ARE_NOT_SPECIFIED = "Current type or name are not specified.";
+    private static final Generated GENERATED_ANNOTATION = GeneratedAnnotation.newInstance();
+    private static final String CURRENT_BUILDER_IS_NOT_SPECIFIED = "Current builder is not specified.";
     public static final String GET_ORIG_TYPE_METHOD_NAME = "_GET_ORIG_TYPE_METHOD_";
-    private final DynamicEntityClassLoader cl;
-    private byte[] currentType;
-    private String currentName;
-    private final Class<?> origType;
+    private static final String ERR_FAILED_TO_INITIALISE_COLLECTIONAL_PROPERTY = "Failed to initialise new collectional property [%s].";
+    private static final String ERR_FAILED_TO_INITIALISE_CUSTOM_COLLECTIONAL_PROPERTY = "Failed to initialise new collectional property of custom type [%s].";
+    private static final String ERR_JAVA_SYSTEM_CLASS_SHOULD_NOT_BE_ENHANCED = "Java system class [%s] should not be enhanced.";
+    private static final String WRN_UNSUCCESSFUL_GENERATION_BUT_ALREADY_PRESENT = "Type [%s] generation was unsuccessful. However, the type is already present in cache and will be used.";
+    private static final String CONSTRUCTOR_FIELD_PREFIX = "constructorInterceptor$";
+    private static final String COLLECTIONAL_SETTER_FIELD_PREFIX = "collectionalSetterInterceptor$";
 
-    public TypeMaker(final DynamicEntityClassLoader loader, final Class<?> origType) {
-        this.cl = loader;
-        this.origType = origType;
-    }
-    
+    private final DynamicEntityClassLoader cl;
+    private final Class<T> origType;
+    private DynamicType.Builder<T> builder;
+    private String modifiedName;
+    private final Logger logger = LogManager.getLogger(getClass());
+
     /**
-     * Initiates adaptation of the specified by name type. This could be either dynamic or static type (created manually by developer).
-     *
-     * @param typeName
-     * @return
-     * @throws ClassNotFoundException
+     * Enables lazy access to all (declared + inherited) properties of the original type.
      */
-    public TypeMaker startModification() throws ClassNotFoundException {
-        final String typeName = origType.getName();
-        if (skipAdaptation(typeName)) {
-            throw new IllegalArgumentException("Java system classes should not be enhanced.");
+    private final Set<String> origTypeProperties;
+    /**
+     * Holds mappings of the form: {@code property name -> initialized value supplier}.
+     */
+    private final Map<String, Supplier<?>> propertyInitializers = new HashMap<>();
+    /**
+     * Storage for both added and modified properties.
+     * <p>
+     * Form: {@code { name = (property, type) }}
+     * <p>
+     * Type is stored to avoid recomputation (see {@link NewProperty#genericType()}).
+     */
+    private final Map<String, T2<NewProperty<?>, Type>> addedProperties = new LinkedHashMap<>();
+
+    public TypeMaker(final DynamicEntityClassLoader loader, final Class<T> origType) {
+        this.cl = loader;
+        if (skipAdaptation(origType.getName())) {
+            throw new TypeMakerException(ERR_JAVA_SYSTEM_CLASS_SHOULD_NOT_BE_ENHANCED.formatted(origType.getName()));
         }
-        // try loading the specified type by either actually loading from disk or finding it in cache
-        if (cl.getTypeByNameFromCache(typeName).isPresent()) {
-            currentType = cl.getCachedByteArray(typeName);
-            currentName = typeName;
-        } else {
-            final String resource = typeName.replace('.', '/') + ".class";
-            try (final InputStream is = cl.getResourceAsStream(resource)) {
-                final ClassReader cr = new ClassReader(is);
-                final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-                final DoNothingAdapter cv = new DoNothingAdapter(cw);
-                cr.accept(cv, ClassReader.SKIP_FRAMES);
-                currentType = cw.toByteArray();
-                currentName = typeName;
-            } catch (final Exception e) {
-                throw new ClassNotFoundException(typeName, e);
-            }
-        }
-        
+        this.origType = origType;
+        this.origTypeProperties = Finder.streamProperties(origType, IsProperty.class)
+                                        .map(Field::getName)
+                                        .collect(toCollection(LinkedHashSet::new));
+    }
+
+    /**
+     * Initiates adaptation of the specified {@code origType}. This could be either dynamic or static type (created manually by developer).
+     */
+    public TypeMaker<T> startModification() {
+        // no need for looking up the specified type in cache,
+        // which was useful before, since ASM operates on byte[] directly
+
+        builder = new ByteBuddy()
+                // By JVM rules 2 methods are considered different if their parameter and return types are different
+                // in contrast to Java rules, where only parameter types are considered (default choice of ByteBuddy instances).
+                // JVM rules enable us to generate methods with modified return type, while avoiding implicit generation
+                // of bridge methods by Java compiler. This is the case for generation of subclasses.
+                .with(MethodGraph.Compiler.Default.forJVMHierarchy())
+                .subclass(origType, 
+                          // do not implicitly define any constructors, since this is done manually later
+                          ConstructorStrategy.Default.NO_CONSTRUCTORS)
+                // grab all declared class-level annotations
+                .annotateType(origType.getDeclaredAnnotations());
+
         return this;
     }
 
     /**
-     * Adds the specified properties to the type. The provided properties are checked for conflicts with the type being modified -- only non-conflicting ones are added. Also,
-     * duplicate properties are eliminated.
+     * Enhances currently modified type by adding the specified properties. 
+     * If any of the specified properties conflicts with an existing one (e.i., has the same name), then it is ignored.
+     * <p>
+     * Added properties are annotated with {@link Generated}.
      *
-     * @param properties
-     * @return
+     * @param properties to be added
+     * @return this instance to continue building
      */
-    public TypeMaker addProperties(final NewProperty... properties) {
-        if (currentType == null || currentName == null) {
-            throw new IllegalStateException(CURRENT_TYPE_OR_NAME_ARE_NOT_SPECIFIED);
+    public TypeMaker<T> addProperties(final Set<NewProperty> properties) {
+        if (builder == null) {
+            throw new TypeMakerException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
         }
 
-        if (properties == null || properties.length == 0) {
+        if (properties == null || properties.isEmpty()) {
             return this;
         }
 
-        final Map<String, NewProperty> propertiesToAdd = new LinkedHashMap<>();
-        for (final NewProperty prop : properties) {
-            propertiesToAdd.put(prop.name, prop);
-        }
-
-        try {
-            final ClassReader cr = new ClassReader(currentType);
-            final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-            final AdvancedAddPropertyAdapter cv = new AdvancedAddPropertyAdapter(cw, propertiesToAdd);
-            cr.accept(cv, ClassReader.SKIP_FRAMES);
-            currentType = cw.toByteArray();
-            currentName = cv.getEnhancedName().replace('/', '.');
-        } catch (final Exception e) {
-            throw new IllegalStateException(e);
-        }
+        properties.stream()
+        .filter(prop -> !addedProperties.containsKey(prop.getName()) && 
+                        !origTypeProperties.contains(prop.getName())) 
+        .forEach(this::addProperty);
 
         return this;
     }
-    
+
     /**
-    *
-    * Adds the specified class level annotation to the class.
-    * <p>
-    * It is important that these annotation have their target specified as <code>TYPE</code> and retention as <code>RUNTIME</code>. Otherwise, method throws an illegal argument
-    * exception.
-    *
-    * @param annotations
-    * @return
-    */
-   public TypeMaker addClassAnnotations(final Annotation... annotations) {
-       if (currentType == null || currentName == null) {
-           throw new IllegalStateException(CURRENT_TYPE_OR_NAME_ARE_NOT_SPECIFIED);
-       }
+     * Enhances currently modified type by adding the specified properties. 
+     * If any of the specified properties conflicts with an existing one (e.g. has the same name), then it is discarded.
+     * If {@code properties} contains duplicates, then they are discarded to obtain only distinct properties.
+     * <p>
+     * Added properties are additionally annotated with {@link Generated}.
+     *
+     * @param properties properties to be added
+     * @return this instance to continue building
+     */
+    public TypeMaker<T> addProperties(final NewProperty... properties) {
+        return addProperties(linkedSetOf(properties));
+    }
 
-       if (annotations == null || annotations.length == 0) {
-           return this;
-       }
+    private void addProperty(final NewProperty<?> prop) {
+        final Type genericType = prop.genericType();
+        builder = builder.defineField(prop.getName(), genericType, Visibility.PRIVATE)
+                // annotations
+                .annotateField(prop.getAnnotations())
+                // annotation @Generated might already be present
+                .annotateField(prop.containsAnnotationDescriptorFor(GENERATED_ANNOTATION.annotationType()) 
+                               ? List.of()
+                               : List.of(GENERATED_ANNOTATION));
 
-       // let's validate provided annotations
-       for (final Annotation annot : annotations) {
-           // check retention policy
-           final Retention retention = annot.annotationType().getAnnotation(Retention.class);
-           if (retention == null || retention.value() != RetentionPolicy.RUNTIME) {
-               throw new IllegalArgumentException(String.format("The provided annotation %s should have runtime retention policy.", annot.annotationType().getSimpleName()));
-           }
+        if (prop.isInitialised()) {
+            // it is guaranteed at this point that `prop` hasn't been put into the map previously
+            // since properties with duplicate names are not allowed
+            propertyInitializers.put(prop.getName(), prop.getValueSupplier());
+        }
+        else if (prop.isCollectional()) { // automatically initialize collectional properties
+            try {
+                propertyInitializers.put(prop.getName(), collectionalInitValueSupplier(prop.getRawType()));
+            } catch (final Exception ex) {
+                throw new CollectionalPropertyInitializationException(ERR_FAILED_TO_INITIALISE_COLLECTIONAL_PROPERTY.formatted(prop.toString()), ex);
+            }
+        }
 
-           // check target
-           final Target target = annot.annotationType().getAnnotation(Target.class);
-           if (target == null || Arrays.stream(target.value()).filter(t -> t == ElementType.TYPE).count() == 0) {
-               throw new IllegalArgumentException(String.format("The provided annotation %s should have 'type' target.", annot.annotationType().getSimpleName()));
-           }
-       }
+        addAccessor(prop.getName(), genericType);
+        // delay addSetter(...) to .endModification() stage
 
-       // proceed with type construction
-       try {
-           final ClassReader cr = new ClassReader(currentType);
-           final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-           final AdvancedAddClassAnnotationAdapter cv = new AdvancedAddClassAnnotationAdapter(cw, annotations);
-           cr.accept(cv, ClassReader.SKIP_FRAMES);
-           currentType = cw.toByteArray();
-           currentName = cv.getEnhancedName().replace('/', '.');
-       } catch (final Exception e) {
-           throw new IllegalStateException(e);
-       }
+        addedProperties.put(prop.getName(), t2(prop, genericType));
+    }
 
-       return this;
-   }
+    /**
+     * Returns a fitting value supplier to initialise an instance of collectional type {@code rawType}.
+     *
+     * @param rawType
+     * @return
+     * @throws Exception
+     */
+    private Supplier<Object> collectionalInitValueSupplier(final Class<?> rawType) {
+        if (rawType == Collection.class || rawType == List.class) {
+            return ArrayList::new;
+        }
+        else if (rawType == Set.class) {
+            return HashSet::new;
+        }
+        else {
+            customCollectionalInitValue(rawType); // perform early check for ability to create custom collection at the level of TypeMaker.addProperties(...) to preserve context
+            return () -> customCollectionalInitValue(rawType); // this function will be computed during TypeMaker.endModification() phase
+        }
+    }
 
-   /**
-    * Modifies type's name with the specified <code>newTypeName</code>. Note that, if type name is needed to be changed, it should be made after all other modifications
-    * (properties adding / adapting etc.).
-    *
-    * @param newTypeName
-    * @return
-    */
-   public TypeMaker modifyTypeName(final String newTypeName) {
-       if (StringUtils.isEmpty(newTypeName)) {
-           throw new IllegalStateException("New type name is 'null' or empty.");
-       }
-       if (currentType == null || currentName == null) {
-           throw new IllegalStateException(CURRENT_TYPE_OR_NAME_ARE_NOT_SPECIFIED);
-       }
-       try {
-           final ClassReader cr = new ClassReader(currentType);
-           final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES); //Opcodes..ASM5
-           final AdvancedChangeNameAdapter cv = new AdvancedChangeNameAdapter(cw, currentName.replace('.', '/'), newTypeName.replace('.', '/')); //
-           cr.accept(cv, ClassReader.SKIP_FRAMES); //  EXPAND_FRAMES
-           currentType = cw.toByteArray();
-           currentName = cv.getNewTypeName().replace('/', '.');
-       } catch (final Exception e) {
-           throw new IllegalStateException(e);
-       }
-       return this;
-   }
-    
-    
-   public TypeMaker modifySupertypeName(final String newSupertypeName) {
-       if (StringUtils.isEmpty(newSupertypeName)) {
-           throw new IllegalStateException(NEW_SUPERTYPE_NAME_IS_NULL_OR_EMPTY);
-       }
-       if (currentType == null || currentName == null) {
-           throw new IllegalStateException(CURRENT_TYPE_OR_NAME_ARE_NOT_SPECIFIED);
-       }
-       try {
-           final ClassReader cr = new ClassReader(currentType);
-           final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-           final AdvancedChangeSupertypeAdapter cv = new AdvancedChangeSupertypeAdapter(newSupertypeName.replace('.', '/'), cw); //
-           cr.accept(cv, ClassReader.SKIP_FRAMES); //ClassReader.EXPAND_FRAMES
-           currentType = cw.toByteArray();
-       } catch (final Exception e) {
-           throw new IllegalStateException(e);
-       }
-       return this;
-   }
+    /**
+     * Tries to compute empty default collectional property value for custom {@code rawType} using default parameterless constructor.
+     */
+    private Object customCollectionalInitValue(final Class<?> rawType) {
+        try {
+            // look for an accessible default constructor
+            return rawType.getConstructor().newInstance();
+        } catch (final Exception ex) {
+            throw new CollectionalPropertyInitializationException(ERR_FAILED_TO_INITIALISE_CUSTOM_COLLECTIONAL_PROPERTY.formatted(rawType), ex);
+        }
+    }
 
-   /**
-    * Modifies type's properties with the specified information.
-    *
-    * @param propertyReplacements
-    * @return
-    */
-   public TypeMaker modifyProperties(final NewProperty... propertyReplacements) {
-       if (currentType == null || currentName == null) {
-           throw new IllegalStateException(CURRENT_TYPE_OR_NAME_ARE_NOT_SPECIFIED);
-       }
+    private void addAccessor(final String propName, final Type propType) {
+        final String prefix = propType.equals(Boolean.class) || propType.equals(boolean.class) ? Accessor.IS.startsWith : Accessor.GET.startsWith;
+        builder = builder.defineMethod(prefix + StringUtils.capitalize(propName), propType, Visibility.PUBLIC)
+                         .intercept(FieldAccessor.ofField(propName));
+    }
 
-       if (propertyReplacements == null || propertyReplacements.length == 0) {
-           return this;
-       }
+    private void addSetter(final String propName, final Type propType, final boolean collectional, final String modifiedTypeName) {
+        final var building = builder.defineMethod(Mutator.SETTER.startsWith + StringUtils.capitalize(propName), TargetType.DESCRIPTION, Visibility.PUBLIC)
+                                    .withParameter(propType, propName, ParameterManifestation.FINAL);
 
-       final Map<String, NewProperty> propertiesToAdapt = new HashMap<>();
-       for (final NewProperty prop : propertyReplacements) {
-           propertiesToAdapt.put(prop.name, prop);
-       }
+        final ReceiverTypeDefinition<T> building1;
+        if (collectional) {
+            // collectional setters are implemented as:
+            /*
+             this.${propName}.clear();
+             this.${propName}.addAll(${arg});
+             return this;
+             */
+            building1 = building.intercept(MethodDelegation.to(new CollectionalSetterInterceptor(propName), COLLECTIONAL_SETTER_FIELD_PREFIX + sha256(modifiedTypeName.getBytes(UTF_8)) + propName).andThen(FixedValue.self()));
+        }
+        else {
+            // regular setters:
+            /*
+             this.${propName} = ${arg};
+             return this;
+             */
+            building1 = building.intercept(FieldAccessor.ofField(propName).setsArgumentAt(0).andThen(FixedValue.self()));
+        }
 
-       try {
-           final ClassReader cr = new ClassReader(currentType);
-           final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-           final AdvancedModifyPropertyAdapter cv = new AdvancedModifyPropertyAdapter(cw, propertiesToAdapt);
-           cr.accept(cv, ClassReader.SKIP_FRAMES);
-           currentType = cw.toByteArray();
-           currentName = cv.getEnhancedName().replace('/', '.');
-       } catch (final Exception e) {
-           throw new IllegalStateException(e);
-       }
+        builder = building1.annotateMethod(ObservableAnnotation.newInstance());
+    }
 
-       return this;
-   }
+    public static class CollectionalSetterInterceptor {
+        private final String propName;
 
-   /**
-    * Generates code to capture the original type.
-    */
-   private void recordOrigType() {
-       try {
-           final ClassReader cr = new ClassReader(currentType);
-           final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-           final AdvancedRecordOriginalTypeAdapter cv = new AdvancedRecordOriginalTypeAdapter(cw, origType);
-           cr.accept(cv, ClassReader.SKIP_FRAMES);
-           currentType = cw.toByteArray();
-       } catch (final Exception e) {
-           throw new IllegalStateException(e);
-       }
+        public CollectionalSetterInterceptor(final String propName) {
+            this.propName = propName;
+        }
 
-   }
-   
-   public Class<?> endModification() {
-       if (!DynamicEntityClassLoader.isGenerated(origType)) {
-           recordOrigType();
-       }
-       
-       final Class<?> klass = cl.defineType(currentName, currentType, 0, currentType.length);
-       cl.registerClass(new Pair<Class<?>, byte[]>(klass, currentType));
+        public void intercept(@This final Object instrumentedInstance, @Argument(0) final Object arg) throws Exception {
+            final Field prop = Finder.getFieldByName(instrumentedInstance.getClass(), propName);
+            final Object propValue = Finder.getFieldValue(prop, instrumentedInstance);
+            // this.${propName}.clear();
+            Reflector.getMethod(prop.getType(), "clear").invoke(propValue);
+            // this.${propname}.addAll(${arg}): 
+            Reflector.getMethod(prop.getType(), "addAll", Collection.class).invoke(propValue, arg);
+        }
+    }
 
-       currentType = null;
-       currentName = null;
-       return klass;
-   }
-   
+    /**
+     * Adds the specified class level annotation to the class. Existing annotations are not replaced.
+     * <p>
+     * It is important that these annotation have their target specified as <code>TYPE</code> and retention as <code>RUNTIME</code>. 
+     * Otherwise, a runtime exception is thrown.
+     *
+     * @param annotations
+     * @return this instance to continue building
+     */
+    public TypeMaker<T> addClassAnnotations(final Annotation... annotations) {
+        if (builder == null) {
+            throw new TypeMakerException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
+        }
+
+        if (annotations == null || annotations.length == 0) {
+            return this;
+        }
+
+        final HashSet<String> existingAnnotationNames = Arrays.stream(origType.getDeclaredAnnotations())
+                .map(annot -> annot.annotationType().getName())
+                .collect(Collectors.toCollection(() -> new HashSet<String>()));
+        final List<Annotation> annotationsToAdd = Arrays.stream(annotations)
+                .filter(annot -> !existingAnnotationNames.contains(annot.annotationType().getName()))
+                .toList();
+
+        // let's validate provided annotations
+        annotationsToAdd.forEach(annot -> {
+            // check retention policy
+            final Retention retention = annot.annotationType().getAnnotation(Retention.class);
+            if (retention == null || retention.value() != RetentionPolicy.RUNTIME) {
+                throw new TypeMakerException("The provided annotation %s should have runtime retention policy.".formatted(annot.annotationType().getSimpleName()));
+            }
+
+            // check target
+            final Target target = annot.annotationType().getAnnotation(Target.class);
+            if (target == null || !Arrays.stream(target.value()).anyMatch(t -> t == ElementType.TYPE)) {
+                throw new TypeMakerException("The provided annotation %s should have 'type' target.".formatted(annot.annotationType().getSimpleName()));
+            }          
+        });
+
+        // proceed with type construction
+        builder = builder.annotateType(annotationsToAdd);
+        return this;
+    }
+
+    /**
+     * Modifies type's name with the specified {@code newTypeName}. 
+     * 
+     * @param newTypeName - must be fully-qualified in a binary format (e.g., {@code foo.Bar}).
+     * @return
+     */
+    public TypeMaker<T> modifyTypeName(final String newTypeName) {
+        if (StringUtils.isBlank(newTypeName)) {
+            throw new TypeMakerException("New type name cannot be blank.");
+        }
+        modifiedName = newTypeName;
+        return this;
+    }
+
+    /**
+     * Enhances currently modified type by modifying properties that exist in its original type.
+     * <p>
+     * If {@code propertyReplacements} contains multiple properties with the same name, then only one of these will be considered.
+     * <p>
+     * Modifying a property with the same name in multiple sequential calls is illegal. That is, a property can be modified only once.
+     * Modifying a property that previously added with {@link #addProperties(Set)} is also illegal for the same reasons.
+     *
+     * @param propertyReplacements
+     * @return this instance to continue building
+     */
+    public TypeMaker<T> modifyProperties(final Set<NewProperty<?>> propertyReplacements) throws IllegalArgumentException {
+        if (builder == null) {
+            throw new TypeMakerException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
+        }
+
+        if (propertyReplacements == null || propertyReplacements.isEmpty()) {
+            return this;
+        }
+
+        // modifying a property that doesn't exist in the original type's hierarchy is illegal
+        final Optional<NewProperty<?>> nonExistentNp = propertyReplacements.stream()
+                .filter(prop -> !origTypeProperties.contains(prop.getName()))
+                .findAny();
+        if (nonExistentNp.isPresent()) {
+            throw new TypeMakerException("Unable to modify property [%s] that does not belong to the original type.".formatted(nonExistentNp.get().getName()));
+        }
+
+        // modifying the same property multiple times is illegal
+        final NewProperty<?> illegalNp = propertyReplacements.stream()
+            .filter(prop -> addedProperties.containsKey(prop.getName()))
+            .findAny().orElse(null);
+        if (illegalNp != null) {
+            throw new TypeMakerException("Property [%s] was already added or modified for this type.".formatted(illegalNp.toString(true)));
+        }
+
+        propertyReplacements.stream().forEach(this::addProperty);
+
+        return this;
+    }
+
+    /**
+     * Enhances currently modified type by modifying existing properties with the specified ones.
+     * The same rules apply as for {@link #addProperties(Set)}.
+     *
+     * @param propertyReplacements
+     * @return this instance to continue building
+     */
+    public TypeMaker<T> modifyProperties(final NewProperty<?>... propertyReplacements) {
+        return modifyProperties(linkedSetOf(propertyReplacements));
+    }
+
+    /**
+     * Generates code to capture the original type, which is provided via <code>type</code>.
+     * @param type - the type to be recorded
+     */
+    private void recordOrigType(final Class<?> type) {
+        builder = builder.defineMethod(GET_ORIG_TYPE_METHOD_NAME, type.getClass(), Visibility.PUBLIC, Ownership.STATIC)
+                .intercept(FixedValue.value(type));
+    }
+
+    private void generateConstructors(final String modifiedTypeName) {
+        final Implementation impl = propertyInitializers.isEmpty() 
+                                    ? SuperMethodCall.INSTANCE
+                                    : SuperMethodCall.INSTANCE.andThen(MethodDelegation.to(new ConstructorInterceptor(propertyInitializers), CONSTRUCTOR_FIELD_PREFIX + sha256(modifiedTypeName.getBytes(UTF_8))));
+
+        final List<Constructor<?>> visibleConstructors = Arrays.stream(origType.getDeclaredConstructors())
+                .filter(constr -> !Modifier.isPrivate(constr.getModifiers()))
+                .toList();
+
+        for (final Constructor<?> origConstr: visibleConstructors) {
+            // manually define a constructor to imitate the original type's constructor
+            MethodDefinition<T> methodBuilder = builder.defineConstructor(origConstr.getModifiers())
+                    .withParameters(origConstr.getGenericParameterTypes())
+                    .throwing(origConstr.getGenericExceptionTypes())
+                    .intercept(impl)
+                    // constructor-level annotations
+                    .annotateMethod(origConstr.getDeclaredAnnotations());
+
+            // constructor parameter-level annotations
+            final Annotation[][] paramAnnotations = origConstr.getParameterAnnotations();
+            for (int i = 0; i < paramAnnotations.length; i++) {
+                final Annotation[] annotations = paramAnnotations[i];
+                if (annotations.length > 0) {
+                    methodBuilder = methodBuilder.annotateParameter(i, annotations);
+                }
+            }
+
+            builder = methodBuilder;
+        }
+    }
+
+    /**
+     * Finalizes type modification and loads the resulting class.
+     * <p>
+     * If the type name wasn't modified prior to this stage, then it is performed here according to {@link DynamicTypeNamingService}.
+     * 
+     * @return a loaded class representing the modified type
+     */
+    public Class<? extends T> endModification() {
+        if (builder == null) {
+            throw new TypeMakerException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
+        }
+
+        if (!DynamicEntityClassLoader.isGenerated(origType)) {
+            recordOrigType(origType);
+        }
+
+        if (modifiedName == null) {
+            modifyTypeName(nextTypeName(origType.getName()));
+        }
+        builder = builder.name(modifiedName);
+
+        // delay adding constructors and setters to the stage where 'modifiedName' is already known;
+        // MethodDelegation static fields will be named exactly the same in identical types to facilitate proper concurrent generation
+        // see TypeResolutionStrategy.Passive.initialize method with onLoad(...) invocations after classLoadingStrategy.load(...) may have returned already loaded / cached types from other concurrent thread
+        generateConstructors(modifiedName);
+        addedProperties.values().forEach(propAndType -> addSetter(propAndType._1.getName(), propAndType._2, propAndType._1.isCollectional(), modifiedName));
+
+        // it is possible that this transformation already exists, and so we should simply return an existing class
+        final var maybeClass = DynamicEntityClassLoader.getCachedClass(modifiedName);
+        if (maybeClass.isPresent()) {
+            return (Class<? extends T>) maybeClass.get();
+        }
+        else {
+            try {
+                // provide a TypePool that uses the class loader of the original type
+                // if origType is a dynamic one, then this will be DynamicEntityClassLoader, which will be able to locate origType
+                return builder.make(TypePool.ClassLoading.of(origType.getClassLoader()))
+                        // provide DynamicEntityClassLoader to be injected with the new dynamic type
+                        // this allows us to use a single class loader for all dynamically created types,
+                        // instead of making ByteBuddy create a separate class loader for each
+                        .load(cl)
+                        .getLoaded();
+            } catch (final Exception ex) {
+                // even in case of an exception, let's try to locate the class with name modifiedName again just in case it was already created concurrently
+                final var maybeClassAgain = DynamicEntityClassLoader.getCachedClass(modifiedName);
+                if (maybeClassAgain.isPresent()) {
+                    logger.warn(WRN_UNSUCCESSFUL_GENERATION_BUT_ALREADY_PRESENT.formatted(modifiedName), ex);
+                    return (Class<? extends T>) maybeClassAgain.get();
+                }
+                else {
+                    throw ex;
+                }
+            }
+        }
+    }
+
+    public static class ConstructorInterceptor {
+        private final Map<String, Supplier<?>> fieldInitializers = new HashMap<>();
+
+        ConstructorInterceptor(final Map<String, Supplier<?>> fieldInitializers) {
+            if (fieldInitializers != null) {
+                this.fieldInitializers.putAll(fieldInitializers);
+            }
+        }
+
+        public void intercept(@This final Object instrumentedInstance) throws Exception {
+            for (final Entry<String, Supplier<?>> nameAndValue : fieldInitializers.entrySet()) {
+                final Field prop = Finder.getFieldByName(instrumentedInstance.getClass(), nameAndValue.getKey());
+                final boolean accessible = prop.canAccess(instrumentedInstance);
+                prop.setAccessible(true);
+                prop.set(instrumentedInstance, nameAndValue.getValue().get()); // supplier should never be null here (see collectionalInitValueSupplier)
+                prop.setAccessible(accessible);
+            }
+        }
+    }
+
     private boolean skipAdaptation(final String name) {
         return name.startsWith("java.");
     }

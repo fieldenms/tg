@@ -1,85 +1,154 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
+import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toMap;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
 import static ua.com.fielden.platform.reflection.asm.impl.TypeMaker.GET_ORIG_TYPE_METHOD_NAME;
-import static ua.com.fielden.platform.utils.Pair.pair;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.lang.reflect.Method;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.function.Function;
 
-import org.kohsuke.asm5.ClassReader;
+import org.apache.logging.log4j.Logger;
 
-import ua.com.fielden.platform.classloader.TgSystemClassLoader;
+import net.bytebuddy.dynamic.loading.InjectionClassLoader;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.reflection.asm.exceptions.DynamicEntityClassLoaderException;
+import ua.com.fielden.platform.types.tuples.T2;
 
 /**
  * A class loader for dynamically constructed or modified entity types.
  * <p>
  * All created types should be loaded by the same instance as used for type modification.
- *
- * This class is NOT thread safe!!! Nor should it be!
+ * The role of {@link InjectionClassLoader} as a parent type is to allow this class loader to be used by ByteBuddy for injecting new types.
+ * <p>
+ * <b>2022-08-23</b> {@code TgSystemClassLoader} is no longer used as a parent class loader. Caching is implemented directly by this class.
+ * <b>2022-11-23</b> {@code DynamicEntityClassLoader} is thread safe.
  *
  * @author TG Team
  */
-public class DynamicEntityClassLoader extends ClassLoader {
-
-    private final TgSystemClassLoader parent;
-    
-    public static DynamicEntityClassLoader getInstance(final ClassLoader parent) {
-        if (parent instanceof TgSystemClassLoader) {
-            return new DynamicEntityClassLoader(parent);
-        }
-        
-        throw new IllegalArgumentException("The parent class loader can only be of type TgSystemClassLoader.");
-    }
-    
-    private DynamicEntityClassLoader(final ClassLoader parent) {
-        super(parent);
-        this.parent = (TgSystemClassLoader) parent;
-    }
-    
-    public Optional<Pair<Class<?>, byte[]>> getTypeByNameFromCache(final String typeName) {
-        return parent.classByName(typeName);
-    }
-    
-    public DynamicEntityClassLoader registerClass(final Pair<Class<?>, byte[]> typePair) {
-        parent.cacheClassDefinition(typePair.getKey(), typePair.getValue());
-        return this;
-    }
-    
+public class DynamicEntityClassLoader extends InjectionClassLoader {
+    private static final Logger LOGGER = getLogger(DynamicEntityClassLoader.class);
+    private static final String MSG_DEFINED_NEW_TYPE = "Gen: %s; defined new [%s] type.";
     /**
-     * Initiates adaptation of the specified by name type. This could be either dynamic or static type (created manually by developer).
+     * Singleton instance of this {@link DynamicEntityClassLoader}.
+     */
+    private static final DynamicEntityClassLoader instance = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
+
+    /**
+     * A cache of generated types.
+     * The key values are the full names of the generated types, which is used as a convenience to get the generated type by name.
+     * The value is a tuple, containing a generated type and the original type, used to produce the generated one.
+     */
+    private static final ConcurrentMap<String, T2<Class<?>, Class<?>>> CACHE = new ConcurrentHashMap<>(/*initialCapacity*/ 1000, /*loadFactor*/ 0.75f, /*concurrencyLevel*/50);
+
+    /**
+     * Optionally returns a cached generated class by {@code className}.
      *
-     * @param origType
+     * @param className
+     * @return
+     */
+    public static Optional<Class<?>> getCachedClass(final String className) {
+        return ofNullable(CACHE.get(className)).map(t2 -> t2._1);
+    }
+
+    private DynamicEntityClassLoader(final ClassLoader parent) {
+        super(parent, /*sealed*/ false);
+    }
+
+    /**
+     * Returns a total number of generated classes currently cached.
+     */
+    public static long size() {
+        return CACHE.size();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected Map<String, Class<?>> doDefineClasses(final Map<String, byte[]> typeDefinitions) {
+        return typeDefinitions.entrySet().stream()
+                .collect(toMap(Map.Entry::getKey, entry -> doDefineClass(entry.getKey(), entry.getValue())));
+    }
+
+    /**
+     * Returns already loaded class with {@code name}, if present.
+     * Otherwise, performs {@link #defineClass(String, byte[])} and caches entry in form {@code [genTypeName : (genType, origType)]}.
+     */
+    private Class<?> doDefineClass(final String name, final byte[] bytes) {
+        return CACHE.computeIfAbsent(name, key -> {
+            // define the class, load it and cache for later reuse
+            final Class<?> klass = defineClass(name, bytes, 0, bytes.length);
+            LOGGER.debug(MSG_DEFINED_NEW_TYPE.formatted(CACHE.size(), klass.getSimpleName()));
+            return t2(klass, determineOriginalType(klass));
+        })._1;
+    }
+
+    /**
+     * A static wrapper to call {@code loadClass} for the singleton.
+     * 
+     * @param typeName
      * @return
      * @throws ClassNotFoundException
      */
-    public TypeMaker startModification(final Class<?> origType) throws ClassNotFoundException {
-        return new TypeMaker(this, origType).startModification();
+    public static Class<?> loadType(final String typeName) throws ClassNotFoundException {
+        return instance.loadClass(typeName);
     }
 
-    protected final Class<?> defineType(final String name, final byte[] b, final int off, final int len) {
-        return super.defineClass(name, b, off, len);
-    }
-    
-    public Class<?> defineClass(final byte[] currentType) {
-        // let's find out whether currentType has already been loaded
-        // if it is then simply return the previously cached class
-        final String typeName = new ClassReader(currentType).getClassName().replace("/", ".");
-        
-        return getTypeByNameFromCache(typeName).map(Pair::getKey).orElseGet(() -> {
-            // the class was not yet loaded, so it needs to be loaded and cached to later reuse
-            final Class klass = defineClass(null, currentType, 0, currentType.length);
-            registerClass(pair(klass, currentType));
-            return klass;
-        });
-    }
-    
     /**
-     * Returns <code>true</code> in case when the type is generated using ASM in TG platform from other (statically defined) entity type, <code>false</code> otherwise.
+     * Initiates modification of the given type. This could be either a dynamic or a static type (created manually by a developer).
+     *
+     * @param origType
+     * @return
+     */
+    public static <T> TypeMaker<T> startModification(final Class<T> origType) {
+        return new TypeMaker<T>(instance, origType).startModification();
+    }
+
+    /**
+     * Returns already modified type with {@code typeName} full class name, if there is one.
+     * Otherwise generates that type from {@code origType} using {@code modifyType} function (typeMaker -> typeMaker).
      * <p>
-     * Most likely, generated types have one or more calculated (or custom) property. But there are also edge-cases
-     * (for example, in tests like SerialisationTestResource) when generated type have no calculated properties, but just have changed the type name.
+     * Typical usage:<br><br>
+     * {@code modifiedClass(newTypeName, Entity.class, typeMaker -> typeMaker.addProperties(...).modifyProperties(...).addClassAnnotations(...))}<br><br>
+     * Please note that {@code modifyTypeName(newTypeName)} call is not needed in {@code modifyType} function -- {@code newTypeName} will be assigned automatically.
+     * Also {@code startModification(origType)} call is not needed.
+     * 
+     * @param typeName
+     * @param modifyType
+     * @return
+     */
+    @SuppressWarnings({ "unchecked" })
+    public static <T> Class<? extends T> modifiedClass(final String typeName, final Class<T> origType, final Function<TypeMaker<T>, TypeMaker<T>> modifyType) {
+        return (Class<T>) getCachedClass(typeName).orElseGet(() -> modifyType.apply(new TypeMaker<T>(instance, origType).startModification().modifyTypeName(typeName)).endModification());
+    }
+
+    /**
+     * Generates modified type from {@code origType} using {@code modifyType} function (typeMaker -> typeMaker).
+     * <p>
+     * Typical usage:<br><br>
+     * {@code modifiedClass(origType, typeMaker -> typeMaker.addProperties(...).modifyProperties(...).addClassAnnotations(...))}<br><br>
+     * Please note that {@code modifyTypeName(newTypeName)} call may not be used in {@code modifyType} function -- {@link DynamicTypeNamingService#nextTypeName(String)} will be assigned automatically.
+     * 
+     * @param origType
+     * @param modifyType
+     * @return
+     */
+    public static <T> Class<? extends T> modifiedClass(final Class<T> origType, final Function<TypeMaker<T>, TypeMaker<T>> modifyType) {
+        return modifyType.apply(new TypeMaker<T>(instance, origType).startModification()).endModification();
+    }
+
+    /**
+     * Determines whether <code>type</code> is a generated type.
+     * <p>
+     * Most likely, generated types have one or more calculated (or custom) property. 
+     * But there are also edge-cases. For example, in tests like SerialisationTestResource when a generated type simply has a modified name.
      * 
      * @param type
      * @return
@@ -88,36 +157,40 @@ public class DynamicEntityClassLoader extends ClassLoader {
         return type.getName().contains(DynamicTypeNamingService.APPENDIX);
     }
 
-    @Override
-    public Class<?> findClass(final String name) throws ClassNotFoundException {
-        return parent.findClass(name);
-    }
-
     /**
-     * Returns an original type for the specified one (the type from which <code>type</code> was generated). If <code>type</code> is not enhanced -- returns the same
-     * <code>type</code>.
+     * Returns an original type for the specified one (the type from which {@code type} was generated).
+     * The expectation is that all generated types get cached before they are used.
+     * <p> 
+     * If {@code type} is not a generated one - simply returns that type back.
      *
      * @param type
      * @return
      */
     @SuppressWarnings("unchecked")
     public static <T extends AbstractEntity<?>> Class<T> getOriginalType(final Class<?> type) {
-        
-        if (isGenerated(type)) {
-            try {
-                final Method getOrigType = type.getMethod(GET_ORIG_TYPE_METHOD_NAME);
-                return (Class<T>) getOrigType.invoke(null);
-            } catch (final RuntimeException ex) {
-                throw ex;
-            } catch (final Exception ex) {
-                throw new IllegalStateException(ex);
-            }
+        final var t2 = CACHE.get(type.getName());
+        if (t2 != null) {
+            return (Class<T>) t2._2;
         } else {
             return (Class<T>) type;
         }
     }
 
-    public byte[] getCachedByteArray(final String name) {
-        return getTypeByNameFromCache(name).map(Pair::getValue).orElse(null);
+    /**
+     * Determines the original type by using static method with name {@code GET_ORIG_TYPE_METHOD_NAME}, which is expected to be present in all generated types.
+     *
+     * @param <T>
+     * @param type
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private static <T extends AbstractEntity<?>> Class<T> determineOriginalType(final Class<?> type) {
+        try {
+            final Method getOrigType = type.getMethod(GET_ORIG_TYPE_METHOD_NAME);
+            return (Class<T>) getOrigType.invoke(null);
+        } catch (final Exception ex) {
+            throw new DynamicEntityClassLoaderException("Could not determine the original type for generated type [%s]".formatted(type.getSimpleName()), ex);
+        }
     }
+
 }

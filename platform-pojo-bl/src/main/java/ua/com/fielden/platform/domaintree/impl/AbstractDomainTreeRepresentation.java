@@ -1,11 +1,25 @@
 package ua.com.fielden.platform.domaintree.impl;
 
+import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.entity.AbstractEntity.isStrictModelVerification;
+import static ua.com.fielden.platform.reflection.Finder.findProperties;
+import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
+import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determineClass;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.transform;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
+import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -15,8 +29,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.Function;
 import ua.com.fielden.platform.domaintree.FunctionUtils;
@@ -32,12 +46,13 @@ import ua.com.fielden.platform.entity.annotation.Invisible;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeUtils;
 import ua.com.fielden.platform.reflection.development.EntityDescriptor;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -50,8 +65,8 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTree implements IDomainTreeRepresentationWithMutability {
-    private final Logger logger = Logger.getLogger(this.getClass());
-    
+    private final Logger logger = getLogger(this.getClass());
+
     /**
      * 0 -- to load only first level properties, Integer.MAX_VALUE -- to load all properties (obviously without cross-references ones);
      */
@@ -66,8 +81,8 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
      */
-    protected AbstractDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AbstractTickRepresentation firstTick, final AbstractTickRepresentation secondTick) {
-        super(serialiser);
+    protected AbstractDomainTreeRepresentation(final EntityFactory entityFactory, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AbstractTickRepresentation firstTick, final AbstractTickRepresentation secondTick) {
+        super(entityFactory);
         this.rootTypes = new EnhancementLinkedRootsSet();
         this.rootTypes.addAll(rootTypes);
         this.manuallyExcludedProperties = createSet();
@@ -112,22 +127,28 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
             if (!isExcludedImmutably(managedType, reflectionProperty)) {
                 newIncludedProps.add(property);
 
-                // determine the type of property, which can be a) "union entity" property b) property under "union entity" c) collection property d) entity property e) simple property
+                // determine the type of property, which can be:
+                // a) "union entity" property 
+                // b) property under "union entity" 
+                // c) collection property 
+                // d) entity property 
+                // e) simple property
                 final Pair<Class<?>, String> penultAndLast = PropertyTypeDeterminator.transform(managedType, reflectionProperty);
                 final Class<?> parentType = penultAndLast.getKey();
                 final Class<?> propertyType = PropertyTypeDeterminator.determineClass(parentType, penultAndLast.getValue(), true, true);
 
                 // add the children for "property" based on its nature
                 if (EntityUtils.isEntityType(propertyType)) {
-                    final boolean propertyTypeWasInHierarchyBefore = typesInHierarchy(managedType, reflectionProperty, true).contains(DynamicEntityClassLoader.getOriginalType(propertyType));
-                    
+                    final boolean propertyTypeWasInHierarchyBefore = typesInHierarchy(managedType, reflectionProperty, true)
+                            .contains(DynamicEntityClassLoader.getOriginalType(propertyType));
+
                     // The logic below (determining whether property represents link property) is important to maintain the integrity of domain trees.
                     // However, it also causes performance bottlenecks when invoking multiple times.
                     // In current Web UI logic, that uses centre domain trees, the following logic does not add any significant value.
                     // Reintroducing may be significant when management of domain trees from UI will be implemented.
                     // Please note number 1. indicates "old" simplified version and number 2. indicates newer version with link property handling.
                     // Perhaps some "hybrid" of both can be used to achieve acceptable performance.
-                    
+
                     // 1. final boolean isKeyPart = Finder.getKeyMembers(parentType).contains(field); // indicates if field is the part of the key.
                     // 2. final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
                     // 2. final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(managedType, property);
@@ -136,7 +157,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
                     // 2. final boolean isLinkProperty = !isEntityItself && PropertyTypeDeterminator.isDotNotation(property)
                     // 2.         && Finder.isOne2Many_or_One2One_association(managedType, penultPropertyName)
                     // 2.         && lastPropertyName.equals(Finder.findLinkProperty((Class<? extends AbstractEntity<?>>) managedType, penultPropertyName)); // exclude link properties in one2many and one2one associations
-                    
+
                     if (level(property) >= LOADING_LEVEL && !EntityUtils.isUnionEntityType(propertyType) //
                             || propertyTypeWasInHierarchyBefore /* && 2. !isLinkProperty */ /* && 1. !isKeyPart */) {
                         newIncludedProps.add(createDummyMarker(property));
@@ -180,9 +201,9 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     private static Pair<List<Field>, List<Field>> commonAndUnion(final Class<? extends AbstractUnionEntity> unionClass) {
         final List<Field> unionProperties = AbstractUnionEntity.unionProperties(unionClass);
         final Class<? extends AbstractEntity> concreteUnionClass = (Class<? extends AbstractEntity>) unionProperties.get(0).getType();
-        final List<String> commonNames = AbstractUnionEntity.commonProperties(unionClass);
+        final Set<String> commonNames = AbstractUnionEntity.commonProperties(unionClass);
         final List<Field> commonProperties = constructKeysAndProperties(concreteUnionClass, commonNames);
-        return new Pair<List<Field>, List<Field>>(commonProperties, unionProperties);
+        return new Pair<>(commonProperties, unionProperties);
     }
 
     /**
@@ -192,23 +213,40 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @return
      */
     private static List<Field> constructKeysAndProperties(final Class<?> type) {
+        return constructKeysAndProperties(type, false);
+    }
+
+    /**
+     * Forms a list of fields for "type" in order ["key" or key members => ["id" => "version" => ]"desc" (if exists) => other properties in order as declared in domain].
+     *
+     * @param type
+     * @param withIdAndVersion -- {@code true} to include {@link AbstractEntity#ID} and {@link AbstractEntity#VERSION} properties right after keys and before {@link AbstractEntity#DESC}, {@code false} otherwise.
+     * @return
+     */
+    public static List<Field> constructKeysAndProperties(final Class<?> type, final boolean withIdAndVersion) {
         // logger().info("Started constructKeysAndProperties for [" + type.getSimpleName() + "].");
-        final List<Field> properties = Finder.findProperties(type);
+        final List<Field> properties = findProperties(type);
         // let's remove desc and key properties as they will be added separately a couple of lines below
         for (final Iterator<Field> iter = properties.iterator(); iter.hasNext();) {
             final Field prop = iter.next();
-            if (AbstractEntity.KEY.equals(prop.getName()) || AbstractEntity.DESC.equals(prop.getName())) {
+            if (KEY.equals(prop.getName()) || DESC.equals(prop.getName())) {
                 iter.remove();
             }
         }
-        final List<Field> keys = Finder.getKeyMembers(type);
+        final List<Field> keys = getKeyMembers((Class<? extends AbstractEntity<?>>) type);
         properties.removeAll(keys); // remove composite key members if any
 
         // now let's ensure that that key related properties and desc are first in the list of properties
-        final List<Field> fieldsAndKeys = new ArrayList<Field>();
+        final List<Field> fieldsAndKeys = new ArrayList<>();
         fieldsAndKeys.addAll(keys);
-        fieldsAndKeys.add(Finder.getFieldByName(type, AbstractEntity.DESC));
-        fieldsAndKeys.addAll(properties);
+        if (withIdAndVersion) {
+            fieldsAndKeys.add(getFieldByName(type, ID));
+            fieldsAndKeys.add(getFieldByName(type, VERSION));
+        }
+        fieldsAndKeys.add(getFieldByName(type, DESC));
+
+        // add the rest (take care of ordering if the type is a generated one)
+        fieldsAndKeys.addAll(DynamicEntityClassLoader.isGenerated(type) ? DynamicTypeUtils.orderedProperties(properties) : properties);
         // logger().info("Ended constructProperties for [" + type.getSimpleName() + "].");
         return fieldsAndKeys;
     }
@@ -221,9 +259,9 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @param names
      * @return
      */
-    private static List<Field> constructKeysAndProperties(final Class<?> type, final List<String> names) {
+    private static List<Field> constructKeysAndProperties(final Class<?> type, final Set<String> names) {
         final List<Field> allProperties = constructKeysAndProperties(type);
-        final List<Field> properties = new ArrayList<Field>();
+        final List<Field> properties = new ArrayList<>();
         for (final Field f : allProperties) {
             if (names.contains(f.getName())) {
                 properties.add(f);
@@ -261,17 +299,47 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         if (isEntityItself) {
             return false;
         }
-        final Pair<Class<?>, String> penultAndLast = PropertyTypeDeterminator.transform(root, property);
-        final Class<?> realType = PropertyTypeDeterminator.determineClass(penultAndLast.getKey(), penultAndLast.getValue(), true, false);
-        final Class<?> elementType = PropertyTypeDeterminator.determineClass(penultAndLast.getKey(), penultAndLast.getValue(), true, true);
+        final Pair<Class<?>, String> penultAndLast = transform(root, property);
+        final Class<?> realType = determineClass(penultAndLast.getKey(), penultAndLast.getValue(), true, false);
+        final Class<?> elementType = determineClass(penultAndLast.getKey(), penultAndLast.getValue(), true, true);
 
         // return !isEntityItself && realType != null && Collection.class.isAssignableFrom(realType); // or collections itself
         return Collection.class.isAssignableFrom(realType) &&
-                EntityUtils.isEntityType(elementType) &&
-                EntityUtils.isCompositeEntity((Class<AbstractEntity<?>>) elementType) &&
-                Finder.getKeyMembers(elementType).size() == 2 &&
-                Finder.getKeyMembers(elementType).stream().allMatch(field -> EntityUtils.isEntityType(field.getType())) &&
-                Finder.getKeyMembers(elementType).stream().anyMatch(field -> stripIfNeeded(getOriginalType(field.getType())).isAssignableFrom(stripIfNeeded(getOriginalType(penultAndLast.getKey()))));
+                isEntityType(elementType) &&
+                isCompositeEntity((Class<AbstractEntity<?>>) elementType) &&
+                getKeyMembers((Class<? extends AbstractEntity<?>>) elementType).size() == 2 &&
+                getKeyMembers((Class<? extends AbstractEntity<?>>) elementType).stream().allMatch(field -> isEntityType(field.getType())) &&
+                getKeyMembers((Class<? extends AbstractEntity<?>>) elementType).stream().anyMatch(field -> isShortCollectionKeyCompatible(field.getType(), penultAndLast.getKey()));
+    }
+
+    /**
+     * Returns <code>true</code> if the type of collectional prop element key (<code>keyType</code>) is equal or supertype of the entity type (<code>parentType</code>) holding collection.
+     * 
+     * @param keyType
+     * @param parentType
+     * @return
+     */
+    private static boolean isShortCollectionKeyCompatible(final Class<?> keyType, final Class<?> parentType) {
+        return stripIfNeeded(getOriginalType(keyType)).isAssignableFrom(stripIfNeeded(getOriginalType(parentType)));
+    }
+
+    /**
+     * Returns the name of significant key member of short collectional prop element; aka key member with type not compatible with parent type.
+     * <p>
+     * This must be used only inside <code>if (isShortCollection(root, property)) {...}</code> clause.
+     * 
+     * @param root
+     * @param property
+     * @return
+     */
+    public static String shortCollectionKey(final Class<?> root, final String property) {
+        final Pair<Class<?>, String> penultAndLast = transform(root, property);
+        final Class<? extends AbstractEntity<?>> elementType = (Class<? extends AbstractEntity<?>>) determineClass(penultAndLast.getKey(), penultAndLast.getValue(), true, true);
+        return getKeyMembers(elementType).stream()
+            .filter(field -> !isShortCollectionKeyCompatible(field.getType(), penultAndLast.getKey()))
+            .findAny() // stream should return exactly one key field out of two entity-typed key fields after above filtering
+            .map(field -> field.getName())
+            .orElseThrow(() -> new IllegalStateException(format("Short collection (%s; %s) does not have significant key that is not compatible with parent type.", root.getSimpleName(), property)));
     }
 
     /**
@@ -325,8 +393,34 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         return (isCollection(root, property) && !isShortCollection(root, property)) || isInCollectionHierarchy(root, property);
     }
 
-    @Override
-    public boolean isExcludedImmutably(final Class<?> root, final String property) {
+    /**
+     * Returns the standard {@link #isExcludedImmutably(Class, String)} contract implementation with few relaxations applicable to Web API:
+     * <ul>
+     * <li>1. do not exclude 'key' that have no {@link KeyTitle} assigned</li>
+     * <li>2. include 'key's with different types, not only entity-typed ones</li>
+     * <li>3. include non-{@link IsProperty} properties, e.g. {@link AbstractEntity#ID} or {@link AbstractEntity#VERSION} </li>
+     * </ul>
+     * 
+     * @param root
+     * @param property
+     * @return
+     */
+    public static boolean isExcluded(final Class<?> root, final String property) {
+        return isExcluded(root, property, createSet(), setOf(root), false, false);
+    }
+
+    /**
+     * Main implementation point for {@link #isExcludedImmutably(Class, String)} contract.
+     * 
+     * @param root
+     * @param property
+     * @param manuallyExcludedProperties
+     * @param rootTypes
+     * @param strictKeys -- <code>true</code> to exclude keys without {@link KeyTitle} annotation or non-entity-typed ones, <code>false</code> otherwise
+     * @param strictIsPropertyProps -- <code>true</code> to exclude non-{@link IsProperty} properties, <code>false</code> otherwise
+     * @return
+     */
+    private static boolean isExcluded(final Class<?> root, final String property, final EnhancementSet manuallyExcludedProperties, final Set<Class<?>> rootTypes, final boolean strictKeys, final boolean strictIsPropertyProps) {
         // logger().info("\t\tStarted isExcludedImmutably for property [" + property + "].");
         final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
         // logger().info("\t\t\ttransform.");
@@ -342,16 +436,17 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         final boolean excl = manuallyExcludedProperties.contains(key(root, property)) || // exclude manually excluded properties
                 Money.class.isAssignableFrom(penultType) || // all properties within type Money should be excluded at this stage
                 !isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && propertyType == null || // exclude "key" -- no KeyType annotation exists in direct owner of "key"
-                !isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && !AnnotationReflector.isAnnotationPresentForClass(KeyTitle.class, penultType) || // exclude "key" -- no KeyTitle annotation exists in direct owner of "key"
-                !isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && !EntityUtils.isEntityType(propertyType) || // exclude "key" -- "key" is not of entity type
+                strictKeys && !isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && !AnnotationReflector.isAnnotationPresentForClass(KeyTitle.class, penultType) || // exclude "key" -- no KeyTitle annotation exists in direct owner of "key"
+                strictKeys && !isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && !EntityUtils.isEntityType(propertyType) || // exclude "key" -- "key" is not of entity type
                 !isEntityItself && AbstractEntity.DESC.equals(lastPropertyName) && !EntityDescriptor.hasDesc(penultType) || // exclude "desc" -- no DescTitle annotation exists in direct owner of "desc"
-                !isEntityItself && !AnnotationReflector.isAnnotationPresent(Finder.findFieldByName(root, property), IsProperty.class) || // exclude non-TG properties (not annotated by @IsProperty)
-                isEntityItself && !rootTypes().contains(propertyType) || // exclude entities of non-"root types"
+                strictIsPropertyProps && !isEntityItself && !AnnotationReflector.isAnnotationPresent(Finder.findFieldByName(root, property), IsProperty.class) || // exclude non-TG properties (not annotated by @IsProperty)
+                isEntityItself && !rootTypes.contains(propertyType) || // exclude entities of non-"root types"
                 EntityUtils.isEnum(propertyType) || // exclude enumeration properties / entities
                 EntityUtils.isEntityType(propertyType) && Modifier.isAbstract(propertyType.getModifiers()) || // exclude properties / entities of entity type with 'abstract' modifier
                 EntityUtils.isEntityType(propertyType) && !AnnotationReflector.isAnnotationPresentForClass(KeyType.class, propertyType) || // exclude properties / entities of entity type without KeyType annotation
+                EntityUtils.isEntityType(propertyType) && EntityUtils.isIntrospectionDenied((Class<? extends AbstractEntity<?>>) propertyType) || // exclude properties / entities of entity type with DenyIntrospection annotation
                 !isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(Invisible.class, penultType, lastPropertyName) || // exclude invisible properties
-                !isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(Ignore.class, penultType, lastPropertyName) || // exclude invisible properties
+                !isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(Ignore.class, penultType, lastPropertyName) || // exclude ignored properties
                 // The logic below (determining whether property represents link property) is important to maintain the integrity of domain trees.
                 // However, it also causes performance bottlenecks when invoking multiple times (findLinkProperty, getOriginalValue, etc.).
                 // In current Web UI logic, that uses centre domain trees, the following logic does not add any significant value.
@@ -360,9 +455,14 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
                 // Perhaps some "hybrid" of both can be used to achieve acceptable performance.
                 // 1. !isEntityItself && Finder.getKeyMembers(penultType).contains(field) && typesInHierarchy(root, property, true).contains(DynamicEntityClassLoader.getOriginalType(propertyType)) || // exclude key parts which type was in hierarchy
                 // 2. !isEntityItself && PropertyTypeDeterminator.isDotNotation(property) && Finder.isOne2Many_or_One2One_association(DynamicEntityClassLoader.getOriginalType(root), penultPropertyName) && lastPropertyName.equals(Finder.findLinkProperty((Class<? extends AbstractEntity<?>>) DynamicEntityClassLoader.getOriginalType(root), penultPropertyName)) || // exclude link properties in one2many and one2one associations
-                !isEntityItself && isExcludedImmutably(root, PropertyTypeDeterminator.isDotNotation(property) ? penultPropertyName : ""); // exclude property if it is an ascender (any level) of already excluded property
+                !isEntityItself && isExcluded(root, PropertyTypeDeterminator.isDotNotation(property) ? penultPropertyName : "", manuallyExcludedProperties, rootTypes, strictKeys, strictIsPropertyProps); // exclude property if it is an ascender (any level) of already excluded property
         // logger().info("\t\tEnded isExcludedImmutably for property [" + property + "].");
         return excl;
+    }
+
+    @Override
+    public boolean isExcludedImmutably(final Class<?> root, final String property) {
+        return isExcluded(root, property, manuallyExcludedProperties, rootTypes(), true, true);
     }
 
     /**
@@ -616,10 +716,10 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         // The check below is important to maintain the integrity of domain trees.
         // However, it also causes performance bottlenecks when invoking multiple times.
         // In current Web UI logic, that uses centre domain trees, this check does not add any significant value due to other checks implemented as part of Centre DSL.
-        // Reintroducing of this check may be significant when management of domain trees from UI will be implemented.
-        // if (dtr.isExcludedImmutably(root, property)) {
-        //     throw new DomainTreeException(message);
-        // }
+        // This check is currently performed only in STRICT_MODEL_VERIFICATION mode (and thus skipped in deployment mode).
+        if (isStrictModelVerification() && dtr.isExcludedImmutably(root, property)) {
+            throw new DomainTreeException(message);
+        }
     }
 
     /**
@@ -751,7 +851,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
         if (!isEntityItself
                 && isCalculatedAndOfTypes(root, property, CalculatedPropertyCategory.AGGREGATED_EXPRESSION, CalculatedPropertyCategory.ATTRIBUTED_COLLECTIONAL_EXPRESSION)) {
-            final Set<Function> functions = new HashSet<Function>();
+            final Set<Function> functions = new HashSet<>();
             if (availableFunctions.contains(Function.SELF)) {
                 functions.add(Function.SELF);
             }
@@ -809,26 +909,6 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     private static boolean isCalculatedAndOriginatedFromNotIntegerType(final Class<?> root, final String property) {
         final Calculated calculatedAnnotation = AnnotationReflector.getPropertyAnnotation(Calculated.class, root, property);
         return calculatedAnnotation != null && !Integer.class.isAssignableFrom(PropertyTypeDeterminator.determinePropertyType(root, calculatedAnnotation.origination()));
-    }
-
-    /**
-     * A specific Kryo serialiser for {@link AbstractDomainTreeRepresentation}.
-     *
-     * @author TG Team
-     *
-     */
-    protected abstract static class AbstractDomainTreeRepresentationSerialiser<T extends AbstractDomainTreeRepresentation> extends AbstractDomainTreeSerialiser<T> {
-        public AbstractDomainTreeRepresentationSerialiser(final ISerialiser serialiser) {
-            super(serialiser);
-        }
-
-        @Override
-        public void write(final ByteBuffer buffer, final T representation) {
-            writeValue(buffer, representation.getRootTypes());
-            writeValue(buffer, representation.getManuallyExcludedProperties());
-            writeValue(buffer, representation.getFirstTick());
-            writeValue(buffer, representation.getSecondTick());
-        }
     }
 
     @Override

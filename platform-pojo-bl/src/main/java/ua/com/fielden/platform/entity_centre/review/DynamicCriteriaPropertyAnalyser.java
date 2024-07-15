@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.entity_centre.review;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;

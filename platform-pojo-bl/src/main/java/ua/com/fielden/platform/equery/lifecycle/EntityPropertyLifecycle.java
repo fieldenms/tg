@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.equery.lifecycle;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -12,7 +14,7 @@ import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 
@@ -31,7 +33,7 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class EntityPropertyLifecycle<T extends AbstractEntity> implements Comparable<EntityPropertyLifecycle<T>> {
     private static final long serialVersionUID = 184435701215220995L;
-    private static final Logger logger = Logger.getLogger(EntityPropertyLifecycle.class);
+    private static final Logger logger = getLogger(EntityPropertyLifecycle.class);
 
     private final T entity;
     private final Class<T> entityType;

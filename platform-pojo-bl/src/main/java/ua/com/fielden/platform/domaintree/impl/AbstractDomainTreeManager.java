@@ -4,7 +4,6 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotN
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penultAndLast;
 
 import java.lang.reflect.Field;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -19,9 +18,9 @@ import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickRepresentation;
 import ua.com.fielden.platform.domaintree.IUsageManager;
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 
 /**
  * Abstract domain tree manager for all TG trees. Includes support for checking and functions managing. <br>
@@ -43,13 +42,13 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
     /**
      * A <i>manager</i> constructor.
      *
-     * @param serialiser
+     * @param entityFactory
      * @param dtr
      * @param firstTick
      * @param secondTick
      */
-    protected AbstractDomainTreeManager(final ISerialiser serialiser, final AbstractDomainTreeRepresentation dtr, final TickManager firstTick, final TickManager secondTick) {
-        super(serialiser);
+    protected AbstractDomainTreeManager(final EntityFactory entityFactory, final AbstractDomainTreeRepresentation dtr, final TickManager firstTick, final TickManager secondTick) {
+        super(entityFactory);
         this.dtr = dtr;
         this.firstTick = firstTick;
         this.secondTick = secondTick;
@@ -285,7 +284,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
                 final Date st = new Date();
                 // initialise checked properties using isChecked contract and "included properties" cache
                 final List<String> includedProps = dtr.includedProperties(root);
-                final List<String> checkedProps = new ArrayList<String>();
+                final List<String> checkedProps = new ArrayList<>();
                 checkedProperties.put(root, checkedProps);
                 // the original order of "included properties" will be used for "checked properties" at first
                 for (final String includedProperty : includedProps) {
@@ -369,7 +368,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 
         @Override
         public List<String> usedProperties(final Class<?> root) {
-            final List<String> usedProperties = new ArrayList<String>();
+            final List<String> usedProperties = new ArrayList<>();
             if (rootsListsOfUsedProperties.containsKey(root)) {
                 usedProperties.addAll(rootsListsOfUsedProperties.get(root));
             }
@@ -424,25 +423,6 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
     @Override
     public IDomainTreeRepresentation getRepresentation() {
         return dtr;
-    }
-
-    /**
-     * A specific Kryo serialiser for {@link AbstractDomainTreeManager}.
-     *
-     * @author TG Team
-     *
-     */
-    protected abstract static class AbstractDomainTreeManagerSerialiser<T extends AbstractDomainTreeManager> extends AbstractDomainTreeSerialiser<T> {
-        public AbstractDomainTreeManagerSerialiser(final ISerialiser serialiser) {
-            super(serialiser);
-        }
-
-        @Override
-        public void write(final ByteBuffer buffer, final T manager) {
-            writeValue(buffer, manager.getDtr());
-            writeValue(buffer, manager.getFirstTick());
-            writeValue(buffer, manager.getSecondTick());
-        }
     }
 
     @Override

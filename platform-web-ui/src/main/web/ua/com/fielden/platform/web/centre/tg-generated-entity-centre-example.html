@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+
+<head>
+    <!--meta charset="utf-8"-->
+    <title>Generated Centre</title>
+    <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js'></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/filesaver/FileSaver.min.js"></script>
+    <script type="module">
+        import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js'; // fullbleed class
+        import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js'; // Roboto font
+        import '/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties.js';
+    </script>
+    <custom-style>
+        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning">
+            body {
+                font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 10pt;
+            }
+        </style>
+    </custom-style>
+</head>
+
+<body unresolved class="fullbleed">
+    <tg-mitgpersistententitywithproperties-centre id="centre" auto-run enforce-post-save-refresh module-id="Division daily management" uri="/entity-centre-events" uuid="Division daily management/Custom group/Entity Centre">
+    </tg-mitgpersistententitywithproperties-centre>
+    <script>
+        (function () {
+            window.addEventListener('WebComponentsReady', function (e) {
+                // imports are loaded and elements have been registered
+                console.log('Components are ready');
+                const centre = document.querySelector('#centre');
+                centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                    console.log("postRetrieved");
+                };
+                centre.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                    console.log("postValidated");
+                };
+                centre.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {
+                    console.log("postSaved");
+                };
+                centre.retrieve();
+            });
+        })();
+    </script>
+</body>
+
+</html>

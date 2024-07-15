@@ -7,17 +7,17 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.function.Predicate;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
+import ua.com.fielden.platform.classloader.SecurityTokenClassLoader;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -28,6 +28,8 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class ClassesRetriever {
+    private static final SecurityTokenClassLoader URL_CLASS_LOADER = new SecurityTokenClassLoader(ClassLoader.getSystemClassLoader());
+
     /**
      * Let's hide default constructor, which is not needed for a static class.
      */
@@ -35,46 +37,28 @@ public class ClassesRetriever {
     }
 
     /**
-     * This interface provides method that can be used to filter out classes. It was implemented only for methods those returns classes from package and also must satisfies some
-     * additional condition implemented in the isSatisfies method.
-     *
-     * @author oleh
-     *
-     */
-    public interface IFilterClass {
-
-        /**
-         * Must return true if the given testClass satisfies implemented condition otherwise returns false
-         *
-         * @param testClass
-         * @return
-         */
-        boolean isSatisfies(final Class<?> testClass);
-    }
-
-    /**
-     * Returns all classes in the specified package that is located on the path. The path might be a directory or *.jar archive according to condition specified by the filter
-     * instance.
+     * Returns all classes in the specified package that is located on the path.
+     * The path might be a directory or *.jar archive according to condition specified by {@code typePredicate}.
      *
      * @param path
      * @param packageName
-     * @param filter
+     * @param typePredicate – used to include only the types in the result, which satisfy the predicate.
      * @return
      * @throws IOException
      * @throws ClassNotFoundException
      * @throws Exception
      */
-    public static List<Class<?>> getClassesInPackage(final String path, final String packageName, final IFilterClass filter) throws Exception {
+    public static List<Class<?>> getClassesInPackage(final String path, final String packageName, final Predicate<Class<?>> typePredicate) throws Exception {
         final SortedSet<Class<?>> classes = new TreeSet<>((o1, o2) -> o1.getName().compareTo(o2.getName()));
         final String packagePath = packageName.replace('.', '/');
         addPath(path.replace("%20", " "));
         if (path.indexOf(".jar") > 0) {
-            classes.addAll(getFromJarFile(path.replace("%20", " "), packagePath, filter));
+            classes.addAll(getFromJarFile(path.replace("%20", " "), packagePath, typePredicate));
         } else {
             String filePath = path + "/" + packagePath;
             // WINDOWS HACK
             filePath = filePath.replace("%20", " ");
-            classes.addAll(getFromDirectory(new File(filePath), packageName, filter));
+            classes.addAll(getFromDirectory(new File(filePath), packageName, typePredicate));
         }
         return new ArrayList<>(classes);
     }
@@ -129,7 +113,7 @@ public class ClassesRetriever {
             return getClassesInPackage(path, packageName, (testClass) -> isClassDerivedFrom(testClass, superClass)).stream()
                     .map(type -> (Class<? extends T>) type).collect(toList());
         } catch (final Exception ex) {
-            throw new ReflectionException(format("Could not get classes on pathe [%s] in package [%s].", path, packageName), ex);
+            throw new ReflectionException(format("Could not get classes on path [%s] in package [%s].", path, packageName), ex);
         }
     }
 
@@ -188,29 +172,33 @@ public class ClassesRetriever {
     }
 
     /**
-     * Finds and loads class for the passed class name.
+     * Finds and loads class for with {@code className}.
      *
      * @param className
      * @return
      */
     public static Class<?> findClass(final String className) {
         try {
-            return ClassLoader.getSystemClassLoader().loadClass(className);
-        } catch (final ClassNotFoundException e) {
-            throw new ReflectionException(format("Failed to load class [%s]", className),e);
+            return DynamicEntityClassLoader.loadType(className);
+        } catch (final ClassNotFoundException ex) {
+            try {
+                return URL_CLASS_LOADER.loadClass(className);
+            } catch (final ClassNotFoundException e) {
+                throw new ReflectionException(format("Failed to load class [%s]", className),e);
+            }
         }
     }
 
     /**
-     * Returns all classes in the package and it's sub packages from the directory according to condition specified by the filter instance
+     * Returns all classes in the package and it's sub packages from the directory according to condition specified by {@code typePredicate}.
      *
      * @param directory
      * @param packageName
-     * @param filter
+     * @param typePredicate
      * @return
      * @throws ClassNotFoundException
      */
-    private static List<Class<?>> getFromDirectory(final File directory, final String packageName, final IFilterClass filter) throws ClassNotFoundException {
+    private static List<Class<?>> getFromDirectory(final File directory, final String packageName, final Predicate<Class<?>> typePredicate) throws ClassNotFoundException {
         final List<Class<?>> classes = new ArrayList<>();
         final List<Pair<File, String>> directories = new ArrayList<>();
         directories.add(new Pair<File, String>(directory, packageName));
@@ -220,8 +208,8 @@ public class ClassesRetriever {
                 for (final File file : nextDirectory.getKey().listFiles()) {
                     if (file.getName().endsWith(".class")) {
                         final String name = nextDirectory.getValue() + '.' + stripFilenameExtension(file.getName());
-                        final Class<?> clazz = ClassLoader.getSystemClassLoader().loadClass(name);
-                        if (filter == null || filter.isSatisfies(clazz)) {
+                        final Class<?> clazz = URL_CLASS_LOADER.loadClass(name);
+                        if (typePredicate == null || typePredicate.test(clazz)) {
                             classes.add(clazz);
                         }
                     } else if (file.isDirectory() && hasNoSpaces(file.getName())) {
@@ -245,16 +233,16 @@ public class ClassesRetriever {
     }
 
     /**
-     * Returns all classes in the package and it's sub packages from the *.jar archive according to condition specified in the filter instance
+     * Returns all classes in the package and it's sub packages from the *.jar archive according to condition specified by {@code typePredicate}.
      *
      * @param jar
      * @param packageName
-     * @param filter
+     * @param typePredicate
      * @return
      * @throws ClassNotFoundException
      * @throws IOException
      */
-    private static List<Class<?>> getFromJarFile(final String jar, final String packageName, final IFilterClass filter) throws ClassNotFoundException, IOException {
+    private static List<Class<?>> getFromJarFile(final String jar, final String packageName, final Predicate<Class<?>> typePredicate) throws ClassNotFoundException, IOException {
         final List<Class<?>> classes = new ArrayList<>();
         try (final JarInputStream jarFile = new JarInputStream(new FileInputStream(jar))) {
             JarEntry jarEntry;
@@ -265,10 +253,10 @@ public class ClassesRetriever {
                     if (className.endsWith(".class")) {
                         className = stripFilenameExtension(className);
                         if (className.startsWith(packageName + "/")) {
-                            final Class<?> clazz = ClassLoader.getSystemClassLoader().loadClass(className.replace('/', '.'));
-                            if (filter != null && filter.isSatisfies(clazz)) {
+                            final Class<?> clazz = URL_CLASS_LOADER.loadClass(className.replace('/', '.'));
+                            if (typePredicate != null && typePredicate.test(clazz)) {
                                 classes.add(clazz);
-                            } else if (filter == null) {
+                            } else if (typePredicate == null) {
                                 classes.add(clazz);
                             }
 
@@ -289,20 +277,16 @@ public class ClassesRetriever {
     private static String stripFilenameExtension(final String className) {
         return className.substring(0, className.lastIndexOf('.'));
     }
-
+    
     /**
-     * Adds specified path to the class path. It works only if the system class loader is an instance of URLClassLoader.
+     * Adds specified path to the class path. It works only if the system class loader is an instance of TgSystemClassLoader.
      *
      * @param path
      * @throws Exception
      */
     private static void addPath(final String path) throws Exception {
         final File file = new File(path);
-        final URLClassLoader urlClassLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
-        final Class<URLClassLoader> urlClass = URLClassLoader.class;
-        final Method method = urlClass.getDeclaredMethod("addURL", new Class[] { URL.class });
-        method.setAccessible(true);
-        method.invoke(urlClassLoader, new Object[] { file.toURI().toURL() });
+        URL_CLASS_LOADER.addURL(file.toURI().toURL());
     }
 
 }

@@ -30,10 +30,10 @@ public abstract class AbstractEntityWithInputStream<K extends Comparable<?>> ext
         return lastModified;
     }
 
-    public void setLastModified(Date lastModified) {
+    public AbstractEntityWithInputStream<K> setLastModified(Date lastModified) {
         this.lastModified = lastModified;
+        return this;
     }
-
 
     public AbstractEntityWithInputStream<K> setOrigFileName(final String origFileName) {
         this.origFileName = origFileName;

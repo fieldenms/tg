@@ -1,6 +1,11 @@
 package ua.com.fielden.platform.web.view.master.api.impl;
 
-import java.util.LinkedHashSet;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
+import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
+import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
+
 import java.util.Optional;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
@@ -20,15 +25,10 @@ import ua.com.fielden.platform.web.view.master.api.IMaster;
  *
  * @param <T>
  */
-public abstract class AbstractMapMaster<T extends AbstractFunctionalEntityWithCentreContext<String>> implements IMaster<T> {
+public abstract class AbstractMapMaster<T extends AbstractFunctionalEntityWithCentreContext<?>> implements IMaster<T> {
     private final IRenderable renderable;
 
     public AbstractMapMaster(final Class<T> entityType, final String gisComponentImportPath, final String gisComponentName) {
-        final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
-        importPaths.add("gis/tg-map");
-        importPaths.add(gisComponentImportPath);
-
-        final int funcActionSeq = 0; // used for both entity and property level functional actions
         final String prefix = ",\n";
         final int prefixLength = prefix.length();
         final StringBuilder primaryActionObjects = new StringBuilder();
@@ -38,21 +38,25 @@ public abstract class AbstractMapMaster<T extends AbstractFunctionalEntityWithCe
                 .attr("column-properties-mapper", "{{columnPropertiesMapper}}")
                 .attr("centre-selection", "[[centreSelection]]")
                 .attr("custom-event-target", "[[customEventTarget]]")
+                .attr("data-change-reason", "[[dataChangeReason]]")
                 .attr("retrieved-entities", "{{retrievedEntities}}")
                 .attr("retrieved-totals", "{{retrievedTotals}}");
 
         final String primaryActionObjectsString = primaryActionObjects.toString();
 
-        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
-                .replace("<!--@imports-->", SimpleMasterBuilder.createImports(importPaths))
-                .replace("@entity_type", entityType.getSimpleName())
+        final StringBuilder prefDimBuilder = new StringBuilder();
+        prefDimBuilder.append("{'width': function() {return '100%'}, 'height': function() {return '100%'}, 'widthUnit': '', 'heightUnit': ''}");
+
+        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
+                .replace(IMPORTS, createImports(linkedSetOf("gis/tg-map")) + "import { " + gisComponentName + " } from '/resources/" + gisComponentImportPath + ".js';\n" )
+                .replace(ENTITY_TYPE, flattenedNameOf(entityType))
                 .replace("<!--@tg-entity-master-content-->", tgMessageMap.toString())
                 .replace("//generatedPrimaryActions", primaryActionObjectsString.length() > prefixLength ? primaryActionObjectsString.substring(prefixLength)
                         : primaryActionObjectsString)
                 .replace("//@attached-callback",
                         "self.classList.remove('canLeave');\n"
-                        + "self.querySelector('.tg-map').initialiseOrInvalidate(L.GIS." + gisComponentName + ");\n")
-                .replace("@prefDim", "null")
+                        + "self.shadowRoot.querySelector('.tg-map').initialiseOrInvalidate(" + gisComponentName + ");\n")
+                .replace("@prefDim", prefDimBuilder.toString())
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", "true");
 

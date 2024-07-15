@@ -48,13 +48,13 @@
     pdftitle={Trident Genesis Platform},
     pdfauthor={Fielden Management Services Pty. Ltd.},
     pdfsubject={A hight level overview of key principles and advantages.},
-    pdfcopyright={Copyright (C) 2019 by Fielden Management Services Pty Ltd.  All rights reserved.}
+    pdfcopyright={Copyright (C) 2020 by Fielden Management Services Pty Ltd.  All rights reserved.}
 }
 
 \usepackage{xcolor}
 \makeevenhead{headings}%
     {\thepage}{}{\slshape\bookname~\thebook\qquad\partname~\thepart\qquad\leftmark}
-    \makeoddfoot{headings}{\slshape\rightmark}{\color{gray}Copyright (C) 2019 by Fielden Management Services Pty Ltd.  All rights reserved.}{\thepage}
+    \makeoddfoot{headings}{\slshape\rightmark}{\color{gray}Copyright (C) 2020 by Fielden Management Services Pty Ltd.  All rights reserved.}{\thepage}
 	\makeoddhead{headings}{\slshape\rightmark}{}{}
 
 
@@ -68,7 +68,7 @@
 \subsection*{What is Trident Genesis platform?}
   Trident Genesis (TG) platform is a technology for developing Enterprise Application Software in a domain-driven way.
   TG incorporates over 30 years of experience in delivering enterprise-grade software solutions at a software architecture level to deliver \emph{extensible}, \emph{maintainable}, \emph{interoperable} and \emph{portable} software.
-  In essence, TG encapsulates \emph{accidental complexity} of low-level technology in order to enable software engineers to better harness the
+  In essence, TG encapsulates \emph{accidental complexity} of the low-level technology in order to enable software engineers to better harness the
   \emph{essential complexity} that stems from a target business domain.
 
   \vspace{3 mm}
@@ -196,7 +196,7 @@
 \subsubsection*{Responsive HTML5 clients}
 	TG provides an embedded domain specific language for defining a responsive Web UI.
 	All UI concepts are based on the domain modelling principles to reinforce the worldview metaphor, and follow the Google Material Design spec to deliver a responsive and consistent User Experience (UX) across devices of multiple and varying form factors.
-	The TG presentation layer is based on Web Components (built with Google Polymer), which enables reuse and integration of in-house and $3^{rd}$ party components.
+	The TG presentation layer is based on Web Components, which enables reuse and integration of in-house and $3^{rd}$ party components.
 	TG offers a \emph{search-first} approach to UX design that provides users with sophisticated first-class data retrieval tools supporting model-driven selection criteria, value autocompletion, ranges, meta-conditions (e.g. missing value, this year, previous fortnight), aggregations and sorting of the result sets.
 
 
@@ -213,12 +213,13 @@
 \subsubsection*{Robust Security}
 	TG provides industrial grade security, which has passed an independent audit.
 	It includes HTTPS communication, the use of key-stretching PBKDF2-based password hashing, mutating session authenticator strategy, and reduced sign-on with support for both trusted and untrusted devices.
-	There is support for multi-factor authentication scheme, as well as declarative fine-grained authorisation with muti-role support and pluggable backends (e.g. LDAP), user-based data filtering.
+    There is support for multi-factor authentication scheme, as well as declarative fine-grained authorisation with muti-role support and pluggable backends (e.g. LDAP), user-based data filtering.
+    Alternatively, OpenID Connect (OAuth 2.0) authentication is available to implement SSO with identify providers such as Microsoft Azure AD.
 
 \subsubsection*{Cloud-ready}
-	Software systems built with TG are cloud-ready and can be deployed as Docker containers.
-	The platform employs RESTful architecture to structure application web-resources, and can expose underlying domain models via the GraphQL API.
-	This ensures clean separation between different business domain boundaries and UI resources, and provides excellent capacity for scalability.
+	Solutions built with TG are cloud-ready, deployable as Docker containers.
+	The platform employs RESTful architecture and can expose underlying domain models via GraphQL API.
+	This ensures clean separation between domain boundaries and provides excellent capacity for scalability.
 
 \subsubsection*{Complete application development lifecycle}
 	One of the key meta-features of the Trident Genesis platform is its ability to support a complete lifecycle for developing software systems.

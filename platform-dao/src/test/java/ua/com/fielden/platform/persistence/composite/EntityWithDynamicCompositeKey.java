@@ -18,7 +18,7 @@ import ua.com.fielden.platform.persistence.types.EntityWithMoney;
  * Test entity class, which utilises {@link DynamicEntityKey} for composite key implementation. The composite key consists of two parts -- one is simple string, another is also an
  * entity mapped as many-to-one association.
  * 
- * @author 01es
+ * @author TG Team
  * 
  */
 @KeyType(DynamicEntityKey.class)

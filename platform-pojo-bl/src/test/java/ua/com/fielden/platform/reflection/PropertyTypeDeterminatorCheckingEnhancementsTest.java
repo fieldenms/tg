@@ -3,6 +3,7 @@ package ua.com.fielden.platform.reflection;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
 
 import org.junit.Test;
 
@@ -18,7 +19,6 @@ import ua.com.fielden.platform.entity.proxy.TgOwnerEntity;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.reflection.asm.impl.entities.EntityBeingEnhanced;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
@@ -38,14 +38,14 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
     private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
-    private final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
-    
+
     private final Class<TgOwnerEntity> entityType;
     private final Class<AbstractEntity<?>> entityTypeGenerated;
     
     public PropertyTypeDeterminatorCheckingEnhancementsTest() throws ClassNotFoundException {
         entityType = TgOwnerEntity.class;
-        entityTypeGenerated = (Class<AbstractEntity<?>>) cl.startModification(entityType).modifyTypeName(DynamicTypeNamingService.nextTypeName(entityType.getName())).endModification();
+        final Class<? extends AbstractEntity<?>> tmp = startModification(entityType).endModification();
+        entityTypeGenerated = (Class<AbstractEntity<?>>) tmp;
     }
 
     //////////////////////////////////// isInstrumented ////////////////////////////////////
@@ -258,18 +258,17 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
 
     @Test
     public void baseEntityType_correctly_determines_the_base_type_for_dynamically_generated_entity_types() throws Exception {
-        final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
         final String NEW_PROPERTY_DESC = "Description  for new money property";
         final String NEW_PROPERTY_TITLE = "New money property";
         final String NEW_PROPERTY_EXPRESSION = "2 * 3 - [integerProp]";
         final String NEW_PROPERTY = "newProperty";
         final Calculated calculated = new CalculatedAnnotation().contextualExpression(NEW_PROPERTY_EXPRESSION).newInstance();
-        final NewProperty pd1 = new NewProperty(NEW_PROPERTY, Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
-        final NewProperty pd2 = new NewProperty(NEW_PROPERTY + 1, Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
+        final NewProperty pd1 = new NewProperty(NEW_PROPERTY, Money.class, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
+        final NewProperty pd2 = new NewProperty(NEW_PROPERTY + 1, Money.class, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
         // first enhancement
-        final Class<? extends AbstractEntity<?>> oneTimeEnhancedType = (Class<? extends AbstractEntity<?>>) cl.startModification(EntityBeingEnhanced.class).addProperties(pd1).endModification();
+        final Class<? extends AbstractEntity<?>> oneTimeEnhancedType = (Class<? extends AbstractEntity<?>>) startModification(EntityBeingEnhanced.class).addProperties(pd1).endModification();
         // second enhancement
-        final Class<? extends AbstractEntity<?>> twoTimesEnhancedType = (Class<? extends AbstractEntity<?>>) cl.startModification(oneTimeEnhancedType).addProperties(pd2).endModification();
+        final Class<? extends AbstractEntity<?>> twoTimesEnhancedType = (Class<? extends AbstractEntity<?>>) startModification(oneTimeEnhancedType).addProperties(pd2).endModification();
 
         // both enhanced types should have EntityBeingEnhanced as their base type
         assertEquals(EntityBeingEnhanced.class, PropertyTypeDeterminator.baseEntityType(oneTimeEnhancedType));

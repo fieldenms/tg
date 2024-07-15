@@ -5,13 +5,13 @@ import java.util.List;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.ILocatorManager;
+import ua.com.fielden.platform.domaintree.IRootTyped;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
+import ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum;
+import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
 import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.snappy.DateRangePrefixEnum;
-import ua.com.fielden.snappy.MnemonicEnum;
 
 /**
  * This interface defines how domain tree can be managed for <b>entity centres</b>. <br>
@@ -248,22 +248,19 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
     IAddToResultTickManager getSecondTick();
 
     /**
-     * Gets a <i>runAutomatically</i> flag. <br>
-     * <br>
+     * Returns the index of preferred resultant view of the entity centre.
      *
      * @return
      */
-    boolean isRunAutomatically();
+    Integer getPreferredView();
 
     /**
-     * Sets a <i>runAutomatically</i> flag. <br>
-     * <br>
+     * Sets the index of preferred resultant view for this entity centre.
      *
-     * @param runAutomatically
-     *            -- a value to set
-     * @return -- a criteria manager
+     * @param prefViewIndex
+     * @return
      */
-    ICentreDomainTreeManager setRunAutomatically(final boolean runAutomatically);
+    ICentreDomainTreeManager setPreferredView(final Integer preferredView);
 
     /**
      * This interface defines <b>entity centre</b> domain tree can be managed for <b>criteria</b> (property represents as a criteria editor). <br>
@@ -280,37 +277,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
      * @author TG Team
      *
      */
-    public interface IAddToCriteriaTickManager extends ITickManager, ILocatorManager {
-        /**
-         * A type of meta values.
-         *
-         * @author TG Team
-         *
-         */
-        public enum MetaValueType {
-            VALUE, VALUE2, EXCLUSIVE, EXCLUSIVE2, OR_NULL, NOT, DATE_PREFIX, DATE_MNEMONIC, AND_BEFORE, ALL_ORDERING, WIDTH, GROW_FACTOR
-        }
-
-        /**
-         * Returns <code>true</code> whether the meta value is present (when it was explicitly marked as 'present'), <code>false</code> otherwise.
-         *
-         * @param metaValueType
-         * @param root
-         * @param property
-         * @return
-         */
-        boolean isMetaValuePresent(final MetaValueType metaValueType, final Class<?> root, final String property);
-
-        /**
-         * Marks the meta value as 'present'.
-         *
-         * @param metaValueType
-         * @param root
-         * @param property
-         * @return
-         */
-        IAddToCriteriaTickManager markMetaValuePresent(final MetaValueType metaValueType, final Class<?> root, final String property);
-
+    public interface IAddToCriteriaTickManager extends ITickManager, IRootTyped {
         /**
          * Gets a <i>columnsNumber</i> for criteria editors. <br>
          * <br>
@@ -640,6 +607,54 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          */
         IAddToCriteriaTickManager setNot(final Class<?> root, final String property, final Boolean not);
 
+        /**
+         * Gets an "autocomplete active only" indication of an activatable entity-typed criteria property.
+         * <p>
+         * Throws {@link DomainTreeException} for non-applicable property (e.g. "non-activatable entity"-typed or "non entity"-typed).
+         * Throws {@link DomainTreeException} if the property is not checked (see {@link #isChecked(Class, String)} method).
+         *
+         * @param root -- a root type that contains property.
+         * @param property -- a dot-notation expression that defines a property.
+         * @return
+         */
+        boolean getAutocompleteActiveOnly(final Class<?> root, final String property);
+
+        /**
+         * Sets an "autocomplete active only" for activatable entity-typed criteria property.
+         * <p>
+         * Throws {@link DomainTreeException} for non-applicable property (e.g. "non-activatable entity"-typed or "non entity"-typed).
+         * Throws {@link DomainTreeException} if the property is not checked (see {@link #isChecked(Class, String)} method).
+         *
+         * @param root -- a root type that contains property.
+         * @param property -- a dot-notation expression that defines a property.
+         * @param autocompleteActiveOnly
+         * @return -- a criteria tick manager
+         */
+        IAddToCriteriaTickManager setAutocompleteActiveOnly(final Class<?> root, final String property, final boolean autocompleteActiveOnly);
+
+        /**
+         * Gets an "or group" number of a criteria property.
+         * <p>
+         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+         *
+         * @param root -- a root type that contains property.
+         * @param property -- a dot-notation expression that defines a property.
+         * @return
+         */
+        Integer getOrGroup(final Class<?> root, final String property);
+
+        /**
+         * Sets an "or group" number of a criteria property.
+         * <p>
+         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+         *
+         * @param root -- a root type that contains property.
+         * @param property -- a dot-notation expression that defines a property.
+         * @param orGroup
+         * @return -- a criteria tick manager
+         */
+        IAddToCriteriaTickManager setOrGroup(final Class<?> root, final String property, final Integer orGroup);
+
         // Boolean getAll(final Class<?> root, final String property);
         // ICriteriaTickManager setAll(final Class<?> root, final String property, final Boolean all);
 
@@ -782,5 +797,65 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * @param widthsAndGrowFactors
          */
         void setWidthsAndGrowFactors(final T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> widthsAndGrowFactors);
+        
+        /**
+         * Gets result-set page capacity.
+         * 
+         * @return
+         */
+        int getPageCapacity();
+        
+        /**
+         * Sets result-set page capacity.
+         * 
+         * @param pageCapacity
+         * @return
+         */
+        IAddToResultTickManager setPageCapacity(final int pageCapacity);
+        
+        /**
+         * Gets maximum page capacity for result-set.
+         * 
+         * @return
+         */
+        int getMaxPageCapacity();
+        
+        /**
+         * Sets maximum page capacity for result-set.
+         * 
+         * @param maxPageCapacity
+         * @return
+         */
+        IAddToResultTickManager setMaxPageCapacity(final int maxPageCapacity);
+        
+        /**
+         * Gets result-set visible rows count.
+         * 
+         * @return
+         */
+        int getVisibleRowsCount();
+        
+        /**
+         * Sets result-set visible rows count.
+         * 
+         * @param visibleRowsCount
+         * @return
+         */
+        IAddToResultTickManager setVisibleRowsCount(final int visibleRowsCount);
+        
+        /**
+         * Gets result-set number of header lines.
+         * 
+         * @return
+         */
+        int getNumberOfHeaderLines();
+        
+        /**
+         * Sets result-set number of header lines.
+         * 
+         * @param numberOfHeaderLines
+         * @return
+         */
+        IAddToResultTickManager setNumberOfHeaderLines(final int numberOfHeaderLines);
     }
 }

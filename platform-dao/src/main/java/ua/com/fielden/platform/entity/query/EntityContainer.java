@@ -1,9 +1,10 @@
 package ua.com.fielden.platform.entity.query;
 
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 
@@ -39,7 +40,9 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
             }
             return true;
         }
-        return (countAllDataItems() == 1 && primitives.containsKey(AbstractEntity.ID) && getId() == null) || (isUnionEntityType(resultType) && countAllDataItems() == 0);
+
+        return (countAllDataItems() == 1 && primitives.containsKey(AbstractEntity.ID) && getId() == null) || (isUnionEntityType(resultType) && countAllDataItems() == 0)
+        || (isPersistedEntityType(resultType) || isSyntheticBasedOnPersistentEntityType(resultType)) && primitives.containsKey(AbstractEntity.ID) && primitives.get(AbstractEntity.ID) == null;
     }
 
     public Long getId() {

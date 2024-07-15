@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.domaintree.testing;
 
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.Observable;
@@ -13,9 +12,7 @@ import ua.com.fielden.platform.entity.annotation.Observable;
  * 
  */
 @KeyTitle(value = "Key title", desc = "Key desc")
-@DescTitle(value = "Desc title", desc = "Desc desc")
 public class UnionEntityForIncludedPropertiesLogic extends AbstractUnionEntity {
-    private static final long serialVersionUID = 1L;
 
     protected UnionEntityForIncludedPropertiesLogic() {
     }

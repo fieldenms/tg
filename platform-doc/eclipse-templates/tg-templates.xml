@@ -1,7 +1,10 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?><templates><template autoinsert="true" context="java" deleted="false" description="Generates a stub for a calculated property" enabled="true" name="tgprop-calculated">@IsProperty
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<templates>
+<template autoinsert="true" context="java" deleted="false" description="Generates a stub for a calculated property" enabled="true" name="tgprop-calculated">
+@IsProperty
 @Readonly
 @Calculated
-@Title(value = "${Title}", desc = "${Desc}")
+@Title(value = "${Title}", desc = "${Extended_description}")
 private ${type} ${name};
 protected static final ExpressionModel ${name}_ = expr().val(${cursor}null).model();
 
@@ -26,8 +29,8 @@ ${imp:import(ua.com.fielden.platform.entity.annotation.IsProperty,
           ua.com.fielden.platform.entity.query.model.ExpressionModel)}
 </template>
 <template autoinsert="true" context="java" deleted="false" description="Generates a stub for collectional one-to-many association" enabled="true" name="tgprop-collectional">@IsProperty(${type}.class)
-@Title(value = "${Title}", desc = "${Desc}")
-private Set&lt;${type}&gt; ${name} = new HashSet&lt;${type}&gt;();${cursor}
+@Title(value = "${Title}", desc = "${Extended_description}")
+private Set&lt;${type}&gt; ${name} = new LinkedHashSet&lt;${type}&gt;();${cursor}
 
 @Observable
 protected ${enclosing_type} set${Name}(final Set&lt;${type}&gt; ${name}) {
@@ -43,11 +46,11 @@ public Set&lt;${type}&gt; get${Name}() {
 ${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
           ua.com.fielden.platform.entity.annotation.Title,
           ua.com.fielden.platform.entity.annotation.Observable,
-          java.util.HashSet, java.util.Set, java.util.Collections)}
+          java.util.LinkedHashSet, java.util.Set, java.util.Collections)}
 </template>
-<template autoinsert="true" context="java" deleted="false" description="Generates a stub for a composite key member of an entity type" enabled="true" name="tgprop-composite-key-member">@IsProperty
+<template autoinsert="true" context="java" deleted="false" description="Generates a stub for a composite key member of most types, except String" enabled="true" name="tgprop-composite-key-member">@IsProperty
 @MapTo
-@Title(value = "${Title}", desc = "${Desc}")
+@Title(value = "${Title}", desc = "${Extended_description}")
 @CompositeKeyMember(${index})
 private ${type} ${name};${cursor}
 
@@ -67,9 +70,38 @@ ${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
           ua.com.fielden.platform.entity.annotation.MapTo,
   	  ua.com.fielden.platform.entity.annotation.CompositeKeyMember)}
 </template>
-<template autoinsert="true" context="java" deleted="false" description="Generates a stub for a property of an entity type" enabled="true" name="tgprop">@IsProperty
+
+<template autoinsert="true" context="java" deleted="false" description="Generates a stub for a String composite key member" enabled="true" name="tgprop-composite-key-member-string">@IsProperty(length = 255)
 @MapTo
-@Title(value = "${Title}", desc = "${Desc}")
+@Title(value = "${Title}", desc = "${Extended_description}")
+@CompositeKeyMember(${index})
+@BeforeChange(@Handler(MaxLengthValidator.class))
+private String ${name};${cursor}
+
+@Observable
+public ${enclosing_type} set${Name}(final String ${name}) {
+    this.${name} = ${name};
+    return this;
+}
+
+public String get${Name}() {
+    return ${name};
+}
+
+${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
+          ua.com.fielden.platform.entity.annotation.Title,
+          ua.com.fielden.platform.entity.annotation.Observable,
+          ua.com.fielden.platform.entity.annotation.MapTo,
+  	  ua.com.fielden.platform.entity.annotation.CompositeKeyMember,
+          ua.com.fielden.platform.entity.validation.MaxLengthValidator,
+          ua.com.fielden.platform.entity.annotation.mutator.BeforeChange,
+          ua.com.fielden.platform.entity.annotation.mutator.Handler)}
+</template>
+
+
+<template autoinsert="true" context="java" deleted="false" description="Generates a stub for a property of most types, except String" enabled="true" name="tgprop">@IsProperty
+@MapTo
+@Title(value = "${Title}", desc = "${Extended_description}")
 private ${type} ${name};${cursor}
 
 @Observable
@@ -87,16 +119,40 @@ ${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
           ua.com.fielden.platform.entity.annotation.Observable,
           ua.com.fielden.platform.entity.annotation.MapTo)}
 </template>
-<template autoinsert="true" context="java" deleted="false" description="Generates a stub for a pairt of comparable and dependent properties such as fromDate and toDate" enabled="true" name="tgprop-from-and-to">@IsProperty
+<template autoinsert="true" context="java" deleted="false" description="Generates a stub for a String property" enabled="true" name="tgprop-string">@IsProperty(length = 255)
+@MapTo
+@Title(value = "${Title}", desc = "${Extended_description}")
+@BeforeChange(@Handler(MaxLengthValidator.class))
+private String ${name};${cursor}
+
+@Observable
+public ${enclosing_type} set${Name}(final String ${name}) {
+    this.${name} = ${name};
+    return this;
+}
+
+public String get${Name}() {
+    return ${name};
+}
+
+${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
+          ua.com.fielden.platform.entity.annotation.Title,
+          ua.com.fielden.platform.entity.annotation.Observable,
+          ua.com.fielden.platform.entity.annotation.MapTo,
+          ua.com.fielden.platform.entity.validation.MaxLengthValidator,
+          ua.com.fielden.platform.entity.annotation.mutator.BeforeChange,
+          ua.com.fielden.platform.entity.annotation.mutator.Handler)}
+</template>
+<template autoinsert="true" context="java" deleted="false" description="Generates a stub for a pair of comparable and dependent properties such as fromDate and toDate" enabled="true" name="tgprop-from-and-to">@IsProperty
 @MapTo
 @Dependent("${name2}")
-@Title(value = "${Title1}", desc = "${Desc1}")
+@Title(value = "${Title1}", desc = "${Extended_description_1}")
 private ${type} ${name1};
 
 @IsProperty
 @MapTo
 @Dependent("${name1}")
-@Title(value = "${Title2}", desc = "${Desc2}")
+@Title(value = "${Title2}", desc = "${Extended_description_2}")
 private ${type} ${name2};${cursor}
 
 @Observable
@@ -129,9 +185,9 @@ ${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
           ua.com.fielden.platform.entity.validation.annotation.GeProperty,
           ua.com.fielden.platform.entity.validation.annotation.LeProperty)}
 </template>
-<template autoinsert="true" context="java" deleted="false" description="Generates a stub for the critOnly entity property." enabled="true" name="tgprop-critOnly">@IsProperty
+<template autoinsert="true" context="java" deleted="false" description="Generates a stub for the critOnly property." enabled="true" name="tgprop-critOnly">@IsProperty
 @CritOnly(Type.MULTI)
-@Title(value = "${Title}", desc = "${Desc}")
+@Title(value = "${Title}", desc = "${Extended_description}")
 private ${type} ${name};${cursor}
 
 @Observable
@@ -149,6 +205,31 @@ ${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
           ua.com.fielden.platform.entity.annotation.Observable,
           ua.com.fielden.platform.entity.annotation.CritOnly,
           ua.com.fielden.platform.entity.annotation.CritOnly.Type)}
+</template>
+<template autoinsert="true" context="java" deleted="false" description="Generates a stub for the critOnly property with an EQL sub-model." enabled="true" name="tgprop-critOnly-with-submodel">
+@IsProperty
+@CritOnly(value = Type.${crit_type}, entityUnderCondition = ${entity_under_condition}.class, propUnderCondition = "${property_under_condition}")
+@Title(value = "${Title}", desc = "${Extended_description}")
+private ${type} ${name};${cursor}
+protected static final ICompoundCondition0&lt;${entity_under_condition}&gt; ${name}_ = select(${entity_under_condition}.class).where()
+            .prop("${join_property}").eq().prop(createConditionProperty("id"));
+
+@Observable
+public ${enclosing_type} set${Name}(final ${type} ${name}) {
+    this.${name} = ${name};
+    return this;
+}
+
+public ${type} get${Name}() {
+    return ${name};
+}
+
+${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
+          ua.com.fielden.platform.entity.annotation.Title,
+          ua.com.fielden.platform.entity.annotation.Observable,
+          ua.com.fielden.platform.entity.annotation.CritOnly,
+          ua.com.fielden.platform.entity.annotation.CritOnly.Type,
+          ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0)}
 </template>
 <template autoinsert="true" context="java-statements" deleted="false" description="Query stub for EntityAggregates" enabled="true" name="tgquery-aggregates">
 final AggregatedResultQueryModel query = ${cursor}select(${type}.class).yield().prop("prop1").as("myresult").modelAsAggregate();
@@ -224,4 +305,5 @@ ${:import(ua.com.fielden.platform.entity.query.model.EntityResultQueryModel,
 	  ua.com.fielden.platform.entity.query.fluent.fetch,
 	  ua.com.fielden.platform.dao.QueryExecutionModel
 )}
-</template></templates>
+</template>
+</templates>

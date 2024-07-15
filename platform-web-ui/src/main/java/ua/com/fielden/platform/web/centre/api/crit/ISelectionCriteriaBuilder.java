@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.crit;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2Properties;
 
 /**
@@ -14,5 +15,17 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2Proper
  * @param <T>
  */
 public interface ISelectionCriteriaBuilder<T extends AbstractEntity<?>> {
+
+    /**
+     * Adds criterion for {@code propName}, possibly in "dot-notation" form (e.g. "zone.sector.division").
+     */
     ISelectionCritKindSelector<T> addCrit(final String propName);
+
+    /**
+     * Adds criterion for {@code propName}, possibly in "dot-notation" form (e.g. Station_.zone().sector().division()).
+     */
+    default ISelectionCritKindSelector<T> addCrit(final IConvertableToPath propName) {
+        return addCrit(propName.toPath());
+    }
+
 }

@@ -1,14 +1,15 @@
 package ua.com.fielden.platform.domaintree.impl;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.AbstractEntity.isStrictModelVerification;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
 import static ua.com.fielden.platform.utils.EntityUtils.isRangeType;
 
 import java.util.Set;
 
-import org.apache.log4j.Logger;
-
-import com.esotericsoftware.kryo.Kryo;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
 import ua.com.fielden.platform.domaintree.IUsageManager;
@@ -20,9 +21,6 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
-import ua.com.fielden.platform.serialisation.kryo.serialisers.TgSimpleSerializer;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -33,8 +31,8 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public abstract class AbstractDomainTree {
-    private final ISerialiser serialiser;
-    private static final Logger logger = Logger.getLogger(AbstractDomainTree.class);
+    private final EntityFactory entityFactory;
+    private static final Logger logger = getLogger(AbstractDomainTree.class);
     private static final String COMMON_SUFFIX = ".common-properties", DUMMY_SUFFIX = ".dummy-property";
     protected static final String PLACEHOLDER = "-placeholder-origin-";
 
@@ -47,22 +45,12 @@ public abstract class AbstractDomainTree {
     }
 
     /**
-     * Constructs base domain tree with a <code>serialiser</code> and <code>factory</code> instances.
+     * Constructs base domain tree with <code>entityFactory</code> instance.
      *
-     * @param serialiser
-     * @param factory
+     * @param entityFactory
      */
-    protected AbstractDomainTree(final ISerialiser serialiser) {
-        this.serialiser = serialiser;
-    }
-
-    /**
-     * Returns an instance of serialiser for persistence and copying.
-     *
-     * @return
-     */
-    protected ISerialiser getSerialiser() {
-        return serialiser;
+    protected AbstractDomainTree(final EntityFactory entityFactory) {
+        this.entityFactory = entityFactory;
     }
 
     /**
@@ -71,7 +59,7 @@ public abstract class AbstractDomainTree {
      * @return
      */
     protected EntityFactory getFactory() {
-        return serialiser.factory();
+        return entityFactory;
     }
 
     /**
@@ -161,7 +149,7 @@ public abstract class AbstractDomainTree {
      * @return
      */
     public static String reflectionProperty(final String property) {
-        return property.replaceAll(DUMMY_SUFFIX, "").replaceAll(COMMON_SUFFIX, "");
+        return StringUtils.remove(StringUtils.remove(property, DUMMY_SUFFIX), COMMON_SUFFIX);
     }
 
     /**
@@ -176,10 +164,10 @@ public abstract class AbstractDomainTree {
         // The check below is important to maintain the integrity of domain trees.
         // However, it also causes performance bottlenecks when invoking multiple times.
         // In current Web UI logic, that uses centre domain trees, this check does not add any significant value due to other checks implemented as part of Centre DSL.
-        // Reintroducing of this check may be significant when management of domain trees from UI will be implemented.
-        // if (!tm.isChecked(root, property)) {
-        //     throw new DomainTreeException(message);
-        // }
+        // This check is currently performed only in STRICT_MODEL_VERIFICATION mode (and thus skipped in deployment mode).
+        if (isStrictModelVerification() && !tm.isChecked(root, property)) {
+            throw new DomainTreeException(message);
+        }
     }
 
     /**
@@ -299,31 +287,6 @@ public abstract class AbstractDomainTree {
         return new Pair<>(root, property);
     }
 
-    /**
-     * A specific Kryo serialiser for {@link AbstractDomainTree}.
-     *
-     * @author TG Team
-     *
-     */
-    protected abstract static class AbstractDomainTreeSerialiser<T> extends TgSimpleSerializer<T> {
-        private final ISerialiser serialiser;
-        private final EntityFactory factory;
-
-        public AbstractDomainTreeSerialiser(final ISerialiser serialiser) {
-            super((Kryo) serialiser.getEngine(SerialiserEngines.KRYO));
-            this.serialiser = serialiser;
-            this.factory = serialiser.factory();
-        }
-
-        protected ISerialiser serialiser() {
-            return serialiser;
-        }
-
-        protected EntityFactory factory() {
-            return factory;
-        }
-    }
-    
     /**
      * Returns <code>true</code> when the property can represent criterion with two editors, <code>false</code> otherwise.
      *

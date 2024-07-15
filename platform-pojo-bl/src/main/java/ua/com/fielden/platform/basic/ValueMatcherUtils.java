@@ -16,11 +16,11 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 
 public class ValueMatcherUtils {
-    
+
     private ValueMatcherUtils() {}
 
     public static <T extends AbstractEntity<?>> Builder<T, EntityResultQueryModel<T>> createCommonQueryBuilderForFindMatches(
-            final Class<T> entityType, 
+            final Class<T> entityType,
             final ConditionModel searchCriteria,
             final OrderingModel ordering,
             final Map<String, Object> queryParams) {
@@ -28,11 +28,11 @@ public class ValueMatcherUtils {
         return from(queryModel).with(ordering).with(queryParams).lightweight();
     }
 
-    public static ConditionModel createStrictSearchByKeyCriteriaModel(Class<? extends AbstractEntity<?>> entityType, final String searchString) {
+    public static ConditionModel createStrictSearchByKeyCriteriaModel(final Class<? extends AbstractEntity<?>> entityType, final String searchString) {
         ConditionModel keyCriteria = cond().prop(KEY).iLikeWithCast().val(searchString).model();
 
         if (isCompositeEntity((Class<? extends AbstractEntity<?>>) entityType)) {
-            for (String propName : keyPaths(entityType)) {
+            for (final String propName : keyPaths(entityType)) {
                 keyCriteria = cond().condition(keyCriteria).or().prop(propName).iLikeWithCast().val(searchString).model();
             }
         }
@@ -41,7 +41,7 @@ public class ValueMatcherUtils {
     }
 
     public static ConditionModel createRelaxedSearchByKeyCriteriaModel(final String searchString) {
-        return cond().prop(KEY).iLikeWithCast().val("%" + searchString).model();
+        return cond().prop(KEY).iLikeWithCast().val(searchString).model();
     }
 
 }

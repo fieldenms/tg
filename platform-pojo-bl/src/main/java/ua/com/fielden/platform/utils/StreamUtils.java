@@ -1,17 +1,13 @@
 package ua.com.fielden.platform.utils;
 
-import java.util.Iterator;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Spliterator;
-import java.util.Spliterators;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
+import ua.com.fielden.platform.streaming.SequentialGroupingStream;
+import ua.com.fielden.platform.types.tuples.T2;
+
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.*;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-
-import ua.com.fielden.platform.types.tuples.T2;
 
 /**
  * A set of convenient APIs for working with {@link Stream}.
@@ -106,6 +102,71 @@ public class StreamUtils {
     }
 
     /**
+     * Returns a stream of distinct elements from {@code stream}, where unique identity of an element is determined by {@code uidMapper}.
+     * <p>
+     * It is required that the return type of {@code uidMapper} has proper implementation of {@code hashCode()} and {@code equals()}.
+     * <p>
+     * The order of the original stream's elements is preserved.
+     *
+     * @param stream
+     * @param uidMapper a function that maps the original element to its unique identity.
+     * @return
+     */
+    public static <T, R> Stream<T> distinct(final Stream<T> stream, final Function<T, R> uidMapper) {
+        return StreamSupport.stream(distinct(stream.spliterator(), uidMapper), false);
+    }
+
+    private static <T, R> Spliterator<T> distinct(final Spliterator<T> splitr, final Function<T, R> uidMapper) {
+        return new Spliterators.AbstractSpliterator<T>(splitr.estimateSize(), 0) {
+            final LinkedHashSet<R> uniqs = new LinkedHashSet<>();
+
+            @Override
+            public boolean tryAdvance(final Consumer<? super T> consumer) {
+                return splitr.tryAdvance(elem -> {
+                    final R uid = uidMapper.apply(elem);
+                    if (!uniqs.contains(uid)) {
+                        consumer.accept(elem);
+                        uniqs.add(uid);
+                    }
+                });
+            }
+        };
+    }
+
+    /**
+     * Returns the longest prefix of the {@code stream} until (inclusive) an element that satisfies {@code predicate} is encountered.
+     * <p>
+     * If no such element was encountered then the whole stream is returned.
+     *
+     * @param stream
+     * @param predicate
+     * @return
+     */
+    public static <T> Stream<T> stopAfter(final Stream<T> stream, final Predicate<? super T> predicate) {
+        return StreamSupport.stream(stopAfter(stream.spliterator(), predicate), false);
+    }
+
+    private static <T> Spliterator<T> stopAfter(final Spliterator<T> splitr, final Predicate<? super T> predicate) {
+        return new Spliterators.AbstractSpliterator<T>(splitr.estimateSize(), 0) {
+            boolean stillGoing = true;
+
+            @Override
+            public boolean tryAdvance(final Consumer<? super T> consumer) {
+                if (stillGoing) {
+                    final boolean hadNext = splitr.tryAdvance(elem -> {
+                        consumer.accept(elem);
+                        if (predicate.test(elem)) {
+                            stillGoing = false;
+                        }
+                    });
+                    return hadNext && stillGoing;
+                }
+                return false;
+            }
+        };
+    }
+
+    /**
      * Constructs a zipped stream.
      * 
      * @param xs
@@ -118,7 +179,7 @@ public class StreamUtils {
         final Spliterator<? extends A> xsSpliterator = Objects.requireNonNull(xs).spliterator();
         final Spliterator<? extends B> ysSpliterator = Objects.requireNonNull(ys).spliterator();
 
-        // zipping should loose DISTINCT and SORTED characteristics
+        // zipping should lose DISTINCT and SORTED characteristics
         final int characteristics = xsSpliterator.characteristics() & ysSpliterator.characteristics() &
                 ~(Spliterator.DISTINCT | Spliterator.SORTED);
 
@@ -146,6 +207,70 @@ public class StreamUtils {
         return xs.isParallel() && ys.isParallel() // if both streams are parallel then the produced one can also be parallel
                 ? StreamSupport.stream(split, true)
                 : StreamSupport.stream(split, false);
+    }
+
+    /**
+     * Splits stream {@code source} into a windowed stream where elements from {@code source} are placed in groups of size {@code windowSize}.
+     * The last group may have its size less than the {@code windowSize}.
+     *
+     * @param <T> A type over which to stream.
+     * @param source An input stream to be "windowed".
+     * @param windowSize A window size.
+     * @return
+     */
+    public static <T> Stream<List<T>> windowed(final Stream<T> source, final int windowSize){
+        return SequentialGroupingStream.stream(source, (el, group) -> group.size() < windowSize);
+    }
+
+    /**
+     * Creates a filtering function that accepts only instances of the given type. Intended to be passed to {@link Stream#mapMulti(BiConsumer)}.
+     * It replaces the following pattern:
+     * <pre>{@code
+     *     stream.map(x -> x instanceof Y y ? y : null)
+     *           .filter(y -> y != null)
+     * }</pre>
+     * with:
+     * <pre>{@code
+     *     stream.mapMulti(typeFilter(Y.class))
+     * }</pre>
+     *
+     * <b>NOTE</b>: this method, unlike {@code instanceof}, can be used to test incompatible types. As such, it sacrifices
+     * the benefit of compile-time detection of "meaningless" filtering for succinctness.
+     * For example, {@code "a" instanceof List} is an illegal statement, while
+     * {@code Stream.of("a").mapMulti(typeFilter(List.class))} is allowed.
+     *
+     * @param type  the type of elements that will be preserved in the resulting stream
+     */
+    public static <T, R extends T> BiConsumer<T, Consumer<R>> typeFilter(Class<R> type) {
+        return (item, sink) -> {
+            if (type.isInstance(item)) {
+                sink.accept(type.cast(item));
+            }
+        };
+    }
+
+    /**
+     * Sometimes there are situations where it is required to identify whether a stream is empty, and if it is empty, supply an alternative stream.
+     * <p>
+     * There is no way to check if a stream is empty without invoking a terminal operation on it. This method returns either a stream with the elements of the original stream, if it was not empty,
+     * or an alternative infinite stream of elements generated by {@code supplier}.
+     *
+     * @param stream
+     * @param supplier
+     * @return
+     * @param <T>
+     */
+    public static <T> Stream<T> supplyIfEmpty(final Stream<T> stream, final Supplier<T> supplier) {
+        final Spliterator<T> spliterator = stream.spliterator();
+        final AtomicReference<T> referenceToFirstElement = new AtomicReference<>();
+        // If we can advance then the stream is not empty, but because we advanced it is necessary to create a new stream.
+        if (spliterator.tryAdvance(referenceToFirstElement::set)) {
+            return Stream.concat(Stream.of(referenceToFirstElement.get()), StreamSupport.stream(spliterator, stream.isParallel()));
+        }
+        // Otherwise, let's return an infinite stream of elements generated by supplier.
+        else {
+            return Stream.generate(supplier);
+        }
     }
 
 }

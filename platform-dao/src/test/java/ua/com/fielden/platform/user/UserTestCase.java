@@ -17,6 +17,8 @@ import java.util.stream.Stream;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.basic.config.IApplicationSettings;
+import ua.com.fielden.platform.basic.config.IApplicationSettings.AuthMode;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.UserAlmostUniqueEmailValidator;
@@ -26,9 +28,9 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.security.user.IUserSecret;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserSecret;
+import ua.com.fielden.platform.security.user.UserSecretCo;
 import ua.com.fielden.platform.security.user.validators.UserBaseOnUserValidator;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
@@ -43,7 +45,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 public class UserTestCase extends AbstractDaoTestCase {
 
     private final IUser coUser = co$(User.class);
-    private final IUserSecret coUserSecret = co$(UserSecret.class);
+    private final UserSecretCo coUserSecret = co$(UserSecret.class);
 
     @Test
     public void username_does_not_permit_password_reset_UUID_separator() {
@@ -52,6 +54,17 @@ public class UserTestCase extends AbstractDaoTestCase {
         user.setKey(value);
         assertFalse(user.getProperty(KEY).isValid());
         assertEquals(format(StringValidator.validationErrorTemplate, user.getProperty(KEY).getTitle(), TitlesDescsGetter.getEntityTitleAndDesc(User.class).getKey()), user.getProperty("key").validationResult().getMessage());
+    }
+
+    @Test
+    public void username_permits_spaces_dots_and_at_char() {
+        final User user = new_(User.class);
+        user.setKey("Name Surname");
+        assertEquals("Name Surname", user.getKey());
+        user.setKey("Name.Surname");
+        assertEquals("Name.Surname", user.getKey());
+        user.setKey("Name.Surname@fielden.com.au");
+        assertEquals("Name.Surname@fielden.com.au", user.getKey());
     }
 
     @Test
@@ -318,7 +331,7 @@ public class UserTestCase extends AbstractDaoTestCase {
         
         assertFalse(coUser.assignPasswordResetUuid("NON-EXISTING-USER").isPresent());
     }
-    
+
     @Test
     public void password_reset_for_inactive_user_fails() {
         final UniversalConstantsForTesting consts = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
@@ -329,7 +342,6 @@ public class UserTestCase extends AbstractDaoTestCase {
         assertFalse(coUser.assignPasswordResetUuid(inactiveUser.getKey()).isPresent());
     }
 
-    
     @Test 
     public void unit_test_user_cannot_be_persisted() {
         final IUser coUser = co$(User.class);
@@ -523,10 +535,11 @@ public class UserTestCase extends AbstractDaoTestCase {
         coUser.lockoutUser("USER3");
         final User inactiveUser = coUser.findUser("USER3");
         assertFalse(inactiveUser.isActive());
+        assertFalse(coUserSecret.findByIdOptional(inactiveUser.getId()).isPresent());
         
         save(inactiveUser.setActive(true));
         
-        final Optional<UserSecret> maybeSecret = coUserSecret.findByIdOptional(inactiveUser.getId(), coUserSecret.getFetchProvider().fetchModel());
+        final Optional<UserSecret> maybeSecret = coUserSecret.findByIdOptional(inactiveUser.getId());
         assertTrue(maybeSecret.isPresent());
         assertNotNull(maybeSecret.get().getResetUuid());
     }
@@ -538,6 +551,55 @@ public class UserTestCase extends AbstractDaoTestCase {
         coUser.lockoutUser(username);
     }
 
+    @Test
+    public void deactivating_active_users_removes_their_secretes() {
+        final User user = coUser.findUser("USER3");
+        assertTrue(user.isActive());
+        assertTrue(coUserSecret.findByIdOptional(user.getId()).isPresent());
+        
+        save(user.setActive(false));
+        
+        assertFalse(coUserSecret.findByIdOptional(user.getId()).isPresent());
+    }
+
+    @Test
+    public void deactivating_user_with_active_dependencies_fails() {
+        final User user3 = coUser.findUser("USER3");
+        assertEquals(Integer.valueOf(0), user3.getRefCount());
+        
+        coUser.save(coUser.findUser("USER5").setBasedOnUser(user3).setActive(true));
+        final User user3_1 = coUser.findUser("USER3");
+        assertEquals(Integer.valueOf(1), user3_1.getRefCount());
+        try {
+           coUser.save(user3_1.setActive(false));
+           fail("Saving invalid user should have failed.");
+        } catch (final Exception ex) {
+            
+        }
+    }
+
+    @Test
+    public void in_RSO_authentication_mode_new_users_have_property_ssoOnly_equal_false_and_readonly() {
+        assertEquals("Invalid initial conditions for this test.", AuthMode.RSO, getInstance(IApplicationSettings.class).authMode());
+        
+        final User user = co$(User.class).new_();
+        assertFalse(user.isSsoOnly());
+        assertFalse(user.getProperty(User.SSO_ONLY).isEditable());
+    }
+
+    /**
+     * One caveat to this test is that if some user was saved in the SSO authentication mode with {@code ssoOnly = true}, then retrieving such user in the RSO mode would still have that value set to {@code true}.
+     * But the property itself would be read-only. However, transitioning from SSO to RSO mode for an application is very unlikely. Also, the authentication logic should not be considering {@code ssoOnly} in the RSO mode.
+     */
+    @Test
+    public void in_RSO_authentication_mode_retrieved_for_editing_users_have_property_ssoOnly_equal_false_and_readonly() {
+        assertEquals("Invalid initial conditions for this test.", AuthMode.RSO, getInstance(IApplicationSettings.class).authMode());
+        
+        final User user = co$(User.class).findByKey("USER3");
+        assertFalse(user.isSsoOnly());
+        assertFalse(user.getProperty(User.SSO_ONLY).isEditable());
+    }
+    
     @Override
     protected void populateDomain() {
         super.populateDomain();

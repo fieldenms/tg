@@ -3,20 +3,21 @@ package ua.com.fielden.platform.report.query.generation;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 
 public class DetailsQueryGenerator<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends GridAnalysisQueryGenerator<T, CDTME> {
 
     private final List<Pair<String, Object>> conditions;
 
-    public DetailsQueryGenerator(final Class<T> root, final CDTME cdtme, final List<Pair<String, Object>> conditions) {
-        super(root, cdtme);
-        this.conditions = conditions == null ? new ArrayList<Pair<String, Object>>() : conditions;
+    public DetailsQueryGenerator(final Class<T> root, final CDTME cdtme, final List<Pair<String, Object>> conditions, final IDates dates) {
+        super(root, cdtme, dates);
+        this.conditions = conditions == null ? new ArrayList<>() : conditions;
     }
 
     @Override

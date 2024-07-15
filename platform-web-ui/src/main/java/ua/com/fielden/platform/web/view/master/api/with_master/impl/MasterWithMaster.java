@@ -27,6 +27,7 @@ class MasterWithMaster<T extends AbstractEntity<?>> extends AbstractMasterWithMa
         //////////////////////////////////////////////////////////////////////////////////////
         attrs.append("{");
         attrs.append("\"entityType\":\"" + entityType.getName() + "\", "
+                + "\"excludeInsertionPoints\": this.excludeInsertionPoints, "
                 + "\"currentState\":\"EDIT\", "
                 + "\"centreUuid\": this.centreUuid, "
                 + "\"shouldRefreshParentCentreAfterSave\": " + shouldRefreshParentCentreAfterSave + ", ");

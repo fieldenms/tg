@@ -1,8 +1,9 @@
 package ua.com.fielden.platform.web.centre;
 
-import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.WAS_RUN_NAME;
+import static java.util.Optional.empty;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.getCustomObject;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefault;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLink;
+
 import java.util.Map;
 import java.util.Optional;
 
@@ -32,21 +33,19 @@ public class CentreConfigSaveActionProducer extends AbstractCentreConfigCommitAc
      * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
      */
     @Override
-    protected Map<String, Object> performProduce(final CentreConfigSaveAction entity, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity, final boolean isDefaultOrInherited) {
-        if (isDefaultOrInherited) {
+    protected Map<String, Object> performProduce(final CentreConfigSaveAction entity, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity, final boolean isDefaultOrLinkOrInherited) {
+        if (isDefaultOrLinkOrInherited) {
             final Optional<String> saveAsName = selectionCrit.saveAsName();
-            if (!isDefault(saveAsName)) {
-                setTitleAndDesc(entity, saveAsName.get(), selectionCrit, COPY_ACTION_SUFFIX);
-            } else {
+            if (isDefaultOrLink(saveAsName)) {
                 makeTitleRequired(entity);
+            } else {
+                setTitleAndDesc(entity, saveAsName.get(), selectionCrit, COPY_ACTION_SUFFIX);
             }
-            return getCustomObject(selectionCrit, appliedCriteriaEntity);
+            return getCustomObject(selectionCrit, appliedCriteriaEntity, empty(), empty()); // not yet transitioned to another config -- do not update configUuid / saveAsName / shareError on client-side
         } else { // owned configuration should be saved without opening 'Save As...' dialog
             entity.setSkipUi(true);
             selectionCrit.saveFreshCentre();
-            final Map<String, Object> customObj = getCustomObject(selectionCrit, appliedCriteriaEntity);
-            customObj.remove(WAS_RUN_NAME); // avoid making VIEW button disabled if it is enabled
-            return customObj;
+            return getCustomObject(selectionCrit, appliedCriteriaEntity, empty(), empty()); // config left the same (no transition occurred) -- do not update configUuid / saveAsName / shareError on client-side
         }
     }
     

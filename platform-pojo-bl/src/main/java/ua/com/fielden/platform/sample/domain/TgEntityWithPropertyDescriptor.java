@@ -2,6 +2,7 @@ package ua.com.fielden.platform.sample.domain;
 
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
+import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -11,23 +12,32 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 
-/** 
- * Master entity object.
- * 
- * @author Developers
- *
- */
+@EntityTitle(value = "TG Entity With Property Descriptor", desc = "Test entity with property descriptor property.")
 @KeyType(String.class)
 @KeyTitle(value = "Key", desc = "Some key description")
-@CompanionObject(ITgEntityWithPropertyDescriptor.class)
+@CompanionObject(TgEntityWithPropertyDescriptorCo.class)
 @MapEntityTo
 public class TgEntityWithPropertyDescriptor extends AbstractPersistentEntity<String> {
-    private static final long serialVersionUID = 1L;
-    
+
     @IsProperty(TgPersistentEntityWithProperties.class)
     @MapTo
     @Title(value = "Property Descriptor", desc = "Property Descriptor property")
     private PropertyDescriptor<TgPersistentEntityWithProperties> propertyDescriptor;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Parent", desc = "Parent association with entity of the same type.")
+    private TgEntityWithPropertyDescriptor parent;
+
+    @Observable
+    public TgEntityWithPropertyDescriptor setParent(final TgEntityWithPropertyDescriptor parent) {
+        this.parent = parent;
+        return this;
+    }
+
+    public TgEntityWithPropertyDescriptor getParent() {
+        return parent;
+    }
 
     @Observable
     public TgEntityWithPropertyDescriptor setPropertyDescriptor(final PropertyDescriptor<TgPersistentEntityWithProperties> propertyDescriptor) {
@@ -38,4 +48,5 @@ public class TgEntityWithPropertyDescriptor extends AbstractPersistentEntity<Str
     public PropertyDescriptor<TgPersistentEntityWithProperties> getPropertyDescriptor() {
         return propertyDescriptor;
     }
+
 }

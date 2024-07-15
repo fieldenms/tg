@@ -6,7 +6,7 @@ import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubl
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -27,7 +27,7 @@ public class ReportQueryGenerationUtils {
      * @return
      */
     public static <T extends AbstractEntity<?>> List<QueryProperty> createQueryProperties(final Class<T> root, final ICentreDomainTreeManagerAndEnhancer cdtme) {
-        final List<QueryProperty> queryProperties = new ArrayList<QueryProperty>();
+        final List<QueryProperty> queryProperties = new ArrayList<>();
         for (final String actualProperty : cdtme.getFirstTick().checkedProperties(root)) {
             if (!AbstractDomainTree.isPlaceholder(actualProperty)) {
                 queryProperties.add(createQueryProperty(actualProperty, root, cdtme));
@@ -65,6 +65,7 @@ public class ReportQueryGenerationUtils {
         }
         queryProperty.setOrNull(tickManager.getOrNull(root, actualProperty));
         queryProperty.setNot(tickManager.getNot(root, actualProperty));
+        queryProperty.setOrGroup(tickManager.getOrGroup(root, actualProperty));
         return queryProperty;
     }
 }

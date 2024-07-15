@@ -21,8 +21,6 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeMan
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisAddToAggregationTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisAddToDistributionTickManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache;
-import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -35,34 +33,33 @@ import ua.com.fielden.platform.report.query.generation.AnalysisResultClass;
 import ua.com.fielden.platform.report.query.generation.AnalysisResultClassBundle;
 import ua.com.fielden.platform.report.query.generation.ChartAnalysisQueryGenerator;
 import ua.com.fielden.platform.report.query.generation.IReportQueryGenerator;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.api.impl.SerialiserForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.utils.IDates;
 
 @SuppressWarnings("unchecked")
 public class ChartAnalysisQueryGenerationTest {
 
     private static final String ALIAS = "alias_for_main_criteria_type";
 
-    private final ISerialiser serialiser = createSerialiser(createFactory());
+    private final Injector injector = createInjector();
+    private final EntityFactory factory = createFactory(injector);
 
-    private EntityFactory createFactory() {
+    private Injector createInjector() {
         final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
-        final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
+        return new ApplicationInjectorFactory().add(module).getInjector();
+    }
+
+    private EntityFactory createFactory(final Injector injector) {
         return injector.getInstance(EntityFactory.class);
     }
 
-    private ISerialiser createSerialiser(final EntityFactory factory) {
-        return new SerialiserForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes(), DomainTreeEnhancerCache.CACHE);
-    }
-
     @SuppressWarnings("serial")
-    private final ICentreDomainTreeManagerAndEnhancer cdtme = new CentreDomainTreeManagerAndEnhancer(serialiser, new HashSet<Class<?>>() {
+    private final ICentreDomainTreeManagerAndEnhancer cdtme = new CentreDomainTreeManagerAndEnhancer(factory, new HashSet<Class<?>>() {
         {
             add(MasterDomainEntity.class);
         }
-    });;
+    });
     private final IReportQueryGenerator<MasterDomainEntity> queryGenerator;
 
     private final Class<AbstractEntity<?>> masterKlass, stringKeyKlass;
@@ -99,7 +96,7 @@ public class ChartAnalysisQueryGenerationTest {
 
         cdtme.acceptAnalysisManager("simple analysis");
 
-        queryGenerator = new ChartAnalysisQueryGenerator<>(MasterDomainEntity.class, cdtme, analysis);
+        queryGenerator = new ChartAnalysisQueryGenerator<>(MasterDomainEntity.class, cdtme, analysis, injector.getInstance(IDates.class));
 
         masterKlass = (Class<AbstractEntity<?>>) dte.getManagedType(MasterDomainEntity.class);
         stringKeyKlass = (Class<AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(masterKlass, "entityProp.entityProp.simpleEntityProp");
@@ -123,7 +120,7 @@ public class ChartAnalysisQueryGenerationTest {
         final AnalysisResultClassBundle<MasterDomainEntity> resultBundle = queryGenerator.generateQueryModel();
 
         final Class<AbstractEntity<?>> managedType = (Class<AbstractEntity<?>>) cdtme.getEnhancer().getManagedType(MasterDomainEntity.class);
-        final EntityResultQueryModel<AbstractEntity<?>> subQueryModel = select(select(managedType).model()).as(ALIAS).model();
+        final EntityResultQueryModel<AbstractEntity<?>> subQueryModel = select(select(managedType).model().setShouldMaterialiseCalcPropsAsColumnsInSqlQuery(true)).as(ALIAS).model();
 
         final EntityResultQueryModel<MasterDomainEntity> queryModel = select(subQueryModel).as(ALIAS)//
         .groupBy().prop(ALIAS + ".firstGroup")//
@@ -166,7 +163,7 @@ public class ChartAnalysisQueryGenerationTest {
         final AnalysisResultClassBundle<MasterDomainEntity> resultBundle = queryGenerator.generateQueryModel();
 
         final Class<AbstractEntity<?>> managedType = (Class<AbstractEntity<?>>) cdtme.getEnhancer().getManagedType(MasterDomainEntity.class);
-        final EntityResultQueryModel<AbstractEntity<?>> subQueryModel = select(select(managedType).model()).as(ALIAS).model();
+        final EntityResultQueryModel<AbstractEntity<?>> subQueryModel = select(select(managedType).model().setShouldMaterialiseCalcPropsAsColumnsInSqlQuery(true)).as(ALIAS).model();
 
         final EntityResultQueryModel<MasterDomainEntity> queryModel = select(subQueryModel).as(ALIAS)//
         .groupBy().prop(ALIAS + ".entityProp.entityProp.secondGroup")//
@@ -208,7 +205,7 @@ public class ChartAnalysisQueryGenerationTest {
         final AnalysisResultClassBundle<MasterDomainEntity> resultBundle = queryGenerator.generateQueryModel();
 
         final Class<AbstractEntity<?>> managedType = (Class<AbstractEntity<?>>) cdtme.getEnhancer().getManagedType(MasterDomainEntity.class);
-        final EntityResultQueryModel<AbstractEntity<?>> subQueryModel = select(select(managedType).model()).as(ALIAS).model();
+        final EntityResultQueryModel<AbstractEntity<?>> subQueryModel = select(select(managedType).model().setShouldMaterialiseCalcPropsAsColumnsInSqlQuery(true)).as(ALIAS).model();
 
         final EntityResultQueryModel<MasterDomainEntity> queryModel = select(subQueryModel).as(ALIAS)//
         .groupBy().prop(ALIAS + ".entityProp.entityProp.simpleEntityProp")//

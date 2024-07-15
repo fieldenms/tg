@@ -10,16 +10,19 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.MediaType;
 import org.restlet.data.Method;
-import org.restlet.routing.Router;
 
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.AbstractEntityWithInputStream;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.FileProcessingResource;
+import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 
 /**
  * Factory to instantiate {@link FileProcessingResource}.
@@ -28,27 +31,31 @@ import ua.com.fielden.platform.web.resources.webui.FileProcessingResource;
  *
  */
 public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStream<?>> extends Restlet {
-    private final Injector injector;
-    private final Class<T> entityType;
-    private final Function<EntityFactory, T> entityCreator;
-    private final ICompanionObjectFinder companionFinder;
-    private final Router router;
-    
-    private final long fileSizeLimitBytes;
-    private final Set<MediaType> types = new HashSet<>();
-    private final IDeviceProvider deviceProvider;
+    protected final Injector injector;
+    protected final Class<T> entityType;
+    protected final Function<EntityFactory, T> entityCreator;
+    protected final ICompanionObjectFinder companionFinder;
+    protected final IEventSourceEmitterRegister eseRegister;
+
+    protected final long fileSizeLimitBytes;
+    protected final Set<MediaType> types = new HashSet<>();
+    protected final IDeviceProvider deviceProvider;
+    protected final IDates dates;
+    protected final IUserProvider userProvider;
 
     public FileProcessingResourceFactory(
-            final Router router,
+            final IEventSourceEmitterRegister eseRegister,
             final Injector injector,
             final Class<T> entityType,
             final Function<EntityFactory, T> entityCreator,
             final IDeviceProvider deviceProvider,
+            final IDates dates,
             final long fileSizeLimitKb,
-            final MediaType type, // at least one type is required 
+            final MediaType type, // at least one type is required
             final MediaType... types) {
-        this.router = router;
+        this.eseRegister = eseRegister;
         this.injector = injector;
+        this.userProvider = injector.getInstance(IUserProvider.class);
         this.entityType = entityType;
         this.entityCreator = entityCreator;
         this.companionFinder = injector.getInstance(ICompanionObjectFinder.class);
@@ -56,6 +63,7 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
         this.types.add(type);
         Arrays.stream(types).forEach(this.types::add);
         this.deviceProvider = deviceProvider;
+        this.dates = dates;
     }
 
     @Override
@@ -63,16 +71,20 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
         super.handle(request, response);
 
         if (Method.PUT.equals(request.getMethod())) {
-            new FileProcessingResource<T>(
-                    router,
+            new FileProcessingResource<>(
+                    eseRegister,
+                    userProvider,
                     companionFinder.find(entityType),
-                    injector.getInstance(EntityFactory.class), 
-                    entityCreator, 
-                    injector.getInstance(RestServerUtil.class), 
-                    fileSizeLimitBytes, 
-                    types, 
+                    injector.getInstance(EntityFactory.class),
+                    entityCreator,
+                    injector.getInstance(RestServerUtil.class),
+                    fileSizeLimitBytes,
+                    types,
                     deviceProvider,
+                    dates,
+                    injector.getInstance(ISerialiser.class),
                     getContext(), request, response).handle();
         }
     }
+
 }

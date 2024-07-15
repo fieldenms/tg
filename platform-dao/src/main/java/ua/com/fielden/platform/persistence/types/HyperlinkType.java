@@ -24,6 +24,8 @@ import ua.com.fielden.platform.types.markers.IHyperlinkType;
  */
 public class HyperlinkType implements UserType, IHyperlinkType {
 
+    public static final HyperlinkType INSTANCE = new HyperlinkType();
+    
 	private static final int[] SQL_TYPES = { Types.VARCHAR };
 
 	@Override

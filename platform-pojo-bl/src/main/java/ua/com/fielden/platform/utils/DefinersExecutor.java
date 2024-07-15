@@ -3,7 +3,6 @@ package ua.com.fielden.platform.utils;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.partitioningBy;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
-import static ua.com.fielden.platform.entity.AbstractEntity.COMMON_PROPS;
 import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
 import static ua.com.fielden.platform.reflection.Reflector.isPropertyProxied;
 import static ua.com.fielden.platform.utils.EntityUtils.getEntityIdentity;
@@ -18,10 +17,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 
 /**
@@ -114,7 +112,6 @@ public class DefinersExecutor {
         
         explored.add(identity);
 
-        final boolean unionEntity = entity instanceof AbstractUnionEntity;
         final boolean isEntityPersisted = entity.isPersisted();
 
         // FIXME please, consider applicability of the following logic (legacy code from EntityUtils.handleMetaProperties method):
@@ -150,33 +147,30 @@ public class DefinersExecutor {
             final boolean isEntity = AbstractEntity.class.isAssignableFrom(propField.getType());
             final boolean isCollectional = Collection.class.isAssignableFrom(propField.getType());
 
-            final boolean notCommonPropOfUnionEntity = !(COMMON_PROPS.contains(propName) && unionEntity);
             final Object propertyValue = entity.get(propName);
 
-            if (notCommonPropOfUnionEntity) {
-                if (isCollectional) { // handle collectional properties
-                    if (propertyValue != null) {
-                        final Collection<?> collection = (Collection<?>) propertyValue;
-                        for (final Object item: collection) {
-                            if (item != null && item instanceof AbstractEntity) {
-                                final AbstractEntity<?> value = (AbstractEntity<?>) item;
-                                frontier.push(value);
-                                explore(frontier, explored);
-                            }
+            if (isCollectional) { // handle collectional properties
+                if (propertyValue != null) {
+                    final Collection<?> collection = (Collection<?>) propertyValue;
+                    for (final Object item: collection) {
+                        if (item != null && item instanceof AbstractEntity) {
+                            final AbstractEntity<?> value = (AbstractEntity<?>) item;
+                            frontier.push(value);
+                            explore(frontier, explored);
                         }
                     }
-                } else if (isEntity) { // handle entity-typed properties
-                    if (propertyValue != null) {
-                        final AbstractEntity<?> value = (AbstractEntity<?>) propertyValue;
-                        // produce fetch
-                        frontier.push(value);
-                        explore(frontier, explored);
-                    }
                 }
-                
-                // original values and execution of ACE handlers is relevant only for instrumented entities
-                handleOriginalValueAndACE(entity.getProperty(propName), propertyValue, isEntityPersisted);
+            } else if (isEntity) { // handle entity-typed properties
+                if (propertyValue != null) {
+                    final AbstractEntity<?> value = (AbstractEntity<?>) propertyValue;
+                    // produce fetch
+                    frontier.push(value);
+                    explore(frontier, explored);
+                }
             }
+            
+            // original values and execution of ACE handlers is relevant only for instrumented entities
+            handleOriginalValueAndACE(entity.getProperty(propName), propertyValue, isEntityPersisted);
         }
 
         entity.endInitialising();

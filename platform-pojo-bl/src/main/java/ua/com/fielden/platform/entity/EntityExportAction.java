@@ -1,23 +1,19 @@
 package ua.com.fielden.platform.entity;
 
-import static ua.com.fielden.platform.entity.NoKey.NO_KEY;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
+import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
+import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
+import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.web.action.AbstractFunEntityForDataExport;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
-import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
-import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
-import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.web.action.AbstractFunEntityForDataExport;
+import static ua.com.fielden.platform.entity.NoKey.NO_KEY;
+import static ua.com.fielden.platform.error.Result.failure;
 
 /**
  * A functional entity that represents an action for exporting entities to Excel.
@@ -27,14 +23,14 @@ import ua.com.fielden.platform.web.action.AbstractFunEntityForDataExport;
  */
 @KeyType(NoKey.class)
 @KeyTitle(value = "Export", desc = "Export data into file")
-@CompanionObject(IEntityExportAction.class)
+@CompanionObject(EntityExportActionCo.class)
 public class EntityExportAction extends AbstractFunEntityForDataExport<NoKey> {
     public static final String PROP_EXPORT_ALL = "exportAll";
     public static final String PROP_EXPORT_TOP = "exportTop";
     public static final String PROP_EXPORT_SELECTED = "exportSelected";
     public static final String PROP_NUMBER = "number";
     public static final Set<String> EXPORT_OPTION_PROPERTIES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(PROP_EXPORT_ALL, PROP_EXPORT_TOP, PROP_EXPORT_SELECTED)));
-    
+
     @IsProperty
     @Title(value = "Export all?", 
            desc = "Should be used in cases where all matching entities across all pages need to be exported.")
@@ -43,24 +39,24 @@ public class EntityExportAction extends AbstractFunEntityForDataExport<NoKey> {
 
     @IsProperty
     @Title(value = "Export top?", 
-           desc = "Should be used in cases where the specified number of the top matching entities need to be exported."
-                   + "If there are less mathing entities than the number specified then only those get exported.")
+           desc = "This option should be used in cases where the specified number of the top matching entities needs to be exported."
+                   + "If there are less matching entities than the number specified then only those records get exported.")
     @AfterChange(ExportActionHandler.class)
     private boolean exportTop;
 
     @IsProperty
-    @Title(value = "Number", desc = "The number of top matching entities to be exported.")
+    @Title(value = "Number", desc = "A number of top matching entities to be exported.")
     private Integer number;
 
     @IsProperty
-    @Title(value = "Export selected?", desc = "Export selected entities")
+    @Title(value = "Export selected?", desc = "Export selected entities.")
     @AfterChange(ExportActionHandler.class)
     private boolean exportSelected;
-    
+
     @IsProperty
     @Title("Context Holder")
     private CentreContextHolder centreContextHolder;
-    
+
     @IsProperty(Long.class)
     @Title("Selected Entity IDs")
     private Set<Long> selectedEntityIds = new HashSet<>();
@@ -68,7 +64,7 @@ public class EntityExportAction extends AbstractFunEntityForDataExport<NoKey> {
     public EntityExportAction() {
         setKey(NO_KEY);
     }
-    
+
     @Observable
     protected EntityExportAction setSelectedEntityIds(final Set<Long> selectedEntityIds) {
         this.selectedEntityIds.clear();
@@ -140,6 +136,7 @@ public class EntityExportAction extends AbstractFunEntityForDataExport<NoKey> {
             }
         }
 
-        return superResult.isSuccessful() ? Result.failure("One of the export options must be selected.") : superResult;
+        return superResult.isSuccessful() ? failure("One of the export options must be selected.") : superResult;
     }
+
 }

@@ -9,7 +9,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.singlelinetext.impl.S
  * @author TG Team
  *
  */
-public class StringCriterionWidget extends AbstractMultiCriterionWidget {
+public class StringCriterionWidget extends AbstractCriterionWidget {
 
     /**
      * Creates an instance of {@link StringCriterionWidget} for specified entity type and property name.
@@ -18,7 +18,7 @@ public class StringCriterionWidget extends AbstractMultiCriterionWidget {
      * @param propertyName
      */
     public StringCriterionWidget(final Class<? extends AbstractEntity<?>> root, final Class<?> managedType, final String propertyName) {
-        super(root, "centre/criterion/multi/tg-multi-criterion", propertyName,
+        super(root, "centre/criterion/tg-criterion", propertyName,
                 new SinglelineTextWidget(
                         AbstractCriterionWidget.generateSingleTitleDesc(root, managedType, propertyName),
                         AbstractCriterionWidget.generateSingleName(root, managedType, propertyName)

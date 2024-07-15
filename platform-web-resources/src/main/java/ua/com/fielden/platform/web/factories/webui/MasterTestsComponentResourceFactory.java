@@ -8,6 +8,7 @@ import org.restlet.data.Method;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.MasterTestsComponentResource;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
@@ -21,6 +22,7 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 public class MasterTestsComponentResourceFactory extends Restlet {
     private final Injector injector;
     private final IDeviceProvider deviceProvider;
+    private final IDates dates;
 
     /**
      * Creates the {@link MasterTestsComponentResourceFactory} instance.
@@ -30,6 +32,7 @@ public class MasterTestsComponentResourceFactory extends Restlet {
     public MasterTestsComponentResourceFactory(final Injector injector) {
         this.injector = injector;
         this.deviceProvider = injector.getInstance(IDeviceProvider.class);
+        this.dates = injector.getInstance(IDates.class);
     }
 
     @Override
@@ -38,11 +41,12 @@ public class MasterTestsComponentResourceFactory extends Restlet {
 
         if (Method.GET.equals(request.getMethod())) {
             new MasterTestsComponentResource(
-                    new EntityMaster<TgPersistentEntityWithProperties>(
+                    new EntityMaster<>(
                             TgPersistentEntityWithProperties.class,
                             null,
                             injector),
                     deviceProvider,
+                    dates,
                     getContext(),
                     request,
                     response //

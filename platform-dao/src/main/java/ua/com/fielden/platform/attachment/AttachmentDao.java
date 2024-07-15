@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.attachment.Attachment.HYPERLINK;
 import static ua.com.fielden.platform.attachment.Attachment.pn_IS_LATEST_REV;
 import static ua.com.fielden.platform.attachment.Attachment.pn_LAST_MODIFIED;
@@ -34,9 +35,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -45,7 +47,6 @@ import ua.com.fielden.platform.attachment.validators.CanBeUsedAsPrevAttachmentRe
 import ua.com.fielden.platform.cypher.HexString;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
@@ -60,8 +61,8 @@ import ua.com.fielden.platform.types.Hyperlink;
 
 @EntityType(Attachment.class)
 public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttachment {
-    private static final Logger LOGGER = Logger.getLogger(AttachmentDao.class);
-    private static final String KEY_MEMBER_SEPARATOR = Reflector.getKeyMemberSeparator(Attachment.class);
+    private static final Logger LOGGER = getLogger(AttachmentDao.class);
+    private static final String KEY_MEMBER_SEPARATOR_FOR_SPLITTING = Pattern.quote(Reflector.getKeyMemberSeparator(Attachment.class));
 
     private final String attachmentsLocation;
 
@@ -72,7 +73,7 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
         super(filter);
         this.attachmentsLocation = attachmentsLocation;
     }
-    
+
     @Override
     @Authorise(AttachmentDownload_CanExecute_Token.class)
     public Optional<File> asFile(final Attachment attachment) {
@@ -105,15 +106,15 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
      */
     @Override
     @SessionRequired
-    public Attachment findByKeyAndFetch(final fetch<Attachment> fetchModel, final Object... keyValues) {
+    public Attachment findByKeyAndFetch(final boolean filtered, final fetch<Attachment> fetchModel, final Object... keyValues) {
         // is this a special case of partial match by title?
         if (keyValues != null && keyValues.length == 1 && keyValues[0] instanceof String) {
-            final String[] keys = ((String) keyValues[0]).split(KEY_MEMBER_SEPARATOR);
+            final String[] keys = ((String) keyValues[0]).split(KEY_MEMBER_SEPARATOR_FOR_SPLITTING);
             final String potentialUri = keys[0].trim();
             return newAsHyperlink(potentialUri).orElse(null);
         }
         // otherwise, proceed as usual
-        return super.findByKeyAndFetch(fetchModel, keyValues);
+        return super.findByKeyAndFetch(filtered, fetchModel, keyValues);
     }
 
     @Override
@@ -133,16 +134,19 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
                 final byte[] digest = md.digest();
                 final String sha1 = HexString.bufferToHex(digest, 0, digest.length);
 
-                return Optional.of(new_()
-                        .setTitle(potentialUri)
-                        .setSha1(sha1)
-                        .setOrigFileName(HYPERLINK));
-
+                final Attachment newAttachment = new_()
+                                                .setOrigFileName(HYPERLINK) // should be first as it affects validation and processing of title
+                                                .setTitle(potentialUri)
+                                                .setSha1(sha1);
+                // a new hyperlink attachment may become invalid if the length of potentialUri exceed the declared length
+                // in this case it is better to throw exception in order for that error to bubble up
+                newAttachment.isValid().ifFailure(Result::throwRuntime);
+                return of(newAttachment);
             } catch (final NoSuchAlgorithmException e) {
-                return Optional.empty();
+                return empty();
             }
         }
-        return Optional.empty();
+        return empty();
     }
 
     /**

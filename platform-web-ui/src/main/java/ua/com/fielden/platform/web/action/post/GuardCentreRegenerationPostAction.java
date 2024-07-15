@@ -33,16 +33,18 @@ public class GuardCentreRegenerationPostAction implements IPostAction {
     @Override
     public JsCode build() {
         final JsCode jsCode = new JsCode(String.format(""
-                + "const old_postRun = self._postRun;\n"
-                + "self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {\n"
-                + "    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);\n"
-                + "    \n"
-                + "    if (criteriaEntity !== null && !criteriaEntity.isValidWithoutException() && criteriaEntity.exceptionOccured() !== null && criteriaEntity.exceptionOccured().message === '%s') {\n"
-                + "        self.confirm('%s', [{name:'Yes', confirm:true, autofocus:true}, {name:'No'}]).then(function () {\n"
-                + "            return self.run(undefined, undefined, true);\n" // forceRegeneration is true (isAutoRunning and isSortingAction are undefined)
-                + "        }, function () {});\n" // skip legal rejection of promise (when 'No' button has been pressed)
-                + "    }\n"
-                + "}).bind(self);\n",
+                + "if (!self.old_postRun) {\n"
+                + "    self.old_postRun = self._postRun;\n"
+                + "    self._postRun = (function (criteriaEntity, newBindingEntity, result) {\n"
+                + "        self.old_postRun(criteriaEntity, newBindingEntity, result);\n"
+                + "        \n"
+                + "        if (criteriaEntity !== null && !criteriaEntity.isValidWithoutException() && criteriaEntity.exceptionOccurred() !== null && criteriaEntity.exceptionOccurred().message === '%s') {\n"
+                + "            self.confirm('%s', [{name:'Yes', confirm:true, autofocus:true}, {name:'No'}]).then(function () {\n"
+                + "                return self.run(undefined, undefined, true);\n" // forceRegeneration is true (isAutoRunning and isSortingAction are undefined)
+                + "            }, function () {});\n" // skip legal rejection of promise (when 'No' button has been pressed)
+                + "        }\n"
+                + "    }).bind(self);\n"
+                + "}\n",
                 forceRegenerationExceptionMessage, confirmationQuestion));
         return jsCode;
     }

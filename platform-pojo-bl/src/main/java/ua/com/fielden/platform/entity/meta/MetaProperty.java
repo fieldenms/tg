@@ -11,11 +11,11 @@ import java.util.Set;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
+import ua.com.fielden.platform.error.Informative;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.Reflector;
@@ -23,6 +23,13 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
+ * A base class for a concept of meta-data about an entity property. Hence, meta-property.
+ * Meta-property instances are created for all properties of instrumented entity instances to capture all the information about entity properties to track their mutation and validation.
+ * <p>
+ * Instances of this class – {@code MetaPropery} – are created for proxied properties (cannot be mutated), providing only the most essential meta-data.
+ * This is why many methods in this class throw {@link StrictProxyException} upon their invocation.
+ * <p>
+ * Instances of {@link MetaPropertyFull}, which is a descendant of {@code MetaPropery}, are created for full, not proxied, properties.
  *
  * @author TG Team
  *
@@ -30,9 +37,11 @@ import ua.com.fielden.platform.utils.Pair;
 public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
 
     public static final String ERR_REQUIRED = "Required property [%s] is not specified for entity [%s].";
+    public static final String ERR_REQUIRED_BOOLEAN = "Required property [%s] must be true for entity [%s].";
     public static final String EDITABLE_PROPERTY_NAME = "editable";
     public static final String REQUIRED_PROPERTY_NAME = "required";
     public static final String VALIDATION_RESULTS_PROPERTY_NAME = "validationResults";
+    public static final String CUSTOM_ERR_MSG_FOR_REQUREDNESS_PROPERTY_NAME = "customErrorMsgForRequiredness";
 
     protected final AbstractEntity<?> entity;
     protected final String name;
@@ -42,13 +51,13 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     protected final boolean retrievable;
     private final boolean activatable;
     private final boolean critOnly;
-    
+
     private final String[] dependentPropertyNames;
     private MetaProperty<?> parentMetaPropertyOnDependencyPath;
-    
+
     protected String title;
     protected String desc;
-    
+
     /**
      * Indicated whether a corresponding property is a proxy.
      */
@@ -67,15 +76,15 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         this.isEntity = AbstractEntity.class.isAssignableFrom(type);
         this.proxy = isProxy;
         this.key = isKey;
-        
+
         final Pair<String, String> titleDesc = TitlesDescsGetter.getTitleAndDesc(name, entity.getType());
         setTitle(titleDesc.getKey());
         setDesc(titleDesc.getValue());
-        
+
         this.retrievable = Reflector.isPropertyRetrievable(entity, field);
         this.dependentPropertyNames = dependentPropertyNames != null ? Arrays.copyOf(dependentPropertyNames, dependentPropertyNames.length) : new String[] {};
         this.critOnly = field.isAnnotationPresent(CritOnly.class);
-        
+
         // let's identify whether property represents an activatable entity in the current context
         // a property of an ativatable entity type is considered "activatable" only if annotation SkipEntityExistsValidation is not present or
         // it is present with attribute skipActiveOnly == true
@@ -84,7 +93,7 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
             this.activatable = false;
         } else {
             final SkipEntityExistsValidation seevAnnotation = field.getAnnotation(SkipEntityExistsValidation.class);
-            final boolean skipActiveOnly = seevAnnotation != null ? seevAnnotation.skipActiveOnly() : false;        
+            final boolean skipActiveOnly = seevAnnotation != null ? seevAnnotation.skipActiveOnly() : false;
             this.activatable = !skipActiveOnly;
         }
     }
@@ -94,7 +103,7 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     }
 
     public Result revalidate(final boolean ignoreRequiredness) {
-        throw new StrictProxyException(format("Invalid call [revalidate] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));    
+        throw new StrictProxyException(format("Invalid call [revalidate] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
     public Map<ValidationAnnotation, Map<IBeforeChangeEventHandler<T>, Result>> getValidators() {
@@ -103,7 +112,7 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
 
     /**
      * Returns the name of the represented property.
-     * 
+     *
      * @return
      */
     public final String getName() {
@@ -120,7 +129,7 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     }
 
     /**
-     * This setter was introduces specifically to set property type in cases where it is not possible to determine during the creation of meta-property. 
+     * This setter was introduces specifically to set property type in cases where it is not possible to determine during the creation of meta-property.
      * The specific case is the
      * <code>key</code> property in {@link AbstractEntity}, where the type can be determined only when the actual value is assigned.
      *
@@ -168,7 +177,15 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     public Warning getFirstWarning() {
         throw new StrictProxyException(format("Invalid call [getFirstWarning] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
-    
+
+    public Informative getFirstInformative() {
+        throw new StrictProxyException(format("Invalid call [getFirstInformative] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
+    }
+
+    public Result getFirstValidResult() {
+        throw new StrictProxyException(format("Invalid call [getFirstValidResult] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
+    }
+
     public void clearWarnings() {
         throw new StrictProxyException(format("Invalid call [removeWarnings] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
@@ -180,10 +197,10 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     public Result getFirstFailure() {
         throw new StrictProxyException(format("Invalid call [getFirstFailure] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
-    
+
     /**
      * A convenient method to obtain the last validation result.
-     * May return either a failure, a warning or a successful result, and never <code>null</code>.
+     * May return either a failure, a warning or a informative / successful result, and never <code>null</code>.
      * <p>
      * A successful result is returned in case no validation took place.
      * @return
@@ -223,7 +240,7 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     public void setValue(final Object value) {
         throw new StrictProxyException(format("Invalid call [setValue] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
-    
+
     /**
      * The same as {@link #setValue(Object)}, but can enforce value assignment logic even if the current value is the same as the one being assigned.
      *
@@ -315,6 +332,10 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         throw new StrictProxyException(format("Invalid call [setVisible] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
+    public String getCustomErrorMsgForRequiredness() {
+        throw new StrictProxyException(format("Invalid call [getCustomErrorMsgForRequiredness] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
+    }
+
     public T getLastInvalidValue() {
         throw new StrictProxyException(format("Invalid call [getLastInvalidValue] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
@@ -352,6 +373,10 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     }
 
     public MetaProperty<T> setRequired(final boolean required) {
+        throw new StrictProxyException(format("Invalid call [setRequired] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
+    }
+
+    public MetaProperty<T> setRequired(final boolean required, final String errorMsg) {
         throw new StrictProxyException(format("Invalid call [setRequired] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
@@ -512,7 +537,7 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     public final boolean isActivatable() {
         return activatable;
     }
-    
+
     public final boolean isCritOnly() {
         return critOnly;
     }

@@ -5,7 +5,7 @@ import java.util.Map;
 
 import ua.com.fielden.platform.continuation.NeedMoreData;
 import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
@@ -26,7 +26,7 @@ public abstract class AbstractCentreConfigCommitActionDao<T extends AbstractCent
     }
     
     @Override
-    @SessionRequired
+    // @SessionRequired -- avoid transaction here; see EntityCentreConfigDao for more details
     public final T save(final T entity) {
         if (!entity.isSkipUi()) {
             // validate centre configuration action entity before performing actual edit / saveAs
@@ -51,5 +51,17 @@ public abstract class AbstractCentreConfigCommitActionDao<T extends AbstractCent
      * @return
      */
     protected abstract Map<String, Object> performSave(final T entity);
+    
+    @Override
+    protected IFetchProvider<T> createFetchProvider() {
+        return super.createFetchProvider().with("dashboardRefreshFrequency"); // this property is needed for autocompletion only; other props are simple and not required for functional entity's fetch provider
+    }
+    
+    @Override
+    public T new_() {
+        final T entity = super.new_();
+        entity.getProperty("dashboardRefreshFrequency").setEditable(false);
+        return entity;
+    }
     
 }

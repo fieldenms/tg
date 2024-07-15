@@ -65,7 +65,7 @@ public class H2DbCreator extends DbCreator {
     public List<String> genInsertStmt(final Collection<PersistedEntityMetadata<?>> entityMetadata, final Connection conn) throws SQLException {
         final List<String> inserts = new ArrayList<>();
         // create insert statements
-        try (final Statement st = conn.createStatement(); final ResultSet rs = st.executeQuery("SCRIPT");) {
+        try (final Statement st = conn.createStatement(); final ResultSet rs = st.executeQuery("SCRIPT COLUMNS");) {
             while (rs.next()) {
                 final String result = rs.getString(1).trim();
                 final String upperCasedResult = result.toUpperCase();

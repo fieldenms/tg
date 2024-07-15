@@ -38,17 +38,17 @@ public class PivotDomainTreeManagerTest extends AbstractAnalysisDomainTreeManage
     }
 
     public static Object createDtm_for_PivotDomainTreeManagerTest() {
-        return new PivotDomainTreeManager(serialiser(), createRootTypes_for_PivotDomainTreeManagerTest());
+        return new PivotDomainTreeManager(factory(), createRootTypes_for_PivotDomainTreeManagerTest());
     }
 
     public static Object createIrrelevantDtm_for_PivotDomainTreeManagerTest() {
-        final ICentreDomainTreeManagerAndEnhancer dtm = new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_PivotDomainTreeManagerTest());
+        final ICentreDomainTreeManagerAndEnhancer dtm = new CentreDomainTreeManagerAndEnhancer(factory(), createRootTypes_for_PivotDomainTreeManagerTest());
         enhanceManagerWithBasicCalculatedProperties(dtm);
         return dtm;
     }
 
     protected static Set<Class<?>> createRootTypes_for_PivotDomainTreeManagerTest() {
-        final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractAnalysisDomainTreeManagerTest());
+        final Set<Class<?>> rootTypes = new HashSet<>(createRootTypes_for_AbstractAnalysisDomainTreeManagerTest());
         return rootTypes;
     }
 

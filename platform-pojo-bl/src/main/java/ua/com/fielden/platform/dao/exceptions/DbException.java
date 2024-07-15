@@ -16,4 +16,5 @@ public class DbException extends EntityCompanionException {
     public DbException(final String msg, final Throwable cause) {
         super(msg, cause);
     }
+
 }

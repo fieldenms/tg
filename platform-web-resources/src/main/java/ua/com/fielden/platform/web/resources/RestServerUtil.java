@@ -1,23 +1,23 @@
 package ua.com.fielden.platform.web.resources;
 
 import static java.lang.String.format;
+import static org.restlet.data.MediaType.APPLICATION_JSON;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.serialisation.api.SerialiserEngines.JACKSON;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.restlet.Message;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -32,16 +32,18 @@ import org.restlet.util.Series;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Inject;
 
+import ua.com.fielden.platform.continuation.NeedMoreData;
+import ua.com.fielden.platform.continuation.NeedMoreDataException;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleQueryContainer;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.roa.HttpHeaders;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
-import ua.com.fielden.platform.snappy.SnappyQuery;
+import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.utils.StreamCouldNotBeResolvedException;
+import ua.com.fielden.platform.web_api.IWebApi;
 
 /**
  * This is a convenience class providing some common routines used in the implementation of web-resources.
@@ -50,17 +52,16 @@ import ua.com.fielden.platform.utils.StreamCouldNotBeResolvedException;
  *
  */
 public class RestServerUtil {
+    private static final String HEADERS_KEY = "org.restlet.http.headers";
+    private static final String ERR_COULD_NOT_FIND_ENTITY = "Could not find entity.";
 
     private final ISerialiser serialiser;
+    private final Logger logger = LogManager.getLogger(RestServerUtil.class);
 
     @Inject
     public RestServerUtil(final ISerialiser serialiser) {
         this.serialiser = serialiser;
     }
-
-    private final Logger logger = Logger.getLogger(RestServerUtil.class);
-
-    private static final String HEADERS_KEY = "org.restlet.http.headers";
 
     private static Series<Header> getMessageHeaders(final Message message) {
         final ConcurrentMap<String, Object> attrs = message.getAttributes();
@@ -105,10 +106,10 @@ public class RestServerUtil {
      * @return
      * @throws JsonProcessingException
      */
-    public Representation errorJSONRepresentation(final String string) {
-        logger.debug("Start building error JSON representation:" + new DateTime());
-        final byte[] bytes = serialiser.serialise(new Result(null, new Exception(string)), SerialiserEngines.JACKSON);
-        logger.debug("SIZE: " + bytes.length);
+    public Representation errorJsonRepresentation(final String string) {
+        // logger.debug("Start building error JSON representation:" + new DateTime());
+        final byte[] bytes = serialiser.serialise(failure(new Exception(string)), SerialiserEngines.JACKSON);
+        // logger.debug("SIZE: " + bytes.length);
         return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length */);
     }
 
@@ -119,22 +120,9 @@ public class RestServerUtil {
      * @return
      */
     public Representation errorRepresentation(final String string) {
-        logger.debug("Start building error representation:" + new DateTime());
-        final byte[] bytes = serialiser.serialise(new Result(null, new Exception(string)));
-        logger.debug("SIZE: " + bytes.length);
-        return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
-    }
-
-    /**
-     * Creates a representation of {@link Result} reporting a cause of some error that could have occurred during request processing.
-     *
-     * @param string
-     * @return
-     */
-    public Representation errorRepresentation(final Exception ex) {
-        logger.debug("Start building error representation:" + new DateTime());
-        final byte[] bytes = serialiser.serialise(new Result(ex));
-        logger.debug("SIZE: " + bytes.length);
+        // logger.debug("Start building error representation:" + new DateTime());
+        final byte[] bytes = serialiser.serialise(failure(new Exception(string)));
+        // logger.debug("SIZE: " + bytes.length);
         return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
     }
 
@@ -146,9 +134,9 @@ public class RestServerUtil {
      * @throws JsonProcessingException
      */
     public Representation errorJSONRepresentation(final Exception ex) {
-        logger.debug("Start building error JSON representation:" + new DateTime());
-        final byte[] bytes = serialiser.serialise(ex instanceof Result ? ex : new Result(ex), SerialiserEngines.JACKSON);
-        logger.debug("SIZE: " + bytes.length);
+        // logger.debug("Start building error JSON representation:" + new DateTime());
+        final byte[] bytes = serialiser.serialise(ex instanceof Result ? ex : failure(ex), SerialiserEngines.JACKSON);
+        // logger.debug("SIZE: " + bytes.length);
         return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/);
     }
 
@@ -159,9 +147,9 @@ public class RestServerUtil {
      * @return
      */
     public Representation resultRepresentation(final Result result) {
-        logger.debug("Start building result representation:" + new DateTime());
+        // logger.debug("Start building result representation:" + new DateTime());
         final byte[] bytes = serialiser.serialise(result);
-        logger.debug("SIZE: " + bytes.length);
+        // logger.debug("SIZE: " + bytes.length);
         return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
     }
 
@@ -173,65 +161,53 @@ public class RestServerUtil {
      * @throws JsonProcessingException
      */
     public Representation resultJSONRepresentation(final Result result) {
-        logger.debug("Start building result JSON representation:" + new DateTime());
+        // logger.debug("Start building result JSON representation:" + new DateTime());
         final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
-        logger.debug("SIZE: " + bytes.length);
+        // logger.debug("SIZE: " + bytes.length);
         return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /* , bytes.length */);
     }
 
     /**
-     * Creates a representation of {@link Result}.
-     *
-     * @param string
-     * @return
-     */
-    public Representation snappyResultRepresentation(final List filteredEntities) {
-        logger.debug("Start building snappy result representation:" + new DateTime());
-        try {
-            // create a Result enclosing entity list
-            final byte[] bytes = serialiser.serialise(new Result(new ArrayList(filteredEntities), "Snappy pair is Ok"));
-            logger.debug("SIZE: " + bytes.length);
-            return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
-        } catch (final Exception ex) {
-            logger.error(ex);
-            return errorRepresentation("The following error occurred during request processing:\n" + ex.getMessage());
-        }
-    }
-
-    /**
      * Composes representation of a list of entities.
      *
      * @return
      */
-    public <T extends AbstractEntity> Representation listRepresentation(final List<T> entities) {
-        logger.debug("Start building entities representation.");
-        try {
-            // create a Result enclosing entity list
-            final Result result = new Result(new ArrayList<T>(entities), "All is cool");
-            final byte[] bytes = serialiser.serialise(result);
-            logger.debug("SIZE: " + bytes.length);
-            return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
-        } catch (final Exception ex) {
-            logger.error(ex);
-            return errorRepresentation("The following error occurred during request processing:\n" + ex.getMessage());
-        }
-    }
-
-    /**
-     * Composes representation of a list of entities.
-     *
-     * @return
-     */
-    public <T extends AbstractEntity> Representation listJSONRepresentation(final List<T> entities) {
-        logger.debug("Start building JSON entities representation.");
+    public <T extends AbstractEntity<?>> Representation listJsonRepresentation(final List<T> entities) {
+        // logger.debug("Start building JSON entities representation.");
         if (entities == null) {
             throw new IllegalArgumentException("The provided list of entities is null.");
         }
         // create a Result enclosing entity list
-        final Result result = new Result(new ArrayList<T>(entities), "All is cool");
+        final Result result = successful(new ArrayList<>(entities));
         final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
-        logger.debug("SIZE: " + bytes.length);
-        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/);
+        // logger.debug("SIZE: " + bytes.length);
+        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON);
+    }
+
+    /**
+     * Composes representation of a list of entities with {@code customObject}, serialising them without id / version properties.
+     *
+     * @param entities
+     * @param customObject -- a map of custom properties with some additional information
+     * @return
+     */
+    public <T extends AbstractEntity<?>> Representation listJsonRepresentationWithoutIdAndVersion(final List<T> entities, final Map<String, Object> customObject) {
+        if (entities == null) {
+            throw new IllegalArgumentException("The provided list of entities is null.");
+        }
+        // create a Result enclosing entity list and customObject
+        final ArrayList<Object> resultantList = new ArrayList<>(entities);
+        resultantList.add(customObject);
+        final Result result = successful(resultantList);
+        EntitySerialiser.getContext().setExcludeIdAndVersion(true);
+        try {
+            final byte[] bytes = serialiser.serialise(result, JACKSON);
+            EntitySerialiser.getContext().setExcludeIdAndVersion(false);
+            return encodedRepresentation(new ByteArrayInputStream(bytes), APPLICATION_JSON);
+        } catch (final Throwable t) {
+            EntitySerialiser.getContext().setExcludeIdAndVersion(false);
+            throw t;
+        }
     }
 
     /**
@@ -239,149 +215,99 @@ public class RestServerUtil {
      *
      * @return
      */
-    public Representation rawListJSONRepresentation(final Object... objects) {
-        logger.debug("Start building JSON list representation.");
+    public Representation rawListJsonRepresentation(final Object... objects) {
+        // logger.debug("Start building JSON list representation.");
         if (objects.length <= 0) {
             throw new IllegalArgumentException("Empty objects.");
         }
         // create a Result enclosing entity list
-        final Result result = new Result(new ArrayList<>(Arrays.asList(objects)), "All is cool");
+        final Result result = successful(new ArrayList<>(Arrays.asList(objects)));
         final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
-        logger.debug("SIZE: " + bytes.length);
-        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/);
+        // logger.debug("SIZE: " + bytes.length);
+        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON);
     }
 
     /**
-     * Composes representation of a map.
-     *
-     * @return
+     * Composes representation of {@link IWebApi} execution results.
      */
-    public Representation mapJSONRepresentation(final Map<?, ?> map) {
-        logger.debug("Start building JSON map representation.");
-        // create a Result enclosing map
-        final Result result = new Result(new LinkedHashMap<>(map), "All is cool");
-        final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
-        logger.debug("SIZE: " + bytes.length);
-        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/);
+    public Representation webApiResultRepresentation(final Map<String, Object> result) {
+        return encodedRepresentation(new ByteArrayInputStream(serialiser.serialise(result, JACKSON)), APPLICATION_JSON);
     }
 
     /**
-     * Composes representation of a map.
-     *
-     * @return
+     * Composes {@link Result} from an {@code entity}.
      */
-    public Representation mapRepresentation(final Map<?, ?> map) {
-        logger.debug("Start building map representation.");
-        try {
-            // create a Result enclosing entity list
-            final Result result = new Result(new HashMap<>(map), "All is cool");
-            final byte[] bytes = serialiser.serialise(result);
-            logger.debug("SIZE: " + bytes.length);
-            return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
-        } catch (final Exception ex) {
-            logger.error(ex);
-            return errorRepresentation("The following error occurred during request processing:\n" + ex.getMessage());
-        }
-    }
-
-    /**
-     * Composes representation of a lifecycle data.
-     *
-     * @return
-     */
-    public <T extends AbstractEntity<?>> Representation lifecycleRepresentation(final LifecycleModel<T> lifecycleModel) {
-        logger.debug("Start building lifecycle representation:" + new DateTime());
-        try {
-            // create a Result enclosing lifecycle data
-            final Result result = new Result(lifecycleModel, "All is cool");
-            final byte[] bytes = serialiser.serialise(result);
-            logger.debug("SIZE: " + bytes.length);
-            return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
-        } catch (final Exception ex) {
-            logger.error(ex);
-            return errorRepresentation("The following error occurred during request processing:\n" + ex.getMessage());
-        }
-    }
-
-    /**
-     * Composes KRYO representation of an entity.
-     *
-     * @return
-     */
-    public <T extends AbstractEntity> Representation singleRepresentation(final T entity) {
-        try {
-            // create a Result enclosing entity list
-            final Result result = entity != null ? new Result(entity, "OK") : new Result(null, new Exception("Could not find entity."));
-            final byte[] bytes = serialiser.serialise(result);
-            return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
-        } catch (final Exception ex) {
-            logger.error(ex);
-            return errorRepresentation("The following error occurred during request processing:\n" + ex.getMessage());
-        }
-    }
-
-    /**
-     * Composes JACKSON representation of an entity.
-     *
-     * @return
-     * @throws JsonProcessingException
-     */
-    public <T extends AbstractEntity<?>> Representation singleJSONRepresentation(final T entity) {
+    public <T extends AbstractEntity<?>> Result singleEntityResult(final T entity) {
         // create a Result enclosing entity list
         final Result result;
         if (entity != null) {
             // valid and invalid entities: both kinds are represented using successful result. Use client-side isValid() method
             //   in 'tg-reflector' to differentiate them
-            result = new Result(entity, "OK");
+            result = successful(entity);
         } else {
-            result = new Result(null, new Exception("Could not find entity."));
+            result = failure(new Exception(ERR_COULD_NOT_FIND_ENTITY));
         }
-        final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
-        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /* TODO , bytes.length*/);
+        return result;
     }
-    
+
     /**
-     * Composes JACKSON representation of an entity with exception.
+     * Composes {@link SerialiserEngines#JACKSON} representation of an entity.
      *
      * @return
      * @throws JsonProcessingException
      */
-    public <T extends AbstractEntity<?>> Representation singleJSONRepresentation(final T entity, final Optional<Exception> savingException) {
+    public <T extends AbstractEntity<?>> Representation singleJsonRepresentation(final T entity) {
+        final byte[] bytes = serialiser.serialise(singleEntityResult(entity), JACKSON);
+        return encodedRepresentation(new ByteArrayInputStream(bytes), APPLICATION_JSON);
+    }
+
+    /**
+     * Composes {@link Result} from an entity with exception.
+     */
+    public <T extends AbstractEntity<?>> Result singleEntityResult(final T entity, final Optional<Exception> savingException) {
+        final Result result;
         if (entity != null && savingException.isPresent()) {
             final Exception ex = savingException.get();
-            final Result result;
             if (ex instanceof Result) {
                 final Result thrownResult = (Result) ex;
                 if (thrownResult.isSuccessful()) {
-                    throw failure(format("The successful result [%s] was thrown during unsuccesful saving of entity with id [%s] of type [%s]. This is most likely programming error.", thrownResult, entity.getId(), entity.getClass().getSimpleName()));
+                    throw failure(format("The successful result [%s] was thrown during unsuccesful saving of entity with id [%s] of type [%s]. This is most likely a programming error.", thrownResult, entity.getId(), entity.getClass().getSimpleName()));
                 }
-                
-                // iterate over properties in search of the first invalid one (without required checks)
-                final Optional<Result> firstFailure = entity.nonProxiedProperties()
-                .filter(mp -> mp.getFirstFailure() != null)
-                .findFirst().map(mp -> mp.getFirstFailure());
-                
-                // returns first failure if exists or successful result if there was no failure.
-                final Result isValid = firstFailure.orElse(successful(entity));
-                if (ex != isValid) {
-                    // Log the server side error only in case where exception, that was thrown, does not equal to validation result of the entity (by reference).
-                    // Please, note that Results, that are thrown in companion objects, often represents validation results of some complimentary entities during saving.
-                    // For example, see ServiceRepairSubmitActionDao save method, which internally invokes saveWorkOrder(serviceRepair) method of ServiceRepairDao, where during saving of workOrder
-                    //  some validation result is thrown.
-                    // In these cases -- server error log should report the saving error.
-                    logger.error(ex.getMessage(), ex);
+
+                // we don't want continuation related exceptions to pollute the log with errors and stack traces – simply log an informative message
+                if (ex instanceof NeedMoreData continuationEx) {
+                    if (continuationEx.getEx() instanceof NeedMoreDataException nmdEx) {
+                        logger.info(format("NMD Continuation: %s, %s, %s", nmdEx.getMessage(), nmdEx.continuationTypeStr, nmdEx.continuationProperty));
+                    } else { // just in case...
+                        logger.info(format("NMD Continuation: %s", continuationEx.getMessage()));
+                    }
+                } else {
+                    // iterate over properties in search of the first invalid one (without required checks)
+                    final Optional<Result> firstFailure = entity.nonProxiedProperties().filter(mp -> mp.getFirstFailure() != null).findFirst().map(mp -> mp.getFirstFailure());
+
+                    // returns first failure if exists or successful result if there was no failure.
+                    final Result isValid = firstFailure.orElse(successful(entity));
+                    if (ex != isValid) {
+                        // Log the server side error only in case where exception, that was thrown, does not equal to validation result of the entity (by reference).
+                        // Please, note that Results, that are thrown in companion objects, often represents validation results of some complimentary entities during saving.
+                        // For example, see ServiceRepairSubmitActionDao save method, which internally invokes saveWorkOrder(serviceRepair) method of ServiceRepairDao, where during saving of workOrder
+                        //  some validation result is thrown.
+                        // In these cases -- server error log should report the saving error.
+                        logger.error(ex.getMessage(), ex);
+                    }
                 }
                 result = thrownResult.copyWith(entity);
-                logger.warn(format("The unsuccessful result [%s] was thrown during unsuccesful saving of entity with id [%s] of type [%s]. Its instance will be overridden by the entity with id [%s] to be able to bind the entity to respective master.", thrownResult, entity.getId(), entity.getClass().getSimpleName(), entity.getId()));
+                logger.debug(format("The unsuccessful result [%s] was thrown during unsuccesful saving of entity with id [%s] of type [%s]. "
+                                  + "Its instance will be overridden by entity with id [%s] to be able to bind the entity to respective master.",
+                                    thrownResult, entity.getId(), entity.getClass().getSimpleName(), entity.getId()));
             } else {
                 logger.error(ex.getMessage(), ex);
                 result = failure(entity, ex);
             }
-            final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
-            return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /* TODO , bytes.length*/);
         } else {
-            return singleJSONRepresentation(entity);
+            result = singleEntityResult(entity);
         }
+        return result;
     }
 
     /**
@@ -404,10 +330,6 @@ public class RestServerUtil {
         return serialiser.deserialise(getStream(representation), LifecycleQueryContainer.class);
     }
 
-    public SnappyQuery restoreSnappyQuery(final Representation representation) {
-        return serialiser.deserialise(getStream(representation), SnappyQuery.class);
-    }
-
     /**
      * Converts representation of the export request representation in to a list.
      *
@@ -424,7 +346,7 @@ public class RestServerUtil {
      * @param representation
      * @return
      */
-    public Result restoreJSONResult(final Representation representation) {
+    public Result restoreJsonResult(final Representation representation) {
         return serialiser.deserialise(getStream(representation), Result.class, SerialiserEngines.JACKSON);
     }
 
@@ -437,7 +359,7 @@ public class RestServerUtil {
      * @param type
      * @return
      */
-    public <T extends AbstractEntity> T restoreEntity(final Representation representation, final Class<T> type) {
+    public <T extends AbstractEntity<?>> T restoreEntity(final Representation representation, final Class<T> type) {
         return serialiser.deserialise(getStream(representation), type);
     }
 
@@ -450,7 +372,7 @@ public class RestServerUtil {
      * @param type
      * @return
      */
-    public <T extends AbstractEntity> T restoreJSONEntity(final Representation representation, final Class<T> type) {
+    public <T extends AbstractEntity<?>> T restoreJsonEntity(final Representation representation, final Class<T> type) {
         return serialiser.deserialise(getStream(representation), type, SerialiserEngines.JACKSON);
     }
 
@@ -470,10 +392,10 @@ public class RestServerUtil {
      * @param representation
      * @return
      */
-    public Map<?, ?> restoreJSONMap(final Representation representation) {
+    public Map<?, ?> restoreJsonMap(final Representation representation) {
         return serialiser.deserialise(getStream(representation), Map.class, SerialiserEngines.JACKSON);
     }
-    
+
     private final static InputStream getStream(final Representation representation) {
         try {
             return representation.getStream();
@@ -481,7 +403,7 @@ public class RestServerUtil {
             throw new StreamCouldNotBeResolvedException(String.format("The stream could not be resolved from representation [%s].", representation), ioException);
         }
     }
-    
+
     public ISerialiser getSerialiser() {
         return serialiser;
     }

@@ -1,28 +1,26 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.restlet.data.MediaType.TEXT_HTML;
 import static ua.com.fielden.platform.security.user.UserSecret.RESER_UUID_EXPIRATION_IN_MUNUTES;
+import static ua.com.fielden.platform.web.resources.webui.FileResource.createRepresentation;
 
-import java.io.ByteArrayInputStream;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
-import org.restlet.data.Encoding;
 import org.restlet.data.Form;
-import org.restlet.data.MediaType;
+import org.restlet.data.Reference;
 import org.restlet.data.Status;
-import org.restlet.engine.application.EncodeRepresentation;
 import org.restlet.ext.json.JsonRepresentation;
-import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Post;
-import org.restlet.resource.ServerResource;
 
 import com.google.common.util.concurrent.AtomicDouble;
 
@@ -32,9 +30,11 @@ import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserSecret;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
-import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.annotations.AppUri;
+import ua.com.fielden.platform.web.app.IWebResourceLoader;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
 /**
  * A web resource to initiate user login recovery procedure.
@@ -42,12 +42,13 @@ import ua.com.fielden.platform.web.annotations.AppUri;
  * @author TG Team
  *
  */
-public class LoginInitiateResetResource extends ServerResource {
+public class LoginInitiateResetResource extends AbstractWebResource {
     
     public static final String BINDING_PATH = "/forgotten";
 
-    private final Logger logger = Logger.getLogger(LoginInitiateResetResource.class);
+    private final Logger logger = LogManager.getLogger(LoginInitiateResetResource.class);
 
+    private final IWebResourceLoader webResourceLoader;
     private final String appUri;
     private final ICompanionObjectFinder coFinder;
     private final IUserProvider up;
@@ -56,15 +57,19 @@ public class LoginInitiateResetResource extends ServerResource {
     /**
      * Creates {@link LoginInitiateResetResource}.
      */
-    public LoginInitiateResetResource(//
+    public LoginInitiateResetResource(
+            final IWebResourceLoader webResourceLoader,
             @AppUri final String appUri,
             final IUniversalConstants constants,
             final ICompanionObjectFinder coFinder,
             final IUserProvider userProvider,
+            final IDeviceProvider deviceProvider,
+            final IDates dates,
             final Context context, //
             final Request request, //
             final Response response) {
-        init(context, request, response);
+        super(context, request, response, deviceProvider, dates);
+        this.webResourceLoader = webResourceLoader;
         this.appUri = appUri;
         this.coFinder = coFinder;
         this.constants = constants;
@@ -73,15 +78,12 @@ public class LoginInitiateResetResource extends ServerResource {
 
     @Override
     protected Representation get() {
-        return pageToProvideUsernameForPasswordReset("Login Reset Request", logger);
+        return pageToProvideUsernameForPasswordReset("Login Reset Request", logger, webResourceLoader, getReference());
     }
 
-    private static Representation pageToProvideUsernameForPasswordReset(final String title, final Logger logger) {
+    private static Representation pageToProvideUsernameForPasswordReset(final String title, final Logger logger, final IWebResourceLoader webResourceLoader, final Reference reference) {
         try {
-            final byte[] body = ResourceLoader.getText("ua/com/fielden/platform/web/login-initiate-reset.html")
-                    .replace("@title", title)
-                    .getBytes("UTF-8");
-            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body), MediaType.TEXT_HTML));
+            return createRepresentation(webResourceLoader, TEXT_HTML, "/app/login-initiate-reset.html", reference.getRemainingPart());
         } catch (final Exception ex) {
             logger.fatal(ex);
             throw new IllegalStateException(ex);

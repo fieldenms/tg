@@ -1,0 +1,125 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>entity-centre tests for property descriptor criteria running</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+    <script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/filesaver/FileSaver.min.js"></script>
+    <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
+</head>
+
+<body>
+    <test-fixture id="CentreFixture">
+        <template>
+            <tg-MiTgEntityWithPropertyDescriptorExt-centre id="centre"></tg-MiTgEntityWithPropertyDescriptorExt-centre>
+        </template>
+    </test-fixture>
+
+    <script type="module">
+        import '/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithPropertyDescriptorExt';
+
+        suite('entity centre with property descriptor criteria', function () {
+            let centre;
+
+            setup(function () {
+                centre = fixture('CentreFixture');
+            });
+
+            const applyCritRunAndCheck = (values, critName, expectedKeyNumbers, done, invalidCriteriaExpected) => {
+                const old_postRun = centre._postRun;
+                centre._postRun = (criteriaEntity, newBindingEntity, result) => {
+                    old_postRun(criteriaEntity, newBindingEntity, result);
+                    centre._postRun = old_postRun;
+                    assert.strictEqual(result.resultEntities.length, expectedKeyNumbers.length);
+                    assert.deepEqual(result.resultEntities.map(e => e.get('key')), expectedKeyNumbers.map(n => 'KEY' + n));
+                    if (invalidCriteriaExpected) {
+                        assert.strictEqual(criteriaEntity.isValid(), false);
+                        assert.strictEqual(centre._selectedView, 0);
+                    }
+                    centre.discard().then(done);
+                };
+                centre.postRetrieved = (entity, bindingEntity, customObject) => {
+                    centre.postRetrieved = () => {};
+                    if (values && critName) {
+                        const editor = centre.$.selection_criteria.$['editor_4_tgEntityWithPropertyDescriptorExt_' + critName];
+                        const criterion = centre.$.selection_criteria.$.masterDom.querySelector('[id=criterion_4_tgEntityWithPropertyDescriptorExt_' + critName + ']');
+                        if (typeof values === 'string') {
+                            editor._editingValue = values;
+                            editor.commit();
+                        } else {
+                            editor._editingValue = values.val;
+                            editor.commit();
+                            if (typeof values.orNull !== 'undefined') {
+                                criterion._orNull = values.orNull;
+                            }
+                            if (typeof values.not !== 'undefined') {
+                                criterion._not = values.not;
+                            }
+                            criterion._acceptMetaValues(true);
+                        }
+                    }
+                    // Async call is required to make sure that calls to "editor.commit()" complete before "centre.run()".
+                    centre.async(() => centre.run(), 200);
+                };
+                centre.retrieve();
+            };
+
+            // no criteria
+            test('returns all entities for empty criteria', done => applyCritRunAndCheck(null, null, [1, 2, 3, 4, 5, 6, 7, 8], done));
+
+            // simple criterion for persistent PropertyDescriptor property
+            test('returns nothing for insufficient property descriptor without wildcard', done => applyCritRunAndCheck('String pro', 'propertyDescriptor', [], done));
+            test('returns expected result for property descriptor without wildcard', done => applyCritRunAndCheck('String prop', 'propertyDescriptor', [6], done));
+            test('returns expected result for multiple property descriptors without wildcard', done => applyCritRunAndCheck('String prop,Integer prop', 'propertyDescriptor', [1, 3, 6], done));
+            test('returns expected result for property descriptor with wildcard', done => applyCritRunAndCheck('Integer*', 'propertyDescriptor', [1, 3], done));
+            test('returns expected result for multiple property descriptors with wildcards', done => applyCritRunAndCheck('Integer*,String*', 'propertyDescriptor', [1, 3, 6], done));
+            test('returns expected result for multiple property descriptors with and without wildcards', done => applyCritRunAndCheck('Integer*,String prop', 'propertyDescriptor', [1, 3, 6], done));
+            test('returns expected result for property descriptor with wildcard without result for insufficient property descriptor', done => applyCritRunAndCheck('Integer*,String pro', 'propertyDescriptor', [1, 3], done));
+
+            // simple criterion for persistent PropertyDescriptor property with 'Missing value' and 'Not'
+            test('returns expected result for property descriptor with missing value cases', done => applyCritRunAndCheck({val: 'String prop', orNull: true }, 'propertyDescriptor', [2, 6], done));
+            test('returns expected result for property descriptor negated', done => applyCritRunAndCheck({val: 'String prop', not: true }, 'propertyDescriptor', [1, 2, 3, 4, 5, 7, 8], done));
+            test('returns expected result for property descriptor with missing value cases negated', done => applyCritRunAndCheck({val: 'String prop', orNull: true, not: true }, 'propertyDescriptor', [1, 3, 4, 5, 7, 8], done));
+
+            // crit-only single criterion mapped through critCondition on persistent PropertyDescriptor property
+            test('returns invalid criteria for insufficient property descriptor [i.e. not found] in crit-only single criterion', done => applyCritRunAndCheck('String pro', 'propertyDescriptorSingleCrit', [], done, true));
+            test('returns invalid criteria for property descriptor with wildcard [i.e. not found] in crit-only single criterion', done => applyCritRunAndCheck('String pro*', 'propertyDescriptorSingleCrit', [], done, true));
+            test('returns expected result for property descriptor in crit-only single criterion', done => applyCritRunAndCheck('String prop', 'propertyDescriptorSingleCrit', [6], done));
+
+            // crit-only multi criterion mapped through critCondition on persistent PropertyDescriptor property
+            test('returns nothing for insufficient property descriptor without wildcard in crit-only multi criterion', done => applyCritRunAndCheck('String pro', 'propertyDescriptorMultiCrit', [], done));
+            test('returns expected result for property descriptor without wildcard in crit-only multi criterion', done => applyCritRunAndCheck('String prop', 'propertyDescriptorMultiCrit', [6], done));
+            test('returns expected result for multiple property descriptors without wildcard in crit-only multi criterion', done => applyCritRunAndCheck('String prop,Integer prop', 'propertyDescriptorMultiCrit', [1, 3, 6], done));
+            test('returns expected result for property descriptor with wildcard in crit-only multi criterion', done => applyCritRunAndCheck('Integer*', 'propertyDescriptorMultiCrit', [1, 3], done));
+            test('returns expected result for multiple property descriptors with wildcards in crit-only multi criterion', done => applyCritRunAndCheck('Integer*,String*', 'propertyDescriptorMultiCrit', [1, 3, 6], done));
+            test('returns expected result for multiple property descriptors with and without wildcards in crit-only multi criterion', done => applyCritRunAndCheck('Integer*,String prop', 'propertyDescriptorMultiCrit', [1, 3, 6], done));
+            test('returns expected result for property descriptor with wildcard without result for insufficient property descriptor in crit-only multi criterion', done => applyCritRunAndCheck('Integer*,String pro', 'propertyDescriptorMultiCrit', [1, 3], done));
+
+            // crit-only multi criterion mapped through critCondition on persistent PropertyDescriptor property with 'Missing value' and 'Not'
+            test('returns expected result for property descriptor with missing value cases in crit-only multi criterion', done => applyCritRunAndCheck({val: 'String prop', orNull: true }, 'propertyDescriptorMultiCrit', [2, 6], done));
+            test('returns expected result for property descriptor negated in crit-only multi criterion', done => applyCritRunAndCheck({val: 'String prop', not: true }, 'propertyDescriptorMultiCrit', [1, 2, 3, 4, 5, 7, 8], done));
+            test('returns expected result for property descriptor with missing value cases negated in crit-only multi criterion', done => applyCritRunAndCheck({val: 'String prop', orNull: true, not: true }, 'propertyDescriptorMultiCrit', [1, 3, 4, 5, 7, 8], done));
+
+            // crit-only collectional multi criterion mapped through critCondition on persistent PropertyDescriptor property
+            test('returns nothing for insufficient property descriptor without wildcard in crit-only multi collectional criterion', done => applyCritRunAndCheck('String pro', 'propertyDescriptorMultiCritCollectional', [], done));
+            test('returns expected result for property descriptor without wildcard in crit-only multi collectional criterion', done => applyCritRunAndCheck('String prop', 'propertyDescriptorMultiCritCollectional', [2], done));
+            test('returns expected result for multiple property descriptors without wildcard in crit-only multi collectional criterion', done => applyCritRunAndCheck('String prop,Integer prop', 'propertyDescriptorMultiCritCollectional', [1, 2], done));
+            test('returns expected result for property descriptor with wildcard in crit-only multi collectional criterion', done => applyCritRunAndCheck('Integer*', 'propertyDescriptorMultiCritCollectional', [1], done));
+            test('returns expected result for multiple property descriptors with wildcards in crit-only multi collectional criterion', done => applyCritRunAndCheck('Integer*,String*', 'propertyDescriptorMultiCritCollectional', [1, 2], done));
+            test('returns expected result for multiple property descriptors with and without wildcards in crit-only multi collectional criterion', done => applyCritRunAndCheck('Integer*,String prop', 'propertyDescriptorMultiCritCollectional', [1, 2], done));
+            test('returns expected result for property descriptor with wildcard without result for insufficient property descriptor in crit-only multi collectional criterion', done => applyCritRunAndCheck('Integer*,String pro', 'propertyDescriptorMultiCritCollectional', [1], done));
+
+            // crit-only collectional multi criterion mapped through critCondition on persistent PropertyDescriptor property with 'Missing value' and 'Not'
+            test('returns expected result for property descriptor with missing value cases in crit-only multi collectional criterion', done => applyCritRunAndCheck({val: 'String prop', orNull: true }, 'propertyDescriptorMultiCritCollectional', [2, 3, 4, 5, 6, 7, 8], done));
+            test('returns expected result for property descriptor negated in crit-only multi collectional criterion', done => applyCritRunAndCheck({val: 'String prop', not: true }, 'propertyDescriptorMultiCritCollectional', [1, 3, 4, 5, 6, 7, 8], done));
+            test('returns expected result for property descriptor with missing value cases negated in crit-only multi collectional criterion', done => applyCritRunAndCheck({val: 'String prop', orNull: true, not: true }, 'propertyDescriptorMultiCritCollectional', [1], done));
+        });
+    </script>
+
+</body>
+
+</html>

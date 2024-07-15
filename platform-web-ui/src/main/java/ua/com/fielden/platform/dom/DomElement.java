@@ -7,7 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Represent the DOM (Domain object model) element.
@@ -320,4 +320,8 @@ public class DomElement {
                 + (children.isEmpty() ? "" : "\n" + StringUtils.join(children, "\n") + "\n")
                 + "</" + tagName + ">";
     };
+
+    public List<DomElement> children() {
+        return Collections.unmodifiableList(children);
+    }
 }

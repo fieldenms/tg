@@ -13,10 +13,10 @@ import org.joda.time.format.PeriodFormatter;
 import org.joda.time.format.PeriodFormatterBuilder;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity_centre.mnemonics.DateMnemonicUtils;
 import ua.com.fielden.platform.types.ICategory;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
-import ua.com.fielden.snappy.DateUtilities;
 
 /**
  * Simple date interval with value.
@@ -69,7 +69,7 @@ public/* final */class ValuedInterval implements Comparable<ValuedInterval>, Clo
      * @return
      */
     public ValuedInterval(final DateTime from, final DateTime to, final Object value) {
-        if (!(DateUtilities.isBefore(from, to) || EntityUtils.equalsEx(from, to))) {
+        if (!(DateMnemonicUtils.isBefore(from, to) || EntityUtils.equalsEx(from, to))) {
             throw new IllegalArgumentException("From date [" + from + "] is not before or equal to To date [" + to + "].");
         }
         this.from = from;

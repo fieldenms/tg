@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.cypher;
 
+import static ua.com.fielden.platform.utils.Pair.pair;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -7,6 +9,7 @@ import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
 
+import ua.com.fielden.platform.cypher.exceptions.ChecksumException;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -17,8 +20,7 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class Checksum {
 
-    private Checksum() {
-    }
+    private Checksum() {}
 
     /**
      * Calculates a SHA1 code and the size (number of bytes) for a content of the input stream.
@@ -27,19 +29,22 @@ public class Checksum {
      * @return
      * @throws Exception
      */
-    public static Pair<String, Long> sha1(final InputStream is) throws Exception {
-        final MessageDigest md = MessageDigest.getInstance("SHA1");
-        final byte[] dataBytes = new byte[1024];
-        int nread = 0;
-        long size = 0;
-        while ((nread = is.read(dataBytes)) != -1) {
-            md.update(dataBytes, 0, nread);
-            size += nread;
+    public static Pair<String, Long> sha1(final InputStream is) {
+        try {
+            final MessageDigest md = MessageDigest.getInstance("SHA1");
+            final byte[] dataBytes = new byte[1024];
+            int nread = 0;
+            long size = 0;
+            while ((nread = is.read(dataBytes)) != -1) {
+                md.update(dataBytes, 0, nread);
+                size += nread;
+            }
+
+            final byte[] mdbytes = md.digest();
+            return pair(HexString.bufferToHex(mdbytes, 0, mdbytes.length), size);
+        } catch (final Exception ex) {
+            throw new ChecksumException("Exception occurred while calculating SHA1 for an input stream.", ex);
         }
-
-        final byte[] mdbytes = md.digest();
-
-        return new Pair<String, Long>(HexString.bufferToHex(mdbytes, 0, mdbytes.length), size);
     }
 
     /**
@@ -47,13 +52,33 @@ public class Checksum {
      * 
      * @param dataBytes
      * @return
-     * @throws Exception
      */
-    public static String sha1(final byte[] dataBytes) throws Exception {
-        final MessageDigest md = MessageDigest.getInstance("SHA1");
-        md.update(dataBytes);
-        final byte[] mdbytes = md.digest();
-        return HexString.bufferToHex(mdbytes, 0, mdbytes.length);
+    public static String sha1(final byte[] dataBytes) {
+        try {
+            final MessageDigest md = MessageDigest.getInstance("SHA1");
+            md.update(dataBytes);
+            final byte[] mdbytes = md.digest();
+            return HexString.bufferToHex(mdbytes, 0, mdbytes.length);
+        } catch (final Exception ex) {
+            throw new ChecksumException("Exception occurred while calculating SHA1 for a byte array.", ex);
+        }
+    }
+
+    /**
+     * Calculates a SHA256 code for the passed in byte array.
+     * 
+     * @param dataBytes
+     * @return
+     */
+    public static String sha256(final byte[] dataBytes) {
+        try {
+            final MessageDigest md = MessageDigest.getInstance("SHA256");
+            md.update(dataBytes);
+            final byte[] mdbytes = md.digest();
+            return HexString.bufferToHex(mdbytes, 0, mdbytes.length);
+        } catch (final Exception ex) {
+            throw new ChecksumException("Exception occurred while calculating SHA256 for a byte array.", ex);
+        }
     }
 
     /**
@@ -62,25 +87,28 @@ public class Checksum {
      * 
      * @param fileOrDirectory
      * @return
-     * @throws Exception
      */
-    public static Map<String, Pair<String, Long>> sha1(final File fileOrDirectory) throws Exception {
+    public static Map<String, Pair<String, Long>> sha1(final File fileOrDirectory) {
         if (!fileOrDirectory.exists()) {
             throw new IllegalArgumentException("File or directory should exist.");
         }
 
-        final Map<String, Pair<String, Long>> result = new HashMap<String, Pair<String, Long>>();
-        if (fileOrDirectory.isDirectory()) {
-            for (final File file : fileOrDirectory.listFiles()) {
-                if (file.isFile()) {
-                    result.put(file.getName(), Checksum.sha1(new FileInputStream(file)));
+        try {
+            final Map<String, Pair<String, Long>> result = new HashMap<>();
+            if (fileOrDirectory.isDirectory()) {
+                for (final File file : fileOrDirectory.listFiles()) {
+                    if (file.isFile()) {
+                        result.put(file.getName(), sha1(new FileInputStream(file)));
+                    }
                 }
+            } else {
+                result.put(fileOrDirectory.getName(), sha1(new FileInputStream(fileOrDirectory)));
             }
-        } else {
-            result.put(fileOrDirectory.getName(), Checksum.sha1(new FileInputStream(fileOrDirectory)));
-        }
 
-        return result;
+            return result;
+        } catch (final Exception ex) {
+            throw new ChecksumException("Exception occurred while calculating SHA1 for a file or directory.", ex);
+        }
     }
 
     /**
@@ -88,15 +116,18 @@ public class Checksum {
      * 
      * @param value
      * @return
-     * @throws Exception
      */
-    public static String sha1(final String value) throws Exception {
-        final MessageDigest md = MessageDigest.getInstance("SHA1");
-        final byte[] data = value.getBytes();
-        md.update(data, 0, data.length);
+    public static String sha1(final String value) {
+        try {
+            final MessageDigest md = MessageDigest.getInstance("SHA1");
+            final byte[] data = value.getBytes();
+            md.update(data, 0, data.length);
 
-        final byte[] mdbytes = md.digest();
+            final byte[] mdbytes = md.digest();
 
-        return HexString.bufferToHex(mdbytes, 0, mdbytes.length);
+            return HexString.bufferToHex(mdbytes, 0, mdbytes.length);
+        } catch (final Exception ex) {
+            throw new ChecksumException("Exception occurred while calculating SHA1 for a string.", ex);
+        }
     }
 }

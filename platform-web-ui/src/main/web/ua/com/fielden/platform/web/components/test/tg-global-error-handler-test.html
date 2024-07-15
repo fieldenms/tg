@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>tg-global-error-handler test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    
+    <script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/filesaver/FileSaver.min.js"></script>
+    <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
+</head>
+
+<body>
+    
+    <test-fixture id="ComponentFixture">
+        <template>
+            <tg-global-error-handler max-error-queue-length="3"></tg-global-error-handler>
+        </template>
+    </test-fixture>
+
+    <script type="module">
+
+        import '/resources/components/tg-global-error-handler.js';
+
+        suite('error queue length', function() {
+            let errorHandler;
+            
+            setup(function() {
+                errorHandler = fixture('ComponentFixture');
+                errorHandler.toaster = {
+                    openToastForError: function (err, msg, showMore) {}
+                };
+            });
+
+            function dispatchError (times) {
+                for (let i = 0; i < times; i++) {
+                    const error = new ErrorEvent('Error Happened', {
+                        error : new Error('Error Happened'),
+                        message : 'Error Happened',
+                        lineno : 0,
+                        col: 0,
+                        filename : 'test.html'
+                    });
+                    errorHandler._handleError(error);
+                }
+            }
+            
+            test('main error handler is called five times', function (done) {
+                let errors = 0;
+                errorHandler.errorHandler = (msg) => { errors++ };
+                errorHandler.alternativeErrorHandler = (msg) => {};
+                dispatchError(5);
+                assert.equal(5, errors, 'The error handler should be called only five times.');
+                done();
+            });
+
+            test('alternative error handler is called two times', function (done) {
+                let errors = 0;
+                errorHandler.errorHandler = (msg) => {};
+                errorHandler.alternativeErrorHandler = (msg) => { errors++ };
+                dispatchError(5);
+                assert.equal(2, errors, 'The alternative error handler should be called only two times.');
+                done();
+            });
+
+            test('the error queue leght should be three', function (done) {
+                let errors = 0;
+                errorHandler.errorHandler = (msg) => {};
+                errorHandler.alternativeErrorHandler = (msg) => {};
+                dispatchError(5);
+                assert.equal(3, errorHandler._errorQueue.length, 'The error queue should be three.');
+                done();
+            });
+        });
+    </script>
+</body>
+</html>

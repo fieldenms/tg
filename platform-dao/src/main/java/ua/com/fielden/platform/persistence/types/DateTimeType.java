@@ -28,6 +28,7 @@ import ua.com.fielden.platform.persistence.types.descriptor.DateTimeJavaTypeDesc
  */
 public class DateTimeType extends AbstractStandardBasicType<Date> implements IdentifierType<Date>, LiteralType<Date> {
     private static final long serialVersionUID = 1L;
+    public static final DateTimeType INSTANCE = new DateTimeType();
 
     public DateTimeType() {
         // SqlTypeDescriptor, JavaTypeDescriptor

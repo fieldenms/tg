@@ -88,6 +88,7 @@ public @interface IsProperty {
     public static final int DEFAULT_PRECISION = -1;
     public static final int DEFAULT_SCALE = -1;
     public static final boolean DEFAULT_TRAILING_ZEROS = true;
+    public static final String DEFAULT_DISPLAY_AS = "";
 
 
     /**
@@ -132,9 +133,18 @@ public @interface IsProperty {
      * @return
      */
     boolean assignBeforeSave() default false;
-    
+
     /**
      * Length indicates the maximum length of a value for a <code>String</code> property.
+     * This value can be used for validation, but in and of itself, this value is only an indicator of a maximum length.
+     * <p>
+     * Value {@code 0} indicates "undetermined" length, which may have context-dependent interpretation.
+     * For example, a database schema generator may use its own default length in such cases.
+     * <p>
+     * If length of value {@code Integer.MAX_VALUE} is specified for properties of type {@code String}, the DDL generation tool would pick the most appropriate data type to represent long text.
+     * For example, for PostgreSQL type {@code text} and for SQL Server type {@code varchar(max)} would be used.
+     * <p>
+     * Also, length can be combined with pre-condition {@code MaxLengthValidator} to enforce the length integrity constraint on properties of type {@code String}.
      * 
      * @return
      */
@@ -143,12 +153,12 @@ public @interface IsProperty {
     /**
      * Precision is the number of digits in a number. For example, the number 123.45 has a precision of 5.
      * <p>
-     * This parameter is applicable only to properties of type <code>BigDecimal</code>. 
+     * This parameter is applicable only to properties of type <code>BigDecimal</code>.
      * @return
      */
     int precision() default DEFAULT_PRECISION;
 
-    
+
     /**
      * Scale is the number of digits to the right of the decimal point in a number. For example, the number 123.45 has a scale of 2.
      * <p>
@@ -156,12 +166,28 @@ public @interface IsProperty {
      * @return
      */
     int scale() default DEFAULT_SCALE;
-    
+
     /**
      * This parameter should be used to indicate whether trailing zeros have any significance for decimal properties (including Money).
-     * Such information can be used by, for example, UI logic for displaying or hind the trailing zeros. 
-     * 
+     * Such information can be used by, for example, UI logic for displaying or hind the trailing zeros.
+     *
      * @return
      */
     boolean trailingZeros() default DEFAULT_TRAILING_ZEROS;
+
+    /**
+     * Defines the way the entity property will be displayed. Other than entity type will be ignored. The value of this property
+     * might be empty which means that the displayed value for this property should use default pattern (i.e composite entity property will be displayed with title-value pattern).
+     * Also this parameter might have specific pattern like: #1tv#2tv or #1vs#2vs, #1v, z. Where:
+     * #i -- the value of i-th key member; this must be the opening tag for a template;
+     * v -- key member value;
+     * t -- key member title;
+     * s -- key member separator; mutually exclusive with t
+     * z -- as per the default toString implementation
+     *
+     * This patterns for displayed value can be used only for composite entity property.
+     *
+     * @return
+     */
+    String displayAs() default DEFAULT_DISPLAY_AS;
 }

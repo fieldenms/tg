@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.web.utils;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
+
 import java.util.Map;
 import java.util.function.Supplier;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.restlet.Response;
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
@@ -14,7 +16,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 public class WebUiResourceUtils {
-    private final static Logger LOGGER = Logger.getLogger(WebUiResourceUtils.class);
+    private final static Logger LOGGER = getLogger(WebUiResourceUtils.class);
 
     /**
      * Restores the holder of modified properties into the map [propertyName; webEditorSpecificValue].
@@ -23,7 +25,7 @@ public class WebUiResourceUtils {
      * @return
      */
     public static Map<String, Object> restoreModifiedPropertiesHolderFrom(final Representation envelope, final RestServerUtil restUtil) {
-        return (Map<String, Object>) restUtil.restoreJSONMap(envelope);
+        return (Map<String, Object>) restUtil.restoreJsonMap(envelope);
     }
 
     /**
@@ -33,7 +35,7 @@ public class WebUiResourceUtils {
      * @return
      */
     public static CentreContextHolder restoreCentreContextHolder(final Representation envelope, final RestServerUtil restUtil) {
-        return restUtil.restoreJSONEntity(envelope, CentreContextHolder.class);
+        return restUtil.restoreJsonEntity(envelope, CentreContextHolder.class);
     }
 
     /**
@@ -43,7 +45,7 @@ public class WebUiResourceUtils {
      * @return
      */
     public static Result restoreJSONResult(final Representation envelope, final RestServerUtil restUtil) {
-        return restUtil.restoreJSONResult(envelope);
+        return restUtil.restoreJsonResult(envelope);
     }
 
     /**
@@ -53,7 +55,7 @@ public class WebUiResourceUtils {
      * @return
      */
     public static SavingInfoHolder restoreSavingInfoHolder(final Representation envelope, final RestServerUtil restUtil) {
-        return restUtil.restoreJSONEntity(envelope, SavingInfoHolder.class);
+        return restUtil.restoreJsonEntity(envelope, SavingInfoHolder.class);
     }
 
     /**

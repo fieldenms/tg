@@ -13,8 +13,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @DescTitle(value = "description", desc = "desc description")
 public class UnionEntityHolder extends AbstractEntity<String> {
 
-    private static final long serialVersionUID = 632043970167639225L;
-
     @IsProperty
     @Title(value = "union entity", desc = "unoin entity description")
     private UnionEntityForReflector unionEntity;

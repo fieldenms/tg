@@ -2,14 +2,12 @@ package ua.com.fielden.platform.web.centre.api.impl;
 
 import java.util.Optional;
 
-import org.apache.commons.lang.NotImplementedException;
-
 import ua.com.fielden.platform.data.generator.IGenerator;
 import ua.com.fielden.platform.data.generator.WithCreatedByUser;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.crit.layout.ILayoutConfigWithResultsetSupport;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder0Checkbox;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aEgiAppearance;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 
@@ -22,11 +20,8 @@ import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
  */
 class SelectionCriteriaLayoutBuilder<T extends AbstractEntity<?>> extends ResultSetBuilder<T> implements ILayoutConfigWithResultsetSupport<T> {
 
-    private final EntityCentreBuilder<T> builder;
-
     public SelectionCriteriaLayoutBuilder(final EntityCentreBuilder<T> builder) {
         super(builder);
-        this.builder = builder;
     }
 
     @Override
@@ -37,9 +32,9 @@ class SelectionCriteriaLayoutBuilder<T extends AbstractEntity<?>> extends Result
         this.builder.selectionCriteriaLayout.whenMedia(device, orientation.isPresent() ? orientation.get() : null).set(flexString);
         return this;
     }
-    
+
     @Override
-    public <G extends AbstractEntity<?> & WithCreatedByUser<G>> IResultSetBuilder0Checkbox<T> withGenerator(final Class<G> entityTypeToBeGenerated, final Class<? extends IGenerator<G>> generator) {
+    public <G extends AbstractEntity<?> & WithCreatedByUser<G>> IResultSetBuilder1aEgiAppearance<T> withGenerator(final Class<G> entityTypeToBeGenerated, final Class<? extends IGenerator<G>> generator) {
         if (entityTypeToBeGenerated == null || generator == null) {
             throw new IllegalArgumentException("Generator definition requries both types to be specified (generator type and entityTypeToBeGenerated).");
         }

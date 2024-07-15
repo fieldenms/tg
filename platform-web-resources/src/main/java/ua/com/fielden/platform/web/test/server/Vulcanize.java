@@ -4,10 +4,11 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.function.Function;
 
-import org.apache.log4j.Logger;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import org.apache.logging.log4j.Logger;
 
-import ua.com.fielden.platform.utils.Pair;
-import ua.com.fielden.platform.web.utils.VulcanizingUtility;
+import ua.com.fielden.platform.types.tuples.T3;
+import ua.com.fielden.platform.web.vulcanizer.VulcanizingUtility;
 
 /**
  * Web UI vulcanization launching class for TG example web server.
@@ -24,10 +25,10 @@ public class Vulcanize extends VulcanizingUtility {
      * @throws IOException 
      */
     public static void main(final String[] args) throws IOException {
-        final Pair<Properties, String[]> propsAndAdditionalPaths = processVmArguments(args);
-        final Logger logger = Logger.getLogger(Vulcanize.class);
+        final T3<Properties, String[], String[]> propsAndAdditionalPaths = processVmArguments(args);
+        final Logger logger = getLogger(Vulcanize.class);
         logger.info("Starting app...");
-        final TgTestApplicationConfiguration component = new TgTestApplicationConfiguration(propsAndAdditionalPaths.getKey());
+        final TgTestApplicationConfiguration component = new TgTestApplicationConfiguration(propsAndAdditionalPaths._1);
         logger.info("Started app.");
 
         final String platformVendorResourcesPath = "../platform-web-ui/src/main/resources";
@@ -47,7 +48,8 @@ public class Vulcanize extends VulcanizingUtility {
                 loginTargetPlatformSpecificPath, 
                 mobileAndDesktopAppSpecificPath, 
                 commandMaker, 
-                propsAndAdditionalPaths.getValue());
+                propsAndAdditionalPaths._2,
+                propsAndAdditionalPaths._3);
     }
 
 }

@@ -50,11 +50,11 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
     }
 
     public static Object createDtm_for_AbstractAnalysisDomainTreeManagerTest() {
-        return new AbstractAnalysisDomainTreeManager1(serialiser(), createRootTypes_for_AbstractAnalysisDomainTreeManagerTest());
+        return new AbstractAnalysisDomainTreeManager1(factory(), createRootTypes_for_AbstractAnalysisDomainTreeManagerTest());
     }
 
     public static Object createIrrelevantDtm_for_AbstractAnalysisDomainTreeManagerTest() {
-        final ICentreDomainTreeManagerAndEnhancer dtm = new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_AbstractAnalysisDomainTreeManagerTest());
+        final ICentreDomainTreeManagerAndEnhancer dtm = new CentreDomainTreeManagerAndEnhancer(factory(), createRootTypes_for_AbstractAnalysisDomainTreeManagerTest());
         enhanceManagerWithBasicCalculatedProperties(dtm);
         return dtm;
     }
@@ -76,7 +76,7 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
     }
 
     protected static Set<Class<?>> createRootTypes_for_AbstractAnalysisDomainTreeManagerTest() {
-        final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractDomainTreeManagerTest());
+        final Set<Class<?>> rootTypes = new HashSet<>(createRootTypes_for_AbstractDomainTreeManagerTest());
         rootTypes.add(EntityWithCompositeKey.class);
         rootTypes.add(EntityWithKeyTitleAndWithAEKeyType.class);
         return rootTypes;
@@ -255,21 +255,21 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
 
         // Alter and check //
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>("intAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>("intAggExprProp", Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
         assertEquals("Value is incorrect.", Arrays.asList(), dtm().getSecondTick().orderedProperties(MasterEntity.class));
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>("intAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "bigDecimalAggExprProp");
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.ASCENDING), new Pair<String, Ordering>("bigDecimalAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>("intAggExprProp", Ordering.ASCENDING), new Pair<>("bigDecimalAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "bigDecimalAggExprProp");
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.ASCENDING), new Pair<String, Ordering>("bigDecimalAggExprProp", Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>("intAggExprProp", Ordering.ASCENDING), new Pair<>("bigDecimalAggExprProp", Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.DESCENDING), new Pair<String, Ordering>("bigDecimalAggExprProp", Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>("intAggExprProp", Ordering.DESCENDING), new Pair<>("bigDecimalAggExprProp", Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("bigDecimalAggExprProp", Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>("bigDecimalAggExprProp", Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "bigDecimalAggExprProp");
         assertEquals("Value is incorrect.", Arrays.asList(), dtm().getSecondTick().orderedProperties(MasterEntity.class));
     }
@@ -284,15 +284,15 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "bigDecimalAggExprProp");
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "bigDecimalAggExprProp");
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "moneyAggExprProp");
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.ASCENDING), new Pair<String, Ordering>("bigDecimalAggExprProp", Ordering.DESCENDING), new Pair<String, Ordering>("moneyAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>("intAggExprProp", Ordering.ASCENDING), new Pair<>("bigDecimalAggExprProp", Ordering.DESCENDING), new Pair<>("moneyAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
 
         // un-use middle property
         dtm().getSecondTick().use(MasterEntity.class, "bigDecimalAggExprProp", false);
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.ASCENDING), new Pair<String, Ordering>("moneyAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>("intAggExprProp", Ordering.ASCENDING), new Pair<>("moneyAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
 
         // un-use right property
         dtm().getSecondTick().use(MasterEntity.class, "moneyAggExprProp", false);
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>("intAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
 
         // un-use last property
         dtm().getSecondTick().use(MasterEntity.class, "intAggExprProp", false);
@@ -382,12 +382,12 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
         assertEquals("Incorrect value 'i'.", 0, i);
 
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>("intAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
 
         assertEquals("Incorrect value 'i'.", 1, i);
 
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>("intAggExprProp", Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
 
         assertEquals("Incorrect value 'i'.", 2, i);
 
@@ -397,7 +397,7 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
         assertEquals("Incorrect value 'i'.", 3, i);
 
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>("intAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
 
         assertEquals("Incorrect value 'i'.", 4, i);
     }
@@ -413,12 +413,12 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
         assertEquals("Incorrect value 'i'.", 0, i);
 
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>("intAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
 
         assertEquals("Incorrect value 'i'.", 1, i);
 
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>("intAggExprProp", Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
 
         assertEquals("Incorrect value 'i'.", 1, i);
     }

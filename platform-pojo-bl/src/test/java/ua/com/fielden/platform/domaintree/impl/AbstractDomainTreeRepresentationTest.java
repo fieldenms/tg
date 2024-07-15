@@ -53,7 +53,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     }
 
     protected static Object createDtm_for_AbstractDomainTreeRepresentationTest() {
-        return new DomainTreeRepresentation1(serialiser(), createRootTypes_for_AbstractDomainTreeRepresentationTest());
+        return new DomainTreeRepresentation1(factory(), createRootTypes_for_AbstractDomainTreeRepresentationTest());
     }
 
     protected static Object createIrrelevantDtm_for_AbstractDomainTreeRepresentationTest() {
@@ -61,7 +61,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     }
 
     protected static Set<Class<?>> createRootTypes_for_AbstractDomainTreeRepresentationTest() {
-        final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractDomainTreeTest());
+        final Set<Class<?>> rootTypes = new HashSet<>(createRootTypes_for_AbstractDomainTreeTest());
         return rootTypes;
     }
 
@@ -72,7 +72,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     protected static void performAfterDeserialisationProcess_for_AbstractDomainTreeRepresentationTest(final Object dtr) {
     }
 
-    protected static void assertInnerCrossReferences_for_AbstractDomainTreeRepresentationTest(final Object dtm) {
+    public static void assertInnerCrossReferences_for_AbstractDomainTreeRepresentationTest(final Object dtm) {
         assertInnerCrossReferences_for_AbstractDomainTreeTest(dtm);
 
         final AbstractDomainTreeRepresentation abstractDtr = (AbstractDomainTreeRepresentation) dtm;
@@ -675,7 +675,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     ////////////////////// 6. Available functions.//////////////////////
     ////////////////////////////////////////////////////////////////////
     protected List<Function> enhanceFunctionsWithCollectionalAttributes(final List<Function> functions) {
-        final List<Function> newFunctions = new ArrayList<Function>(functions);
+        final List<Function> newFunctions = new ArrayList<>(functions);
         newFunctions.add(Function.ALL);
         newFunctions.add(Function.ANY);
         return newFunctions;
@@ -685,66 +685,66 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     public void test_that_any_property_has_type_related_functions() {
         final String m = "Available functions are incorrect.";
         // Entity property
-        assertEquals(m, Arrays.asList(Function.COUNT_DISTINCT), new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "")));
-        assertEquals(m, Arrays.asList(Function.SELF, Function.COUNT_DISTINCT), new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "collection")));
+        assertEquals(m, Arrays.asList(Function.COUNT_DISTINCT), new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "")));
+        assertEquals(m, Arrays.asList(Function.SELF, Function.COUNT_DISTINCT), new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "collection")));
 
         List<Function> functions = Arrays.asList(Function.SELF, Function.COUNT_DISTINCT);
-        assertEquals(m, functions, new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "simpleEntityProp")));
-        assertEquals(m, functions, new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "entityProp.simpleEntityProp")));
-        assertEquals(m, functions, new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "entityProp.entityProp.simpleEntityProp")));
-        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "collection.simpleEntityProp")));
-        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "entityProp.collection.simpleEntityProp")));
-        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "entityProp.collection.slaveEntityProp.simpleEntityProp")));
+        assertEquals(m, functions, new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "simpleEntityProp")));
+        assertEquals(m, functions, new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "entityProp.simpleEntityProp")));
+        assertEquals(m, functions, new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "entityProp.entityProp.simpleEntityProp")));
+        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "collection.simpleEntityProp")));
+        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "entityProp.collection.simpleEntityProp")));
+        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "entityProp.collection.slaveEntityProp.simpleEntityProp")));
 
         // String property
         functions = Arrays.asList(Function.SELF, Function.MIN, Function.MAX);
-        assertEquals(m, functions, new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "stringProp")));
-        assertEquals(m, functions, new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "entityProp.stringProp")));
-        assertEquals(m, functions, new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "entityProp.entityProp.stringProp")));
-        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "collection.stringProp")));
-        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "entityProp.collection.stringProp")));
-        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "entityProp.collection.slaveEntityProp.stringProp")));
+        assertEquals(m, functions, new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "stringProp")));
+        assertEquals(m, functions, new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "entityProp.stringProp")));
+        assertEquals(m, functions, new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "entityProp.entityProp.stringProp")));
+        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "collection.stringProp")));
+        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "entityProp.collection.stringProp")));
+        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "entityProp.collection.slaveEntityProp.stringProp")));
 
         functions = Arrays.asList(Function.SELF, Function.SUM, Function.AVG, Function.MIN, Function.MAX);
         // Money property
-        assertEquals(m, functions, new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "moneyProp")));
-        assertEquals(m, functions, new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "entityProp.moneyProp")));
-        assertEquals(m, functions, new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "entityProp.entityProp.moneyProp")));
-        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "collection.moneyProp")));
-        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "entityProp.collection.moneyProp")));
-        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "entityProp.collection.slaveEntityProp.moneyProp")));
+        assertEquals(m, functions, new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "moneyProp")));
+        assertEquals(m, functions, new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "entityProp.moneyProp")));
+        assertEquals(m, functions, new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "entityProp.entityProp.moneyProp")));
+        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "collection.moneyProp")));
+        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "entityProp.collection.moneyProp")));
+        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "entityProp.collection.slaveEntityProp.moneyProp")));
         // Integer property
-        assertEquals(m, functions, new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "integerProp")));
-        assertEquals(m, functions, new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "entityProp.integerProp")));
-        assertEquals(m, functions, new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "entityProp.entityProp.integerProp")));
-        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "collection.integerProp")));
-        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "entityProp.collection.integerProp")));
-        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "entityProp.collection.slaveEntityProp.integerProp")));
+        assertEquals(m, functions, new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "integerProp")));
+        assertEquals(m, functions, new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "entityProp.integerProp")));
+        assertEquals(m, functions, new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "entityProp.entityProp.integerProp")));
+        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "collection.integerProp")));
+        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "entityProp.collection.integerProp")));
+        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "entityProp.collection.slaveEntityProp.integerProp")));
         // BigDecimal property
-        assertEquals(m, functions, new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "bigDecimalProp")));
-        assertEquals(m, functions, new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "entityProp.bigDecimalProp")));
-        assertEquals(m, functions, new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "entityProp.entityProp.bigDecimalProp")));
-        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "collection.bigDecimalProp")));
-        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "entityProp.collection.bigDecimalProp")));
-        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "entityProp.collection.slaveEntityProp.bigDecimalProp")));
+        assertEquals(m, functions, new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "bigDecimalProp")));
+        assertEquals(m, functions, new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "entityProp.bigDecimalProp")));
+        assertEquals(m, functions, new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "entityProp.entityProp.bigDecimalProp")));
+        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "collection.bigDecimalProp")));
+        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "entityProp.collection.bigDecimalProp")));
+        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "entityProp.collection.slaveEntityProp.bigDecimalProp")));
 
         // Boolean property
         functions = Arrays.asList(Function.SELF, Function.COUNT_DISTINCT);
-        assertEquals(m, functions, new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "booleanProp")));
-        assertEquals(m, functions, new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "entityProp.booleanProp")));
-        assertEquals(m, functions, new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "entityProp.entityProp.booleanProp")));
-        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "collection.booleanProp")));
-        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "entityProp.collection.booleanProp")));
-        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "entityProp.collection.slaveEntityProp.booleanProp")));
+        assertEquals(m, functions, new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "booleanProp")));
+        assertEquals(m, functions, new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "entityProp.booleanProp")));
+        assertEquals(m, functions, new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "entityProp.entityProp.booleanProp")));
+        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "collection.booleanProp")));
+        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "entityProp.collection.booleanProp")));
+        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "entityProp.collection.slaveEntityProp.booleanProp")));
 
         // Date property
         functions = Arrays.asList(Function.SELF, Function.YEAR, Function.MONTH, Function.DAY, Function.MIN, Function.MAX);
-        assertEquals(m, functions, new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "dateProp")));
-        assertEquals(m, functions, new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "entityProp.dateProp")));
-        assertEquals(m, functions, new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "entityProp.entityProp.dateProp")));
-        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "collection.dateProp")));
-        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "entityProp.collection.dateProp")));
-        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "entityProp.collection.slaveEntityProp.dateProp")));
+        assertEquals(m, functions, new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "dateProp")));
+        assertEquals(m, functions, new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "entityProp.dateProp")));
+        assertEquals(m, functions, new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "entityProp.entityProp.dateProp")));
+        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "collection.dateProp")));
+        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "entityProp.collection.dateProp")));
+        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<>(dtm().availableFunctions(MasterEntity.class, "entityProp.collection.slaveEntityProp.dateProp")));
     }
     
     @Ignore

@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.criteria.generator.impl;
 
+import static org.apache.commons.lang3.RegExUtils.replaceAll;
+
 import java.lang.reflect.Field;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ua.com.fielden.platform.criteria.enhanced.CriteriaProperty;
 import ua.com.fielden.platform.criteria.enhanced.FirstParam;
@@ -11,6 +13,7 @@ import ua.com.fielden.platform.criteria.enhanced.SecondParam;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
@@ -19,9 +22,9 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Implements basic reflection functionality for query criteria class (i.e. retrieving title and description for specified property, generating property names etc.)
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class CriteriaReflector {
 
@@ -29,7 +32,7 @@ public class CriteriaReflector {
 
     /**
      * Enhances the dot-notated property name with appropriate suffix to indicate that it is a range property.
-     * 
+     *
      * @param propertyName
      * @return
      */
@@ -39,7 +42,7 @@ public class CriteriaReflector {
 
     /**
      * Enhances the dot-notated property name with appropriate suffix to indicate that it is a range property.
-     * 
+     *
      * @param propertyName
      * @return
      */
@@ -49,7 +52,7 @@ public class CriteriaReflector {
 
     /**
      * Enhances the dot-notated property name with appropriate suffix to indicate that it is a boolean property.
-     * 
+     *
      * @param propertyName
      * @return
      */
@@ -59,7 +62,7 @@ public class CriteriaReflector {
 
     /**
      * Enhances the dot-notated property name with appropriate suffix to indicate that it is a boolean property.
-     * 
+     *
      * @param propertyName
      * @return
      */
@@ -73,29 +76,42 @@ public class CriteriaReflector {
     public static Pair<String, String> getCriteriaTitleAndDesc(final Class<?> root, final String propertyName) {
         final String realPropertyName = "".equals(propertyName) ? AbstractEntity.KEY : propertyName;
         final Pair<String, String> titleAndDesc = TitlesDescsGetter.getTitleAndDesc(realPropertyName, root);
-        return new Pair<String, String>(TitlesDescsGetter.removeHtmlTag(titleAndDesc.getKey()), TitlesDescsGetter.removeHtmlTag(titleAndDesc.getValue()));
+        return new Pair<>(TitlesDescsGetter.removeHtmlTag(titleAndDesc.getKey()), TitlesDescsGetter.removeHtmlTag(titleAndDesc.getValue()));
     }
 
     /**
      * Generates the criteria property name. The generated property name must be unique. New generated criteria property name consists of two parts: root type name, property name.
      * For example: if root = EntityType.class, property = property.anotherProperty.nestedProperty, then generated property name will be -
      * entityType_property_anotherProperty_nestedProperty.
-     * 
+     *
      * @param root
      *            - the type from which the property was taken.
      * @param propertyName
      *            - the name of the property for which criteria property name must be generated.
-     * @param suffix
-     *            - the additional suffix if the generated property has a pair.
      * @return
      */
-    public static String generateCriteriaPropertyName(final Class<?> root, final String propertyName) {
-        return root.getSimpleName().substring(0, 1).toLowerCase() + root.getSimpleName().substring(1) + "_" + propertyName.replaceAll(Reflector.DOT_SPLITTER, "_");
+    public static String critName(final Class<?> root, final String propertyName) {
+        return root.getSimpleName().substring(0, 1).toLowerCase() + root.getSimpleName().substring(1) + "_" + replaceAll(propertyName, Reflector.DOT_SPLITTER_PATTERN, "_");
+    }
+
+    /**
+     * Generates the criteria property name. The generated property name must be unique. New generated criteria property name consists of two parts: root type name, property name.
+     * For example: if root = EntityType.class, property = property.anotherProperty.nestedProperty, then generated property name will be -
+     * entityType_property_anotherProperty_nestedProperty.
+     *
+     * @param root
+     *            - the type from which the property was taken.
+     * @param propertyPath
+     *            - the path to the property for which criteria property name must be generated.
+     * @return
+     */
+    public static String critName(final Class<?> root, final IConvertableToPath propertyPath) {
+        return root.getSimpleName().substring(0, 1).toLowerCase() + root.getSimpleName().substring(1) + "_" + replaceAll(propertyPath.toPath(), Reflector.DOT_SPLITTER_PATTERN, "_");
     }
 
     /**
      * Returns the list of criteria properties for specified {@link EntityQueryCriteria} class.
-     * 
+     *
      * @param criteriaClass
      * @return
      */
@@ -105,7 +121,7 @@ public class CriteriaReflector {
 
     /**
      * Returns true if the specified criteria property is annotated with {@link SecondParam}.
-     * 
+     *
      * @param criteriaClass
      * @param propertyName
      * @return
@@ -116,7 +132,7 @@ public class CriteriaReflector {
 
     /**
      * Returns true if the specified criteria property is annotated with {@link FirstParam}.
-     * 
+     *
      * @param criteriaClass
      * @param propertyName
      * @return
@@ -127,7 +143,7 @@ public class CriteriaReflector {
 
     /**
      * Returns the name of the second property related to the specified one.
-     * 
+     *
      * @param criteriaClass
      * @param propertyName
      * @return
@@ -142,7 +158,7 @@ public class CriteriaReflector {
 
     /**
      * Returns the name of the first property related to the specified one.
-     * 
+     *
      * @param criteriaClass
      * @param propertyName
      * @return
@@ -157,7 +173,7 @@ public class CriteriaReflector {
 
     /**
      * Returns the parameters of the {@link CriteriaProperty} annotation for the specified property of the {@link EntityQueryCriteria} class.
-     * 
+     *
      * @param criteriaClass
      * @param propertyName
      * @return

@@ -45,7 +45,7 @@ public class AbstractDomainTreeManagerAndEnhancerTest extends AbstractDomainTree
     }
 
     protected static Object createDtm_for_AbstractDomainTreeManagerAndEnhancerTest() {
-        return new DomainTreeManagerAndEnhancer1(serialiser(), createRootTypes_for_AbstractDomainTreeManagerAndEnhancerTest());
+        return new DomainTreeManagerAndEnhancer1(factory(), createRootTypes_for_AbstractDomainTreeManagerAndEnhancerTest());
     }
 
     protected static Object createIrrelevantDtm_for_AbstractDomainTreeManagerAndEnhancerTest() {
@@ -53,7 +53,7 @@ public class AbstractDomainTreeManagerAndEnhancerTest extends AbstractDomainTree
     }
 
     protected static Set<Class<?>> createRootTypes_for_AbstractDomainTreeManagerAndEnhancerTest() {
-        final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractDomainTreeTest());
+        final Set<Class<?>> rootTypes = new HashSet<>(createRootTypes_for_AbstractDomainTreeTest());
         return rootTypes;
     }
 
@@ -205,19 +205,7 @@ public class AbstractDomainTreeManagerAndEnhancerTest extends AbstractDomainTree
         assertFalse("The calculated property with the same name should 'become' unchecked.", dtm().getSecondTick().isChecked(MasterEntity.class, "calcProp3"));
         assertFalse("The calculated property with the same name should 'become' enabled.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "calcProp3"));
         assertFalse("The calculated property with the same name should 'become' unchecked.", dtm().getSecondTick().isChecked(MasterEntity.class, "calcProp5"));
-
-        ///////////////////////////////////////////////////////////////////////////////////////////
-        // serialise and deserialise and then check the order of "checked properties"
-        final byte[] array = serialiser().serialise(dtm());
-        final IDomainTreeManagerAndEnhancer copy = serialiser().deserialise(array, IDomainTreeManagerAndEnhancer.class);
-        assertNotNull("", copy.getEnhancer().getCalculatedProperty(MasterEntity.class, "calcProp1"));
-        assertNotNull("", copy.getEnhancer().getCalculatedProperty(MasterEntity.class, calcProp2));
-        assertNotNull("", copy.getEnhancer().getCalculatedProperty(MasterEntity.class, "calcProp3"));
-        assertNotNull("", copy.getEnhancer().getCalculatedProperty(MasterEntity.class, "calcProp5"));
-        assertFalse("The calculated property with the same name should 'become' excluded.", copy.getRepresentation().isExcludedImmutably(MasterEntity.class, "calcProp1"));
-        assertFalse("The calculated property with the same name should 'become' disabled.", copy.getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, calcProp2));
         assertFalse("The calculated property with the same name should 'become' unchecked.", dtm().getSecondTick().isChecked(MasterEntity.class, "calcProp3"));
         assertFalse("The calculated property with the same name should 'become' enabled.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "calcProp3"));
-        assertFalse("The calculated property with the same name should 'become' checked.", copy.getSecondTick().isChecked(MasterEntity.class, "calcProp5"));
     }
 }

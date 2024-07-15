@@ -4,6 +4,7 @@ import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
@@ -14,18 +15,18 @@ import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.menu.validators.UserAsConfigurationOwnerValidator;
 import ua.com.fielden.platform.security.user.User;
+
 /**
- * Master entity object.
+ * An entity that models a module menu item invisibility.
  *
- * @author Developers
+ * @author TG Team
  *
  */
 @KeyType(DynamicEntityKey.class)
-@CompanionObject(IWebMenuItemInvisibility.class)
+@CompanionObject(WebMenuItemInvisibilityCo.class)
 @MapEntityTo
+@DenyIntrospection
 public class WebMenuItemInvisibility extends AbstractPersistentEntity<DynamicEntityKey> {
-
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @CompositeKeyMember(1)
@@ -36,7 +37,7 @@ public class WebMenuItemInvisibility extends AbstractPersistentEntity<DynamicEnt
 
     @IsProperty
     @CompositeKeyMember(2)
-    @Title(value = "Menu item URI", desc = "Menu item URI invisible to the user that is based on owning user.")
+    @Title(value = "Menu item URI", desc = "Menu item URI invisible to the user that is based on the owning user.")
     @MapTo
     private String menuItemUri;
 

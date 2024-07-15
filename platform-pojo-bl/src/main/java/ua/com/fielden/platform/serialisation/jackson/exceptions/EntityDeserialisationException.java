@@ -1,12 +1,14 @@
 package ua.com.fielden.platform.serialisation.jackson.exceptions;
 
+import ua.com.fielden.platform.exceptions.AbstractPlatformRuntimeException;
+
 /**
  * A runtime exception to indicate any errors pertaining to entity deserialisation.
  * 
  * @author TG Team
  *
  */
-public class EntityDeserialisationException extends RuntimeException {
+public class EntityDeserialisationException extends AbstractPlatformRuntimeException {
 
     private static final long serialVersionUID = 1L;
 

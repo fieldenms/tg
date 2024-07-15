@@ -1,11 +1,16 @@
 package ua.com.fielden.platform.web.view.master.attachments;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
+import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.MOBILE;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.TABLET;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 import static ua.com.fielden.platform.web.view.master.api.actions.MasterActions.REFRESH;
 import static ua.com.fielden.platform.web.view.master.api.actions.MasterActions.SAVE;
+import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -19,7 +24,6 @@ import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
-import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.utils.StreamUtils;
 import ua.com.fielden.platform.web.PrefDim;
@@ -43,7 +47,7 @@ import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
  * <li> Automatically register uploaded files as attachments (i.e. instances of type {@link Attachment}) if they did not exist previously.
  * <li> Associate attachments that correspond to successfully uploaded files with an entity that is determined from the context (either master or selected entity).
  * </ul>
- * 
+ *
  * @author TG Team
  */
 public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadAction> {
@@ -51,10 +55,10 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
     private final IRenderable renderable;
     private final FlexLayout actionBarLayout = new FlexLayout("actions");
     private final List<AttachmentsUploadActionMasterEntityActionConfig> entityActions = new ArrayList<>();
-    
+
 
     public AttachmentsUploadActionMaster(final PrefDim dims, final int fileSizeLimitKb, final String mimeType, final String... moreMimeTypes) {
-        final LinkedHashSet<String> importPaths = CollectionUtil.linkedSetOf(
+        final LinkedHashSet<String> importPaths = linkedSetOf(
                 "file_operations/tg-attachment-uploader-list",
                 "layout/tg-flex-layout",
                 "master/actions/tg-action");
@@ -62,20 +66,21 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
         final String mimeTypesAccepted = StreamUtils.of(mimeType, moreMimeTypes).collect(Collectors.joining(","));
         final DomElement attachmentUploaderList = new DomElement("tg-attachment-uploader-list")
                 .attr("id", "attachmentUploader")
-                .attr("class", "property-editors")
+                .attr("slot", "property-editors")
                 .attr("entity", "[[_currBindingEntity]]")
                 .attr("upload-size-limit-kb", fileSizeLimitKb)
                 .attr("mime-types-accepted", mimeTypesAccepted)
-                .attr("url", "/upload-attachment");
-        
+                .attr("url", "/upload-attachment")
+                .attr("event-source-class", "ua.com.fielden.platform.web.rx.eventsources.ProcessingProgressEventSource");
+
         addMasterAction(REFRESH).shortDesc("CANCEL").longDesc("Cancel attaching files");
         addMasterAction(SAVE).shortDesc("ATTACH").longDesc("Attach uploaded files");
-        
+
         setActionBarLayoutFor(DESKTOP, Optional.empty(), mkActionLayoutForMaster());
         setActionBarLayoutFor(TABLET, Optional.empty(), mkActionLayoutForMaster());
         setActionBarLayoutFor(MOBILE, Optional.empty(), mkActionLayoutForMaster());
-        
-        final DomElement actionContainer = actionBarLayout.render().clazz("action-bar");
+
+        final DomElement actionContainer = actionBarLayout.render().attr("slot", "action-bar");
         final StringBuilder shortcuts = new StringBuilder();
         final StringBuilder entityActionsStr = new StringBuilder();
         for (final AttachmentsUploadActionMasterEntityActionConfig config : entityActions) {
@@ -90,26 +95,26 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
                 entityActionsStr.append(((IExecutable) config.action()).code().toString());
             }
         }
-        
+
         final DomElement elementContainer = new DomContainer().add(attachmentUploaderList, actionContainer);
-        
+
         final StringBuilder prefDimBuilder = new StringBuilder();
         prefDimBuilder.append(format("{'width': function() {return %s}, 'height': function() {return %s}, 'widthUnit': '%s', 'heightUnit': '%s'}", dims.width, dims.height, dims.widthUnit.value, dims.heightUnit.value));
-        
-        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
-                .replace("<!--@imports-->", SimpleMasterBuilder.createImports(importPaths))
-                .replace("@entity_type", AttachmentsUploadAction.class.getSimpleName())
+
+        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
+                .replace(IMPORTS, createImports(importPaths))
+                .replace(ENTITY_TYPE, flattenedNameOf(AttachmentsUploadAction.class))
                 .replace("<!--@tg-entity-master-content-->", elementContainer.toString())
                 .replace("//generatedPrimaryActions", "")
-                .replace("//@ready-callback", 
-                         actionBarLayout.code().toString() + "\n" + 
-                         entityActionsStr.toString() + "\n" + 
+                .replace("//@ready-callback",
+                         actionBarLayout.code().toString() + "\n" +
+                         entityActionsStr.toString() + "\n" +
                          uploaderListEventHandling())
                 .replace("@SHORTCUTS", shortcuts)
                 .replace("@prefDim", prefDimBuilder.toString())
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", "false") // true would save action upon retrieval, which is not what we need... I think...
-                .replace("//@master-has-been-attached-custom-code", "self.$.attachmentUploader.clearListOfFilesToUpload();\n"); // the same master is reused, hence the need to clear the list of previously uploaded files 
+                .replace("//@master-has-been-attached-custom-code", "self.$.attachmentUploader.clearListOfFilesToUpload();\n"); // the same master is reused, hence the need to clear the list of previously uploaded files
 
         renderable = () -> new InnerTextElement(entityMasterStr);
     }
@@ -117,7 +122,7 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
     private String uploaderListEventHandling() {
         return  "// Overridden to support hidden property conversion on the client-side ('attachmentIds').\n"
                 + "self._isNecessaryForConversion = function (propertyName) {\n"
-                + "    return ['attachmentIds'].indexOf(propertyName) !== -1;\n" 
+                + "    return ['attachmentIds'].indexOf(propertyName) !== -1;\n"
                 + "};\n\n"
                 + "//register listeners for attachment uploading\n"
                 + "const uploaderList = self.$.attachmentUploader;\n"
@@ -144,8 +149,8 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
                 + "    //uploaderList.attachments.forEach( att => console.log('Attachment: id=', att.id, 'fileName:', att.origFileName, 'SHA1:', att.sha1) );\n"
                 + "    const ids = uploaderList.attachments.map(att => att.id);\n"
                 + "    self._currBindingEntity.setAndRegisterPropertyTouch('attachmentIds', ids);\n"
-                + "    uploaderList.classList.remove('canLeave');\n"                
-                + "    self.edit();\n"                
+                + "    uploaderList.classList.remove('canLeave');\n"
+                + "    self.edit();\n"
                 + "    self._toastGreeting().text = 'Uploaded ' + uploaderList.numberOfUploaded +' / Failed ' + uploaderList.numberOfFailed +' / Aborted ' + uploaderList.numberOfAborted;\n"
                 + "    self._toastGreeting().hasMore = false;\n"
                 + "    self._toastGreeting().showProgress = false;\n"
@@ -153,7 +158,7 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
                 + "    self._toastGreeting().isCritical = false;\n"
                 + "    self._toastGreeting().show();\n"
                 + "};\n";
-                
+
     }
 
     @Override
@@ -162,7 +167,7 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
     }
 
     protected AttachmentsUploadActionMasterEntityActionConfig addMasterAction(final MasterActions masterAction) {
-        final DefaultEntityAction defaultEntityAction = new DefaultEntityAction(masterAction.name(), SimpleMasterBuilder.getPostAction(masterAction), SimpleMasterBuilder.getPostActionError(masterAction));
+        final DefaultEntityAction<AttachmentsUploadAction> defaultEntityAction = new DefaultEntityAction<>(masterAction.name(), AttachmentsUploadAction.class, SimpleMasterBuilder.getPostAction(masterAction), SimpleMasterBuilder.getPostActionError(masterAction));
         final Optional<String> shortcut = SimpleMasterBuilder.getShortcut(masterAction);
         if (shortcut.isPresent()) {
             defaultEntityAction.setShortcut(shortcut.get()); // default value of shortcut if present
@@ -188,12 +193,12 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
         final String MARGIN_PIX_FOR_MASTER_ACTION = "10px";
         final String MASTER_ACTION_LAYOUT_SPECIFICATION = "'horizontal', 'padding: " + MARGIN_PIX_FOR_MASTER_ACTION + "', 'wrap', 'justify-content: center',";
         final String MASTER_ACTION_SPECIFICATION = StandardMastersWebUiConfig.MASTER_ACTION_SPECIFICATION;
-        
+
         final StringBuilder layout = new StringBuilder();
         layout.append("[").append(MASTER_ACTION_LAYOUT_SPECIFICATION).append(",[").append(MASTER_ACTION_SPECIFICATION).append("],[").append(MASTER_ACTION_SPECIFICATION).append("]]");
         return layout.toString();
     }
-    
+
     @Override
     public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
         throw new UnsupportedOperationException("Getting an action configuration is not supported.");

@@ -5,6 +5,7 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Readonly;
+import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
@@ -35,6 +36,7 @@ public abstract class ActivatableAbstractEntity<K extends Comparable<K>> extends
     @MapTo
     @Title(value = "Ref Count", desc = "The count of active entities pointing to this entity.")
     @Readonly
+    @Required
     @GreaterOrEqual(0)
     private Integer refCount = 0;
 

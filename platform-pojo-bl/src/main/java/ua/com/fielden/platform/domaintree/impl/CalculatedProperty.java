@@ -14,8 +14,8 @@ import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresen
 import java.lang.reflect.Field;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.WordUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.WordUtils;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
@@ -36,12 +36,15 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Optional;
 import ua.com.fielden.platform.entity.annotation.Readonly;
+import ua.com.fielden.platform.entity.annotation.SkipDefaultStringKeyMemberValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.entity.validation.RestrictCommasValidator;
+import ua.com.fielden.platform.entity.validation.RestrictExtraWhitespaceValidator;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
 import ua.com.fielden.platform.expression.ast.AstNode;
@@ -91,6 +94,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
     // revalidates "originationProperty" to ensure that it is correct after "contextualExpression" has been changed
     @BeforeChange(@Handler(BceContextualExpressionValidation.class))
     @AfterChange(AceCalculatedPropertyMetaInformationPopulation.class)
+    @SkipDefaultStringKeyMemberValidation(RestrictCommasValidator.class)
     private String contextualExpression;
 
     @IsProperty
@@ -98,6 +102,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
     @Title(value = "Title", desc = "Calculated property title")
     @BeforeChange(@Handler(BceTitleValidation.class))
     @AfterChange(AceCalculatedPropertyNamePopulation.class)
+    @SkipDefaultStringKeyMemberValidation({RestrictExtraWhitespaceValidator.class, RestrictCommasValidator.class})
     private String title;
 
     // Required contextually and mutable stuff
@@ -145,13 +150,13 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
         key.addKeyMemberComparator(1, new ClassComparator());
         setKey(key);
     }
-    
+
     /**
      * Copy function for {@link CalculatedProperty} taking benefit from shared 'ast' instance and other derived information.
      * <p>
      * This is to be used for performance-friendly copying of {@link DomainTreeEnhancer} without unnecessary parsing of {@link CalculatedProperty#getContextualExpression()},
      * which is costly operation.
-     * 
+     *
      * @param calculatedProperty
      * @param enhancer -- {@link DomainTreeEnhancer} instance to be associated with copied instance
      */
@@ -173,7 +178,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
         copy.scale = scale;
         return copy;
     }
-    
+
     private Class<?> determineType(final String path) {
         return StringUtils.isEmpty(path) ? this.root : PropertyTypeDeterminator.determinePropertyType(this.root, path);
     }
@@ -587,9 +592,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
     }
 
     protected Object enhancer() {
-        if (enhancer instanceof DomainTreeEnhancer0) {
-            return enhancer;
-        } else if (enhancer instanceof DomainTreeEnhancer) {
+        if (enhancer instanceof DomainTreeEnhancer) {
             return enhancer;
         } else if (enhancer instanceof DomainTreeEnhancerWithPropertiesPopulation) {
             return ((DomainTreeEnhancerWithPropertiesPopulation) enhancer).baseEnhancer();
@@ -729,8 +732,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
     private static void validateCalculatedPropertyKey1(final CalculatedProperty calculatedPropertyToCheck, final String newPathAndName) {
         final Class<?> root = calculatedPropertyToCheck.getRoot();
 
-        final ICalculatedProperty calculatedProperty = (calculatedPropertyToCheck.enhancer() instanceof DomainTreeEnhancer) ? (((DomainTreeEnhancer) calculatedPropertyToCheck.enhancer()).calculatedProperty(root, newPathAndName))
-                : ((DomainTreeEnhancer0) calculatedPropertyToCheck.enhancer()).calculatedProperty(root, newPathAndName);
+        final ICalculatedProperty calculatedProperty = (((DomainTreeEnhancer) calculatedPropertyToCheck.enhancer()).calculatedProperty(root, newPathAndName));
         if (calculatedProperty != null) {
             if (calculatedProperty == calculatedPropertyToCheck) {
                 // this is the same property!
@@ -814,6 +816,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
         return this;
     }
 
+    @Override
     public Integer getScale() {
         return scale;
     }
@@ -824,6 +827,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
         return this;
     }
 
+    @Override
     public Integer getPrecision() {
         return precision;
     }

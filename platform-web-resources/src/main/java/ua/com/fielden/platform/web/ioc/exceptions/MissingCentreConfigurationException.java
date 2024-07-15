@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.ioc.exceptions;
 
-public class MissingCentreConfigurationException extends RuntimeException {
+import ua.com.fielden.platform.exceptions.AbstractPlatformRuntimeException;
+
+public class MissingCentreConfigurationException extends AbstractPlatformRuntimeException {
     private static final long serialVersionUID = 1L;
 
     public MissingCentreConfigurationException(final String msg) {
@@ -10,4 +12,5 @@ public class MissingCentreConfigurationException extends RuntimeException {
     public MissingCentreConfigurationException(final String msg, final Throwable cause) {
         super(msg, cause);
     }
+
 }

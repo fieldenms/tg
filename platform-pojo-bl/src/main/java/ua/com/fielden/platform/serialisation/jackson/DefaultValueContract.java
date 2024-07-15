@@ -3,6 +3,7 @@ package ua.com.fielden.platform.serialisation.jackson;
 import static java.lang.Boolean.FALSE;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_DISPLAY_AS;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_LENGTH;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_PRECISION;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_SCALE;
@@ -18,12 +19,12 @@ import ua.com.fielden.platform.entity.annotation.DateOnly;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.TimeOnly;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum;
+import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.snappy.DateRangePrefixEnum;
-import ua.com.fielden.snappy.MnemonicEnum;
 
 /**
  * A set of utilities to determine if the value of some property or meta-info is default. It is used internally for Jackson entity serialiser to significantly reduce the amount of
@@ -33,9 +34,11 @@ import ua.com.fielden.snappy.MnemonicEnum;
  *
  */
 public class DefaultValueContract {
+    private static final String UTC = "UTC";
+
     private DefaultValueContract() {
     }
-    
+
     ///////////////////////////////////////////////// prevValue /////////////////////////////////////////////////
     /**
      * Returns <code>true</code> if the value of <code>prevValue</code> property is default, <code>false</code> otherwise.
@@ -73,7 +76,7 @@ public class DefaultValueContract {
     public static int getValueChangeCountDefault() {
         return 0;
     }
-    
+
     /**
      * Returns <code>true</code> if the value of <code>valueChangeCount</code> property is default, <code>false</code> otherwise.
      *
@@ -117,7 +120,18 @@ public class DefaultValueContract {
      */
     public static String getTimeZone(final Class<?> entityType, final String propertyName) {
         final PersistentType persistentType = AnnotationReflector.getPropertyAnnotation(PersistentType.class, entityType, propertyName);
-        return persistentType != null && persistentType.userType().equals(IUtcDateTimeType.class) ? "UTC" : null;
+        return persistentType != null && persistentType.userType().equals(IUtcDateTimeType.class) ? UTC : null;
+    }
+
+    /**
+     * Indicates whether the property has UTC indicator on it.
+     *
+     * @param entityType
+     * @param propertyName
+     * @return
+     */
+    public static boolean isUtc(final Class<?> entityType, final String propertyName) {
+        return UTC.equals(getTimeZone(entityType, propertyName));
     }
 
     /**
@@ -164,7 +178,7 @@ public class DefaultValueContract {
         }
         return t2(equalsEx(metaProperty.isChangedFromOriginal(), isChangedFromOriginalDefault()), empty());
     }
-    
+
     private static boolean isIdOnlyProxiedEntity(final Object value) {
         return value != null && ((AbstractEntity<?>) value).isIdOnlyProxy();
     }
@@ -229,7 +243,7 @@ public class DefaultValueContract {
      * @return
      */
     public static <M> Result getValidationResult(final MetaProperty<M> metaProperty) {
-        return !metaProperty.isValid() ? metaProperty.getFirstFailure() : metaProperty.getFirstWarning();
+        return !metaProperty.isValid() ? metaProperty.getFirstFailure() : metaProperty.getFirstValidResult();
     }
 
     /**
@@ -328,6 +342,16 @@ public class DefaultValueContract {
     }
 
     /**
+     * Returns the value that indicates whether displayAs property has default value or not.
+     *
+     * @param displayAs
+     * @return
+     */
+    public static final boolean isDisplayAsDefault(final String displayAs) {
+        return equalsEx(displayAs, DEFAULT_DISPLAY_AS);
+    }
+
+    /**
      * Returns <code>true</code> if the value of <code>ignore</code> property is default, <code>false</code> otherwise.
      *
      * @return
@@ -415,6 +439,15 @@ public class DefaultValueContract {
      */
     public static boolean isNotDefault(final Boolean not) {
         return not == null || FALSE.equals(not);
+    }
+
+    /**
+     * Returns <code>true</code> if the criterion value of <code>orGroup</code> is default, <code>false</code> otherwise.
+     *
+     * @return
+     */
+    public static boolean isOrGroupDefault(final Integer orGroup) {
+        return orGroup == null;
     }
 
     /**

@@ -1,9 +1,13 @@
 package ua.com.fielden.platform.expression.automata;
 
+import static org.apache.commons.lang3.RegExUtils.removeAll;
+
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.RegExUtils;
 
 /**
  * Non-deterministic automata implementation. The automata starts by invocation of method {@link #start(char)}, which either throws an exception or returns the next state. The
@@ -118,6 +122,7 @@ public class NonDeterministicAutomata {
      * @throws SequenceRecognitionFailed
      *             -- indicates failure to recognise any lexeme, the exception contains the value of posInOriginalSequence to facilitate error reporting.
      */
+    private static final Pattern WS = Pattern.compile("\\s");
     public String recognisePartiallyFromStart(final String input, final Integer posInOriginalSequence) throws SequenceRecognitionFailed {
         final char[] in = input.toCharArray();
         String result = null;
@@ -142,7 +147,7 @@ public class NonDeterministicAutomata {
 
         switch (postProcessingAction) {
         case REMOVE_WS:
-            return result.replaceAll("\\s", "");
+            return removeAll(result, WS);
         case TRIM:
             return result.trim();
         default:

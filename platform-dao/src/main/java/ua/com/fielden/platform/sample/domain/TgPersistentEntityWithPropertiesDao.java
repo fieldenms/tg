@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.sample.domain;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
+import static ua.com.fielden.platform.error.Result.failure;
 
 import java.util.Collection;
 import java.util.Date;
@@ -71,12 +73,15 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
             if (!res.isSuccessful()) { // throw precise exception about the validation error
                 throw new IllegalArgumentException(format("Modification failed: %s", res.getMessage()));
             }
+            if (entity.getRequiredValidatedProp() == 55) {
+                throw failure("Saving failed with exception.");
+            }
         }
-        
-        
+
+
         // IMPORTANT: the following IF statement needs to be turned off (e.g. commented or && false added to the condition) for the purpose of running web unit test.
         // let's demonstrate a simple approach to implementing user's warning acknowledgement
-        // this example, albeit artificially, also demonstrates not just one but two sequential requests for additional user input in a form of acknowledgement 
+        // this example, albeit artificially, also demonstrates not just one but two sequential requests for additional user input in a form of acknowledgement
         if (entity.hasWarnings() && false) {
             if (!moreData("acknowledgedForTheFirstTime").isPresent()) {
                 throw new NeedMoreData("Warnings need acknowledgement (first time)", AcknowledgeWarnings.class, "acknowledgedForTheFirstTime");
@@ -92,29 +97,29 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
                 }
             }
         }
-        
-        
+
+
         final boolean wasNew = false; // !entity.isPersisted();
         final TgPersistentEntityWithProperties saved = super.save(entity);
         changeSubject.publish(saved);
-        
+
         if (!wasPersisted) {
             final Date dateValue = saved.getDateProp();
             if (dateValue != null && new DateTime(2003, 2, 1, 6, 22).equals(new DateTime(dateValue))) {
                 throw new IllegalArgumentException(format("Creation failed: [1/2/3 6:22] date is not permitted."));
             }
         }
-        
+
         // if the entity was new and just successfully saved then let's return a new entity to mimic "continuous" entry
         // otherwise simply return the same entity
-        if (wasNew && saved.isValid().isSuccessful()) {
+        if (wasNew && saved.isValid(validateWithoutCritOnly).isSuccessful()) {
             final TgPersistentEntityWithProperties newEntity = saved.getEntityFactory().newEntity(TgPersistentEntityWithProperties.class);
             // the following two lines can be uncommented to simulate the situation of an invalid new entity returned from save
             //newEntity.setRequiredValidatedProp(1);
             //newEntity.setRequiredValidatedProp(null);
             return newEntity;
         }
-        
+
         return saved;
     }
 
@@ -144,13 +149,14 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
                 .with("domainInitProp", "nonConflictingProp", "conflictingProp")
                 // .with("entityProp", EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("key"))
                 .with("userParam", "userParam.basedOnUser")
-                .with("entityProp", "entityProp.entityProp", "entityProp.compositeProp", "entityProp.compositeProp.desc", "entityProp.booleanProp")
+                .with("entityProp.completed", "entityProp.entityProp.completed", "entityProp.compositeProp", "entityProp.compositeProp.desc", "entityProp.booleanProp", "entityProp.stringProp")
                 //                .with("status")
                 .with("critOnlyEntityProp")
                 .with("compositeProp", "compositeProp.desc")
                 // .with("producerInitProp", EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("key")
-                .with("producerInitProp", "status.key", "status.desc")
+                .with("producerInitProp.completed", "status.key", "status.desc")
                 .with("colourProp", "hyperlinkProp")
+                .with("completed")
                 .with("idOnlyProxyProp"); //
     }
 
@@ -160,8 +166,14 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
         final TgPersistentEntityWithPropertiesAttachment entityAttachment = co$.new_()
                 .setMaster(entity)
                 .setAttachment(attachment);
-        
+
         return co$.findByEntityAndFetchOptional(co$.getFetchProvider().fetchModel(), entityAttachment)
-                  .orElseGet(() -> co$.save(entityAttachment));        
+                  .orElseGet(() -> co$.save(entityAttachment));
     }
+
+    @Override
+    public TgPersistentEntityWithProperties new_() {
+        return super.new_().setCompleted(false);
+    }
+
 }

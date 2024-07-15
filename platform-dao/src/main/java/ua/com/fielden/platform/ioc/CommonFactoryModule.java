@@ -19,13 +19,8 @@ import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
  */
 public class CommonFactoryModule extends PropertyFactoryModule {
 
-    public CommonFactoryModule(final Properties props, final Map<Class, Class> defaultHibernateTypes, final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes)
-            throws Exception {
+    public CommonFactoryModule(final Properties props, final Map<Class, Class> defaultHibernateTypes, final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes) {
         super(props, defaultHibernateTypes, applicationEntityTypes);
-    }
-
-    public CommonFactoryModule(final SessionFactory sessionFactory, final DomainMetadata domainMetadata, final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
-        super(sessionFactory, domainMetadata, idOnlyProxiedEntityTypeCache);
     }
 
     protected EntityFactory getEntityFactory() {

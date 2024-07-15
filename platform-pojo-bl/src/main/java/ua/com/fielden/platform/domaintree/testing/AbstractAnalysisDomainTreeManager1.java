@@ -1,12 +1,11 @@
 package ua.com.fielden.platform.domaintree.testing;
 
-import java.nio.ByteBuffer;
 import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AbstractAnalysisDomainTreeRepresentation;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 
 /**
  * Test implementation of abstract analysis manager.
@@ -18,23 +17,23 @@ public class AbstractAnalysisDomainTreeManager1 extends AbstractAnalysisDomainTr
     /**
      * A <i>manager</i> constructor for the first time instantiation.
      * 
-     * @param serialiser
+     * @param entityFactory
      * @param rootTypes
      */
-    public AbstractAnalysisDomainTreeManager1(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-        this(serialiser, new AbstractAnalysisDomainTreeRepresentation1(serialiser, rootTypes), null, new AbstractAnalysisAddToDistributionTickManager1(), new AbstractAnalysisAddToAggregationTickManager1());
+    public AbstractAnalysisDomainTreeManager1(final EntityFactory entityFactory, final Set<Class<?>> rootTypes) {
+        this(entityFactory, new AbstractAnalysisDomainTreeRepresentation1(entityFactory, rootTypes), null, new AbstractAnalysisAddToDistributionTickManager1(), new AbstractAnalysisAddToAggregationTickManager1());
     }
 
     /**
      * A <i>manager</i> constructor.
      * 
-     * @param serialiser
+     * @param entityFactory
      * @param dtr
      * @param firstTick
      * @param secondTick
      */
-    protected AbstractAnalysisDomainTreeManager1(final ISerialiser serialiser, final AbstractAnalysisDomainTreeRepresentation dtr, final Boolean visible, final AbstractAnalysisAddToDistributionTickManager1 firstTick, final AbstractAnalysisAddToAggregationTickManager1 secondTick) {
-        super(serialiser, dtr, visible, firstTick, secondTick);
+    protected AbstractAnalysisDomainTreeManager1(final EntityFactory entityFactory, final AbstractAnalysisDomainTreeRepresentation dtr, final Boolean visible, final AbstractAnalysisAddToDistributionTickManager1 firstTick, final AbstractAnalysisAddToAggregationTickManager1 secondTick) {
+        super(entityFactory, dtr, visible, firstTick, secondTick);
     }
 
     @Override
@@ -69,27 +68,6 @@ public class AbstractAnalysisDomainTreeManager1 extends AbstractAnalysisDomainTr
          */
         public AbstractAnalysisAddToAggregationTickManager1() {
             super();
-        }
-    }
-
-    /**
-     * A specific Kryo serialiser for {@link AbstractAnalysisDomainTreeManager1}.
-     * 
-     * @author TG Team
-     * 
-     */
-    public static class AbstractAnalysisDomainTreeManager1Serialiser extends AbstractAnalysisDomainTreeManagerSerialiser<AbstractAnalysisDomainTreeManager1> {
-        public AbstractAnalysisDomainTreeManager1Serialiser(final ISerialiser serialiser) {
-            super(serialiser);
-        }
-
-        @Override
-        public AbstractAnalysisDomainTreeManager1 read(final ByteBuffer buffer) {
-            final AbstractAnalysisDomainTreeRepresentation1 dtr = readValue(buffer, AbstractAnalysisDomainTreeRepresentation1.class);
-            final AbstractAnalysisAddToDistributionTickManager1 firstTick = readValue(buffer, AbstractAnalysisAddToDistributionTickManager1.class);
-            final AbstractAnalysisAddToAggregationTickManager1 secondTick = readValue(buffer, AbstractAnalysisAddToAggregationTickManager1.class);
-            final Boolean visible = readValue(buffer, Boolean.class);
-            return new AbstractAnalysisDomainTreeManager1(serialiser(), dtr, visible, firstTick, secondTick);
         }
     }
 }

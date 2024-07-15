@@ -5,24 +5,26 @@
     <meta charset="utf-8">
     <title>Drag example</title>
 
-    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
-
-    <link rel="import" href="/resources/polymer/paper-input/paper-input.html">
-    <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
-    
-    <link rel="import" href="/resources/components/tg-drag-from-component-example.html">
-    <link rel="import" href="/resources/components/tg-drop-to-component-example.html">
-
-    <style>
-        html {
-            font-size: 10pt;
-        }
-        body {
-            font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 10pt;
-        }
-    </style>
-
+    <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js'></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/filesaver/FileSaver.min.js"></script>
+    <script type="module">
+        import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js'; // fullbleed class
+        import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js'; // Roboto font
+        import '/resources/components/tg-drag-from-component-example.js';
+        import '/resources/components/tg-drop-to-component-example.js';
+    </script>
+    <custom-style>
+        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning">
+            html {
+                font-size: 10pt;
+            }
+            body {
+                font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 10pt;
+            }
+        </style>
+    </custom-style>
 </head>
 
 <body unresolved class="layout horizontal">

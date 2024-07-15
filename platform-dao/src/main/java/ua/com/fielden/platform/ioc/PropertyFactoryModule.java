@@ -7,7 +7,7 @@ import java.util.Properties;
 import org.hibernate.SessionFactory;
 
 import com.google.inject.Injector;
-import com.google.inject.Scopes;
+import com.google.inject.Singleton;
 
 import ua.com.fielden.platform.dao.CommonEntityAggregatesDao;
 import ua.com.fielden.platform.dao.EntityAggregatesDao;
@@ -39,19 +39,14 @@ public class PropertyFactoryModule extends TransactionalModule {
         initHibernateConfig(entityFactory);
     }
 
-    public PropertyFactoryModule(final SessionFactory sessionFactory, final DomainMetadata domainMetadata, final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
-        super(sessionFactory, domainMetadata, idOnlyProxiedEntityTypeCache);
-        entityFactory = new EntityFactory() {};
-    }
-
     @Override
     protected void configure() {
         super.configure();
         bind(EntityFactory.class).toInstance(entityFactory);
-        // bind provider for default entity controller
-        bind(ICompanionObjectFinder.class).to(DefaultCompanionObjectFinderImpl.class);
+        // bind provider for the default CO finder in singleton scope
+        bind(ICompanionObjectFinder.class).to(DefaultCompanionObjectFinderImpl.class).in(Singleton.class);
         // bind property factory
-        bind(IMetaPropertyFactory.class).to(DefaultMetaPropertyFactory.class).in(Scopes.SINGLETON);
+        bind(IMetaPropertyFactory.class).to(DefaultMetaPropertyFactory.class).in(Singleton.class);
         // bind entity aggregates DAO
         bind(IEntityAggregatesOperations.class).to(EntityAggregatesDao.class);
         bind(IEntityAggregates.class).to(CommonEntityAggregatesDao.class);

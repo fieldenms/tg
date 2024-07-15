@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * A data structure to capture a value for a multi-valued kind criterion of type string, which covers mutli-valued criteria of an entity type.
+ * A data structure to capture a value for a multi-valued kind criterion of type string, which covers multi-valued criteria of an entity type.
  * Its main, but not restricted to, purpose is to specify default criteria values that could carry both the actual values and meta-values to
  * describe the multi-valued criteria conditions.
  *

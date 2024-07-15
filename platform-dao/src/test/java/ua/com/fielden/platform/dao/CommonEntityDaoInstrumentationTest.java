@@ -84,20 +84,6 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void by_default_first_page_returns_instrumented_instances() {
-        final List<EntityWithMoney> entities = co$(EntityWithMoney.class).firstPage(10).data();
-        assertTrue(entities.size() > 0);
-        assertEquals("All entities are instrumented", entities.size(), entities.stream().filter(e -> e.isInstrumented()).count());
-    }
-
-    @Test
-    public void uninstrumented_first_page_returns_uninstrumented_instances() {
-        final List<EntityWithMoney> entities = co(EntityWithMoney.class).firstPage(10).data();
-        assertTrue(entities.size() > 0);
-        assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
-    }
-
-    @Test
     public void by_default_first_page_with_EQL_model_returns_instrumented_instances() {
         final QueryExecutionModel<EntityWithMoney, EntityResultQueryModel<EntityWithMoney>> qem = 
                 from(select(EntityWithMoney.class).where().prop("money.amount").gt().val(20).model())
@@ -141,28 +127,6 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
                 .with(orderBy().prop("key").asc().model()).lightweight().model();
 
         final List<EntityWithMoney> entities = co(EntityWithMoney.class).firstPage(qem, 10).data();
-        assertTrue(entities.size() > 0);
-        assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
-    }
-
-
-    @Test
-    public void by_default_get_page_returns_instrumented_instances() {
-        final List<EntityWithMoney> entities = co$(EntityWithMoney.class).getPage(1, 2).data();
-        assertTrue(entities.size() > 0);
-        assertEquals("All entities are instrumented", entities.size(), entities.stream().filter(e -> e.isInstrumented()).count());
-    }
-
-    @Test
-    public void uninstrumented_get_page_returns_uninstrumented_instances() {
-        final List<EntityWithMoney> entities = co(EntityWithMoney.class).getPage(1, 2).data();
-        assertTrue(entities.size() > 0);
-        assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
-    }
-
-    @Test
-    public void next_on_uninstrumented_get_page_returns_uninstrumented_instances() {
-        final List<EntityWithMoney> entities = co(EntityWithMoney.class).getPage(0, 2).next().data();
         assertTrue(entities.size() > 0);
         assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
     }

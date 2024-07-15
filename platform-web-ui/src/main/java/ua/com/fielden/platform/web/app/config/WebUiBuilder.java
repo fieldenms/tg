@@ -1,25 +1,26 @@
 package ua.com.fielden.platform.web.app.config;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
+import static org.apache.logging.log4j.LogManager.getLogger;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
-import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
@@ -29,7 +30,7 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  *
  */
 public class WebUiBuilder implements IWebUiBuilder {
-    private final Logger logger = Logger.getLogger(getClass());
+    private final Logger logger = getLogger(getClass());
     /**
      * The {@link IWebUiConfig} instance for which this configuration object was created.
      */
@@ -40,6 +41,9 @@ public class WebUiBuilder implements IWebUiBuilder {
     private String dateFormat = "DD/MM/YYYY";
     private String timeFormat = "h:mm A";
     private String timeWithMillisFormat = "h:mm:ss.SSS A";
+    private Optional<String> panelColor = Optional.empty();
+    private Optional<String> watermark = Optional.empty();
+    private Optional<String> watermarkStyle = Optional.empty();
 
     /**
      * Holds the map between master's entity type and its master component.
@@ -113,9 +117,9 @@ public class WebUiBuilder implements IWebUiBuilder {
         final Optional<EntityMaster<T>> masterOptional = getMaster(master.getEntityType());
         if (masterOptional.isPresent()) {
             if (masterOptional.get() != master) {
-                throw new WebUiBuilderException(String.format("The master configuration for type [%s] has been already registered.", master.getEntityType().getSimpleName()));
+                throw new WebUiBuilderException(format("The master configuration for type [%s] has been already registered.", master.getEntityType().getSimpleName()));
             } else {
-                logger.info(String.format("There is a try to register exactly the same master configuration instance for type [%s], that has been already registered.", master.getEntityType().getSimpleName()));
+                logger.debug(format("\tThere is a try to register exactly the same master configuration instance for type [%s], that has been already registered.", master.getEntityType().getSimpleName()));
                 return this;
             }
         } else {
@@ -166,13 +170,14 @@ public class WebUiBuilder implements IWebUiBuilder {
         final Optional<EntityCentre<?>> centreOptional = getCentre(centre.getMenuItemType());
         if (centreOptional.isPresent()) {
             if (centreOptional.get() != centre) {
-                throw new WebUiBuilderException(String.format("The centre configuration for type [%s] has been already registered.", centre.getMenuItemType().getSimpleName()));
+                throw new WebUiBuilderException(format("The centre configuration for type [%s] has been already registered.", centre.getMenuItemType().getSimpleName()));
             } else {
-                logger.info(format("There is a try to register exactly the same centre configuration instance for type [%s], that has been already registered.", centre.getMenuItemType().getSimpleName()));
+                logger.debug(format("\tThere is a try to register exactly the same centre configuration instance for type [%s], that has been already registered.", centre.getMenuItemType().getSimpleName()));
                 return this;
             }
         } else {
             centreMap.put(centre.getMenuItemType(), centre);
+            centre.eventSourceClass().ifPresent(eventSourceClass -> webUiConfig.createAndRegisterEventSource(eventSourceClass));
             return this;
         }
     }
@@ -205,23 +210,45 @@ public class WebUiBuilder implements IWebUiBuilder {
      *
      * @return
      */
-    public String genWebUiPrefComponent(final DeviceProfile deviceProfile) {
+    public String genWebUiPrefComponent() {
         if (this.minDesktopWidth <= this.minTabletWidth) {
             throw new IllegalStateException("The desktop width can not be less then or equal tablet width.");
         }
-        return ResourceLoader.getText("ua/com/fielden/platform/web/app/config/tg-app-config.html").
+        return ResourceLoader.getText("ua/com/fielden/platform/web/app/config/tg-app-config.js").
                 replace("@minDesktopWidth", Integer.toString(this.minDesktopWidth)).
                 replace("@minTabletWidth", Integer.toString(this.minTabletWidth)).
                 replace("@locale", "\"" + this.locale + "\"").
+                replace("@independentTimeZoneSetting", webUiConfig.independentTimeZone() ? format("moment.tz.setDefault('%s');", TimeZone.getDefault().getID()) : "").
                 replace("@dateFormat", "\"" + this.dateFormat + "\"").
                 replace("@timeFormat", "\"" + this.timeFormat + "\"").
                 replace("@timeWithMillisFormat", "\"" + this.timeWithMillisFormat + "\"").
-                replace("@mobile", Boolean.toString(MOBILE.equals(deviceProfile)));
+                replace("@masterActionOptions", "\"" + webUiConfig.masterActionOptions() + "\"");
+    }
+
+    public String getAppIndex(final IDates dates) {
+        return ResourceLoader.getText("ua/com/fielden/platform/web/index.html")
+                .replace("@panelColor", panelColor.map(val -> "--tg-main-pannel-color: " + val + ";").orElse(""))
+                .replace("@watermark", "'" + watermark.orElse("") + "'")
+                .replace("@cssStyle", watermarkStyle.orElse("") )
+                // Need to inject the first day of week, which is used by the date picker component to correctly render a weekly representation of a month.
+                // Because IDates use a number range from 1 to 7 to represent Mon to Sun and JS uses 0 for Sun, we need to convert the value coming from  IDates.
+                .replace("@firstDayOfWeek", String.valueOf(dates.startOfWeek() % 7));
     }
 
     @Override
     public IWebUiBuilder addCustomView(final AbstractCustomView customView) {
         viewMap.put(customView.getViewName(), customView);
+        return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public IWebUiBuilder withTopPanelStyle(final Optional<String> backgroundColour, final Optional<String> watermark, final Optional<String> cssWatermark) {
+        this.panelColor = backgroundColour;
+        this.watermark = watermark;
+        this.watermarkStyle = cssWatermark;
         return this;
     }
 }

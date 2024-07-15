@@ -6,7 +6,6 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 
 /**
  * Represent's menu item view.
@@ -17,7 +16,6 @@ import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 @KeyType(String.class)
 @CompanionObject(IView.class)
 public class View extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @Title("Import")

@@ -25,7 +25,6 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
-import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  * Key based value matcher, which supports context assignment.
@@ -58,7 +57,7 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
 
         final ConditionModel keyCriteria = createRelaxedSearchByKeyCriteriaModel(searchString);
 
-        return hasDescProperty(companion.getEntityType()) ? cond().condition(keyCriteria).or().prop(DESC).iLike().val("%" + searchString).model() : keyCriteria;
+        return hasDescProperty(companion.getEntityType()) ? cond().condition(keyCriteria).or().prop(DESC).iLike().val(searchString).model() : keyCriteria;
     }
 
     /**
@@ -80,7 +79,7 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
         return isNaturalOrderDescending(companion.getEntityType()) ? prop.desc().model() : prop.asc().model();
     }
 
-    private OrderingModel composeOrderingModelForQuery(final String searchString) {
+    protected final OrderingModel composeOrderingModelForQuery(final String searchString) {
         return "%".equals(searchString) ? makeOrderingModel(searchString)
                 : orderBy().expr(makeSearchResultOrderingPriority(companion.getEntityType(), searchString)).asc().order(makeOrderingModel(searchString)).model();
     }

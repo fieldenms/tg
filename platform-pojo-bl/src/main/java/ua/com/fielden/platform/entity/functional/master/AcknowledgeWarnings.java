@@ -23,7 +23,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
  *
  */
 @KeyType(NoKey.class)
-@CompanionObject(IAcknowledgeWarnings.class)
+@CompanionObject(AcknowledgeWarningsCo.class)
 @EntityTitle(value = "Acknowledge warnings", desc = "Acknowledge warnings of the current initiating entity")
 public class AcknowledgeWarnings extends AbstractFunctionalEntityWithCentreContext<NoKey> implements IContinuationData {
     

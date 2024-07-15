@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.test.config;
 
+import static java.util.Collections.unmodifiableSet;
+
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -16,55 +18,17 @@ import fielden.test_app.close_leave.TgCloseLeaveExampleMaster_OpenMain_MenuItem;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.sample.domain.EntityOne;
-import ua.com.fielden.platform.sample.domain.EntityTwo;
-import ua.com.fielden.platform.sample.domain.ExportAction;
-import ua.com.fielden.platform.sample.domain.TgBogie;
-import ua.com.fielden.platform.sample.domain.TgBogieLocation;
-import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
-import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
-import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
-import ua.com.fielden.platform.sample.domain.TgCoordinate;
-import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusAction;
-import ua.com.fielden.platform.sample.domain.TgDeletionTestEntity;
-import ua.com.fielden.platform.sample.domain.TgDummyAction;
-import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
-import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
-import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptor;
-import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
-import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
-import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext;
-import ua.com.fielden.platform.sample.domain.TgGeneratedEntity;
-import ua.com.fielden.platform.sample.domain.TgGeneratedEntityForTrippleDecAnalysis;
-import ua.com.fielden.platform.sample.domain.TgGeneratedEntityForTrippleDecAnalysisInsertionPoint;
-import ua.com.fielden.platform.sample.domain.TgIRStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgISStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgMachine;
-import ua.com.fielden.platform.sample.domain.TgMachineRealtimeMonitorMap;
-import ua.com.fielden.platform.sample.domain.TgMessage;
-import ua.com.fielden.platform.sample.domain.TgMessageMap;
-import ua.com.fielden.platform.sample.domain.TgONStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgOpenTrippleDecDetails;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit;
-import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
-import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
-import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithPropertiesAttachment;
-import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
-import ua.com.fielden.platform.sample.domain.TgPerson;
-import ua.com.fielden.platform.sample.domain.TgPolygon;
-import ua.com.fielden.platform.sample.domain.TgPolygonMap;
-import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgSelectedEntitiesExampleAction;
-import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgStop;
-import ua.com.fielden.platform.sample.domain.TgStopMap;
-import ua.com.fielden.platform.sample.domain.TgWagon;
-import ua.com.fielden.platform.sample.domain.TgWagonClass;
-import ua.com.fielden.platform.sample.domain.TgWagonSlot;
-import ua.com.fielden.platform.sample.domain.TgWorkshop;
-import ua.com.fielden.platform.sample.domain.UnionEntity;
+import ua.com.fielden.platform.sample.domain.*;
+import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity;
+import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityChild;
+import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityDetail;
+import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityLocator;
+import ua.com.fielden.platform.sample.domain.compound.master.menu.actions.TgCompoundEntityMaster_OpenMain_MenuItem;
+import ua.com.fielden.platform.sample.domain.compound.master.menu.actions.TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem;
+import ua.com.fielden.platform.sample.domain.compound.master.menu.actions.TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem;
+import ua.com.fielden.platform.sample.domain.compound.ui_actions.OpenTgCompoundEntityMasterAction;
 import ua.com.fielden.platform.sample.domain.stream_processors.DumpCsvTxtProcessor;
+import ua.com.fielden.platform.sample.domain.ui_actions.MakeCompletedAction;
 import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
 
@@ -106,6 +70,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgDummyAction.class);
         add(TgEntityWithPropertyDependency.class);
         add(TgEntityWithPropertyDescriptor.class);
+        add(TgEntityWithPropertyDescriptorExt.class);
         add(DumpCsvTxtProcessor.class);
         add(NewEntityAction.class);
         add(ExportAction.class);
@@ -116,31 +81,43 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgGeneratedEntityForTrippleDecAnalysisInsertionPoint.class);
         add(TgOpenTrippleDecDetails.class);
         add(OtherEntity.class);
+        add(MoreDataForDeleteEntity.class);
 
-        add(TgMessage.class);
-        add(TgMessageMap.class);
-
-        add(TgOrgUnit.class);
-        add(TgMachine.class);
-        add(TgMachineRealtimeMonitorMap.class);
-
-        add(TgStop.class);
-        add(TgStopMap.class);
-
-        add(TgPolygon.class);
-        add(TgCoordinate.class);
-        add(TgPolygonMap.class);
-
+        add(TgVehicle.class);
+        add(TgVehicleFinDetails.class);
+        add(TgVehicleModel.class);
+        add(TgVehicleMake.class);
+        add(TgVehicleFuelUsage.class);
+        add(TgOrgUnit1.class);
+        add(TgOrgUnit2.class);
+        add(TgOrgUnit3.class);
+        add(TgOrgUnit4.class);
+        add(TgOrgUnit5.class);
+        add(TeNamedValuesVector.class);
+        add(TeProductPrice.class);
+        add(TeVehicle.class);
+        add(TeVehicleFinDetails.class);
+        add(TeVehicleFuelUsage.class);
+        add(TeVehicleMake.class);
+        add(TeVehicleModel.class);
+        add(TgFuelType.class);
         add(UnionEntity.class);
+        add(UnionEntityWithoutSecondDescTitle.class);
         add(EntityOne.class);
         add(EntityTwo.class);
+        add(EntityThree.class);
 
         add(TgBogieLocation.class);
+        add(UnionEntityWithSkipExistsValidation.class);
+        add(EntityWithUnionEntityWithSkipExistsValidation.class);
         add(TgWorkshop.class);
         add(TgWagonSlot.class);
         add(TgWagon.class);
         add(TgBogie.class);
         add(TgWagonClass.class);
+        add(TgWagonClassCompatibility.class);
+        add(TgBogieClass.class);
+        add(TgFuelUsage.class);
         add(TgSelectedEntitiesExampleAction.class);
         add(TgCloseLeaveExample.class);
         add(OpenTgCloseLeaveExampleMasterAction.class);
@@ -149,6 +126,75 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgCloseLeaveExampleDetail.class);
         add(TgCloseLeaveExampleDetailUnpersisted.class);
         add(TgCloseLeaveExampleMaster_OpenDetailUnpersisted_MenuItem.class);
+        add(TgCompoundEntity.class);
+        add(TgCompoundEntityLocator.class);
+        add(TgCompoundEntityDetail.class);
+        add(TgCompoundEntityChild.class);
+        add(OpenTgCompoundEntityMasterAction.class);
+        add(TgCompoundEntityMaster_OpenMain_MenuItem.class);
+        add(TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem.class);
+        add(TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem.class);
+        add(TgFuelType.class);
+
+        add(TgEntityStringKey.class);
+        add(TgEntityBooleanKey.class);
+        add(TgEntityDateKey.class);
+        add(TgEntityIntegerKey.class);
+        add(TgEntityLongKey.class);
+        add(TgEntityEntityKey.class);
+        add(TgEntityCompositeKey.class);
+        add(TgEntityCompositeBooleanKey.class);
+        add(TgEntityTwoEntityKeys.class);
+        add(TgEntityBigDecimalKey.class);
+
+        add(TgWebApiEntity.class);
+        add(TgWebApiEntitySyntheticSingle.class);
+        add(TgWebApiEntitySyntheticMulti.class);
+
+        add(TgUnionHolder.class);
+        add(TgUnion.class);
+        add(TgUnionType1.class);
+        add(TgUnionType2.class);
+        add(TgUnionCommonType.class);
+
+        add(TgSynBogie.class);
+        add(MakeCompletedAction.class);
+
+        add(TgMeterReading.class);
+        add(TgReMaxVehicleReading.class);
+        add(TgPersonName.class);
+        add(TgAuthor.class);
+        add(TgAuthorship.class);
+        add(TgAuthorRoyalty.class);
+        add(TgReBogieWithHighLoad.class);
+        add(TgTimesheet.class);
+        add(TgReVehicleWithHighPrice.class);
+        add(TgVehicleTechDetails.class);
+        add(TgReVehicleModel.class);
+        add(TgMakeCount.class);
+        add(TgOrgUnit5WithSummaries.class);
+        add(TgWorkOrder.class);
+        add(TeWorkOrder.class);
+        add(TgModelCount.class);
+        add(TgModelYearCount.class);
+        add(TgPublishedYearly.class);
+        add(TgAverageFuelUsage.class);
+        add(TeAverageFuelUsage.class);
+        add(TeFuelUsageByType.class);
+        add(TgSystem.class);
+        add(TgSubSystem.class);
+        add(TgCategory.class);
+        add(TgAuthoriser.class);
+        add(TgOriginator.class);
+        add(TgEntityWithComplexSummaries.class);
+        add(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class);
+        add(TgCentreDiffSerialisation.class);
+        add(TgCentreDiffSerialisationPersistentChild.class);
+        add(TgCentreDiffSerialisationNonPersistentChild.class);
+        add(TgCentreDiffSerialisationNonPersistentCompositeChild.class);
+        add(TgCategoryAttachment.class);
+        add(TgDateTestEntity.class);
+
     }
 
     @Override
@@ -156,7 +202,12 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         return Collections.unmodifiableList(entityTypes.stream().collect(Collectors.toList()));
     }
 
-    public List<Class<? extends AbstractEntity<?>>> domainTypes() {
+    public static List<Class<? extends AbstractEntity<?>>> domainTypes() {
         return Collections.unmodifiableList(domainTypes.stream().collect(Collectors.toList()));
     }
+
+    public static Set<Class<? extends AbstractEntity<?>>> entityTypesSet() {
+        return unmodifiableSet(entityTypes);
+    }
+
 }

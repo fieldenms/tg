@@ -8,6 +8,8 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserEmailNotifierBindingModule;
+import ua.com.fielden.platform.utils.DefaultDates;
+import ua.com.fielden.platform.utils.DefaultUniversalConstants;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.webui.LoginCompleteResetResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.LoginInitiateResetResourceFactory;
@@ -37,7 +39,7 @@ public class TgTestApplicationConfiguration extends Component {
         try {
             // create application IoC module and injector
             final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
-            final TgTestWebApplicationServerModule module = new TgTestWebApplicationServerModule(HibernateSetup.getHibernateTypes(), applicationDomainProvider, applicationDomainProvider.domainTypes(), SerialisationClassProvider.class, ExampleDataFilter.class, props);
+            final TgTestWebApplicationServerModule module = new TgTestWebApplicationServerModule(HibernateSetup.getHibernateTypes(), applicationDomainProvider, applicationDomainProvider.domainTypes(), SerialisationClassProvider.class, ExampleDataFilter.class, DefaultUniversalConstants.class, DefaultDates.class, props);
             injector = new ApplicationInjectorFactory().add(module).add(new NewUserEmailNotifierBindingModule()).getInjector();
 
             // create and configure REST server utility

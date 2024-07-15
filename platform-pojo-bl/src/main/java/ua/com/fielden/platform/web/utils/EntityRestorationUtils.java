@@ -1,17 +1,27 @@
 package ua.com.fielden.platform.web.utils;
 
+import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.tabs;
 
 import java.util.Map;
+import java.util.function.Function;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
+import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.entity.EntityProducingException;
 import ua.com.fielden.platform.entity.IEntityProducer;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
@@ -28,9 +38,59 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  *
  */
 public class EntityRestorationUtils {
-    private static final Logger logger = Logger.getLogger(EntityRestorationUtils.class);
+    private static final String ENTITY_NOT_FOUND = "Entity [%s] could not be found.";
+    private static final Logger logger = getLogger(EntityRestorationUtils.class);
     
     ////////////////////////////////////// VALIDATION PROTOTYPE CREATION //////////////////////////////////////
+    /**
+     * Finds entity by <code>id</code> ensuring it will be filtered out by registered domain-driven application's {@link IFilter} if its logic defines such filtering.
+     * {@value #ENTITY_NOT_FOUND} {@link Result} is thrown if no entity was found. Default {@link IEntityReader#getFetchProvider()} will be used for fetch model construction.
+     * 
+     * @param id
+     * @param reader -- {@link IEntityReader} for entity reading; instrumented or not depending on actual needs
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> T findByIdWithFiltering(final Long id, final IEntityReader<T> reader) {
+        return findByIdWithFiltering(id, reader, reader.getFetchProvider().fetchModel());
+    }
+    
+    /**
+     * Finds entity by <code>id</code> ensuring it will be filtered out by registered domain-driven application's {@link IFilter} if its logic defines such filtering.
+     * {@value #ENTITY_NOT_FOUND} {@link Result} is thrown if no entity was found.
+     * 
+     * @param id
+     * @param reader -- {@link IEntityReader} for entity reading; instrumented or not depending on actual needs
+     * @param fetchModel -- custom fetch model
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> T findByIdWithFiltering(final Long id, final IEntityReader<T> reader, final fetch<T> fetchModel) {
+        return findWithFiltering((filtered) -> reader.findById(filtered, id, fetchModel), reader);
+    }
+    
+    /**
+     * Finds entity by <code>keyValues</code> ensuring it will be filtered out by registered domain-driven application's {@link IFilter} if its logic defines such filtering.
+     * {@value #ENTITY_NOT_FOUND} {@link Result} is thrown if no entity was found. Default {@link IEntityReader#getFetchProvider()} will be used for fetch model construction.
+     * 
+     * @param reader -- {@link IEntityReader} for entity reading; instrumented or not depending on actual needs
+     * @param keyValues
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> T findByKeyWithFiltering(final IEntityReader<T> reader, final Object... keyValues) {
+        return findWithFiltering((filtered) -> reader.findByKeyAndFetch(filtered, reader.getFetchProvider().fetchModel(), keyValues), reader);
+    }
+    
+    /**
+     * Finds entity using <code>finder</code> ensuring it will be filtered out by registered domain-driven application's {@link IFilter} if its logic defines such filtering.
+     * {@value #ENTITY_NOT_FOUND} {@link Result} is thrown if no entity was found.
+     * 
+     * @param finder -- function with 'filtered' argument to find entity
+     * @param reader -- {@link IEntityReader} for entity reading; instrumented or not depending on actual needs
+     * @return
+     */
+    private static <T extends AbstractEntity<?>> T findWithFiltering(final Function<Boolean, T> finder, final IEntityReader<T> reader) {
+        return ofNullable(finder.apply(true)).orElseThrow(() -> failure(format(ENTITY_NOT_FOUND, getEntityTitleAndDesc(reader.getEntityType()).getKey())));
+    }
+    
     /**
      * Constructs a validation prototype having an <code>id</code> and the <code>originallyProducedEntity</code> information.
      *
@@ -50,7 +110,7 @@ public class EntityRestorationUtils {
         }
         final T entity;
         if (id != null) {
-            entity = companion.findById(id, companion.getFetchProvider().fetchModel());
+            entity = findByIdWithFiltering(id, companion);
         } else if (originallyProducedEntity != null) {
             entity = originallyProducedEntity;
         } else {
@@ -58,7 +118,7 @@ public class EntityRestorationUtils {
         }
         return entity;
     }
-
+    
     /**
      * Constructs a validation prototype having an <code>id</code>, <code>originallyProducedEntity</code> and the <code>context</code> information.
      *
@@ -148,4 +208,5 @@ public class EntityRestorationUtils {
             final ICompanionObjectFinder companionFinder) {
         return new Pair<>(EntityResourceUtils.apply(modifiedPropertiesHolder, validationPrototype, companionFinder), modifiedPropertiesHolder);
     }
+    
 }

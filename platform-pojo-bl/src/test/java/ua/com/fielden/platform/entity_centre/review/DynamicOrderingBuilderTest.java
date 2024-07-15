@@ -16,16 +16,12 @@ import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedProperty
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
-import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache;
-import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.api.impl.SerialiserForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.Pair;
@@ -33,7 +29,7 @@ import ua.com.fielden.platform.utils.Pair;
 @SuppressWarnings({ "unchecked", "serial" })
 public class DynamicOrderingBuilderTest {
 
-    private final static ISerialiser serialiser = createSerialiser(createFactory());
+    private final static EntityFactory factory = createFactory();
 
     private static EntityFactory createFactory() {
         final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
@@ -41,14 +37,10 @@ public class DynamicOrderingBuilderTest {
         return injector.getInstance(EntityFactory.class);
     }
 
-    private static ISerialiser createSerialiser(final EntityFactory factory) {
-        return new SerialiserForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes(), DomainTreeEnhancerCache.CACHE);
-    }
-
     private static final Class<? extends AbstractEntity<?>> masterKlass;
 
     static {
-        final IDomainTreeEnhancer dte = new DomainTreeEnhancer(serialiser, new HashSet<Class<?>>() {
+        final IDomainTreeEnhancer dte = new DomainTreeEnhancer(factory, new HashSet<Class<?>>() {
             {
                 add(MasterEntity.class);
             }
@@ -81,8 +73,8 @@ public class DynamicOrderingBuilderTest {
 
     @Test
     public void test_that_ordering_builder_throws_NullPointerException_if_root_type_is_null() {
-        final List<Pair<String, Ordering>> orderingPairs = new ArrayList<Pair<String, Ordering>>();
-        orderingPairs.add(new Pair<String, Ordering>("integerProp", Ordering.ASCENDING));
+        final List<Pair<String, Ordering>> orderingPairs = new ArrayList<>();
+        orderingPairs.add(new Pair<>("integerProp", Ordering.ASCENDING));
         try {
             DynamicOrderingBuilder.createOrderingModel(null, orderingPairs);
             fail("There should be null pointer exception");

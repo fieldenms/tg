@@ -166,14 +166,14 @@ public class PropertyTypeDeterminatorTest {
         try {
             penultAndLast = PropertyTypeDeterminator.penultAndLast("property3");
             fail("property3 is not dot-notation therefore RuntimeException should be thrown");
-        } catch (final Exception e) {
-            System.out.println(e.getMessage());
+        } catch (final ReflectionException ex) {
+            assertEquals("Should be dot-notation.", ex.getMessage());
         }
         try {
             penultAndLast = PropertyTypeDeterminator.penultAndLast("getProperty3()");
             fail("getProperty3() is not dot-notation therefore RuntimeException should be thrown");
-        } catch (final Exception e) {
-            System.out.println(e.getMessage());
+        } catch (final ReflectionException ex) {
+            assertEquals("Should be dot-notation.", ex.getMessage());
         }
     }
 
@@ -198,7 +198,7 @@ public class PropertyTypeDeterminatorTest {
             PropertyTypeDeterminator.transform(SecondLevelEntity.class, "propertyOfSelfType.nonExistingProperty.property");
             fail("Should have thrown an exception.");
         } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
+            // expected situation
         }
 
         // methods finding tests: (including method inheritance & nested dot-notation properties)
@@ -216,8 +216,8 @@ public class PropertyTypeDeterminatorTest {
         try {
             PropertyTypeDeterminator.transform(SecondLevelEntity.class, methodName);
             fail("There is no such property");
-        } catch (final IllegalArgumentException e) {
-            System.out.println("All is ok: " + e.getMessage());
+        } catch (final ReflectionException e) {
+            // expected situation
         }
     }
 
@@ -235,7 +235,7 @@ public class PropertyTypeDeterminatorTest {
         assertEquals(Integer.class, PropertyTypeDeterminator.determinePropertyType(EntityWithCollection.class, "getCollection2().getIntCollectionalProperty()"));
     }
 
-    private class GenericsPropertiesTestClass<T extends Number> {
+    protected class GenericsPropertiesTestClass<T extends Number> {
         private List<Integer> prop1;
         private List<T> prop2;
         private List<? extends Float> prop3;

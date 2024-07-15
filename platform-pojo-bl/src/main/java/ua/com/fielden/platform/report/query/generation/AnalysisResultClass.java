@@ -1,19 +1,19 @@
 package ua.com.fielden.platform.report.query.generation;
 
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
+
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.development.EntityDescriptor;
-import ua.com.fielden.platform.utils.CollectionUtil;
 
 /**
  * Class for generating other classes those holds the analysis query result.
@@ -52,12 +52,10 @@ public class AnalysisResultClass extends AbstractEntity<String> {
         final List<NewProperty> newProperties = createNewProperties(enhancedType, usedDistributions, distributionED);
         newProperties.addAll(createNewProperties(enhancedType, usedAggregations, aggregationED));
 
-        final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
-
         try {
-            final Class<?> generatedClass = cl.startModification(AnalysisResultClass.class).addProperties(newProperties.toArray(new NewProperty[0])).endModification();
-            return new AnalysisResultClassBundle<>(null, (Class<AbstractEntity<?>>) generatedClass, cl.getCachedByteArray(generatedClass.getName()), null);
-        } catch (final ClassNotFoundException e) {
+            final Class<?> generatedClass = startModification(AnalysisResultClass.class).addProperties(newProperties.toArray(new NewProperty[0])).endModification();
+            return new AnalysisResultClassBundle<>(null, (Class<AbstractEntity<?>>) generatedClass, null);
+        } catch (final Exception e) {
             throw new IllegalStateException(e);
         }
     }
@@ -89,8 +87,7 @@ public class AnalysisResultClass extends AbstractEntity<String> {
         for (final String propertyName : propertyNames) {
             final String newPropertyName = getAnalysisPropertyName(propertyName);
             final Class<?> newPropertyType = StringUtils.isEmpty(propertyName) ? type : PropertyTypeDeterminator.determinePropertyType(type, propertyName);
-            final List<Annotation> annotations = CollectionUtil.listOf(new IsPropertyAnnotation().newInstance());
-            newProperties.add(new NewProperty(newPropertyName, newPropertyType, false, ed.getTitle(propertyName), ed.getDesc(propertyName), annotations.toArray(new Annotation[0])));
+            newProperties.add(new NewProperty(newPropertyName, newPropertyType, ed.getTitle(propertyName), ed.getDesc(propertyName), new Annotation[] { new IsPropertyAnnotation().newInstance() }));
         }
 
         return newProperties;

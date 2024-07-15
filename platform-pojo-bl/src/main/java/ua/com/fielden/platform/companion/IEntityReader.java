@@ -72,16 +72,30 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
     /**
      * Finds entity by its surrogate id.
      *
-     * @param id
-     *            -- ID of the entity to be loaded.
-     * @param models
-     *            -- one or more fetching models specifying the initialisation strategy (i.e. what properties should be retrieved).
+     * @param filtered -- <code>true</code> to turn filtering on.
+     * @param id -- ID of the entity to be loaded.
+     * @param fetchModel -- fetching model specifying the initialisation strategy (i.e. what properties should be retrieved).
      * @return
      */
-    T findById(final Long id, final fetch<T> fetchModel);
+    T findById(final boolean filtered, final Long id, final fetch<T> fetchModel);
+
+    /**
+     * Finds entity by its surrogate id.
+     *
+     * @param id -- ID of the entity to be loaded.
+     * @param fetchModel -- fetching model specifying the initialisation strategy (i.e. what properties should be retrieved).
+     * @return
+     */
+    default T findById(final Long id, final fetch<T> fetchModel) {
+        return findById(false, id, fetchModel);
+    }
 
     default Optional<T> findByIdOptional(final Long id, final fetch<T> fetchModel) {
-        return Optional.ofNullable(findById(id, fetchModel));
+        return findByIdOptional(false, id, fetchModel);
+    }
+
+    default Optional<T> findByIdOptional(final boolean filtered, final Long id, final fetch<T> fetchModel) {
+        return Optional.ofNullable(findById(filtered, id, fetchModel));
     }
 
     /**
@@ -100,8 +114,8 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
     }
 
     /**
-     * Finds entity by its business key. If the key is composite then values of the key components should be passed in the same order as defined in the entity class using
-     * annotation {@link CompositeKeyMember}.
+     * Finds entity by its business key .
+     * If the key is composite then values of the key components should be passed in the same order as defined in the entity class using annotation {@link CompositeKeyMember}.
      *
      * @param keyValues
      * @return
@@ -113,16 +127,35 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
     }
 
     /**
-     * Finds entity by its business key and enhances it according to provided fetch model. If the key is composite then values of the key components should be passed in the same
-     * order as defined in the entity class using annotation {@link CompositeKeyMember}.
+     * Finds entity by its business key and fetches it with specified fetch model.
+     * If the key is composite then values of the key components should be passed in the same order as defined in the entity class using annotation {@link CompositeKeyMember}.
+     * Supports user filtering option as argument {@code filtered}.
      *
+     * @param filtered -- specify {@code true} to turn filtering on.
+     * @param fetchModel -- fetching model specifying the initialisation strategy (i.e. what properties should be retrieved).
      * @param keyValues
      * @return
      */
-    T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues);
+    T findByKeyAndFetch(final boolean filtered, final fetch<T> fetchModel, final Object... keyValues);
+
+    /**
+     * Finds entity by its business key without applying user-driven filtering, and fetches it with the specified fetch model.
+     * If the key is composite then values of the key components should be passed in the same order as defined in the entity class using annotation {@link CompositeKeyMember}.
+     *
+     * @param fetchModel -- fetching model specifying the initialisation strategy (i.e. what properties should be retrieved).
+     * @param keyValues
+     * @return
+     */
+    default T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues) {
+        return findByKeyAndFetch(false, fetchModel, keyValues);
+    }
+
+    default Optional<T> findByKeyAndFetchOptional(final boolean filtered, final fetch<T> fetchModel, final Object... keyValues) {
+        return Optional.ofNullable(findByKeyAndFetch(filtered, fetchModel, keyValues));
+    }
 
     default Optional<T> findByKeyAndFetchOptional(final fetch<T> fetchModel, final Object... keyValues) {
-        return Optional.ofNullable(findByKeyAndFetch(fetchModel, keyValues));
+        return findByKeyAndFetchOptional(false, fetchModel, keyValues);
     }
 
     /**
@@ -148,14 +181,6 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
     List<T> getFirstEntities(final QueryExecutionModel<T, ?> query, final int numberOfEntities);
     
     /**
-     * Should return a reference to the first page of the specified size containing entity instances.
-     *
-     * @param pageCapacity
-     * @return
-     */
-    IPage<T> firstPage(final int pageCapacity);
-
-    /**
      * Should return a reference to the first page of the specified size containing entity instances retrieved using the provided query model (new EntityQuery).
      *
      * @param pageCapacity
@@ -176,16 +201,6 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
     default IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final QueryExecutionModel<T, ?> summaryModel, final int pageCapacity) {
         throw new UnsupportedOperationException("Not supported.");
     }
-
-    /**
-     * Returns a reference to a page with requested number and capacity holding entity instances retrieved sequentially ordered by ID.
-     *
-     * @param Equery
-     * @param pageCapacity
-     * @param pageNo
-     * @return
-     */
-    IPage<T> getPage(final int pageNo, final int pageCapacity);
 
     /**
      * Returns a reference to a page with requested number and capacity holding entity instances matching the provided query model (new EntityQuery).

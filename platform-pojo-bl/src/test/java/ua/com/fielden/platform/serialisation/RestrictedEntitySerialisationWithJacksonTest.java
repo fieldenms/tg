@@ -41,7 +41,7 @@ public class RestrictedEntitySerialisationWithJacksonTest {
     public void instances_of_UserSecret_cannot_be_serialised() {
         final UserSecret us = factory.newEntity(UserSecret.class);
         try {
-            final ISerialiserEngine jacksonSerialiser = Serialiser.createSerialiserWithKryoAndJackson(factory, new ProvidedSerialisationClassProvider(UserSecret.class), new SerialisationTypeEncoder(), new IdOnlyProxiedEntityTypeCacheForTests()).getEngine(SerialiserEngines.JACKSON);
+            final ISerialiserEngine jacksonSerialiser = Serialiser.createSerialiserWithJackson(factory, new ProvidedSerialisationClassProvider(UserSecret.class), new SerialisationTypeEncoder(), new IdOnlyProxiedEntityTypeCacheForTests()).getEngine(SerialiserEngines.JACKSON);
             jacksonSerialiser.serialise(us);
             fail();
         } catch (final EntitySerialisationException ex) {
@@ -52,7 +52,7 @@ public class RestrictedEntitySerialisationWithJacksonTest {
     @Test
     public void instances_of_UserSecret_cannot_be_deserialised() {
         try {
-            final ISerialiserEngine jacksonDeserialiser = Serialiser.createSerialiserWithKryoAndJackson(factory, new ProvidedSerialisationClassProvider(UserSecret.class), new SerialisationTypeEncoder(), new IdOnlyProxiedEntityTypeCacheForTests()).getEngine(SerialiserEngines.JACKSON);
+            final ISerialiserEngine jacksonDeserialiser = Serialiser.createSerialiserWithJackson(factory, new ProvidedSerialisationClassProvider(UserSecret.class), new SerialisationTypeEncoder(), new IdOnlyProxiedEntityTypeCacheForTests()).getEngine(SerialiserEngines.JACKSON);
             jacksonDeserialiser.deserialise(new byte[] {}, UserSecret.class);
             fail();
         } catch (final EntityDeserialisationException ex) {
@@ -66,7 +66,7 @@ public class RestrictedEntitySerialisationWithJacksonTest {
         final EntityWithUserSecret entWithSecret = EntityFactory.newPlainEntity(EntityWithUserSecret.class, 2L);
         entWithSecret.setSecret(us);
         try {
-            Serialiser.createSerialiserWithKryoAndJackson(factory, new ProvidedSerialisationClassProvider(UserSecret.class, EntityWithUserSecret.class), new SerialisationTypeEncoder(), new IdOnlyProxiedEntityTypeCacheForTests()).getEngine(SerialiserEngines.JACKSON);
+            Serialiser.createSerialiserWithJackson(factory, new ProvidedSerialisationClassProvider(UserSecret.class, EntityWithUserSecret.class), new SerialisationTypeEncoder(), new IdOnlyProxiedEntityTypeCacheForTests()).getEngine(SerialiserEngines.JACKSON);
             fail();
         } catch (final EntitySerialisationException ex) {
             assertEquals(format(ERR_RESTRICTED_TYPE_SERIALISATION_DUE_TO_PROP_TYPE, EntityWithUserSecret.class.getSimpleName(), "secret"), ex.getMessage());

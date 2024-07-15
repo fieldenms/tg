@@ -4,13 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang.StringUtils;
-
 import ua.com.fielden.platform.menu.ModuleMenuItem;
-import ua.com.fielden.platform.web.interfaces.IExecutable;
-import ua.com.fielden.platform.web.minijs.JsCode;
 
-public class WebMenu implements IExecutable {
+public class WebMenu {
 
     List<WebMenuItem> menuItems = new ArrayList<>();
 
@@ -18,11 +14,6 @@ public class WebMenu implements IExecutable {
         final WebMenuItem menuItem = new WebMenuItem(title);
         menuItems.add(menuItem);
         return menuItem;
-    }
-
-    @Override
-    public JsCode code() {
-        return new JsCode("[" + StringUtils.join(menuItems, ",") + "]");
     }
 
     public List<ModuleMenuItem> getMenu() {

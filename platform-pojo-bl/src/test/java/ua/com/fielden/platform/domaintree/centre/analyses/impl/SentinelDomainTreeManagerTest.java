@@ -43,12 +43,12 @@ public class SentinelDomainTreeManagerTest extends AnalysisDomainTreeManagerTest
     }
 
     public static Object createDtm_for_SentinelDomainTreeManagerTest() {
-        return new SentinelDomainTreeManager(serialiser(), createRootTypes_for_SentinelDomainTreeManagerTest());
+        return new SentinelDomainTreeManager(factory(), createRootTypes_for_SentinelDomainTreeManagerTest());
     }
 
     public static Object createIrrelevantDtm_for_SentinelDomainTreeManagerTest() {
         final Set<Class<?>> rootTypes = createRootTypes_for_SentinelDomainTreeManagerTest();
-        final CentreDomainTreeManagerAndEnhancer mgr = new CentreDomainTreeManagerAndEnhancer(serialiser(), rootTypes);
+        final CentreDomainTreeManagerAndEnhancer mgr = new CentreDomainTreeManagerAndEnhancer(factory(), rootTypes);
         mgr.provideSentinelAnalysesAggregationProperty(rootTypes);
         // provide sentinel properties to test exclusion logic
         mgr.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "case When integerProp > 10 thEn \"GreEn\" wheN integerProp > 5 thEn \"yelloW\" else \"red\" end", "Sentinel 1", "Desc", CalculatedPropertyAttribute.NO_ATTR, null, IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
@@ -65,7 +65,7 @@ public class SentinelDomainTreeManagerTest extends AnalysisDomainTreeManagerTest
     }
 
     protected static Set<Class<?>> createRootTypes_for_SentinelDomainTreeManagerTest() {
-        final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AnalysisDomainTreeManagerTest());
+        final Set<Class<?>> rootTypes = new HashSet<>(createRootTypes_for_AnalysisDomainTreeManagerTest());
         rootTypes.remove(EvenSlaverEntity.class); // this entity has been excluded manually in parent tests
         return rootTypes;
     }
@@ -172,9 +172,9 @@ public class SentinelDomainTreeManagerTest extends AnalysisDomainTreeManagerTest
 
         // Alter and check //
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, SentinelDomainTreeRepresentation.COUNT_OF_SELF_DASHBOARD);
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(SentinelDomainTreeRepresentation.COUNT_OF_SELF_DASHBOARD, Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>(SentinelDomainTreeRepresentation.COUNT_OF_SELF_DASHBOARD, Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, SentinelDomainTreeRepresentation.COUNT_OF_SELF_DASHBOARD);
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(SentinelDomainTreeRepresentation.COUNT_OF_SELF_DASHBOARD, Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>(SentinelDomainTreeRepresentation.COUNT_OF_SELF_DASHBOARD, Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, SentinelDomainTreeRepresentation.COUNT_OF_SELF_DASHBOARD);
         assertEquals("Value is incorrect.", Arrays.asList(), dtm().getSecondTick().orderedProperties(MasterEntity.class));
     }

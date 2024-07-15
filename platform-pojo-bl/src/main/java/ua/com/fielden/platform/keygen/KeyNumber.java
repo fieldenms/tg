@@ -2,7 +2,9 @@ package ua.com.fielden.platform.keygen;
 
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
+import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
@@ -15,7 +17,9 @@ import ua.com.fielden.platform.entity.annotation.Observable;
  * 
  */
 @KeyType(String.class)
-@MapEntityTo(value = "NUMBERS")
+@KeyTitle("Key Name")
+@EntityTitle(value = "Key Number", desc = "Represents a concept of auto-increment keys. Key names designate keys for specific domain entities.")
+@MapEntityTo("NUMBERS")
 @CompanionObject(IKeyNumber.class)
 public class KeyNumber extends AbstractPersistentEntity<String> {
 

@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.domaintree.centre.analyses.impl;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,8 +13,8 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomai
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -53,13 +52,13 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
     /**
      * A <i>manager</i> constructor.
      * 
-     * @param serialiser
+     * @param entityFactory
      * @param dtr
      * @param firstTick
      * @param secondTick
      */
-    protected AbstractAnalysisDomainTreeManager(final ISerialiser serialiser, final AbstractAnalysisDomainTreeRepresentation dtr, final Boolean visible, final AbstractAnalysisAddToDistributionTickManager firstTick, final AbstractAnalysisAddToAggregationTickManager secondTick) {
-        super(serialiser, dtr, firstTick, secondTick);
+    protected AbstractAnalysisDomainTreeManager(final EntityFactory entityFactory, final AbstractAnalysisDomainTreeRepresentation dtr, final Boolean visible, final AbstractAnalysisAddToDistributionTickManager firstTick, final AbstractAnalysisAddToAggregationTickManager secondTick) {
+        super(entityFactory, dtr, firstTick, secondTick);
         this.visible = visible;
 
         parentCentreDomainTreeManager = null; // as soon as this analysis wiil be added into centre manager -- this field should be initialised
@@ -335,9 +334,9 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
             AbstractDomainTree.illegalUnusedProperties(this, managedType, property, "Could not toggle 'ordering' for 'unused' property [" + property + "] in type ["
                     + managedType.getSimpleName() + "].");
             if (!rootsListsOfOrderings.containsKey(managedType)) {
-                rootsListsOfOrderings.put(managedType, new ArrayList<Pair<String, Ordering>>(tr().orderedPropertiesByDefault(managedType)));
+                rootsListsOfOrderings.put(managedType, new ArrayList<>(tr().orderedPropertiesByDefault(managedType)));
             }
-            final List<Pair<String, Ordering>> list = new ArrayList<Pair<String, Ordering>>(rootsListsOfOrderings.get(managedType));
+            final List<Pair<String, Ordering>> list = new ArrayList<>(rootsListsOfOrderings.get(managedType));
             for (final Pair<String, Ordering> pair : list) {
                 if (pair.getKey().equals(property)) {
                     final int index = rootsListsOfOrderings.get(managedType).indexOf(pair);
@@ -349,7 +348,7 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
                     return this;
                 }
             } // if the property does not have an Ordering assigned -- put a ASC ordering to it (into the end of the list)
-            rootsListsOfOrderings.get(managedType).add(new Pair<String, Ordering>(property, Ordering.ASCENDING));
+            rootsListsOfOrderings.get(managedType).add(new Pair<>(property, Ordering.ASCENDING));
 
             return this;
         }
@@ -382,24 +381,6 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
                 return false;
             }
             return true;
-        }
-    }
-
-    /**
-     * A specific Kryo serialiser for {@link AbstractDomainTreeManager}.
-     * 
-     * @author TG Team
-     * 
-     */
-    protected abstract static class AbstractAnalysisDomainTreeManagerSerialiser<T extends AbstractAnalysisDomainTreeManager> extends AbstractDomainTreeManagerSerialiser<T> {
-        public AbstractAnalysisDomainTreeManagerSerialiser(final ISerialiser serialiser) {
-            super(serialiser);
-        }
-
-        @Override
-        public void write(final ByteBuffer buffer, final T manager) {
-            super.write(buffer, manager);
-            writeValue(buffer, manager.getVisible());
         }
     }
 

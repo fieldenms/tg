@@ -2,15 +2,7 @@ package ua.com.fielden.platform.entity.annotation.factory;
 
 import java.lang.annotation.Annotation;
 
-import ua.com.fielden.platform.entity.annotation.mutator.ClassParam;
-import ua.com.fielden.platform.entity.annotation.mutator.DateParam;
-import ua.com.fielden.platform.entity.annotation.mutator.DateTimeParam;
-import ua.com.fielden.platform.entity.annotation.mutator.DblParam;
-import ua.com.fielden.platform.entity.annotation.mutator.EnumParam;
-import ua.com.fielden.platform.entity.annotation.mutator.Handler;
-import ua.com.fielden.platform.entity.annotation.mutator.IntParam;
-import ua.com.fielden.platform.entity.annotation.mutator.MoneyParam;
-import ua.com.fielden.platform.entity.annotation.mutator.StrParam;
+import ua.com.fielden.platform.entity.annotation.mutator.*;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 
 /**
@@ -26,11 +18,13 @@ public class HandlerAnnotation {
     private ClassParam[] clazz = new ClassParam[] {};
     private IntParam[] integer = new IntParam[] {};
     private StrParam[] str = new StrParam[] {};
+    private PropParam[] prop = new PropParam[] {};
     private DblParam[] dbl = new DblParam[] {};
     private DateParam[] date = new DateParam[] {};
     private DateTimeParam[] date_time = new DateTimeParam[] {};
     private MoneyParam[] money = new MoneyParam[] {};
     private EnumParam[] enumeration = new EnumParam[] {};
+    private BooleanParam[] bool = new BooleanParam[] {};
 
     public <T extends IBeforeChangeEventHandler<?>> HandlerAnnotation(final Class<T> value) {
         this.value = value;
@@ -39,32 +33,37 @@ public class HandlerAnnotation {
     public HandlerAnnotation non_ordinary(final ClassParam[] values) {
         this.non_ordinary = values;
         return this;
-    };
+    }
 
     public HandlerAnnotation clazz(final ClassParam[] values) {
         this.clazz = values;
         return this;
-    };
+    }
 
     public HandlerAnnotation integer(final IntParam[] values) {
         this.integer = values;
         return this;
-    };
+    }
 
     public HandlerAnnotation str(final StrParam[] values) {
         this.str = values;
         return this;
-    };
+    }
+
+    public HandlerAnnotation prop(final PropParam[] values) {
+        this.prop = values;
+        return this;
+    }
 
     public HandlerAnnotation dbl(final DblParam[] values) {
         this.dbl = values;
         return this;
-    };
+    }
 
     public HandlerAnnotation date(final DateParam[] values) {
         this.date = values;
         return this;
-    };
+    }
 
     public HandlerAnnotation date_time(final DateTimeParam[] values) {
         this.date_time = values;
@@ -79,7 +78,7 @@ public class HandlerAnnotation {
     public HandlerAnnotation enumeration(final EnumParam[] values) {
         this.enumeration = values;
         return this;
-    };
+    }
 
 
     public Handler newInstance() {
@@ -116,6 +115,11 @@ public class HandlerAnnotation {
             }
 
             @Override
+            public PropParam[] prop() {
+                return prop;
+            }
+
+            @Override
             public DblParam[] dbl() {
                 return dbl;
             }
@@ -139,6 +143,12 @@ public class HandlerAnnotation {
             public EnumParam[] enumeration() {
                 return enumeration;
             }
+
+            @Override
+            public BooleanParam[] bool() {
+                return bool;
+            }
+
         };
     }
 
@@ -176,6 +186,11 @@ public class HandlerAnnotation {
             }
 
             @Override
+            public PropParam[] prop() {
+                return handler.prop();
+            }
+
+            @Override
             public DblParam[] dbl() {
                 return handler.dbl();
             }
@@ -200,6 +215,12 @@ public class HandlerAnnotation {
                 return handler.enumeration();
             }
 
+            @Override
+            public BooleanParam[] bool() {
+                return bool;
+            }
+
         };
     }
+
 }

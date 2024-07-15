@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.centre.api.actions;
 
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
@@ -28,9 +30,9 @@ public final class EntityActionConfig {
     public final Optional<IPostAction> successPostAction;
     public final Optional<IPostAction> errorPostAction;
     public final Optional<PrefDim> prefDimForView;
-    private final boolean noAction;
     public final Optional<InsertionPoints> whereToInsertView;
 	public final boolean shouldRefreshParentCentreAfterSave;
+	public final Set<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>> excludeInsertionPoints = new HashSet<>();
 	public final UI_ROLE role;
 
 	public enum UI_ROLE {
@@ -49,17 +51,17 @@ public final class EntityActionConfig {
             final IPostAction successPostAction,
             final IPostAction errorPostAction,
             final PrefDim prefDimForView,
-            final boolean noAction,
             final boolean shouldRefreshParentCentreAfterSave,
             final InsertionPoints whereToInsertView,
-            final UI_ROLE role) {
+            final UI_ROLE role,
+            final Set<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>> excludeInsertionPoints) {
 
-        if (!noAction && functionalEntity == null) {
-            throw new IllegalArgumentException("A functional entity type should be provided.");
+        if (context == null) {
+            throw new IllegalArgumentException("Any functional entity requires some execution context to be specified.");
         }
 
-        if (functionalEntity != null && context == null) {
-            throw new IllegalArgumentException("Any functional entity requires some execution context to be specified.");
+        if (functionalEntity == null && !context.withCurrentEtity) {
+            throw new IllegalArgumentException("Dynamic action can be created only with current entity in context.");
         }
 
         this.shouldRefreshParentCentreAfterSave = shouldRefreshParentCentreAfterSave;
@@ -79,9 +81,9 @@ public final class EntityActionConfig {
         this.successPostAction = Optional.ofNullable(successPostAction);
         this.errorPostAction = Optional.ofNullable(errorPostAction);
         this.prefDimForView = Optional.ofNullable(prefDimForView);
-        this.noAction = noAction;
         this.whereToInsertView = Optional.ofNullable(whereToInsertView);
         this.role = role;
+        this.excludeInsertionPoints.addAll(excludeInsertionPoints);
     }
 
 
@@ -97,9 +99,28 @@ public final class EntityActionConfig {
             final IPostAction successPostAction,
             final IPostAction errorPostAction,
             final PrefDim prefDimForView,
-            final boolean noAction,
-            final boolean shouldRefreshParentCentreAfterSave) {
-        this(functionalEntity, context, icon, iconStyle, shortDesc, longDesc, shortcut, preAction, successPostAction, errorPostAction, prefDimForView, noAction, shouldRefreshParentCentreAfterSave, null, UI_ROLE.ICON);
+            final boolean shouldRefreshParentCentreAfterSave,
+            final Set<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>> excludeInsertionPoints) {
+        this(functionalEntity, context, icon, iconStyle, shortDesc, longDesc, shortcut, preAction, successPostAction, errorPostAction, prefDimForView, shouldRefreshParentCentreAfterSave, null, UI_ROLE.ICON, excludeInsertionPoints);
+    }
+
+    public static EntityActionConfig withContext(final EntityActionConfig ac, final CentreContextConfig cc) {
+        return new EntityActionConfig(
+                        ac.functionalEntity.isPresent() ? ac.functionalEntity.get() : null,
+                        cc,
+                        ac.icon.isPresent() ? ac.icon.get() : null,
+                        ac.iconStyle.orElse(null),
+                        ac.shortDesc.isPresent() ? ac.shortDesc.get() : null,
+                        ac.longDesc.isPresent() ? ac.longDesc.get() : null,
+                        ac.shortcut.isPresent() ? ac.shortcut.get() : null,
+                        ac.preAction.isPresent() ? ac.preAction.get() : null,
+                        ac.successPostAction.isPresent() ? ac.successPostAction.get() : null,
+                        ac.errorPostAction.isPresent() ? ac.errorPostAction.get() : null,
+                        ac.prefDimForView.isPresent() ? ac.prefDimForView.get() : null,
+                        ac.shouldRefreshParentCentreAfterSave,
+                        ac.whereToInsertView.isPresent() ? ac.whereToInsertView.get() : null,
+                        ac.role,
+                        ac.excludeInsertionPoints);
     }
 
 
@@ -119,10 +140,10 @@ public final class EntityActionConfig {
                 ac.successPostAction.isPresent() ? ac.successPostAction.get() : null,
                 ac.errorPostAction.isPresent() ? ac.errorPostAction.get() : null,
                 ac.prefDimForView.isPresent() ? ac.prefDimForView.get() : null,
-                ac.noAction,
                 ac.shouldRefreshParentCentreAfterSave,
                 ip,
-                UI_ROLE.ICON);
+                UI_ROLE.ICON,
+                ac.excludeInsertionPoints);
     }
 
     /**
@@ -145,19 +166,10 @@ public final class EntityActionConfig {
                 ac.successPostAction.isPresent() ? ac.successPostAction.get() : null,
                 ac.errorPostAction.isPresent() ? ac.errorPostAction.get() : null,
                 ac.prefDimForView.isPresent() ? ac.prefDimForView.get() : null,
-                ac.noAction,
                 ac.shouldRefreshParentCentreAfterSave,
                 ac.whereToInsertView.isPresent() ? ac.whereToInsertView.get() : null,
-                role);
-    }
-
-    /**
-     * A factory method for creating a configuration that indicates a need to skip creation of any action.
-     *
-     * @return
-     */
-    public static EntityActionConfig createNoActionConfig() {
-        return new EntityActionConfig(null, null, null, null, null, null, null, null, null, null, null, true, true);
+                role,
+                ac.excludeInsertionPoints);
     }
 
     /**
@@ -185,7 +197,8 @@ public final class EntityActionConfig {
             final IPostAction successPostAction,
             final IPostAction errorPostAction,
             final PrefDim prefDimForView,
-            final boolean shouldRefreshParentCentreAfterSave
+            final boolean shouldRefreshParentCentreAfterSave,
+            final Set<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>> excludeInsertionPoints
             ) {
         return new EntityActionConfig(
                 functionalEntity,
@@ -199,17 +212,8 @@ public final class EntityActionConfig {
                 successPostAction,
                 errorPostAction,
                 prefDimForView,
-                false,
-                shouldRefreshParentCentreAfterSave);
-    }
-
-    /**
-     * Indicates whether the action configuration should be used for instantiation of actions or to skip action creation.
-     *
-     * @return
-     */
-    public boolean isNoAction() {
-        return noAction;
+                shouldRefreshParentCentreAfterSave,
+                excludeInsertionPoints);
     }
 
     @Override
@@ -222,7 +226,6 @@ public final class EntityActionConfig {
         result = prime * result + ((icon == null) ? 0 : icon.hashCode());
         result = prime * result + ((longDesc == null) ? 0 : longDesc.hashCode());
         result = prime * result + ((shortcut == null) ? 0 : shortcut.hashCode());
-        result = prime * result + (noAction ? 1231 : 1237);
         result = prime * result + ((preAction == null) ? 0 : preAction.hashCode());
         result = prime * result + ((shortDesc == null) ? 0 : shortDesc.hashCode());
         result = prime * result + ((successPostAction == null) ? 0 : successPostAction.hashCode());
@@ -280,9 +283,6 @@ public final class EntityActionConfig {
                 return false;
             }
         } else if (!shortcut.equals(other.shortcut)) {
-            return false;
-        }
-        if (noAction != other.noAction) {
             return false;
         }
         if (preAction == null) {

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.menu.module.impl;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 
 import ua.com.fielden.platform.menu.CustomView;
 import ua.com.fielden.platform.menu.EntityCentreView;
@@ -45,8 +46,8 @@ public class WebView implements IExecutable {
             final String typeUrl = entityMaster != null ? entityMaster.getEntityType().getName() : (entityCentre != null ? entityCentre.getMenuItemType().getName()
                     : customView.getViewName());
             final String importUrl = "\"/" + viewUrl + "/" + typeUrl + "\"";
-            final String typeName = entityMaster != null ? (entityMaster.getEntityType().getSimpleName() + "-master")
-                    : (entityCentre != null ? (entityCentre.getMenuItemType().getSimpleName() + "-centre") : customView.getViewName());
+            final String typeName = entityMaster != null ? (flattenedNameOf(entityMaster.getEntityType()) + "-master")
+                    : (entityCentre != null ? (flattenedNameOf(entityCentre.getMenuItemType()) + "-centre") : customView.getViewName());
             final String elementName = "\"tg-" + typeName + "\"";
             final String viewType = entityMaster != null ? "\"master\"" : (entityCentre != null ? "\"centre\"" : "\"view\"");
             final StringBuilder attrs = new StringBuilder();
@@ -63,15 +64,10 @@ public class WebView implements IExecutable {
             } else if (entityCentre != null) {
             	attrs.append("{");
             	attrs.append(format("uuid: \"%s\",", entityCentre.getName()));
-                if (entityCentre.isRunAutomatically()) {
-                    attrs.append("autoRun: true,");
-                }
                 if (entityCentre.shouldEnforcePostSaveRefresh()) {
                     attrs.append("enforcePostSaveRefresh: true,");
                 }
-                if (entityCentre.eventSourceUri().isPresent()) {
-                	attrs.append(format("uri: \"%s\",", entityCentre.eventSourceUri().get()));
-                }
+                attrs.append(format("eventSourceClass: \"%s\",", entityCentre.eventSourceClass().map(clazz -> clazz.getName()).orElse("")));
                 attrs.append("}");
             } else {
                 attrs.append("{}");
@@ -92,8 +88,8 @@ public class WebView implements IExecutable {
             final String typeUrl = entityMaster != null ? entityMaster.getEntityType().getName() : (entityCentre != null ? entityCentre.getMenuItemType().getName()
                     : customView.getViewName());
             final String importUrl = "/" + viewUrl + "/" + typeUrl;
-            final String typeName = entityMaster != null ? (entityMaster.getEntityType().getSimpleName() + "-master")
-                    : (entityCentre != null ? (entityCentre.getMenuItemType().getSimpleName() + "-centre") : customView.getViewName());
+            final String typeName = entityMaster != null ? (flattenedNameOf(entityMaster.getEntityType()) + "-master")
+                    : (entityCentre != null ? (flattenedNameOf(entityCentre.getMenuItemType()) + "-centre") : customView.getViewName());
             final String elementName = "tg-" + typeName + "";
             final String viewType = entityMaster != null ? "master" : (entityCentre != null ? "centre" : "view");
 
@@ -113,15 +109,10 @@ public class WebView implements IExecutable {
             } else if (entityCentre != null) {
                 final EntityCentreView entityCentreView = new EntityCentreView();
                 entityCentreView.setUuid(entityCentre.getName());
-                if (entityCentre.isRunAutomatically()) {
-                    entityCentreView.setAutoRun(true);
-                }
                 if (entityCentre.shouldEnforcePostSaveRefresh()) {
                     entityCentreView.setEnforcePostSaveRefresh(true);
                 }
-                if (entityCentre.eventSourceUri().isPresent()) {
-                    entityCentreView.setUri(entityCentre.eventSourceUri().get());
-                }
+                entityCentreView.setEventSourceClass(entityCentre.eventSourceClass().map(clazz -> clazz.getName()).orElse(""));
                 view.setAttrs(entityCentreView);
             } else {
                 view.setAttrs(new CustomView());

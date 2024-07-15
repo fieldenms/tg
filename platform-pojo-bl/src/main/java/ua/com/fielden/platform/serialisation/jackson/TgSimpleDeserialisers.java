@@ -1,11 +1,13 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
 import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.BeanDescription;
 import com.fasterxml.jackson.databind.DeserializationConfig;
@@ -20,11 +22,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.exceptions.SerialisationException;
 
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
-
 public class TgSimpleDeserialisers extends SimpleDeserializers {
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = Logger.getLogger(TgSimpleDeserialisers.class);
+    private static final Logger LOGGER = getLogger(TgSimpleDeserialisers.class);
 
     private final transient TgJacksonModule module;
     private final transient Cache<Class<?>,JsonDeserializer<?>> genClassDeserialisers = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).initialCapacity(1000).build();

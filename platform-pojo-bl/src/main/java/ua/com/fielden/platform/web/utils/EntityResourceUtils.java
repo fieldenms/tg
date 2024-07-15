@@ -1,20 +1,31 @@
 package ua.com.fielden.platform.web.utils;
 
+import static java.lang.Class.forName;
 import static java.lang.String.format;
 import static java.util.Locale.getDefault;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
 import static java.util.regex.Pattern.quote;
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.apache.commons.lang.StringUtils.uncapitalize;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY_NOT_ASSIGNED;
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
+import static ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker.getErrorMessage;
+import static ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker.mock;
+import static ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker.setErrorMessage;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
+import static ua.com.fielden.platform.reflection.Finder.getPropertyDescriptors;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.decodeOriginalTypeFromCriteriaType;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -35,8 +46,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.companion.IEntityReader;
@@ -47,6 +58,7 @@ import ua.com.fielden.platform.dao.exceptions.UnexpectedNumberOfReturnedEntities
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.EntityType;
@@ -62,6 +74,7 @@ import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
@@ -69,7 +82,6 @@ import ua.com.fielden.platform.serialisation.jackson.deserialisers.EntityJsonDes
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.ui.menu.MiType;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.MiscUtilities;
@@ -81,15 +93,19 @@ import ua.com.fielden.platform.utils.MiscUtilities;
  *
  */
 public class EntityResourceUtils {
-    private static final String CONFLICT_WARNING = "This property has recently been changed by another user.";
+    private static final String CONFLICT_WARNING = "This property has been recently changed.";
     public static final String CENTRE_CONFIG_CONFLICT_WARNING = "Configuration with this title already exists.";
-    public static final String CENTRE_CONFIG_CONFLICT_ERROR = "Base " + uncapitalize(CENTRE_CONFIG_CONFLICT_WARNING);
+    public static final String ERR_MORE_THEN_ONE_ENTITY_FOUND = "Please choose a specific value explicitly from a drop-down.";
     private static final String RESOLVE_CONFLICT_INSTRUCTION = "Please either edit the value back to [%s] to resolve the conflict or cancel all of your changes.";
     /**
      * Used to indicate the start of 'not found mock' serialisation sequence.
      */
     private static final String NOT_FOUND_MOCK_PREFIX = "__________NOT_FOUND__________";
-    private static final Logger logger = Logger.getLogger(EntityResourceUtils.class);
+    /**
+     * Used to indicate the start of 'more than one mock' serialisation sequence.
+     */
+    private static final String MORE_THAN_ONE_MOCK_PREFIX = "__________MORE_THAN_ONE__________";
+    private static final Logger logger = getLogger(EntityResourceUtils.class);
     /**
      * Standard {@link PropertyDescriptor}'s convertor to string. Includes handling for 'not found mock' instances.
      */
@@ -101,9 +117,9 @@ public class EntityResourceUtils {
      * However, we also have similar logic in {@link EntityJsonDeserialiser}, which also deserialises instrumented instances.
      */
     public static final Function<String, PropertyDescriptor<?>> PROPERTY_DESCRIPTOR_FROM_STRING = str -> entityWithMocksFromString(PropertyDescriptor::fromString, str, PropertyDescriptor.class);
-    
+
     private EntityResourceUtils() {}
-    
+
     public static <T extends AbstractEntity<?>, V extends AbstractEntity<?>> IFetchProvider<V> fetchForProperty(final ICompanionObjectFinder coFinder, final Class<T> entityType, final String propertyName) {
         if (EntityQueryCriteria.class.isAssignableFrom(entityType)) {
             final Class<? extends AbstractEntity<?>> originalType = EntityResourceUtils.getOriginalType(entityType);
@@ -115,17 +131,17 @@ public class EntityResourceUtils {
             return coFinder.find(entityType).getFetchProvider().fetchFor(propertyName);
         }
     }
-    
+
     /**
      * Returns <code>true</code> in case where the <code>warning</code> does not represent special 'conflicting' warning, <code>false</code> otherwise.
-     * 
+     *
      * @param warning
      * @return
      */
     public static boolean isNonConflicting(final Warning warning) {
         return !CONFLICT_WARNING.equals(warning.getMessage()) && !CENTRE_CONFIG_CONFLICT_WARNING.equals(warning.getMessage());
     }
-    
+
     /**
      * Returns fetch provider for property or, if the property should not be fetched according to default strategy, returns the 'default' property fetch provider with 'keys'
      * (simple an composite) and 'desc' (if 'desc' exists in domain entity).
@@ -139,7 +155,7 @@ public class EntityResourceUtils {
         final IFetchProvider<? extends AbstractEntity<?>> fetchProvider = coFinder.find(entityType).getFetchProvider();
         return fetchForPropertyOrDefault(fetchProvider, propertyName);
     }
-    
+
     /**
      * Returns fetch provider for property or, if the property should not be fetched according to default strategy, returns the 'default' property fetch provider with 'keys'
      * (simple an composite) and 'desc' (if 'desc' exists in domain entity).
@@ -153,7 +169,7 @@ public class EntityResourceUtils {
             ? fetchProvider.fetchFor(propertyName)
             : fetchProvider.with(propertyName).fetchFor(propertyName);
     }
-    
+
     /**
      * Determines the version that is shipped with 'modifiedPropertiesHolder'.
      *
@@ -223,15 +239,15 @@ public class EntityResourceUtils {
         entity.isValid();
 
         disregardCritOnlyRequiredProperties(entity);
-        disregardUntouchedRequiredProperties(entity, touchedProps);
-        disregardTouchedRequiredPropertiesWithEmptyValue(entity, touchedProps);
+        disregardUntouchedRequiredProperties(entity, touchedProps, isCriteriaEntity);
+        disregardTouchedRequiredPropertiesWithEmptyValue(entity, touchedProps, isCriteriaEntity);
 
         return entity;
     }
-    
+
     /**
      * Logs property application / validation in a table form to easily debug data flow in method 'apply'.
-     * 
+     *
      * @param actionCaption
      * @param apply
      * @param shortLog -- specifies shorter or wider (with 'type' and staleness) view of information
@@ -266,7 +282,7 @@ public class EntityResourceUtils {
             System.out.println(builder.toString()); // use logger instead of sysout if needed
         }
     }
-    
+
     /**
      * Validates / applies the property value against the entity.
      *
@@ -281,11 +297,12 @@ public class EntityResourceUtils {
      * @param isCriteriaEntity
      */
     private static <M extends AbstractEntity<?>> void processPropertyValue(final boolean apply, final boolean shouldApplyOriginalValue, final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale, final boolean isCriteriaEntity) {
+        final Optional<String> optActiveProp = ofNullable((String)valAndOrigVal.get("activeProperty"));
         if (apply) {
             // in case where application is necessary (modified touched, modified untouched, unmodified touched) the value (valueToBeApplied) should be checked on existence and then (if successful) it should be applied
             final String valueToBeAppliedName = shouldApplyOriginalValue ? "origVal" : "val";
             final Object valToBeApplied = valAndOrigVal.get(valueToBeAppliedName);
-            final Object convertedValue = convert(type, name, valToBeApplied, reflectedValueId(valAndOrigVal, valueToBeAppliedName), companionFinder);
+            final Object convertedValue = convert(type, name, valToBeApplied, reflectedValueId(valAndOrigVal, valueToBeAppliedName), optActiveProp, companionFinder);
             final Object valueToBeApplied;
             if (valToBeApplied != null && convertedValue == null) {
                 final Class<?> propType = determinePropertyType(type, name);
@@ -308,7 +325,7 @@ public class EntityResourceUtils {
             }, () -> {
                 return valueToBeApplied;
             }, () -> {
-                return shouldApplyOriginalValue ? valueToBeApplied : convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder);
+                return shouldApplyOriginalValue ? valueToBeApplied : convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), optActiveProp, companionFinder);
             }, type, name, valAndOrigVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
         } else {
             // in case where no application is needed (unmodified untouched) the value should be validated only
@@ -316,70 +333,89 @@ public class EntityResourceUtils {
                 // do nothing
             }, () -> {
                 return shouldApplyOriginalValue
-                        ? convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder)
-                                : convert(type, name, valAndOrigVal.get("val"), reflectedValueId(valAndOrigVal, "val"), companionFinder);
+                        ? convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), optActiveProp, companionFinder)
+                                : convert(type, name, valAndOrigVal.get("val"), reflectedValueId(valAndOrigVal, "val"), optActiveProp, companionFinder);
             }, () -> {
-                return convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder);
+                return convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), optActiveProp, companionFinder);
             }, type, name, valAndOrigVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
         }
     }
-    
+
     /**
-     * Creates lightweight mock entity instance which will be invalid against {@link EntityExistsValidator} due to empty ID.
-     * ToString conversion will give us {@link AbstractEntity#KEY_NOT_ASSIGNED}.
+     * Creates a lightweight mock entity instance, which does not pass {@link EntityExistsValidator} due to missing ID.
+     * Conversion {@code toString} results in {@link AbstractEntity#KEY_NOT_ASSIGNED}.
      * <p>
-     * This mock instance contains the string query by which the entity was not found.
-     * 
+     * This mock instance contains a search string, which was used to find an entity, but none was found.
+     *
      * @param type
-     * @param stringQuery -- string query by which the entity was not found
-     * 
+     * @param searchString -- a search string, used to find an entity.
+     *
      * @return
      */
-    public static AbstractEntity<?> createMockNotFoundEntity(final Class<? extends AbstractEntity> type, final String stringQuery) {
-        if (isEmpty(stringQuery)) {
-            throw new EntityResourceUtilsException("Mock 'not found' entity could not be created due to empty 'stringQuery'.");
+    public static AbstractEntity<?> createMockNotFoundEntity(final Class<? extends AbstractEntity> type, final String searchString) {
+        if (isEmpty(searchString)) {
+            throw new EntityResourceUtilsException("Mock [not found] entity could not be created due to empty [searchString].");
         }
-        return  newPlainEntity(MockNotFoundEntityMaker.mock(type), null).setDesc(stringQuery);
+        if (isUnionEntityType(type)) {
+            final List<Field> unionProps = unionProperties((Class<AbstractUnionEntity>) type);
+            final Class<? extends AbstractEntity<?>> unionPropType = (Class<? extends AbstractEntity<?>>) unionProps.get(0).getType();
+            final AbstractEntity<?> unionPropValue = newPlainEntity(mock(unionPropType), null).setDesc(searchString);
+            return newPlainEntity(mock(type), null).set(unionProps.get(0).getName(), unionPropValue);
+        }
+        return newPlainEntity(mock(type), null).setDesc(searchString);
     }
-    
+
     /**
      * Creates a string that can be used for 'not found mock' entity serialisation.
-     * 
-     * @param stringQuery
+     *
+     * @param searchString
      * @return
      */
-    public static String createNotFoundMockString(final String stringQuery) {
-        return NOT_FOUND_MOCK_PREFIX + stringQuery;
+    public static String createNotFoundMockString(final String searchString) {
+        return NOT_FOUND_MOCK_PREFIX + searchString;
     }
-    
+
+    /**
+     * Creates a string that can be used for 'more than one mock' entity serialisation.
+     *
+     * @param searchString
+     * @return
+     */
+    public static String createMoreThanOneMockString(final String searchString) {
+        return MORE_THAN_ONE_MOCK_PREFIX + searchString;
+    }
+
     /**
      * Returns indication whether <code>obj</code> represents 'mock not found entity'.
-     * 
+     *
      * @param obj
      * @return
      */
     public static boolean isMockNotFoundEntity(final Object obj) {
         return obj instanceof AbstractEntity && MockNotFoundEntityMaker.isMockNotFoundValue((AbstractEntity<?>)obj);
     }
-    
+
     /**
      * Converts <code>entity</code> to serialisation string.
-     * 
+     *
      * @param specificConverter -- used to convert entity if it is not 'not found mock', otherwise the standard scheme for 'not found mocks' is used
      * @param entity
      * @return
      */
     public static <T extends AbstractEntity<?>> String entityWithMocksToString(final Function<T, String> specificConverter, final T entity) {
         if (isMockNotFoundEntity(entity)) {
-            return createNotFoundMockString(entity.get(DESC));
+            // entity.get(DESC) returns the actually typed by user string; property "desc" is used for this purpose, because it is of type String for any entity that may need to be mocked
+            // FIXME It would have been better to remove the use of "desc" in favour of a separate, specifically generated property to hold values typed by users (https://github.com/fieldenms/tg/issues/1933).
+            //       Property "desc" will be removed from AbstractEntity at some stage in the future.
+            return getErrorMessage(entity).isPresent() ? createMoreThanOneMockString(entity.get(DESC)) : createNotFoundMockString(entity.get(DESC));
         } else {
             return specificConverter.apply(entity);
         }
     }
-    
+
     /**
      * Converts serialisation <code>str</code> to entity.
-     * 
+     *
      * @param specificConverter -- used to convert string if it does not represent 'not found mock', otherwise the standard scheme for 'not found mocks' is used
      * @param str
      * @param type
@@ -388,10 +424,12 @@ public class EntityResourceUtils {
     public static <T extends AbstractEntity<?>> T entityWithMocksFromString(final Function<String, T> specificConverter, final String str, final Class<? extends AbstractEntity> type) {
         if (str.startsWith(NOT_FOUND_MOCK_PREFIX)) {
             return (T) createMockNotFoundEntity(type, str.replaceFirst(quote(NOT_FOUND_MOCK_PREFIX), ""));
+        } else if (str.startsWith(MORE_THAN_ONE_MOCK_PREFIX)) {
+            return (T) createMockFoundMoreThanOneEntity(type, str.replaceFirst(quote(MORE_THAN_ONE_MOCK_PREFIX), ""));
         }
         return specificConverter.apply(str);
     }
-    
+
     /**
      * Validates the property on subject of conflicts and <code>perform[s]Action</code>.
      *
@@ -489,7 +527,7 @@ public class EntityResourceUtils {
     private static <M extends AbstractEntity<?>> void validateUnmodifiedPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale, final boolean isCriteriaEntity) {
         processPropertyValue(false, true, type, name, valAndOrigVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
     }
-    
+
     /**
      * Disregards the 'required' errors for those properties, that were not 'touched' directly by the user (for both criteria and simple entities).
      *
@@ -497,14 +535,21 @@ public class EntityResourceUtils {
      * @param touchedProps -- list of 'touched' properties, i.e. those for which editing has occurred during validation lifecycle (maybe returning to original value thus making them unmodified)
      * @return
      */
-    public static <M extends AbstractEntity<?>> M disregardUntouchedRequiredProperties(final M entity, final Set<String> touchedProps) {
+    public static <M extends AbstractEntity<?>> M disregardUntouchedRequiredProperties(final M entity, final Set<String> touchedProps, final boolean isCriteriaEntity) {
         // both criteria and simple entities will be affected
         entity.nonProxiedProperties().filter(mp -> mp.isRequired() && !touchedProps.contains(mp.getName())).forEach(mp -> {
             mp.setRequiredValidationResult(successful(entity));
+            // stale validation error for other validator may remain on the property;
+            // this is possible if the property is dependent on other and that other property makes this property required;
+            // before it was made required, the property may have been in error in other validator, and the entity at the time may have been not constructed fully (the property validation state being stale);
+            // need to revalidate without requiredness validation
+            if (!isCriteriaEntity && !mp.isValid()) { // only do this for Entity Master entities and trigger revalidation only for erroneous (after req error clearing) properties
+                mp.revalidate(true);
+            }
         });
         return entity;
     }
-    
+
     /**
      * Disregards the 'required' errors for those properties, that were provided with some value and then cleared back to empty value during editing of new entity.
      *
@@ -512,16 +557,23 @@ public class EntityResourceUtils {
      * @param touchedProps -- list of 'touched' properties, i.e. those for which editing has occurred during validation lifecycle (maybe returning to original value thus making them unmodified)
      * @return
      */
-    private static <M extends AbstractEntity<?>> M disregardTouchedRequiredPropertiesWithEmptyValue(final M entity, final Set<String> touchedProps) {
+    private static <M extends AbstractEntity<?>> M disregardTouchedRequiredPropertiesWithEmptyValue(final M entity, final Set<String> touchedProps, final boolean isCriteriaEntity) {
         // both criteria and simple non-persisted (new) entities will be affected
-        if (!entity.isPersisted() || EntityQueryCriteria.class.isAssignableFrom(entity.getType())) {
+        if (!entity.isPersisted() || isCriteriaEntity) {
             entity.nonProxiedProperties().filter(mp -> mp.isRequired() && touchedProps.contains(mp.getName()) && mp.getValue() == null).forEach(mp -> {
                 mp.setRequiredValidationResult(successful(entity));
+                // stale validation error for other validator may remain on the property;
+                // this is possible if the property is dependent on other and that other property makes this property required;
+                // before it was made required, the property may have been in error in other validator, and the entity at the time may have been not constructed fully (the property validation state being stale);
+                // need to revalidate without requiredness validation
+                if (!isCriteriaEntity && !mp.isValid()) { // only do this for Entity Master entities and trigger revalidation only for erroneous (after req error clearing) properties
+                    mp.revalidate(true);
+                }
             });
         }
         return entity;
     }
-    
+
     /**
      * Disregards the 'required' errors for crit-only properties on masters for non-criteria entity types.
      *
@@ -539,7 +591,7 @@ public class EntityResourceUtils {
             });
         }
     }
-    
+
     /**
      * Determines property type.
      * <p>
@@ -580,7 +632,7 @@ public class EntityResourceUtils {
      *
      * @return
      */
-    private static <M extends AbstractEntity<?>> Object convert(final Class<M> type, final String propertyName, final Object reflectedValue, final Optional<Long> reflectedValueId, final ICompanionObjectFinder companionFinder) {
+    private static <M extends AbstractEntity<?>> Object convert(final Class<M> type, final String propertyName, final Object reflectedValue, final Optional<Long> reflectedValueId, final Optional<String> optActiveProp, final ICompanionObjectFinder companionFinder) {
         if (reflectedValue == null) {
             return null;
         }
@@ -600,13 +652,13 @@ public class EntityResourceUtils {
                 return extractPropertyDescriptor(reflectedValueAsString, enclosingEntityType).orElse(null);
             } else {
                 final fetch<AbstractEntity<?>> fetch = fetchForProperty(companionFinder, type, propertyName).fetchModel();
-                final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.<IEntityDao<AbstractEntity<?>>, AbstractEntity<?>> find(entityPropertyType, true);
+                final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.<IEntityDao<AbstractEntity<?>>, AbstractEntity<?>> find(entityPropertyType, !isUnionEntityType(entityPropertyType));
                 if (reflectedValueId.isPresent()) {
                     logger.debug(format("ID-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId.get(), reflectedValue));
                     // regardless of whether entityPropertyType is composite or not, the entity should be retrieved by non-empty reflectedValueId that has been arrived from the client application
-                    return propertyCompanion.findById(reflectedValueId.get(), fetch);
+                    return propertyCompanion.findById(true, reflectedValueId.get(), fetch);
                 } else {
-                    return findAndFetchBy(reflectedValueAsString, entityPropertyType, fetch, propertyCompanion);
+                    return findAndFetchBy(reflectedValueAsString, entityPropertyType, optActiveProp, fetch, propertyCompanion);
                 }
             }
             // prev implementation => return propertyCompanion.findByKeyAndFetch(getFetchProvider().fetchFor(propertyName).fetchModel(), reflectedValue);
@@ -630,6 +682,9 @@ public class EntityResourceUtils {
         } else if (EntityUtils.isString(propertyType)) {
             return reflectedValue;
         } else if (Integer.class.isAssignableFrom(propertyType)) {
+            if (reflectedValue instanceof Long || reflectedValue instanceof BigInteger) {
+                throw new IllegalStateException("Too big.");
+            }
             return reflectedValue;
         } else if (EntityUtils.isBoolean(propertyType)) {
             return reflectedValue;
@@ -683,6 +738,12 @@ public class EntityResourceUtils {
             return linkValue == null ? null : new Hyperlink(linkValue);
         } else if (Long.class.isAssignableFrom(propertyType)) {
             return extractLongValueFrom(reflectedValue);
+        } else if (Class.class.isAssignableFrom(propertyType)) {
+            try {
+                return forName((String) reflectedValue); // full class names for already registered server-side Class'es are supported
+            } catch (final Exception ex) {
+                throw new EntityResourceUtilsException(format("Conversion to [%s@%s] from reflected value [%s] of type [%s] failed.", propertyName, type.getSimpleName(), reflectedValue, propertyType.getSimpleName()), ex);
+            }
         } else {
             throw new UnsupportedOperationException(format("Unsupported conversion to [%s@%s] from reflected value [%s] of type [%s].", propertyName, type.getSimpleName(), reflectedValue, propertyType.getSimpleName()));
         }
@@ -692,26 +753,50 @@ public class EntityResourceUtils {
      * Finds entity value by <code>searchString</code> from autocompleter.
      * <p>
      * This method takes care of proper composite entity search string decomposition (including situations with {@link PropertyDescriptor} as key member) and early checking for search string correctness.
-     * 
+     *
      * @param searchString
      * @param entityType -- the type of entity being looked for
+     * @param optActiveProp
      * @param fetch -- fetch model for resultant entity
      * @param companion -- companion for the entity being looked for
      * @return
      */
-    public static AbstractEntity<?> findAndFetchBy(final String searchString, final Class<AbstractEntity<?>> entityType, final fetch<AbstractEntity<?>> fetch, final IEntityDao<AbstractEntity<?>> companion) {
+    public static AbstractEntity<?> findAndFetchBy(final String searchString, final Class<AbstractEntity<?>> entityType, final Optional<String> optActiveProp, final fetch<AbstractEntity<?>> fetch, final IEntityDao<AbstractEntity<?>> companion) {
         if (isCompositeEntity(entityType)) {
             //logger.debug(format("KEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
             final String compositeKeyAsString = MiscUtilities.prepare(prepSearchStringForCompositeKey(entityType, searchString));
-            final EntityResultQueryModel<AbstractEntity<?>> model = select(entityType).where().prop(KEY).iLike().val(compositeKeyAsString).model();
-            final fetch<AbstractEntity<?>> fetchModel = fetch;
-            final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> qem = from(model).with(fetchModel).model();
+            final EntityResultQueryModel<AbstractEntity<?>> model = select(entityType).where().prop(KEY).iLike().val(compositeKeyAsString).model().setFilterable(true);
+            final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> qem = from(model).with(fetch).model();
             try {
                 final AbstractEntity<?> converted = companion.getEntity(qem);
-                
-                return orElseFindByKey(converted, companion, fetchModel, compositeKeyAsString);
+
+                return orElseFindByKey(converted, companion, fetch, compositeKeyAsString);
             } catch (final UnexpectedNumberOfReturnedEntities e) {
                 return null;
+            }
+        } else if (isUnionEntityType(entityType)) {
+            final var entities = companion.getFirstEntities(
+                from(
+                    select(entityType)
+                    .where().prop(
+                        // using a condition for an active property, if it is present, guarantees a narrower search result in case of duplicate key values among entity types of union properties
+                        optActiveProp.map(activeProp -> activeProp + "." + KEY).orElse(KEY)
+                    ).iLike().val(searchString)
+                    .model()
+                    .setFilterable(true)
+                )
+                .with(fetch)
+                .model(),
+                2
+            );
+            if (entities.isEmpty()) {
+                return null;
+            } else if (entities.size() == 1) {
+                return entities.get(0);
+            } else {
+                // there can be many associated entities for unions without concrete active prop (same keys trough different subtypes);
+                // otherwise, return empty entity similarly as we do for composite ones (see UnexpectedNumberOfReturnedEntities exception)
+                return optActiveProp.isPresent() ? null : createMockFoundMoreThanOneEntity(entityType, searchString);
             }
         } else {
             //logger.debug(format("KEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
@@ -724,8 +809,19 @@ public class EntityResourceUtils {
             } else {
                 key = keys[0];
             }
-            return companion.findByKeyAndFetch(fetch, key);
+            return companion.findByKeyAndFetch(true, fetch, key);
         }
+    }
+
+    /**
+     * The same as {@link #createMockNotFoundEntity(Class, String)}, but with a specific error message assigned to field {@code PROP_NAME_HOLDING_ERROR_MSG}.
+     *
+     * @param type
+     * @param searchString -- a search string, used to find an entity.
+     * @return
+     */
+    public static AbstractEntity<?> createMockFoundMoreThanOneEntity(final Class<? extends AbstractEntity> type, final String searchString) {
+        return setErrorMessage(createMockNotFoundEntity(type, searchString), ERR_MORE_THEN_ONE_ENTITY_FOUND);
     }
 
     /**
@@ -743,7 +839,7 @@ public class EntityResourceUtils {
     private static AbstractEntity<?> orElseFindByKey(final AbstractEntity<?> converted, final IEntityDao<AbstractEntity<?>> propertyCompanion, final fetch<AbstractEntity<?>> fetchModel, final String compositeKeyAsString) {
         if (converted == null) {
             try {
-                return propertyCompanion.findByKeyAndFetch(fetchModel, compositeKeyAsString);
+                return propertyCompanion.findByKeyAndFetch(true, fetchModel, compositeKeyAsString);
             } catch (final Exception ex) {
                 // we can safely ignore any exceptions in this case
             }
@@ -833,13 +929,12 @@ public class EntityResourceUtils {
      * @return
      */
     private static Optional<PropertyDescriptor<AbstractEntity<?>>> extractPropertyDescriptor(final String value, final Class<AbstractEntity<?>> enclosingEntityType) {
-        final List<PropertyDescriptor<AbstractEntity<?>>> allPropertyDescriptors = Finder.getPropertyDescriptors(enclosingEntityType);
-        final PojoValueMatcher<PropertyDescriptor<AbstractEntity<?>>> matcher = new PojoValueMatcher<>(allPropertyDescriptors, AbstractEntity.KEY, allPropertyDescriptors.size());
-        final List<PropertyDescriptor<AbstractEntity<?>>> matchedPropertyDescriptors = matcher.findMatches(value);
+        final List<PropertyDescriptor<AbstractEntity<?>>> allPropertyDescriptors = getPropertyDescriptors(enclosingEntityType);
+        final List<PropertyDescriptor<AbstractEntity<?>>> matchedPropertyDescriptors = new PojoValueMatcher<>(allPropertyDescriptors, KEY, allPropertyDescriptors.size()).findMatches(value);
         if (matchedPropertyDescriptors.size() != 1) {
-            return Optional.empty();
+            return empty();
         }
-        return Optional.of(matchedPropertyDescriptors.get(0));
+        return of(matchedPropertyDescriptors.get(0));
     }
 
     /**
@@ -857,27 +952,13 @@ public class EntityResourceUtils {
     }
 
     /**
-     * Determines the miType for which criteria entity was generated.
-     *
-     * @param miType
-     * @return
-     */
-    public static Class<? extends MiWithConfigurationSupport<?>> getMiType(final Class<? extends AbstractEntity<?>> criteriaType) {
-        final MiType annotation = AnnotationReflector.getAnnotation(criteriaType, MiType.class);
-        if (annotation == null) {
-            throw new IllegalStateException(format("The criteria type [%s] should be annotated with MiType annotation.", criteriaType.getName()));
-        }
-        return annotation.value();
-    }
-
-    /**
      * Determines the master type for which criteria entity was generated.
      *
      * @param criteriaType
      * @return
      */
     public static Class<? extends AbstractEntity<?>> getOriginalType(final Class<? extends AbstractEntity<?>> criteriaType) {
-        return getEntityType(getMiType(criteriaType));
+        return (Class<? extends AbstractEntity<?>>) ClassesRetriever.findClass(decodeOriginalTypeFromCriteriaType(stripIfNeeded(criteriaType).getName()));
     }
 
     /**

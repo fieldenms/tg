@@ -22,6 +22,7 @@ import java.util.Set;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 public class fetch<T extends AbstractEntity<?>> {
     public static final String MSG_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES = "Mismatch between actual type [%s] of property [%s] in entity type [%s] and its fetch model type [%s]!";
@@ -104,6 +105,18 @@ public class fetch<T extends AbstractEntity<?>> {
     }
 
     /**
+     * Should be used to indicate a name of the first level property that should be initialised in the retrieved entity instances.
+     *
+     * @param propName
+     *            - Could be name of the primitive property (e.g. Type_.desc(), Type_.numberOfPages()), entity property (Type_.station()), composite type property (Type_.cost(), Type_.cost().amount()), union
+     *            entity property (Type_.location(), Type_.location().workshop()), collectional property (Type_.slots()), one-to-one association property (Type_.financialDetails()).
+     * @return
+     */
+    public fetch<T> with(final IConvertableToPath propName) {
+        return with(propName.toPath());
+    }
+
+    /**
      * Should be used to indicate a name of the first level property that should not be initialised in the retrieved entity instances.
      *
      * @param propName
@@ -116,6 +129,18 @@ public class fetch<T extends AbstractEntity<?>> {
         final fetch<T> result = copy(this);
         result.excludedProps.add(propName);
         return result;
+    }
+
+    /**
+     * Should be used to indicate a name of the first level property that should not be initialised in the retrieved entity instances.
+     *
+     * @param propName
+     *            - Could be name of the primitive property (e.g. Type_.desc(), Type_.numberOfPages()), entity property (Type_.station()), composite type property (Type_.cost(), Type_.cost().amount()), union
+     *            entity property (Type_.location(), Type_.location().workshop()), collectional property (Type_.slots()), one-to-one association property (Type_.financialDetails()).
+     * @return
+     */
+    public fetch<T> without(final IConvertableToPath propName) {
+        return without(propName.toPath());
     }
 
     /**
@@ -139,6 +164,18 @@ public class fetch<T extends AbstractEntity<?>> {
         final fetch<T> result = copy(this);
         result.includedPropsWithModels.put(propName, fetchModel);
         return result;
+    }
+
+    /**
+     * Should be used to indicate a name of the first level entity property that should be initialised in the retrieved entity instances and the model to indicate which
+     * subproperties of the given property should be initialised as well.
+     *
+     * @param propName
+     * @param fetchModel
+     * @return
+     */
+    public fetch<T> with(final IConvertableToPath propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
+        return with(propName.toPath(), fetchModel);
     }
 
     public Class<T> getEntityType() {

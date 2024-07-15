@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.domaintree.centre.analyses.impl;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -19,12 +18,12 @@ import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTr
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Monitoring;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel.GroupingPeriods;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.ICategorizer;
 import ua.com.fielden.platform.types.ICategory;
 import ua.com.fielden.platform.utils.Pair;
@@ -42,23 +41,23 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
     /**
      * A <i>manager</i> constructor for the first time instantiation.
      *
-     * @param serialiser
+     * @param entityFactory
      * @param rootTypes
      */
-    public LifecycleDomainTreeManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-        this(serialiser, new LifecycleDomainTreeRepresentation(serialiser, rootTypes), null, new LifecycleAddToDistributionTickManager(), new LifecycleAddToCategoriesTickManager(), null, null, null);
+    public LifecycleDomainTreeManager(final EntityFactory entityFactory, final Set<Class<?>> rootTypes) {
+        this(entityFactory, new LifecycleDomainTreeRepresentation(entityFactory, rootTypes), null, new LifecycleAddToDistributionTickManager(), new LifecycleAddToCategoriesTickManager(), null, null, null);
     }
 
     /**
      * A <i>manager</i> constructor.
      *
-     * @param serialiser
+     * @param entityFactory
      * @param dtr
      * @param firstTick
      * @param secondTick
      */
-    protected LifecycleDomainTreeManager(final ISerialiser serialiser, final LifecycleDomainTreeRepresentation dtr, final Boolean visible, final LifecycleAddToDistributionTickManager firstTick, final LifecycleAddToCategoriesTickManager secondTick, final Date from, final Date to, final Boolean total) {
-        super(serialiser, dtr, visible, firstTick, secondTick);
+    protected LifecycleDomainTreeManager(final EntityFactory entityFactory, final LifecycleDomainTreeRepresentation dtr, final Boolean visible, final LifecycleAddToDistributionTickManager firstTick, final LifecycleAddToCategoriesTickManager secondTick, final Date from, final Date to, final Boolean total) {
+        super(entityFactory, dtr, visible, firstTick, secondTick);
 
         this.from = from;
         this.to = to;
@@ -192,9 +191,9 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
 
         protected List<String> allCats(final Class<?> root) {
             final Class<?> originalType = DynamicEntityClassLoader.getOriginalType(root);
-            final List<String> includedProperties = new ArrayList<String>(tr().getDtr().includedProperties(originalType));
+            final List<String> includedProperties = new ArrayList<>(tr().getDtr().includedProperties(originalType));
             final Class<?> managedType = managedType(root);
-            final List<String> allCats = new ArrayList<String>();
+            final List<String> allCats = new ArrayList<>();
             for (final String property : includedProperties) {
                 if (!PropertyTypeDeterminator.isDotNotation(property) && LifecycleAddToCategoriesTickRepresentation.isCategoryProperty(managedType, property)) { // categories at this stage are located in root type
                     allCats.add(property);
@@ -220,13 +219,13 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
         @Override
         public List<? extends ICategory> allCategories(final Class<?> root) {
             final String lifecycleProperty = lifecycleProperty(root);
-            return lifecycleProperty == null ? new ArrayList<ICategory>() : categorizer(root, lifecycleProperty(root)).getAllCategories();
+            return lifecycleProperty == null ? new ArrayList<>() : categorizer(root, lifecycleProperty(root)).getAllCategories();
         }
 
         @Override
         public List<? extends ICategory> currentCategories(final Class<?> root) {
             final List<? extends ICategory> allCategories = allCategories(root);
-            final List<ICategory> res = new ArrayList<ICategory>();
+            final List<ICategory> res = new ArrayList<>();
             final List<String> usedProperties = usedProperties(root);
             for (final String property : usedProperties) {
                 if (LifecycleDomainTreeRepresentation.LifecycleAddToCategoriesTickRepresentation.isCategoryProperty(managedType(root), property)) {
@@ -234,38 +233,6 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
                 }
             }
             return res;
-        }
-    }
-
-    /**
-     * A specific Kryo serialiser for {@link LifecycleDomainTreeManager}.
-     *
-     * @author TG Team
-     *
-     */
-    public static class LifecycleDomainTreeManagerSerialiser extends AbstractAnalysisDomainTreeManagerSerialiser<LifecycleDomainTreeManager> {
-        public LifecycleDomainTreeManagerSerialiser(final ISerialiser serialiser) {
-            super(serialiser);
-        }
-
-        @Override
-        public LifecycleDomainTreeManager read(final ByteBuffer buffer) {
-            final LifecycleDomainTreeRepresentation dtr = readValue(buffer, LifecycleDomainTreeRepresentation.class);
-            final LifecycleAddToDistributionTickManager firstTick = readValue(buffer, LifecycleAddToDistributionTickManager.class);
-            final LifecycleAddToCategoriesTickManager secondTick = readValue(buffer, LifecycleAddToCategoriesTickManager.class);
-            final Boolean visible = readValue(buffer, Boolean.class);
-            final Date from = readValue(buffer, Date.class);
-            final Date to = readValue(buffer, Date.class);
-            final Boolean total = readValue(buffer, Boolean.class);
-            return new LifecycleDomainTreeManager(serialiser(), dtr, visible, firstTick, secondTick, from, to, total);
-        }
-
-        @Override
-        public void write(final ByteBuffer buffer, final LifecycleDomainTreeManager manager) {
-            super.write(buffer, manager);
-            writeValue(buffer, manager.from);
-            writeValue(buffer, manager.to);
-            writeValue(buffer, manager.total);
         }
     }
 

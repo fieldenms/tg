@@ -1,16 +1,22 @@
 package ua.com.fielden.platform.dao;
 
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.companion.AbstractEntityReader.ERR_MISSING_ID_VALUE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.utils.EntityUtils.fetch;
+import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -21,11 +27,21 @@ import java.util.stream.Stream;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
+import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
+import ua.com.fielden.platform.persistence.composite.EntityWithSingleMemberDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
+import ua.com.fielden.platform.sample.domain.TgVehicle;
+import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
+import ua.com.fielden.platform.sample.domain.TgVehicleFinDetailsDao;
+import ua.com.fielden.platform.sample.domain.TgVehicleMake;
+import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
@@ -43,8 +59,10 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
     public void test_that_entity_with_simple_key_is_handled_correctly() {
         final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
+        final EntityResultQueryModel<EntityWithMoney> query = select(EntityWithMoney.class).model();
+        final OrderingModel orderBy = orderBy().prop(AbstractEntity.ID).asc().model();
         // find all
-        final List<EntityWithMoney> result = dao.getPage(0, 25).data();
+        final List<EntityWithMoney> result = dao.getPage(from(query).with(orderBy).model(), 0, 25).data();
         assertEquals("Incorrect number of retrieved entities.", 4, result.size());
         assertEquals("Incorrect key value.", "KEY1", result.get(0).getKey());
         // find by id
@@ -56,6 +74,38 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
         assertEquals("Incorrect number of found entities.", 4, dao.getPage(from(model1).model(), 0, 25).data().size());
         final EntityResultQueryModel<EntityWithMoney> model2 = select(EntityWithMoney.class).where().prop("key").like().val("e%").model();
         assertEquals("Incorrect number of found entities.", 0, dao.getPage(from(model2).model(), 0, 25).data().size());
+    }
+
+    @Test
+    public void attempts_to_find_entities_by_passing_null_as_id_value_throws_exception() {
+        final IEntityWithMoney co = co$(EntityWithMoney.class);
+
+        final Long idNull = null;
+        final String errMsg = format(ERR_MISSING_ID_VALUE, EntityWithMoney.class.getName());
+
+        try {
+            co.findById(idNull);
+        } catch (final EntityCompanionException ex) {
+            assertEquals(errMsg, ex.getMessage());
+        }
+
+        try {
+            co.findByIdOptional(idNull);
+        } catch (final EntityCompanionException ex) {
+            assertEquals(errMsg, ex.getMessage());
+        }
+
+        try {
+            co.findById(idNull, fetch(EntityWithMoney.class).fetchModel());
+        } catch (final EntityCompanionException ex) {
+            assertEquals(errMsg, ex.getMessage());
+        }
+
+        try {
+            co.findByIdOptional(idNull, fetch(EntityWithMoney.class).fetchModel());
+        } catch (final EntityCompanionException ex) {
+            assertEquals(errMsg, ex.getMessage());
+        }
     }
 
     @Test
@@ -177,8 +227,8 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
                 assertEquals(en, entityOptional.get());
             });
         }
-    }    
-    
+    }
+
     @Test
     public void finding_non_existing_entity_by_key_with_fetch_produces_consistent_result_for_non_optional_and_optional_versions() {
         final EntityWithMoneyDao co = co$(EntityWithMoney.class);
@@ -208,7 +258,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
             });
         }
     }
-    
+
     @Test
     public void finding_non_existing_composite_entity_by_key_with_fetch_produces_consistent_result_for_non_optional_and_optional_versions() {
         final EntityWithDynamicCompositeKeyDao co = co$(EntityWithDynamicCompositeKey.class);
@@ -261,7 +311,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
         try (final Stream<EntityWithMoney> stream = co.stream(from(select(EntityWithMoney.class).model()).model())) {
             stream.forEach(entity -> {
                 final QueryExecutionModel<EntityWithMoney, EntityResultQueryModel<EntityWithMoney>> qem = from(select(EntityWithMoney.class).where().prop("key").eq().val(entity.getKey()).model()).model();
-                
+
                 final EntityWithMoney en = co.getEntity(qem);
                 assertNotNull(en);
 
@@ -279,6 +329,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
         final String requiredKeyMember = null;
         final EntityWithMoney optionalKeyMember = co$(EntityWithMoney.class).findByKey("KEY1");
+        assertNotNull(optionalKeyMember);
 
         final EntityWithDynamicCompositeKey entity = co.findByKey(requiredKeyMember, optionalKeyMember);
         assertNull(entity);
@@ -297,14 +348,67 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
         assertNull(entity.getKeyPartTwo());
     }
 
-    
+    @Test
+    public void finding_composite_entities_with_single_key_member_by_string_representation_of_that_key_is_supported() {
+        final EntityWithMoney keyMember = co(EntityWithMoney.class).findByKey("KEY1");
+        final EntityWithSingleMemberDynamicCompositeKeyDao co = co(EntityWithSingleMemberDynamicCompositeKey.class);
+        final EntityWithSingleMemberDynamicCompositeKey entity = save(co.new_().setKeyMemember(keyMember));
+
+        final EntityWithSingleMemberDynamicCompositeKey foundByKey = co.findByKey(keyMember);
+        assertNotNull(foundByKey);
+        assertEquals(entity, foundByKey);
+
+        final EntityWithSingleMemberDynamicCompositeKey entityFoundByString = co.findByKey(entity.toString());
+        assertNotNull(entityFoundByString);
+        assertEquals(entity, entityFoundByString);
+    }
+
+    @Test
+    public void finding_composite_entities_with_multiple_key_members_by_string_representation_of_that_key_is_supported() {
+        final EntityWithDynamicCompositeKeyDao co = co(EntityWithDynamicCompositeKey.class);
+
+        final String requiredKeyMember = "key-1-1";
+        final EntityWithMoney optionalKeyMember = co(EntityWithMoney.class).findByKey("KEY1");
+
+        final EntityWithDynamicCompositeKey foundByKey = co.findByKey(requiredKeyMember, optionalKeyMember);
+        assertNotNull(foundByKey);
+
+        final EntityWithDynamicCompositeKey foundByKeyAsString = co.findByKey(foundByKey.toString());
+        assertNotNull(foundByKeyAsString);
+        assertEquals(foundByKey, foundByKeyAsString);
+    }
+
+    @Test
+    public void finding_one_2_one_entities_by_string_representation_of_their_key_is_supported() {
+        assertTrue("Expecting a one-2-one association for this test.", isOneToOne(TgVehicleFinDetails.class));
+
+        final TgVehicleMake audi = save(new_(TgVehicleMake.class, "AUDI", "Audi"));
+        final TgVehicleModel m318 = save(new_(TgVehicleModel.class, "318", "318").setMake(audi));
+        final TgVehicle car1 = save(new_(TgVehicle.class, "CAR1", "CAR1 DESC")
+                .setInitDate(date("2001-01-01 00:00:00"))
+                .setModel(m318).setPrice(new Money("20"))
+                .setPurchasePrice(new Money("10"))
+                .setActive(true)
+                .setLeased(false));
+
+        final TgVehicleFinDetailsDao co = co(TgVehicleFinDetails.class);
+        final TgVehicleFinDetails foundOne2OneByKeyValue = co.findByKey(car1);
+        assertNotNull(foundOne2OneByKeyValue);
+
+        final TgVehicleFinDetails foundOne2OneByKeyAsString = co.findByKey(foundOne2OneByKeyValue.toString());
+        assertNotNull(foundOne2OneByKeyAsString);
+        assertEquals(foundOne2OneByKeyValue, foundOne2OneByKeyAsString);
+    }
+
     @Test
     public void test_that_entity_with_composite_key_is_handled_correctly() {
         final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
         final EntityWithDynamicCompositeKeyDao daoComposite = co$(EntityWithDynamicCompositeKey.class);
 
+        final EntityResultQueryModel<EntityWithDynamicCompositeKey> query = select(EntityWithDynamicCompositeKey.class).model();
+        final OrderingModel orderBy = orderBy().prop(AbstractEntity.ID).asc().model();
         // find all
-        final List<EntityWithDynamicCompositeKey> result = daoComposite.getPage(0, 25).data();
+        final List<EntityWithDynamicCompositeKey> result = daoComposite.getPage(from(query).with(orderBy).model(), 0, 25).data();
         assertEquals("Incorrect number of retrieved entities.", 2, result.size());
         assertEquals("Incorrect key value.", new DynamicEntityKey(result.get(0)), result.get(0).getKey());
         // find by key
@@ -320,7 +424,10 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
     public void test_that_unfiltered_pagination_works() {
         final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
-        final IPage<EntityWithMoney> page = dao.firstPage(2);
+        final EntityResultQueryModel<EntityWithMoney> query = select(EntityWithMoney.class).model();
+        final OrderingModel orderBy = orderBy().prop(AbstractEntity.ID).asc().model();
+
+        final IPage<EntityWithMoney> page = dao.firstPage(from(query).with(orderBy).model(), 2);
         assertEquals("Incorrect number of instances on the page.", 2, page.data().size());
         assertTrue("Page should have the next one.", page.hasNext());
 
@@ -366,11 +473,32 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void test_entity_exists_using_entity() {
-        final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
+    public void entityExists_is_true_for_persisted_entities() {
+        final EntityWithMoneyDao co = co$(EntityWithMoney.class);
 
-        final EntityWithMoney entity = dao.findByKey("key1");
-        assertTrue(dao.entityExists(entity));
+        final EntityWithMoney entity = co.findByKey("key1");
+        assertTrue(co.entityExists(entity));
+    }
+
+    @Test
+    public void entityExists_is_true_IDs_matching_persisted_entities() {
+        final EntityWithMoneyDao co = co$(EntityWithMoney.class);
+
+        final EntityWithMoney entity = co.findByKey("key1");
+        assertTrue(co.entityExists(entity.getId()));
+    }
+
+    @Test
+    public void entityExists_is_false_for_not_persisted_entities() {
+        final EntityWithMoneyDao co = co$(EntityWithMoney.class);
+        final EntityWithMoney entity = co.new_();
+        assertFalse(co.entityExists(entity));
+    }
+
+    @Test
+    public void entityExists_is_false_for_IDs_not_matching_any_persisted_entities() {
+        final EntityWithMoneyDao co = co$(EntityWithMoney.class);
+        assertFalse(co.entityExists(-1L));
     }
 
     @Test
@@ -485,14 +613,34 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void new_entities_become_not_dirty_once_saved() {
+    public void new_non_one_2_one_entities_become_persisted_and_not_dirty_once_saved() {
         final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
         final EntityWithMoney newEntity = new_(EntityWithMoney.class, "some key")
                                           .setDateTimeProperty(new Date());
         final EntityWithMoney savedEntity = dao.save(newEntity);
         assertFalse("New entity should not be dirty after save", savedEntity.isDirty());
+        assertTrue(savedEntity.isPersisted());
         assertTrue("But the original new entiti instance remains dirty...", newEntity.isDirty());
+        assertFalse(newEntity.isPersisted());
+    }
+
+    @Test
+    public void new_one_2_one_entities_get_save_upon_saving_of_the_main_entityd() {
+        assertTrue("Expecting a one-2-one association for this test.", isOneToOne(TgVehicleFinDetails.class));
+
+        final TgVehicleMake audi = save(new_(TgVehicleMake.class, "AUDI", "Audi"));
+        final TgVehicleModel m318 = save(new_(TgVehicleModel.class, "318", "318").setMake(audi));
+        final TgVehicle car1 = save(new_(TgVehicle.class, "CAR1", "CAR1 DESC")
+                .setInitDate(date("2001-01-01 00:00:00"))
+                .setModel(m318).setPrice(new Money("20"))
+                .setPurchasePrice(new Money("10"))
+                .setActive(true)
+                .setLeased(false));
+
+        final TgVehicleFinDetails savedOne2One = car1.getFinDetails();
+        assertNotNull(savedOne2One.isPersisted());
+        assertTrue(savedOne2One.isPersisted());
     }
 
     @Test
@@ -592,18 +740,15 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void test_entity_staleness_check() {
+    public void isStale_holds_only_for_stale_entities() {
         final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
         final EntityWithMoney entity = dao.findByKey("key1");
+        assertTrue(0L == dao.save(entity).getVersion());
         // update entity to simulate staleness
-        entity.setDesc("new desc");
-        dao.save(entity);
+        assertTrue(1L == dao.save(entity.setDesc("new desc")).getVersion());
 
-        dao.findByKey("key1");
         assertTrue("This version should have been recognised as stale.", dao.isStale(entity.getId(), 0L));
-        //assertTrue("This version should have been recognised as stale.", dao.isStale(entity.getId(), 1L));
-        //assertFalse("This version should have been recognised as current.", dao.isStale(entity.getId(), 2L));
         assertFalse("This version should have been recognised as current.", dao.isStale(entity.getId(), 1L));
     }
 
@@ -734,10 +879,79 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
         assertFalse(entity.isValid().isSuccessful());
         assertFalse(entity.getProperty("requiredCritOnly").isValid());
-        
+
         assertTrue(entity.isValid(validateWithoutCritOnly).isSuccessful());
-        
+
         co.save(entity);
+    }
+
+    @Test
+    public void composite_entities_can_by_queried_by_passing_composite_key_values_as_EQL_parameters() {
+        final IEntityDao<EntityWithDynamicCompositeKey> co = co(EntityWithDynamicCompositeKey.class);
+        final String compositeKeyAsString = "key-1-1" + " " + "KEY1";
+        final EntityResultQueryModel<EntityWithDynamicCompositeKey> qByKeyAsString = select(EntityWithDynamicCompositeKey.class).where()
+                .prop("key").eq().val(compositeKeyAsString).model();
+        final fetch<EntityWithDynamicCompositeKey> fetch = fetchAll(EntityWithDynamicCompositeKey.class);
+        final EntityWithDynamicCompositeKey entityByKeyAsString = co.getEntity(from(qByKeyAsString).with(fetch).model());
+        assertNotNull(entityByKeyAsString);
+
+        final EntityResultQueryModel<EntityWithDynamicCompositeKey> qByKey = select(EntityWithDynamicCompositeKey.class).where()
+                .prop("key").eq().val(entityByKeyAsString.getKey()).model();
+        final EntityWithDynamicCompositeKey entityByKey = co.getEntity(from(qByKey).with(fetch).model());
+        assertNotNull(entityByKey);
+        assertEquals(entityByKeyAsString, entityByKey);
+    }
+
+    /**
+     * This test demonstrates that inherited methods, which are intercepted when invoked directly, do not get intercepted when invoked via a {@code super} call in one of the methods, defined in a subtype.
+     * <p>
+     * Such behaviour of the AOP in general and the one included as part of Guice in particular, is very natural - instrumentation does not happen for inherited methods, invoked on a {@code super} instance, which cannot itself be instrumented.
+     * </p>
+     * This specific test covers the case where no session was yet associated with a companion object.
+     */
+    @Test
+    public void super_saving_new_instance_invoked_from_a_method_without_SessionRequired_is_not_intercepted_and_fails_due_not_missing_or_invalid_session() {
+        final var co = getInstance(IEntityWithMoney.class);
+        final var entity = co.new_();
+        entity.setKey("new value");
+        try {
+            ((ISessionEnabled)co).setSession(null); // remove session manually - methods intercepted due to @SessionRequired would initialise a new session
+            co.superSave(entity); // invokes super.save(), which should fail due to missing session as the super call is not intercepted to create a new session
+            failure("Invocation of superSave should have failed due to missing @SesionRequired");
+        } catch(final EntityCompanionException ex) {
+            // no session was yet associated with the companion instance, hence the "missing session" error
+            assertEquals("Session is missing, most likely, due to missing @SessionRequired annotation.", ex.getMessage());
+        }
+    }
+
+    /**
+     * This test is similar to {@link #super_saving_new_instance_invoked_from_a_method_without_SessionRequired_is_not_intercepted_and_fails_due_not_missing_or_invalid_session},
+     * covering the case where a session was already associated with a companion object, but an attempt to use that session is made subsequently by a {@code super.save} call.
+     */
+    @Test
+    public void super_saving_modified_instance_invoked_from_a_method_without_SessionRequired_is_not_intercepted_and_fails_due_not_missing_or_invalid_session() {
+        final var co = getInstance(IEntityWithMoney.class);
+        final var entity = co.new_();
+        entity.setKey("new value");
+        final var savedEntity = co.save(entity);
+        try {
+            savedEntity.setKey("new value 1"); // modify before save to actually attempt saving
+            co.superSave(savedEntity); // invokes super.save(), which should fail due to missing session as the super call is not intercepted to create a new session
+            failure("Invocation of superSave should have failed due to missing @SesionRequired");
+        } catch(final EntityCompanionException ex) {
+            // previously associated session was already closed when an attempt to use is made
+            assertEquals("Session is closed, most likely, due to missing @SessionRequired annotation.", ex.getMessage());
+        }
+    }
+
+    @Override
+    public boolean saveDataPopulationScriptToFile() {
+        return false;
+    }
+
+    @Override
+    public boolean useSavedDataPopulationScript() {
+        return false;
     }
 
     @Override
@@ -746,6 +960,10 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
         final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
         constants.setNow(dateTime("2016-02-19 02:47:00"));
+
+        if (useSavedDataPopulationScript()) {
+            return;
+        }
 
         final EntityWithMoney keyPartTwo = save(new_(EntityWithMoney.class, "KEY1", "desc").setMoney(new Money("20.00")).setDateTimeProperty(date("2009-03-01 11:00:55")));
         save(new_composite(EntityWithDynamicCompositeKey.class, "key-1-1", keyPartTwo));

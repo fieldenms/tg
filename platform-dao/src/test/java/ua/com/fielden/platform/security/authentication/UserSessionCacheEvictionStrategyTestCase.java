@@ -4,10 +4,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.security.SignatureException;
 import java.util.Optional;
@@ -20,7 +18,6 @@ import org.junit.Test;
 import com.google.common.base.Ticker;
 import com.google.common.cache.Cache;
 
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.session.UserSessionDao;
@@ -57,7 +54,7 @@ public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCas
         final User currUser = getInstance(IUserProvider.class).getUser();
         constants.setNow(dateTime("2015-04-23 13:00:00"));
         cacheTicker.setStartTime(dateTime("2015-04-23 13:00:00"));
-        final UserSession newSession = coSession.newSession(currUser, true);
+        final UserSession newSession = coSession.newSession(currUser, true, null);
 
         // at this stage the cache should contain only one entry
         assertEquals(1, coSession.getCache().size());
@@ -70,7 +67,7 @@ public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCas
         final User currUser = getInstance(IUserProvider.class).getUser();
         constants.setNow(dateTime("2015-04-23 13:00:00"));
         cacheTicker.setStartTime(dateTime("2015-04-23 13:00:00"));
-        final UserSession newSession = coSession.newSession(currUser, true);
+        final UserSession newSession = coSession.newSession(currUser, true, null);
         final String newAuthenticator = newSession.getAuthenticator().get().toString();
 
         // emulate burst requests with random increment of request time within 2 seconds
@@ -89,12 +86,12 @@ public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCas
     }
 
     @Test
-    public void should_permit_burst_requests_from_the_same_untrusted_device_immeditely_afte_login_all_within_eviction_time() {
+    public void should_permit_burst_requests_from_the_same_untrusted_device_immeditely_after_login_all_within_eviction_time() {
         // establish a new sessions for user TEST, which effectively emulates the explicit login
         final User currUser = getInstance(IUserProvider.class).getUser();
         constants.setNow(dateTime("2015-04-23 13:00:00"));
         cacheTicker.setStartTime(dateTime("2015-04-23 13:00:00"));
-        final UserSession newSession = coSession.newSession(currUser, false);
+        final UserSession newSession = coSession.newSession(currUser, false, null);
         final String newAuthenticator = newSession.getAuthenticator().get().toString();
 
         // emulate burst requests with random increment of request time within 2 seconds
@@ -125,7 +122,7 @@ public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCas
         final User currUser = getInstance(IUserProvider.class).getUser();
         constants.setNow(dateTime("2015-04-23 13:00:00"));
         cacheTicker.setStartTime(dateTime("2015-04-23 13:00:00"));
-        final UserSession newSession = coSession.newSession(currUser, true);
+        final UserSession newSession = coSession.newSession(currUser, true, null);
         final String authenticator = newSession.getAuthenticator().get().toString();
 
         // enough time has passed to evict authenticators from cache
@@ -178,7 +175,7 @@ public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCas
         final User currUser = getInstance(IUserProvider.class).getUser();
         constants.setNow(dateTime("2015-04-23 13:00:00"));
         cacheTicker.setStartTime(dateTime("2015-04-23 13:00:00"));
-        final UserSession newSession = coSession.newSession(currUser, true);
+        final UserSession newSession = coSession.newSession(currUser, true, null);
         final String authenticator = newSession.getAuthenticator().get().toString();
 
         // enough time has passed to evict authenticators from cache
@@ -189,7 +186,7 @@ public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCas
         assertTrue(session.isPresent());
         // make sure both original and regenerated authenticators have been cached
         final String newAuthenticator = session.get().getAuthenticator().get().toString();
-        assertNotSame("Authenticator should have been reset.", authenticator, newAuthenticator);
+        assertNotEquals("Authenticator should have been reset.", authenticator, newAuthenticator);
         assertEquals("Unexpected number of session in cache.", 2, coSession.getCache().size());
         assertNotNull("Original authenticator should be present in cache.", coSession.getCache().getIfPresent(authenticator));
         assertNotNull("New authenticator should be present in cache.", coSession.getCache().getIfPresent(newAuthenticator));
@@ -203,8 +200,6 @@ public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCas
         // making a request with the original authenticator should lead to blocking of user sessions due to suspected stolen authenticator
         final Optional<UserSession> ss = coSession.currentSession(currUser, authenticator, false);
         assertFalse(ss.isPresent());
-        final EntityResultQueryModel<UserSession> currUserSessions = select(UserSession.class).where().prop("user").eq().val(currUser).model();
-        assertEquals(0, coSession.count(currUserSessions));
     }
 
     @Override

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.cypher;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
+
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -7,6 +9,7 @@ import java.security.SignatureException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
@@ -15,11 +18,12 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.joda.time.format.PeriodFormatter;
 import org.joda.time.format.PeriodFormatterBuilder;
+import ua.com.fielden.platform.security.exceptions.SecurityException;
 
 /**
  *
@@ -34,8 +38,14 @@ import org.joda.time.format.PeriodFormatterBuilder;
  */
 public final class SessionIdentifierGenerator {
     private static final String HMAC_SHA256_ALGORITHM = "HmacSHA256";
-    private static final Logger LOGGER = Logger.getLogger(SessionIdentifierGenerator.class);
-    private SecureRandom random = new SecureRandom();
+    private static final Logger LOGGER = getLogger(SessionIdentifierGenerator.class);
+    private static final ThreadLocal<SecureRandom> random = ThreadLocal.withInitial(() -> {
+        try {
+            return SecureRandom.getInstanceStrong();
+        } catch (final NoSuchAlgorithmException ex) {
+            throw new SecurityException("Could not instantiate SecureRandom.", ex);
+        }
+    });
 
     /**
      * Generates cryptographically random series identifier.
@@ -43,7 +53,7 @@ public final class SessionIdentifierGenerator {
      * @return
      */
     public String nextSessionId() {
-        return new BigInteger(128, random).toString(32);
+        return new BigInteger(128, random.get()).toString(32);
     }
 
     /**
@@ -52,7 +62,7 @@ public final class SessionIdentifierGenerator {
      * @return
      */
     public String nextPin() {
-        return new BigInteger(32, random).toString(32);
+        return new BigInteger(32, random.get()).toString(32);
     }
     
     /**
@@ -61,9 +71,16 @@ public final class SessionIdentifierGenerator {
      * @return
      */
     public String genSalt() {
-        return new BigInteger(128, random).toString(32);
+        return new BigInteger(128, random.get()).toString(32);
     }
 
+    /**
+     * Generates cryptographically random UUID.
+     * @return
+     */
+    public UUID genUuid() {
+        return new UUID(random.get().nextLong(), random.get().nextLong());
+    }
     /**
      * Generates a 4096 bit key using the HMAC-SHA256 algorithm.
      *

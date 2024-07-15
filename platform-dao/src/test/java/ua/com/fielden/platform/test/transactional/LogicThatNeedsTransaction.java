@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.test.transactional;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Session;
 
 import com.google.inject.Inject;
@@ -11,6 +11,7 @@ import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.Money;
 
 /**
@@ -19,7 +20,7 @@ import ua.com.fielden.platform.types.Money;
  * @author TG Team
  *
  */
-class LogicThatNeedsTransaction implements ISessionEnabled {
+public class LogicThatNeedsTransaction implements ISessionEnabled {
     private final IEntityDao<EntityWithMoney> dao;
     private Session session;
     private String transactionGuid;
@@ -114,4 +115,10 @@ class LogicThatNeedsTransaction implements ISessionEnabled {
     public void cannotBeInvokeWithinExistingTransaction() {
         singleTransactionInvocaion("20.00", "30.00");
     }
+
+    @Override
+    public User getUser() {
+        return dao.getUser();
+    }
+
 }

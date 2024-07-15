@@ -9,14 +9,18 @@ public interface IRetrievalModel<T extends AbstractEntity<?>> {
     Class<T> getEntityType();
 
     boolean isInstrumented();
-    
+
     Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> getRetrievalModels();
-    
+
     Set<String> getPrimProps();
-    
+
     Set<String> getProxiedProps();
-    
+
     boolean containsProp(final String propName);
-    
+
     boolean containsProxy(final String propName);
+
+    boolean topLevel();
+
+    boolean containsOnlyTotals();
 }

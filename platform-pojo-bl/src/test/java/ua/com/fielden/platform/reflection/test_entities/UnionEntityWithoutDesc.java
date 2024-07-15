@@ -7,8 +7,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 
 public class UnionEntityWithoutDesc extends AbstractUnionEntity {
 
-    private static final long serialVersionUID = -2697003300590628392L;
-
     @IsProperty
     @Title(value = "First entity", desc = "First entity description")
     private SimplePartEntity simplePartEntity;

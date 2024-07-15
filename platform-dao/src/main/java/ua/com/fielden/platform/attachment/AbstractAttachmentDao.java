@@ -50,7 +50,10 @@ public abstract class AbstractAttachmentDao<A extends AbstractAttachment<A, ?>> 
     protected void persistAttachmentIfRequired(final AbstractAttachment<A, ?> entity) {
         final Attachment currAttachment = entity.getAttachment();
         if (currAttachment != null && !currAttachment.isPersisted()) {
-            entity.setAttachment(co$(Attachment.class).save(currAttachment));
+            final Attachment savedAttachment = co$(Attachment.class).save(currAttachment);
+            entity.beginInitialising();
+            entity.setAttachment(savedAttachment);
+            entity.endInitialising();
         }
     }
 

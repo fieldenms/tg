@@ -1,7 +1,13 @@
 package ua.com.fielden.platform.reflection;
 
 import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByNameOptionally;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penultAndLast;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.transform;
 import static ua.com.fielden.platform.reflection.Reflector.MAXIMUM_CACHE_SIZE;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
@@ -20,7 +26,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -37,7 +43,6 @@ import ua.com.fielden.platform.entity.annotation.TransactionEntity;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.utils.Pair;
 
 /**
  * This is a helper class to provide methods related to {@link Annotation}s determination and related entity/property/method analysis based on them.
@@ -46,12 +51,12 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public final class AnnotationReflector {
-    private static final Logger LOGGER = Logger.getLogger(AnnotationReflector.class);
+    private static final Logger LOGGER = getLogger(AnnotationReflector.class);
 
     /** A global lazy static cache of annotations, which is used for annotation information retrieval. */
-    private static final Cache<Class<?>, Map<String, Map<Class<? extends Annotation>, Annotation>>> METHOD_ANNOTATIONS = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
-    private static final Cache<Class<?>, Map<String, Map<Class<? extends Annotation>, Annotation>>> FIELD_ANNOTATIONS = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
-    
+    private static final Cache<Class<?>, Cache<String, Map<Class<? extends Annotation>, Annotation>>> METHOD_ANNOTATIONS = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
+    private static final Cache<Class<?>, Cache<String, Map<Class<? extends Annotation>, Annotation>>> FIELD_ANNOTATIONS = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
+
     public static T2<Long, Long> cleanUp() {
         METHOD_ANNOTATIONS.cleanUp();
         FIELD_ANNOTATIONS.cleanUp();
@@ -79,7 +84,7 @@ public final class AnnotationReflector {
     }
 
     /**
-     * Similar to {@link #getAnnotation(Class, Class)}, but instead of an actual annotation returns <code>true</code> if annotation is present, <code>false</code> otherwise.
+     * Similar to {@link #getAnnotationForClass(Class, Class)}, but instead of an actual annotation returns {@code true} if annotation is present, {@code false} otherwise.
      *
      * @param annotationType
      * @param forType
@@ -116,48 +121,49 @@ public final class AnnotationReflector {
         final Class<?> klass = field.getDeclaringClass();
         final String name = field.getName();
 
-        final Map<String, Map<Class<? extends Annotation>, Annotation>> cachedMethods;
+        final Cache<String, Map<Class<? extends Annotation>, Annotation>> cachedFieldAnnotations;
         try {
-            cachedMethods = FIELD_ANNOTATIONS.get(klass, HashMap::new);
+            cachedFieldAnnotations = FIELD_ANNOTATIONS.get(klass, () -> CacheBuilder.newBuilder().weakValues().build());
         } catch (final ExecutionException ex) {
             LOGGER.error(ex);
             throw new ReflectionException(format("Could not get annotation for field [%s].", field), ex);
         }
 
-        return annotationExtractionHelper(field, name, cachedMethods);
+        return annotationExtractionHelper(field, name, cachedFieldAnnotations);
     }
 
     private static Map<Class<? extends Annotation>, Annotation> getMethodAnnotations(final Method method) {
         final Class<?> klass = method.getDeclaringClass();
         final String name = method.getName();
 
-        final Map<String, Map<Class<? extends Annotation>, Annotation>> cachedMethods;
+        final Cache<String, Map<Class<? extends Annotation>, Annotation>> cachedMethodAnnotations;
         try {
-            cachedMethods = METHOD_ANNOTATIONS.get(klass, HashMap::new);
+            cachedMethodAnnotations = METHOD_ANNOTATIONS.get(klass, () -> CacheBuilder.newBuilder().weakValues().build());
         } catch (final ExecutionException ex) {
             LOGGER.error(ex);
             throw new ReflectionException(format("Could not get annotation for method [%s].", method), ex);
         }
 
-        return annotationExtractionHelper(method, name, cachedMethods);
+        return annotationExtractionHelper(method, name, cachedMethodAnnotations);
     }
 
-    private static Map<Class<? extends Annotation>, Annotation> annotationExtractionHelper(final AnnotatedElement el, final String name, final Map<String, Map<Class<? extends Annotation>, Annotation>> cachedMethods) {
-        final Map<Class<? extends Annotation>, Annotation> cached = cachedMethods.get(name);
-        if (cached == null) {
-            final Map<Class<? extends Annotation>, Annotation> newCached = new HashMap<>();
-            for (final Annotation ann : el.getAnnotations()) {
-                newCached.put(ann.annotationType(), ann);
-            }
-            cachedMethods.put(name, newCached);
-            return newCached;
+    private static Map<Class<? extends Annotation>, Annotation> annotationExtractionHelper(final AnnotatedElement el, final String name, final Cache<String, Map<Class<? extends Annotation>, Annotation>> cachedAnnotations) {
+        try {
+            return cachedAnnotations.get(name, () -> {
+                    final Map<Class<? extends Annotation>, Annotation> newCached = new HashMap<>();
+                    for (final Annotation ann : el.getAnnotations()) {
+                        newCached.put(ann.annotationType(), ann);
+                    }
+                    return newCached;
+            });
+        } catch (final ExecutionException ex) {
+            throw new ReflectionException("Could not get annotations for [%s]".formatted(name), ex);
         }
-        return cached;
     }
 
     /**
      * The same as {@link #getAnnotation(AnnotatedElement, Class)}, but with an {@link Optional} result.
-     * 
+     *
      * @param annotatedElement
      * @param annotationClass
      * @return
@@ -215,11 +221,10 @@ public final class AnnotationReflector {
      *
      * Returns a whole list of methods (including private, protected and public). This method processes the whole class hierarchy.
      * <p>
-     * Important : overridden methods resolves as different. (e.g.: both overridden "getKey()" from {@link AbstractUnionEntity} and original "getKey()" from {@link AbstractEntity}
-     * will be returned for {@link AbstractUnionEntity} descendant)
+     * Important : overridden methods resolve as different. (e.g.: both overridden "getKey()" from {@link AbstractUnionEntity} and original "getKey()" from {@link AbstractEntity}
+     * would be returned for a {@link AbstractUnionEntity} descendant)
      *
      * @param type
-     * @param annotation
      * @return
      */
     public static List<Method> getMethods(final Class<?> type) {
@@ -273,7 +278,7 @@ public final class AnnotationReflector {
         Class<?> runningType = forType;
         T annotation = null;
         while (annotation == null && runningType != null && runningType != Object.class) { // need to iterated thought entity hierarchy
-            annotation = runningType.getAnnotation(annotationType); 
+            annotation = runningType.getAnnotation(annotationType);
             runningType = runningType.getSuperclass();
         }
         return annotation;
@@ -316,27 +321,18 @@ public final class AnnotationReflector {
      * @return
      */
     public static <T extends Annotation> T getPropertyAnnotation(final Class<T> annotationType, final Class<?> forType, final String dotNotationExp) {
-        // if (AbstractEntity.KEY.equals(dotNotationExp) || AbstractEntity.DESC.equals(dotNotationExp)) {
-        // return getAnnotation(annotationType, forType);
-        // }
-        // if (dotNotationExp.endsWith("." + AbstractEntity.KEY) || dotNotationExp.endsWith("." + AbstractEntity.DESC)) {
-        // final String containingPropertyName = dotNotationExp.endsWith("." + AbstractEntity.KEY) ? dotNotationExp.substring(0, dotNotationExp.length() - 4) :
-        // dotNotationExp.substring(
-        // 0, dotNotationExp.length() - 5);
-        // return getAnnotation(annotationType, PropertyTypeDeterminator.determinePropertyType(forType, containingPropertyName));
-        if (dotNotationExp.endsWith(AbstractEntity.KEY) && KeyType.class.equals(annotationType) || //
-        dotNotationExp.endsWith(AbstractEntity.KEY) && KeyTitle.class.equals(annotationType) || //
-        dotNotationExp.endsWith(AbstractEntity.DESC) && DescTitle.class.equals(annotationType)) {
-            final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(forType, dotNotationExp);
-            return getAnnotationForClass(annotationType, transformed.getKey());
+        if (dotNotationExp.endsWith(AbstractEntity.KEY) && KeyType.class.equals(annotationType) ||
+            dotNotationExp.endsWith(AbstractEntity.KEY) && KeyTitle.class.equals(annotationType) ||
+            dotNotationExp.endsWith(AbstractEntity.DESC) && DescTitle.class.equals(annotationType)) {
+            return getAnnotationForClass(annotationType, transform(forType, dotNotationExp).getKey());
         } else {
             return findFieldByNameOptionally(forType, dotNotationExp).map(field -> getAnnotation(field, annotationType)).orElse(null);
         }
     }
-    
+
     /**
      * The same as {@link #getPropertyAnnotation(Class, Class, String)}, but with an {@link Optional} result;
-     * 
+     *
      * @param annotationType
      * @param forType
      * @param dotNotationExp
@@ -347,11 +343,10 @@ public final class AnnotationReflector {
     }
 
     /**
-     * Returns <code>true</code> if {@link Calculated} annotation represents <i>contextual</i> calculated property, <code>false</code> otherwise. <i>Contextual</i> calculated
+     * Returns {@code true} if {@link Calculated} annotation represents <i>contextual</i> calculated property, <code>false</code> otherwise. <i>Contextual</i> calculated
      * properties are generated using {@link IDomainTreeEnhancer} and can be dependent on type higher than direct parent type.
      *
-     * @param root
-     * @param property
+     * @param calculatedAnnotation
      * @return
      */
     public static boolean isContextual(final Calculated calculatedAnnotation) {
@@ -377,30 +372,36 @@ public final class AnnotationReflector {
      * Returns true if any property in dotNotationExp parameter has an annotation specified with annotationType.
      *
      * @param annotationType
-     * @param superType
+     * @param forType
      * @param dotNotationExp
      * @return
      */
-    public static boolean isAnnotationPresentInHierarchy(final Class<? extends Annotation> annotationType, final Class<?> superType, final String dotNotationExp) {
-        //	String propertyName = dotNotationExp;
-        //	while (!StringUtils.isEmpty(propertyName)) {
-        //	    final Field resField = Finder.findFieldByName(superType, propertyName);
-        //	    if (resField.isAnnotationPresent(annotationType)) {
-        //		return true;
-        //	    }
-        //	    final int lastPointIndex = propertyName.lastIndexOf(PropertyTypeDeterminator.PROPERTY_SPLITTER); // "."
-        //	    propertyName = propertyName.substring(0, lastPointIndex < 0 ? 0 : lastPointIndex);
-        //	}
-        //	return false;
-        if (isPropertyAnnotationPresent(annotationType, superType, dotNotationExp)) {
+    public static boolean isAnnotationPresentInHierarchy(final Class<? extends Annotation> annotationType, final Class<?> forType, final String dotNotationExp) {
+        if (isPropertyAnnotationPresent(annotationType, forType, dotNotationExp)) {
             return true;
+        } else if (PropertyTypeDeterminator.isDotNotation(dotNotationExp)) {
+            return isAnnotationPresentInHierarchy(annotationType, forType, PropertyTypeDeterminator.penultAndLast(dotNotationExp).getKey());
         } else {
-            if (PropertyTypeDeterminator.isDotNotation(dotNotationExp)) {
-                return isAnnotationPresentInHierarchy(annotationType, superType, PropertyTypeDeterminator.penultAndLast(dotNotationExp).getKey());
-            } else {
-                return false;
-            }
+            return false;
         }
+    }
+
+    /**
+     * Returns an optional annotation value of type {@code annotationType} for a property specified by {@code dotNotationExp} in a type hierarchy starting with {@code forType}.
+     *
+     * @param annotationType
+     * @param forType
+     * @param dotNotationExp
+     * @return
+     */
+    public static <T extends Annotation> Optional<T> getPropertyAnnotationInHierarchy (final Class<T> annotationType, final Class<?> forType, final String dotNotationExp) {
+        final T annotation = getPropertyAnnotation(annotationType, forType, dotNotationExp);
+        if (annotation != null) {
+            return of(annotation);
+        } else if (isDotNotation(dotNotationExp)) {
+            return getPropertyAnnotationInHierarchy(annotationType, forType, penultAndLast(dotNotationExp).getKey());
+        }
+        return empty();
     }
 
     /**

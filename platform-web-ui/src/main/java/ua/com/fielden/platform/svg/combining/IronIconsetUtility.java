@@ -2,6 +2,7 @@ package ua.com.fielden.platform.svg.combining;
 
 import static java.lang.String.format;
 import static java.nio.file.Files.readAllBytes;
+import static java.util.Comparator.comparing;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -12,22 +13,27 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import com.google.common.base.Charsets;
 
 public class IronIconsetUtility {
-
+    public static final String FILE_BEGIN_TEMPLATE = "import '/resources/polymer/@polymer/iron-icon/iron-icon.js';%n" +
+                                                     "import '/resources/polymer/@polymer/iron-iconset-svg/iron-iconset-svg.js';%n" +
+                                                     "import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';%n" +
+                                                     "const template = html`<iron-iconset-svg name='%s' size='%d'> %n <svg> %n <defs> %n";
+    public static final String FILE_END_TEMPLATE = "</defs> \n </svg> \n </iron-iconset-svg>`;\n" +
+                                                   "document.head.appendChild(template.content);";
     private final String fileBegin;
     private final String fileEnd;
     private final String srcFolder;
 
     public IronIconsetUtility(final String iconsetId, final int svgWidth, final String srcFolder) {
-        this.fileBegin = format("<link rel=\"import\" href=\"/resources/polymer/iron-icon/iron-icon.html\"> %n " +
-                                "<link rel=\"import\" href=\"/resources/polymer/iron-iconset-svg/iron-iconset-svg.html\"> %n " +
-                                "<iron-iconset-svg name=\"%s\" size=\"%d\"> %n <svg> %n <defs> %n", iconsetId, svgWidth);
-        this.fileEnd = "</defs> %n </svg> %n </iron-iconset-svg>";
+        this.fileBegin = format(FILE_BEGIN_TEMPLATE, iconsetId, svgWidth);
+        this.fileEnd = FILE_END_TEMPLATE;
         this.srcFolder = srcFolder;
     }
 
@@ -54,9 +60,12 @@ public class IronIconsetUtility {
     }
 
     private Set<String> getFilesFromFolder(final String folder) throws IOException {
-        final Set<String> srcFiles = new HashSet<>();
+        final Set<String> srcFiles = new LinkedHashSet<>();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(folder), "*.svg")) {
-            for (final Path filePath : stream) {
+            final List<Path> paths = new ArrayList<>();
+            stream.forEach(paths::add);
+            paths.sort(comparing(Path::toString)); // ensure the same order each time when regenerating icons
+            for (final Path filePath : paths) {
                 srcFiles.add(filePath.toString());
             }
         } catch (final DirectoryIteratorException ex) {

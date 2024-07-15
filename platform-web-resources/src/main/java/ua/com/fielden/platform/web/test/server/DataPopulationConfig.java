@@ -9,8 +9,9 @@ import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
-import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
+import ua.com.fielden.platform.utils.DefaultDates;
+import ua.com.fielden.platform.utils.DefaultUniversalConstants;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
 /**
@@ -25,9 +26,6 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
     private final Injector injector;
     private final TgTestApplicationServerModule module;
 
-    /**
-     * Default constructor is required for dynamic instantiation by {@link DbDrivenTestCase}.
-     */
     public DataPopulationConfig(final Properties props) {
         // instantiate all the factories and Hibernate utility
         try {
@@ -39,11 +37,11 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
             props.setProperty("tokens.path", "../platform-pojo-bl/target/classes");
             props.setProperty("tokens.package", "ua.com.fielden.platform.security.tokens");
             props.setProperty("workflow", "development");
-            props.setProperty("email.smtp", "non-existing-server");
-            props.setProperty("email.fromAddress", "tg@fielden.com.au");
+            props.setProperty("email.smtp", "localhost");
+            props.setProperty("email.fromAddress", "tg@localhost");
 
             final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
-            module = new TgTestApplicationServerModule(HibernateSetup.getHibernateTypes(), applicationDomainProvider, applicationDomainProvider.domainTypes(), SerialisationClassProvider.class, ExampleDataFilter.class, props);
+            module = new TgTestApplicationServerModule(HibernateSetup.getHibernateTypes(), applicationDomainProvider, applicationDomainProvider.domainTypes(), SerialisationClassProvider.class, ExampleDataFilter.class, DefaultUniversalConstants.class, DefaultDates.class, props);
             injector = new ApplicationInjectorFactory().add(module).add(new NewUserNotifierMockBindingModule()).getInjector();
             entityFactory = injector.getInstance(EntityFactory.class);
         } catch (final Exception e) {

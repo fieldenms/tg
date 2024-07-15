@@ -1,11 +1,12 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
 import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 
@@ -16,7 +17,7 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
  *
  */
 public final class EntityTypeInfoGetter {
-    private static final Logger LOGGER = Logger.getLogger(EntityTypeInfoGetter.class);
+    private static final Logger LOGGER = getLogger(EntityTypeInfoGetter.class);
 
     private final ConcurrentHashMap<String, EntityType> typeTable = new ConcurrentHashMap<>(512);
 

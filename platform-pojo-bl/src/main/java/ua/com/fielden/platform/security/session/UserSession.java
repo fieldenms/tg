@@ -7,6 +7,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
@@ -28,6 +29,7 @@ import ua.com.fielden.platform.security.user.User;
 @KeyType(DynamicEntityKey.class)
 @CompanionObject(IUserSession.class)
 @MapEntityTo
+@DenyIntrospection
 public class UserSession extends AbstractEntity<DynamicEntityKey> {
 
     @IsProperty
@@ -57,6 +59,11 @@ public class UserSession extends AbstractEntity<DynamicEntityKey> {
     @MapTo
     @Title(value = "Last Access", desc = "The time when the session was last accessed.")
     private Date lastAccess;
+    
+    @IsProperty(length = 255)
+    @MapTo
+    @Title(value = "Session ID", desc = "A session ID, designed specifically to support SSO. This value should represent sid as provided during the establishment of an SSO session.")
+    private String sid;
 
     private Optional<Authenticator> authenticator = Optional.empty();
 
@@ -118,6 +125,16 @@ public class UserSession extends AbstractEntity<DynamicEntityKey> {
 
     public User getUser() {
         return user;
+    }
+
+    @Observable
+    public UserSession setSid(final String customData) {
+        this.sid = customData;
+        return this;
+    }
+
+    public String getSid() {
+        return sid;
     }
 
 }

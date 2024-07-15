@@ -6,7 +6,6 @@ import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 
 /**
  * API for serialising and deserialising entities, queries and other TG objects. There are multiple {@link SerialiserEngines} to be used for serialisation / deserialisation.
- * {@link SerialiserEngines#KRYO} can be used as the default engine.
  *
  * @author TG Team
  *
@@ -26,10 +25,8 @@ public interface ISerialiser extends ISerialiserEngine {
     /**
      * Deserialises an object using specified {@link SerialiserEngines}.
      *
-     * @param content
-     *            - a KRYO byte array of the serialised object
-     * @param type
-     *            - the type of the deserialised object, which should be known when deserialisation happens
+     * @param content -- byte array of the serialised object
+     * @param type -- the type of the deserialised object, which should be known when deserialisation happens
      * @param serialiserEngine
      * @return
      * @throws Exception
@@ -39,10 +36,8 @@ public interface ISerialiser extends ISerialiserEngine {
     /**
      * Deserialises an object using specified {@link SerialiserEngines}.
      *
-     * @param content
-     *            - a KRYO input stream of the serialised object
-     * @param type
-     *            - the type of the deserialised object, which should be known when deserialisation happens
+     * @param content -- input stream of the serialised object
+     * @param type -- the type of the deserialised object, which should be known when deserialisation happens
      * @param serialiserEngine
      * @return
      * @throws Exception
@@ -58,5 +53,5 @@ public interface ISerialiser extends ISerialiserEngine {
      */
     ISerialiserEngine getEngine(final SerialiserEngines serialiserEngine);
 
-    void initJacksonEngine(final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache);
+    ISerialiser initJacksonEngine(final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache);
 }

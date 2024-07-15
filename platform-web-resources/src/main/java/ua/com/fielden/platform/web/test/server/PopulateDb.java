@@ -1,33 +1,27 @@
 package ua.com.fielden.platform.web.test.server;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.logging.log4j.LogManager.getLogger;
 
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Currency;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.SortedSet;
 
-import org.apache.log4j.Logger;
-import org.apache.log4j.xml.DOMConfigurator;
-import org.codehaus.jackson.map.ObjectMapper;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
 
 import fielden.test_app.close_leave.TgCloseLeaveExample;
 import ua.com.fielden.platform.algorithm.search.ISearchAlgorithm;
 import ua.com.fielden.platform.algorithm.search.bfs.BreadthFirstSearch;
-import ua.com.fielden.platform.basic.config.IApplicationSettings;
+import ua.com.fielden.platform.basic.config.exceptions.ApplicationConfigurationException;
 import ua.com.fielden.platform.devdb_support.DomainDrivenDataPopulation;
 import ua.com.fielden.platform.devdb_support.SecurityTokenAssociator;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -36,24 +30,31 @@ import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.sample.domain.ITgPerson;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
-import ua.com.fielden.platform.sample.domain.TgCoordinate;
 import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptor;
 import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
+import ua.com.fielden.platform.sample.domain.TgFuelType;
+import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgGeneratedEntity;
-import ua.com.fielden.platform.sample.domain.TgMachine;
-import ua.com.fielden.platform.sample.domain.TgMessage;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
 import ua.com.fielden.platform.sample.domain.TgPerson;
-import ua.com.fielden.platform.sample.domain.TgPolygon;
+import ua.com.fielden.platform.sample.domain.TgVehicle;
+import ua.com.fielden.platform.sample.domain.TgVehicleMake;
+import ua.com.fielden.platform.sample.domain.TgVehicleModel;
+import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity;
+import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityChild;
 import ua.com.fielden.platform.security.ISecurityToken;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.provider.SecurityTokenNode;
-import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
@@ -81,8 +82,8 @@ import ua.com.fielden.platform.web.test.config.ApplicationDomain;
  *
  */
 public class PopulateDb extends DomainDrivenDataPopulation {
-    private static final Logger LOGGER = Logger.getLogger(PopulateDb.class);
-    
+    private static final Logger LOGGER = getLogger(PopulateDb.class);
+
     private final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
 
     private PopulateDb(final IDomainDrivenTestCaseConfiguration config, final Properties props) {
@@ -91,29 +92,59 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
     public static void main(final String[] args) throws Exception {
         LOGGER.info("Initialising...");
-        final String configFileName = args.length == 1 ? args[0] : "src/main/resources/application.properties";
-        final Properties props = new Properties();
+        final var props = new Properties();
+        final String propsFileSuffix; // is used to load either application-PostreSql.properties or application-SqlServer.properties
+        // Three system properties are required: databaseUri, databaseUser and databasePasswd.
+        final var databseUri = System.getProperty("databaseUri");
+        if (isEmpty(databseUri)) {
+            throw new ApplicationConfigurationException("Property 'databaseUri' is required.");
+        } else {
+            final String jdbcUri;
+            if (databseUri.contains("5432")) {
+                propsFileSuffix = "PostgreSql";
+                jdbcUri = "jdbc:postgresql:" + databseUri; 
+            } else {
+                propsFileSuffix = "SqlServer";
+                jdbcUri = "jdbc:sqlserver:" + databseUri; 
+ 
+            }
+            props.put("hibernate.connection.url", jdbcUri);
+        }
+        final var dbUser = System.getProperty("databaseUser");
+        if (isEmpty(dbUser)) {
+            throw new ApplicationConfigurationException("Property 'databaseUser' is required.");
+        } else {
+            props.put("hibernate.connection.username", dbUser);
+        }
+        final var dbPasswd = System.getProperty("databasePasswd");
+        if (isEmpty(dbPasswd)) {
+            throw new ApplicationConfigurationException("Property 'databasePasswd' is required.");
+        } else {
+            props.put("hibernate.connection.password", dbPasswd);
+        }
+        // Default application-PostreSql.properties and application-SqlServer.properties do not have any of the properties already assigned from system properties databaseUri, databaseUser and databasePasswd.
+        // However, if some alternative application.properties is provided, which contains those properties, the values from the file will get used.
+        final String configFileName = args.length == 1 ? args[0] : "src/main/resources/application-%s.properties".formatted(propsFileSuffix);
         try (final FileInputStream in = new FileInputStream(configFileName)) {
             props.load(in);
         }
-
-        DOMConfigurator.configure(props.getProperty("log4j"));
-
+        
+        
         LOGGER.info("Obtaining Hibernate dialect...");
         final Class<?> dialectType = Class.forName(props.getProperty("hibernate.dialect"));
-        final Dialect dialect = (Dialect) dialectType.newInstance();
+        final Dialect dialect = (Dialect) dialectType.getDeclaredConstructor().newInstance();
         LOGGER.info(format("Running with dialect %s...", dialect));
         final DataPopulationConfig config = new DataPopulationConfig(props);
         LOGGER.info("Generating DDL and running it against the target DB...");
-        
-        // use TG DDL generation or 
+
+        // use TG DDL generation or
         // Hibernate DDL generation final List<String> createDdl = DbUtils.generateSchemaByHibernate()
         final List<String> createDdl = config.getDomainMetadata().generateDatabaseDdl(dialect);
-        final List<String> ddl = dialect instanceof H2Dialect ? 
-                                 DbUtils.prependDropDdlForH2(createDdl) : 
-                                 DbUtils.prependDropDdlForSqlServer(createDdl);
+        final List<String> ddl = dialect instanceof H2Dialect ?           DbUtils.prependDropDdlForH2(createDdl) :
+                                 dialect instanceof PostgreSQL82Dialect ? DbUtils.prependDropDdlForPostgresql(createDdl) :
+                                                                          DbUtils.prependDropDdlForSqlServer(createDdl);
         DbUtils.execSql(ddl, config.getInstance(HibernateUtil.class).getSessionFactory().getCurrentSession());
-        
+
         final PopulateDb popDb = new PopulateDb(config, props);
         popDb.populateDomain();
     }
@@ -148,7 +179,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(ent2.setEntityProp(ent3));
         save(new_(TgPersistentEntityWithProperties.class, "KEY4").setIntegerProp(63).setMoneyProp(new Money("23.0", Currency.getInstance("USD"))).setDesc("Description for entity with key 4.").setRequiredValidatedProp(30));
         save(new_(TgPersistentEntityWithProperties.class, "KEY5").setBigDecimalProp(new BigDecimal(23.0)).setDesc("Description for entity with key 5.").setRequiredValidatedProp(30));
-        save(new_(TgPersistentEntityWithProperties.class, "KEY6").setIntegerProp(61).setStringProp("ok").setDesc("Description for entity with key 6.").setRequiredValidatedProp(30));
+        save(new_(TgPersistentEntityWithProperties.class, "KEY6").setIntegerProp(61).setStringProp("ok").setDesc("Description for entity with key 6.").setRequiredValidatedProp(30).setBigDecimalProp(new BigDecimal("12"))); // id = 10L
         save(new_(TgPersistentEntityWithProperties.class, "KEY7").setBooleanProp(true).setDesc("Description for entity with key 7.").setRequiredValidatedProp(30));
         save(new_(TgPersistentEntityWithProperties.class, "KEY8").setDateProp(new DateTime(3609999L).toDate()).setDesc("Description for entity with key 8.").setRequiredValidatedProp(30));
         final TgPersistentEntityWithProperties de = new_(TgPersistentEntityWithProperties.class, "DEFAULT_KEY")
@@ -194,13 +225,13 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgCollectionalSerialisationParent csp1 = save(new_(TgCollectionalSerialisationParent.class, "CSP1").setDesc("desc1"));
         save(new_composite(TgCollectionalSerialisationChild.class, csp1, "1").setDesc("desc1"));
 
-        save(new_(TgEntityWithPropertyDescriptor.class, "KEY1").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "integerProp")));
-        save(new_(TgEntityWithPropertyDescriptor.class, "KEY2"));
-        save(new_(TgEntityWithPropertyDescriptor.class, "KEY3").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "integerProp")));
+        final TgEntityWithPropertyDescriptor ewpd1 = save(new_(TgEntityWithPropertyDescriptor.class, "KEY1").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "integerProp"))); // has children -- to be used for collectional crit-only multi criteria
+        final TgEntityWithPropertyDescriptor ewpd2 = save(new_(TgEntityWithPropertyDescriptor.class, "KEY2").setParent(ewpd1)); // has children -- to be used for collectional crit-only multi criteria
+        save(new_(TgEntityWithPropertyDescriptor.class, "KEY3").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "integerProp")).setParent(ewpd1));
         save(new_(TgEntityWithPropertyDescriptor.class, "KEY4").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "bigDecimalProp")));
-        save(new_(TgEntityWithPropertyDescriptor.class, "KEY5").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "entityProp")));
-        save(new_(TgEntityWithPropertyDescriptor.class, "KEY6").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "stringProp")));
-        save(new_(TgEntityWithPropertyDescriptor.class, "KEY7").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "booleanProp")));
+        save(new_(TgEntityWithPropertyDescriptor.class, "KEY5").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "entityProp")).setParent(ewpd2));
+        save(new_(TgEntityWithPropertyDescriptor.class, "KEY6").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "stringProp")).setParent(ewpd2));
+        save(new_(TgEntityWithPropertyDescriptor.class, "KEY7").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "booleanProp")).setParent(ewpd2));
         save(new_(TgEntityWithPropertyDescriptor.class, "KEY8").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "dateProp")));
 
         save(new_(TgEntityWithTimeZoneDates.class, "KEY1").setDatePropUtc(new Date(3609999)));
@@ -211,143 +242,47 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
         save(new_(TgGeneratedEntity.class).setEntityKey("KEY1").setCreatedBy(su));
 
-        save(new_(TgPersistentEntityWithProperties.class, "FILTERED").setIntegerProp(43).setRequiredValidatedProp(30).setDesc("Description for filtered entity.").setStatus(co$(TgPersistentStatus.class).findByKey("DR")));
-        
+        final TgPersistentEntityWithProperties filteredEntity = save(new_(TgPersistentEntityWithProperties.class, "FILTERED").setIntegerProp(43).setRequiredValidatedProp(30).setDesc("Description for filtered entity.").setStatus(co$(TgPersistentStatus.class).findByKey("DR")));
+        final TgPersistentEntityWithProperties savedDefaultEntity = save(defaultEnt.setEntityProp(filteredEntity));
+
         save(new_(TgCloseLeaveExample.class, "KEY1").setDesc("desc 1"));
         save(new_(TgCloseLeaveExample.class, "KEY2").setDesc("desc 2"));
         save(new_(TgCloseLeaveExample.class, "KEY3").setDesc("desc 3"));
         save(new_(TgCloseLeaveExample.class, "KEY4").setDesc("desc 4"));
         save(new_(TgCloseLeaveExample.class, "KEY5").setDesc("desc 5"));
-        
-        LOGGER.info("\tPopulating messages...");
-        final Map<String, TgMachine> machines = new HashMap<>();
-        try {
-            final ClassLoader classLoader = getClass().getClassLoader();
-            final File file = new File(classLoader.getResource("gis/messageEntities.js").getFile());
-            final InputStream stream = new FileInputStream(file);
-            final ObjectMapper objectMapper = new ObjectMapper();
-            final ArrayList oldMessageEntities = objectMapper.readValue(stream, ArrayList.class);
 
-            for (final Object oldMessageEntity: oldMessageEntities) {
-                final Map<String, Object> map = (Map<String, Object>) oldMessageEntity;
-                final Map<String, Object> messageProps = ((Map<String, Object>) map.get("properties"));
-                final String machineKey = (String) ((Map<String, Object>) ((Map<String, Object>) messageProps.get("machine")).get("properties")).get("key");
-                TgMachine found = machines.get(machineKey);
-                if (found == null) {
-                    final TgMachine newMachine = new_(TgMachine.class, machineKey);
-                    newMachine.setDesc(machineKey + " desc");
-                    found = save(newMachine);
-                    machines.put(machineKey, found);
-                }
-                save(new_composite(TgMessage.class, found, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS").parseDateTime(((String) messageProps.get("gpsTime"))).toDate())
-                        .setX(BigDecimal.valueOf((double) messageProps.get("x")))
-                        .setY(BigDecimal.valueOf((double) messageProps.get("y")))
-                        .setVectorAngle((int) messageProps.get("vectorAngle"))
-                        .setVectorSpeed((int) messageProps.get("vectorSpeed"))
-                        // .setAltitude(223)
-                        // .setVisibleSattelites(2)
-                        .setDin1((boolean) messageProps.get("din1"))
-                        .setGpsPower((boolean) messageProps.get("gpsPower"))
-                        .setTravelledDistance(BigDecimal.valueOf((double) messageProps.get("travelledDistance")))
-                );
-            }
-        } catch (final IOException ex) {
-            throw new IllegalStateException(ex);
-        }
+        save(new_(TgCompoundEntity.class, "KEY1").setActive(true).setDesc("desc 1"));
+        save(new_(TgCompoundEntity.class, "KEY2").setActive(true).setDesc("desc 2"));
+        save(new_(TgCompoundEntity.class, "KEY3").setActive(true).setDesc("desc 3"));
+        save(new_(TgCompoundEntity.class, "KEY4").setActive(true).setDesc("desc 4"));
+        save(new_(TgCompoundEntity.class, "KEY5").setActive(true).setDesc("desc 5"));
 
-        LOGGER.info("\tPopulating machines...");
-        try {
-            final ClassLoader classLoader = getClass().getClassLoader();
-            final File file = new File(classLoader.getResource("gis/realtimeMonitorEntities.js").getFile());
-            final InputStream stream = new FileInputStream(file);
-            final ObjectMapper objectMapper = new ObjectMapper();
-            final ArrayList oldMachineEntities = objectMapper.readValue(stream, ArrayList.class);
+        save(new_(TgCompoundEntity.class, "FILTERED1").setActive(true).setDesc("Description for filtered TgCompoundEntity entity."));
+        final TgCompoundEntity filteredEntity2 = save(new_(TgCompoundEntity.class, "FILTERED2").setActive(true).setDesc("Description for TgCompoundEntity entity, for which TgCompoundEntityDetail is filtered."));
+        save(new_composite(TgCompoundEntityChild.class, filteredEntity2, new Date()).setDesc("Description for filtered TgCompoundEntityChild entity."));
 
-            final Map<String, TgOrgUnit> orgUnits = new HashMap<>();
-            for (final Object oldMachineEntity: oldMachineEntities) {
-                final Map<String, Object> map = (Map<String, Object>) oldMachineEntity;
-                final Map<String, Object> machineProps = ((Map<String, Object>) map.get("properties"));
-                final String machineKey = (String) machineProps.get("key");
-                TgMachine found = machines.get(machineKey);
-                if (found == null) {
-                    final TgMachine newMachine = new_(TgMachine.class, machineKey);
-                    newMachine.setDesc((String) machineProps.get("desc"));
-                    final Object orgUnitObject = machineProps.get("orgUnit");
-                    if (orgUnitObject != null) {
-                        final String orgUnitKey = (String) ((Map<String, Object>) ((Map<String, Object>) orgUnitObject).get("properties")).get("key");
-                        TgOrgUnit foundOrgUnit = orgUnits.get(orgUnitKey);
-                        if (foundOrgUnit == null) {
-                            final TgOrgUnit newOrgUnit = new_(TgOrgUnit.class, orgUnitKey);
-                            newOrgUnit.setDesc((String) ((Map<String, Object>) ((Map<String, Object>) machineProps.get("orgUnit")).get("properties")).get("desc"));
-                            foundOrgUnit = save(newOrgUnit);
-                            orgUnits.put(orgUnitKey, foundOrgUnit);
-                        }
-                        newMachine.setOrgUnit(foundOrgUnit);
-                    }
-                    found = save(newMachine);
-                    machines.put(machineKey, found);
-                }
-                final Object lastMessageObject = machineProps.get("lastMessage");
-                if (lastMessageObject != null) {
-                    final Map<String, Object> lastMessageProps = (Map<String, Object>) ((Map<String, Object>) lastMessageObject).get("properties");
+        final TgCompoundEntity test1 = save(new_(TgCompoundEntity.class, "1TEST").setActive(true).setDesc("1TEST (1TEST detail)"));
+        save(new_composite(TgCompoundEntityChild.class, test1, new Date()).setDesc("Description for TgCompoundEntityChild entity of 1TEST."));
 
-                    save(new_composite(TgMessage.class, found, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS").parseDateTime(((String) lastMessageProps.get("gpsTime"))).toDate())
-                            .setX(BigDecimal.valueOf((double) lastMessageProps.get("x")))
-                            .setY(BigDecimal.valueOf((double) lastMessageProps.get("y")))
-                            .setVectorAngle((int) lastMessageProps.get("vectorAngle"))
-                            .setVectorSpeed((int) lastMessageProps.get("vectorSpeed"))
-                            // .setAltitude(223)
-                            // .setVisibleSattelites(2)
-                            .setDin1((boolean) lastMessageProps.get("din1"))
-                            .setGpsPower((boolean) lastMessageProps.get("gpsPower"))
-                            .setTravelledDistance(BigDecimal.valueOf(15.5)) // lastMessageProps.get("travelledDistance")
-                    );
-                }
-            }
-        } catch (final IOException ex) {
-            throw new IllegalStateException(ex);
-        }
+        final TgPersistentCompositeEntity ceWith0 = new_composite(TgPersistentCompositeEntity.class, savedDefaultEntity, 0);
+        final TgPersistentCompositeEntity compWith0Saved = save(ceWith0);
 
-        LOGGER.info("\tPopulating geozones...");
-        try {
-            final ClassLoader classLoader = getClass().getClassLoader();
-            final File file = new File(classLoader.getResource("gis/polygonEntities.js").getFile());
-            final InputStream stream = new FileInputStream(file);
-            final ObjectMapper objectMapper = new ObjectMapper();
-            final ArrayList oldPolygonEntities = objectMapper.readValue(stream, ArrayList.class);
+        final TgPersistentEntityWithProperties entWith0CompKeyToBeSaved = new_(TgPersistentEntityWithProperties.class, "KEY12").setStringProp("ok").setIntegerProp(43).setEntityProp(savedDefaultEntity).setBigDecimalProp(new BigDecimal(23).setScale(5)).setDateProp(new DateTime(960000L).toDate()).setBooleanProp(true).setCompositeProp(compWith0Saved).setDesc("Description for entity with key 12.").setRequiredValidatedProp(30);
+        save(entWith0CompKeyToBeSaved);
 
-            final Map<String, TgPolygon> polygons = new HashMap<>();
-            for (final Object oldPolygonEntity: oldPolygonEntities) {
-                final Map<String, Object> map = (Map<String, Object>) oldPolygonEntity;
-                final Map<String, Object> polygonProps = ((Map<String, Object>) map.get("properties"));
-                final String polygonKey = (String) polygonProps.get("key");
-                TgPolygon found = polygons.get(polygonKey);
-                if (found == null) {
-                    final TgPolygon newPolygon = new_(TgPolygon.class, polygonKey);
-                    newPolygon.setDesc((String) polygonProps.get("desc"));
-                    found = save(newPolygon);
-                    polygons.put(polygonKey, found);
-                }
+        final User _demo2 = co$(User.class).save(new_(User.class, "DEMO2").setBasedOnUser(su).setEmail("DEMO2@demoapp.com").setActive(true));
+        final User demo2 = coUser.resetPasswd(_demo2, _demo2.getKey()).getKey();
+        save(new_composite(UserAndRoleAssociation.class, demo2, admin));
 
-                final ArrayList<Object> coordinates = (ArrayList<Object>) polygonProps.get("coordinates");
-                for (final Object coord: coordinates) {
-                    final Map<String, Object> coordProps = ((Map<String, Object>) ((Map<String, Object>) coord).get("properties"));
-                    save(new_composite(TgCoordinate.class, found, (Integer) coordProps.get("order"))
-                            .setLongitude(BigDecimal.valueOf((double) coordProps.get("longitude")))
-                            .setLatitude(BigDecimal.valueOf((double) coordProps.get("latitude")))
-                    );
-                }
-            }
-        } catch (final IOException ex) {
-            throw new IllegalStateException(ex);
-        }
+        LOGGER.info("\tPopulating GraphQL data...");
+        populateGraphQlData();
+
 
         try {
-            final IApplicationSettings settings = config.getInstance(IApplicationSettings.class);
-            final SecurityTokenProvider provider = new SecurityTokenProvider(settings.pathToSecurityTokens(), settings.securityTokensPackageName()); //  IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.path"), IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.package")
+            final ISecurityTokenProvider provider = config.getInstance(ISecurityTokenProvider.class); //  IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.path"), IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.package")
             final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
             final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, co$(SecurityRoleAssociation.class));
-            final ISearchAlgorithm<Class<? extends ISecurityToken>, SecurityTokenNode> alg = new BreadthFirstSearch<Class<? extends ISecurityToken>, SecurityTokenNode>();
+            final ISearchAlgorithm<Class<? extends ISecurityToken>, SecurityTokenNode> alg = new BreadthFirstSearch<>();
             for (final SecurityTokenNode securityNode : topNodes) {
                 alg.search(securityNode, predicate);
             }
@@ -356,6 +291,50 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         } catch (final Exception e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    private void populateGraphQlData() {
+        final TgFuelType unleadedFuelType = save(new_(TgFuelType.class, "U", "Unleaded"));
+        final TgFuelType petrolFuelType = save(new_(TgFuelType.class, "P", "Petrol"));
+
+        final TgOrgUnit1 orgUnit1 = save(new_(TgOrgUnit1.class, "orgunit1", "desc orgunit1"));
+        final TgOrgUnit2 orgUnit2 = save(new_composite(TgOrgUnit2.class, orgUnit1, "orgunit2"));
+        final TgOrgUnit3 orgUnit3 = save(new_composite(TgOrgUnit3.class, orgUnit2, "orgunit3"));
+        final TgOrgUnit4 orgUnit4 = save(new_composite(TgOrgUnit4.class, orgUnit3, "orgunit4"));
+        final TgOrgUnit5 orgUnit5 = save(new_composite(TgOrgUnit5.class, orgUnit4, "orgunit5").setFuelType(petrolFuelType));
+
+        final TgVehicleMake merc = save(new_(TgVehicleMake.class, "MERC", "Mercedes"));
+        final TgVehicleMake audi = save(new_(TgVehicleMake.class, "AUDI", "Audi"));
+        final TgVehicleMake bmw = save(new_(TgVehicleMake.class, "BMW", "BMW"));
+        save(new_(TgVehicleMake.class, "SUBARO", "Subaro"));
+
+        final TgVehicleModel m316 = save(new_(TgVehicleModel.class, "316", "316").setMake(merc));
+        save(new_(TgVehicleModel.class, "317", "317").setMake(audi));
+        final TgVehicleModel m318 = save(new_(TgVehicleModel.class, "318", "318").setMake(audi));
+        save(new_(TgVehicleModel.class, "319", "319").setMake(bmw));
+        save(new_(TgVehicleModel.class, "320", "320").setMake(bmw));
+        save(new_(TgVehicleModel.class, "321", "321").setMake(bmw));
+        save(new_(TgVehicleModel.class, "322", "322").setMake(bmw));
+
+        final TgVehicle car2 = save(new_(TgVehicle.class, "CAR2", "CAR2 DESC").
+                setInitDate(date("2007-01-01 00:00:00")).
+                setModel(m316).
+                setPrice(new Money("200")).
+                setPurchasePrice(new Money("100")).
+                setActive(false).
+                setLeased(true).
+                setLastMeterReading(new BigDecimal("105")).
+                setStation(orgUnit5));
+        save(new_(TgVehicle.class, "CAR1", "CAR1 DESC").
+                setInitDate(date("2001-01-01 00:00:00")).
+                setModel(m318).setPrice(new Money("20")).
+                setPurchasePrice(new Money("10")).
+                setActive(true).
+                setLeased(false).
+                setReplacedBy(car2));
+
+        save(new_composite(TgFuelUsage.class, car2, date("2006-02-09 00:00:00")).setQty(new BigDecimal("100")).setFuelType(unleadedFuelType));
+        save(new_composite(TgFuelUsage.class, car2, date("2008-02-10 00:00:00")).setQty(new BigDecimal("120")).setFuelType(petrolFuelType));
     }
 
     /**

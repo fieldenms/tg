@@ -1,12 +1,13 @@
 package ua.com.fielden.platform.entity;
 
+import static ua.com.fielden.platform.entity.NoKey.NO_KEY;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
@@ -14,13 +15,12 @@ import ua.com.fielden.platform.entity.annotation.Title;
 /**
  * Master entity object.
  *
- * @author Developers
+ * @author TG Team
  *
  */
-@KeyType(String.class)
-@KeyTitle(value = "Key", desc = "Some key description")
-@CompanionObject(IEntityDeleteAction.class)
-public class EntityDeleteAction extends AbstractFunctionalEntityWithCentreContext<String> {
+@KeyType(NoKey.class)
+@CompanionObject(EntityDeleteActionCo.class)
+public class EntityDeleteAction extends AbstractFunctionalEntityWithCentreContext<NoKey> {
     
     @IsProperty
     @Title("Entity Type")
@@ -29,6 +29,10 @@ public class EntityDeleteAction extends AbstractFunctionalEntityWithCentreContex
     @IsProperty(Long.class)
     @Title("Selected Entity IDs")
     private Set<Long> selectedEntityIds = new HashSet<>();
+
+    protected EntityDeleteAction() {
+        setKey(NO_KEY);
+    }
 
     @Observable
     protected EntityDeleteAction setSelectedEntityIds(final Set<Long> selectedEntityIds) {

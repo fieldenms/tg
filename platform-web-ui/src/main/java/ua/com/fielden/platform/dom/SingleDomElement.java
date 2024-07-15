@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.dom;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Represents the {@link DomElement} that has no children.

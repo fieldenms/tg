@@ -2,17 +2,22 @@ package ua.com.fielden.platform.web.app;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.menu.IMenuRetriever;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
-import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
+import ua.com.fielden.platform.web.sse.IEventSource;
+import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
+import ua.com.fielden.platform.web.view.master.api.actions.impl.MasterActionOptions;
 
 /**
  * Represent a contract for Web UI configuring.
@@ -66,39 +71,39 @@ public interface IWebUiConfig extends IMenuRetriever {
     IMainMenuBuilder configMobileMainMenu();
 
     /**
-     * Generates the main html file of desktop web application.
+     * Generates the main html file of web application.
      *
      * @return
      */
-    String genDesktopAppIndex();
-
-    /**
-     * Generates the main html file of mobile web application.
-     *
-     * @return
-     */
-    String genMobileAppIndex();
-
-    /**
-     * Generates the main menu component for mobile application.
-     *
-     * @return
-     */
-    String genMobileMainWebUIComponent();
+    String genAppIndex();
 
     /**
      * Generates the main menu component for desktop application.
      *
      * @return
      */
-    String genDesktopMainWebUIComponent();
+    String genMainWebUIComponent();
 
     /**
-     * Generates the global configuration component depending on {@link DeviceProfile}.
+     * Generates the global configuration component.
      *
      * @return
      */
-    String genWebUiPreferences(final DeviceProfile deviceProfile);
+    String genWebUiPreferences();
+
+    /**
+     * Returns the instance of {@link IEventSourceEmitterRegister} that will is created for this web application to manage registered clients.
+     *
+     * @return
+     */
+    IEventSourceEmitterRegister getEventSourceEmitterRegister();
+
+    /**
+     * Creates and registers an instance of {@code eventSrouceClass}, if it was not created before.
+     *
+     * @return
+     */
+    IWebUiConfig createAndRegisterEventSource(Class<? extends IEventSource> eventSourceClass);
 
     /**
      * Returns the map of entity masters for this web application.
@@ -127,6 +132,31 @@ public interface IWebUiConfig extends IMenuRetriever {
     void initConfiguration();
 
     /**
+     * Iterates through all registered {@link EntityCentre}s and creates default configurations for each one.
+     */
+    void createDefaultConfigurationsForAllCentres();
+
+    /**
+     * Returns the map of embedded entity centres (and masters containing them) for this web application.
+     */
+    Map<Class<? extends MiWithConfigurationSupport<?>>, T2<EntityCentre<?>, EntityMaster<? extends AbstractEntity<?>>>> getEmbeddedCentres();
+
+    /**
+     * Loads all standalone / embedded default centres for concrete 'entityType' (with their generated types and criteria types).
+     */
+    void loadCentreGeneratedTypesAndCriteriaTypes(final Class<?> entityType);
+
+    /**
+     * Determines whether the centre, represented by {@code miType}, is embedded.
+     *
+     * @param miType
+     * @return
+     */
+    default boolean isEmbeddedCentre(final Class<? extends MiWithConfigurationSupport<?>> miType) {
+        return getEmbeddedCentres().containsKey(miType);
+    }
+
+    /**
      * Clears all centre, master and menu configurations that were initialised before.
      */
     void clearConfiguration();
@@ -143,4 +173,40 @@ public interface IWebUiConfig extends IMenuRetriever {
      * @return
      */
     Workflows workflow();
+
+    /**
+     * Loads checksum for resource if available. Otherwise, returns empty {@link Optional}.
+     * <p>
+     * Checksums are available for static resources in deployment mode. 'startup-resources-vulcanized.js' file is primary in this category.
+     * Client-side Service Worker script intercepts requests to get checksum first to compare whether resource has changed.
+     * If that is true then full resource will be re-downloaded and re-cached on the client side.
+     * Otherwise the cached resource will be used straight away.
+     *
+     * @param resourceURI
+     * @return
+     */
+    Optional<String> checksum(final String resourceURI);
+
+    /**
+     * Returns true if server and client applications operate in the same time-zone, otherwise false.
+     * The only exception is handling of 'now': it calculates based on real user time-zone (and later converts to server time-zone).
+     *
+     * @return
+     */
+    boolean independentTimeZone();
+
+
+    /**
+     * Returns {@link MasterActionOptions} instance that indicates what options should be available in master actions.
+     *
+     * @return
+     */
+    MasterActionOptions masterActionOptions();
+
+    /**
+     * A set of domain-specific actions for centre configurations sharing.
+     *
+     * @return
+     */
+    List<EntityActionConfig> centreConfigShareActions();
 }

@@ -2,6 +2,14 @@ package ua.com.fielden.platform.keygen;
 
 import static java.lang.String.format;
 
+import java.util.Collections;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 
 import com.google.inject.Inject;
@@ -37,8 +45,8 @@ public class KeyNumberDao extends CommonEntityDao<KeyNumber> implements IKeyNumb
     public Integer nextNumber(final String key) {
         KeyNumber number = findByKey(key); // find an instance
         if (number != null) {
-            // re-fetch instance with pessimistic UPGRADE lock
-            number = (KeyNumber) getSession().load(KeyNumber.class, number.getId(), LockOptions.UPGRADE);
+            // re-fetch instance with pessimistic write lock
+            number = (KeyNumber) getSession().load(KeyNumber.class, number.getId(), new LockOptions(LockMode.PESSIMISTIC_WRITE));
         } else { // this would most likely never happen since the target legacy db should already have some values in table NUMBERS
             number = factory.newByKey(KeyNumber.class, key).setValue("0");
         }
@@ -47,6 +55,27 @@ public class KeyNumberDao extends CommonEntityDao<KeyNumber> implements IKeyNumb
         number.setValue(nextNo.toString());
         save(number);
         return nextNo;
+    }
+
+    @Override
+    @SessionRequired
+    public SortedSet<Integer> nextNumbers(final String key, final int count) {
+        if (count < 1) {
+            return Collections.emptySortedSet();
+        }
+
+        KeyNumber number = findByKey(key); // find an instance
+        if (number != null) {
+            // re-fetch instance with pessimistic write lock
+            number = (KeyNumber) getSession().load(KeyNumber.class, number.getId(), new LockOptions(LockMode.PESSIMISTIC_WRITE));
+        } else { // this would most likely never happen since the target legacy db should already have some values in table NUMBERS
+            number = factory.newByKey(KeyNumber.class, key).setValue("0");
+        }
+
+        final SortedSet<Integer> keys = IntStream.iterate(Integer.parseInt(number.getValue()) + 1, n -> n + 1).limit(count).boxed().collect(Collectors.toCollection(() -> new TreeSet<Integer>()));
+        number.setValue(keys.last().toString());
+        save(number);
+        return keys;
     }
 
     /**

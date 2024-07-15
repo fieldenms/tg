@@ -1,11 +1,14 @@
 package ua.com.fielden.platform.web.centre;
 
 import static java.lang.String.format;
+import static java.util.Collections.unmodifiableMap;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
@@ -21,7 +24,7 @@ import ua.com.fielden.platform.reflection.Reflector;
 /**
  * A structure that represents an execution context for functional entities. Not all of its properties should or need to be populated. Depending on specific needs actions may choose
  * what parts of the context do they require. This allows for optimising the amount of data marshaled between between the client and server.
- * 
+ *
  * TODO to be renamed to Context as it also represents the context on master functional actions, not only on centre
  *
  * @author TG Team
@@ -32,6 +35,8 @@ import ua.com.fielden.platform.reflection.Reflector;
  *            -- in case of an entity centre that is associated with an entity master, this is a type of the master entity
  */
 public final class CentreContext<T extends AbstractEntity<?>, M extends AbstractEntity<?>> {
+
+    public static final String ERR_CANNOT_DETERMINE_CURRENT_ENTITY = "The current entity cannot be determined due to unexpected number of selected entities (%s).";
 
     /**
      * An action may be applicable to zero, one or more entities that are selected on an entity centre. If an action is applicable only to one entity it is associated with (i.e.
@@ -63,13 +68,23 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
      */
     private Optional<BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object>> computation = Optional.empty();
 
+    /**
+     * The name of a property that is considered to be "chosen" in the current context.
+     * For example, this could be a property that was tapped on in EGI to invoke the associated action.
+     */
     private String chosenProperty;
-    
+
+    /**
+     * A bag of custom properties in the context.
+     * Usually contains some technical properties to restore the context and may contain custom properties provided by the client-side or server-side logic.
+     */
+    private final Map<String, Object> customObject = new LinkedHashMap<>();
+
     public T getCurrEntity() {
         if (selectedEntities.size() == 1) {
             return selectedEntities.get(0);
         }
-        throw new IllegalStateException(format("The number of selected entities is %s, which is not applicable for determining a current entity.", selectedEntities.size()));
+        throw new IllegalStateException(format(ERR_CANNOT_DETERMINE_CURRENT_ENTITY, selectedEntities.size()));
     }
 
     public List<AbstractEntity<?>> getSelectedEntities() {
@@ -85,12 +100,12 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
                 final List<String> originalTypeProperties = Finder.streamRealProperties(originalType)
                     .map(Field::getName)
                     .collect(Collectors.toList());
-                final String[] propsToBeProxied = Finder.streamRealProperties(el.getClass())
+                final String[] propsToBeProxied = Finder.streamRealProperties((Class<? extends AbstractEntity<?>>) el.getClass())
                     .map(Field::getName)
                     .filter(name -> Reflector.isPropertyProxied(el, name) && originalTypeProperties.contains(name))
                     .collect(Collectors.toList())
                     .toArray(new String[] {});
-                    
+
                 // let's be smart about types and try to handle the situation with generated types
                 this.selectedEntities.add((T) el.copy(EntityProxyContainer.proxy(originalType, propsToBeProxied)));
             }
@@ -121,13 +136,14 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
         return format("Centre Context: [\n"
             + "    selectionCrit = %s,\n"
             + "    selectedEntities = %s,\n"
-            + "    masterEntity=%s,\n"
-            + "    computation=%s,\n"
-            + "    chosenProperty=%s\n"
-            + "]", selectionCrit, selectedEntities, masterEntity, computation, chosenProperty);
+            + "    masterEntity = %s,\n"
+            + "    computation = %s,\n"
+            + "    chosenProperty = %s,\n"
+            + "    customObject = %s\n"
+            + "]", selectionCrit, selectedEntities, masterEntity, computation, chosenProperty, customObject);
     }
 
-    public CentreContext<T,M> setComputation(final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation) {
+    public CentreContext<T, M> setComputation(final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation) {
         this.computation = Optional.of(computation);
         return this;
     }
@@ -135,12 +151,36 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
     public Optional<BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object>> getComputation() {
         return computation;
     }
-    
+
     public String getChosenProperty() {
         return chosenProperty;
     }
-    
-    public void setChosenProperty(final String chosenProperty) {
+
+    public CentreContext<T, M> setChosenProperty(final String chosenProperty) {
         this.chosenProperty = chosenProperty;
+        return this;
     }
+
+    public CentreContext<T, M> setCustomObject(final Map<String, Object> customObject) {
+        this.customObject.clear();
+        this.customObject.putAll(customObject);
+        return this;
+    }
+
+    /**
+     * Bag of custom properties in the context.
+     * Usually contains some technical properties for context restoration and may contain custom properties provided by client-side application.
+     */
+    public Map<String, Object> getCustomObject() {
+        return unmodifiableMap(customObject);
+    }
+
+    /**
+     * Sets custom property into custom object of this {@link CentreContext}.
+     */
+    public CentreContext<T, M> setCustomProperty(final String name, final Object value) {
+        customObject.put(name, value);
+        return this;
+    }
+
 }

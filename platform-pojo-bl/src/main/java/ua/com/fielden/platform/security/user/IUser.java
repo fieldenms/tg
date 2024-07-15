@@ -5,6 +5,7 @@ package ua.com.fielden.platform.security.user;
 
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.security.user.User.EMAIL;
+import static ua.com.fielden.platform.security.user.User.SSO_ONLY;
 
 import java.util.List;
 import java.util.Map;
@@ -13,34 +14,39 @@ import java.util.Set;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  * Contract for DAO handling user instances.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public interface IUser extends IEntityDao<User> {
 
+    static final IFetchProvider<User> FETCH_PROVIDER = EntityUtils.fetch(User.class)
+            .with("key", EMAIL, ACTIVE, SSO_ONLY)
+            .with("base", "basedOnUser.base", "roles");
+
     /**
      * Returns users with roles.
-     * 
+     *
      * @return
      */
     List<User> findAllUsersWithRoles();
 
     /**
      * Returns the users without their roles.
-     * 
+     *
      * @return
      */
     List<User> findAllUsers();
 
     /**
      * Returns a user with the specified id. The returned user is with initialised set of roles.
-     * 
+     *
      * @param id
      * @return
      */
@@ -48,7 +54,7 @@ public interface IUser extends IEntityDao<User> {
 
     /**
      * Returns the user with specified key. The returned user also have associated user roles.
-     * 
+     *
      * @param key
      * @return
      */
@@ -56,42 +62,42 @@ public interface IUser extends IEntityDao<User> {
 
     /**
      * Resets the user password.
-     * 
+     *
      * @param user
      * @param passwd
      */
     UserSecret resetPasswd(final User user, final String passwd);
-    
+
     /**
      * Tries to find a user by its password reset UUID.
-     * 
+     *
      * @param uuid
      * @return
      */
     Optional<User> findUserByResetUuid(final String uuid);
-    
+
     /**
      * Generates a temporal password reset UUID for a user that is identified by the provided username or email address.
      * The generated UUID gets immediately associated with the user and the updated user is returned for further use such as email sending with reset URI.
      * <p>
      * An empty optional value is returned in case where no user was identified by the given username or email address.
-     * 
+     *
      * @param usernameOrEmail
      * @return
      */
     Optional<UserSecret> assignPasswordResetUuid(final String usernameOrEmail);
-    
+
     /**
      * Returns <code>true</code> if the provided <code>uuid</code> is associated with a user and has not yet expired.
-     * 
+     *
      * @param uuid
      * @return
      */
     boolean isPasswordResetUuidValid(final String uuid);
-    
+
     /**
      * Estimates password's strength returing <code>true</code> if the presented password is acceptable.
-     * 
+     *
      * @param passwd
      * @return
      */
@@ -137,8 +143,12 @@ public interface IUser extends IEntityDao<User> {
      */
     User findUser(String username);
 
-    static final IFetchProvider<User> FETCH_PROVIDER = EntityUtils.fetch(User.class)
-            .with("key", EMAIL, ACTIVE)
-            .with("base", "basedOnUser.base");
+    /**
+     * Returns all active based-on users.
+     *
+     * @param baseUser
+     * @return
+     */
+    Set<User> findBasedOnUsers(final User baseUser, final fetch<User> userFetch);
 
 }

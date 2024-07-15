@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.serialisation.jackson.serialisers;
 
 import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.reflection.Reflector.extractValidationLimits;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValidationResult;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isChangedFromOriginalDefault;
@@ -14,6 +16,7 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isValueChangeCountDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isVisibleDefault;
 import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.ID_ONLY_PROXY_PREFIX;
+import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.newSerialisationId;
 import static ua.com.fielden.platform.utils.EntityUtils.isDecimal;
 import static ua.com.fielden.platform.utils.EntityUtils.isInteger;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
@@ -26,7 +29,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.commons.lang3.StringUtils;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
@@ -57,11 +61,13 @@ import ua.com.fielden.platform.utils.Pair;
  * @param <T>
  */
 public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerializer<T> {
+    private static final long serialVersionUID = 1L;
 
     public static final String ERR_RESTRICTED_TYPE_SERIALISATION_DUE_TO_PROP_TYPE = "Type [%s] containst property [%s] that is not permitted for serialisation.";
+    private static final String ERR_FULL_TYPE_NAME_NOT_DEFINED = "Full name of the type [%s] should be populated to be ready for serialisation.";
 
     private final Class<T> type;
-    private static final Logger LOGGER = Logger.getLogger(EntityJsonSerialiser.class);
+    private static final Logger LOGGER = getLogger(EntityJsonSerialiser.class);
     private final transient List<CachedProperty> properties;
     private final transient EntityType entityType;
     private final boolean excludeNulls;
@@ -87,8 +93,8 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
 
     @Override
     public void serialize(final T entity, final JsonGenerator generator, final SerializerProvider provider) throws IOException {
-        if (entityType.get_identifier() == null) {
-            throw new SerialisationException(format("The identifier of the type [%s] should be populated to be ready for serialisation.", entityType));
+        if (entityType.getKey() == null) {
+            throw new SerialisationException(ERR_FULL_TYPE_NAME_NOT_DEFINED.formatted(entityType));
         }
         ////////////////////////////////////////////////////
         ///////////////// handle references ////////////////
@@ -114,7 +120,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
 
             generator.writeEndObject();
         } else {
-            final String newReference = EntitySerialiser.newSerialisationId(entity, references, entityType.get_identifier());
+            final String newReference = newSerialisationId(entity, references, entityType.getKey());
             references.putReference(entity, newReference);
 
             generator.writeStartObject();
@@ -130,21 +136,28 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
             }
             
             final boolean uninstrumented = !PropertyTypeDeterminator.isInstrumented(entity.getClass());
-            if (uninstrumented) {
-                generator.writeFieldName("@uninstrumented");
+            if (!uninstrumented) {
+                generator.writeFieldName("@_i");
                 generator.writeObject(null);
             }
 
-            // serialise id
-            generator.writeFieldName(AbstractEntity.ID);
-            generator.writeObject(getIdSafely(entity));
-
-            // serialise version -- should never be null
-            generator.writeFieldName(AbstractEntity.VERSION);
-            if (Reflector.isPropertyProxied(entity, AbstractEntity.VERSION)) {
-                generator.writeObject(Long.valueOf(0L));
-            } else {
-                generator.writeObject(entity.getVersion());
+            if (!context.excludeIdAndVersion()) {
+                // serialise id
+                generator.writeFieldName(AbstractEntity.ID);
+                generator.writeObject(getIdSafely(entity));
+                
+                // serialise version -- should never be null
+                generator.writeFieldName(VERSION);
+                if (Reflector.isPropertyProxied(entity, VERSION)) {
+                    generator.writeObject(Long.valueOf(0L));
+                } else {
+                    generator.writeObject(entity.getVersion());
+                }
+            }
+            
+            if (entity.getPreferredProperty() != null) {
+                generator.writeFieldName("@_pp");
+                generator.writeObject(entity.getPreferredProperty());
             }
             
             // serialise all the properties relying on the fact that property sequence is consistent with order of fields in the class declaration
@@ -189,6 +202,9 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                                     existingMetaProps.put("_cfo", metaProperty.isChangedFromOriginal());
                                 }
                                 existingMetaProps.put("_originalVal", valueObject(metaProperty.getOriginalValue(), prop.isEntityTyped()));
+                            }
+                            if (!StringUtils.isEmpty(metaProperty.getCustomErrorMsgForRequiredness())) {
+                                existingMetaProps.put("_" + MetaProperty.CUSTOM_ERR_MSG_FOR_REQUREDNESS_PROPERTY_NAME, metaProperty.getCustomErrorMsgForRequiredness());
                             }
                             if (!isRequiredDefault(metaProperty)) {
                                 existingMetaProps.put("_" + MetaProperty.REQUIRED_PROPERTY_NAME, metaProperty.isRequired());

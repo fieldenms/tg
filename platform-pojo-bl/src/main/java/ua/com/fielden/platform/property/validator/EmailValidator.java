@@ -1,12 +1,12 @@
 package ua.com.fielden.platform.property.validator;
 
 import static java.lang.String.format;
+
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-
+import jakarta.mail.internet.AddressException;
+import jakarta.mail.internet.InternetAddress;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.error.Result;

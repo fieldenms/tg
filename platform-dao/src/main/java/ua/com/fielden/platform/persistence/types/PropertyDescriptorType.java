@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.persistence.types;
 
 import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 
 import java.io.Serializable;
 import java.sql.PreparedStatement;
@@ -9,7 +10,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Optional;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.UserType;
@@ -25,7 +26,9 @@ import ua.com.fielden.platform.types.markers.IPropertyDescriptorType;
  * @author TG Team
  */
 public class PropertyDescriptorType implements UserType, IPropertyDescriptorType {
-    private static final Logger LOGGER = Logger.getLogger(PropertyDescriptorType.class);
+    private static final Logger LOGGER = getLogger(PropertyDescriptorType.class);
+    
+    public static final PropertyDescriptorType INSTANCE = new PropertyDescriptorType();
     
     private static final int[] SQL_TYPES = { Types.VARCHAR };
     

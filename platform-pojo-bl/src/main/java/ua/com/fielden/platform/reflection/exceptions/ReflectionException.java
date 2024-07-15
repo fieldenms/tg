@@ -1,12 +1,14 @@
 package ua.com.fielden.platform.reflection.exceptions;
 
+import ua.com.fielden.platform.exceptions.AbstractPlatformRuntimeException;
+
 /**
  * A runtime exception to indicate TG specific reflection related exception.
  * 
  * @author TG Team
  *
  */
-public class ReflectionException extends RuntimeException {
+public class ReflectionException extends AbstractPlatformRuntimeException {
 
     private static final long serialVersionUID = 1L;
     

@@ -11,25 +11,25 @@ import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+
 /**
- * Master entity object.
+ * Functional entity to save invisibility for main menu items represented by {@link WebMenuItemInvisibility}.
  *
- * @author Developers
+ * @author TG Team
  *
  */
 @KeyType(String.class)
 @KeyTitle("Save menu item key")
 @CompanionObject(IMenuSaveAction.class)
 public class MenuSaveAction extends AbstractFunctionalEntityWithCentreContext<String> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty(String.class)
     @Title(value = "Visible menu items", desc = "Menu items that should become visible")
-    private Set<String> visibleMenuItems = new HashSet<String>();
+    private Set<String> visibleMenuItems = new HashSet<>();
 
     @IsProperty(String.class)
     @Title(value = "Invisible menu items", desc = "Menu items that should become invisible")
-    private Set<String> invisibleMenuItems = new HashSet<String>();
+    private Set<String> invisibleMenuItems = new HashSet<>();
 
     @Observable
     protected MenuSaveAction setInvisibleMenuItems(final Set<String> invisibleMenuItems) {

@@ -8,13 +8,14 @@ import org.restlet.data.Method;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.IEntityProducer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.EntityResource;
@@ -29,7 +30,6 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  *
  */
 public class EntityResourceFactory extends Restlet {
-    private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
     private final RestServerUtil restUtil;
     private final EntityFactory factory;
@@ -37,6 +37,8 @@ public class EntityResourceFactory extends Restlet {
     private final ICompanionObjectFinder coFinder;
     private final IUserProvider userProvider;
     private final IDeviceProvider deviceProvider;
+    private final IDates dates;
+    private final ICentreConfigSharingModel sharingModel;
     
     /**
      * Instantiates a factory for entity resources.
@@ -46,7 +48,6 @@ public class EntityResourceFactory extends Restlet {
      * @param injector
      */
     public EntityResourceFactory(final IWebUiConfig webUiConfig, final Injector injector) {
-        this.domainTreeEnhancerCache = injector.getInstance(IDomainTreeEnhancerCache.class);
         this.webUiConfig = webUiConfig;
         this.restUtil = injector.getInstance(RestServerUtil.class);
         this.factory = injector.getInstance(EntityFactory.class);
@@ -54,6 +55,8 @@ public class EntityResourceFactory extends Restlet {
         this.coFinder = injector.getInstance(ICompanionObjectFinder.class);
         this.userProvider = injector.getInstance(IUserProvider.class);
         this.deviceProvider = injector.getInstance(IDeviceProvider.class);
+        this.dates = injector.getInstance(IDates.class);
+        this.sharingModel = injector.getInstance(ICentreConfigSharingModel.class);
     }
 
     @Override
@@ -63,17 +66,18 @@ public class EntityResourceFactory extends Restlet {
         if (Method.POST == request.getMethod() || Method.PUT == request.getMethod() || Method.DELETE == request.getMethod()) {
             final EntityMaster<? extends AbstractEntity<?>> master = ResourceFactoryUtils.getEntityMaster(request, webUiConfig);
             
-            new EntityResource<AbstractEntity<?>>(
+            new EntityResource<>(
                     (Class<AbstractEntity<?>>) master.getEntityType(),
                     (IEntityProducer<AbstractEntity<?>>) master.createEntityProducer(),
                     factory,
                     restUtil,
                     critGenerator,
                     coFinder,
-                    domainTreeEnhancerCache,
                     webUiConfig,
                     userProvider,
                     deviceProvider,
+                    dates,
+                    sharingModel,
                     getContext(),
                     request,
                     response //

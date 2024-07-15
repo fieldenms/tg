@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.web.centre;
 
 import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.applyCriteria;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.getCustomObject;
+
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -37,7 +39,14 @@ public class CentreConfigDuplicateActionProducer extends DefaultEntityProducerWi
             selectionCrit().configDuplicateAction();
             // and after copying of criteria values against default centre compare it with SAVED version of default centre,
             // which always holds empty Centre DSL-configured configuration
-            entity.setCustomObject(getCustomObject(selectionCrit(), appliedCriteriaEntity, empty()));
+            entity.setCustomObject(getCustomObject(
+                selectionCrit(),
+                appliedCriteriaEntity,
+                empty(), // update with empty saveAsName indicating default config
+                of(empty()), // update with empty uuid indicating default config
+                of(appliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer().getPreferredView()), // update with preferred view from selection criteria with applied modifications
+                of(selectionCrit().createCriteriaValidationPrototype(empty()).shareError()) // update with share error corresponding to default config
+            ));
         }
         return entity;
     }

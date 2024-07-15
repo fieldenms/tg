@@ -2,7 +2,7 @@ package ua.com.fielden.platform.web.centre;
 
 import static java.util.Optional.of;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.applyCriteria;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrInherited;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLinkOrInherited;
 
 import java.util.Map;
 
@@ -36,11 +36,11 @@ public abstract class AbstractCentreConfigCommitActionProducer<T extends Abstrac
             
             // in most cases the following check will be needed to determine the course of action
             // also it will throw early failure in case where current configuration was deleted
-            final boolean isDefaultOrInherited = isDefaultOrInherited(selectionCrit().saveAsName(), selectionCrit());
+            final boolean isDefaultOrLinkOrInherited = isDefaultOrLinkOrInherited(selectionCrit().saveAsName(), selectionCrit());
             
             // apply criteria entity
             final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = applyCriteria(selectionCrit());
-            entity.setCustomObject(performProduce(entity, selectionCrit(), appliedCriteriaEntity, isDefaultOrInherited));
+            entity.setCustomObject(performProduce(entity, selectionCrit(), appliedCriteriaEntity, isDefaultOrLinkOrInherited));
         }
         return entity;
     }
@@ -51,10 +51,10 @@ public abstract class AbstractCentreConfigCommitActionProducer<T extends Abstrac
      * @param entity
      * @param selectionCrit
      * @param appliedCriteriaEntity
-     * @param isDefaultOrInherited -- indicates whether current configuration is default or inherited
+     * @param isDefaultOrLinkOrInherited -- indicates whether current configuration is default or link or inherited
      * @return
      */
-    protected abstract Map<String, Object> performProduce(final T entity, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity, boolean isDefaultOrInherited);
+    protected abstract Map<String, Object> performProduce(final T entity, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity, final boolean isDefaultOrLinkOrInherited);
     
     /**
      * Initialises <code>title</code> and <code>desc</code> inside <code>entity</code>. Takes them from persisted configuration with concrete name <code>saveAsName</code>.

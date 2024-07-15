@@ -37,17 +37,17 @@ public class AnalysisDomainTreeManagerTest extends AbstractAnalysisDomainTreeMan
     }
 
     public static Object createDtm_for_AnalysisDomainTreeManagerTest() {
-        return new AnalysisDomainTreeManager(serialiser(), createRootTypes_for_AnalysisDomainTreeManagerTest());
+        return new AnalysisDomainTreeManager(factory(), createRootTypes_for_AnalysisDomainTreeManagerTest());
     }
 
     public static Object createIrrelevantDtm_for_AnalysisDomainTreeManagerTest() {
-        final ICentreDomainTreeManagerAndEnhancer dtm = new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_AnalysisDomainTreeManagerTest());
+        final ICentreDomainTreeManagerAndEnhancer dtm = new CentreDomainTreeManagerAndEnhancer(factory(), createRootTypes_for_AnalysisDomainTreeManagerTest());
         enhanceManagerWithBasicCalculatedProperties(dtm);
         return dtm;
     }
 
     protected static Set<Class<?>> createRootTypes_for_AnalysisDomainTreeManagerTest() {
-        final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractAnalysisDomainTreeManagerTest());
+        final Set<Class<?>> rootTypes = new HashSet<>(createRootTypes_for_AbstractAnalysisDomainTreeManagerTest());
         return rootTypes;
     }
 

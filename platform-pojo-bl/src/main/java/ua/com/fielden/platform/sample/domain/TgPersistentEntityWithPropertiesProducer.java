@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.sample.domain;
 
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
@@ -31,12 +33,15 @@ public class TgPersistentEntityWithPropertiesProducer extends DefaultEntityProdu
 
     @Override
     public TgPersistentEntityWithProperties provideDefaultValuesForStandardNew(final TgPersistentEntityWithProperties entity, final EntityNewAction masterEntity) {
+        if (ofMasterEntity().computation().map(c -> c.apply(null, null).equals("WITH_KEY4")).orElse(false)) {
+            entity.setEntityProp(coTgPersistentEntityWithProperties.findByKeyAndFetch(coTgPersistentEntityWithProperties.getFetchProvider().<TgPersistentEntityWithProperties> fetchFor("entityProp").fetchModel(), "KEY4"));
+        }
         return provideProducerInitProp(coTgPersistentEntityWithProperties, entity, serialiser);
     }
     
     @Override
     public TgPersistentEntityWithProperties provideDefaultValues(final TgPersistentEntityWithProperties entity) {
-        return provideProducerInitProp(coTgPersistentEntityWithProperties, entity, serialiser);
+        return provideProducerInitProp(coTgPersistentEntityWithProperties, currentEntityNotEmpty() && chosenPropertyEqualsTo(DESC) ? refetchInstrumentedEntityById(currentEntity().getId()) : entity, serialiser);
     }
     
     private static TgPersistentEntityWithProperties provideProducerInitProp(final ITgPersistentEntityWithProperties co, final TgPersistentEntityWithProperties entity, final ISerialiser serialiser) {

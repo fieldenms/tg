@@ -1,12 +1,16 @@
 package ua.com.fielden.platform.web.test.server.config;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.IContextDecomposer.decompose;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
+import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.CELL_LAYOUT;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN;
+import static ua.com.fielden.platform.web.test.server.config.StandardActionsStyles.STANDARD_ACTION_COLOUR;
+import static ua.com.fielden.platform.web.test.server.config.StandardMessages.DELETE_CONFIRMATION;
 import static ua.com.fielden.platform.web.view.master.chart.decker.api.LabelOrientation.VERTICAL;
 
 import java.util.Optional;
@@ -14,9 +18,11 @@ import java.util.Optional;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.IContextDecomposer;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.sample.domain.TgGeneratedEntity;
 import ua.com.fielden.platform.sample.domain.TgGeneratedEntityForTrippleDecAnalysis;
 import ua.com.fielden.platform.sample.domain.TgGeneratedEntityForTrippleDecAnalysisDao;
@@ -36,8 +42,10 @@ import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
+import ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl.InsertionPointToolbar;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.layout.api.impl.LayoutComposer;
+import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
@@ -176,7 +184,20 @@ public class TgGeneratedEntityForTrippleDecAnalysisWebUiConfig {
                .cell(cell().skip().layoutForEach(CELL_LAYOUT).withGapBetweenCells(MARGIN))).toString();
 
         final EntityActionConfig standardNewAction = StandardActions.NEW_ACTION.mkAction(TgGeneratedEntityForTrippleDecAnalysis.class);
-        final EntityActionConfig standardDeleteAction = StandardActions.DELETE_ACTION.mkAction(TgGeneratedEntityForTrippleDecAnalysis.class);
+        final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(TgGeneratedEntityForTrippleDecAnalysis.class).getKey();
+        final String desc = format("Delete selected %s entities", entityTitle);
+        final EntityActionConfig standardDeleteAction = action(EntityDeleteAction.class)
+            .withContext(context().withSelectedEntities().build())
+            .preAction(okCancel(DELETE_CONFIRMATION.msg))
+            .postActionSuccess(() -> new JsCode("self.$.egi.clearPageSelection(); \n"))
+            .postActionError(() -> new JsCode("self.currentPage();\n"))
+            .icon("icons:remove-circle-outline")
+            .withStyle(STANDARD_ACTION_COLOUR)
+            .shortDesc(desc)
+            .longDesc(desc)
+            .shortcut("alt+d")
+            .withNoInsertionPointsRefresh(TgGeneratedEntityForTrippleDecAnalysisInsertionPoint.class)
+            .build();
         final EntityActionConfig standardExportAction = StandardActions.EXPORT_ACTION.mkAction(TgGeneratedEntityForTrippleDecAnalysis.class);
         final EntityActionConfig standardEditAction = StandardActions.EDIT_ACTION.mkAction(TgGeneratedEntityForTrippleDecAnalysis.class);
         final EntityActionConfig standardSortAction = CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction();
@@ -207,7 +228,7 @@ public class TgGeneratedEntityForTrippleDecAnalysisWebUiConfig {
                 .addProp("hours").minWidth(60)
                     .withSummary("sum_hours_", "SUM(hours)", "Sum of hours property")
                 .addPrimaryAction(standardEditAction)
-                .addInsertionPointWithPagination(
+                .addInsertionPoint(
                         action(TgGeneratedEntityForTrippleDecAnalysisInsertionPoint.class)
                              .withContext(context().withSelectionCrit().build())
                              .icon("stub")
@@ -215,7 +236,7 @@ public class TgGeneratedEntityForTrippleDecAnalysisWebUiConfig {
                              .prefDimForView(mkDim("'auto'", "'770px'"))
                              .withNoParentCentreRefresh()
                              .build(),
-                         InsertionPoints.BOTTOM)
+                         InsertionPoints.BOTTOM).setToolbar(new InsertionPointToolbar())
                 .build();
 
         final EntityCentre<TgGeneratedEntityForTrippleDecAnalysis> entityCentre = new EntityCentre<>(MiTgGeneratedEntityForTrippleDecAnalysis.class, "MiTgGeneratedEntityForTrippleDecAnalysis", ecc, injector, null);
@@ -237,6 +258,6 @@ public class TgGeneratedEntityForTrippleDecAnalysisWebUiConfig {
                 .setLayoutFor(Device.MOBILE, Optional.empty(), layout)
                 .done();
 
-        return new EntityMaster<TgGeneratedEntityForTrippleDecAnalysis>(TgGeneratedEntityForTrippleDecAnalysis.class, masterConfig, injector);
+        return new EntityMaster<>(TgGeneratedEntityForTrippleDecAnalysis.class, masterConfig, injector);
     }
 }

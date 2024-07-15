@@ -12,7 +12,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 /**
  * Test class, which represent an entity derived directly from AbstractEntity with a simple key.
  *
- * @author 01es
+ * @author TG Team
  *
  */
 @KeyType(String.class)

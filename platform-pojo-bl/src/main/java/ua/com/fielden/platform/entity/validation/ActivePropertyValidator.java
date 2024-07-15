@@ -3,8 +3,10 @@ package ua.com.fielden.platform.entity.validation;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
-import static org.apache.commons.lang.StringUtils.leftPad;
-import static org.apache.commons.lang.StringUtils.rightPad;
+import static java.util.stream.Collectors.toCollection;
+import static org.apache.commons.lang3.StringUtils.leftPad;
+import static org.apache.commons.lang3.StringUtils.rightPad;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
@@ -18,6 +20,7 @@ import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isNotSpecialActivatableToBeSkipped;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
@@ -28,7 +31,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
+
+import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
 
@@ -44,8 +48,8 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.validation.custom.DomainEntityDependencies;
+import ua.com.fielden.platform.entity.validation.custom.DomainEntityDependencies.DomainEntityDependency;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.types.tuples.T3;
 
 
@@ -57,8 +61,9 @@ import ua.com.fielden.platform.types.tuples.T3;
  */
 
 public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Boolean> {
-    private final ICompanionObjectFinder coFinder;
-    
+    private static final Logger LOGGER = getLogger(ActivePropertyValidator.class);
+
+    private final ICompanionObjectFinder coFinder;   
     private final IApplicationDomainProvider applicationDomainProvider;
 
     @Inject
@@ -71,9 +76,7 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public Result handle(final MetaProperty<Boolean> property, final Boolean newValue, final Set<Annotation> mutatorAnnotations) {
         final ActivatableAbstractEntity<?> entity = property.getEntity();
-        if (!entity.isPersisted()) { // a brand new entity is being created
-            return successful(newValue);
-        } else if (!newValue) { // entity is being deactivated, but could still be referenced
+        if (!newValue && entity.isPersisted()) { // a persisted entity is being deactivated, but it may still be referenced
             // let's check refCount... it could potentially be stale...
             final IEntityDao<?> co = coFinder.find(entity.getType());
             final int count;
@@ -90,11 +93,19 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
                 return successful(newValue);
             } else {
                 final Map<Class<? extends AbstractEntity<?>>, DomainEntityDependencies> domainDependency = getEntityDependantsMap(applicationDomainProvider.entityTypes());
-                final AggregatedResultQueryModel query = generateQuery(domainDependency.get(entity.getType()).getActivatableDependencies(), true);
-                final OrderingModel orderBy = orderBy().yield(COUNT).desc().yield(ENTITY_TYPE_TITLE).asc().yield(DEPENDENT_PROP_TITLE).asc().model();
-                return failure(count, mkErrorMsg(entity, count, co(EntityAggregates.class).getAllEntities(from(query).with(orderBy).with(mapOf(t2(PARAM, entity))).model())));
+                final Set<DomainEntityDependency> dependencies = domainDependency.get(entity.getType()).getActivatableDependencies();
+                // there can be cases where the domain model evolved and entity dependencies were relaxed/removed, but refCount has not been updated
+                // in such cases there there will no dependencies identified in the domain model, and thus there is no reason to report any errors
+                if (dependencies.isEmpty()) {
+                    LOGGER.warn(format("Entity [%s] has no activatable dependencies at the domain level, but has refCount > 0.", entity.getType().getName()));
+                    return successful(newValue);
+                } else {
+                    final AggregatedResultQueryModel query = generateQuery(dependencies, true);
+                    final OrderingModel orderBy = orderBy().yield(COUNT).desc().yield(ENTITY_TYPE_TITLE).asc().yield(DEPENDENT_PROP_TITLE).asc().model();
+                    return failure(count, mkErrorMsg(entity, count, co(EntityAggregates.class).getAllEntities(from(query).with(orderBy).with(mapOf(t2(PARAM, entity))).model())));
+                }
             }
-        } else { 
+        } else if (newValue) { // either existing or new entity is being activated...
             // entity is being activated, but could be referencing inactive activatables
             // we could not rely on the fact that all activatable are fetched
             // so, we should only perform so-called soft validation
@@ -106,15 +117,15 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
             for (final MetaProperty<? extends ActivatableAbstractEntity<?>> prop : activatableProps) {
                 final ActivatableAbstractEntity<?> value = prop.getValue();
                 if (!value.isActive()) {
-                    final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey();
-                    final String propTitle = TitlesDescsGetter.getTitleAndDesc(prop.getName(), entity.getType()).getKey();
-                    final String valueEntityTitle = TitlesDescsGetter.getEntityTitleAndDesc(value.getType()).getKey();
+                    final String entityTitle = getEntityTitleAndDesc(entity.getType()).getKey();
+                    final String propTitle = getTitleAndDesc(prop.getName(), entity.getType()).getKey();
+                    final String valueEntityTitle = getEntityTitleAndDesc(value.getType()).getKey();
                     return failure(format("Property [%s] in %s [%s] references inactive %s [%s].", propTitle, entityTitle, entity, valueEntityTitle, value));
                 }
             }
-
-            return successful(null);
         }
+        // otherwise...
+        return successful(newValue);
     }
 
     private String mkErrorMsg(final ActivatableAbstractEntity<?> entity, final int count, final List<EntityAggregates> dependencies) {
@@ -148,6 +159,7 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
                              !((AbstractEntity<?>) mp.getValue()).isIdOnlyProxy() &&
                              !entity.equals(mp.getValue()))
                .map(mp -> (MetaProperty<? extends ActivatableAbstractEntity<?>>) mp)
-               .collect(Collectors.toCollection(LinkedHashSet::new));
+               .collect(toCollection(LinkedHashSet::new));
     }
+
 }

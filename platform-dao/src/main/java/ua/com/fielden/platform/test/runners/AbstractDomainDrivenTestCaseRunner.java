@@ -1,9 +1,15 @@
 package ua.com.fielden.platform.test.runners;
 
-import static java.lang.String.format;
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static ua.com.fielden.platform.reflection.Reflector.assignStatic;
-import static ua.com.fielden.platform.test.DbCreator.ddlScriptFileName;
+import org.apache.logging.log4j.Logger;
+import org.junit.runner.notification.RunNotifier;
+import org.junit.runners.BlockJUnit4ClassRunner;
+import org.junit.runners.model.Statement;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
+import ua.com.fielden.platform.test.DbCreator;
+import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
+import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
@@ -12,17 +18,11 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Function;
 
-import org.apache.log4j.Logger;
-import org.junit.runner.notification.RunNotifier;
-import org.junit.runners.BlockJUnit4ClassRunner;
-import org.junit.runners.model.Statement;
-
-import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
-import ua.com.fielden.platform.test.DbCreator;
-import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
-import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.reflection.Reflector.assignStatic;
+import static ua.com.fielden.platform.test.DbCreator.ddlScriptFileName;
 
 /**
  * The domain test case runner that is responsible of instantiation and initialisation of domain test cases.
@@ -32,7 +32,7 @@ import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
  */
 public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4ClassRunner  {
 
-    public final Logger logger = Logger.getLogger(getClass());
+    public final Logger logger = getLogger(getClass());
     
     // the following two properties must be static to perform their allocation only once due to its memory and CPU intencity
     private static Properties dbProps; // mainly used for db creation and population at the time of loading the test case classes
@@ -62,7 +62,11 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         super(klass);
         // assert if the provided test case is supported
         if (!AbstractDomainDrivenTestCase.class.isAssignableFrom(klass)) {
-            throw new IllegalArgumentException(format("Test case [%s] should extend [%s].", klass.getName(), AbstractDomainDrivenTestCase.class.getName()));
+            throw new DomainDriventTestException(format("Test case [%s] should extend [%s].", klass.getName(), AbstractDomainDrivenTestCase.class.getName()));
+        }
+       
+        if (dbCreatorType == null) {
+            throw new DomainDriventTestException("DbCreator type was not provided, but is required.");
         }
         
         // databaseUri value should be specified in POM or come from the command line
@@ -98,7 +102,7 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
 
         logger.info(format("Running [%s] with loadDdlScriptFromFile = [%s], saveScriptsToFile = [%s], loadDataScriptFromFile = [%s] and  databaseUri = [%s]", klass, loadDdlScriptFromFile, saveScriptsToFile, loadDataScriptFromFile, databaseUri));
 
-        // lets construct and assign test configuration
+        // let's construct and assign test configuration
         // this should occur only once per JVM instance as this is a computationally intensive operation
         // hence, caching of the produced value in the static variable
         // in the essence this is like a static initialization block that occurs during instantiation of the first test runner 
@@ -107,12 +111,8 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
             config = testConfig.orElseGet(() -> createConfig(dbProps));
             coFinder = config.getInstance(ICompanionObjectFinder.class);
             factory = config.getInstance(EntityFactory.class);
-            assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("instantiator"), 
-                    new Function<Class<?>, Object>() {
-                        @Override
-                        public Object apply(Class<?> type) {
-                            return config.getInstance(type);
-                        }});
+            final Function<Class<?>, Object> instFun = type -> config.getInstance(type);
+            assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("instantiator"), instFun);
             assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("coFinder"), coFinder);
             assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("factory"), factory);
         }
@@ -189,7 +189,7 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
     }
     
     /**
-     * A helper function to instantiate test case configuration as specified in <code>src/test/resources/test.properties</code>, property <code>config-domain</code>.
+     * A helper function to instantiate test case configuration as specified in {@code props}, property {@code "config.domain"}.
      * 
      * @param props
      * @return

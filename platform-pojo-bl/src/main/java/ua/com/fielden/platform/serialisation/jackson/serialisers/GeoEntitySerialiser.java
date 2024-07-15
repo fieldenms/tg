@@ -33,7 +33,7 @@ public class GeoEntitySerialiser extends JsonSerializer<AbstractEntity> {
         generator.writeFieldName("_entityType");
         generator.writeObject(DynamicEntityClassLoader.getOriginalType(PropertyTypeDeterminator.stripIfNeeded(entity.getType())).getSimpleName());
 
-        for (final Field propertyField : Finder.findRealProperties(entity.getType())) {
+        for (final Field propertyField : Finder.findRealProperties((Class<? extends AbstractEntity<?>>) entity.getType())) {
             if (!AbstractEntity.KEY.equals(propertyField.getName()) // disregard inclusion of composite key property inside json (as the separate parts of keys will be included)
                     || !DynamicEntityKey.class.equals(PropertyTypeDeterminator.determinePropertyType(entity.getType(), AbstractEntity.KEY))) {
 

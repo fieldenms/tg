@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.mail;
 
+import static java.util.Optional.*;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static java.lang.String.format;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
@@ -7,28 +10,28 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
 import java.util.stream.Stream;
 
-import javax.activation.DataHandler;
-import javax.activation.DataSource;
-import javax.activation.FileDataSource;
-import javax.mail.BodyPart;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Multipart;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
+import jakarta.mail.Message.RecipientType;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
-
+import jakarta.activation.DataHandler;
+import jakarta.activation.DataSource;
+import jakarta.activation.FileDataSource;
+import jakarta.mail.Authenticator;
+import jakarta.mail.BodyPart;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Multipart;
+import jakarta.mail.PasswordAuthentication;
+import jakarta.mail.Session;
+import jakarta.mail.Transport;
+import jakarta.mail.internet.AddressException;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeBodyPart;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.mail.exceptions.EmailException;
@@ -42,6 +45,11 @@ import ua.com.fielden.platform.types.tuples.T2;
  *
  */
 public class SmtpEmailSender {
+
+    public static final String ERR_ARGUMENT_CSV_REPLY_TO_ADDRESSES_CANNOT_BE_BLANK = "Argument [csvReplyToAddresses] cannot be blank.";
+    public static final String ERR_AT_LEAST_ONE_ATTACHMENT_IS_EXPECTED = "At least one attachment is expected.";
+    public static final String ERR_AT_LEAST_ONE_IMAGE_IS_EXPECTED = "At least one image is expected.";
+    public static final String ERR_EMAIL_SENDING_FAILED = "Error during email sending.";
 
     private static enum EmailType {
         PLAIN {
@@ -116,18 +124,41 @@ public class SmtpEmailSender {
         public abstract String alterBody(final String body, final Stream<T2<Optional<File>, String>> optionalT2Stream1);
     }
 
-    private final Logger logger = Logger.getLogger(SmtpEmailSender.class);
+    private final Logger logger = getLogger(SmtpEmailSender.class);
     private final String host;
+    private final Optional<String> maybePort;
 
     public SmtpEmailSender(final String host) {
-        this.host = host;
+        Objects.requireNonNull(host, "Argument [host] cannot be null.");
+        final String[] hostAndPort = host.split(":");
+        this.host = hostAndPort[0];
+        this.maybePort = ofNullable(hostAndPort.length == 2 ? hostAndPort[1] : null);
     }
 
-    private Session newEmailSession() {
+    public Session newEmailSession() {
         final Properties props = new Properties();
+        final String username = System.getProperty("email.smtp.username", System.getenv("email.smtp.username"));
+        final String password = System.getProperty("email.smtp.password", System.getenv("email.smtp.password"));
+        final Authenticator auth;
+        final String port;
+        if (!StringUtils.isEmpty(username) &&
+            !StringUtils.isEmpty(password)) {
+            auth = new Authenticator() {
+                protected PasswordAuthentication getPasswordAuthentication() {
+                    return new PasswordAuthentication(username, password);
+                }
+            };
+            port = maybePort.orElse("587");
+            props.put("mail.smtp.auth", "true");
+            props.put("mail.smtp.starttls.enable", "true");
+        } else {
+            auth = null;
+            port = maybePort.orElse("25");
+        }
         props.put("mail.smtp.host", host);
-        final Session session = Session.getDefaultInstance(props, null);
-        return session;
+        props.put("mail.smtp.port", port);
+        logger.debug(format("SMTP host is: [%s:%s]", host, port));
+        return Session.getInstance(props, auth);
     }
 
     /**
@@ -143,7 +174,28 @@ public class SmtpEmailSender {
             final String csvToAddresses,
             final String subject,
             final String body) {
-        sendMessage(fromAddress, csvToAddresses, subject, body, EmailType.PLAIN);
+        sendMessage(empty(), fromAddress, csvToAddresses, subject, body, EmailType.PLAIN);
+    }
+
+    /**
+     * Sends a plain text email with no attachments and custom Reply-To addresses
+     *
+     * @param csvReplyToAddresses
+     * @param fromAddress
+     * @param csvToAddresses
+     * @param subject
+     * @param body
+     */
+    public void sendPlainMessage(
+            final String csvReplyToAddresses,
+            final String fromAddress,
+            final String csvToAddresses,
+            final String subject,
+            final String body) {
+        if (StringUtils.isBlank(csvReplyToAddresses)) {
+            throw new EmailException(ERR_ARGUMENT_CSV_REPLY_TO_ADDRESSES_CANNOT_BE_BLANK);
+        }
+        sendMessage(of(csvReplyToAddresses), fromAddress, csvToAddresses, subject, body, EmailType.PLAIN);
     }
 
     /**
@@ -159,7 +211,28 @@ public class SmtpEmailSender {
             final String csvToAddresses,
             final String subject,
             final String body) {
-        sendMessage(fromAddress, csvToAddresses, subject, body, EmailType.HTML);
+        sendMessage(empty(), fromAddress, csvToAddresses, subject, body, EmailType.HTML);
+    }
+
+    /**
+     * Sends a HTML text email with no attachments and custom Reply-To addresses
+     *
+     * @param csvReplyToAddresses
+     * @param fromAddress
+     * @param csvToAddresses
+     * @param subject
+     * @param body
+     */
+    public void sendHtmlMessage(
+            final String csvReplyToAddresses,
+            final String fromAddress,
+            final String csvToAddresses,
+            final String subject,
+            final String body) {
+        if (StringUtils.isBlank(csvReplyToAddresses)) {
+            throw new EmailException(ERR_ARGUMENT_CSV_REPLY_TO_ADDRESSES_CANNOT_BE_BLANK);
+        }
+        sendMessage(of(csvReplyToAddresses), fromAddress, csvToAddresses, subject, body, EmailType.HTML);
     }
 
     /**
@@ -178,11 +251,39 @@ public class SmtpEmailSender {
             final String body,
             final Path... filePaths) {
         if (filePaths.length == 0) {
-            throw new EmailException("At least one attachment is expected.");
+            throw new EmailException(ERR_AT_LEAST_ONE_ATTACHMENT_IS_EXPECTED);
         }
 
         final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.PLAIN, body, filePaths);
-        sendPlainMessageWithAttachments(fromAddress, csvToAddresses, subject, t2._1, t2._2);
+        sendPlainMessageWithAttachments(empty(), fromAddress, csvToAddresses, subject, t2._1, t2._2);
+    }
+
+    /**
+     * Sends a plain text email with attachments and custom Reply-To addresses.
+     *
+     * @param csvReplyToAddresses
+     * @param fromAddress
+     * @param csvToAddresses
+     * @param subject
+     * @param body
+     * @param filePaths
+     */
+    public void sendPlainMessageWithAttachments(
+            final String csvReplyToAddresses,
+            final String fromAddress,
+            final String csvToAddresses,
+            final String subject,
+            final String body,
+            final Path... filePaths) {
+        if (filePaths.length == 0) {
+            throw new EmailException(ERR_AT_LEAST_ONE_ATTACHMENT_IS_EXPECTED);
+        }
+        if (StringUtils.isBlank(csvReplyToAddresses)) {
+            throw new EmailException(ERR_ARGUMENT_CSV_REPLY_TO_ADDRESSES_CANNOT_BE_BLANK);
+        }
+
+        final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.PLAIN, body, filePaths);
+        sendPlainMessageWithAttachments(of(csvReplyToAddresses), fromAddress, csvToAddresses, subject, t2._1, t2._2);
     }
 
     /**
@@ -203,11 +304,41 @@ public class SmtpEmailSender {
             final IAttachment coAttachment,
             final Attachment... attachments) {
         if (attachments.length == 0) {
-            throw new EmailException("At least one attachment is expected.");
+            throw new EmailException(ERR_AT_LEAST_ONE_ATTACHMENT_IS_EXPECTED);
         }
 
         final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.PLAIN, body, coAttachment, attachments);
-        sendPlainMessageWithAttachments(fromAddress, csvToAddresses, subject, t2._1, t2._2);
+        sendPlainMessageWithAttachments(empty(), fromAddress, csvToAddresses, subject, t2._1, t2._2);
+    }
+
+    /**
+     * Sends a plain text email with attachments and custom Reply-To addresses.
+     *
+     * @param csvReplyToAddresses
+     * @param fromAddress
+     * @param csvToAddresses
+     * @param subject
+     * @param body
+     * @param coAttachment
+     * @param attachments
+     */
+    public void sendPlainMessageWithAttachments(
+            final String csvReplyToAddresses,
+            final String fromAddress,
+            final String csvToAddresses,
+            final String subject,
+            final String body,
+            final IAttachment coAttachment,
+            final Attachment... attachments) {
+        if (attachments.length == 0) {
+            throw new EmailException(ERR_AT_LEAST_ONE_ATTACHMENT_IS_EXPECTED);
+        }
+        if (StringUtils.isBlank(csvReplyToAddresses)) {
+            throw new EmailException(ERR_ARGUMENT_CSV_REPLY_TO_ADDRESSES_CANNOT_BE_BLANK);
+        }
+
+        final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.PLAIN, body, coAttachment, attachments);
+        sendPlainMessageWithAttachments(of(csvReplyToAddresses), fromAddress, csvToAddresses, subject, t2._1, t2._2);
     }
 
     /**
@@ -226,11 +357,39 @@ public class SmtpEmailSender {
             final String body,
             final Path... filePaths) {
         if (filePaths.length == 0) {
-            throw new EmailException("At least one attachment is expected.");
+            throw new EmailException(ERR_AT_LEAST_ONE_ATTACHMENT_IS_EXPECTED);
         }
 
         final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.HTML, body, filePaths);
-        sendHtmlMessageWithImagesAndAttachments(fromAddress, csvToAddresses, subject, t2._1, new Path[] {}, t2._2);
+        sendHtmlMessageWithImagesAndAttachments(empty(), fromAddress, csvToAddresses, subject, t2._1, new Path[] {}, t2._2);
+    }
+
+    /**
+     * Sends a HTML text email with attachments with custom Reply-To addresses.
+     *
+     * @param csvReplyToAddresses
+     * @param fromAddress
+     * @param csvToAddresses
+     * @param subject
+     * @param body
+     * @param filePaths
+     */
+    public void sendHtmlMessageWithAttachments(
+            final String csvReplyToAddresses,
+            final String fromAddress,
+            final String csvToAddresses,
+            final String subject,
+            final String body,
+            final Path... filePaths) {
+        if (filePaths.length == 0) {
+            throw new EmailException(ERR_AT_LEAST_ONE_ATTACHMENT_IS_EXPECTED);
+        }
+        if (StringUtils.isBlank(csvReplyToAddresses)) {
+            throw new EmailException(ERR_ARGUMENT_CSV_REPLY_TO_ADDRESSES_CANNOT_BE_BLANK);
+        }
+
+        final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.HTML, body, filePaths);
+        sendHtmlMessageWithImagesAndAttachments(of(csvReplyToAddresses), fromAddress, csvToAddresses, subject, t2._1, new Path[] {}, t2._2);
     }
 
     /**
@@ -250,12 +409,42 @@ public class SmtpEmailSender {
             final IAttachment coAttachment,
             final Attachment... attachments) {
         if (attachments.length == 0) {
-            throw new EmailException("At least one attachment is expected.");
+            throw new EmailException(ERR_AT_LEAST_ONE_ATTACHMENT_IS_EXPECTED);
         }
 
         final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.HTML, body, coAttachment, attachments);
-        sendHtmlMessageWithImagesAndAttachments(fromAddress, csvToAddresses, subject, t2._1, new Path[] {}, t2._2);
+        sendHtmlMessageWithImagesAndAttachments(empty(), fromAddress, csvToAddresses, subject, t2._1, new Path[] {}, t2._2);
     }
+
+    /**
+     * Sends a HTML text email with attachments with custom Repoly-To addresses.
+     *
+     * @param csvReplyToAddresses
+     * @param fromAddress
+     * @param csvToAddresses
+     * @param subject
+     * @param body
+     * @param attachments
+     */
+    public void sendHtmlMessageWithAttachments(
+            final String csvReplyToAddresses,
+            final String fromAddress,
+            final String csvToAddresses,
+            final String subject,
+            final String body,
+            final IAttachment coAttachment,
+            final Attachment... attachments) {
+        if (attachments.length == 0) {
+            throw new EmailException(ERR_AT_LEAST_ONE_ATTACHMENT_IS_EXPECTED);
+        }
+        if (StringUtils.isBlank(csvReplyToAddresses)) {
+            throw new EmailException(ERR_ARGUMENT_CSV_REPLY_TO_ADDRESSES_CANNOT_BE_BLANK);
+        }
+
+        final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.HTML, body, coAttachment, attachments);
+        sendHtmlMessageWithImagesAndAttachments(of(csvReplyToAddresses), fromAddress, csvToAddresses, subject, t2._1, new Path[] {}, t2._2);
+    }
+
 
     /**
      * Sends a HTML text email with embedded images and attachments.
@@ -277,15 +466,50 @@ public class SmtpEmailSender {
             final IAttachment coAttachment,
             final Attachment... attachments) {
         if (imagePaths.length == 0) {
-            throw new EmailException("At least one image is expected.");
+            throw new EmailException(ERR_AT_LEAST_ONE_IMAGE_IS_EXPECTED);
         }
 
         if (attachments.length == 0) {
-            throw new EmailException("At least one attachment is expected.");
+            throw new EmailException(ERR_AT_LEAST_ONE_ATTACHMENT_IS_EXPECTED);
         }
 
         final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.HTML, body, coAttachment, attachments);
-        sendHtmlMessageWithImagesAndAttachments(fromAddress, csvToAddresses, subject, t2._1, imagePaths, t2._2);
+        sendHtmlMessageWithImagesAndAttachments(empty(), fromAddress, csvToAddresses, subject, t2._1, imagePaths, t2._2);
+    }
+
+    /**
+     * Sends a HTML text email with embedded images and attachments, with custom Reply-To addresses.
+     *
+     * @param csvReplyToAddresses
+     * @param fromAddress
+     * @param csvToAddresses
+     * @param subject
+     * @param body
+     * @param imagePaths
+     * @param coAttachment
+     * @param attachments
+     */
+    public void sendHtmlMessageWithImagesAndAttachments(
+            final String csvReplyToAddresses,
+            final String fromAddress,
+            final String csvToAddresses,
+            final String subject,
+            final String body,
+            final Path[] imagePaths,
+            final IAttachment coAttachment,
+            final Attachment... attachments) {
+        if (imagePaths.length == 0) {
+            throw new EmailException(ERR_AT_LEAST_ONE_IMAGE_IS_EXPECTED);
+        }
+        if (attachments.length == 0) {
+            throw new EmailException(ERR_AT_LEAST_ONE_ATTACHMENT_IS_EXPECTED);
+        }
+        if (StringUtils.isBlank(csvReplyToAddresses)) {
+            throw new EmailException(ERR_ARGUMENT_CSV_REPLY_TO_ADDRESSES_CANNOT_BE_BLANK);
+        }
+
+        final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.HTML, body, coAttachment, attachments);
+        sendHtmlMessageWithImagesAndAttachments(of(csvReplyToAddresses), fromAddress, csvToAddresses, subject, t2._1, imagePaths, t2._2);
     }
 
     /**
@@ -298,7 +522,6 @@ public class SmtpEmailSender {
      * @param imagePaths
      * @param filePaths
      */
-
     public void sendHtmlMessageWithImagesAndAttachments(
             final String fromAddress,
             final String csvToAddresses,
@@ -306,19 +529,40 @@ public class SmtpEmailSender {
             final String body,
             final Path[] imagePaths,
             final Path... filePaths) {
-        if (imagePaths.length == 0) {
-            throw new EmailException("At least one image is expected.");
-        }
-        if (filePaths.length == 0) {
-            throw new EmailException("At least one attachment is expected.");
+        final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.HTML, body, filePaths);
+        sendHtmlMessageWithImagesAndAttachments(empty(), fromAddress, csvToAddresses, subject, t2._1, imagePaths, t2._2);
+    }
+
+    /**
+     * Sends a HTML text email with embedded images and attachments, and custom Reply-To addresses.
+     *
+     * @param csvReplyToAddresses
+     * @param fromAddress
+     * @param csvToAddresses
+     * @param subject
+     * @param body
+     * @param imagePaths
+     * @param filePaths
+     */
+    public void sendHtmlMessageWithImagesAndAttachments(
+            final String csvReplyToAddresses,
+            final String fromAddress,
+            final String csvToAddresses,
+            final String subject,
+            final String body,
+            final Path[] imagePaths,
+            final Path... filePaths) {
+        if (StringUtils.isBlank(csvReplyToAddresses)) {
+            throw new EmailException(ERR_ARGUMENT_CSV_REPLY_TO_ADDRESSES_CANNOT_BE_BLANK);
         }
 
         final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.HTML, body, filePaths);
-        sendHtmlMessageWithImagesAndAttachments(fromAddress, csvToAddresses, subject, t2._1, imagePaths, t2._2);
+        sendHtmlMessageWithImagesAndAttachments(of(csvReplyToAddresses), fromAddress, csvToAddresses, subject, t2._1, imagePaths, t2._2);
     }
 
 
     private void sendMessage(
+            final Optional<String> csvReplyToAddresses,
             final String fromAddress,
             final String csvToAddresses,
             final String subject,
@@ -327,29 +571,36 @@ public class SmtpEmailSender {
         try {
             final Session session = newEmailSession();
             final MimeMessage message = new MimeMessage(session);
-            message.setFrom(new InternetAddress(fromAddress));
-            assignToAddresses(csvToAddresses, message);
+            if (!StringUtils.isBlank(fromAddress)) {
+                message.setFrom(new InternetAddress(fromAddress));
+            }
+            if (csvReplyToAddresses.isPresent()) {
+                assignReplyToAddresses(csvReplyToAddresses.get(), message);
+            }
+            assignRecipientAddresses(csvToAddresses, message);
             message.setSubject(subject);
             type.setBodyText(message, body);
             message.setSentDate(new Timestamp(System.currentTimeMillis()));
             Transport.send(message);
         } catch (final Exception ex) {
-            logger.error("Error during email sending.", ex);
-            throw new EmailException("Error during email sending.", ex);
+            logger.error(ERR_EMAIL_SENDING_FAILED, ex);
+            throw new EmailException(ERR_EMAIL_SENDING_FAILED, ex);
         }
     }
 
     /**
-     * This
+     * This method assumes that attachments have already been pre-validated and
+     * only valid files are passed in.
      *
+     * @param csvReplyToAddresses
      * @param fromAddress
      * @param csvToAddresses
      * @param subject
      * @param body
-     * @param type
      * @param attachments
      */
     private void sendPlainMessageWithAttachments(
+            final Optional<String> csvReplyToAddresses,
             final String fromAddress,
             final String csvToAddresses,
             final String subject,
@@ -358,8 +609,13 @@ public class SmtpEmailSender {
         try {
             final Session session = newEmailSession();
             final MimeMessage message = new MimeMessage(session);
-            message.setFrom(new InternetAddress(fromAddress));
-            assignToAddresses(csvToAddresses, message);
+            if (!StringUtils.isBlank(fromAddress)) {
+                message.setFrom(new InternetAddress(fromAddress));
+            }
+            if (csvReplyToAddresses.isPresent()) {
+                assignReplyToAddresses(csvReplyToAddresses.get(), message);
+            }
+            assignRecipientAddresses(csvToAddresses, message);
             message.setSubject(subject);
 
             message.setContent(buildPlainMultipart(body, attachments));
@@ -367,13 +623,14 @@ public class SmtpEmailSender {
             message.saveChanges();
             Transport.send(message);
         } catch (final Exception ex) {
-            logger.error("Error during email sending.", ex);
-            throw new EmailException("Error during email sending.", ex);
+            logger.error(ERR_EMAIL_SENDING_FAILED, ex);
+            throw new EmailException(ERR_EMAIL_SENDING_FAILED, ex);
         }
 
     }
 
     private void sendHtmlMessageWithImagesAndAttachments(
+            final Optional<String> csvReplyToAddresses,
             final String fromAddress,
             final String csvToAddresses,
             final String subject,
@@ -383,8 +640,13 @@ public class SmtpEmailSender {
         try {
             final Session session = newEmailSession();
             final MimeMessage message = new MimeMessage(session);
-            message.setFrom(new InternetAddress(fromAddress));
-            assignToAddresses(csvToAddresses, message);
+            if (!StringUtils.isBlank(fromAddress)) {
+                message.setFrom(new InternetAddress(fromAddress));
+            }
+            if (csvReplyToAddresses.isPresent()) {
+                assignReplyToAddresses(csvReplyToAddresses.get(), message);
+            }
+            assignRecipientAddresses(csvToAddresses, message);
             message.setSubject(subject);
 
             // add everything to the email
@@ -393,24 +655,50 @@ public class SmtpEmailSender {
             message.saveChanges();
             Transport.send(message);
         } catch (final Exception ex) {
-            logger.error("Error during email sending.", ex);
-            throw new EmailException("Error during email sending.", ex);
+            logger.error(ERR_EMAIL_SENDING_FAILED, ex);
+            throw new EmailException(ERR_EMAIL_SENDING_FAILED, ex);
         }
     }
 
     /**
-     * A helper method to process and assign the TO addresses.
+     * A helper method to process and assign TO, CC and BCC addresses.
      *
-     * @param csvToAddresses
+     * @param csvAddresses
      * @param message
      * @throws MessagingException
-     * @throws AddressException
      */
-    private void assignToAddresses(final String csvToAddresses, final MimeMessage message) throws MessagingException, AddressException {
-        final String[] toAddresses = csvToAddresses.trim().split("[,;]");
-        for (final String toAddresse : toAddresses) {
-            message.addRecipient(Message.RecipientType.TO, new InternetAddress(toAddresse));
+    public static void assignRecipientAddresses(final String csvAddresses, final MimeMessage message) throws MessagingException {
+        final String[] addresses = csvAddresses.trim().split("[,;]");
+        for (final String address : addresses) {
+            final RecipientType recipientType;
+            final String emailAddress;
+            // CC address
+            if (address.toUpperCase().startsWith("CC:")) {
+                recipientType = RecipientType.CC;
+                emailAddress = address.substring(3);
+            }
+            // BCC address
+            else if (address.toUpperCase().startsWith("BCC:")) {
+                recipientType = RecipientType.BCC;
+                emailAddress = address.substring(4);
+            }
+            // TO address
+            else {
+                recipientType = RecipientType.TO;
+                emailAddress = address.toUpperCase().startsWith("TO:") ? address.substring(3) : address;
+
+            }
+            message.addRecipient(recipientType, new InternetAddress(emailAddress));
         }
+    }
+
+    private static void assignReplyToAddresses(final String csvReplyToAddresses, final MimeMessage message) throws MessagingException {
+        final var replyToAddresses = csvReplyToAddresses.trim().split("[,;]");
+        final var addresses = new InternetAddress[replyToAddresses.length];
+        for (int index = 0; index < addresses.length; index++) {
+            addresses[index] = new InternetAddress(replyToAddresses[index]);
+        }
+        message.setReplyTo(addresses);
     }
 
     private static void addImagesInline(final Multipart parent, final Path[] images) throws MessagingException {
@@ -485,9 +773,9 @@ public class SmtpEmailSender {
         return Stream.of(filePaths).map(path -> {
             final File file = path.toFile();
             if (file.exists() && file.canRead()) {
-                return t2(Optional.of(file), file.getName());
+                return t2(of(file), file.getName());
             } else {
-                return t2(Optional.empty(), file.getName());
+                return t2(empty(), file.getName());
             }
         });
     }
@@ -525,7 +813,7 @@ public class SmtpEmailSender {
     }
 
     public static void main(final String[] args) {
-        final SmtpEmailSender sender = new SmtpEmailSender("192.168.1.8");
+        final SmtpEmailSender sender = new SmtpEmailSender("localhost");
         final Path path1 = Paths.get(".classpath");
         final Path path2 = Paths.get(".project");
         final Path path3 = Paths.get("desktop-script.sh");
@@ -541,13 +829,17 @@ public class SmtpEmailSender {
         final String htmlBodyWithoutImage = String.format(htmlBodyTemplate, "");
         final Path[] imagePaths = new Path[1];
         imagePaths[0] = pathImage;
-        sender.sendHtmlMessageWithAttachments("oles@fielden.com.au", "oles@fielden.com.au", "HtmlMessageWithAttachments", htmlBodyWithoutImage, path1, path2, path3, path4);
+//        sender.sendHtmlMessageWithAttachments("oles@fielden.com.au", "oles@fielden.com.au", "HtmlMessageWithAttachments", htmlBodyWithoutImage, path1, path2, path3, path4);
         sender.sendHtmlMessageWithImagesAndAttachments("oles@fielden.com.au", "oles@fielden.com.au", "HtmlMessageWithImagesAndAttachments", htmlBodyWithImage, imagePaths, path1, path2, path3, path4);
-        sender.sendPlainMessageWithAttachments("oles@fielden.com.au", "oles@fielden.com.au", "PlainMessageWithAttachments", plainBody, path1, path2, path3, path4);
+        sender.sendHtmlMessageWithImagesAndAttachments("support@fielden.com.au", "oles@fielden.com.au", "oles@fielden.com.au", "HtmlMessageWithImagesAndAttachments", htmlBodyWithImage, imagePaths, path1, path2, path3, path4);
+//        sender.sendPlainMessageWithAttachments("oles@fielden.com.au", "oles@fielden.com.au", "PlainMessageWithAttachments", plainBody, path1, path2, path3, path4);
 //        sender.sendPlainMessageWithAttachments("oles@fielden.com.au", "oles.hodych@gmail.com", "Plain text with text mime type", "Plain text, but HTML mime type", path1, path2);
 //        sender.sendHtmlMessageWithAttachments("oles@fielden.com.au", "oles.hodych@gmail.com ", "Html text with HTML mime type", "Html text, but HTML mime type</br></br>", path1, path2);
 //        sender.sendHtmlMessage("oles@fielden.com.au", "oles@fielden.com.au  ", "Plain text with HTML mime type", "Plain text, but HTML mime type");
-//        sender.sendPlainMessage("oles@fielden.com.au", "oles@fielden.com.au", "HTML text with TXT mime type", "<html>Please open the <a href='https://tgdev.com:8092/login'>link</a> to reset you password.</html>");
+        sender.sendPlainMessage("", "CC:support@fielden.com.au", "Only CC HTML text with TXT mime type", "<html>Please open the <a href='https://tgdev.com:8092/login'>link</a> to reset you password.</html>");
+        sender.sendPlainMessage("", "BCC:support@fielden.com.au", "Only BCC HTML text with TXT mime type", "<html>Please open the <a href='https://tgdev.com:8092/login'>link</a> to reset you password.</html>");
+        sender.sendPlainMessage("oles@fielden.com.au", "oles@fielden.com.au,CC:support@fielden.com.au", "HTML text with TXT mime type", "<html>Please open the <a href='https://tgdev.com:8092/login'>link</a> to reset you password.</html>");
+        sender.sendPlainMessage("support@fielden.com.au;support@client.com", "oles@fielden.com.au", "oles@fielden.com.au", "HTML text with TXT mime type", "<html>Please open the <a href='https://tgdev.com:8092/login'>link</a> to reset you password.</html>");
 //        sender.sendHtmlMessage("oles@fielden.com.au", "oles@fielden.com.au", "HTML text with HTML mime type, not <html> block", "Please open the <a href='https://tgdev.com:8092/login'>link</a> to reset you password.");
 //        sender.sendHtmlMessage("oles@fielden.com.au", "oles@fielden.com.au", "HTML text with HTML mime type", "<html>Please open the <a href='https://tgdev.com:8092/login'>link</a> to reset you password.</html>");
     }

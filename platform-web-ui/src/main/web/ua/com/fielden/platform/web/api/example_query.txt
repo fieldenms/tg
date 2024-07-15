@@ -1,0 +1,104 @@
+# Welcome to GraphiQL (https://tgdev.com/api/graphiql)
+#
+# GraphiQL is an in-browser tool for writing, validating, and
+# testing GraphQL queries.
+#
+# Type queries into this side of the screen, and you will see intelligent
+# typeaheads aware of the current GraphQL type schema and live syntax and
+# validation errors highlighted within the text.
+#
+# GraphQL queries typically start with a "{" character. Lines that starts
+# with a # are ignored.
+#
+# An example GraphQL query might look like:
+#
+#     {
+#       field(arg: "value") {
+#         subField
+#       }
+#     }
+#
+# Keyboard shortcuts:
+#
+#  Prettify Query:  Shift-Ctrl-P (or press the prettify button above)
+#
+#     Merge Query:  Shift-Ctrl-M (or press the merge button above)
+#
+#       Run Query:  Ctrl-Enter (or press the play button above)
+#
+#   Auto Complete:  Ctrl-Space (or just start typing)
+#
+
+{
+  allVehicles: tgVehicle {
+    key
+    active(value: true)
+    fuelUsages @include(if: false) {
+      qty
+    }
+    model {
+      key
+      desc
+      make {
+        key
+      }
+    }
+    replacedBy {
+      key
+      active(value: false)
+    }
+  }
+  testEntities: tgPersistentEntityWithProperties {
+    key
+    desc
+    booleanProp(value: true)
+  }
+  anotherAllVehicles: tgVehicle {
+    key
+    active
+  }
+}
+
+########### variables ############
+
+query ($vehicleActiveValue: Boolean) {
+  
+  vehiclesWithStaticArgument: tgVehicle {
+    key
+    active(value: false)
+  }
+  
+  vehiclesWithVariableArgument: tgVehicle {
+    key
+    active(value: $vehicleActiveValue)
+  }
+  
+  vehicles: tgVehicle {
+    key
+    active
+  }
+  
+}
+
+Use the following variables for query running (or use completely empty variables): 
+{
+  "vehicleActiveValue": true
+}
+
+########### variables [END] ############
+
+########### fragments ############
+query VehiclesWithFragment {
+  tgVehicle {
+    ...vehicleCommons
+  }
+}
+
+fragment vehicleCommons on TgVehicle {
+  key
+  desc
+  replacedBy {
+    key
+  }
+}
+########### fragments [END] ############

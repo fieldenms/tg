@@ -1,23 +1,18 @@
 package ua.com.fielden.platform.web.menu.impl;
 
+import static java.util.stream.Collectors.toList;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.lang.StringUtils;
-
-import ua.com.fielden.platform.dom.DomContainer;
-import ua.com.fielden.platform.dom.DomElement;
-import ua.com.fielden.platform.menu.Module;
-import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.menu.ModuleMenu;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
-import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
-import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.menu.module.impl.WebMenuModule;
 import ua.com.fielden.platform.web.minijs.JsCode;
 
-public class WebMainMenu implements IExecutable {
+public class WebMainMenu {
 
     private final List<WebMenuModule> modules = new ArrayList<>();
 
@@ -27,28 +22,16 @@ public class WebMainMenu implements IExecutable {
         return module;
     }
 
-    @Override
-    public JsCode code() {
-        final String menuModules = "[" + StringUtils.join(modules, ",") + "]";
-        return new JsCode(menuModules);
-    }
-
-    public List<Module> getModules() {
-        return modules.stream().map(module -> module.getModule()).collect(Collectors.toList());
-    }
-
-    public Pair<DomElement, JsCode> generateMenuActions() {
-        int numberOfActions = 0;
-        final List<DomElement> actionDomElements = new ArrayList<>();
-        final List<String> propActions = new ArrayList<>();
-        for (final WebMenuModule webMenuModule : modules) {
-            for (final EntityActionConfig config : webMenuModule.getActions()) {
-                final FunctionalActionElement actionElement = new FunctionalActionElement(config, numberOfActions++, FunctionalActionKind.TOP_LEVEL);
-                actionDomElements.add(actionElement.render().attr("action-module-group", webMenuModule.title));
-                propActions.add(actionElement.createActionObject());
-            }
-        }
-        return new Pair<>(new DomContainer().add(actionDomElements.toArray(new DomElement[0])), new JsCode(StringUtils.join(propActions, ",\n")));
+    /**
+     * Iterates over all web menu module definitions and builds them, returning a list of modules.
+     *
+     * @return
+     */
+    public List<ModuleMenu> buildModules() {
+        // all tile actions must have a unique index across all modules
+        // hence the use of the same atomic integer instance to supply sequential indexes for all tile actions
+        final AtomicInteger seqIndex = new AtomicInteger(0);
+        return modules.stream().map(module -> module.buildModule(() -> seqIndex.getAndIncrement())).collect(toList());
     }
 
     public EntityActionConfig getActionConfig(final int actionNumber, final FunctionalActionKind actionKind) {

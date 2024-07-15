@@ -25,11 +25,10 @@ import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration
 import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IAuthenticationModel;
-import ua.com.fielden.platform.security.user.INewUserNotifier;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.security.user.NewUserNotifierByEmail;
 import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.annotations.AppUri;
 
@@ -40,7 +39,8 @@ import ua.com.fielden.platform.web.annotations.AppUri;
  *
  */
 public class TgTestApplicationServerModule extends BasicWebServerModule {
-    private final Class<? extends IUniversalConstants> universalConstantsType;
+    private final Class<? extends IUniversalConstants> universalConstantsImplType;
+    private final Class<? extends IDates> datesImplType;
     private final List<Class<? extends AbstractEntity<?>>> domainTypes;
 
     /**
@@ -61,31 +61,20 @@ public class TgTestApplicationServerModule extends BasicWebServerModule {
             final List<Class<? extends AbstractEntity<?>>> domainTypes,//
             final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
             final Class<? extends IFilter> automaticDataFilterType, //
-            final Class<? extends IUniversalConstants> universalConstantsType,//
+            final Class<? extends IUniversalConstants> universalConstantsImplType,//
+            final Class<? extends IDates> datesImplType,
             final Properties props) throws Exception {
         super(defaultHibernateTypes, applicationDomainProvider, serialisationClassProviderType, automaticDataFilterType, null, props);
-        this.universalConstantsType = universalConstantsType;
-        this.domainTypes = domainTypes;
-    }
+        if (universalConstantsImplType == null) {
+            throw new IllegalArgumentException("Missing implemementation for IUniversalConstants.");
+        }
+        if (datesImplType == null) {
+            throw new IllegalArgumentException("Missing implemementation for IDates.");
+        }
 
-    /**
-     * An argument list reduced version of the above constructor, where <code>universalConstantsType</code> is specified as <code>null</code>.
-     *
-     * @param defaultHibernateTypes
-     * @param applicationEntityTypes
-     * @param domainTypes
-     * @param serialisationClassProviderType
-     * @param automaticDataFilterType
-     * @param props
-     * @throws Exception
-     */
-    public TgTestApplicationServerModule(final Map<Class, Class> defaultHibernateTypes, //
-            final IApplicationDomainProvider applicationDomainProvider,//
-            final List<Class<? extends AbstractEntity<?>>> domainTypes,//
-            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
-            final Class<? extends IFilter> automaticDataFilterType, //
-            final Properties props) throws Exception {
-        this(defaultHibernateTypes, applicationDomainProvider, domainTypes, serialisationClassProviderType, automaticDataFilterType, null, props);
+        this.universalConstantsImplType = universalConstantsImplType;
+        this.datesImplType = datesImplType;
+        this.domainTypes = domainTypes;
     }
 
     @Override
@@ -98,9 +87,8 @@ public class TgTestApplicationServerModule extends BasicWebServerModule {
         // bind authentication model
         bind(IAuthenticationModel.class).to(TgTestAppAuthenticationModel.class);
 
-        if (universalConstantsType != null) {
-            bind(IUniversalConstants.class).to(universalConstantsType).in(Scopes.SINGLETON);
-        }
+        bind(IDates.class).to(datesImplType).in(Scopes.SINGLETON);
+        bind(IUniversalConstants.class).to(universalConstantsImplType).in(Scopes.SINGLETON);
 
         // dynamically bind DAO implementations for all companion objects
         for (final Class<? extends AbstractEntity<?>> entityType : domainTypes) {

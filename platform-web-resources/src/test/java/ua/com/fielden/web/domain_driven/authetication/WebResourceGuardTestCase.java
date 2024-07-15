@@ -30,8 +30,7 @@ import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.security.AbstractWebResourceGuard;
-import ua.com.fielden.platform.web.test.IWebDrivenTestCaseConfiguration;
-import ua.com.fielden.platform.web.test.WebBasedTestCase;
+import ua.com.fielden.platform.web.test.TestWebApplication;
 
 /**
  * A test case to ensure correct HTTP responses (HTTP codes and cookies) to requests for accessing guarded web resources.
@@ -44,7 +43,7 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
     private final UserSessionDao coSession = (UserSessionDao) co$(UserSession.class);
     private final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
     private final WebResourceGuardTestWebApplication webApp = getInstance(WebResourceGuardTestWebApplication.class);
-    private final String baseUri = format("http://localhost:%s/v1", IWebDrivenTestCaseConfiguration.PORT);
+    private final String baseUri = format("http://localhost:%s/v1", TestWebApplication.PORT);
     private final Client client = new Client(Protocol.HTTP);
     private IUser coUser = co$(User.class);
 
@@ -52,20 +51,36 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
     public void startUp() {
         coSession.getCache().invalidateAll();
         webApp.setCurrUser(coUser.findByKey(User.system_users.UNIT_TEST_USER.name()));
-        WebBasedTestCase.attachWebApplication("/v1", webApp);
+        TestWebApplication.attachWebApplication("/v1", webApp);
     }
 
     @After
     public void tearDown() {
-        WebBasedTestCase.detachWebApplication(webApp);
+        TestWebApplication.detachWebApplication(webApp);
     }
 
     @Test
-    public void unauthenticated_request_should_be_refused_with_code_403_forbidden() throws SignatureException {
-        final Request request = new Request(Method.GET, format("%s/users/%s/%s/%s", baseUri, User.system_users.UNIT_TEST_USER, TgPerson.class.getSimpleName(), 12L));
+    public void unauthenticated_POST_request_should_be_refused_with_code_403_forbidden() throws SignatureException {
+        final Request request = new Request(Method.POST, format("%s/users/%s/%s/%s", baseUri, User.system_users.UNIT_TEST_USER, TgPerson.class.getSimpleName(), 12L));
         final Response response = client.handle(request);
 
         assertEquals(403, response.getStatus().getCode());
+    }
+
+    @Test
+    public void unauthenticated_PUT_request_should_be_refused_with_code_403_forbidden() throws SignatureException {
+        final Request request = new Request(Method.POST, format("%s/users/%s/%s/%s", baseUri, User.system_users.UNIT_TEST_USER, TgPerson.class.getSimpleName(), 12L));
+        final Response response = client.handle(request);
+
+        assertEquals(403, response.getStatus().getCode());
+    }
+
+    @Test
+    public void unauthenticated_GET_request_should_be_redirected() throws SignatureException {
+        final Request request = new Request(Method.GET, format("%s/users/%s/%s/%s", baseUri, User.system_users.UNIT_TEST_USER, TgPerson.class.getSimpleName(), 12L));
+        final Response response = client.handle(request);
+
+        assertEquals(307, response.getStatus().getCode());
     }
 
     @Test
@@ -73,7 +88,7 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
         constants.setNow(dateTime("2015-04-23 17:26:00"));
         // establish a new session
         final User currUser = getInstance(IUserProvider.class).getUser();
-        final UserSession session = coSession.newSession(currUser, true);
+        final UserSession session = coSession.newSession(currUser, true, null);
         final String authenticator = session.getAuthenticator().get().toString();
 
         final Request request = new Request(Method.GET, format("%s/users/%s/%s/%s", baseUri, currUser.getKey(), TgPerson.class.getSimpleName(), 12L));
@@ -91,7 +106,7 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
         constants.setNow(dateTime("2015-04-23 17:26:00"));
         // establish a new session
         final User currUser = getInstance(IUserProvider.class).getUser();
-        final UserSession session = coSession.newSession(currUser, true);
+        final UserSession session = coSession.newSession(currUser, true, null);
         final String authenticator = session.getAuthenticator().get().toString();
 
         final Request request = new Request(Method.GET, format("%s/users/%s/%s/%s", baseUri, User.system_users.UNIT_TEST_USER, TgPerson.class.getSimpleName(), 12L));
@@ -113,7 +128,7 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
         constants.setNow(dateTime("2015-04-23 17:26:00"));
         // establish a new session
         final User currUser = getInstance(IUserProvider.class).getUser();
-        final UserSession session = coSession.newSession(currUser, true);
+        final UserSession session = coSession.newSession(currUser, true, null);
         final String authenticator = session.getAuthenticator().get().toString();
 
         // some time passes by sufficient to evict authenticators from cache
@@ -151,7 +166,7 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
         constants.setNow(dateTime("2015-04-23 17:26:00"));
         // establish a new session
         final User currUser = getInstance(IUserProvider.class).getUser();
-        final UserSession session = coSession.newSession(currUser, false);
+        final UserSession session = coSession.newSession(currUser, false, null);
         final String authenticator = session.getAuthenticator().get().toString();
 
         // some time passes by sufficient to evict authenticators from cache, but insufficient to invalidate the original authenticator from an untrusted device
@@ -186,11 +201,31 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
 
 
     @Test
-    public void requests_with_expired_authenticators_from_untrusted_devices_should_respond_with_code_403_forbidden() {
+    public void POST_requests_with_expired_authenticators_from_untrusted_devices_should_respond_with_code_403_forbidden() {
         constants.setNow(dateTime("2015-04-23 17:26:00"));
         // establish a new session
         final User currUser = getInstance(IUserProvider.class).getUser();
-        final UserSession session = coSession.newSession(currUser, false);
+        final UserSession session = coSession.newSession(currUser, false, null);
+        final String authenticator = session.getAuthenticator().get().toString();
+
+        // sufficient time passes by to invalidate the authenticator
+        constants.setNow(dateTime("2015-04-23 17:33:00"));
+        final Request request = new Request(Method.POST, format("%s/users/%s/%s/%s", baseUri, User.system_users.UNIT_TEST_USER, TgPerson.class.getSimpleName(), 12L));
+        final CookieSetting newCookie = new CookieSetting(1, AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME, authenticator, "/", null);
+        newCookie.setAccessRestricted(true);
+        request.getCookies().add(newCookie);
+
+        final Response response = client.handle(request);
+
+        assertEquals(403, response.getStatus().getCode());
+    }
+
+    @Test
+    public void GET_requests_with_expired_authenticators_from_untrusted_devices_should_respond_with_code_305_redirect() {
+        constants.setNow(dateTime("2015-04-23 17:26:00"));
+        // establish a new session
+        final User currUser = getInstance(IUserProvider.class).getUser();
+        final UserSession session = coSession.newSession(currUser, false, null);
         final String authenticator = session.getAuthenticator().get().toString();
 
         // sufficient time passes by to invalidate the authenticator
@@ -202,7 +237,7 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
 
         final Response response = client.handle(request);
 
-        assertEquals(403, response.getStatus().getCode());
+        assertEquals(307, response.getStatus().getCode());
     }
 
     @Test
@@ -210,19 +245,19 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
         constants.setNow(dateTime("2015-04-23 17:26:00"));
         // establish a new session
         final User currUser = getInstance(IUserProvider.class).getUser();
-        final UserSession session = coSession.newSession(currUser, true);
+        final UserSession session = coSession.newSession(currUser, true, null);
         final String stolenAuthenticator = session.getAuthenticator().get().toString();
 
         // an authenticator gets stolen and used by an adversary after sufficiently long time to evict authenticators from cache has passed
         // the authenticator is still valid, but not in cache, which should lead to its regeneration
-        // any subsequent requests with the stolen authenticator post the cache eviction time after regeneration should lead to a recognition of the authenticator theft
+        // any subsequent requests with the stolen authenticator post the eviction time after regeneration should lead to a recognition of that authenticator as invalid
         constants.setNow(dateTime("2015-04-23 18:26:00"));
         final Request request1 = new Request(Method.GET, format("%s/users/%s/%s/%s", baseUri, User.system_users.UNIT_TEST_USER, TgPerson.class.getSimpleName(), 12L));
         final CookieSetting cookie = new CookieSetting(1, AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME, stolenAuthenticator, "/", null);
         cookie.setAccessRestricted(true);
         request1.getCookies().add(cookie);
 
-        // request by an adversary
+        // request by a user
         final Response response1 = client.handle(request1);
         assertEquals(200, response1.getStatus().getCode());
         final CookieSetting returnedCookie1 = response1.getCookieSettings().getFirst(AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME);
@@ -231,24 +266,16 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
         assertNotEquals("Returned authenticator should not match the sent one due to expected re-authentication.", stolenAuthenticator, newAuthenticator);
         assertTrue("Returned cookie must have restricted access.", returnedCookie1.isAccessRestricted());
 
-        // request by a legitimate user with the stolen authenticator
+        // request by an adversary with the stolen authenticator
         constants.setNow(dateTime("2015-04-23 18:40:00"));
         final Request request2 = new Request(Method.GET, format("%s/users/%s/%s/%s", baseUri, User.system_users.UNIT_TEST_USER, TgPerson.class.getSimpleName(), 12L));
         request2.getCookies().add(cookie);
         final Response response2 = client.handle(request2);
-        assertEquals(403, response2.getStatus().getCode());
+        assertEquals(307, response2.getStatus().getCode());
         assertEquals(1, response2.getCookieSettings().size());
         final CookieSetting authCookie = response2.getCookieSettings().get(0);
         assertEquals("", authCookie.getValue());
         assertEquals(0, authCookie.getMaxAge());
-        
-
-        // another request by an adversary with what is thought a valid authenticator
-        constants.setNow(dateTime("2015-04-23 18:41:00"));
-        final Request request3 = new Request(Method.GET, format("%s/users/%s/%s/%s", baseUri, User.system_users.UNIT_TEST_USER, TgPerson.class.getSimpleName(), 12L));
-        request3.getCookies().add(returnedCookie1);
-        final Response response3 = client.handle(request3);
-        assertEquals(403, response3.getStatus().getCode());
     }
 
     @Test
@@ -257,8 +284,8 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
         final User currUser = getInstance(IUserProvider.class).getUser();
 
         // establish generate two authenticators with the second authenticator having a greater expiration time
-        final Authenticator auth1 = coSession.mkAuthenticator(currUser, coSession.genSeriesId(), dateTime("2015-04-23 18:00:00").toDate());
-        final Authenticator auth2 = coSession.mkAuthenticator(currUser, coSession.genSeriesId(), dateTime("2015-04-23 19:00:00").toDate());
+        final Authenticator auth1 = coSession.mkAuthenticator(currUser, coSession.genSeriesId(), 1L, dateTime("2015-04-23 19:00:01").toDate());
+        final Authenticator auth2 = coSession.mkAuthenticator(currUser, coSession.genSeriesId(), 2L, dateTime("2015-04-23 19:00:00").toDate());
         final String strAuth1 = auth1.toString();
         final String strAuth2 = auth2.toString();
 

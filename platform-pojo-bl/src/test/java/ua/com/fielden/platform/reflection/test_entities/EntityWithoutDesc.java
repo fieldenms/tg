@@ -9,8 +9,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 @KeyTitle(value = "key title", desc = "key description")
 public class EntityWithoutDesc extends AbstractEntity<String> {
 
-    private static final long serialVersionUID = -1874035931967151214L;
-
     @IsProperty
     private String commonProperty;
+
 }

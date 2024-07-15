@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.security.authentication;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.security.SignatureException;
 import java.util.Optional;
@@ -32,7 +35,7 @@ public class UserSessionValidationAndReestablishmentTestCase extends AbstractDao
         constants.setNow(dateTime("2015-04-23 13:00:00"));
         // establish a new session
         final User currUser = getInstance(IUserProvider.class).getUser();
-        final UserSession newSession = coSession.newSession(currUser, true);
+        final UserSession newSession = coSession.newSession(currUser, true, null);
         final String authenticator = newSession.getAuthenticator().get().toString();
 
         // now let's move the clock 3 hours forward to emulate a time change and request a current session
@@ -48,7 +51,7 @@ public class UserSessionValidationAndReestablishmentTestCase extends AbstractDao
         constants.setNow(dateTime("2015-04-23 13:00:00"));
         // establish a new session
         final User currUser = getInstance(IUserProvider.class).getUser();
-        final UserSession newSession = coSession.newSession(currUser, true);
+        final UserSession newSession = coSession.newSession(currUser, true, null);
         final String authenticator = newSession.getAuthenticator().get().toString();
 
         // now let's move the clock 5 days forward to emulate a time change and request a current session
@@ -63,7 +66,7 @@ public class UserSessionValidationAndReestablishmentTestCase extends AbstractDao
         constants.setNow(dateTime("2015-04-23 13:00:00"));
         // establish a new session
         final User currUser = getInstance(IUserProvider.class).getUser();
-        final UserSession newSession = coSession.newSession(currUser, false);
+        final UserSession newSession = coSession.newSession(currUser, false, null);
         final String authenticator = newSession.getAuthenticator().get().toString();
 
         // now let's move the clock 2 minutes forward to emulate a time change and request a current session
@@ -79,7 +82,7 @@ public class UserSessionValidationAndReestablishmentTestCase extends AbstractDao
         constants.setNow(dateTime("2015-04-23 13:00:00"));
         // establish a new session
         final User currUser = getInstance(IUserProvider.class).getUser();
-        final UserSession newSession = coSession.newSession(currUser, false);
+        final UserSession newSession = coSession.newSession(currUser, false, null);
         final String authenticator = newSession.getAuthenticator().get().toString();
 
         // now let's move the clock more than 5 minutes forward to emulate a time change and request a current session
@@ -94,13 +97,13 @@ public class UserSessionValidationAndReestablishmentTestCase extends AbstractDao
         constants.setNow(dateTime("2015-04-23 17:26:00"));
         // establish a new session
         final User currUser = getInstance(IUserProvider.class).getUser();
-        final UserSession trustedSession = coSession.newSession(currUser, true);
+        final UserSession trustedSession = coSession.newSession(currUser, true, null);
         final String trustedAuthenticator = trustedSession.getAuthenticator().get().toString();
 
         // early next morning, the user access the system from an untrusted tablet device on the way to work
         constants.setNow(dateTime("2015-04-24 07:30:00"));
         // establish a new session
-        final UserSession untrustedSession = coSession.newSession(currUser, false);
+        final UserSession untrustedSession = coSession.newSession(currUser, false, null);
         final String untrustedAuthenticator = untrustedSession.getAuthenticator().get().toString();
 
 
@@ -121,7 +124,7 @@ public class UserSessionValidationAndReestablishmentTestCase extends AbstractDao
         constants.setNow(dateTime("2015-04-23 17:26:00"));
         // establish a new session
         final User currUser = getInstance(IUserProvider.class).getUser();
-        final UserSession session = coSession.newSession(currUser, true);
+        final UserSession session = coSession.newSession(currUser, true, null);
         final String authenticator = session.getAuthenticator().get().toString();
 
         // some time later, after the session cache has been evicted, a user session is requested for skipRegeneration = true...
@@ -130,12 +133,13 @@ public class UserSessionValidationAndReestablishmentTestCase extends AbstractDao
         assertTrue(restoredSession.isPresent());
         assertEquals(session, restoredSession.get());
         assertTrue("Session is missing an authenticator.", restoredSession.get().getAuthenticator().isPresent());
+        assertEquals(session.getAuthenticator().get(), restoredSession.get().getAuthenticator().get());
         
         final Optional<UserSession> restoredAgainSession = coSession.currentSession(currUser, authenticator, true /*skipRegeneration*/);
         assertTrue(restoredAgainSession.isPresent());
         assertEquals(session, restoredAgainSession.get());
-        assertSame("Expected the cached session, but new instance is returned.", restoredSession.get(), restoredAgainSession.get());
-
+        assertEquals(restoredSession.get(), restoredAgainSession.get());
+        assertEquals(restoredSession.get().getAuthenticator().get(), restoredSession.get().getAuthenticator().get());
     }
 
     @Test
@@ -144,7 +148,7 @@ public class UserSessionValidationAndReestablishmentTestCase extends AbstractDao
         constants.setNow(dateTime("2015-04-23 17:26:00"));
         // establish a new session
         final User currUser = getInstance(IUserProvider.class).getUser();
-        final UserSession session = coSession.newSession(currUser, true);
+        final UserSession session = coSession.newSession(currUser, true, null);
         final String authenticator = session.getAuthenticator().get().toString();
 
         // some time later, after the session cache has been evicted, a user session is requested for skipRegeneration = true...

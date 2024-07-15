@@ -4,6 +4,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -20,6 +21,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle("Wagon slots")
+@DescTitle("Description")
 @MapEntityTo
 @CompanionObject(ITgWagonSlot.class)
 public class TgWagonSlot extends AbstractEntity<DynamicEntityKey> {
@@ -41,6 +43,20 @@ public class TgWagonSlot extends AbstractEntity<DynamicEntityKey> {
     @MapTo
     @Title("Bogie")
     private TgBogie bogie;
+
+    @IsProperty
+    @MapTo
+    private TgFuelType fuelType;
+
+    @Observable
+    public TgWagonSlot setFuelType(final TgFuelType fuelType) {
+        this.fuelType = fuelType;
+        return this;
+    }
+
+    public TgFuelType getFuelType() {
+        return fuelType;
+    }
 
     public TgBogie getBogie() {
         return bogie;

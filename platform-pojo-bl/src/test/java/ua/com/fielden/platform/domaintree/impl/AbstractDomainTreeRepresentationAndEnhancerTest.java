@@ -46,7 +46,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
     }
 
     protected static Object createDtm_for_AbstractDomainTreeRepresentationAndEnhancerTest() {
-        return new DomainTreeManagerAndEnhancer1(serialiser(), createRootTypes_for_AbstractDomainTreeRepresentationAndEnhancerTest());
+        return new DomainTreeManagerAndEnhancer1(factory(), createRootTypes_for_AbstractDomainTreeRepresentationAndEnhancerTest());
     }
 
     protected static Object createIrrelevantDtm_for_AbstractDomainTreeRepresentationAndEnhancerTest() {
@@ -54,7 +54,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
     }
 
     protected static Set<Class<?>> createRootTypes_for_AbstractDomainTreeRepresentationAndEnhancerTest() {
-        final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractDomainTreeTest());
+        final Set<Class<?>> rootTypes = new HashSet<>(createRootTypes_for_AbstractDomainTreeTest());
         return rootTypes;
     }
 
@@ -208,25 +208,20 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         dtm().getEnhancer().getCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "prop1").setContextualExpression("MAX(2 * integerProp)");
         dtm().getEnhancer().apply();
         assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property", "prop1"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
-        assertFalse("Should be resetted.", dtm().getFirstTick().isChecked(MasterEntityForIncludedPropertiesLogic.class, "prop1"));
-        assertFalse("Should be resetted.", dtm().getSecondTick().isChecked(MasterEntityForIncludedPropertiesLogic.class, "prop1"));
+        assertFalse("Should be reset.", dtm().getFirstTick().isChecked(MasterEntityForIncludedPropertiesLogic.class, "prop1"));
+        assertFalse("Should be reset.", dtm().getSecondTick().isChecked(MasterEntityForIncludedPropertiesLogic.class, "prop1"));
     }
 
     @Test
-    public void test_that_Included_Properties_are_correct_after_serialisation_deserialisation() throws Exception {
+    public void test_that_Included_Properties_are_correct() throws Exception {
         assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
-
-        // serialise and deserialise and then check the order of "checked properties"
-        final byte[] array = serialiser().serialise(dtm());
-        final IDomainTreeManagerAndEnhancer copy = serialiser().deserialise(array, IDomainTreeManagerAndEnhancer.class);
-        assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property"), copy.getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
     }
 
     ////////////////////////////////////////////////////////////////////
     ////////////////////// 6. Available functions.//////////////////////
     ////////////////////////////////////////////////////////////////////
     protected List<Function> enhanceFunctionsWithCollectionalAttributes(final List<Function> functions) {
-        final List<Function> newFunctions = new ArrayList<Function>(functions);
+        final List<Function> newFunctions = new ArrayList<>(functions);
         newFunctions.add(Function.ALL);
         newFunctions.add(Function.ANY);
         return newFunctions;
@@ -241,7 +236,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
             public void action(final String name) {
                 dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, name, "YEAR(dateProp)", "Integer Prop Originated From Date", "desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
                 dtm().getEnhancer().apply();
-                assertEquals(m, Arrays.asList(Function.SELF, Function.COUNT_DISTINCT, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, AbstractDomainTreeTest.name(name, "integerPropOriginatedFromDate"))));
+                assertEquals(m, Arrays.asList(Function.SELF, Function.COUNT_DISTINCT, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<>(dtm().getRepresentation().availableFunctions(MasterEntity.class, AbstractDomainTreeTest.name(name, "integerPropOriginatedFromDate"))));
             }
         }, ""); // integerPropOriginatedFromDate
 
@@ -251,7 +246,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
             public void action(final String name) {
                 dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, name, "YEAR(dateProp)", "Integer Prop Originated From Date", "desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
                 dtm().getEnhancer().apply();
-                assertEquals(m, enhanceFunctionsWithCollectionalAttributes(Arrays.asList(Function.SELF, Function.COUNT_DISTINCT, Function.SUM, Function.AVG, Function.MIN, Function.MAX)), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, AbstractDomainTreeTest.name(name, "integerPropOriginatedFromDate"))));
+                assertEquals(m, enhanceFunctionsWithCollectionalAttributes(Arrays.asList(Function.SELF, Function.COUNT_DISTINCT, Function.SUM, Function.AVG, Function.MIN, Function.MAX)), new ArrayList<>(dtm().getRepresentation().availableFunctions(MasterEntity.class, AbstractDomainTreeTest.name(name, "integerPropOriginatedFromDate"))));
             }
         }, ""); // integerPropOriginatedFromDate
 
@@ -279,7 +274,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
             public void action(final String name) {
                 dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, name, "2 * integerProp", "Calculated Integer Prop", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
                 dtm().getEnhancer().apply();
-                assertEquals(m, Arrays.asList(Function.SELF, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, AbstractDomainTreeTest.name(name, "calculatedIntegerProp"))));
+                assertEquals(m, Arrays.asList(Function.SELF, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<>(dtm().getRepresentation().availableFunctions(MasterEntity.class, AbstractDomainTreeTest.name(name, "calculatedIntegerProp"))));
             }
         }, ""); // calculatedIntegerProp
 
@@ -288,7 +283,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
             public void action(final String name) {
                 dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, name, "2 * integerProp", "Calculated Integer Prop", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
                 dtm().getEnhancer().apply();
-                assertEquals(m, enhanceFunctionsWithCollectionalAttributes(Arrays.asList(Function.SELF, Function.SUM, Function.AVG, Function.MIN, Function.MAX)), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, AbstractDomainTreeTest.name(name, "calculatedIntegerProp"))));
+                assertEquals(m, enhanceFunctionsWithCollectionalAttributes(Arrays.asList(Function.SELF, Function.SUM, Function.AVG, Function.MIN, Function.MAX)), new ArrayList<>(dtm().getRepresentation().availableFunctions(MasterEntity.class, AbstractDomainTreeTest.name(name, "calculatedIntegerProp"))));
             }
         }, ""); // calculatedIntegerProp
 
@@ -296,9 +291,9 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp", "COUNT(integerProp)", "Calc From Integer Prop 2", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.entityProp", "COUNT(integerProp)", "Calc From Integer Prop 3", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().apply();
-        assertEquals(m, Arrays.asList(Function.SELF), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "calcFromIntegerProp1")));
-        assertEquals(m, Arrays.asList(Function.SELF), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "calcFromIntegerProp2")));
-        assertEquals(m, Arrays.asList(Function.SELF), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "calcFromIntegerProp3")));
+        assertEquals(m, Arrays.asList(Function.SELF), new ArrayList<>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "calcFromIntegerProp1")));
+        assertEquals(m, Arrays.asList(Function.SELF), new ArrayList<>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "calcFromIntegerProp2")));
+        assertEquals(m, Arrays.asList(Function.SELF), new ArrayList<>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "calcFromIntegerProp3")));
     }
 
     @Test
@@ -312,18 +307,18 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.collection", "COUNT(entityProp)", "Calc From Entity Prop 2", "desc", CalculatedPropertyAttribute.NO_ATTR, "entityProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.collection.slaveEntityProp", "COUNT(entityProp)", "Calc From Entity Prop 3", "desc", CalculatedPropertyAttribute.NO_ATTR, "entityProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().apply();
-        assertEquals(m, Arrays.asList(Function.SELF, Function.COUNT_DISTINCT, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "calcFromEntityProp1")));
-        assertEquals(m, Arrays.asList(Function.SELF, Function.COUNT_DISTINCT, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.calcFromEntityProp2")));
-        assertEquals(m, Arrays.asList(Function.SELF, Function.COUNT_DISTINCT, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.calcFromEntityProp3")));
+        assertEquals(m, Arrays.asList(Function.SELF, Function.COUNT_DISTINCT, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "calcFromEntityProp1")));
+        assertEquals(m, Arrays.asList(Function.SELF, Function.COUNT_DISTINCT, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.calcFromEntityProp2")));
+        assertEquals(m, Arrays.asList(Function.SELF, Function.COUNT_DISTINCT, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.calcFromEntityProp3")));
 
         // Check whether count distinct function can be applied to calculated property of CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION type based on boolean property.
         dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "collection", "COUNT(booleanProp)", "Calc From Boolean Prop 1", "desc", CalculatedPropertyAttribute.NO_ATTR, "booleanProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.collection", "COUNT(booleanProp)", "Calc From Boolean Prop 2", "desc", CalculatedPropertyAttribute.NO_ATTR, "booleanProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.collection.slaveEntityProp", "COUNT(booleanProp)", "Calc From Boolean Prop 3", "desc", CalculatedPropertyAttribute.NO_ATTR, "booleanProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().apply();
-        assertEquals(m, Arrays.asList(Function.SELF, Function.COUNT_DISTINCT, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "calcFromBooleanProp1")));
-        assertEquals(m, Arrays.asList(Function.SELF, Function.COUNT_DISTINCT, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.calcFromBooleanProp2")));
-        assertEquals(m, Arrays.asList(Function.SELF, Function.COUNT_DISTINCT, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.calcFromBooleanProp3")));
+        assertEquals(m, Arrays.asList(Function.SELF, Function.COUNT_DISTINCT, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "calcFromBooleanProp1")));
+        assertEquals(m, Arrays.asList(Function.SELF, Function.COUNT_DISTINCT, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.calcFromBooleanProp2")));
+        assertEquals(m, Arrays.asList(Function.SELF, Function.COUNT_DISTINCT, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.calcFromBooleanProp3")));
     }
 
     @Test
@@ -332,20 +327,20 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         final String m = "Available functions are incorrect.";
 
         // EXPRESSION
-        assertEquals(m, Arrays.asList(Function.SELF, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "exprProp")));
-        assertEquals(m, Arrays.asList(Function.SELF, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.exprProp")));
+        assertEquals(m, Arrays.asList(Function.SELF, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "exprProp")));
+        assertEquals(m, Arrays.asList(Function.SELF, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.exprProp")));
         // AGGREGATED_EXPRESSION
-        assertEquals(m, Arrays.asList(Function.SELF), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "aggrExprProp1")));
-        assertEquals(m, Arrays.asList(Function.SELF), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "aggrExprProp2")));
+        assertEquals(m, Arrays.asList(Function.SELF), new ArrayList<>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "aggrExprProp1")));
+        assertEquals(m, Arrays.asList(Function.SELF), new ArrayList<>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "aggrExprProp2")));
         // COLLECTIONAL_EXPRESSION
-        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(Arrays.asList(Function.SELF, Function.SUM, Function.AVG, Function.MIN, Function.MAX)), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.collection.collExprProp")));
-        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(Arrays.asList(Function.SELF, Function.SUM, Function.AVG, Function.MIN, Function.MAX)), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.collection.simpleEntityProp.collExprProp")));
+        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(Arrays.asList(Function.SELF, Function.SUM, Function.AVG, Function.MIN, Function.MAX)), new ArrayList<>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.collection.collExprProp")));
+        assertEquals(m, enhanceFunctionsWithCollectionalAttributes(Arrays.asList(Function.SELF, Function.SUM, Function.AVG, Function.MIN, Function.MAX)), new ArrayList<>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.collection.simpleEntityProp.collExprProp")));
         // TODO AGGREGATED_COLLECTIONAL_EXPRESSION
         // TODO assertEquals(m, Arrays.asList(Function.SELF, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.aggrCollExprProp1")));
         // TODO assertEquals(m, Arrays.asList(Function.SELF, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.aggrCollExprProp2")));
         // ATTRIBUTED_COLLECTIONAL_EXPRESSION
-        assertEquals(m, Arrays.asList(Function.SELF), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.collection.attrCollExprProp1")));
-        assertEquals(m, Arrays.asList(Function.SELF), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.collection.simpleEntityProp.attrCollExprProp2")));
+        assertEquals(m, Arrays.asList(Function.SELF), new ArrayList<>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.collection.attrCollExprProp1")));
+        assertEquals(m, Arrays.asList(Function.SELF), new ArrayList<>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.collection.simpleEntityProp.attrCollExprProp2")));
     }
 
     @Test
@@ -355,8 +350,8 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         final String m = "Available functions are incorrect.";
 
         // AGGREGATED_COLLECTIONAL_EXPRESSION
-        assertEquals(m, Arrays.asList(Function.SELF, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.aggrCollExprProp1")));
-        assertEquals(m, Arrays.asList(Function.SELF, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.aggrCollExprProp2")));
+        assertEquals(m, Arrays.asList(Function.SELF, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.aggrCollExprProp1")));
+        assertEquals(m, Arrays.asList(Function.SELF, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.aggrCollExprProp2")));
     }
 
     @Test

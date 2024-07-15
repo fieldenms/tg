@@ -7,9 +7,9 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Represents a computational model for expressions, which can be used together with entity query API.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class ExpressionModel extends AbstractModel {
 

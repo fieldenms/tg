@@ -1,7 +1,15 @@
 package ua.com.fielden.platform.web.view.master.api.impl;
 
 import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static java.util.stream.Collectors.toMap;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
+import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
 import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.setRole;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,6 +17,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dom.DomContainer;
@@ -18,6 +28,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.UI_ROLE;
+import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
+import ua.com.fielden.platform.web.centre.api.actions.multi.IEntityMultiActionSelector;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
@@ -30,7 +42,8 @@ import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.ISimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig0;
-import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig8;
+import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig5;
+import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfigWithoutNew;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.DefaultEntityAction;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig;
 import ua.com.fielden.platform.web.view.master.api.helpers.IActionBarLayoutConfig1;
@@ -42,8 +55,12 @@ import ua.com.fielden.platform.web.view.master.api.helpers.IWidgetSelector;
 import ua.com.fielden.platform.web.view.master.api.helpers.impl.WidgetSelector;
 import ua.com.fielden.platform.web.view.master.api.widgets.IDividerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IHtmlTextConfig;
+import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.AbstractEntityAutocompletionWidget;
+import ua.com.fielden.platform.web.view.master.exceptions.EntityMasterConfigurationException;
 
-public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimpleMasterBuilder<T>, IPropertySelector<T>, ILayoutConfig<T>, ILayoutConfigWithDimensionsAndDone<T>, IEntityActionConfig8<T>, IActionBarLayoutConfig1<T> {
+public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimpleMasterBuilder<T>, IPropertySelector<T>, ILayoutConfig<T>, ILayoutConfigWithDimensionsAndDone<T>, IEntityActionConfig5<T>, IActionBarLayoutConfig1<T> {
+
+    private static final String ERR_WIDGET_IS_ALREADY_PRESENT = "A widget with property [%s] is already present in the entity master for [%s].";
 
     private final List<WidgetSelector<T>> widgets = new ArrayList<>();
     private final List<Object> entityActions = new ArrayList<>();
@@ -54,11 +71,12 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
 
     private Class<T> entityType;
-    private Optional<PrefDim> prefDim = Optional.empty();
+    private Optional<PrefDim> prefDim = empty();
     private boolean saveOnActivation = false;
 
-    private Optional<JsCode> customCode = Optional.empty();
-    private Optional<JsCode> customCodeOnAttach = Optional.empty();
+    private Optional<JsCode> customCode = empty();
+    private Optional<JsCode> customCodeOnAttach = empty();
+    private Optional<JsCode> customImports = empty();
 
     @Override
     public IPropertySelector<T> forEntity(final Class<T> type) {
@@ -74,14 +92,14 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     }
 
     @Override
-    public IEntityActionConfig8<T> addAction(final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig action) {
+    public IEntityActionConfig5<T> addAction(final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig action) {
         entityActions.add(setRole(action, UI_ROLE.BUTTON));
         return this;
     }
 
     @Override
     public IEntityActionConfig0<T> addAction(final MasterActions masterAction) {
-        final DefaultEntityAction defaultEntityAction = new DefaultEntityAction(masterAction.name(), getPostAction(masterAction), getPostActionError(masterAction));
+        final DefaultEntityAction<T> defaultEntityAction = new DefaultEntityAction<T>(masterAction.name(), this.entityType, getPostAction(masterAction), getPostActionError(masterAction));
         final Optional<String> shortcut = getShortcut(masterAction);
         if (shortcut.isPresent()) {
             defaultEntityAction.setShortcut(shortcut.get()); // default value of shortcut if present
@@ -90,9 +108,19 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         if (focusingCallback.isPresent()) {
             defaultEntityAction.setFocusingCallback(focusingCallback.get()); // default value of focusingCallback if present
         }
-        final EntityActionConfig<T> entityAction = new EntityActionConfig<>(defaultEntityAction, this);
+        final EntityActionConfig<T> entityAction = new EntityActionConfig<T>(defaultEntityAction, this);
         entityActions.add(entityAction);
         return entityAction;
+    }
+
+    @Override
+    public IEntityActionConfigWithoutNew<T> addSaveAction() {
+        return (IEntityActionConfigWithoutNew<T>) addAction(MasterActions.SAVE);
+    }
+
+    @Override
+    public IEntityActionConfigWithoutNew<T> addCancelAction() {
+        return (IEntityActionConfigWithoutNew<T>) addAction(MasterActions.REFRESH);
     }
 
     @Override
@@ -103,7 +131,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
     public static Optional<String> getFocusingCallback(final MasterActions masterAction) {
         if (MasterActions.SAVE == masterAction) {
-            return Optional.of("focusViewBound");
+            return Optional.of("focusViewBound"); // focuses enabled input or other subcomponent on SAVE completion either from actual tap or shortcut activation; see 'focusViewBound' in 'tg-entity-master-behavior'
         } else {
             return Optional.empty();
         }
@@ -111,7 +139,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
     public static Optional<String> getShortcut(final MasterActions masterAction) {
         if (MasterActions.REFRESH == masterAction) {
-            return Optional.of("ctrl+r meta+r");
+            return Optional.of("ctrl+x meta+x");
         } else if (MasterActions.SAVE == masterAction) {
             return Optional.of("ctrl+s meta+s");
         } else if (MasterActions.VALIDATE == masterAction || MasterActions.EDIT == masterAction || MasterActions.VIEW == masterAction) {
@@ -155,6 +183,9 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
     @Override
     public IWidgetSelector<T> addProp(final String propName) {
+        widgets.stream().filter(widget -> widget.propertyName.equals(propName)).findFirst().ifPresent(widget -> {
+            throw new EntityMasterConfigurationException(format(ERR_WIDGET_IS_ALREADY_PRESENT, propName, this.entityType.getSimpleName()));
+        });
         final WidgetSelector<T> widget = new WidgetSelector<>(this, propName, new WithMatcherCallback());
         widgets.add(widget);
         return widget;
@@ -192,15 +223,15 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     @Override
     public IMaster<T> done() {
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
-        importPaths.add("polymer/polymer/polymer");
+        // importPaths.add("polymer/polymer/polymer"); // FIXME check and delete if all good -- this is not really needed due to tg-entity-master-template-behavior dependencies
 
-        int funcActionSeq = 0; // used for both entity and property level functional actions
+        final AtomicInteger funcActionSeq = new AtomicInteger(0); // used for both entity and property level functional actions
         final String prefix = ",\n";
         final int prefixLength = prefix.length();
         final StringBuilder primaryActionObjects = new StringBuilder();
 
         final StringBuilder propertyActionsStr = new StringBuilder();
-        final DomElement editorContainer = layout.render().clazz("property-editors").attr("context", "[[_currEntity]]");
+        final DomElement editorContainer = layout.render().attr("slot", "property-editors").attr("context", "[[_currEntity]]");
         importPaths.add(layout.importPath());
         final StringBuilder shortcuts = new StringBuilder();
         for (final WidgetSelector<T> widget : widgets) {
@@ -209,22 +240,23 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
             if (!widget.widget().action().isPresent()) {
                 editorContainer.add(widget.widget().render());
             } else {
-                final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig config = widget.widget().action().get();
-                if (!config.isNoAction()) {
-                    final FunctionalActionElement el = FunctionalActionElement.newPropertyActionForMaster(config, funcActionSeq++, widget.propertyName);
-                    if (config.shortcut.isPresent()) {
-                        shortcuts.append(config.shortcut.get() + " ");
+                final DomElement widgetElement = widget.widget().render();
+                final EntityMultiActionConfig config = widget.widget().action().get();
+                config.actions().forEach(actionConfig -> {
+                    final FunctionalActionElement el = FunctionalActionElement.newPropertyActionForMaster(actionConfig, funcActionSeq.getAndIncrement(), widget.propertyName);
+                    if (actionConfig.shortcut.isPresent()) {
+                        shortcuts.append(actionConfig.shortcut.get() + " ");
                     }
                     importPaths.add(el.importPath());
-                    editorContainer.add(widget.widget().render()
-                            .add(el.render().clazz("property-action", "property-action-icon")));
+                    widgetElement.add(el.render().attr("slot", "property-action").clazz("property-action-icon"));
                     primaryActionObjects.append(prefix + el.createActionObject());
-                }
+                });
+                editorContainer.add(widgetElement);
             }
         }
 
         // entity actions should be type matched for rendering due to inclusion of both "standard" actions such as SAVE or CANCLE as well as the functional actions
-        final DomElement actionContainer = actionBarLayout.render().clazz("action-bar");
+        final DomElement actionContainer = actionBarLayout.render().attr("slot", "action-bar");
         final StringBuilder entityActionsStr = new StringBuilder();
         for (final Object action: entityActions) {
             if (action instanceof ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig) {
@@ -241,15 +273,13 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                 }
             } else {
                 final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig config = (ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig) action;
-                if (!config.isNoAction()) {
-                    final FunctionalActionElement el = FunctionalActionElement.newEntityActionForMaster(config, funcActionSeq++);
-                    if (config.shortcut.isPresent()) {
-                        shortcuts.append(config.shortcut.get() + " ");
-                    }
-                    importPaths.add(el.importPath());
-                    actionContainer.add(el.render().clazz("primary-action"));
-                    primaryActionObjects.append(prefix + el.createActionObject());
+                final FunctionalActionElement el = FunctionalActionElement.newEntityActionForMaster(config, funcActionSeq.getAndIncrement());
+                if (config.shortcut.isPresent()) {
+                    shortcuts.append(config.shortcut.get() + " ");
                 }
+                importPaths.add(el.importPath());
+                actionContainer.add(el.render().clazz("primary-action"));
+                primaryActionObjects.append(prefix + el.createActionObject());
             }
         }
 
@@ -266,9 +296,9 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         final String primaryActionObjectsString = primaryActionObjects.toString();
         final String dimensionsString = prefDimBuilder.toString();
 
-        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
-                .replace("<!--@imports-->", createImports(importPaths))
-                .replace("@entity_type", entityType.getSimpleName())
+        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
+                .replace(IMPORTS, createImports(importPaths) + customImports.map(ci -> ci.toString()).orElse(""))
+                .replace(ENTITY_TYPE, flattenedNameOf(entityType))
                 .replace("<!--@tg-entity-master-content-->", elementContainer.toString()) // TODO should contain prop actions
                 .replace("//@ready-callback",
                         layout.code().toString() + "\n"
@@ -293,19 +323,19 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     private String genReadyCallback() {
         return "self.wasLoaded = function () {\n"
                 + "    return !!this._viewLoaded;\n"
-                + "}.bind(self);\n";
-    }
-
-    private String genAttachedCallback() {
-        return "self.registerCentreRefreshRedirector();\n"
+                + "}.bind(self);\n"
                 + "//Init event listener that indicates whether content was loaded\n"
                 + "if (!self._hasEmbededView()) {\n"
-                + "    self._entityMasterContentLoaded = function (e) {\n"
+                + "    const _entityMasterContentLoaded = function (e) {\n"
                 + "        this._viewLoaded = true;\n"
                 + "        this.fire('tg-view-loaded', this);\n"
                 + "    }.bind(self);\n"
-                + "    self.addEventListener('tg-entity-master-content-loaded', self._entityMasterContentLoaded);\n"
-                + "}";
+                + "    self.addEventListener('tg-entity-master-content-loaded', _entityMasterContentLoaded);\n"
+                + "}\n";
+    }
+
+    private String genAttachedCallback() {
+        return "self.registerCentreRefreshRedirector();\n";
     }
 
     /**
@@ -317,7 +347,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     public static String createImports(final LinkedHashSet<String> importPaths) {
         final StringBuilder sb = new StringBuilder();
         importPaths.forEach(path -> {
-            sb.append("<link rel='import' href='/resources/" + path + ".html'>\n");
+            sb.append("import '/resources/" + path + ".js';\n");
         });
         return sb.toString();
     }
@@ -349,6 +379,21 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
             return Optional.ofNullable(valueMatcherForProps.get(propName));
         }
 
+        @Override
+        public Set<String> additionalAutocompleterPropertiesFor(final String propertyName) {
+            for (final WidgetSelector<T> widgetSelector: widgets) {
+                if (widgetSelector.propertyName != null && widgetSelector.propertyName.equals(propertyName)) {
+                    if (widgetSelector.widget() instanceof AbstractEntityAutocompletionWidget) {
+                        final AbstractEntityAutocompletionWidget widget = (AbstractEntityAutocompletionWidget) widgetSelector.widget();
+                        return widget.additionalProps().keySet();
+                    } else {
+                        return setOf();
+                    }
+                }
+            }
+            return setOf();
+        }
+
         /**
          * Returns action configuration for concrete action kind and its number in that kind's space.
          * <p>
@@ -361,15 +406,15 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         @Override
         public  ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
             if (FunctionalActionKind.PRIMARY_RESULT_SET == actionKind) {
-                int funcActionSeq = 0; // used for both entity and property level functional actions
+                int funcActionSeq = actionNumber; // used for both entity and property level functional actions
                 for (final WidgetSelector<T> widget : widgets) {
                     if (widget.widget().action().isPresent()) {
-                        final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig config = widget.widget().action().get();
-                        if (!config.isNoAction()) {
-                            if (actionNumber == funcActionSeq) {
-                                return config;
-                            }
-                            funcActionSeq++;
+                        final EntityMultiActionConfig config = widget.widget().action().get();
+                        final List<ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig> actions = config.actions();
+                        if (funcActionSeq < actions.size()) {
+                            return actions.get(funcActionSeq);
+                        } else {
+                            funcActionSeq -= actions.size();
                         }
                     }
                 }
@@ -377,17 +422,22 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                 for (final Object action: entityActions) {
                     if (!(action instanceof ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig)) {
                         final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig config = (ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig) action;
-                        if (!config.isNoAction()) {
-                            if (actionNumber == funcActionSeq) {
-                                return config;
-                            }
-                            funcActionSeq++;
+                        if (funcActionSeq == 0) {
+                            return config;
                         }
+                        funcActionSeq--;
                     }
                 }
                 throw new IllegalStateException("No master action has been found.");
             } // TODO implement other types
             throw new UnsupportedOperationException(actionKind + " is not supported yet.");
+        }
+
+        @Override
+        public Map<String, Class<? extends IEntityMultiActionSelector>> propertyActionSelectors() {
+            return widgets.stream().filter(widget -> widget.widget().action().isPresent()).map(widget -> {
+                return t2(widget.widget().propertyName(), widget.widget().action().get().actionSelectorClass());
+            }).collect(toMap(tt -> tt._1, tt -> tt._2));
         }
     }
 
@@ -427,4 +477,16 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         this.customCodeOnAttach = Optional.of(customCode);
         return this;
     }
+
+    /**
+     * Injects custom JavaScript imports into centre implementation.
+     *
+     * @param customImports
+     * @return
+     */
+    public SimpleMasterBuilder<T> injectCustomImports(final JsCode customImports) {
+        this.customImports = of(customImports);
+        return this;
+    }
+
 }

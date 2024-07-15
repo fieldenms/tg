@@ -6,16 +6,10 @@
     <title>entity-centre basic tests</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 
-    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
-    <script src="/resources/polymer/web-component-tester/browser.js"></script>
-    <script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
-    <script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
-
-    <link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
-
-    <link rel="import" href="/app/tg-reflector.html">
-    <link rel="import" href="/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties4">
-    <link rel="import" href="/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties">
+    <script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/filesaver/FileSaver.min.js"></script>
+    <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
 </head>
 
 <body>
@@ -26,9 +20,14 @@
         </template>
     </test-fixture>
 
-    <script>
+    <script type="module">
+        
+        import '/app/tg-reflector.js';
+        import '/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties4';
+        import '/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties';
+
         suite('entity centre', function () {
-            var centre, reflector;
+            let centre, reflector;
 
             setup(function () {
                 centre = fixture('CentreFixture');
@@ -36,23 +35,24 @@
             });
 
             test('filtering works for domain-driven data filter', function (done) {
-                var old_postRun = centre._postRun;
+                const old_postRun = centre._postRun;
 
-                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
-                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
+                centre._postRun = function (criteriaEntity, newBindingEntity, result) {
+                    old_postRun(criteriaEntity, newBindingEntity, result);
 
-                    assert.strictEqual(resultEntities.length, 0, 'The count of resultant entities for the centre should be 0 -- FILTERED instance should be filtered out.');
+                    assert.strictEqual(result.resultEntities.length, 0, 'The count of resultant entities for the centre should be 0 -- FILTERED instance should be filtered out.');
 
                     centre._postRun = old_postRun;
                     done();
                 };
 
                 centre.postRetrieved = function (entity, bindingEntity, customObject) {
-                    var editor = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_;
+                    const editor = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_;
                     editor._editingValue = 'FILTERED';
+                    // At times committing a value was happening after the "centre.run()"" call.
+                    // Placing "centre.run()" on async with 100 millis delay seems to have resolved this problem.
                     editor.commit();
-
-                    centre.run();
+                    this.async(() => centre.run(), 100);
                 };
 
                 centre.retrieve();
@@ -60,12 +60,29 @@
 
             test('autocompleter filtering works for domain-driven data filter', function (done) {
                 centre.postRetrieved = function (entity, bindingEntity, customObject) {
-                    var autocompleter = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_;
+                    const autocompleter = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_;
 
-                    var oldOnFound = autocompleter._onFound;
-                    autocompleter._onFound = function (entities) {
-                        console.log("onFound: ", entities);
+                    autocompleter._onFound = function (entitiesAndCustomObject) {
+                        const entities = entitiesAndCustomObject.slice(0, -1); // -1 means cutting of last element
                         assert.strictEqual(entities.length, 0, 'The count of resultant entities for the centre"s autocompleter should be 0 -- FILTERED instance should be filtered out.');
+
+                        done();
+                    }.bind(autocompleter);
+                    
+                    autocompleter._editingValue = 'FILTERED';
+                    autocompleter._selectNextOnKeyDown();
+                };
+
+                centre.retrieve();
+            });
+
+            test('autocompleter filtering is ignored for domain-driven data filter invoked via search tap', function (done) {
+                centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                    const autocompleter = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_;
+
+                    autocompleter._onFound = function (entitiesAndCustomObject) {
+                        const entities = entitiesAndCustomObject.slice(0, -1); // -1 means cutting of last element
+                        assert.strictEqual(entities.length, 10, 'searchOnTap ignores the input text.');
 
                         done();
                     }.bind(autocompleter);
@@ -78,43 +95,42 @@
             });
 
             test('autocompleter filtering in EntityEditAction embedded master works for domain-driven data filter', function (done) {
-                var old_postRun = centre._postRun;
+                const old_postRun = centre._postRun;
                 
-                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
-                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
+                centre._postRun = function (criteriaEntity, newBindingEntity, result) {
+                    old_postRun(criteriaEntity, newBindingEntity, result);
                     
-                    assert.strictEqual(resultEntities.length, 20, 'The count of resultant entities for the centre should be 20. Page capacity is 20 for this centre.');
-                    var entity = resultEntities[0];
+                    assert.strictEqual(result.resultEntities.length, 20, 'The count of resultant entities for the centre should be 20. Page capacity is 20 for this centre.');
+                    const entity = result.resultEntities[0];
                     
-                    var editAction = Polymer.dom(centre.$.egi.$.primary_action_selector).getDistributedNodes()[0];
-                    editAction.currentEntity = entity;
-                    var value = editAction._run();
+                    const editAction = centre.$.egi.$.primary_action_selector.assignedNodes()[0].actions[0];
+                    editAction.currentEntity = () => entity;
+                    const value = editAction._run();
                     
                     editAction.postActionSuccess = function (potentiallySavedOrNewEntity) {
-                        var outerMaster = editAction._masterReferenceForTesting;
+                        const outerMaster = editAction._masterReferenceForTesting;
                         
                         outerMaster.addEventListener('after-load', function (event) {
-                            var embeddedMaster = event.detail;
-                            var autocompleter = embeddedMaster.$.editor_4_entityProp;
+                            const embeddedMaster = event.detail;
+                            const autocompleter = embeddedMaster.$.editor_4_entityProp;
                             
                             embeddedMaster.postRetrieved = function (entity, bindingEntity, customObject) {
-                                var oldOnFound = autocompleter._onFound;
-                                autocompleter._onFound = function (entities) {
-                                    console.log("onFound: ", entities);
+                                autocompleter._onFound = function (entitiesAndCustomObject) {
+                                    const entities = entitiesAndCustomObject.slice(0, -1); // -1 means cutting of last element
                                     assert.strictEqual(entities.length, 0, 'The count of resultant entities for the centre"s autocompleter should be 0 -- FILTERED instance should be filtered out.');
                                     
                                     done();
                                 }.bind(autocompleter);
                                 
                                 autocompleter._editingValue = 'FILTERED';
-                                autocompleter._searchOnTap();
+                                autocompleter._selectNextOnKeyDown();
                             };
                         });
                     }
                 };
                 
                 centre.postRetrieved = function (entity, bindingEntity, customObject) {
-                    var editor = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_;
+                    const editor = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_;
                     editor._editingValue = '';
                     editor.commit();
                     

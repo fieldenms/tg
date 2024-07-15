@@ -55,7 +55,7 @@ public class CentreDomainTreeManagerAndEnhancerTest extends AbstractDomainTreeMa
     }
 
     public static Object createDtm_for_CentreDomainTreeManagerAndEnhancerTest() {
-        return new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_CentreDomainTreeManagerAndEnhancerTest());
+        return new CentreDomainTreeManagerAndEnhancer(factory(), createRootTypes_for_CentreDomainTreeManagerAndEnhancerTest());
     }
 
     public static Object createIrrelevantDtm_for_CentreDomainTreeManagerAndEnhancerTest() {
@@ -63,7 +63,7 @@ public class CentreDomainTreeManagerAndEnhancerTest extends AbstractDomainTreeMa
     }
 
     protected static Set<Class<?>> createRootTypes_for_CentreDomainTreeManagerAndEnhancerTest() {
-        final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractDomainTreeManagerAndEnhancerTest());
+        final Set<Class<?>> rootTypes = new HashSet<>(createRootTypes_for_AbstractDomainTreeManagerAndEnhancerTest());
         rootTypes.add(MasterEntityForCentreDomainTree.class);
         rootTypes.add(EntityWithCompositeKey.class);
         rootTypes.add(EntityWithKeyTitleAndWithAEKeyType.class);
@@ -228,6 +228,7 @@ public class CentreDomainTreeManagerAndEnhancerTest extends AbstractDomainTreeMa
         assertFalse("The instance should be 'unchanged' after removal.", dtm().isChangedAnalysisManager(name));
     }
 
+    @Ignore("Ignored due to analyses made partially non-workable. See CentreDomainTreeManagerAndEnhancer.copyAnalysis method for more details.")
     @Test
     public void test_initialisation_discarding_and_saving_Analyses() {
         test_initialisation_discarding_and_saving_of_Analyses(AnalysisType.PIVOT, "A brand new PIVOT analysis");
@@ -286,6 +287,7 @@ public class CentreDomainTreeManagerAndEnhancerTest extends AbstractDomainTreeMa
         assertEquals("Incorrect value 'j'.", 3, j);
     }
 
+    @Ignore("Ignored due to analyses made partially non-workable. See CentreDomainTreeManagerAndEnhancer.copyAnalysis method for more details.")
     @Test
     public void test_that_Analyses_freezing_works_fine() {
         final AnalysisType analysisType = AnalysisType.SIMPLE;

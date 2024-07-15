@@ -4,9 +4,9 @@ import static java.util.stream.Collectors.toCollection;
 import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.createCustomisableColumns;
 import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.createSortingVals;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.checkedPropertiesWithoutSummaries;
+
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import com.google.inject.Inject;
@@ -50,7 +50,7 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         
         // When opening Customise Columns dialog we need to show the order / sort / visibility that is currently present in EGI.
         // It however does not mean that this configuration is synchronised with 'fresh' centre configuration.
-        // In such case 'Show selection criteria' has orange colour.
+        // Unlike selection criteria / mnemonics, this will not change 'Show selection criteria' colour to orange.
         // When APPLY is made in Customise Columns dialog the changes are applied against 'fresh' and 'previouslyRun' centres, but not against 'saved' one.
         // Thus Discard button on selection criteria can be used to Discard all centre changes including those made in Customise Columns dialog.
         // Very similar situation is with Change Columns Width action.
@@ -74,6 +74,12 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         
         // provide sorting values into the action
         entity.setSortingVals(createSortingVals(customisableColumns));
+        
+        // provide pageCapacity, maxPageCapacity, visibleRowsCount and numberOfHeaderLines into the action
+        entity.setPageCapacity(previouslyRunCentre.getSecondTick().getPageCapacity());
+        entity.setMaxPageCapacity(previouslyRunCentre.getSecondTick().getMaxPageCapacity());
+        entity.setVisibleRowsCount(previouslyRunCentre.getSecondTick().getVisibleRowsCount());
+        entity.setNumberOfHeaderLines(previouslyRunCentre.getSecondTick().getNumberOfHeaderLines());
         return entity;
     }
     

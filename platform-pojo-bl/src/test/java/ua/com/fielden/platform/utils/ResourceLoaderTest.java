@@ -15,31 +15,31 @@ public class ResourceLoaderTest {
 
     @Test
     public void testWhetherGetTextWorks() {
-	assertEquals("The get text from ResourceLoader class doesn't work!", "<h1>Test Resources</h1>", getText("testResource.html"));
+        assertEquals("The get text from ResourceLoader class doesn't work!", "<h1>Test Resources</h1>", getText("testResource.html"));
     }
 
     @Test
     public void testWhetherGetTextFails() {
-	assertNull("The getText from ResourceLoader class didn't failed to found resource", getText("notExistingResource.html"));
+        assertNull("The getText from ResourceLoader class didn't failed to found resource", getText("notExistingResource.html"));
     }
 
     @Test
     public void testWhetherExistFindsResource() {
-	assertTrue("The exist method didn't resource", exist("testResource.html"));
+        assertTrue("The exist method didn't resource", exist("testResource.html"));
     }
 
     @Test
     public void testWhetherExistFailsToFindResource() {
-	assertFalse("The exist method found non existing resource", exist("notExistingResource.html"));
+        assertFalse("The exist method found non existing resource", exist("notExistingResource.html"));
     }
 
     @Test
     public void testWhetherGetStreamWorks() {
-	assertNotNull("The getStream from ResourceLoader class doesn't work!",  getStream("testResource.html"));
+        assertNotNull("The getStream from ResourceLoader class doesn't work!", getStream("testResource.html"));
     }
 
     @Test
     public void testWhetherGetStreamFails() {
-	assertNull("The getStream from ResourceLoader class didn't failed to found resource", getStream("notExistingResource.html"));
+        assertNull("The getStream from ResourceLoader class didn't failed to found resource", getStream("notExistingResource.html"));
     }
 }

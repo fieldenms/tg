@@ -12,11 +12,12 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 import javax.swing.filechooser.FileFilter;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public class MiscUtilities {
 
@@ -101,9 +102,8 @@ public class MiscUtilities {
         if ("*".equals(autocompleterExp.trim())) {
             return null;
         }
-        return autocompleterExp.replaceAll("\\*", "%").trim();
+        return autocompleterExp.replace("*", "%").trim();
     }
-    
 
     /**
      * Converts the content of the input stream into a string.
@@ -144,7 +144,7 @@ public class MiscUtilities {
      *
      * @param fileName
      * @return
-     * @throws IOException 
+     * @throws IOException
      * @throws Exception
      */
     public static Properties propertyExtractor(final String fileName) throws IOException {
@@ -162,6 +162,18 @@ public class MiscUtilities {
 
             return props;
         }
+    }
+    
+    /**
+     * Returns a function accepting a format string and returning that string formatted with {@code args}.
+     * <p>
+     * Useful when the same value is used repeatedly to create a formatted string.
+     * 
+     * @param args
+     * @return
+     */
+    public static Function<String, String> stringFormatter(final Object... args) {
+        return (format -> format.formatted(args)); 
     }
 
 }

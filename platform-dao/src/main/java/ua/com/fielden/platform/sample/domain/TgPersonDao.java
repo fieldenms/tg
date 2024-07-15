@@ -1,11 +1,15 @@
 package ua.com.fielden.platform.sample.domain;
 
 import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.RegExUtils;
 
 import com.google.inject.Inject;
 
@@ -30,7 +34,7 @@ public class TgPersonDao extends CommonEntityDao<TgPerson> implements ITgPerson 
 
     private final IUser coUser;
     private final EntityFactory entityFactory;
-    private final Logger logger = Logger.getLogger(getClass());
+    private final Logger logger = getLogger(getClass());
 
     @Inject
     protected TgPersonDao(final IFilter filter, final EntityFactory entityFactory, final IUser coUser) {
@@ -152,8 +156,9 @@ public class TgPersonDao extends CommonEntityDao<TgPerson> implements ITgPerson 
      * @param givenName
      * @return
      */
+    private static final Pattern letters = Pattern.compile("[^a-zA-Z0-9]");
     private static String letters(final String str, final int n) {
-        final String cleanUpperCase = str.replaceAll("[^a-zA-Z0-9]", "").toUpperCase();
+        final String cleanUpperCase = RegExUtils.removeAll(str, letters).toUpperCase();
         return cleanUpperCase.substring(0, n);
     }
 

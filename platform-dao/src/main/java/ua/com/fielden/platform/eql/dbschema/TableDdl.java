@@ -2,8 +2,7 @@ package ua.com.fielden.platform.eql.dbschema;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.DbVersion.MSSQL;
 import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
@@ -37,7 +36,6 @@ import ua.com.fielden.platform.entity.annotation.Unique;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.ioc.HibernateConfigurationFactory;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  * Generates DDL to create a table, primary key, indices (including unique) and foreign keys for the specified persistent type.
@@ -87,7 +85,7 @@ public class TableDdl {
     }
 
     private static boolean shouldIgnore(final Field propField, final Class<? extends AbstractEntity<?>> entityType) {
-        return KEY.equals(propField.getName()) || DESC.equals(propField.getName()) && !EntityUtils.hasDescProperty(entityType);
+        return KEY.equals(propField.getName());
     }
 
     /**

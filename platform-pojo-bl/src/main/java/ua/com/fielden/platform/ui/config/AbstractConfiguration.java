@@ -14,7 +14,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
  */
 public abstract class AbstractConfiguration<KEY extends Comparable<KEY>> extends AbstractEntity<KEY> {
 
-    @IsProperty(length = 1073741824)
+    @IsProperty(length = Integer.MAX_VALUE)
     @Title(value = "Configuration body", desc = "The binary representation of the configuration.")
     @MapTo(value = "BODY")
     private byte[] configBody = new byte[] {};
@@ -24,8 +24,9 @@ public abstract class AbstractConfiguration<KEY extends Comparable<KEY>> extends
     }
 
     @Observable
-    public void setConfigBody(final byte[] configBody) {
+    public AbstractConfiguration<KEY> setConfigBody(final byte[] configBody) {
         this.configBody = configBody;
+        return this;
     }
 
 }

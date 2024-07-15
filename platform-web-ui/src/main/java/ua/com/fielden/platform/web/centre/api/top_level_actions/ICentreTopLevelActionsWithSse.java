@@ -1,9 +1,10 @@
 package ua.com.fielden.platform.web.centre.api.top_level_actions;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.web.sse.IEventSource;
 
 /**
- * A contract to specify Sever-Side Eventing URI.
+ * A contract to specify Sever-Side Event Source.
  *
  * @author TG Team
  *
@@ -12,12 +13,12 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 public interface ICentreTopLevelActionsWithSse<T extends AbstractEntity<?>> extends ICentreTopLevelActionsWithEnforcePostSaveRefreshConfig<T> {
 
 	/**
-	 * Accepts URI that is used at the server side to connect to the associated with it event source.
+	 * Accepts event source class to send event to all registered client via common URI.
 	 * Only non-empty and non-null value is acceptable.
-	 * 
-	 * @param uri
+	 *
+	 * @param eventSourceClass
 	 * @return
 	 */
-    ICentreTopLevelActionsWithEnforcePostSaveRefreshConfig<T> hasEventSourceAt(final String uri);
+    ICentreSseWithPromptRefresh<T> hasEventSource(final Class<? extends IEventSource> eventSourceClass);
 
 }

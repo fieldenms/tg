@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -708,6 +709,7 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
      * 
      * @param node
      */
+    private static final String DBL_QUOTE = "\"";
     private Object evaluateOperation(final AstNode node) {
         final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
         final AstNode leftOperand = node.getChildren().get(0);
@@ -722,7 +724,7 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
                     final Integer value = new Integer(leftOperand.getValue().toString()) + new Integer(rightOperand.getValue().toString());
                     return value;
                 } else if (String.class.isAssignableFrom(node.getType())) {
-                    final String value = "\"" + leftOperand.getValue().toString().replaceAll("\"", "") + rightOperand.getValue().toString().replaceAll("\"", "") + "\"";
+                    final String value = DBL_QUOTE + StringUtils.remove(leftOperand.getValue().toString(), DBL_QUOTE) + StringUtils.remove(rightOperand.getValue().toString(), DBL_QUOTE) + DBL_QUOTE;
                     return value;
                 } else if (Day.class.isAssignableFrom(node.getType())) {
                     return ((Integer) leftOperand.getValue()) + ((Integer) rightOperand.getValue());
@@ -798,7 +800,7 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
      * @throws TypeCompatibilityException
      */
     private void processDateLiteralToken(final AstNode node) {
-        final String pureDateStr = node.getToken().text.replace("'", "");
+        final String pureDateStr = StringUtils.remove(node.getToken().text, "'");
         final DateTime date;
         // let's now check if we can covert recognised sequence to date
         if (pureDateStr.split(" ").length == 2) { // has time portion

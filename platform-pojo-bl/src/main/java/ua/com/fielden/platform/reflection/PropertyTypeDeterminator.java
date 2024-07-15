@@ -15,7 +15,7 @@ import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
@@ -78,7 +78,7 @@ public class PropertyTypeDeterminator {
     /**
      * Determines class of property/function that should be inside <code>clazz</code> hierarchy.
      *
-     * If <code>clazz</code> doesn't have desired property or function -- {@link IllegalArgumentException} will be thrown.
+     * If <code>clazz</code> doesn't have desired property or function -- {@link ReflectionException} will be thrown.
      *
      * @param clazz
      *            -- the class that should contain "propertyOrFunction" (property or function)
@@ -93,10 +93,10 @@ public class PropertyTypeDeterminator {
      */
     public static Class<?> determineClass(final Class<?> clazz, final String propertyOrFunction, final boolean determineKeyType, final boolean determineElementType) {
         if (StringUtils.isEmpty(propertyOrFunction)) {
-            throw new IllegalArgumentException("Empty string should not be used here. clazz = " + clazz + ", propertyOrFunction = " + propertyOrFunction);
+            throw new ReflectionException("Empty string should not be used here. clazz = " + clazz + ", propertyOrFunction = " + propertyOrFunction);
         }
         if (isDotNotation(propertyOrFunction)) {
-            throw new IllegalArgumentException("Dot-notation should not be used here. clazz = " + clazz + ", propertyOrFunction = " + propertyOrFunction);
+            throw new ReflectionException("Dot-notation should not be used here. clazz = " + clazz + ", propertyOrFunction = " + propertyOrFunction);
         }
         if (determineKeyType && (AbstractEntity.KEY.equals(propertyOrFunction) || AbstractEntity.GETKEY.equals(propertyOrFunction)) && AbstractEntity.class.equals(clazz)) {
             return Comparable.class;
@@ -111,7 +111,7 @@ public class PropertyTypeDeterminator {
                     final Class<?> theType = method.getReturnType();
                     return determineElementType && isParameterizedType(theType) ? determineElementClassForMethod(method) : theType; // property element type should be retrieved if determineElementType == true
                 } catch (final Exception e) {
-                    throw new IllegalArgumentException("No " + propertyOrFunction + " method in " + clazz.getSimpleName() + " class.");
+                    throw new ReflectionException("No " + propertyOrFunction + " method in " + clazz.getSimpleName() + " class.");
                 }
             } else { // property -- assuming that "propertyOrFunction" is a name of a property (because its name contains no braces)
                 ////////////////// Property class determination using property field. //////////////////
@@ -138,14 +138,12 @@ public class PropertyTypeDeterminator {
     }
 
     /**
-     * If field is collectional property then it returns type of collection elements.
-     *
-     * @param field
-     * @return
+     * If the field is a collectional property, returns the type of collection elements, otherwise returns {@link Object}.
      */
     private static Class<?> determineElementClass(final Field field) {
-        final ParameterizedType paramType = (ParameterizedType) field.getGenericType();
-        return classFrom(paramType.getActualTypeArguments()[0]);
+        return field.getGenericType() instanceof ParameterizedType paramType
+                ? classFrom(paramType.getActualTypeArguments()[0])
+                : Object.class;
     }
 
     /**
@@ -219,7 +217,7 @@ public class PropertyTypeDeterminator {
     /**
      * Determines type ({@link Type}) of property/function that should be inside <code>clazz</code> hierarchy.
      *
-     * If <code>clazz</code> doesn't have desired property or function -- {@link IllegalArgumentException} will be thrown.
+     * If <code>clazz</code> doesn't have desired property or function -- {@link ReflectionException} will be thrown.
      *
      * @param clazz
      *            -- the class that should contain "propertyOrFunction" (property or function)
@@ -232,7 +230,7 @@ public class PropertyTypeDeterminator {
      */
     private static Type determineType(final Class<?> clazz, final String propertyOrFunction) {
         if (StringUtils.isEmpty(propertyOrFunction) || isDotNotation(propertyOrFunction)) {
-            throw new IllegalArgumentException("Dot-notation or empty string should not be used here.");
+            throw new ReflectionException("Dot-notation or empty string should not be used here.");
         }
         if ((AbstractEntity.KEY.equals(propertyOrFunction) || AbstractEntity.GETKEY.equals(propertyOrFunction)) && AbstractEntity.class.isAssignableFrom(clazz)) {
             return AnnotationReflector.getKeyType(clazz);
@@ -242,7 +240,7 @@ public class PropertyTypeDeterminator {
                 ////////////////// Parameterless Function return type determination //////////////////
                 return Reflector.getMethod(clazz, propertyOrFunction.substring(0, propertyOrFunction.length() - 2)).getGenericReturnType(); // getReturnType();
             } catch (final Exception e) {
-                throw new IllegalArgumentException("No " + propertyOrFunction + " method in " + clazz.getSimpleName() + " class.");
+                throw new ReflectionException("No " + propertyOrFunction + " method in " + clazz.getSimpleName() + " class.");
             }
         } else { // property -- assuming that "propertyOrFunction" is a name of a property (because its name contains no braces)
             //	    return Reflector.getFieldByName(clazz, propertyOrFunction).getType();
@@ -292,7 +290,8 @@ public class PropertyTypeDeterminator {
     }
 
     private static boolean isLoadedByHibernate(final Class<?> clazz) {
-        return clazz.getName().contains("$$_javassist") || clazz.getName().contains("_$$_");
+        final String name = clazz.getName();
+        return name.contains("$HibernateProxy") || name.contains("$$_javassist") || name.contains("_$$_");
     }
 
     /**
@@ -332,7 +331,7 @@ public class PropertyTypeDeterminator {
 
     public static Pair<String, String> penultAndLast(final String dotNotationExp) {
         if (!isDotNotation(dotNotationExp)) {
-            throw new IllegalArgumentException("Should be dot-notation.");
+            throw new ReflectionException("Should be dot-notation.");
         }
         final int indexOfLastDot = dotNotationExp.lastIndexOf(PROPERTY_SPLITTER);
         final String penultPart = dotNotationExp.substring(0, indexOfLastDot);
@@ -342,7 +341,7 @@ public class PropertyTypeDeterminator {
 
     public static Pair<String, String> firstAndRest(final String dotNotationExp) {
         if (!isDotNotation(dotNotationExp)) {
-            throw new IllegalArgumentException("Should be dot-notation.");
+            throw new ReflectionException("Should be dot-notation.");
         }
         final int indexOfFirstDot = dotNotationExp.indexOf(PROPERTY_SPLITTER);
         final String firstPart = dotNotationExp.substring(0, indexOfFirstDot);
@@ -360,9 +359,9 @@ public class PropertyTypeDeterminator {
     public static Pair<Class<?>, String> transform(final Class<?> type, final String dotNotationExp) {
         if (isDotNotation(dotNotationExp)) { // dot-notation expression defines property/function.
             final Pair<String, String> pl = penultAndLast(dotNotationExp);
-            return new Pair<>(determinePropertyType(type, pl.getKey()), pl.getValue());
+            return pair(determinePropertyType(type, pl.getKey()), pl.getValue());
         } else { // empty or first level property/function.
-            return new Pair<>(type, dotNotationExp);
+            return pair(type, dotNotationExp);
         }
     }
 

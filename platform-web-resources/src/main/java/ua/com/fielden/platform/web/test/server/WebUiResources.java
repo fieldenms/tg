@@ -12,9 +12,6 @@ import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.application.AbstractWebUiResources;
 import ua.com.fielden.platform.web.factories.webui.AttachmentDownloadResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.FileProcessingResourceFactory;
-import ua.com.fielden.platform.web.sse.resources.EventSourcingResourceFactory;
-import ua.com.fielden.platform.web.test.eventsources.TgMessageEventSource;
-import ua.com.fielden.platform.web.test.eventsources.TgPersistentEntityWithPropertiesEventSrouce;
 
 /**
  * Custom {@link AbstractWebUiResources} descendant for Web UI Testing Server. Provided in order to configure entity centres, masters and other client specific stuff.
@@ -51,27 +48,29 @@ public class WebUiResources extends AbstractWebUiResources {
     protected void registerDomainWebResources(final Router router, final IWebUiConfig webApp) {
         // register some file processors
         final FileProcessingResourceFactory<DumpCsvTxtProcessor> factory = new FileProcessingResourceFactory<DumpCsvTxtProcessor>(
-                router,
+                webApp.getEventSourceEmitterRegister(),
                 injector,
                 DumpCsvTxtProcessor.class,
                 f -> f.newByKey(DumpCsvTxtProcessor.class, "DUMMY"), // this entity construction could be more sophisticated in practice
                 deviceProvider,
+                dates,
                 20 * 1024, // Kilobytes
                 MediaType.TEXT_CSV,
                 MediaType.TEXT_PLAIN);
         router.attach("/csv-txt-file-processing", factory);
 
         // register attachment uploader
-        final FileProcessingResourceFactory<AttachmentUploader> factoryForAttachmentUploader = new FileProcessingResourceFactory<AttachmentUploader>(
-                router,
+        final FileProcessingResourceFactory<AttachmentUploader> factoryForAttachmentUploader = new FileProcessingResourceFactory<>(
+                webApp.getEventSourceEmitterRegister(),
                 injector,
                 AttachmentUploader.class,
                 f -> f.newEntity(AttachmentUploader.class),
                 deviceProvider,
+                dates,
                 20 * 1024 * 1024, // Kilobytes
                 // image/png,image/jpeg,
                 // .csv,.txt,text/plain,text/csv,
-                // application/pdf,application/zip, 
+                // application/pdf,application/zip,
                 // application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,
                 // application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
                 MediaType.IMAGE_JPEG, MediaType.IMAGE_PNG,
@@ -83,10 +82,5 @@ public class WebUiResources extends AbstractWebUiResources {
 
         // register attachment download resource
         router.attach("/download-attachment/{attachment-id}/{attachment-sha1}", new AttachmentDownloadResourceFactory(injector));
-
-        // register some server-side eventing
-        // router.attach("/sse/events",  new _EventSourcingResourceFactory()); -- some experimental stuff, which should be kept here for the moment
-        router.attach("/sse/entity-centre-events",  new EventSourcingResourceFactory(injector, TgPersistentEntityWithPropertiesEventSrouce.class, deviceProvider));
-        router.attach("/sse/message-update-events", new EventSourcingResourceFactory(injector, TgMessageEventSource.class, deviceProvider));
     }
 }

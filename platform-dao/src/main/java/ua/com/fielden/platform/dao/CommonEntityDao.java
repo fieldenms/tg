@@ -1,30 +1,12 @@
 package ua.com.fielden.platform.dao;
 
-import static java.lang.String.format;
-import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
-
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
-import org.hibernate.Session;
-import org.joda.time.DateTime;
-
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-
-import ua.com.fielden.platform.companion.AbstractEntityReader;
-import ua.com.fielden.platform.companion.DeleteOperations;
-import ua.com.fielden.platform.companion.ICanReadUninstrumented;
-import ua.com.fielden.platform.companion.IEntityReader;
-import ua.com.fielden.platform.companion.PersistentEntitySaver;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
+import org.hibernate.Session;
+import org.joda.time.DateTime;
+import ua.com.fielden.platform.companion.*;
 import ua.com.fielden.platform.dao.annotations.AfterSave;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
@@ -37,63 +19,64 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.EntityBatchDeleteByIdsOperation;
-import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
-import ua.com.fielden.platform.entity.query.QueryExecutionContext;
+import ua.com.fielden.platform.entity.query.*;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
-import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.types.either.Either;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
+import static ua.com.fielden.platform.types.either.Either.left;
+import static ua.com.fielden.platform.types.either.Either.right;
+
 /**
- * This is a most common Hibernate-based implementation of the {@link IEntityDao}.
- * <p>
- * It should not be used directly -- more preferred way is to inherit it for implementation of a more specific DAO.
- * <p>
- * Property <code>session</code> is used to allocation session whenever is appropriate -- all data access methods should use this session. It is envisaged that the real class usage
- * will include Guice method intercepter that would assign session instance dynamically before executing calls to methods annotated with {@link SessionRequired}.
+ * This is a base class for db-aware implementations of entity companions.
  *
  * @author TG Team
  *
- * @param <T>
- *            -- entity type
- * @param <K>
- *            -- entitie's key type
+ * @param <T> entity type
  */
 public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends AbstractEntityReader<T> implements IEntityDao<T>, ISessionEnabled, ICanReadUninstrumented {
 
-    private final Logger logger = Logger.getLogger(this.getClass());
+    private final Logger logger = getLogger(this.getClass());
 
     private final PersistentEntitySaver<T> entitySaver;
-    
+
     private Session session;
     private String transactionGuid;
     private DomainMetadata domainMetadata;
     private IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
-    
+
     @Inject
     private ICompanionObjectFinder coFinder;
     @Inject
     private Injector injector;
-    
+
     private final IFilter filter;
     private final DeleteOperations<T> deleteOps;
 
     @Inject
     private IUniversalConstants universalConstants;
     @Inject
+    private IDates dates;
+    @Inject
     private IUserProvider up;
 
-    /** A marker to skip re-fetching an entity during save. */
-    private boolean skipRefetching = false;
-    
     /** A guard against an accidental use of quick save to prevent its use for companions with overridden method <code>save</code>.
      *  Refer issue <a href='https://github.com/fieldenms/tg/issues/421'>#421</a> for more details. */
     private Boolean hasSaveOverridden;
@@ -103,15 +86,15 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private final Class<? extends Comparable<?>> keyType;
     private final Class<T> entityType;
     private IFetchProvider<T> fetchProvider;
-    
+
     @Inject
     private EntityFactory entityFactory;
 
     /**
      * The default constructor, which looks for annotation {@link EntityType} to identify the entity type automatically.
-     * An exception is thrown if the annotation is missing. 
+     * An exception is thrown if the annotation is missing.
      *
-     * @param entityType
+     * @param filter
      */
     protected CommonEntityDao(final IFilter filter) {
         final EntityType annotation = AnnotationReflector.getAnnotation(getClass(), EntityType.class);
@@ -120,15 +103,15 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
         this.entityType = (Class<T>) annotation.value();
         this.keyType = AnnotationReflector.getKeyType(entityType);
-        
+
         this.filter = filter;
         this.deleteOps = new DeleteOperations<>(
                 this,
                 this::getSession,
                 entityType,
                 this::newQueryExecutionContext,
-                () -> new EntityBatchDeleteByIdsOperation<T>(getSession(), (PersistedEntityMetadata<T>) getDomainMetadata().getPersistedEntityMetadataMap().get(entityType)));
-        
+                () -> new EntityBatchDeleteByIdsOperation<>(getSession(), getDomainMetadata().eqlDomainMetadata.entityMetadataHolder.getTableForEntityType(entityType)));
+
         entitySaver = new PersistentEntitySaver<>(
                 this::getSession,
                 this::getTransactionGuid,
@@ -137,8 +120,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 keyType,
                 this::getUser,
                 () -> getUniversalConstants().now(),
-                () -> skipRefetching,
-                this::isFilterable,
                 this::getCoFinder,
                 this::newQueryExecutionContext,
                 this::processAfterSaveEvent,
@@ -146,7 +127,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 this::findById,
                 this::exists,
                 logger);
-                
+
     }
 
     /**
@@ -156,25 +137,21 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Override
     protected QueryExecutionContext newQueryExecutionContext() {
         return new QueryExecutionContext(
-                getSession(), 
-                getEntityFactory(), 
-                getCoFinder(), 
-                getDomainMetadata(), 
-                getFilter(), 
-                getUsername(), 
-                getUniversalConstants(), 
+                getSession(),
+                getEntityFactory(),
+                getCoFinder(),
+                getDomainMetadata(),
+                getDomainMetadata().eqlDomainMetadata,
+                getFilter(),
+                getUsername(),
+                dates,
                 getIdOnlyProxiedEntityTypeCache());
     }
 
-    @Override
-    protected boolean isFilterable() {
-        return false;
-    }
-    
     /**
      * A separate setter is used in order to avoid enforcement of providing mapping generator as one of constructor parameter in descendant classes.
      *
-     * @param mappingExtractor
+     * @param domainMetadata
      */
     @Inject
     protected void setDomainMetadata(final DomainMetadata domainMetadata) {
@@ -208,7 +185,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     /**
-     * By default all DAO computations are considered indefinite. Thus returning <code>null</code> as the result.
+     * By default, all DAO computations are considered indefinite. Thus returning empty result.
      */
     @Override
     public Optional<Integer> progress() {
@@ -228,30 +205,34 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
     @SessionRequired
-    public final long quickSave(final T entity) {
+    public long quickSave(final T entity) {
         if (hasSaveOverridden == null) {
             hasSaveOverridden = isMethodOverriddenOrDeclared(CommonEntityDao.class, getClass(), "save", getEntityType());
         }
         if (hasSaveOverridden) {
             throw new EntityCompanionException(
-                    format("Quick save is not supported for entity [%s] due to an overridden method save (refer companion [%s]).", 
-                            getEntityType().getName(), 
+                    format("Quick save is not supported for entity [%s] due to an overridden method save (refer companion [%s]).",
+                            getEntityType().getName(),
                             getEntityType().getAnnotation(CompanionObject.class).value().getName()));
         }
-        
-        
-        try {
-            skipRefetching = true;
-            return save(entity).getId();
-        } finally {
-            skipRefetching = false;
+
+        if (entity == null) {
+            throw new EntityCompanionException(format("Null entity of type [%s] cannot be saved.", entityType.getName()));
+        } else if (!entity.isPersistent()) {
+            throw new EntityCompanionException(format("Quick save is not supported for non-persistent entity [%s].", entityType.getName()));
+        } else {
+            final Long id = entitySaver.coreSave(entity, true, empty())._1;
+            if (id == null) {
+                throw new EntityCompanionException(format("Saving of entity [%s] did not return its ID.", entityType.getName()));
+            }
+            return id;
         }
     }
-    
+
     @Override
     @SessionRequired
     public T save(final T entity) {
@@ -264,11 +245,49 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
     }
 
+    /**
+     * Experimental API with the potential to replace {@link #save(AbstractEntity)} if proven superior in practice.
+     * <p>
+     * This method could be used as an alternative to {@link #quickSave(AbstractEntity)} by passing in an empty instance of {@code Optional<fetch<T>>}.
+     * The right way to go about it, would be to override this method and place all the logic into this method instead of the potentially overridden {@link #save(AbstractEntity)},
+     * and simply call it from {@link #save(AbstractEntity)} with the appropriate fetch model.
+     * This way would guarantee a single path for validation and other related logic when saving entities.
+     * <p>
+     * The return type {@code Either<Long, T>} represents either an entity id (left) or an entity instance (right).
+     * Passing an empty instance of {@code Optional<fetch<T>>} should always skip refetching and return the left result (i.e. id) – this is analogous to {@link #quickSave(AbstractEntity)}.
+     *
+     * @param entity
+     * @param maybeFetch
+     * @return
+     */
+    @SessionRequired
+    protected Either<Long, T> save(final T entity, final Optional<fetch<T>> maybeFetch) {
+        // if maybeFetch is empty then we skip re-fetching
+        final boolean skipRefetching = !maybeFetch.isPresent();
+        final T2<Long, T> result = entitySaver.coreSave(entity, skipRefetching, maybeFetch);
+        return skipRefetching ? left(result._1) : right(result._2);
+    }
+
+    /**
+     * Returns an open session, if present. Otherwise, throws {@link EntityCompanionException} exception.
+     * @return
+     */
     @Override
     public Session getSession() {
         if (session == null) {
             throw new EntityCompanionException("Session is missing, most likely, due to missing @SessionRequired annotation.");
+        } else if (!session.isOpen()) {
+            throw new EntityCompanionException("Session is closed, most likely, due to missing @SessionRequired annotation.");
         }
+        return session;
+    }
+
+    /**
+     * Returns a session instances without any checks. It is intended mainly for testing purposes to ensure correct session state after various db operations.
+     *
+     * @return
+     */
+    public Session getSessionUnsafe() {
         return session;
     }
 
@@ -276,7 +295,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     public void setSession(final Session session) {
         this.session = session;
     }
-    
+
     @Override
     public String getTransactionGuid() {
         if (StringUtils.isEmpty(transactionGuid)) {
@@ -284,7 +303,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
         return transactionGuid;
     }
-    
+
     @Override
     public void setTransactionGuid(final String guid) {
         this.transactionGuid = guid;
@@ -334,7 +353,11 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     public IUniversalConstants getUniversalConstants() {
         return universalConstants;
     }
-    
+
+    public IDates dates() {
+        return dates;
+    }
+
     /**
      * Just a convenience method for obtaining the current date/time as a single call {@code now()} instead of chaining {@code getUniversalConstants().now()}.
      * @return
@@ -344,20 +367,21 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> co$Cache = new HashMap<>();
-    private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> coCache = new HashMap<>();    
-    
+    private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> coCache = new HashMap<>();
+
     /**
      * A convenient way to obtain companion instances by the types of corresponding entities.
-     * 
+     *
      * @param type -- entity type whose companion instance needs to be obtained
      * @return
      */
+    @Override
     @SuppressWarnings("unchecked")
     public <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co$(final Class<E> type) {
         if (instrumented() && getEntityType().equals(type)) {
             return (C) this;
         }
-        
+
         IEntityDao<?> co = co$Cache.get(type);
         if (co == null) {
             co = getCoFinder().find(type, false);
@@ -372,6 +396,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * @param type -- entity type whose companion instance needs to be obtained
      * @return
      */
+    @Override
     @SuppressWarnings("unchecked")
     public <C extends IEntityReader<E>, E extends AbstractEntity<?>> C co(final Class<E> type) {
         if (!instrumented() && getEntityType().equals(type)) {
@@ -390,10 +415,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     public void readUninstrumented() {
         this.$instrumented$ = false;
     }
-    
+
     /**
      * This method is inherited from {@link AbstractEntityReader} and overridden to inform the reader when should it read uninstrumented entities.
-     * 
+     *
      * @return
      */
     @Override
@@ -401,12 +426,18 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return $instrumented$;
     }
 
+    ////////////////////////////////////////////////////////////////
+    //////// Continuation related structures and methods ///////////
+    ////////////////////////////////////////////////////////////////
+    // a map to hold the "more data" gathered by means of continuations
     private final Map<String, IContinuationData> moreData = new HashMap<>();
-    
+    // indicates whether continuations are supported to provide "more data" in the caller's context
+    private boolean continuationSupported = false;
+
     /**
      * Replaces any previously provided "more data" with new "more data".
      * This is a bulk operation that is mainly needed for the infrastructural integration.
-     * 
+     *
      * @param moreData
      */
     public CommonEntityDao<T> setMoreData(final Map<String, IContinuationData> moreData) {
@@ -414,11 +445,11 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         this.moreData.putAll(moreData);
         return this;
     }
-    
+
     /**
-     * A convenient method to set a single "more data" instance for a given key. 
+     * A convenient method to set a single "more data" instance for a given key.
      * Mostly useful for unit tests.
-     * 
+     *
      * @param key
      * @param moreData
      * @return
@@ -427,17 +458,17 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         this.moreData.put(key, moreData);
         return this;
     }
-    
+
     /**
      * Clears continuations in this companion object.
      */
     public void clearMoreData() {
         this.moreData.clear();
     }
-    
+
     /**
      * A convenient way to obtain "more data" by key. An empty optional is return if there was no "more data" found.
-     * 
+     *
      * @param key -- companion object property that identifies continuation
      * @return
      */
@@ -448,15 +479,25 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * A convenient way to obtain all "more data" by keys.
-     * 
+     *
      * @return
      */
     public Map<String, IContinuationData> moreData() {
         return Collections.unmodifiableMap(moreData);
     }
 
+    public CommonEntityDao<T> setContinuationSupported(final boolean supported) {
+        this.continuationSupported = supported;
+        return this;
+    }
+
+    public boolean isContinuationSupported() {
+        return this.continuationSupported;
+    }
+
     ////////////////////////////////////////////////////////////////
     //////////////////// Before and After save methods /////////////
+    ////////////////////////////////////////////////////////////////
     /**
      * A method for assigning a value to a domain specific transactional property. This method does nothing by default, and should be overridden by companion objects in order to
      * provide domain specific behaviour.
@@ -481,13 +522,13 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
 
     }
-    
+
     ////////////////////////////////////////////////////////////
     /////////////// block of default delete methods ////////////
     ////////////////////////////////////////////////////////////
-    
+
     /**
-     * A convenient default implementation for entity deletion, which should be used by overriding method {@link #delete(Long)}.
+     * A convenient default implementation for entity deletion, which should be used when overriding method {@link #delete(T)}.
      *
      * @param entity
      */
@@ -498,7 +539,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * A convenient default implementation for deletion of entities specified by provided query model and parameters, which could be empty.
-     * 
+     *
      * @param model
      * @param paramValues
      */
@@ -506,10 +547,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     protected void defaultDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
         deleteOps.defaultDelete(model, paramValues);
     }
-    
+
     /**
      * The same as {@link #defaultDelete(EntityResultQueryModel, Map)}, but with empty parameters.
-     * 
+     *
      * @param model
      */
     @SessionRequired
@@ -519,7 +560,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * A convenient default implementation for batch deletion of entities specified by provided query model and parameters, which could be empty.
-     * 
+     *
      * @param model
      * @param paramValues
      * @return
@@ -528,10 +569,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     protected int defaultBatchDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
         return deleteOps.defaultBatchDelete(model, paramValues);
     }
-    
+
     /**
      * The same as {@link #defaultBatchDelete(EntityResultQueryModel, Map)}, but with empty parameters.
-     * 
+     *
      * @param model
      * @return
      */
@@ -539,10 +580,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     protected int defaultBatchDelete(final EntityResultQueryModel<T> model) {
         return deleteOps.defaultBatchDelete(model);
     }
-    
+
     /**
      * Batch deletion of entities in the provided list.
-     *  
+     *
      * @param entities
      * @return
      */
@@ -550,10 +591,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     protected int defaultBatchDelete(final List<? extends AbstractEntity<?>> entities) {
         return batchDelete(entities.stream().map(e -> e.getId()).collect(Collectors.toList()));
     }
-    
+
     /**
      * Batch deletion of entities by their ID values.
-     * 
+     *
      * @param entitiesIds
      * @return
      */
@@ -561,11 +602,11 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     protected int defaultBatchDelete(final Collection<Long> entitiesIds) {
         return deleteOps.defaultBatchDelete(entitiesIds);
     }
-    
+
     /**
      * A more generic version of batch deletion of entities {@link #defaultBatchDelete(Collection)} that accepts a property name and a collection of ID values.
-     * Those entities that have the specified property matching any of those ID values get deleted. 
-     * 
+     * Those entities that have the specified property matching any of those ID values get deleted.
+     *
      * @param propName
      * @param entitiesIds
      * @return
@@ -574,10 +615,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     protected int defaultBatchDeleteByPropertyValues(final String propName, final Collection<Long> entitiesIds) {
         return deleteOps.defaultBatchDeleteByPropertyValues(propName, entitiesIds);
     }
-    
+
     /**
      * The same as {@link #defaultBatchDeleteByPropertyValues(String, Collection)}, but for a list of entities.
-     * 
+     *
      * @param propName
      * @param propEntities
      * @return
@@ -616,11 +657,11 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         // provides a very minimalistic version of fetch provider by default (only id and version are included)
         return EntityUtils.fetch(getEntityType());
     }
-    
+
     protected EntityFactory getEntityFactory() {
         return entityFactory;
     }
- 
+
     /**
      * Instantiates an instrumented new entity of the type for which this object is a companion.
      * The default entity constructor, which should be protected, is used for instantiation.

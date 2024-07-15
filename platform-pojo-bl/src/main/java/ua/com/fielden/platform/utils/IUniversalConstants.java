@@ -15,6 +15,7 @@ import com.google.inject.ImplementedBy;
  */
 @ImplementedBy(DefaultUniversalConstants.class)
 public interface IUniversalConstants {
+    
     /**
      * Returns a value indicating the current date/time.
      * 
@@ -28,7 +29,7 @@ public interface IUniversalConstants {
     default DateTime today() {
         return now().withMillisOfDay(0);
     }
-
+    
     /**
      * Returns a value indicating the current locale.
      * 
@@ -56,4 +57,5 @@ public interface IUniversalConstants {
      * @return
      */
     String fromEmailAddress();
+    
 }

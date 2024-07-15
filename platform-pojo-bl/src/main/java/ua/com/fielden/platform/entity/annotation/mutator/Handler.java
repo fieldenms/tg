@@ -1,15 +1,14 @@
 package ua.com.fielden.platform.entity.annotation.mutator;
 
+import org.joda.time.DateTime;
+import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
+import ua.com.fielden.platform.types.Money;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.Date;
-
-import org.joda.time.DateTime;
-
-import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
-import ua.com.fielden.platform.types.Money;
 
 /**
  * Describes BCE handler. Requires handler type to be specified.
@@ -58,6 +57,13 @@ public @interface Handler {
     StrParam[] str() default {};
 
     /**
+     * Should be used for specifying property-driven parameters of the handler.
+     *
+     * @return
+     */
+    PropParam[] prop() default {};
+
+    /**
      * Should be used for specifying double parameters of the handler.
      *
      * @return
@@ -90,4 +96,10 @@ public @interface Handler {
      * @return
      */
     EnumParam[] enumeration() default {};
+
+    /**
+     * Should be used for specifying boolean parameters.
+     * @return
+     */
+    BooleanParam[] bool() default {};
 }

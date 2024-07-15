@@ -3,6 +3,7 @@ package ua.com.fielden.platform.ui.config;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -12,7 +13,6 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
 
 /**
  *
@@ -26,10 +26,10 @@ import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle("Entity master configuration")
-@CompanionObject(IEntityMasterConfig.class)
+@CompanionObject(EntityMasterConfigCo.class)
 @MapEntityTo("ENTITY_MASTER_CONFIG")
+@DenyIntrospection
 public class EntityMasterConfig extends AbstractConfiguration<DynamicEntityKey> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @CompositeKeyMember(1)

@@ -39,7 +39,7 @@ public class CentreDomainTreeRepresentationAndEnhancerTest extends AbstractDomai
     }
 
     public static Object createDtm_for_CentreDomainTreeRepresentationAndEnhancerTest() {
-        return new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_CentreDomainTreeRepresentationAndEnhancerTest());
+        return new CentreDomainTreeManagerAndEnhancer(factory(), createRootTypes_for_CentreDomainTreeRepresentationAndEnhancerTest());
     }
 
     public static Object createIrrelevantDtm_for_CentreDomainTreeRepresentationAndEnhancerTest() {
@@ -47,7 +47,7 @@ public class CentreDomainTreeRepresentationAndEnhancerTest extends AbstractDomai
     }
 
     protected static Set<Class<?>> createRootTypes_for_CentreDomainTreeRepresentationAndEnhancerTest() {
-        final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractDomainTreeRepresentationAndEnhancerTest());
+        final Set<Class<?>> rootTypes = new HashSet<>(createRootTypes_for_AbstractDomainTreeRepresentationAndEnhancerTest());
         rootTypes.add(EntityWithCompositeKey.class);
         rootTypes.add(EntityWithKeyTitleAndWithAEKeyType.class);
         rootTypes.add(MasterSyntheticEntity.class);

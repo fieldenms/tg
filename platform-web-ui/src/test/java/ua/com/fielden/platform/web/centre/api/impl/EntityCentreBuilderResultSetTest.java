@@ -18,10 +18,12 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.impl.helpers.CustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.impl.helpers.FunctionalEntity;
 import ua.com.fielden.platform.web.centre.api.impl.helpers.ResultSetRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
+import ua.com.fielden.platform.web.centre.exceptions.EntityCentreConfigurationException;
 
 /**
  * A test case for Entity Centre DSL produced result sets.
@@ -64,17 +66,17 @@ public class EntityCentreBuilderResultSetTest {
         assertEquals("desc", config.getResultSetProperties().get().get(3).propName.get());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = EntityCentreConfigurationException.class)
     public void adding_non_exitsting_properties_to_result_set_should_be_prevented() {
         centreFor(TgWorkOrder.class).addProp("non.existing.prop").build();
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = EntityCentreConfigurationException.class)
     public void adding_null_as_property_to_result_set_should_be_prevented() {
         centreFor(TgWorkOrder.class).addProp((String) null).build();
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = EntityCentreConfigurationException.class)
     public void adding_null_as_custom_property_to_result_set_should_be_prevented() {
         centreFor(TgWorkOrder.class).addProp((PropDef<?>) null).build();
     }
@@ -88,19 +90,19 @@ public class EntityCentreBuilderResultSetTest {
                 .build();
 
         assertEquals(2, config.getResultSetProperties().get().size());
-        assertTrue(config.getResultSetProperties().get().get(0).propAction.get().isPresent());
-        assertTrue(config.getResultSetProperties().get().get(0).propAction.get().get().longDesc.isPresent());
-        assertTrue(config.getResultSetProperties().get().get(1).propAction.get().isPresent());
-        assertTrue(config.getResultSetProperties().get().get(1).propAction.get().get().longDesc.isPresent());
-        assertEquals("Changes vehicle status", config.getResultSetProperties().get().get(1).propAction.get().get().longDesc.get());
+        assertTrue(config.getResultSetProperties().get().get(0).getPropAction().isPresent());
+        assertTrue(config.getResultSetProperties().get().get(0).getPropAction().get().actions().get(0).longDesc.isPresent());
+        assertTrue(config.getResultSetProperties().get().get(1).getPropAction().isPresent());
+        assertTrue(config.getResultSetProperties().get().get(1).getPropAction().get().actions().get(0).longDesc.isPresent());
+        assertEquals("Changes vehicle status", config.getResultSetProperties().get().get(1).getPropAction().get().actions().get(0).longDesc.get());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = EntityCentreConfigurationException.class)
     public void adding_null_as_custom_property_action_should_be_prevented() {
         centreFor(TgWorkOrder.class).addProp(mkProp("OF", "Defect OFF road", "OF")).withAction(null).build();
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = EntityCentreConfigurationException.class)
     public void adding_null_as_property_action_should_be_prevented() {
         centreFor(TgWorkOrder.class).addProp("key").withAction(null).build();
     }
@@ -175,15 +177,15 @@ public class EntityCentreBuilderResultSetTest {
                 .addSecondaryAction(action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).build())
                 .build();
         assertTrue(config.getResultSetPrimaryEntityAction().isPresent());
-        assertTrue(config.getResultSetSecondaryEntityActions().isPresent());
-        assertEquals(2, config.getResultSetSecondaryEntityActions().get().size());
+        assertFalse(config.getResultSetSecondaryEntityActions().isEmpty());
+        assertEquals(2, config.getResultSetSecondaryEntityActions().size());
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void null_primary_action_should_be_prevented() {
         centreFor(TgWorkOrder.class)
                 .addProp("key")
-                .addPrimaryAction(null)
+                .addPrimaryAction((EntityActionConfig) null)
                 .also()
                 .addSecondaryAction(action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).build())
                 .also()
@@ -197,7 +199,7 @@ public class EntityCentreBuilderResultSetTest {
                 .addProp("key")
                 .addPrimaryAction(action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).build())
                 .also()
-                .addSecondaryAction(null)
+                .addSecondaryAction((EntityActionConfig) null)
                 .build();
     }
 
@@ -213,7 +215,7 @@ public class EntityCentreBuilderResultSetTest {
         assertTrue(config.getResultSetCustomPropAssignmentHandlerType().isPresent());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = EntityCentreConfigurationException.class)
     public void should_not_permit_setting_custom_value_assignment_handler_for_result_set_where_all_custom_props_hav_default_vaues() {
         centreFor(TgWorkOrder.class)
                 .addProp(mkProp("OF", "Defect OFF road", "OF"))
@@ -223,7 +225,7 @@ public class EntityCentreBuilderResultSetTest {
                 .build();
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = EntityCentreConfigurationException.class)
     public void should_not_permit_setting_null_custom_value_assignment_handler() {
         centreFor(TgWorkOrder.class)
                 .addProp(mkProp("OF", "Defect OFF road", "OF"))

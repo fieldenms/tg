@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.insertion_points;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.web.centre.api.IEcbCompletion;
+import ua.com.fielden.platform.web.centre.api.IWithLeftSplitterPosition;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 
 /**
@@ -11,7 +11,7 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
  *
  * @param <T>
  */
-public interface IInsertionPoints<T extends AbstractEntity<?>> extends IEcbCompletion<T> {
+public interface IInsertionPoints<T extends AbstractEntity<?>> extends IWithLeftSplitterPosition<T> {
     /**
      * Associates the specified action with an insertion point.
      * Several actions can be associated with the same insertion point, where the order of associations determines the order of insertions.
@@ -20,15 +20,5 @@ public interface IInsertionPoints<T extends AbstractEntity<?>> extends IEcbCompl
      * @param whereToInsertView
      * @return
      */
-    IInsertionPoints<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView);
-    
-    /**
-     * The same as {@link #addInsertionPoint(EntityActionConfig, InsertionPoints)} but also adds pagination buttons to the insertion point which
-     * become visible only when insertion point is in expanded mode.
-     * 
-     * @param actionConfig
-     * @param whereToInsertView
-     * @return
-     */
-    IInsertionPoints<T> addInsertionPointWithPagination(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView);
+    IInsertionPointConfig0<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView);
 }

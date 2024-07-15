@@ -1,22 +1,17 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static org.restlet.data.MediaType.TEXT_JAVASCRIPT;
+import static ua.com.fielden.platform.web.resources.webui.FileResource.createRepresentation;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
-
-import java.io.ByteArrayInputStream;
 
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
-import org.restlet.data.Encoding;
-import org.restlet.data.MediaType;
-import org.restlet.engine.application.EncodeRepresentation;
-import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 
-import com.google.common.base.Charsets;
-
-import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.utils.IDates;
+import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -28,7 +23,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  */
 public class CentreComponentResource extends AbstractWebResource {
     private final String mitypeString;
-    private final ISourceController sourceController;
+    private final IWebResourceLoader webResourceLoader;
     private final RestServerUtil restUtil;
     
     /**
@@ -40,24 +35,22 @@ public class CentreComponentResource extends AbstractWebResource {
      * @param response
      */
     public CentreComponentResource(
-            final ISourceController sourceController,//
+            final IWebResourceLoader webResourceLoader,
             final RestServerUtil restUtil,
             final IDeviceProvider deviceProvider,
-            final Context context, //
-            final Request request, //
+            final IDates dates,
+            final Context context,
+            final Request request,
             final Response response) {
-        super(context, request, response, deviceProvider);
+        super(context, request, response, deviceProvider, dates);
         this.mitypeString = (String) request.getAttributes().get("mitype");
-        this.sourceController = sourceController;
+        this.webResourceLoader = webResourceLoader;
         this.restUtil = restUtil;
     }
 
     @Get
     @Override
     public Representation get() {
-        return handleUndesiredExceptions(getResponse(), () -> {
-            final String source = sourceController.loadSource("/centre_ui/" + this.mitypeString, device());
-            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8)), MediaType.TEXT_HTML));
-        }, restUtil);
+        return handleUndesiredExceptions(getResponse(), () -> createRepresentation(webResourceLoader, TEXT_JAVASCRIPT, "/centre_ui/" + this.mitypeString, getReference().getRemainingPart()), restUtil);
     }
 }

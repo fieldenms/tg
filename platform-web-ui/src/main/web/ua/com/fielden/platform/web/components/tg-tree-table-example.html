@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>Menu list example</title>
+    <link rel="stylesheet" type="text/css" crossorigin="anonymous" href="https://fonts.googleapis.com/css?family=Roboto+Mono:400,700|Roboto:400,300,300italic,400italic,500,500italic,700,700italic"></link>
+    <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js'></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script type="module">
+        import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
+        import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
+        import '/resources/polymer/@polymer/paper-input/paper-input.js';
+        import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
+        import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
+        import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
+        import '/resources/polymer/@polymer/iron-icons/communication-icons.js';
+        import '/resources/egi/tg-property-column.js';
+        import '/resources/egi/tg-hierarchy-column.js';
+        import './tg-tree-table.js';
+    </script>
+    <custom-style>
+        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning">
+            body {
+                font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 10pt;
+            }
+            #tree {
+                min-height: 0;
+            }
+        </style>
+    </custom-style>
+</head>
+
+<body unresolved class="fullbleed">
+    <dom-bind>
+        <template is="dom-bind">
+            <div class="fit layout vertical">
+                <div class="layout horizontal">
+                    <paper-input class="flex" on-bind-value-changed="_findTreeItems"></paper-input>
+                    <paper-icon-button on-tap="expandAll" icon="icons:arrow-drop-down-circle"></paper-icon-button>
+                </div>
+                <tg-tree-table class="flex" id="tree" model="[[model]]" on-tg-load-subtree="_loadSubtree">
+                    <tg-hierarchy-column slot='hierarchy-column' property="key" type="String" width="200" min-width="80" grow-factor="1" column-title="Title" column-desc="Title description" content-builder="[[_buildContent]]"></tg-hierarchy-column>
+                    <tg-property-column slot='regular-column' property="propertyType" type="String" width="100" min-width="80" grow-factor="0" column-title="Property Type" column-desc="Property type"></tg-property-column>
+                    <tg-property-column slot='regular-column' property="desc" type="String" width="100" min-width="80" grow-factor="0" column-title="Description" column-desc="Description"></tg-property-column>
+                    <tg-property-column slot='regular-column' property="internalName" type="String" width="160" min-width="80" grow-factor="0" column-title="Internal Name" column-desc="Internal type name"></tg-property-column>
+                    <tg-property-column slot='regular-column' property="dbSchema" type="String" width="200" min-width="80" grow-factor="0" column-title="DB Schema" column-desc="Table Name"></tg-property-column>
+                    <tg-property-column slot='regular-column' property="refTable" type="String" width="160" min-width="80" grow-factor="0" column-title="Ref Table" column-desc="References Table Name"></tg-property-column>
+                </tg-tree-table>
+            </div>
+        </template>
+    </dom-bind>
+</body>
+<script type="module">
+
+    import { EntityStub } from '/resources/reflection/tg-polymer-utils.js';
+
+    let idCounter = 0;
+    class TreeEntry extends EntityStub {
+
+        constructor(obj) {
+            super(idCounter++);
+            this.key = obj.key;
+            this.propertyType = obj.propertyType;
+            this.desc = obj.desc;
+            this.internalName = obj.internalName;
+            this.dbSchema = obj.dbSchema;
+            this.refTable = obj.refTable;
+            this.hasChildren = obj.hasChildren;
+            this.children = [];
+            this.isKey = obj.isKey;
+            this.order = obj.order;
+            this.isRequired = obj.isRequired;
+        }
+
+        propType (name) {
+            return 'String'
+        }
+
+    }
+
+    let app = document.querySelector("dom-bind");
+    const numberOfItems = 10;
+    const types = [];
+    for(let i = 0; i < numberOfItems; i++) {
+        types.push({
+            key: "Type_" + i,
+            propertyType: null,  
+            desc: "Type_Desc_" + i, 
+            internalName: "Type_" + i, 
+            dbSchema: "TABLE_" + i,
+            refTable: null, 
+            hasChildren: true});
+    }
+    const properties = [];
+    for (let i = 0; i < numberOfItems; i++) {
+        properties.push({
+            key: "Property_" + i, 
+            propertyType: "Type_" + i, 
+            desc: "Property_Desc_" + i, 
+            internalName: "property_" + i, 
+            dbSchema: "PROPERTY_" + i, 
+            refTable: "TABLE_" + i, 
+            hasChildren: true,
+            isKey: i < 2,
+            order: i + 1,
+            isRequired: i < 1
+        });
+    }
+    properties.push({
+        key: "Property_" + 10, 
+        propertyType: "String", 
+        desc: "Property_Desc_" + 10, 
+        internalName: "property_" + 10, 
+        dbSchema: "PROPERTY_" + 10,
+        refTable: null,
+        hasChildren: false
+    });
+    
+    const createTreeEntity = function (obj, deepth) {
+        const treeEntity = new TreeEntry(obj);
+        if (deepth > 1) {
+            treeEntity.children = generateChildren(treeEntity, deepth - 1);
+        }
+        return treeEntity;
+    }
+
+    const generateChildren = function (parent, deepth) {
+        if (parent) {
+            if (!parent.propertyType || parent.propertyType !== "String") {
+                return properties.map(property => createTreeEntity(property, deepth));
+            }
+            return [];
+        } else {
+            return types.map(type => createTreeEntity(type, deepth));
+        }
+    }
+    const keyIcon = function (entity) {
+        return "<iron-icon icon='communication:vpn-key' style='height:18px; transform: scale(-1, 1) rotate(90deg); color:" + (entity.entity.isRequired ? "#03A9F4" : "black") + "'></iron-icon>";
+    }
+    const keyNumber = function (entity, numOfKeys) {
+        return numOfKeys > 1 ? ("<sup style='position:absolute; left:18px;'><b>" + entity.entity.order + "</b></sup>") : ""; 
+    }
+    const getKeyIcon = function (entity, numOfKeys) {
+        return entity.entity.isKey 
+                    ? "<span style='position:relative;'>" + keyIcon(entity) + keyNumber(entity, numOfKeys) + "</span>" 
+                    : (numOfKeys > 0 ? "<span style='min-width:24px;'></span>" : "");
+    };
+    app.model = generateChildren(null, 4);
+    app.expandAll  = function (e) {
+        const entities = app.$.tree._entities.slice();
+        entities.forEach(entity => {
+            app.$.tree.expandSubTreeView(entity, false);
+        });
+    };
+    app._buildContent = function (entity) {
+        const parentEntity = entity.parent;
+        const numOfKeys = parentEntity ? parentEntity.entity.children.filter(ent => ent.isKey).length : 0;
+        return getKeyIcon(entity, numOfKeys) + "<span class='truncate'" + (numOfKeys !== 1 ? "style='margin-left:8px;'" : "") + ">" + entity.entity.key + "</span>";
+    }
+    app._loadSubtree = function (e) {
+        const parentsPath = e.detail.parentPath;
+        const idxs = [];
+        let modelList = app.model;
+        for (let i = 0; i < parentsPath.length; i++) {
+            const parentIdx = modelList.indexOf(parentsPath[i]);
+            if (parentIdx < 0) {
+                throw {msg: "The item " + parentsPath[0].key + " couldn't be found at " + i + " level"};
+            } else {
+                idxs.push(parentIdx);
+            }
+            modelList = parentsPath[i].children;
+        }
+        const pathToChange = idxs.reduce((acc, cur) => acc += "." + cur + ".children", "model");
+        const generatedChildren = generateChildren(parentsPath[parentsPath.length - 1], 1);
+        setTimeout(() => {
+            app.set(pathToChange, generatedChildren);
+        }, 2000);
+    }
+    app._findTreeItems = function (e) {
+        app.$.tree.find(e.detail.value);
+    }
+</script>
+
+</html>

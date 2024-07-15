@@ -5,25 +5,25 @@ import java.util.Set;
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
+import ua.com.fielden.platform.security.user.UserAndRoleAssociationCo;
 
 /**
  * DAO implementation for companion object {@link IUserAndRoleAssociationBatchAction}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @EntityType(UserAndRoleAssociationBatchAction.class)
 public class UserAndRoleAssociationBatchActionDao extends CommonEntityDao<UserAndRoleAssociationBatchAction> implements IUserAndRoleAssociationBatchAction {
 
-    private final IUserAndRoleAssociation associationDao;
+    private final UserAndRoleAssociationCo associationDao;
 
     @Inject
-    public UserAndRoleAssociationBatchActionDao(final IUserAndRoleAssociation associationDao, final IFilter filter) {
+    public UserAndRoleAssociationBatchActionDao(final UserAndRoleAssociationCo associationDao, final IFilter filter) {
         super(filter);
 
         this.associationDao = associationDao;
@@ -40,7 +40,7 @@ public class UserAndRoleAssociationBatchActionDao extends CommonEntityDao<UserAn
 
     /**
      * Saves the set of given associations.
-     * 
+     *
      * @param associations
      */
     private void processSaveAction(final Set<UserAndRoleAssociation> associations) {

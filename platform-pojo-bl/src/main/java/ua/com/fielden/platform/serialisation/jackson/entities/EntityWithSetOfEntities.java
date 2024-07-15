@@ -5,6 +5,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
@@ -17,6 +18,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
  *
  */
 @KeyType(String.class)
+@DescTitle("Description")
 public class EntityWithSetOfEntities extends AbstractEntity<String> {
 
     @IsProperty(EntityWithSetOfEntities.class)

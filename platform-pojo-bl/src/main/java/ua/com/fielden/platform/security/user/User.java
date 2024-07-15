@@ -3,10 +3,11 @@ package ua.com.fielden.platform.security.user;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.property.validator.StringValidator.regexProp;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
@@ -30,8 +31,10 @@ import ua.com.fielden.platform.property.validator.StringValidator;
 import ua.com.fielden.platform.security.user.definers.UserActivationDefiner;
 import ua.com.fielden.platform.security.user.definers.UserBaseDefiner;
 import ua.com.fielden.platform.security.user.definers.UserBasedOnUserDefiner;
+import ua.com.fielden.platform.security.user.definers.UserSsoOnlyDefiner;
 import ua.com.fielden.platform.security.user.validators.UserBaseOnUserValidator;
 import ua.com.fielden.platform.security.user.validators.UserBaseValidator;
+import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Represents the system-wide concept of a user. So, this is a system user, which should be used by system security as well as for implementing any specific customer personnel
@@ -44,9 +47,15 @@ import ua.com.fielden.platform.security.user.validators.UserBaseValidator;
 @MapEntityTo
 @CompanionObject(IUser.class)
 public class User extends ActivatableAbstractEntity<String> {
+    private static final Pair<String, String> entityTitleAndDesc = getEntityTitleAndDesc(User.class);
+    public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
+    public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
 
+    public static final String ROLES = "roles";
+    public static final String BASED_ON_USER = "basedOnUser";
     public static final String EMAIL = "email";
-    public static final String USER_NAME_REGEX = "^\\w+$"; // permits only letters and digits, must not permit SECRET_RESET_UUID_SEPERATOR
+    public static final String SSO_ONLY = "ssoOnly";
+    public static final String USER_NAME_REGEX = "^(?!.*" + UserSecret.SECRET_RESET_UUID_SEPERATOR + ").*$"; // match anything, but SECRET_RESET_UUID_SEPERATOR by using negative lookahead assertion
 
     /**
      * This is an enumeration for listing all system in-built accounts.
@@ -84,18 +93,18 @@ public class User extends ActivatableAbstractEntity<String> {
     
     @IsProperty(value = UserAndRoleAssociation.class, linkProperty = "user")
     @Title(value = "Roles", desc = "The associated with this user roles.")
-    private final Set<UserAndRoleAssociation> roles = new HashSet<>();
+    private final Set<UserAndRoleAssociation> roles = new TreeSet<>();
 
     @IsProperty
     @Title(value = "Is base user?", desc = "Indicates whether this is a base user, which is used for application configuration and creation of other application users.")
     @MapTo
     @BeforeChange(@Handler(UserBaseValidator.class))
     @AfterChange(UserBaseDefiner.class)
-    @Dependent("email")
+    @Dependent({"email", "active"})
     private boolean base = false;
 
     @IsProperty
-    @Title(value = "Base user", desc = "A user on which the current user is based. This mainly relates to the application configuration and security user roles.")
+    @Title(value = "Base User", desc = "A user on which the current user is based (aka a profile user). This relates to the application configurations such as visibility of menu items and entity centre configurations.")
     @MapTo
     @BeforeChange(@Handler(UserBaseOnUserValidator.class))
     @AfterChange(UserBasedOnUserDefiner.class)
@@ -114,6 +123,22 @@ public class User extends ActivatableAbstractEntity<String> {
     @BeforeChange(@Handler(ActivePropertyValidator.class))
     @AfterChange(UserActivationDefiner.class)
     private boolean active;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "SSO only?", desc = "Only relevant in the SSO authentication mode. Controls the ability for users to loging with Reduced Sign-On (value false) or Signle Sign-On only (value true).")
+    @AfterChange(UserSsoOnlyDefiner.class)
+    private boolean ssoOnly;
+
+    @Observable
+    public User setSsoOnly(final boolean ssoOnly) {
+        this.ssoOnly = ssoOnly;
+        return this;
+    }
+
+    public boolean isSsoOnly() {
+        return ssoOnly;
+    }
 
     @Override
     @Observable

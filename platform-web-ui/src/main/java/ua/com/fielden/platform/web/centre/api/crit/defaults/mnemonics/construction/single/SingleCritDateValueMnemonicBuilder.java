@@ -3,10 +3,10 @@ package ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construct
 import java.util.Date;
 import java.util.Optional;
 
+import ua.com.fielden.platform.entity_centre.mnemonics.DateRangeConditionEnum;
+import ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum;
+import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritDateValueMnemonic;
-import ua.com.fielden.snappy.DateRangeConditionEnum;
-import ua.com.fielden.snappy.DateRangePrefixEnum;
-import ua.com.fielden.snappy.MnemonicEnum;
 
 public class SingleCritDateValueMnemonicBuilder
 implements  ISingleCritDateValueMnemonic,
@@ -255,20 +255,20 @@ implements  ISingleCritDateValueMnemonic,
 
     @Override
     public ISingleCritDateValueMnemonic2ExcludeFrom finYear() {
-        this.period = Optional.of(MnemonicEnum.OZ_FIN_YEAR);
+        this.period = Optional.of(MnemonicEnum.FIN_YEAR);
         return this;
     }
 
     @Override
     public ISingleCritDateValueMnemonic2ExcludeFrom finYearAndBefore() {
-        this.period = Optional.of(MnemonicEnum.OZ_FIN_YEAR);
+        this.period = Optional.of(MnemonicEnum.FIN_YEAR);
         this.beforeOrAfter = Optional.of(DateRangeConditionEnum.BEFORE);
         return this;
     }
 
     @Override
     public ISingleCritDateValueMnemonic2ExcludeFrom finYearAndAfter() {
-        this.period = Optional.of(MnemonicEnum.OZ_FIN_YEAR);
+        this.period = Optional.of(MnemonicEnum.FIN_YEAR);
         this.beforeOrAfter = Optional.of(DateRangeConditionEnum.AFTER);
         return this;
     }

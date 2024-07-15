@@ -2,6 +2,7 @@ package ua.com.fielden.platform.serialisation.jackson.entities;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
+import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 
@@ -14,6 +15,7 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 @KeyType(String.class)
 @MapEntityTo
 @CompanionObject(IOtherEntity.class)
+@DescTitle("Description")
 public class OtherEntity extends AbstractEntity<String> {
 
 }

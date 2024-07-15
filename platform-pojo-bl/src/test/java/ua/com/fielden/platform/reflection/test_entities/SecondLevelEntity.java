@@ -12,7 +12,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 /**
  * Test class, which represent an second level entity derived FirstLevelEntity.
  *
- * @author 01es
+ * @author TG Team
  *
  */
 public class SecondLevelEntity extends FirstLevelEntity {

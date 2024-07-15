@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.sample.domain.validators;
 
 import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.informative;
 import static ua.com.fielden.platform.error.Result.successful;
 
 import java.lang.annotation.Annotation;
@@ -25,6 +26,9 @@ public class CosWithValidatorValidator implements IBeforeChangeEventHandler<TgPe
         final TgPersistentEntityWithProperties cosWithDependencyValue = entity.getCosWithDependency();
         if (newValue != null && "KEY8".equals(newValue.getKey()) && (cosWithDependencyValue == null || !"KEY7".equals(cosWithDependencyValue.getKey()))) {
             return failure("KEY8 value is not permitted if cosWithDependency is not KEY7.");
+        }
+        if (newValue != null && "KEY7".equals(newValue.getKey()) && (cosWithDependencyValue == null || !"KEY7".equals(cosWithDependencyValue.getKey()))) {
+            return informative("KEY7 value should be advised if cosWithDependency is not KEY7.");
         }
         return successful(newValue);
     }

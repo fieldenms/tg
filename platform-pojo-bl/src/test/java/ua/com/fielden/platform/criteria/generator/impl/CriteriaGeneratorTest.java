@@ -1,8 +1,17 @@
 package ua.com.fielden.platform.criteria.generator.impl;
 
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator.generateCriteriaType;
+import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.critName;
+import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.from;
+import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.to;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isPropertyAnnotationPresent;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -11,7 +20,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -28,12 +36,13 @@ import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedProperty
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache;
-import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.DateOnly;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
+import ua.com.fielden.platform.entity.annotation.TimeOnly;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -44,12 +53,9 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.sample.domain.crit_gen.CriteriaGeneratorTestModule;
 import ua.com.fielden.platform.sample.domain.crit_gen.LastLevelEntity;
-import ua.com.fielden.platform.sample.domain.crit_gen.SecondLevelEntity;
-import ua.com.fielden.platform.sample.domain.crit_gen.ThirdLevelEntity;
 import ua.com.fielden.platform.sample.domain.crit_gen.TopLevelEntity;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.api.impl.SerialiserForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 import ua.com.fielden.platform.utils.Pair;
 
 public class CriteriaGeneratorTest {
@@ -61,15 +67,7 @@ public class CriteriaGeneratorTest {
     private final EntityFactory entityFactory = injector.getInstance(EntityFactory.class);
     private final ICriteriaGenerator cg = injector.getInstance(ICriteriaGenerator.class);
 
-    private final ClassProviderForTestingPurposes provider = new ClassProviderForTestingPurposes(TopLevelEntity.class, LastLevelEntity.class, SecondLevelEntity.class, ThirdLevelEntity.class);
-    private final ISerialiser serialiser = new SerialiserForDomainTreesTestingPurposes(entityFactory, provider, DomainTreeEnhancerCache.CACHE);
-
-    @SuppressWarnings("serial")
-    private final CentreDomainTreeManagerAndEnhancer cdtm = new CentreDomainTreeManagerAndEnhancer(serialiser, new HashSet<Class<?>>() {
-        {
-            add(TopLevelEntity.class);
-        }
-    });
+    private final CentreDomainTreeManagerAndEnhancer cdtm = new CentreDomainTreeManagerAndEnhancer(entityFactory, setOf(TopLevelEntity.class));
     {
         //Adding calculated properties to the centre domain tree manager and enhancer.
         cdtm.getEnhancer().addCalculatedProperty(TopLevelEntity.class, "", "3 + integerProp", "firstCalc", "firstCalc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
@@ -99,7 +97,8 @@ public class CriteriaGeneratorTest {
         cdtm.getFirstTick().setValue(TopLevelEntity.class, "moneyProp", new Money(BigDecimal.valueOf(30.0)));
     }
 
-    private final Class<?> managedType = cdtm.getEnhancer().getManagedType(TopLevelEntity.class);
+    private final Class<TopLevelEntity> root = TopLevelEntity.class;
+    private final Class<?> managedType = cdtm.getEnhancer().getManagedType(root);
     private final Class<?> entityPropType = PropertyTypeDeterminator.determinePropertyType(managedType, "entityProp");
 
     @SuppressWarnings("serial")
@@ -490,7 +489,7 @@ public class CriteriaGeneratorTest {
 
     @Test
     public void test_that_criteria_generation_works_correctly() {
-        final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao<TopLevelEntity>> criteriaEntity = cg.generateCentreQueryCriteria(TopLevelEntity.class, cdtm);
+        final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao<TopLevelEntity>> criteriaEntity = cg.generateCentreQueryCriteria(cdtm);
         assertNotNull("The centre domain tree manager can not be null", criteriaEntity.getCentreDomainTreeMangerAndEnhancer());
         final List<Field> criteriaProperties = CriteriaReflector.getCriteriaProperties(criteriaEntity.getClass());
         assertEquals("The number of criteria properties is incorrect", propertyNames.size(), criteriaProperties.size());
@@ -507,7 +506,7 @@ public class CriteriaGeneratorTest {
     @Test
     public void test_that_setting_default_value_when_criterion_already_has_other_value_works() {
         cdtm.getRepresentation().getFirstTick().setValueByDefault(TopLevelEntity.class, "stringProp", "default");
-        final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao<TopLevelEntity>> criteriaEntity = cg.generateCentreQueryCriteria(TopLevelEntity.class, cdtm);
+        final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao<TopLevelEntity>> criteriaEntity = cg.generateCentreQueryCriteria(cdtm);
         assertEquals("Value should have been set", "default", cdtm.getFirstTick().getValue(TopLevelEntity.class, "stringProp"));
         criteriaEntity.set("topLevelEntity_stringProp", "value");
         assertEquals("Value should have been set", "value", cdtm.getFirstTick().getValue(TopLevelEntity.class, "stringProp"));
@@ -585,4 +584,77 @@ public class CriteriaGeneratorTest {
         }
         return null;
     }
+    
+    @Test
+    public void critOnly_single_dateOnly_property_generates_dateOnly_criterion() {
+        final String property = "datePropDateOnlySingle";
+        assertTrue(isPropertyAnnotationPresent(DateOnly.class, generateCriteriaType(root, asList(property), root), critName(root, property)));
+    }
+    
+    @Test
+    public void critOnly_multi_dateOnly_property_generates_left_and_right_dateOnly_criteria() {
+        final String property = "datePropDateOnlyMulti";
+        assertTrue(isPropertyAnnotationPresent(DateOnly.class, generateCriteriaType(root, asList(property), root), critName(root, from(property))));
+        assertTrue(isPropertyAnnotationPresent(DateOnly.class, generateCriteriaType(root, asList(property), root), critName(root, to(property))));
+    }
+    
+    @Test
+    public void dateOnly_property_generates_left_and_right_dateOnly_criteria() {
+        final String property = "datePropDateOnly";
+        assertTrue(isPropertyAnnotationPresent(DateOnly.class, generateCriteriaType(root, asList(property), root), critName(root, from(property))));
+        assertTrue(isPropertyAnnotationPresent(DateOnly.class, generateCriteriaType(root, asList(property), root), critName(root, to(property))));
+    }
+    
+    @Test
+    public void critOnly_single_timeOnly_property_generates_timeOnly_criterion() {
+        final String property = "datePropTimeOnlySingle";
+        assertTrue(isPropertyAnnotationPresent(TimeOnly.class, generateCriteriaType(root, asList(property), root), critName(root, property)));
+    }
+    
+    @Test
+    public void critOnly_multi_timeOnly_property_generates_left_and_right_timeOnly_criteria() {
+        final String property = "datePropTimeOnlyMulti";
+        assertTrue(isPropertyAnnotationPresent(TimeOnly.class, generateCriteriaType(root, asList(property), root), critName(root, from(property))));
+        assertTrue(isPropertyAnnotationPresent(TimeOnly.class, generateCriteriaType(root, asList(property), root), critName(root, to(property))));
+    }
+    
+    @Test
+    public void timeOnly_property_generates_left_and_right_timeOnly_criteria() {
+        final String property = "datePropTimeOnly";
+        assertTrue(isPropertyAnnotationPresent(TimeOnly.class, generateCriteriaType(root, asList(property), root), critName(root, from(property))));
+        assertTrue(isPropertyAnnotationPresent(TimeOnly.class, generateCriteriaType(root, asList(property), root), critName(root, to(property))));
+    }
+    
+    @Test
+    public void critOnly_single_UTC_property_generates_UTC_criterion() {
+        final String property = "datePropUtcSingle";
+        final PersistentType annotation = getPropertyAnnotation(PersistentType.class, generateCriteriaType(root, asList(property), root), critName(root, property));
+        assertNotNull(annotation);
+        assertEquals(IUtcDateTimeType.class, annotation.userType());
+    }
+    
+    @Test
+    public void critOnly_multi_UTC_property_generates_left_and_right_UTC_criteria() {
+        final String property = "datePropUtcMulti";
+        final Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao<TopLevelEntity>>> criteriaType = generateCriteriaType(root, asList(property), root);
+        final PersistentType fromAnnotation = getPropertyAnnotation(PersistentType.class, criteriaType, critName(root, from(property)));
+        assertNotNull(fromAnnotation);
+        assertEquals(IUtcDateTimeType.class, fromAnnotation.userType());
+        final PersistentType toAnnotation = getPropertyAnnotation(PersistentType.class, criteriaType, critName(root, to(property)));
+        assertNotNull(toAnnotation);
+        assertEquals(IUtcDateTimeType.class, toAnnotation.userType());
+    }
+    
+    @Test
+    public void UTC_property_generates_left_and_right_UTC_criteria() {
+        final String property = "datePropUtc";
+        final Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao<TopLevelEntity>>> criteriaType = generateCriteriaType(root, asList(property), root);
+        final PersistentType fromAnnotation = getPropertyAnnotation(PersistentType.class, criteriaType, critName(root, from(property)));
+        assertNotNull(fromAnnotation);
+        assertEquals(IUtcDateTimeType.class, fromAnnotation.userType());
+        final PersistentType toAnnotation = getPropertyAnnotation(PersistentType.class, criteriaType, critName(root, to(property)));
+        assertNotNull(toAnnotation);
+        assertEquals(IUtcDateTimeType.class, toAnnotation.userType());
+    }
+
 }

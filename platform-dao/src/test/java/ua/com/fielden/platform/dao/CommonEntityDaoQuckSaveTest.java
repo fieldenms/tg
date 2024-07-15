@@ -74,11 +74,11 @@ public class CommonEntityDaoQuckSaveTest extends AbstractDaoTestCase {
 
     @Test
     public void transaction_date_property_for_previously_persisted_entity_is_not_reassigned_with_quickSave() {
-        final IEntityDao<EntityWithMoney> co = co$(EntityWithMoney.class);
-        final EntityWithMoney entity = co.findByKey("KEY1");
-        final Date transDate = co.findByKey("KEY1").getTransDate();
+        final IEntityDao<EntityWithMoney> co$ = co$(EntityWithMoney.class);
+        final EntityWithMoney entity = co$.findByKey("KEY1");
+        final Date transDate = co$.findByKey("KEY1").getTransDate();
         assertNotNull("Test pre-condition is invalid -- transDate should be null.", transDate);
-        assertEquals("Transaction property should not have been updated for an existing property.", transDate, co.findById(co.quickSave(entity)).getTransDate());
+        assertEquals("Transaction property should not have been updated for an existing property.", transDate, co$.findById(co$.quickSave(entity.setDesc("some new value"))).getTransDate());
     }
     
     @Test

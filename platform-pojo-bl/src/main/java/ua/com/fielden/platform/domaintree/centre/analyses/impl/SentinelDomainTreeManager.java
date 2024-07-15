@@ -1,13 +1,12 @@
 package ua.com.fielden.platform.domaintree.centre.analyses.impl;
 
-import java.nio.ByteBuffer;
 import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.IUsageManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.ISentinelDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.ISentinelDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 
 /**
  * A domain tree manager for sentinel analyses.
@@ -19,23 +18,23 @@ public class SentinelDomainTreeManager extends AnalysisDomainTreeManager impleme
     /**
      * A <i>manager</i> constructor for the first time instantiation.
      * 
-     * @param serialiser
+     * @param entityFactory
      * @param rootTypes
      */
-    public SentinelDomainTreeManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-        this(serialiser, new SentinelDomainTreeRepresentation(serialiser, rootTypes), null, new SentinelAddToDistributionTickManager(), new SentinelAddToAggregationTickManager(), null);
+    public SentinelDomainTreeManager(final EntityFactory entityFactory, final Set<Class<?>> rootTypes) {
+        this(entityFactory, new SentinelDomainTreeRepresentation(entityFactory, rootTypes), null, new SentinelAddToDistributionTickManager(), new SentinelAddToAggregationTickManager(), null);
     }
 
     /**
      * A <i>manager</i> constructor.
      * 
-     * @param serialiser
+     * @param entityFactory
      * @param dtr
      * @param firstTick
      * @param secondTick
      */
-    protected SentinelDomainTreeManager(final ISerialiser serialiser, final AnalysisDomainTreeRepresentation dtr, final Boolean visible, final AnalysisAddToDistributionTickManager firstTick, final AnalysisAddToAggregationTickManager secondTick, final Integer visibleDistributedValuesNumber) {
-        super(serialiser, dtr, visible, firstTick, secondTick, visibleDistributedValuesNumber);
+    protected SentinelDomainTreeManager(final EntityFactory entityFactory, final AnalysisDomainTreeRepresentation dtr, final Boolean visible, final AnalysisAddToDistributionTickManager firstTick, final AnalysisAddToAggregationTickManager secondTick, final Integer visibleDistributedValuesNumber) {
+        super(entityFactory, dtr, visible, firstTick, secondTick, visibleDistributedValuesNumber);
     }
 
     @Override
@@ -139,31 +138,4 @@ public class SentinelDomainTreeManager extends AnalysisDomainTreeManager impleme
         }
     }
 
-    /**
-     * A specific Kryo serialiser for {@link SentinelDomainTreeManager}.
-     * 
-     * @author TG Team
-     * 
-     */
-    public static class SentinelDomainTreeManagerSerialiser extends AbstractAnalysisDomainTreeManagerSerialiser<SentinelDomainTreeManager> {
-        public SentinelDomainTreeManagerSerialiser(final ISerialiser serialiser) {
-            super(serialiser);
-        }
-
-        @Override
-        public SentinelDomainTreeManager read(final ByteBuffer buffer) {
-            final SentinelDomainTreeRepresentation dtr = readValue(buffer, SentinelDomainTreeRepresentation.class);
-            final SentinelAddToDistributionTickManager firstTick = readValue(buffer, SentinelAddToDistributionTickManager.class);
-            final SentinelAddToAggregationTickManager secondTick = readValue(buffer, SentinelAddToAggregationTickManager.class);
-            final Boolean visible = readValue(buffer, Boolean.class);
-            final Integer visibleDistributedValuesNumber = readValue(buffer, Integer.class);
-            return new SentinelDomainTreeManager(serialiser(), dtr, visible, firstTick, secondTick, visibleDistributedValuesNumber);
-        }
-
-        @Override
-        public void write(final ByteBuffer buffer, final SentinelDomainTreeManager manager) {
-            super.write(buffer, manager);
-            writeValue(buffer, manager.visibleDistributedValuesNumber());
-        }
-    }
 }

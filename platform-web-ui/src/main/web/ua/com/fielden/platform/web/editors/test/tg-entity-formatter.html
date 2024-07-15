@@ -1,0 +1,477 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>entity-master basic tests</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+	
+	<script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/filesaver/FileSaver.min.js"></script>
+    <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
+</head>
+
+<body>
+	<tg-reflector id="reflector"></tg-reflector>
+	<test-fixture id="MasterFixture">
+    	<template>
+   		    <tg-TgPersistentEntityWithProperties-master 
+		    	id="master" 
+		    	entity-type="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties" 
+		    	entity-id="new" 
+		    	current-state="EDIT">
+    		</tg-TgPersistentEntityWithProperties-master>
+    	</template>
+	</test-fixture>
+
+	<script type="module">
+
+		import '/app/tg-reflector.js';
+        import { _millis } from '/resources/reflection/tg-date-utils.js';
+        import { composeEntityValue, composeDefaultEntityValue } from '/resources/editors/tg-entity-formatter.js';
+		import '/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties';
+
+		suite('composite entity formatter', function() {
+		    let master, reflector;
+		
+		    setup(function() {
+				master = fixture('MasterFixture');
+		      	reflector = document.querySelector('#reflector');
+		    });
+		
+		    test('works for "z" format', function (done) {
+		    	master.entityId = '16';
+		    	
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(entity.get('compositeProp'), 'The property should be initialised.');
+	                assert.instanceOf(entity.get('compositeProp'), reflector.getEntityPrototype(), 'The property should be of entity type.');
+
+                    const entityValue = entity.get("compositeProp");
+                    const defaultFormat = composeEntityValue(entityValue, "z");
+
+                    assert.strictEqual(2, defaultFormat.length, "The number of formatted value is incorrect");
+                    assert.isUndefined(defaultFormat[0].title, "The first key title is incorrect");
+                    assert.strictEqual("DEFAULT_KEY", defaultFormat[0].value, "The first key value is incorrect");
+                    assert.strictEqual(" ", defaultFormat[0].separator, "The first key separator is incorrect");
+                    assert.isUndefined(defaultFormat[1].title, "The second key title is incorrect");
+                    assert.strictEqual("10", defaultFormat[1].value, "The second key value is incorrect");
+                    assert.isUndefined(defaultFormat[1].separator, "The second separator is incorrect");
+
+                    done();
+	            };
+
+	            master.retrieve();
+            });
+            
+            test('works for "#1tv#2tv" format', function (done) {
+		    	master.entityId = '16';
+		    	
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(entity.get('compositeProp'), 'The property should be initialised.');
+	                assert.instanceOf(entity.get('compositeProp'), reflector.getEntityPrototype(), 'The property should be of entity type.');
+
+                    const entityValue = entity.get("compositeProp");
+                    const defaultFormat = composeEntityValue(entityValue, "#1tv#2tv");
+
+                    assert.strictEqual(2, defaultFormat.length, "The number of formatted value is incorrect");
+                    assert.strictEqual("Composite Part 1", defaultFormat[0].title, "The first key title is incorrect");
+                    assert.strictEqual("DEFAULT_KEY", defaultFormat[0].value, "The first key value is incorrect");
+                    assert.strictEqual("Composite Part 2", defaultFormat[1].title, "The second key title is incorrect");
+                    assert.strictEqual("10", defaultFormat[1].value, "The second key value is incorrect");
+                    assert.isUndefined(defaultFormat[0].separator, "The first separator is incorrect");
+                    assert.isUndefined(defaultFormat[1].separator, "The second separator is incorrect");
+
+                    done();
+	            };
+
+	            master.retrieve();
+            });
+            
+            test('works for "#1vs#2v" format', function (done) {
+		    	master.entityId = '16';
+		    	
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(entity.get('compositeProp'), 'The property should be initialised.');
+	                assert.instanceOf(entity.get('compositeProp'), reflector.getEntityPrototype(), 'The property should be of entity type.');
+
+                    const entityValue = entity.get("compositeProp");
+                    const defaultFormat = composeEntityValue(entityValue, "#1vs#2v");
+
+                    assert.strictEqual(2, defaultFormat.length, "The number of formatted value is incorrect");
+                    assert.isUndefined(defaultFormat[0].title, "The first key title is incorrect");
+                    assert.strictEqual("DEFAULT_KEY", defaultFormat[0].value, "The first key value is incorrect");
+                    assert.strictEqual(" ", defaultFormat[0].separator, "The first key separator is incorrect");
+                    assert.isUndefined(defaultFormat[1].title, "The second key title is incorrect");
+                    assert.strictEqual("10", defaultFormat[1].value, "The second key value is incorrect");
+                    assert.isUndefined(defaultFormat[1].separator, "The second separator is incorrect");
+
+                    done();
+                };
+                
+	            master.retrieve();
+            });
+            
+            test('works for "#1v" format', function (done) {
+		    	master.entityId = '16';
+		    	
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(entity.get('compositeProp'), 'The property should be initialised.');
+	                assert.instanceOf(entity.get('compositeProp'), reflector.getEntityPrototype(), 'The property should be of entity type.');
+
+                    const entityValue = entity.get("compositeProp");
+                    const defaultFormat = composeEntityValue(entityValue, "#1v");
+
+                    assert.strictEqual(1, defaultFormat.length, "The number of formatted value is incorrect");
+                    assert.isUndefined(defaultFormat[0].title, "The first key title is incorrect");
+                    assert.strictEqual("DEFAULT_KEY", defaultFormat[0].value, "The first key value is incorrect");
+                    assert.isUndefined(defaultFormat[0].separator, "The first separator is incorrect");
+
+                    done();
+                };
+                
+                master.retrieve();
+            });
+
+            test('works for "#2v" format', function (done) {
+		    	master.entityId = '16';
+		    	
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(entity.get('compositeProp'), 'The property should be initialised.');
+	                assert.instanceOf(entity.get('compositeProp'), reflector.getEntityPrototype(), 'The property should be of entity type.');
+
+                    const entityValue = entity.get("compositeProp");
+                    const defaultFormat = composeEntityValue(entityValue, "#2v");
+
+                    assert.strictEqual(1, defaultFormat.length, "The number of formatted value is incorrect");
+                    assert.isUndefined(defaultFormat[0].title, "The first key title is incorrect");
+                    assert.strictEqual("10", defaultFormat[0].value, "The first key value is incorrect");
+                    assert.isUndefined(defaultFormat[0].separator, "The first separator is incorrect");
+
+                    done();
+                };
+
+                master.retrieve();
+            });
+
+            test('works for "#1tv" format', function (done) {
+		    	master.entityId = '16';
+		    	
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(entity.get('compositeProp'), 'The property should be initialised.');
+	                assert.instanceOf(entity.get('compositeProp'), reflector.getEntityPrototype(), 'The property should be of entity type.');
+
+                    const entityValue = entity.get("compositeProp");
+                    const defaultFormat = composeEntityValue(entityValue, "#1tv");
+
+                    assert.strictEqual(1, defaultFormat.length, "The number of formatted value is incorrect");
+                    assert.strictEqual("Composite Part 1", defaultFormat[0].title, "The first key title is incorrect");
+                    assert.strictEqual("DEFAULT_KEY", defaultFormat[0].value, "The first key value is incorrect");
+                    assert.isUndefined(defaultFormat[0].separator, "The first separator is incorrect");
+
+                    done();
+	            };
+
+	            master.retrieve();
+            });
+
+            test('works for "#2tv" format', function (done) {
+		    	master.entityId = '16';
+		    	
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(entity.get('compositeProp'), 'The property should be initialised.');
+	                assert.instanceOf(entity.get('compositeProp'), reflector.getEntityPrototype(), 'The property should be of entity type.');
+
+                    const entityValue = entity.get("compositeProp");
+                    const defaultFormat = composeEntityValue(entityValue, "#2tv");
+
+                    assert.strictEqual(1, defaultFormat.length, "The number of formatted value is incorrect");
+                    assert.strictEqual("Composite Part 2", defaultFormat[0].title, "The first key title is incorrect");
+                    assert.strictEqual("10", defaultFormat[0].value, "The first key value is incorrect");
+                    assert.isUndefined(defaultFormat[0].separator, "The first separator is incorrect");
+
+                    done();
+	            };
+
+	            master.retrieve();
+            });
+
+            test('fails for "k" format', function (done) {
+		    	master.entityId = '16';
+		    	
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(entity.get('compositeProp'), 'The property should be initialised.');
+	                assert.instanceOf(entity.get('compositeProp'), reflector.getEntityPrototype(), 'The property should be of entity type.');
+
+                    const entityValue = entity.get("compositeProp");
+
+                    try {
+	                    const defaultFormat = composeEntityValue(entityValue, "k");
+	                    assert.fail('', '', 'Formatter should throw exception.');
+	                } catch (ex) {
+	                    if (ex instanceof chai.AssertionError) {
+	                        throw ex;
+	                    }
+	                    assert.strictEqual(ex.msg, 'Unknown template symbol: k in template: k at 0 position');
+	                }
+                    done();
+	            };
+
+	            master.retrieve();
+            });
+
+            test('fails for "#etv" format', function (done) {
+		    	master.entityId = '16';
+		    	
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(entity.get('compositeProp'), 'The property should be initialised.');
+	                assert.instanceOf(entity.get('compositeProp'), reflector.getEntityPrototype(), 'The property should be of entity type.');
+
+                    const entityValue = entity.get("compositeProp");
+
+                    try {
+	                    const defaultFormat = composeEntityValue(entityValue, "#etv");
+	                    assert.fail('', '', 'Formatter should throw exception.');
+	                } catch (ex) {
+	                    if (ex instanceof chai.AssertionError) {
+	                        throw ex;
+	                    }
+	                    assert.strictEqual(ex.msg, 'e at 1 should be a number in #etv.');
+	                }
+                    done();
+	            };
+
+	            master.retrieve();
+            });
+
+            test('fails for "#3tv" format', function (done) {
+		    	master.entityId = '16';
+		    	
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(entity.get('compositeProp'), 'The property should be initialised.');
+	                assert.instanceOf(entity.get('compositeProp'), reflector.getEntityPrototype(), 'The property should be of entity type.');
+
+                    const entityValue = entity.get("compositeProp");
+
+                    try {
+	                    const defaultFormat = composeEntityValue(entityValue, "#3tv");
+	                    assert.fail('', '', 'Formatter should throw exception.');
+	                } catch (ex) {
+	                    if (ex instanceof chai.AssertionError) {
+	                        throw ex;
+	                    }
+	                    assert.strictEqual(ex.msg, 'Key with index: 3 specified at 1 does not exist in the ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity entity');
+	                }
+                    done();
+	            };
+
+	            master.retrieve();
+            });
+            test('fails for "#1sv" format', function (done) {
+		    	master.entityId = '16';
+		    	
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(entity.get('compositeProp'), 'The property should be initialised.');
+	                assert.instanceOf(entity.get('compositeProp'), reflector.getEntityPrototype(), 'The property should be of entity type.');
+
+                    const entityValue = entity.get("compositeProp");
+
+                    try {
+	                    const defaultFormat = composeEntityValue(entityValue, "#1sv");
+	                    assert.fail('', '', 'Formatter should throw exception.');
+	                } catch (ex) {
+	                    if (ex instanceof chai.AssertionError) {
+	                        throw ex;
+	                    }
+	                    assert.strictEqual(ex.msg, "'t' or 'v' should be at 2 in #1sv");
+	                }
+                    done();
+	            };
+
+	            master.retrieve();
+            });
+
+            test('fails for "#1tt" format', function (done) {
+		    	master.entityId = '16';
+		    	
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(entity.get('compositeProp'), 'The property should be initialised.');
+	                assert.instanceOf(entity.get('compositeProp'), reflector.getEntityPrototype(), 'The property should be of entity type.');
+
+                    const entityValue = entity.get("compositeProp");
+
+                    try {
+	                    const defaultFormat = composeEntityValue(entityValue, "#1tt");
+	                    assert.fail('', '', 'Formatter should throw exception.');
+	                } catch (ex) {
+	                    if (ex instanceof chai.AssertionError) {
+	                        throw ex;
+	                    }
+	                    assert.strictEqual(ex.msg, "'v' should be at 3 in #1tt");
+	                }
+                    done();
+	            };
+
+	            master.retrieve();
+            });
+            test('fails for "#1tvd" format', function (done) {
+		    	master.entityId = '16';
+		    	
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(entity.get('compositeProp'), 'The property should be initialised.');
+	                assert.instanceOf(entity.get('compositeProp'), reflector.getEntityPrototype(), 'The property should be of entity type.');
+
+                    const entityValue = entity.get("compositeProp");
+
+                    try {
+	                    const defaultFormat = composeEntityValue(entityValue, "#1tvd");
+	                    assert.fail('', '', 'Formatter should throw exception.');
+	                } catch (ex) {
+	                    if (ex instanceof chai.AssertionError) {
+	                        throw ex;
+	                    }
+	                    assert.strictEqual(ex.msg, "'#' should be at 4 in #1tvd");
+	                }
+                    done();
+	            };
+
+	            master.retrieve();
+            });
+            test('fails for "#1tv#2s" format', function (done) {
+		    	master.entityId = '16';
+		    	
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(entity.get('compositeProp'), 'The property should be initialised.');
+	                assert.instanceOf(entity.get('compositeProp'), reflector.getEntityPrototype(), 'The property should be of entity type.');
+
+                    const entityValue = entity.get("compositeProp");
+
+                    try {
+	                    const defaultFormat = composeEntityValue(entityValue, "#1tv#2s");
+	                    assert.fail('', '', 'Formatter should throw exception.');
+	                } catch (ex) {
+	                    if (ex instanceof chai.AssertionError) {
+	                        throw ex;
+	                    }
+	                    assert.strictEqual(ex.msg, "'t' should be at 6 in #1tv#2s");
+	                }
+                    done();
+	            };
+
+	            master.retrieve();
+            });
+            test('fails for "#1vv" format', function (done) {
+		    	master.entityId = '16';
+		    	
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(entity.get('compositeProp'), 'The property should be initialised.');
+	                assert.instanceOf(entity.get('compositeProp'), reflector.getEntityPrototype(), 'The property should be of entity type.');
+
+                    const entityValue = entity.get("compositeProp");
+
+                    try {
+	                    const defaultFormat = composeEntityValue(entityValue, "#1vv");
+	                    assert.fail('', '', 'Formatter should throw exception.');
+	                } catch (ex) {
+	                    if (ex instanceof chai.AssertionError) {
+	                        throw ex;
+	                    }
+	                    assert.strictEqual(ex.msg, "'s' should be at 3 in #1vv");
+	                }
+                    done();
+	            };
+
+	            master.retrieve();
+            });
+			test('works for "z" format with 0 key value', function (done) {
+		    	master.entityId = '100';
+		    	
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(entity.get('compositeProp'), 'The property should be initialised.');
+	                assert.instanceOf(entity.get('compositeProp'), reflector.getEntityPrototype(), 'The property should be of entity type.');
+
+                    const entityValue = entity.get("compositeProp");
+                    const defaultFormat = composeEntityValue(entityValue, "z");
+
+                    assert.strictEqual(2, defaultFormat.length, "The number of formatted value is incorrect");
+                    assert.isUndefined(defaultFormat[0].title, "The first key title is incorrect");
+                    assert.strictEqual("DEFAULT_KEY", defaultFormat[0].value, "The first key value is incorrect");
+                    assert.strictEqual(" ", defaultFormat[0].separator, "The first key separator is incorrect");
+                    assert.isUndefined(defaultFormat[1].title, "The second key title is incorrect");
+                    assert.strictEqual("0", defaultFormat[1].value, "The second key value is incorrect");
+                    assert.isUndefined(defaultFormat[1].separator, "The second separator is incorrect");
+
+                    done();
+	            };
+
+	            master.retrieve();
+            });
+			test('works for no template with 0 key value', function (done) {
+		    	master.entityId = '100';
+		    	
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(entity.get('compositeProp'), 'The property should be initialised.');
+	                assert.instanceOf(entity.get('compositeProp'), reflector.getEntityPrototype(), 'The property should be of entity type.');
+
+                    const entityValue = entity.get("compositeProp");
+                    const defaultFormat = composeDefaultEntityValue(entityValue);
+
+					assert.strictEqual(2, defaultFormat.length, "The number of formatted value is incorrect");
+                    assert.strictEqual("Composite Part 1", defaultFormat[0].title, "The first key title is incorrect");
+                    assert.strictEqual("DEFAULT_KEY", defaultFormat[0].value, "The first key value is incorrect");
+                    assert.strictEqual("Composite Part 2", defaultFormat[1].title, "The second key title is incorrect");
+                    assert.strictEqual("0", defaultFormat[1].value, "The second key value is incorrect");
+					assert.isUndefined(defaultFormat[0].separator, "The first key separator is incorrect");
+                    assert.isUndefined(defaultFormat[1].separator, "The second separator is incorrect");
+
+                    done();
+	            };
+
+	            master.retrieve();
+            });
+			test('works for "#1vs#2v" format with 0 key value', function (done) {
+		    	master.entityId = '100';
+		    	
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(entity.get('compositeProp'), 'The property should be initialised.');
+	                assert.instanceOf(entity.get('compositeProp'), reflector.getEntityPrototype(), 'The property should be of entity type.');
+
+                    const entityValue = entity.get("compositeProp");
+                    const defaultFormat = composeEntityValue(entityValue, "#1vs#2v");
+
+                    assert.strictEqual(2, defaultFormat.length, "The number of formatted value is incorrect");
+                    assert.isUndefined(defaultFormat[0].title, "The first key title is incorrect");
+                    assert.strictEqual("DEFAULT_KEY", defaultFormat[0].value, "The first key value is incorrect");
+                    assert.strictEqual(" ", defaultFormat[0].separator, "The first key separator is incorrect");
+                    assert.isUndefined(defaultFormat[1].title, "The second key title is incorrect");
+                    assert.strictEqual("0", defaultFormat[1].value, "The second key value is incorrect");
+                    assert.isUndefined(defaultFormat[1].separator, "The second separator is incorrect");
+
+                    done();
+                };
+                
+	            master.retrieve();
+            });
+		});
+    </script>
+</body>
+
+</html>

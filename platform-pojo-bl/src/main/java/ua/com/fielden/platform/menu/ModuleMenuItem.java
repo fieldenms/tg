@@ -25,7 +25,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @CompanionObject(IModuleMenuItem.class)
 @DescTitle(value = "Description", desc = "Menu item description")
 public class ModuleMenuItem extends AbstractEntity<String> implements IMenuManager {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty(ModuleMenuItem.class)
     @Title("Submenu")
@@ -39,12 +38,42 @@ public class ModuleMenuItem extends AbstractEntity<String> implements IMenuManag
     @Title(value = "Visible?", desc = "Is menu item visible?")
     private boolean visible = true;
 
+    @IsProperty
+    @Title(value = "Semi Visible?", desc = "Is menu item semi visible?")
+    private boolean semiVisible = false;
+
+    @IsProperty
+    @Title(value = "Icon", desc = "Menu item icon")
+    private String icon;
+
+    @Observable
+    public ModuleMenuItem setIcon(final String icon) {
+        this.icon = icon;
+        return this;
+    }
+
+    public String getIcon() {
+        return icon;
+    }
+
+    @Observable
+    public ModuleMenuItem setSemiVisible(final boolean semiVisible) {
+        this.semiVisible = semiVisible;
+        return this;
+    }
+
+    @Override
+    public boolean isSemiVisible() {
+        return this.semiVisible;
+    }
+
     @Observable
     public ModuleMenuItem setVisible(final boolean isVisible) {
         this.visible = isVisible;
         return this;
     }
 
+    @Override
     public boolean isVisible() {
         return visible;
     }
@@ -66,6 +95,7 @@ public class ModuleMenuItem extends AbstractEntity<String> implements IMenuManag
         return this;
     }
 
+    @Override
     public List<ModuleMenuItem> getMenu() {
         return Collections.unmodifiableList(menu);
     }
@@ -93,5 +123,15 @@ public class ModuleMenuItem extends AbstractEntity<String> implements IMenuManag
     @Override
     public ModuleMenuItem setDesc(final String desc) {
         return (ModuleMenuItem) super.setDesc(desc);
+    }
+
+    @Override
+    public String getTitle() {
+        return getKey();
+    }
+
+    @Override
+    public void makeMenuItemSemiVisible(final String title) {
+        menu.stream().filter(menuItem -> menuItem.getKey().equals(title)).findFirst().ifPresent(menuItem -> menuItem.setSemiVisible(true));
     }
 }

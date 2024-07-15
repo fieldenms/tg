@@ -37,12 +37,12 @@ public class SentinelDomainTreeRepresentationTest extends AnalysisDomainTreeRepr
     }
 
     public static Object createDtm_for_SentinelDomainTreeRepresentationTest() {
-        return new SentinelDomainTreeRepresentation(serialiser(), createRootTypes_for_SentinelDomainTreeRepresentationTest());
+        return new SentinelDomainTreeRepresentation(factory(), createRootTypes_for_SentinelDomainTreeRepresentationTest());
     }
 
     public static Object createIrrelevantDtm_for_SentinelDomainTreeRepresentationTest() {
         final Set<Class<?>> rootTypes = createRootTypes_for_SentinelDomainTreeRepresentationTest();
-        final CentreDomainTreeManagerAndEnhancer mgr = new CentreDomainTreeManagerAndEnhancer(serialiser(), rootTypes);
+        final CentreDomainTreeManagerAndEnhancer mgr = new CentreDomainTreeManagerAndEnhancer(factory(), rootTypes);
         mgr.provideSentinelAnalysesAggregationProperty(rootTypes);
         // provide sentinel properties to test exclusion logic
         mgr.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "case When integerProp > 10 thEn \"GreEn\" wheN integerProp > 5 thEn \"yelloW\" else \"red\" end", "Sentinel 1", "Desc", CalculatedPropertyAttribute.NO_ATTR, null, IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
@@ -57,7 +57,7 @@ public class SentinelDomainTreeRepresentationTest extends AnalysisDomainTreeRepr
     }
 
     protected static Set<Class<?>> createRootTypes_for_SentinelDomainTreeRepresentationTest() {
-        final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AnalysisDomainTreeRepresentationTest());
+        final Set<Class<?>> rootTypes = new HashSet<>(createRootTypes_for_AnalysisDomainTreeRepresentationTest());
         rootTypes.remove(EvenSlaverEntity.class); // this entity has been excluded manually in parent tests
         return rootTypes;
     }

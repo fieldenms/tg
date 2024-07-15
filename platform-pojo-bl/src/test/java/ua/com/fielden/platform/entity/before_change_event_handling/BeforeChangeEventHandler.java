@@ -20,6 +20,7 @@ import ua.com.fielden.platform.types.Money;
 public class BeforeChangeEventHandler implements IBeforeChangeEventHandler<String> {
 
     private String strParam;
+    private String propNameParam;
     private int intParam1;
     private int intParam2;
     private double dblParam;
@@ -124,6 +125,10 @@ public class BeforeChangeEventHandler implements IBeforeChangeEventHandler<Strin
 
     public EnumForParams getEnumParam() {
         return enumParam;
+    }
+    
+    public String getPropNameParam() {
+        return propNameParam;
     }
 
 }

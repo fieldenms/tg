@@ -10,7 +10,7 @@ import java.util.Optional;
 import org.junit.Test;
 
 import ua.com.fielden.platform.security.user.IUser;
-import ua.com.fielden.platform.security.user.IUserSecret;
+import ua.com.fielden.platform.security.user.UserSecretCo;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserSecret;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
@@ -23,7 +23,7 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
  */
 public class UserPasswordResetTest extends AbstractDaoTestCase {
     private final IUser coUser = co$(User.class);
-    private final IUserSecret coUserSecret = co$(UserSecret.class);
+    private final UserSecretCo coUserSecret = co$(UserSecret.class);
     private final ResetUserPassword passwordReset = new ResetUserPassword(coUser);
 
     @Test

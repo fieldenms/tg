@@ -2,6 +2,7 @@ package ua.com.fielden.platform.security.user;
 
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
+import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -26,7 +27,8 @@ import ua.com.fielden.platform.entity.annotation.Unique;
 @KeyTitle("User")
 @KeyType(User.class)
 @MapEntityTo
-@CompanionObject(IUserSecret.class)
+@CompanionObject(UserSecretCo.class)
+@DenyIntrospection
 public class UserSecret extends AbstractPersistentEntity<User> {
 
     public static final String SECRET_RESET_UUID_SEPERATOR = "-";

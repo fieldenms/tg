@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.widgets;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.web.view.master.api.helpers.ISkipValidation;
+import ua.com.fielden.platform.web.view.master.api.helpers.IAutoCommit;
 import ua.com.fielden.platform.web.view.master.api.widgets.singlelinetext.ISinglelineTextConfig0;
 
 /**
@@ -15,5 +15,5 @@ import ua.com.fielden.platform.web.view.master.api.widgets.singlelinetext.ISingl
  *
  * @param <T>
  */
-public interface ISinglelineTextConfig<T extends AbstractEntity<?>> extends ISinglelineTextConfig0<T>, ISkipValidation<ISinglelineTextConfig0<T>> {
+public interface ISinglelineTextConfig<T extends AbstractEntity<?>> extends ISinglelineTextConfig0<T>, IAutoCommit<ISinglelineTextConfig0<T>> {
 }

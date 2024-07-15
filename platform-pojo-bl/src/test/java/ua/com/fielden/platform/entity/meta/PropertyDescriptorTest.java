@@ -2,12 +2,19 @@ package ua.com.fielden.platform.entity.meta;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
+
+import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.Entity;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 
 /**
  * Ensures correct instantiation of {@link PropertyDescriptor}.
@@ -97,4 +104,17 @@ public class PropertyDescriptorTest {
         assertEquals(pd2.hashCode(), pd3.hashCode());
         assertEquals(pd1.hashCode(), pd3.hashCode());
     }
+
+    @Test
+    public void PropertyDescriptor_key_has_all_default_String_validations_skipped() {
+        final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
+        final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
+        final EntityFactory factory = injector.getInstance(EntityFactory.class);
+
+        final PropertyDescriptor<?> pd = factory.newEntity(PropertyDescriptor.class);
+        pd.setKey("  hello,  world  \n");
+        assertTrue(pd.getProperty(AbstractEntity.KEY).isValid());
+        assertEquals("  hello,  world  \n", pd.getKey());
+    }
+
 }

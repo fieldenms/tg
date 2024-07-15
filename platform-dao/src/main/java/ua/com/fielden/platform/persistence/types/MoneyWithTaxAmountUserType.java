@@ -23,6 +23,8 @@ import ua.com.fielden.platform.types.markers.IMoneyWithTaxAmountUserType;
  */
 public class MoneyWithTaxAmountUserType extends AbstractCompositeUserType implements IMoneyWithTaxAmountUserType {
 
+    public static final MoneyWithTaxAmountUserType INSTANCE = new MoneyWithTaxAmountUserType();
+    
     @Override
     public Class<Money> returnedClass() {
         return Money.class;

@@ -11,7 +11,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
  * @author TG Team
  *
  */
-@CompanionObject(IEntityEditAction.class)
+@CompanionObject(EntityEditActionCo.class)
 public class EntityEditAction extends AbstractEntityManipulationAction {
 
     @IsProperty

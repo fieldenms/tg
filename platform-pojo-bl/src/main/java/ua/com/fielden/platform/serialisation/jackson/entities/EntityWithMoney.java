@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.serialisation.jackson.entities;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.Ignore;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -17,6 +18,7 @@ import ua.com.fielden.platform.types.Money;
  *
  */
 @KeyType(String.class)
+@DescTitle("Description")
 public class EntityWithMoney extends AbstractEntity<String> {
 
     @IsProperty

@@ -1,10 +1,11 @@
 package ua.com.fielden.platform.persistence;
 
 import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 
 import java.io.Serializable;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.EntityMode;
 
@@ -21,7 +22,7 @@ import ua.com.fielden.platform.keygen.KeyNumber;
 public class ProxyInterceptor extends EmptyInterceptor {
     private static final long serialVersionUID = 1L;
 
-    private static final Logger LOGGER = Logger.getLogger(ProxyInterceptor.class);
+    private static final Logger LOGGER = getLogger(ProxyInterceptor.class);
 
     private transient EntityFactory factory;
 

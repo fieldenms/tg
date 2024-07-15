@@ -54,7 +54,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
     }
 
     protected static Object createDtm_for_CalculatedPropertyTest() {
-        return new DomainTreeEnhancer(serialiser(), createRootTypes_for_CalculatedPropertyTest());
+        return new DomainTreeEnhancer(factory(), createRootTypes_for_CalculatedPropertyTest());
     }
 
     protected static Object createIrrelevantDtm_for_CalculatedPropertyTest() {
@@ -62,7 +62,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
     }
 
     protected static Set<Class<?>> createRootTypes_for_CalculatedPropertyTest() {
-        final Set<Class<?>> rootTypes = new HashSet<Class<?>>();
+        final Set<Class<?>> rootTypes = new HashSet<>();
         rootTypes.add(MasterEntity.class);
         return rootTypes;
     }

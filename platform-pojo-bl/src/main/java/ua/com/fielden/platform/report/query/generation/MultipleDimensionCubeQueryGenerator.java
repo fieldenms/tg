@@ -6,11 +6,12 @@ import java.util.List;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.utils.IDates;
 
 public class MultipleDimensionCubeQueryGenerator<T extends AbstractEntity<?>> extends GroupAnalysisQueryGenerator<T> {
 
-    public MultipleDimensionCubeQueryGenerator(final Class<T> root, final ICentreDomainTreeManagerAndEnhancer cdtme, final IPivotDomainTreeManager adtm) {
-        super(root, cdtme, adtm);
+    public MultipleDimensionCubeQueryGenerator(final Class<T> root, final ICentreDomainTreeManagerAndEnhancer cdtme, final IPivotDomainTreeManager adtm, final IDates dates) {
+        super(root, cdtme, adtm, dates);
     }
 
     @SuppressWarnings("unchecked")
@@ -46,7 +47,7 @@ public class MultipleDimensionCubeQueryGenerator<T extends AbstractEntity<?>> ex
                 resultQueryList.add(createQueryAndGroupBy(classBundle.getGeneratedClass(), groups));
             }
         }
-        return new AnalysisResultClassBundle<>(getCdtme(), classBundle.getGeneratedClass(), classBundle.getGeneratedClassRepresentation(), resultQueryList);
+        return new AnalysisResultClassBundle<>(getCdtme(), classBundle.getGeneratedClass(), resultQueryList);
     }
 
     @Override

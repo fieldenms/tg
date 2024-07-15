@@ -1,19 +1,22 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl;
 
 import static java.lang.String.format;
+import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.joining;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
+import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
+import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 
 import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 
@@ -31,6 +34,7 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
     private Class<? extends IValueMatcher> matcherType;
     private boolean lightDesc = false;
 
+    protected final Class<? extends AbstractEntity<?>> propType;
     private final Map<String, Boolean> additionalProps = new LinkedHashMap<>();
     private final Map<String, Boolean> defaultAdditionalProps = new LinkedHashMap<>();
 
@@ -40,25 +44,39 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
             final String propName,
             final Class<? extends AbstractEntity<?>> propType) {
         super(widgetPath, titleAndDesc, propName);
+        this.propType = propType;
 
+        defaultAdditionalProps.putAll(createDefaultAdditionalProps(propType));
+
+        // assigned the collected default props
+        additionalProps.putAll(defaultAdditionalProps);
+    }
+
+    /**
+     * Creates default additional properties (except key) for autocompleter. This includes description if the type contains it.
+     * Also this includes key members if the type is composite.
+     *
+     * @param propType
+     * @return
+     */
+    public static Map<String, Boolean> createDefaultAdditionalProps(final Class<? extends AbstractEntity<?>> propType) {
+        final Map<String, Boolean> defaultAdditionalProps = new LinkedHashMap<>();
         // let's provide some sensible defaults for additional properties
         // in most cases description is included if it exists for the type... also it is searched by default
-        if (EntityUtils.hasDescProperty(propType)) {
-            defaultAdditionalProps.put(AbstractEntity.DESC, true);
+        if (hasDescProperty(propType)) {
+            defaultAdditionalProps.put(DESC, true);
         }
         // in case of composite entities that has more than one key member, all key members should be included and highlighted as they'are searched by
         // in case of a single key member, displaying only the key is sufficient
-        if (EntityUtils.isCompositeEntity(propType)) {
-            final List<Field> members = Finder.getKeyMembers(propType);
+        if (isCompositeEntity(propType)) {
+            final List<Field> members = getKeyMembers(propType);
             if (members.size() > 1) {
                 for (final Field member: members) {
                     defaultAdditionalProps.put(member.getName(), true);
                 }
             }
         }
-        
-        // assigned the collected default props 
-        additionalProps.putAll(defaultAdditionalProps);
+        return defaultAdditionalProps;
     }
 
     public AbstractEntityAutocompletionWidget setAdditionalProps(final List<Pair<String, Boolean>> pairs) {
@@ -91,7 +109,7 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
         attrs.put("process-error", "[[_processError]]");
         attrs.put("post-searched-default-error", "[[_postSearchedDefaultError]]");
         return attrs;
-    };
+    }
 
     @SuppressWarnings("rawtypes")
     public AbstractEntityAutocompletionWidget setMatcherType(final Class<? extends IValueMatcher> matcherType) {
@@ -111,6 +129,16 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
     public void setLightDesc(final boolean shouldSearchByDesc) {
         additionalProps.put(AbstractEntity.DESC, shouldSearchByDesc);
         this.lightDesc = shouldSearchByDesc;
+    }
+
+    /**
+     * Additional properties (except key) for autocompleter. This includes description if the type contains it.
+     * Also this includes key members if the type is composite.
+     *
+     * @return
+     */
+    public Map<String, Boolean> additionalProps() {
+        return unmodifiableMap(additionalProps);
     }
 
 }

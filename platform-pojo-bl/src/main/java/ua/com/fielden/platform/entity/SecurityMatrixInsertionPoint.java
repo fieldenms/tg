@@ -20,7 +20,7 @@ import ua.com.fielden.platform.security.user.UserRole;
 @EntityTitle(value = "Security Matrix", desc = "A tool to manage user role authorisations.")
 @KeyType(NoKey.class)
 @KeyTitle("Security Matrix")
-@CompanionObject(ISecurityMatrixInsertionPoint.class)
+@CompanionObject(SecurityMatrixInsertionPointCo.class)
 public class SecurityMatrixInsertionPoint extends AbstractFunctionalEntityWithCentreContext<NoKey> {
 
     @IsProperty

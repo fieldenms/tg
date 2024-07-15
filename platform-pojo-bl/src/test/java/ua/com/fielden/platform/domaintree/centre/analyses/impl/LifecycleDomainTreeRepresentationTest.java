@@ -50,17 +50,17 @@ public class LifecycleDomainTreeRepresentationTest extends AbstractAnalysisDomai
     }
 
     public static Object createDtm_for_LifecycleDomainTreeRepresentationTest() {
-        return new LifecycleDomainTreeRepresentation(serialiser(), createRootTypes_for_LifecycleDomainTreeRepresentationTest());
+        return new LifecycleDomainTreeRepresentation(factory(), createRootTypes_for_LifecycleDomainTreeRepresentationTest());
     }
 
     public static Object createIrrelevantDtm_for_LifecycleDomainTreeRepresentationTest() {
-        final CentreDomainTreeManagerAndEnhancer cdtmae = new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_LifecycleDomainTreeRepresentationTest());
+        final CentreDomainTreeManagerAndEnhancer cdtmae = new CentreDomainTreeManagerAndEnhancer(factory(), createRootTypes_for_LifecycleDomainTreeRepresentationTest());
         cdtmae.provideLifecycleAnalysesDatePeriodProperties(createRootTypes_for_LifecycleDomainTreeRepresentationTest());
         return cdtmae;
     }
 
     protected static Set<Class<?>> createRootTypes_for_LifecycleDomainTreeRepresentationTest() {
-        final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractAnalysisDomainTreeRepresentationTest());
+        final Set<Class<?>> rootTypes = new HashSet<>(createRootTypes_for_AbstractAnalysisDomainTreeRepresentationTest());
         return rootTypes;
     }
 

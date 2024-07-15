@@ -13,15 +13,14 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 
 /**
  * Entity for "domain tree enhancing" testing.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @KeyType(String.class)
 @KeyTitle(value = "Key title", desc = "Key desc")
 @DescTitle(value = "Desc title", desc = "Desc desc")
 public class EnhancingEvenSlaverEntity extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
     protected EnhancingEvenSlaverEntity() {
     }

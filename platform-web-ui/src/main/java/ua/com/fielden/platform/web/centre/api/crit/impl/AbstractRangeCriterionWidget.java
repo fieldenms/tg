@@ -11,7 +11,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
  * @author TG Team
  *
  */
-public abstract class AbstractRangeCriterionWidget extends AbstractMultiCriterionWidget {
+public abstract class AbstractRangeCriterionWidget extends AbstractCriterionWidget {
 
     /**
      * Creates an instance of {@link AbstractRangeCriterionWidget} for specified entity type and property name.

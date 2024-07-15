@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.dao;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.util.stream.Stream;
 
@@ -10,6 +9,7 @@ import org.hibernate.Session;
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -19,12 +19,13 @@ import ua.com.fielden.platform.utils.Pair;
 /**
  * A DAO for {@link EntityWithMoney} used for testing.
  * 
- * @author 01es
+ * @author TG Team
  * 
  */
 @EntityType(EntityWithMoney.class)
 public class EntityWithMoneyDao extends CommonEntityDao<EntityWithMoney> implements IEntityWithMoney {
-
+    public static final String ERR_PURPOSEFUL_EXCEPTION = "Purposeful exception.";
+    
     @Inject
     protected EntityWithMoneyDao(final IFilter filter) {
         super(filter);
@@ -33,7 +34,7 @@ public class EntityWithMoneyDao extends CommonEntityDao<EntityWithMoney> impleme
     @SessionRequired
     public EntityWithMoney saveWithException(final EntityWithMoney entity) {
         super.save(entity);
-        throw new RuntimeException("Purposeful exception.");
+        throw new RuntimeException(ERR_PURPOSEFUL_EXCEPTION);
     }
 
     @SessionRequired
@@ -45,9 +46,9 @@ public class EntityWithMoneyDao extends CommonEntityDao<EntityWithMoney> impleme
 
     @SessionRequired
     public Pair<Session, Session> getSessionWithDelay(final long sleep) throws Exception {
-        final Session ses = getSession();
+        final Session ses = getSessionUnsafe();
         Thread.sleep(sleep);
-        return new Pair<Session, Session>(ses, getSession());
+        return new Pair<Session, Session>(ses, getSessionUnsafe());
     }
     
     @SessionRequired
@@ -60,4 +61,8 @@ public class EntityWithMoneyDao extends CommonEntityDao<EntityWithMoney> impleme
         return result;
     }
 
+    // @SessionRequired -- deliberately not annotated
+    public EntityWithMoney superSave(final EntityWithMoney entity) {
+        return super.save(entity);
+    }
 }
