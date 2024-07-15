@@ -110,6 +110,16 @@ public sealed class RichText permits RichText.Persisted {
         return false;
     }
 
+    /**
+     * Type-insensitive {@link #equals(Object)}: {@link RichText} can be compared to {@link RichText.Persisted}.
+     */
+    public final boolean iEquals(final Object obj) {
+        return obj == this ||
+               obj instanceof RichText that
+               && Objects.equals(this.formattedText, that.formattedText)
+               && Objects.equals(this.coreText, that.coreText);
+    }
+
     @Override
     public final int hashCode() {
         return Objects.hash(formattedText, coreText);
