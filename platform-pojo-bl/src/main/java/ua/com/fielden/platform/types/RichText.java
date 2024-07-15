@@ -35,7 +35,7 @@ import static ua.com.fielden.platform.utils.StreamUtils.enumerate;
  * <p>
  * This representation is immutable.
  */
-public final class RichText {
+public sealed class RichText permits RichText.Persisted {
 
     public static final String _formattedText = "formattedText";
     public static final String _coreText = "coreText";
@@ -72,14 +72,19 @@ public final class RichText {
     }
 
     /**
-     * Creates {@link RichText} from Markdown without sanitizing the input, hence <i>unsafe</i>.
-     * <p>
-     * This is effectively an escape hatch, and is therefore private, accessible only via reflection. This method should
-     * be used <b>strictly in safe contexts</b> (i.e., when it is guaranteed that the formatted text had been sanitized),
-     * e.g., when constructring values retrieved from the database.
+     * Represents persisted values. <b>The constructor must be used only when retrieving values from a database</b>
+     * because it doesn't perform validation.
      */
-    private static RichText fromMarkdownUnsafe(final String formattedText, final String coreText) {
-        return new RichText(formattedText, coreText);
+    static final class Persisted extends RichText {
+        /**
+         * This constructor does not validate its arguments.
+         *
+         * @param formattedText text with markup
+         * @param coreText      text without markup (its length is always less than or equal to that of formatted text)
+         */
+        Persisted(final String formattedText, final String coreText) {
+            super(formattedText, coreText);
+        }
     }
 
     public String formattedText() {
@@ -91,20 +96,27 @@ public final class RichText {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        return obj == this
-               || obj instanceof RichText that
-                  && Objects.equals(this.formattedText, that.formattedText)
-                  && Objects.equals(this.coreText, that.coreText);
+    public final boolean equals(final Object obj) {
+        if (obj == this) {
+            return true;
+        }
+
+        if (obj != null && obj.getClass() == this.getClass()) {
+            final RichText that = (RichText) obj;
+            return Objects.equals(this.formattedText, that.formattedText)
+                   && Objects.equals(this.coreText, that.coreText);
+        }
+
+        return false;
     }
 
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return Objects.hash(formattedText, coreText);
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "RichText[\n%s\n]".formatted(formattedText);
     }
 
