@@ -1,10 +1,10 @@
-package ua.com.fielden.platform.persistence.types;
+package ua.com.fielden.platform.types;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
+import ua.com.fielden.platform.persistence.types.AbstractCompositeUserType;
 import ua.com.fielden.platform.persistence.types.exceptions.UserTypeException;
-import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.types.markers.IRichTextType;
 
 import java.lang.reflect.InvocationTargetException;

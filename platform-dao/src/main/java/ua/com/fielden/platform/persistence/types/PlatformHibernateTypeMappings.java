@@ -2,10 +2,7 @@ package ua.com.fielden.platform.persistence.types;
 
 import org.hibernate.type.YesNoType;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.types.Colour;
-import ua.com.fielden.platform.types.Hyperlink;
-import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.RichText;
+import ua.com.fielden.platform.types.*;
 import ua.com.fielden.platform.types.markers.*;
 
 import java.util.Date;
