@@ -10,7 +10,7 @@ import org.hibernate.type.YesNoType;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.persistence.types.ColourType;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
-import ua.com.fielden.platform.persistence.types.HyperlinkType;
+import ua.com.fielden.platform.types.HyperlinkType;
 import ua.com.fielden.platform.persistence.types.PropertyDescriptorType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
 import ua.com.fielden.platform.types.Colour;

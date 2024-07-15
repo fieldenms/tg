@@ -3,7 +3,7 @@ package ua.com.fielden.platform.ioc;
 import com.google.inject.AbstractModule;
 
 import ua.com.fielden.platform.persistence.types.ColourType;
-import ua.com.fielden.platform.persistence.types.HyperlinkType;
+import ua.com.fielden.platform.types.HyperlinkType;
 import ua.com.fielden.platform.persistence.types.MoneyUserType;
 import ua.com.fielden.platform.persistence.types.MoneyWithTaxAmountUserType;
 import ua.com.fielden.platform.persistence.types.PropertyDescriptorType;
