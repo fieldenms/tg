@@ -23,4 +23,11 @@ public class EntityWithRichText extends AbstractEntity<String> {
         return this;
     }
 
+    @Observable
+    @Override
+    public EntityWithRichText setKey(final String key) {
+        super.setKey(key);
+        return this;
+    }
+
 }
