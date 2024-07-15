@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.types;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
@@ -24,7 +25,8 @@ public class HyperlinkPersistanceTestCase extends AbstractDaoTestCase {
         final TgPersonName chris = save(new_(TgPersonName.class, "Chris", "Chris"));
         final TgAuthor date = save(new_composite(TgAuthor.class, chris, "Date", null).setWebpage(new Hyperlink("http://www.amazon.com/date")));
         
-        assertEquals(new Hyperlink("http://www.amazon.com/date"), date.getWebpage());
+        assertNotEquals("Persisted hyperlinks are of different type.", Hyperlink.class, date.getWebpage().getClass());
+        assertEquals(new Hyperlink("http://www.amazon.com/date").value, date.getWebpage().value);
     }
 
     @Test

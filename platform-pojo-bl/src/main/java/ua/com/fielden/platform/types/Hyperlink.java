@@ -24,7 +24,7 @@ import ua.com.fielden.platform.types.exceptions.ValueObjectException;
  * @author TG Team
  *
  */
-public class Hyperlink {
+public sealed class Hyperlink permits Hyperlink.Persisted {
     // http://, https://, ftp://, ftps:// and mailto:
     // file:// protocol should not be permitted due to restrictions of modern web browsers to open local resources
 
@@ -54,8 +54,19 @@ public class Hyperlink {
 
     public final String value;
 
+    /**
+     * A public constructor that enforces validation.
+     *
+     * @param value
+     */
     public Hyperlink(final String value) {
-        validate(value).ifFailure(Result::throwRuntime);
+        this(value, true);
+    }
+
+    private Hyperlink(final String value, final boolean forceValidation) {
+        if (forceValidation) {
+            validate(value).ifFailure(Result::throwRuntime);
+        }
         this.value = value;
     }
 
@@ -87,17 +98,21 @@ public class Hyperlink {
     }
 
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return 31 * value.hashCode();
     }
 
     @Override
-    public boolean equals(final Object obj) {
+    public final boolean equals(final Object obj) {
         if (this == obj) {
             return true;
         }
 
         if (!(obj instanceof Hyperlink)) {
+            return false;
+        }
+
+        if (obj.getClass() != this.getClass()) {
             return false;
         }
 
@@ -110,4 +125,15 @@ public class Hyperlink {
     public String toString() {
         return value;
     }
+
+    /**
+     * A type to be used when retrieving {@link Hyperlink} values from a database.
+     * Its main purpose is to skip validation of hyperlinks when reading values from a database.
+     */
+    final static class Persisted extends Hyperlink {
+        public Persisted(String value) {
+            super(value, false);
+        }
+    }
+
 }
