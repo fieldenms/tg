@@ -34,6 +34,11 @@ import static ua.com.fielden.platform.utils.StreamUtils.enumerate;
  * It also does not contain information about the markup language used in the formatted text.
  * <p>
  * This representation is immutable.
+ * <p>
+ * Properties with this type are subject to the following rules:
+ * <ul>
+ *   <li> {@link IsProperty#length()} applies to {@link #coreText}.
+ * </ul>
  */
 public sealed class RichText permits RichText.Persisted {
 
