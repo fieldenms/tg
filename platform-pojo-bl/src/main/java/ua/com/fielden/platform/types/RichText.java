@@ -40,7 +40,7 @@ public sealed class RichText permits RichText.Persisted {
     public static final String _formattedText = "formattedText";
     public static final String _coreText = "coreText";
 
-    @IsProperty
+    @IsProperty(length = Integer.MAX_VALUE)
     @MapTo
     private final String formattedText;
 
