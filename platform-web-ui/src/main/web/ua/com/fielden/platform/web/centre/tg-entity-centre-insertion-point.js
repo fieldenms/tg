@@ -55,10 +55,6 @@ const template = html`
             position: relative;
         }
 
-        :host(:not([detached-view]):not([maximised]):not([alternative-view])) {
-            margin: 10px;
-        }
-
         :host(:not([maximised]):not([alternative-view])) {
             @apply --shadow-elevation-2dp;
         }
@@ -806,6 +802,7 @@ Polymer({
 
     /****************Miscellaneous methods for restoring size and dimension***********************/
     _setDimension: function () {
+        this.style.removeProperty('margin');
         if (this.detachedView) {
             let dimToApply = this._getPair(ST_DETACHED_VIEW_WIDTH, ST_DETACHED_VIEW_HEIGHT);
             if (!dimToApply) {
@@ -826,18 +823,20 @@ Polymer({
             }
         } else {
             if (this.alternativeView) {
-                this.style.width = "100%";
-                this.style.height = "100%";
+                this.style.width = '100%';
+                this.style.height = '100%';
             } else {
                 const heightToApply = this._getProp(ST_ATTACHED_HEIGHT);
                 const prefDim = this._getPrefDim();
                 if (!this.minimised && !this.maximised) {
+                    this.style.margin = '10px';
                     this.style.width = prefDim && prefDim[0];
                     this.style.height = heightToApply || (prefDim && prefDim[1]);
                 } else if (this.maximised && !this.minimised) {
                     this.style.width = '100%';
                     this.style.height = '100%';
                 } else if (this.minimised && !this.maximised) {
+                    this.style.margin = '10px';
                     this.style.height = this._titleBarHeight();
                     this.style.width = prefDim && prefDim[0];
                 }
