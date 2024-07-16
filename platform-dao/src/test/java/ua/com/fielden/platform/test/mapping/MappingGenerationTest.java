@@ -84,6 +84,20 @@ public class MappingGenerationTest {
 \t<property name="title" column="TITLE" type="org.hibernate.type.StringType"/>
 </class>
 
+<class name="ua.com.fielden.platform.persistence.types.EntityWithMoney" table="MONEY_CLASS_TABLE">
+\t<id name="id" column="_ID" type="org.hibernate.type.LongType" access="property">
+\t</id>
+\t<version name="version" type="org.hibernate.type.LongType" access="field" insert="false">
+\t\t<column name="_VERSION" default="0" />
+\t</version>
+\t<property name="key" column="KEY_" type="org.hibernate.type.StringType"/>
+\t<property name="dateTimeProperty" column="DATE_TIME" type="ua.com.fielden.platform.persistence.types.DateTimeType"/>
+\t<property name="desc" column="DESC_" type="org.hibernate.type.StringType"/>
+\t<property name="money" column="MONEY" type="ua.com.fielden.platform.persistence.types.SimpleMoneyType" precision="18" scale="2"/>
+\t<property name="shortComment" column="SHORTCOMMENT_" type="org.hibernate.type.StringType" length="5"/>
+\t<property name="transDate" column="TRANS_DATE_TIME" type="ua.com.fielden.platform.persistence.types.DateTimeType"/>
+</class>
+
 <class name="ua.com.fielden.platform.ui.config.MainMenuItem" table="MAIN_MENU">
 \t<id name="id" column="_ID" type="org.hibernate.type.LongType" access="property">
 \t</id>
@@ -95,6 +109,25 @@ public class MappingGenerationTest {
 \t<property name="order" column="ITEM_ORDER" type="org.hibernate.type.IntegerType"/>
 \t<many-to-one name="parent" class="ua.com.fielden.platform.ui.config.MainMenuItem" column="ID_PARENT"/>
 \t<property name="title" column="TITLE" type="org.hibernate.type.StringType"/>
+</class>
+
+<class name="ua.com.fielden.platform.sample.domain.TgUnionHolder" table="TGUNIONHOLDER_">
+\t<id name="id" column="_ID" type="org.hibernate.type.LongType" access="property">
+\t</id>
+\t<version name="version" type="org.hibernate.type.LongType" access="field" insert="false">
+\t\t<column name="_VERSION" default="0" />
+\t</version>
+\t<property name="key" column="KEY_" type="org.hibernate.type.StringType"/>
+\t<many-to-one name="createdBy" class="ua.com.fielden.platform.security.user.User" column="CREATEDBY_"/>
+\t<property name="createdDate" column="CREATEDDATE_" type="ua.com.fielden.platform.persistence.types.DateTimeType"/>
+\t<property name="createdTransactionGuid" column="CREATEDTRANSACTIONGUID_" type="org.hibernate.type.StringType"/>
+\t<many-to-one name="lastUpdatedBy" class="ua.com.fielden.platform.security.user.User" column="LASTUPDATEDBY_"/>
+\t<property name="lastUpdatedDate" column="LASTUPDATEDDATE_" type="ua.com.fielden.platform.persistence.types.DateTimeType"/>
+\t<property name="lastUpdatedTransactionGuid" column="LASTUPDATEDTRANSACTIONGUID_" type="org.hibernate.type.StringType"/>
+\t<component name="union" class="ua.com.fielden.platform.sample.domain.TgUnion">
+\t\t<many-to-one name="union1" class="ua.com.fielden.platform.sample.domain.TgUnionType1" column = "UNION__UNION1"/>
+\t\t<many-to-one name="union2" class="ua.com.fielden.platform.sample.domain.TgUnionType2" column = "UNION__UNION2"/>
+\t</component>
 </class>
 
 <class name="ua.com.fielden.platform.security.user.User" table="USER_">
