@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.utils;
 import static java.lang.Class.forName;
 import static java.lang.String.format;
 import static java.util.Locale.getDefault;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
@@ -32,15 +33,7 @@ import java.lang.reflect.ParameterizedType;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Currency;
-import java.util.Date;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -82,6 +75,7 @@ import ua.com.fielden.platform.serialisation.jackson.deserialisers.EntityJsonDes
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.MiscUtilities;
@@ -736,6 +730,11 @@ public class EntityResourceUtils {
             final Map<String, Object> map = (Map<String, Object>) reflectedValue;
             final String linkValue = (String) map.get("value");
             return linkValue == null ? null : new Hyperlink(linkValue);
+        } else if (RichText.class.isAssignableFrom(propertyType)){
+            final Map<String, Object> map = (Map<String, Object>) reflectedValue;
+            // in a modified RichText value we care only about formatted text
+            final String formattedText = (String) map.get(RichText._formattedText);
+            return formattedText == null ? null : RichText.fromMarkdown(formattedText);
         } else if (Long.class.isAssignableFrom(propertyType)) {
             return extractLongValueFrom(reflectedValue);
         } else if (Class.class.isAssignableFrom(propertyType)) {
