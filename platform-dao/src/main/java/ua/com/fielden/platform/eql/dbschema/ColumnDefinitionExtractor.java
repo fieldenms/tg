@@ -40,6 +40,7 @@ import ua.com.fielden.platform.eql.dbschema.exceptions.DbSchemaException;
 import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -118,7 +119,13 @@ public class ColumnDefinitionExtractor {
                     final MapTo subpropMapTo = getAnnotation(subpropField, MapTo.class);
                     final IsProperty subpropIsProperty = getAnnotation(subpropField, IsProperty.class);
                     final String subpropColumnNameSuggestion = subpropMapTo.value();
-                    final int subpropLength = subpropIsProperty.length();
+
+                    final int subpropLength;
+                    if (RichText.class.isAssignableFrom(propType) && RichText._coreText.equals(subpropField.getName())) {
+                        subpropLength = isProperty.length();
+                    } else {
+                        subpropLength = subpropIsProperty.length();
+                    }
 
                     // properties of type Money need special handling as the precision and scale for Money.amount can be overridden
                     final int subpropPrecision;
