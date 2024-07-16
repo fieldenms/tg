@@ -26,12 +26,14 @@ class EntityCentreInsertionPointManager {
      * 
      * @param {Object} insertionPoint - insertion point to manage
      */
-    add (insertionPoint) {
+    add (insertionPoint, zIndex) {
         if (this._insertionPoints.indexOf(insertionPoint) >= 0) {
-            this.bringToFront(insertionPoint);
+            if (typeof zIndex === 'undefined') {
+                this.bringToFront(insertionPoint);
+            }
         } else {
             this._insertionPoints.push(insertionPoint);
-            this._setZ(insertionPoint, this._insertionPoints.length);
+            insertionPoint.setZOrder(typeof zIndex !== 'undefined'  ? zIndex : this._insertionPoints.length);
         }
     }
 
@@ -45,7 +47,7 @@ class EntityCentreInsertionPointManager {
         if (idx >= 0) {
             this.bringToFront(insertionPoint);
             this._insertionPoints.splice(idx, 1);
-            this._setZ(insertionPoint, 0);
+            insertionPoint.setZOrder(0);
             return true;
         }
         return false;
@@ -57,27 +59,15 @@ class EntityCentreInsertionPointManager {
      * @param {Object} insertionPoint - insertion point to bring to front
      */
     bringToFront (insertionPoint) {
-        const zIndex = this._getZ(insertionPoint);
+        const zIndex = insertionPoint.getZOrder();
         if (zIndex > 0) {
             this._insertionPoints.forEach(p => {
-                const z = this._getZ(p);
+                const z = p.getZOrder();
                 if (z > zIndex) {
-                    this._setZ(p, z - 1);
+                    p.setZOrder(z - 1);
                 }
             });
-            this._setZ(insertionPoint, this._insertionPoints.length);
-        }
-    }
-
-    _getZ (insertionPoint) {
-        return +insertionPoint.style.zIndex;
-    }
-
-    _setZ (insertionPoint, z) {
-        if (z <= 0 ) {
-            insertionPoint.style.removeProperty("z-index");
-        } else {
-            insertionPoint.style.zIndex = z;
+            insertionPoint.setZOrder(this._insertionPoints.length);
         }
     }
 }

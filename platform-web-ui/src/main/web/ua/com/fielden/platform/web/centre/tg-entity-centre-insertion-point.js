@@ -42,6 +42,7 @@ const ST_PREF_WIDTH = 'prefWidth';
 const ST_PREF_HEIGHT = 'prefHeight';
 const ST_POS_X = "posX";
 const ST_POS_Y = "posY";
+const ST_ZORDER = "zOrder";
 
 const ST_ATTACHED_HEIGHT = 'attachedHeight';
 
@@ -78,6 +79,10 @@ const template = html`
             -ms-user-select: none;
             user-select: none;
             background-color: var(--paper-light-blue-600);
+        }
+
+        .title-text {
+            pointer-events: none;
         }
 
         tg-responsive-toolbar {
@@ -145,7 +150,7 @@ const template = html`
         </div>
         <div class="lock-layer" lock$="[[lock]]"></div>
     </div>
-    <iron-icon id="resizer" style$="[[_getResizerStyle(detachedView)]]" hidden$="[[_resizingDisabled(minimised, maximised, alternativeView, withoutResizing)]]" icon="tg-icons:resize-bottom-right" on-tap="_clearLocalStorage" on-track="_resizeInsertionPoint" tooltip-text="Drag to resize<br>Double tap to reset height"></iron-icon>
+    <iron-icon id="resizer" style$="[[_getResizerStyle(detachedView)]]" hidden$="[[_resizingDisabled(minimised, maximised, alternativeView, withoutResizing)]]" icon="tg-icons:resize-bottom-right" on-tap="_clearLocalStorage" on-track="_resizeInsertionPoint" on-down="_makeCentreUnselectable" on-up="_makeCentreSelectable" tooltip-text="Drag to resize<br>Double tap to reset height"></iron-icon>
     <tg-toast id="toaster"></tg-toast>
 `;
 
@@ -347,9 +352,15 @@ Polymer({
         this.triggerElement = this.$.insertionPointContent;
         this.addEventListener('tg-config-uuid-before-change', tearDownEvent); // prevent propagating of centre config UUID event to the top (tg-view-with-menu) to avoid browser URI change
         this.addEventListener('tg-config-uuid-changed', tearDownEvent); // prevent propagating of centre config UUID event to the top (tg-view-with-menu) to avoid configUuid change on parent standalone centre
+        //iron-fit-behavior related settings
         this.positionTarget = document.body;
         this.horizontalAlign = 'center';
         this.verticalAlign = 'middle';
+        //z-index management related settings
+        const clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
+        this.addEventListener(clickEvent, this._onCaptureClick, true);
+        this.addEventListener('focus', this._onCaptureClick, true);
+        this.addEventListener('keydown', this._onCaptureClick, true);
     },
 
     attached: function () {
@@ -587,6 +598,19 @@ Polymer({
         tearDownEvent(event);  
     },
 
+    _makeCentreUnselectable: function () {
+        if (this.contextRetriever) {
+            this.contextRetriever()._dom()._makeCentreUnselectable();
+        }
+    },
+    
+    _makeCentreSelectable: function () {
+        if (this.contextRetriever) {
+            this.contextRetriever()._dom()._makeCentreSelectable();
+        }
+
+    },
+
     _resizeDetached: function (event) {
         const resizedHeight = this.offsetHeight + event.detail.ddy;
         const heightNeedsResize = resizedHeight >= 44 /* toolbar height*/ + 14 /* resizer image height */ ;
@@ -628,7 +652,7 @@ Polymer({
 
         if (elementHeight !== newHeight) {
             this.style.height = newHeight + 'px';
-            this._saveHeight(this.style.height);
+            this._saveProp(ST_ATTACHED_HEIGHT, this.style.height);
             this.notifyResize();
             if (mousePos.y >= scrollingContainer.offsetHeight || mousePos.y < 0) {
                 // If the mouse pointer is above or below the scrolling container then perform scrolling (the scrolling distance should be equal to a change of the insertion point height)
@@ -672,6 +696,26 @@ Polymer({
         tearDownEvent(e);
     },
 
+    _onCaptureClick: function (e) {
+        if ((this.detachedView || this.maximised) && this.contextRetriever) {
+            this.contextRetriever().insertionPointManager.bringToFront(this);
+        }
+    },
+
+    setZOrder: function (zOrder) {
+        if (zOrder <= 0 ) {
+            this.style.removeProperty("z-index");
+            this._removeProp(ST_ZORDER);
+        } else {
+            this.style.zIndex = zOrder;
+            this._saveProp(ST_ZORDER, this.style.zIndex);
+        }
+    },
+
+    getZOrder: function () {
+        return +this.style.zIndex;
+    },
+
     /**
      * Shows title bar only for non-alternative views with short description defined.
      */
@@ -702,26 +746,37 @@ Polymer({
     _maximisedChanged: function (newValue) {
         if (this.contextRetriever) {
             if (newValue) {
-                if (!this.detachedView) {
-                    if (!this._getPair(ST_DETACHED_VIEW_WIDTH, ST_DETACHED_VIEW_HEIGHT)) {
-                        this._saveDimensions();
-                    }
-                }
-                this.contextRetriever().insertionPointManager.add(this);
+                this._makeDetached();
                 InsertionPointManager.addInsertionPoint(this);
-                this.focus();
             } else {
                 InsertionPointManager.removeInsertionPoint(this);
                 if (!this.detachedView) {
-                    this.contextRetriever().insertionPointManager.remove(this);
-                    if (this.contextRetriever && this.contextRetriever().$.centreResultContainer) {
-                        this.contextRetriever().$.centreResultContainer.focus();
-                    }
+                    this._makeAttached();
                 }
             }
             this._setDimension();
             this._setPosition();
             this.notifyResize();
+        }
+    },
+
+    _makeDetached: function () {
+        if (!this._getPair(ST_DETACHED_VIEW_WIDTH, ST_DETACHED_VIEW_HEIGHT)) {
+            this._saveDimensions();
+        }
+        const zOrder = this._getProp(ST_ZORDER);
+        if (zOrder) {
+            this.contextRetriever().insertionPointManager.add(this, +zOrder);
+        } else {
+            this.contextRetriever().insertionPointManager.add(this);
+        }
+        this.focus();
+    },
+
+    _makeAttached: function () {
+        this.contextRetriever().insertionPointManager.remove(this);
+        if (this.contextRetriever && this.contextRetriever().$.centreResultContainer) {
+            this.contextRetriever().$.centreResultContainer.focus();
         }
     },
 
@@ -776,16 +831,13 @@ Polymer({
     _detachedViewChanged: function (newValue) {
         if (this.contextRetriever) {
             if (newValue) {
+                //TODO should consider to save into pref dim
                 if (!this._getPair(ST_DETACHED_VIEW_WIDTH, ST_DETACHED_VIEW_HEIGHT)) {
                     this._saveDimensions();
                 }
-                this.contextRetriever().insertionPointManager.add(this);
-                this.focus();
+                this._makeDetached();
             } else if (!this.maximised){
-                this.contextRetriever().insertionPointManager.remove(this);
-                if (this.contextRetriever && this.contextRetriever().$.centreResultContainer) {
-                    this.contextRetriever().$.centreResultContainer.focus();
-                }
+                this._makeAttached();
             }
             this._setDimension();
             this._setPosition();
@@ -955,10 +1007,6 @@ Polymer({
         }
     },
 
-    _saveHeight: function(height) {
-        localStorage.setItem(this._generateKey(ST_ATTACHED_HEIGHT), height);
-    },
-
     _getPrefDim: function () {
         const prefDim = this.$.elementLoader.prefDim;
         if (prefDim) {
@@ -967,6 +1015,7 @@ Polymer({
             return [width, prefDim.heightUnit === '%' ? height : `calc(${height} + ${this._titleBarHeight()})`];
         }
     },
+
 
     _titleBarHeight: function() {
         return this._hasTitleBar(this.shortDesc, this.alternativeView) ? '44px' : '0px';
@@ -978,6 +1027,16 @@ Polymer({
         if (pair_1 && pair_2) {
             return [pair_1, pair_2];
         }
+    },
+
+    _saveProp: function(key, value) {
+        if (value) {
+            localStorage.setItem(this._generateKey(key), value);
+        }
+    },
+
+    _removeProp: function (key) {
+        localStorage.removeItem(this._generateKey(key));
     },
 
     _getProp: function (key) {
