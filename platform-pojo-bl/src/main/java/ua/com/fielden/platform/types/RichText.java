@@ -85,6 +85,11 @@ public sealed class RichText permits RichText.Persisted {
         Persisted(final String formattedText, final String coreText) {
             super(formattedText, coreText);
         }
+
+        @Override
+        Persisted asPersisted() {
+            return this;
+        }
     }
 
     public String formattedText() {
@@ -93,6 +98,10 @@ public sealed class RichText permits RichText.Persisted {
 
     public String coreText() {
         return coreText;
+    }
+
+    Persisted asPersisted() {
+        return new Persisted(formattedText, coreText);
     }
 
     @Override
