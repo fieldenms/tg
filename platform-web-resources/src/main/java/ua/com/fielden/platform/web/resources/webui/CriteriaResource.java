@@ -427,7 +427,7 @@ public class CriteriaResource extends AbstractWebResource {
             final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(
                 createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
                 appliedCriteriaEntity.centreDirtyCalculator().apply(saveAsName).apply(() -> updatedFreshCentre),
-                createStaleCriteriaMessage((String) modifiedPropertiesHolder.get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, critGenerator, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion)
+                createCriteriaIndication((String) modifiedPropertiesHolder.get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, critGenerator, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion)
             );
             customObject.put(VALIDATION_COUNTER, modifiedPropertiesHolder.get(VALIDATION_COUNTER));
             return restUtil.rawListJsonRepresentation(appliedCriteriaEntity, customObject);
@@ -476,7 +476,7 @@ public class CriteriaResource extends AbstractWebResource {
             final RestServerUtil restUtil,
             final ICompanionObjectFinder companionFinder,
             final ICriteriaGenerator critGenerator,
-            final String staleCriteriaMessage,
+            final CriteriaIndication criteriaIndication,
             final DeviceProfile device,
             final Optional<Optional<String>> saveAsDesc,
             final IWebUiConfig webUiConfig,
@@ -494,7 +494,7 @@ public class CriteriaResource extends AbstractWebResource {
                         empty(),
                         of(false), // even though configuration can be runAutomatically, do not perform auto-running on Discard action
                         saveAsDesc,
-                        of(ofNullable(staleCriteriaMessage)),
+                        of(criteriaIndication),
                         of(updatedFreshCentre.getPreferredView()),
                         user,
                         empty() // no need to update shareError on discarding
@@ -502,7 +502,7 @@ public class CriteriaResource extends AbstractWebResource {
         );
     }
 
-    public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> String createStaleCriteriaMessage(
+    public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> CriteriaIndication createCriteriaIndication(
             final String wasRun,
             final ICentreDomainTreeManagerAndEnhancer freshCentre,
             final Class<? extends MiWithConfigurationSupport<?>> miType,
@@ -604,8 +604,8 @@ public class CriteriaResource extends AbstractWebResource {
                     final Result validationResult = freshCentreAppliedCriteriaEntity.isValid();
                     if (!validationResult.isSuccessful()) {
                         LOGGER.debug("CRITERIA_RESOURCE: run finished (validation failed).");
-                        final String staleCriteriaMessage = createStaleCriteriaMessage((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, critGenerator, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-                        return restUtil.rawListJsonRepresentation(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, user, updatedFreshCentre, new LinkedHashMap<>(), staleCriteriaMessage, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder));
+                        final var criteriaIndication = createCriteriaIndication((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, critGenerator, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                        return restUtil.rawListJsonRepresentation(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, user, updatedFreshCentre, new LinkedHashMap<>(), criteriaIndication, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder));
                     }
                 } else {
                     updatedFreshCentre = null;
@@ -635,8 +635,8 @@ public class CriteriaResource extends AbstractWebResource {
                     // in most cases, the generated and queried data would be represented by the same entity and, thus, the final query needs to be enhanced with user related filtering by property 'createdBy'
                     if (!generationResult.isSuccessful()) {
                         LOGGER.debug("CRITERIA_RESOURCE: run finished (generation failed).");
-                        final String staleCriteriaMessage = createStaleCriteriaMessage((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, critGenerator, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-                        final Result result = generationResult.copyWith(new ArrayList<>(Arrays.asList(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, user, updatedFreshCentre, new LinkedHashMap<>(), staleCriteriaMessage, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder))));
+                        final var criteriaIndication = createCriteriaIndication((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, critGenerator, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                        final Result result = generationResult.copyWith(new ArrayList<>(Arrays.asList(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, user, updatedFreshCentre, new LinkedHashMap<>(), criteriaIndication, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder))));
                         return restUtil.resultJSONRepresentation(result);
                     }
                 }
@@ -849,7 +849,7 @@ public class CriteriaResource extends AbstractWebResource {
 
     /**
      * Resultant custom object contains important result information such as 'centreDirty' (guards enablement of SAVE button) or 'metaValues'
-     * (they bind to metaValues criteria editors) or information whether selection criteria is stale (config button colour).
+     * (they bind to metaValues criteria editors) or information whether selection criteria is stale or changed (config button colour / tooltip).
      * <p>
      * This method updates such information just before returning resultant custom object to the client.
      *
@@ -857,7 +857,7 @@ public class CriteriaResource extends AbstractWebResource {
      * @param saveAsName
      * @param updatedFreshCentre
      * @param resultantCustomObject
-     * @param staleCriteriaMessage
+     * @param criteriaIndication -- contains actual CriteriaIndication for currently loaded centre configuration and its result-set; this indication will be promoted to 'Show selection criteria' button in EGI
      *
      * @return
      */
@@ -868,7 +868,7 @@ public class CriteriaResource extends AbstractWebResource {
             final User user,
             final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre,
             final Map<String, Object> resultantCustomObject,
-            final String staleCriteriaMessage,
+            final CriteriaIndication criteriaIndication,
             final DeviceProfile device,
             final IWebUiConfig webUiConfig,
             final EntityCentreConfigCo eccCompanion,
@@ -878,9 +878,9 @@ public class CriteriaResource extends AbstractWebResource {
         resultantCustomObject.put(CENTRE_DIRTY, centreDirtyCalculator.apply(saveAsName).apply(() -> updatedFreshCentre));
         resultantCustomObject.put(META_VALUES, createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)));
 
-        // Resultant custom object contains information whether selection criteria is stale (config button colour).
+        // Resultant custom object contains information whether selection criteria is stale / changed (config button colour / tooltip).
         // Such information should be updated just before returning resultant custom object to the client.
-        resultantCustomObject.put(STALE_CRITERIA_MESSAGE, staleCriteriaMessage);
+        resultantCustomObject.put(CRITERIA_INDICATION, criteriaIndication);
 
         return resultantCustomObject;
     }

@@ -149,9 +149,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      */
     static final String META_VALUES = "metaValues";
     /**
-     * The key for customObject's value, which either contains a message for stale criteria or is empty if no criteria are stale.
+     * The key for customObject's value, which contains CriteriaIndicator.
      */
-    static final String STALE_CRITERIA_MESSAGE = "staleCriteriaMessage";
+    static final String CRITERIA_INDICATION = "criteriaIndication";
     /**
      * The key for customObject's value containing the preferred view index.
      */
@@ -202,7 +202,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     }
 
     /**
-     * Creates the 'custom object' that contains 'critMetaValues', 'centreDirty' flag (see {@link #createCriteriaMetaValuesCustomObject(Map, boolean, int)},
+     * Creates the 'custom object' that contains 'critMetaValues', 'centreDirty' flag (see {@link #createCriteriaMetaValuesCustomObject(Map, boolean)},
      * optional 'saveAsName' value, optional 'saveAsDesc' value, optional 'configUuid' value and optional 'shareError' value.
      *
      * @param criteriaMetaValues
@@ -211,7 +211,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param configUuid -- represents uuid of configuration to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      * @param autoRun -- represents autoRun parameter of configuration to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      * @param saveAsDesc -- represents a configuration title's tooltip to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
-     * @param staleCriteriaMessage
+     * @param criteriaIndicationOpt -- optional CriteriaIndication for currently loaded centre configuration and its result-set; this indication will be promoted to 'Show selection criteria' button in EGI if not empty
      * @param preferredView -- represents a configuration preferred view index to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      * @param shareError -- represents a configuration sharing error message to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      *
@@ -224,7 +224,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final Optional<Optional<String>> configUuid,
         final Optional<Boolean> autoRun,
         final Optional<Optional<String>> saveAsDesc,
-        final Optional<Optional<String>> staleCriteriaMessage,
+        final Optional<CriteriaIndication> criteriaIndicationOpt,
         final Optional<Integer> preferredView,
         final User user,
         final Optional<Optional<String>> shareError
@@ -242,8 +242,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         saveAsDesc.ifPresent(desc -> {
             customObject.put(SAVE_AS_DESC, desc.orElse(""));
         });
-        staleCriteriaMessage.ifPresent(message -> {
-            customObject.put(STALE_CRITERIA_MESSAGE, message.orElse(null));
+        criteriaIndicationOpt.ifPresent(criteriaIndication -> {
+            customObject.put(CRITERIA_INDICATION, criteriaIndication);
         });
         preferredView.ifPresent(prefView -> {
             customObject.put(PREFERRED_VIEW, prefView);
@@ -256,19 +256,17 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     }
 
     /**
-     * Creates the 'custom object' that contain 'critMetaValues', 'centreDirty' flag (see {@link #createCriteriaMetaValuesCustomObject(Map, boolean, int)}) and 'staleCriteriaMessage'.
+     * Creates the 'custom object' that contain 'critMetaValues', 'centreDirty' flag (see {@link #createCriteriaMetaValuesCustomObject(Map, boolean)}) and 'criteriaIndication'.
      *
      * @param criteriaMetaValues
      * @param centreDirty
-     * @param staleCriteriaMessage
-     *            -- if not <code>null</code> then the criteria is stale and the user will be informed about that ('orange' config button), otherwise (if <code>null</code>) -- the
-     *            criteria were not changed and the user will be informed about that ('black' config button).
+     * @param criteriaIndication -- contains actual CriteriaIndication for currently loaded centre configuration and its result-set; this indication will be promoted to 'Show selection criteria' button in EGI
      *
      * @return
      */
-    static Map<String, Object> createCriteriaMetaValuesCustomObject(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean centreDirty, final String staleCriteriaMessage) {
+    static Map<String, Object> createCriteriaMetaValuesCustomObject(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean centreDirty, final CriteriaIndication criteriaIndication) {
         final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(criteriaMetaValues, centreDirty);
-        customObject.put(STALE_CRITERIA_MESSAGE, staleCriteriaMessage);
+        customObject.put(CRITERIA_INDICATION, criteriaIndication);
         return customObject;
     }
 

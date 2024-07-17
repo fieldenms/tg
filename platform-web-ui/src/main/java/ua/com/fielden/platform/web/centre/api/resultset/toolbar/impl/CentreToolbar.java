@@ -1,18 +1,14 @@
 package ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl;
 
+import ua.com.fielden.platform.dom.*;
+import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
+import ua.com.fielden.platform.web.minijs.JsCode;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import ua.com.fielden.platform.dom.CssElement;
-import ua.com.fielden.platform.dom.CssStyles;
-import ua.com.fielden.platform.dom.DomContainer;
-import ua.com.fielden.platform.dom.DomElement;
-import ua.com.fielden.platform.dom.InnerTextElement;
-import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
-import ua.com.fielden.platform.web.minijs.JsCode;
 
 /**
  * Configuration for default toolbars available for entity centres and alternative views.
@@ -87,12 +83,12 @@ public class CentreToolbar implements IToolbarConfig {
         return new DomElement("paper-icon-button")
                 .attr("slot", "standart-action")
                 .attr("shortcut", "ctrl+e")
-                .attr("class$", "[[computeConfigButtonClasses(staleCriteriaMessage)]]")
+                .attr("class$", "[[computeConfigButtonClasses(criteriaIndication)]]")
                 .attr("icon", "icons:filter-list")
                 .attr("on-tap", "_activateSelectionCriteriaView")
                 .attr("disabled$", "[[isRunning]]")
                 .attr("hidden$", "[[isSelectionCriteriaEmpty]]")
-                .attr("tooltip-text$", "[[computeConfigButtonTooltip(staleCriteriaMessage)]]");
+                .attr("tooltip-text$", "[[computeConfigButtonTooltip(criteriaIndication)]]");
     }
 
     public static DomElement helpButton() {

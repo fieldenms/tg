@@ -1457,11 +1457,11 @@ const TgEntityCentreBehaviorImpl = {
         return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : isRunning; // Refresh button enabled even if pageCount === null i.e. where erroneous autorun occurred
     },
 
-    computeConfigButtonTooltip: function (staleCriteriaMessage) {
-        return (staleCriteriaMessage === null ? 'Show selection criteria' : staleCriteriaMessage) + ", Ctrl&nbsp+&nbspe";
+    computeConfigButtonTooltip: function (criteriaIndication) {
+        return criteriaIndication.message;
     },
-    computeConfigButtonClasses: function (staleCriteriaMessage) {
-        return staleCriteriaMessage === null ? 'standart-action' : 'standart-action orange';
+    computeConfigButtonClasses: function (criteriaIndication) {
+        return 'standart-action ' + criteriaIndication.style; // TODO
     },
 
     currPageFeedback: function (pageNumberUpdated, pageCountUpdated) {

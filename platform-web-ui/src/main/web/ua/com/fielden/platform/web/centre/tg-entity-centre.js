@@ -394,9 +394,9 @@ Polymer({
         _createContextHolder: Function,
         uuid: String,
         _activateResultSetView: Function,
-        staleCriteriaMessage: {
-            type: String,
-            observer: '_staleCriteriaMessageChanged'
+        criteriaIndication: {
+            type: Object,
+            observer: '_criteriaIndicationChanged'
         },
         _confirm: Function,
         initiateAutoRun: Function,
@@ -703,8 +703,8 @@ Polymer({
         this.$.fantomSplitter.style.removeProperty("left");
     },
 
-    _staleCriteriaMessageChanged: function (newValue, oldValue) {
-        console.debug('_staleCriteriaMessageChanged:', newValue, oldValue);
+    _criteriaIndicationChanged: function (newValue, oldValue) {
+        console.debug('_criteriaIndicationChanged:', newValue, oldValue);
     },
 
     /**
