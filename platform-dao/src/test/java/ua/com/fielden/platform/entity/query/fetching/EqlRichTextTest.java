@@ -53,4 +53,37 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
         assertEquals(entityAgg.get("x"), "true");
     }
 
+    // SQL Server requirements:
+    // * sendStringParametersAsUnicode=true
+    @Test
+    public void utf8_formattedText_can_be_used_as_search_criteria() {
+        final var richText = RichText.fromMarkdown("привіт world");
+        save(new_(EntityWithRichText.class, "1").setText(richText));
+
+        final var co = co(EntityWithRichText.class);
+        assertEquals(richText.formattedText(),
+                     co.getEntity(from(select(EntityWithRichText.class).where()
+                                               .prop(join(".", "text", _formattedText)).like().val("привіт%")
+                                               .model())
+                                          .model())
+                             .getText().formattedText());
+    }
+
+    // SQL Server requirements:
+    // * sendStringParametersAsUnicode=true
+    // * UTF8 collation
+    @Test
+    public void utf8_coreText_can_be_used_as_search_criteria() {
+        final var richText = RichText.fromMarkdown("привіт world");
+        save(new_(EntityWithRichText.class, "1").setText(richText));
+
+        final var co = co(EntityWithRichText.class);
+        assertEquals(richText.coreText(),
+                     co.getEntity(from(select(EntityWithRichText.class).where()
+                                               .prop(join(".", "text", _coreText)).like().val("привіт%")
+                                               .model())
+                                          .model())
+                             .getText().coreText());
+    }
+
 }

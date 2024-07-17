@@ -2,7 +2,6 @@ package ua.com.fielden.platform.types;
 
 import org.junit.Test;
 import ua.com.fielden.platform.persistence.types.EntityWithRichText;
-import ua.com.fielden.platform.persistence.types.EntityWithRichTextCo;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -29,6 +28,20 @@ public class RichTextPersistenceTest extends AbstractDaoTestCase {
         final var entity2 = save(new_(EntityWithRichText.class, "two").setText(RichText.fromMarkdown("text two")));
         entity1.setText(entity2.getText());
         assertEquals(entity2.getText(), save(entity1).getText());
+    }
+
+    // SQL Server requirements:
+    // * sendStringParametersAsUnicode=true
+    // * UTF8 collation
+    @Test
+    public void utf8_text_can_be_saved_and_retrieved() {
+        final var richText = RichText.fromMarkdown("привіт *world*");
+        final var entity = save(new_(EntityWithRichText.class, "one").setText(richText));
+
+        final var co = co(EntityWithRichText.class);
+        co.save(entity);
+        final var fetchedEntity = co.findByKey("one");
+        assertTrue(fetchedEntity.getText().iEquals(richText));
     }
 
     @Override
