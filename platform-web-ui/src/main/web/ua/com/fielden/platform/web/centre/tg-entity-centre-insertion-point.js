@@ -799,7 +799,6 @@ Polymer({
     _minimisedChanged: function (newValue) {
         if (this.contextRetriever) {
             this._setDimension();
-            this._setPosition();
         }
     },
 
