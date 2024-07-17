@@ -13,12 +13,12 @@ public class RichTextPersistenceTest extends AbstractDaoTestCase {
 
     @Test
     public void rich_text_property_can_be_saved_and_retrieved() {
-        final var entity = new_(EntityWithRichText.class, "abc").setText(RichText.fromMarkdown("hello *world*"));
         final var co = co$(EntityWithRichText.class);
-        co.save(entity);
+        final var richText = RichText.fromMarkdown("hello *world*");
+        co.save(new_(EntityWithRichText.class, "abc").setText(richText));
         final var fetchedEntity = co.findByKey("abc");
         assertInstanceOf(RichText.Persisted.class, fetchedEntity.getText());
-        assertTrue(fetchedEntity.getText().iEquals(entity.getText()));
+        assertTrue(fetchedEntity.getText().iEquals(richText));
 
         assertEquals(fetchedEntity.getText(), co.save(fetchedEntity.setKey("cba")).getText());
     }
