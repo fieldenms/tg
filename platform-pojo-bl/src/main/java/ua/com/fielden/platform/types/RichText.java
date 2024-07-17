@@ -11,6 +11,7 @@ import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
+import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.owasp.html.SimpleHtmlChangeListener;
 
@@ -47,6 +48,7 @@ public sealed class RichText permits RichText.Persisted {
 
     @IsProperty(length = Integer.MAX_VALUE)
     @MapTo
+    @PersistentType("nstring")
     private final String formattedText;
 
     @IsProperty
