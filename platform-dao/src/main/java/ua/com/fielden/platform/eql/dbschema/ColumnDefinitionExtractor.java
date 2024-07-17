@@ -110,10 +110,20 @@ public class ColumnDefinitionExtractor {
                 final List<Pair<String, Integer>> subprops = jdbcSqlTypeFor(compositeUserType);
                 for (final Pair<String, Integer> pair : subprops) {
                     final String parentColumn = columnName;
-                    final Field subpropField = findFieldByName(compositeUserType.returnedClass(), pair.getKey());
+                    final var subpropName = pair.getKey();
+                    final Field subpropField = findFieldByName(compositeUserType.returnedClass(), subpropName);
                     final MapTo subpropMapTo = getAnnotation(subpropField, MapTo.class);
                     final IsProperty subpropIsProperty = getAnnotation(subpropField, IsProperty.class);
                     final String subpropColumnNameSuggestion = subpropMapTo.value();
+                    final Object subpropHibType = hibernateTypeDeterminer.getHibernateType(subpropField.getType(),
+                                                                                           getAnnotation(subpropField, PersistentType.class));
+                    final SqlType subpropSqlType = switch (subpropHibType) {
+                        case UserType t -> new SqlType.TypeCode(jdbcSqlTypeFor(t));
+                        case Type t -> new SqlType.TypeCode(jdbcSqlTypeFor(t));
+                        default -> throw new DbSchemaException("Property [%s] has unsupported Hibernate type: %s".formatted(
+                                "%s.%s".formatted(propType.getTypeName(), subpropName),
+                                subpropHibType));
+                    };
 
                     final int subpropLength;
                     if (RichText.class.isAssignableFrom(propType) && RichText._coreText.equals(subpropField.getName())) {
@@ -139,10 +149,10 @@ public class ColumnDefinitionExtractor {
                     
                     
                     final String subpropColumnName = subprops.size() == 1 ? parentColumn
-                            : (parentColumn + (parentColumn.endsWith("_") ? "" : "_") + (isEmpty(subpropColumnNameSuggestion) ? pair.getKey().toUpperCase() : subpropColumnNameSuggestion));
+                            : (parentColumn + (parentColumn.endsWith("_") ? "" : "_") + (isEmpty(subpropColumnNameSuggestion) ? subpropName.toUpperCase() : subpropColumnNameSuggestion));
 
                     result.add(new ColumnDefinition(unique, compositeKeyMemberOrder, isNullable(propType, required), subpropColumnName, subpropField.getType(),
-                                                    new SqlType.TypeCode(pair.getValue()), subpropLength, subpropScale, subpropPrecision, subpropMapTo.defaultValue()));
+                                                    subpropSqlType, subpropLength, subpropScale, subpropPrecision, subpropMapTo.defaultValue()));
                 }
             } else {
                 throw new DbSchemaException(format("Unexpected hibernate type converter [%s] for property [%s] of type [%s].", hibTypeConverter, propName, propType));
