@@ -1,66 +1,8 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static java.lang.Boolean.FALSE;
-import static java.lang.Math.min;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
-import static java.util.UUID.randomUUID;
-import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.CRITERIA_ENTITY_ID;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
-import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.error.Result.successful;
-import static ua.com.fielden.platform.pagination.IPage.pageCount;
-import static ua.com.fielden.platform.pagination.IPage.realPageCount;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isAndBeforeDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDateMnemonicDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDatePrefixDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isExclusive2Default;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isExclusiveDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isNotDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isOrGroupDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isOrNullDefault;
-import static ua.com.fielden.platform.types.either.Either.left;
-import static ua.com.fielden.platform.types.either.Either.right;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
-import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
-import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPLIED_CRITERIA_ENTITY_NAME;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.AUTO_RUN;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLink;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLinkOrInherited;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isInherited;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.FETCH_CONFIG_AND_INSTRUMENT;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOpt;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOptByUuid;
-import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.createQueryEnhancerAndContext;
-import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.enhanceResultEntitiesWithCustomPropertyValues;
-import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.enhanceResultEntitiesWithDynamicPropertyValues;
-import static ua.com.fielden.platform.web.resources.webui.EntityResource.restoreMasterFunctionalEntity;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalManagedType;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getVersion;
-
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -100,11 +42,7 @@ import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.centre.CentreContext;
-import ua.com.fielden.platform.web.centre.CentreUtils;
-import ua.com.fielden.platform.web.centre.EntityCentre;
-import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
-import ua.com.fielden.platform.web.centre.IQueryEnhancer;
+import ua.com.fielden.platform.web.centre.*;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
@@ -114,6 +52,39 @@ import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSette
 import ua.com.fielden.platform.web.centre.api.resultset.tooltip.IWithTooltip;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
+
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static java.lang.Boolean.FALSE;
+import static java.lang.Math.min;
+import static java.util.Optional.*;
+import static java.util.UUID.randomUUID;
+import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.CRITERIA_ENTITY_ID;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.pagination.IPage.pageCount;
+import static ua.com.fielden.platform.pagination.IPage.realPageCount;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.*;
+import static ua.com.fielden.platform.types.either.Either.left;
+import static ua.com.fielden.platform.types.either.Either.right;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPLIED_CRITERIA_ENTITY_NAME;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.*;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.*;
+import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.*;
+import static ua.com.fielden.platform.web.resources.webui.EntityResource.restoreMasterFunctionalEntity;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.*;
 
 /**
  * This utility class contains the methods that are shared across {@link CentreResource} and {@link CriteriaResource}.
@@ -149,7 +120,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      */
     static final String META_VALUES = "metaValues";
     /**
-     * The key for customObject's value, which contains CriteriaIndicator.
+     * The key for customObject's value, which contains CriteriaIndication.
      */
     static final String CRITERIA_INDICATION = "criteriaIndication";
     /**

@@ -1458,10 +1458,16 @@ const TgEntityCentreBehaviorImpl = {
     },
 
     computeConfigButtonTooltip: function (criteriaIndication) {
-        return criteriaIndication.message;
+        return criteriaIndication ? criteriaIndication.message : '';
     },
-    computeConfigButtonClasses: function (criteriaIndication) {
-        return 'standart-action ' + criteriaIndication.style; // TODO
+    computeConfigButtonStyle: function (criteriaIndication) {
+        return criteriaIndication && criteriaIndication.style ? this._convertStyle(criteriaIndication.style) : '';
+    },
+
+    _convertStyle: function (styleObject) {
+        return Object.keys(styleObject.value)
+            .map(key => `${key}:${styleObject.value[key].value.join(' ')}`)
+            .join(';')
     },
 
     currPageFeedback: function (pageNumberUpdated, pageCountUpdated) {

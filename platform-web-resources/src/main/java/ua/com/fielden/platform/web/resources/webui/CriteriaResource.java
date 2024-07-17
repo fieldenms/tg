@@ -84,6 +84,7 @@ import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.extractSaveAsName;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.wasLoadedPreviouslyAndConfigUuid;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.*;
+import static ua.com.fielden.platform.web.resources.webui.CriteriaIndication.*;
 import static ua.com.fielden.platform.web.resources.webui.EntityValidationResource.VALIDATION_COUNTER;
 import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.*;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
@@ -105,11 +106,6 @@ public class CriteriaResource extends AbstractWebResource {
     private static final String CONFLICTING_TITLE_SUFFIX = " (shared%s)";
     private static final String COULD_NOT_LOAD_CONFLICTING_SHARED_CONFIGURATION = "Cannot load a shared configuration with conflicting title [%s].";
     private static final String LINK_CONFIG_COULD_NOT_BE_LOADED = "A link configuration could not be loaded. Please try again.";
-    private static final String ERR_STALE_CRITERIA = "Selection criteria have been changed, but not applied. "
-                                                     + "Previously applied values are in effect. "
-                                                     + "Please tap <b>RUN</b> to apply the updated selection criteria.";
-    private static final String ERR_CHANGED_CRITERIA = "Selection criteria have been applied, but not saved. "
-                                                     + "Tap <b>SAVE</b> to save the updated selection criteria if needed.";
 
     /**
      * Map for user+miType based locks for centre running. It is used to emulate a queue for execution of run requests for the same user and centre (regardless of the {@code saveAsName} value).
@@ -520,25 +516,27 @@ public class CriteriaResource extends AbstractWebResource {
             // From end-user perspective it is only relevant to 'know' whether selection criteria change was not applied against currently visible result-set.
             // Thus need to only compare 'firstTick's of centre managers.
             // Please be careful when adding some new contracts to 'firstTick' not to violate this premise.
-            final boolean isCriteriaStale = !updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder).getFirstTick().selectionCriteriaEquals(freshCentre.getFirstTick());
-            if (isCriteriaStale) {
-                return ERR_STALE_CRITERIA;
-            } else {
-                String errChangedCriteria = createChangedCriteriaMessage(freshCentre, miType, saveAsName, user, companionFinder, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-                if (errChangedCriteria != null) {
-                    return errChangedCriteria;
-                }
-            }
+            final boolean isCriteriaStale = !updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder).getFirstTick()
+                .selectionCriteriaEquals(freshCentre.getFirstTick());
+            return isCriteriaStale ? STALE : createChangedCriteriaIndication(freshCentre, miType, saveAsName, user, companionFinder, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
         }
-        return null;
+        return NONE;
     }
 
-    public static String createChangedCriteriaMessage(ICentreDomainTreeManagerAndEnhancer freshCentre, Class<? extends MiWithConfigurationSupport<?>> miType, Optional<String> saveAsName, User user, ICompanionObjectFinder companionFinder, DeviceProfile device, IWebUiConfig webUiConfig, EntityCentreConfigCo eccCompanion, MainMenuItemCo mmiCompanion, IUser userCompanion) {
-        final boolean isCriteriaChanged = !updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder).getFirstTick().selectionCriteriaEquals(freshCentre.getFirstTick());
-        if (isCriteriaChanged) {
-            return ERR_CHANGED_CRITERIA;
-        }
-        return null;
+    public static CriteriaIndication createChangedCriteriaIndication(
+            final ICentreDomainTreeManagerAndEnhancer freshCentre,
+            final Class<? extends MiWithConfigurationSupport<?>> miType,
+            final Optional<String> saveAsName,
+            final User user,
+            final ICompanionObjectFinder companionFinder,
+            final DeviceProfile device,
+            final IWebUiConfig webUiConfig,
+            final EntityCentreConfigCo eccCompanion,
+            final MainMenuItemCo mmiCompanion,
+            final IUser userCompanion) {
+        final boolean isCriteriaChanged = !updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder).getFirstTick()
+            .selectionCriteriaEquals(freshCentre.getFirstTick());
+        return isCriteriaChanged ? CHANGED : NONE;
     }
 
     /**
@@ -664,8 +662,8 @@ public class CriteriaResource extends AbstractWebResource {
                     )
                 );
                 if (isRunning) {
-                    final String changedCriteriaMessage = createChangedCriteriaMessage(updatedFreshCentre, miType, saveAsName, user, companionFinder, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-                    updateResultantCustomObject(previouslyRunCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, user, previouslyRunCentre, pair.getKey(), changedCriteriaMessage, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                    final var changedCriteriaIndication = createChangedCriteriaIndication(updatedFreshCentre, miType, saveAsName, user, companionFinder, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                    updateResultantCustomObject(previouslyRunCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, user, previouslyRunCentre, pair.getKey(), changedCriteriaIndication, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                 }
 
                 // Running the rendering customiser for result set of entities.

@@ -70,8 +70,7 @@ public class CentreToolbar implements IToolbarConfig {
 
     @Override
     public CssStyles styles() {
-        return new CssStyles()
-                .add(new CssElement("paper-icon-button.orange").setStyle("color", "var(--paper-orange-500)").setStyle("border-color", "var(--paper-orange-500)"));
+        return new CssStyles();
     }
 
     @Override
@@ -83,7 +82,8 @@ public class CentreToolbar implements IToolbarConfig {
         return new DomElement("paper-icon-button")
                 .attr("slot", "standart-action")
                 .attr("shortcut", "ctrl+e")
-                .attr("class$", "[[computeConfigButtonClasses(criteriaIndication)]]")
+                .clazz("standart-action")
+                .attr("style$", "[[computeConfigButtonStyle(criteriaIndication)]]")
                 .attr("icon", "icons:filter-list")
                 .attr("on-tap", "_activateSelectionCriteriaView")
                 .attr("disabled$", "[[isRunning]]")
