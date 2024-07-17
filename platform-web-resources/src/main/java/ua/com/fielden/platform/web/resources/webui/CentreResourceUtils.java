@@ -120,7 +120,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      */
     static final String META_VALUES = "metaValues";
     /**
-     * The key for customObject's value, which contains CriteriaIndication.
+     * The key for customObject's value, which contains {@link CriteriaIndication}.
      */
     static final String CRITERIA_INDICATION = "criteriaIndication";
     /**
@@ -182,7 +182,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param configUuid -- represents uuid of configuration to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      * @param autoRun -- represents autoRun parameter of configuration to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      * @param saveAsDesc -- represents a configuration title's tooltip to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
-     * @param criteriaIndicationOpt -- optional CriteriaIndication for currently loaded centre configuration and its result-set; this indication will be promoted to 'Show selection criteria' button in EGI if not empty
+     * @param criteriaIndicationOpt -- optional {@link CriteriaIndication} for currently loaded centre configuration and its result-set; this indication will be promoted to 'Show selection criteria' button in EGI if not empty
      * @param preferredView -- represents a configuration preferred view index to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      * @param shareError -- represents a configuration sharing error message to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      *
@@ -231,7 +231,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      *
      * @param criteriaMetaValues
      * @param centreDirty
-     * @param criteriaIndication -- contains actual CriteriaIndication for currently loaded centre configuration and its result-set; this indication will be promoted to 'Show selection criteria' button in EGI
+     * @param criteriaIndication -- contains actual {@link CriteriaIndication} for currently loaded centre configuration and its result-set; this indication will be promoted to 'Show selection criteria' button in EGI
      *
      * @return
      */

@@ -855,7 +855,7 @@ public class CriteriaResource extends AbstractWebResource {
      * @param saveAsName
      * @param updatedFreshCentre
      * @param resultantCustomObject
-     * @param criteriaIndication -- contains actual CriteriaIndication for currently loaded centre configuration and its result-set; this indication will be promoted to 'Show selection criteria' button in EGI
+     * @param criteriaIndication -- contains actual {@link CriteriaIndication} for currently loaded centre configuration and its result-set; this indication will be promoted to 'Show selection criteria' button in EGI
      *
      * @return
      */
