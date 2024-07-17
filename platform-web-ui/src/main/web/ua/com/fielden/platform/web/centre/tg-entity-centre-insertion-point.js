@@ -38,13 +38,13 @@ const ST_DETACHED_VIEW = 'detachedView';
 
 const ST_DETACHED_VIEW_WIDTH = 'detachedWidth';
 const ST_DETACHED_VIEW_HEIGHT = 'detachedHeight';
-const ST_PREF_WIDTH = 'prefWidth';
-const ST_PREF_HEIGHT = 'prefHeight';
 const ST_POS_X = "posX";
 const ST_POS_Y = "posY";
 const ST_ZORDER = "zOrder";
 
 const ST_ATTACHED_HEIGHT = 'attachedHeight';
+
+const INSERTION_POINT_MARGIN = 10;
 
 const template = html`
     <style>
@@ -623,7 +623,7 @@ Polymer({
             this.style.width = resizedWidth + 'px';
         }
         if (heightNeedsResize || widthNeedsResize) {
-            this._saveDimensions(this.style.width, this.style.height);
+            this._savePair(ST_DETACHED_VIEW_WIDTH, this.style.width, ST_DETACHED_VIEW_HEIGHT, this.style.height);
             this.notifyResize();
         }
     },
@@ -651,10 +651,6 @@ Polymer({
         }
 
         if (elementHeight !== newHeight) {
-            //Should save preferred dimensions in order to be able to restore on double-tap of resize icon.
-            if (!this._getPair(ST_PREF_WIDTH, ST_PREF_HEIGHT)) {
-                this._saveIntoPrefDim();
-            }
             this.style.height = newHeight + 'px';
             this._saveProp(ST_ATTACHED_HEIGHT, this.style.height);
             this.notifyResize();
@@ -689,7 +685,7 @@ Polymer({
                         this.style.top = _titleBarDimensions.top + e.detail.ddy + 'px';
                     }
                     if (leftNeedsChange || topNeedsChange) {
-                        this._savePosition(this.style.left, this.style.top);
+                        this._savePair(ST_POS_X, this.style.left, ST_POS_Y, this.style.top);
                     }
                     break;
                 case 'end':
@@ -764,12 +760,6 @@ Polymer({
     },
 
     _makeDetached: function () {
-        if (!this._getPair(ST_PREF_WIDTH, ST_PREF_HEIGHT)) {
-            this._saveIntoPrefDim();
-        }
-        if (!this._getPair(ST_DETACHED_VIEW_WIDTH, ST_DETACHED_VIEW_HEIGHT)) {
-            this._saveDimensions();
-        }
         const zOrder = this._getProp(ST_ZORDER);
         if (zOrder) {
             this.contextRetriever().insertionPointManager.add(this, +zOrder);
@@ -808,14 +798,6 @@ Polymer({
 
     _minimisedChanged: function (newValue) {
         if (this.contextRetriever) {
-            if (newValue) {
-                if (!this._getPair(ST_PREF_WIDTH, ST_PREF_HEIGHT)) {
-                    this._saveIntoPrefDim();
-                }
-                if (!this._getPair(ST_DETACHED_VIEW_WIDTH, ST_DETACHED_VIEW_HEIGHT)) {
-                    this._saveDimensions();
-                }
-            }
             this._setDimension();
             this._setPosition();
         }
@@ -863,10 +845,7 @@ Polymer({
         if (this.detachedView) {
             let dimToApply = this._getPair(ST_DETACHED_VIEW_WIDTH, ST_DETACHED_VIEW_HEIGHT);
             if (!dimToApply) {
-                dimToApply = this._getPair(ST_PREF_WIDTH, ST_PREF_HEIGHT);
-            }
-            if (!dimToApply) {
-                dimToApply = this._getPrefDim();
+                dimToApply = this._getPrefDimForDetachedView();
             }
             if (!this.minimised && !this.maximised) {
                 this.style.width = dimToApply && dimToApply[0];
@@ -886,14 +865,14 @@ Polymer({
                 const heightToApply = this._getProp(ST_ATTACHED_HEIGHT);
                 const prefDim = this._getPrefDim();
                 if (!this.minimised && !this.maximised) {
-                    this.style.margin = '10px';
+                    this.style.margin = INSERTION_POINT_MARGIN + 'px';
                     this.style.width = prefDim && prefDim[0];
                     this.style.height = heightToApply || (prefDim && prefDim[1]);
                 } else if (this.maximised && !this.minimised) {
                     this.style.width = '100%';
                     this.style.height = '100%';
                 } else if (this.minimised && !this.maximised) {
-                    this.style.margin = '10px';
+                    this.style.margin = INSERTION_POINT_MARGIN + 'px';
                     this.style.height = this._titleBarHeight();
                     this.style.width = prefDim && prefDim[0];
                 }
@@ -970,6 +949,30 @@ Polymer({
         }
     },
 
+    _getPrefDim: function () {
+        const prefDim = this.$.elementLoader.prefDim;
+        if (prefDim) {
+            const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
+            const height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
+            return [width, prefDim.heightUnit === '%' ? height : `calc(${height} + ${this._titleBarHeight()})`];
+        }
+    },
+
+    _titleBarHeight: function() {
+        return this._hasTitleBar(this.shortDesc, this.alternativeView) ? '44px' : '0px';
+    },
+
+    _getPrefDimForDetachedView: function () {
+        const prefDim = this._getPrefDim();
+        if (prefDim) {
+            prefDim[1] = this._getProp(ST_ATTACHED_HEIGHT) || prefDim[1];
+        }
+        if (prefDim && isNaN(parseInt(prefDim[0]))) {//The width might not be a number in that case take the width of container minus margins
+            prefDim[0] = (this.parentElement.offsetWidth - INSERTION_POINT_MARGIN * 2) + 'px';
+        }
+        return prefDim
+    },
+
     /********************************* Local storage related functions ********************************/
     _restoreFromLocalStorage: function(_element, contextRetriever) {
         if (_element && contextRetriever) {
@@ -992,47 +995,11 @@ Polymer({
         }
     },
 
-    _saveDimensions: function (width, height) {
-        let widthToSave = width;
-        let heightToSave = height;
-        if (!widthToSave || !heightToSave) {
-            const rect = this.getBoundingClientRect();
-            widthToSave = rect.width + 'px';
-            heightToSave = rect.height + 'px';
+    _savePair: function (key_1, value_1, key_2, value_2) {
+        if (value_1 && value_2) {
+            localStorage.setItem(this._generateKey(key_1), value_1);
+            localStorage.setItem(this._generateKey(key_2), value_2);
         }
-        if (widthToSave && heightToSave) {
-            localStorage.setItem(this._generateKey(ST_DETACHED_VIEW_WIDTH), widthToSave);
-            localStorage.setItem(this._generateKey(ST_DETACHED_VIEW_HEIGHT), heightToSave);
-        }
-    },
-
-    _saveIntoPrefDim: function () {
-        const rect = this.getBoundingClientRect();
-        if (rect.width && rect.height) {
-            localStorage.setItem(this._generateKey(ST_PREF_WIDTH), rect.width + 'px');
-            localStorage.setItem(this._generateKey(ST_PREF_HEIGHT), rect.height + 'px');
-        }
-    },
-
-    _savePosition: function (x, y) {
-        if (x && y) {
-            localStorage.setItem(this._generateKey(ST_POS_X), x);
-            localStorage.setItem(this._generateKey(ST_POS_Y), y);
-        }
-    },
-
-    _getPrefDim: function () {
-        const prefDim = this.$.elementLoader.prefDim;
-        if (prefDim) {
-            const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
-            const height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
-            return [width, prefDim.heightUnit === '%' ? height : `calc(${height} + ${this._titleBarHeight()})`];
-        }
-    },
-
-
-    _titleBarHeight: function() {
-        return this._hasTitleBar(this.shortDesc, this.alternativeView) ? '44px' : '0px';
     },
 
     _getPair: function (_1, _2) {
@@ -1049,24 +1016,21 @@ Polymer({
         }
     },
 
-    _removeProp: function (key) {
-        localStorage.removeItem(this._generateKey(key));
-    },
-
     _getProp: function (key) {
         return localStorage.getItem(this._generateKey(key));
     },
 
+    _removeProp: function (key) {
+        localStorage.removeItem(this._generateKey(key));
+    },
+
     _clearLocalStorage: function (event) {
         if (event.detail.sourceEvent.detail && event.detail.sourceEvent.detail === 2) {
-            if (this.detachedView) {
-                this._removeProp(ST_DETACHED_VIEW_WIDTH);
-                this._removeProp(ST_DETACHED_VIEW_HEIGHT);
-                this._removeProp(ST_POS_X);
-                this._removeProp(ST_POS_Y);
-            } else {
-                this._removeProp(ST_ATTACHED_HEIGHT);
-            }
+            this._removeProp(ST_DETACHED_VIEW_WIDTH);
+            this._removeProp(ST_DETACHED_VIEW_HEIGHT);
+            this._removeProp(ST_ATTACHED_HEIGHT);
+            this._removeProp(ST_POS_X);
+            this._removeProp(ST_POS_Y);
             this._setDimension();
             this._setPosition();
         }
