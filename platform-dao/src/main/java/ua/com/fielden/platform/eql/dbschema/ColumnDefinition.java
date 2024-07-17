@@ -11,22 +11,11 @@ import java.util.Optional;
 /**
  * A data structure to capture the information required to generate column DDL statement.
  *
- * @author TG Team
- *
+ * @param javaType could be useful for determining if the FK constraint is applicable
  */
-public class ColumnDefinition {
-    public final boolean nullable;
-    public final String name;
-    public final Class<?> javaType; // could be useful for determining if the FK constraint is applicable
-    final SqlType sqlType;
-    public final int length;
-    public final int scale;
-    public final int precision;
-    public final String defaultValue;
-    public final boolean unique;
-    public final Optional<Integer> compositeKeyMemberOrder;
-    final boolean requiresIndex;
-
+public record ColumnDefinition(boolean unique, Optional<Integer> compositeKeyMemberOrder, boolean nullable, String name,
+                               Class<?> javaType, SqlType sqlType, int length, int scale, int precision,
+                               String defaultValue, boolean requiresIndex) {
     public static final int DEFAULT_STRING_LENGTH = 255;
     public static final int DEFAULT_NUMERIC_PRECISION = 18;
     public static final int DEFAULT_NUMERIC_SCALE = 2;
@@ -42,7 +31,8 @@ public class ColumnDefinition {
             final int scale,
             final int precision,
             final String defaultValue,
-            final boolean requiresIndex) {
+            final boolean requiresIndex)
+    {
         if (StringUtils.isEmpty(name)) {
             throw new DbSchemaException("Column name can not be empty!");
         }
@@ -135,4 +125,5 @@ public class ColumnDefinition {
 
         return StringUtils.equals(name, other.name);
     }
+
 }
