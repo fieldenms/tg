@@ -26,6 +26,14 @@ import static ua.com.fielden.platform.types.RichText._formattedText;
  RichText value is to write to the DB directly, which would indicate a compromise of a much greater scale.
 */
 
+/**
+ * Hibernate type mapping for composite type {@link RichText}.
+ * <p>
+ * {@link RichText#formattedText} is mapped to a regular {@link StringType} but its corresponding column type in the
+ * DB schema may be different. For SQL Server it will be {@code nvarchar}, for PostgreSQL - {@code text}. This discrepancy
+ * does not prevent Hibernate from correctly converting values to and from a database, i.e., {@link StringType} works
+ * correctly with {@code nvarchar}.
+ */
 public final class RichTextType extends AbstractCompositeUserType implements IRichTextType {
 
     public static final RichTextType INSTANCE = new RichTextType();
