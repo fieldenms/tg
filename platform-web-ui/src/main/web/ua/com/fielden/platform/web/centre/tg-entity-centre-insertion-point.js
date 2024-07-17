@@ -651,6 +651,10 @@ Polymer({
         }
 
         if (elementHeight !== newHeight) {
+            //Should save preferred dimensions in order to be able to restore on double-tap of resize icon.
+            if (!this._getPair(ST_PREF_WIDTH, ST_PREF_HEIGHT)) {
+                this._saveIntoPrefDim();
+            }
             this.style.height = newHeight + 'px';
             this._saveProp(ST_ATTACHED_HEIGHT, this.style.height);
             this.notifyResize();
@@ -756,11 +760,13 @@ Polymer({
             }
             this._setDimension();
             this._setPosition();
-            this.notifyResize();
         }
     },
 
     _makeDetached: function () {
+        if (!this._getPair(ST_PREF_WIDTH, ST_PREF_HEIGHT)) {
+            this._saveIntoPrefDim();
+        }
         if (!this._getPair(ST_DETACHED_VIEW_WIDTH, ST_DETACHED_VIEW_HEIGHT)) {
             this._saveDimensions();
         }
@@ -803,6 +809,9 @@ Polymer({
     _minimisedChanged: function (newValue) {
         if (this.contextRetriever) {
             if (newValue) {
+                if (!this._getPair(ST_PREF_WIDTH, ST_PREF_HEIGHT)) {
+                    this._saveIntoPrefDim();
+                }
                 if (!this._getPair(ST_DETACHED_VIEW_WIDTH, ST_DETACHED_VIEW_HEIGHT)) {
                     this._saveDimensions();
                 }
@@ -831,10 +840,6 @@ Polymer({
     _detachedViewChanged: function (newValue) {
         if (this.contextRetriever) {
             if (newValue) {
-                //TODO should consider to save into pref dim
-                if (!this._getPair(ST_DETACHED_VIEW_WIDTH, ST_DETACHED_VIEW_HEIGHT)) {
-                    this._saveDimensions();
-                }
                 this._makeDetached();
             } else if (!this.maximised){
                 this._makeAttached();
@@ -894,6 +899,7 @@ Polymer({
                 }
             }
         }
+        this.notifyResize();
     },
 
     _setPosition: function () {
@@ -1000,6 +1006,14 @@ Polymer({
         }
     },
 
+    _saveIntoPrefDim: function () {
+        const rect = this.getBoundingClientRect();
+        if (rect.width && rect.height) {
+            localStorage.setItem(this._generateKey(ST_PREF_WIDTH), rect.width + 'px');
+            localStorage.setItem(this._generateKey(ST_PREF_HEIGHT), rect.height + 'px');
+        }
+    },
+
     _savePosition: function (x, y) {
         if (x && y) {
             localStorage.setItem(this._generateKey(ST_POS_X), x);
@@ -1045,7 +1059,16 @@ Polymer({
 
     _clearLocalStorage: function (event) {
         if (event.detail.sourceEvent.detail && event.detail.sourceEvent.detail === 2) {
-            
+            if (this.detachedView) {
+                this._removeProp(ST_DETACHED_VIEW_WIDTH);
+                this._removeProp(ST_DETACHED_VIEW_HEIGHT);
+                this._removeProp(ST_POS_X);
+                this._removeProp(ST_POS_Y);
+            } else {
+                this._removeProp(ST_ATTACHED_HEIGHT);
+            }
+            this._setDimension();
+            this._setPosition();
         }
     },
 
