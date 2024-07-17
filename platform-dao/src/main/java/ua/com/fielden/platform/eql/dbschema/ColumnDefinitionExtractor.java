@@ -96,22 +96,23 @@ public class ColumnDefinitionExtractor {
                 
                 final String unionPropColumnName = columnName + "_" + (isEmpty(mapToUnionSubprop.value()) ? subpropField.getName().toUpperCase() : mapToUnionSubprop.value());
                 result.add(new ColumnDefinition(unique, compositeKeyMemberOrder, true, unionPropColumnName, subpropField.getType(),
-                                                new SqlType.TypeCode(jdbcSqlTypeFor((Type) hibTypeConverter)), isPropertyUnionSubprop.length(), isPropertyUnionSubprop.scale(), isPropertyUnionSubprop.precision(), mapToUnionSubprop.defaultValue()));
+                                                new SqlType.TypeCode(jdbcSqlTypeFor((Type) hibTypeConverter)), isPropertyUnionSubprop.length(), isPropertyUnionSubprop.scale(), isPropertyUnionSubprop.precision(), mapToUnionSubprop.defaultValue(), false));
             }
         } else {
             if (hibTypeConverter instanceof Type) {
                 result.add(new ColumnDefinition(unique, compositeKeyMemberOrder, isNullable(propType, required), columnName, propType,
-                                                new SqlType.TypeCode(jdbcSqlTypeFor((Type) hibTypeConverter)), length, scale, precision, mapTo.defaultValue()));
+                                                new SqlType.TypeCode(jdbcSqlTypeFor((Type) hibTypeConverter)), length, scale, precision, mapTo.defaultValue(), false));
             } else if (hibTypeConverter instanceof UserType) {
                 result.add(new ColumnDefinition(unique, compositeKeyMemberOrder, isNullable(propType, required), columnName, propType,
-                                                new SqlType.TypeCode(jdbcSqlTypeFor((UserType) hibTypeConverter)), length, scale, precision, mapTo.defaultValue()));
+                                                new SqlType.TypeCode(jdbcSqlTypeFor((UserType) hibTypeConverter)), length, scale, precision, mapTo.defaultValue(), false));
             } else if (hibTypeConverter instanceof CompositeUserType) {
                 final CompositeUserType compositeUserType = (CompositeUserType) hibTypeConverter;
                 final List<Pair<String, Integer>> subprops = jdbcSqlTypeFor(compositeUserType);
                 for (final Pair<String, Integer> pair : subprops) {
                     final String parentColumn = columnName;
                     final var subpropName = pair.getKey();
-                    final Field subpropField = findFieldByName(compositeUserType.returnedClass(), subpropName);
+                    final var subpropType = compositeUserType.returnedClass();
+                    final Field subpropField = findFieldByName(subpropType, subpropName);
                     final MapTo subpropMapTo = getAnnotation(subpropField, MapTo.class);
                     final IsProperty subpropIsProperty = getAnnotation(subpropField, IsProperty.class);
                     final String subpropColumnNameSuggestion = subpropMapTo.value();
@@ -134,25 +135,32 @@ public class ColumnDefinitionExtractor {
 
                     // properties of type Money need special handling as the precision and scale for Money.amount can be overridden
                     final int subpropPrecision;
-                    if (Money.class.isAssignableFrom(compositeUserType.returnedClass()) && "amount".equals(subpropField.getName()) && precision != IsProperty.DEFAULT_PRECISION) {
+                    if (Money.class.isAssignableFrom(subpropType) && "amount".equals(subpropField.getName()) && precision != IsProperty.DEFAULT_PRECISION) {
                         subpropPrecision = precision; 
                     } else {
                         subpropPrecision = subpropIsProperty.precision();
                     }
                     
                     final int subpropScale;
-                    if (Money.class.isAssignableFrom(compositeUserType.returnedClass()) && "amount".equals(subpropField.getName()) && scale != IsProperty.DEFAULT_SCALE) {
+                    if (Money.class.isAssignableFrom(subpropType) && "amount".equals(subpropField.getName()) && scale != IsProperty.DEFAULT_SCALE) {
                         subpropScale = scale; 
                     } else {
                         subpropScale = subpropIsProperty.scale();
                     }
-                    
-                    
+
+
                     final String subpropColumnName = subprops.size() == 1 ? parentColumn
                             : (parentColumn + (parentColumn.endsWith("_") ? "" : "_") + (isEmpty(subpropColumnNameSuggestion) ? subpropName.toUpperCase() : subpropColumnNameSuggestion));
 
+                    final boolean requiresIndex;
+                    if (RichText.class.isAssignableFrom(propType) && RichText._coreText.equals(subpropField.getName())) {
+                        requiresIndex = true;
+                    } else {
+                        requiresIndex = false;
+                    }
+
                     result.add(new ColumnDefinition(unique, compositeKeyMemberOrder, isNullable(propType, required), subpropColumnName, subpropField.getType(),
-                                                    subpropSqlType, subpropLength, subpropScale, subpropPrecision, subpropMapTo.defaultValue()));
+                                                    subpropSqlType, subpropLength, subpropScale, subpropPrecision, subpropMapTo.defaultValue(), requiresIndex));
                 }
             } else {
                 throw new DbSchemaException(format("Unexpected hibernate type converter [%s] for property [%s] of type [%s].", hibTypeConverter, propName, propType));

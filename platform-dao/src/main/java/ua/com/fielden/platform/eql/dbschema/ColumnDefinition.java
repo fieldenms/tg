@@ -25,6 +25,7 @@ public class ColumnDefinition {
     public final String defaultValue;
     public final boolean unique;
     public final Optional<Integer> compositeKeyMemberOrder;
+    final boolean requiresIndex;
 
     public static final int DEFAULT_STRING_LENGTH = 255;
     public static final int DEFAULT_NUMERIC_PRECISION = 18;
@@ -40,7 +41,8 @@ public class ColumnDefinition {
             final int length,
             final int scale,
             final int precision,
-            final String defaultValue) {
+            final String defaultValue,
+            final boolean requiresIndex) {
         if (StringUtils.isEmpty(name)) {
             throw new DbSchemaException("Column name can not be empty!");
         }
@@ -54,6 +56,7 @@ public class ColumnDefinition {
         this.scale = scale <= -1 ? DEFAULT_NUMERIC_SCALE : scale;
         this.precision = precision <= -1 ? DEFAULT_NUMERIC_PRECISION : precision;
         this.defaultValue = defaultValue;
+        this.requiresIndex = requiresIndex;
     }
 
     /**

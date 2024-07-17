@@ -155,7 +155,7 @@ public class TableDdl {
     }
 
     private List<String> createNonUniqueIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
-        return cols.filter(col -> isPersistedEntityType(col.javaType)).map(col -> {
+        return cols.filter(col -> col.requiresIndex || isPersistedEntityType(col.javaType)).map(col -> {
             final StringBuilder sb = new StringBuilder();
 
             final String tableName = tableName(entityType);
