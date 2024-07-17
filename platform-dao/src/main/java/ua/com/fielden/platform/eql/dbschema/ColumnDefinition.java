@@ -1,11 +1,12 @@
 package ua.com.fielden.platform.eql.dbschema;
 
-import java.util.Optional;
-
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.dialect.Dialect;
-
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.dbschema.exceptions.DbSchemaException;
+
+import java.sql.Types;
+import java.util.Optional;
 
 /**
  * A data structure to capture the information required to generate column DDL statement.
@@ -17,7 +18,7 @@ public class ColumnDefinition {
     public final boolean nullable;
     public final String name;
     public final Class<?> javaType; // could be useful for determining if the FK constraint is applicable
-    public final int sqlType;
+    final SqlType sqlType;
     public final int length;
     public final int scale;
     public final int precision;
@@ -35,7 +36,7 @@ public class ColumnDefinition {
             final boolean nullable,
             final String name,
             final Class<?> javaType,
-            final int sqlType,
+            final SqlType sqlType,
             final int length,
             final int scale,
             final int precision,
@@ -65,13 +66,8 @@ public class ColumnDefinition {
         final StringBuilder sb = new StringBuilder();
         sb.append(name);
         sb.append(" ");
-        if (length == Integer.MAX_VALUE && String.class.equals(javaType) && dialect.getClass().getSimpleName().startsWith("Postgre")) {
-            sb.append("text");
-        } else if (length == Integer.MAX_VALUE && String.class.equals(javaType) && dialect.getClass().getSimpleName().startsWith("SQLServer")) {
-            sb.append("varchar(max)");
-        } else {
-            sb.append(dialect.getTypeName(sqlType, length, precision, scale));
-        }
+
+        sb.append(sqlTypeName(sqlType, dialect, javaType, length, precision, scale));
 
         if (!nullable) {
             sb.append(" NOT NULL");
@@ -83,6 +79,39 @@ public class ColumnDefinition {
         }
 
         return sb.toString();
+    }
+
+    private static String sqlTypeName(final SqlType sqlType, final Dialect dialect,
+                                      final Class<?> javaType,
+                                      final int length, final int precision, final int scale) {
+        return switch (sqlType) {
+            case SqlType.Named (var name) -> name;
+            case SqlType.TypeCode (var code) -> {
+                if (length == Integer.MAX_VALUE && String.class == javaType) {
+                    yield switch (dbVersion(dialect)) {
+                        case POSTGRESQL -> "text";
+                        case MSSQL -> {
+                            if (code == Types.NVARCHAR) yield "nvarchar(max)";
+                            else yield "varchar(max)";
+                        }
+                        default -> dialect.getTypeName(code, length, precision, scale);
+                    };
+                }
+                else {
+                    yield dialect.getTypeName(code, length, precision, scale);
+                }
+            }
+        };
+    }
+
+    private static DbVersion dbVersion(final Dialect dialect) {
+        if (dialect.getClass().getSimpleName().startsWith("Postgre")) {
+            return DbVersion.POSTGRESQL;
+        }
+        else if (dialect.getClass().getSimpleName().startsWith("SQLServer")) {
+            return DbVersion.MSSQL;
+        }
+        throw new DbSchemaException("Unrecognised Hibernate dialect: %s".formatted(dialect));
     }
 
     @Override
