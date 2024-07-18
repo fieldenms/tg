@@ -1242,7 +1242,7 @@ Polymer({
                     this.set(`egiModel.${entityIndex}.selected`, false);
                     this._processEntitySelection(this.filteredEntities[entityIndex], false);
                     selectionDetails.push({
-                        entity: this.filteredEntities[i],
+                        entity: this.filteredEntities[entityIndex],
                         select: false
                     });
                 } 
