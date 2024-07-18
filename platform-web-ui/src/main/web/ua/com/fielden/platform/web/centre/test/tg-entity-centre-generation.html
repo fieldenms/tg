@@ -238,7 +238,8 @@
                             assert.strictEqual(centre._selectedView, 0, 'The view should not be switched to EGI result-set.');
                             assert.strictEqual(centre._viewerDisabled, false, 'The viewer button should remain enabled after unsuccessful generation (RUN after any successful RUN).');
                             assert.strictEqual(centre._buttonDisabled, false, 'The runner button should remain enabled after unsuccessful generation (RUN after any successful RUN).');
-                            assert.deepEquals(centre.$.selection_criteria.criteriaIndication, {message: '', style: 'orange'}, 'Criteria should be stale.'); // TODO
+                            assert.ok(centre.$.selection_criteria.criteriaIndication, 'Criteria should be present.');
+                            assert.strictEqual(centre.$.selection_criteria.criteriaIndication.message, 'Selection criteria have been changed, but not applied. Previously applied values are in effect. Please tap <b>RUN</b> to apply the updated selection criteria. Ctrl&nbsp+&nbspe', 'Criteria should be stale.');
                             
                             let firstTime = false;
                             
