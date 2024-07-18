@@ -395,8 +395,7 @@ Polymer({
         uuid: String,
         _activateResultSetView: Function,
         criteriaIndication: {
-            type: Object,
-            observer: '_criteriaIndicationChanged'
+            type: Object
         },
         _confirm: Function,
         initiateAutoRun: Function,
@@ -701,10 +700,6 @@ Polymer({
         insertionPointContainerUpdater(this.$.fantomSplitter.offsetLeft);
         this.$.fantomSplitter.style.removeProperty("display");
         this.$.fantomSplitter.style.removeProperty("left");
-    },
-
-    _criteriaIndicationChanged: function (newValue, oldValue) {
-        console.debug('_criteriaIndicationChanged:', newValue, oldValue);
     },
 
     /**
