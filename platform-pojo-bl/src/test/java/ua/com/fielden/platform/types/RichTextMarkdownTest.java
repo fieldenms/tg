@@ -200,8 +200,8 @@ public class RichTextMarkdownTest {
     }
 
     @Test
-    public void simple_ordered_lists_are_squashed_into_a_single_line() {
-        assertCoreText("1. one 2. two",
+    public void simple_ordered_lists_are_squashed_into_a_single_line_with_markers_removed() {
+        assertCoreText("one two",
                        """
                        1. one
                        2. two
@@ -219,8 +219,8 @@ public class RichTextMarkdownTest {
     }
 
     @Test
-    public void list_items_with_content_are_squashed_into_a_single_line() {
-        assertCoreText("1. item content 2. more stuff",
+    public void list_items_with_content_are_squashed_into_a_single_line_with_markers_removed() {
+        assertCoreText("item content more stuff",
                        """
                        1. item
                           content
@@ -232,12 +232,12 @@ public class RichTextMarkdownTest {
 
     @Test
     public void nested_list_items_are_squashed_into_a_single_line() {
-        assertCoreText("1. item subitem",
+        assertCoreText("item subitem",
                        """
                        1. item
                           * subitem
                        """);
-        assertCoreText("1. item subitem 1. another item",
+        assertCoreText("item subitem another item",
                        """
                        1. item
                           * subitem
