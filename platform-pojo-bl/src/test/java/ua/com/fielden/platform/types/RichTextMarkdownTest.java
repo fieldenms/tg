@@ -245,6 +245,36 @@ public class RichTextMarkdownTest {
                        """);
     }
 
+    @Test
+    public void inline_html_elements_are_removed() {
+        assertCoreText("hello big world",
+                       "hello <b>big</b> world");
+        assertCoreText("hello world",
+                       "<i>hello</i> world");
+        assertCoreText("hello world",
+                       "hello <B>world</B>");
+        assertCoreText("hello world",
+                       "hello <img src='cat.jpeg'/> world");
+    }
+
+    @Test
+    public void html_blocks_are_removed() {
+        assertCoreText("",
+                       """
+                       <pre>
+                       blah blah blah
+                       </pre>
+                       """);
+        assertCoreText("above below",
+                       """
+                       above
+                       <pre>
+                       blah blah blah
+                       </pre>
+                       below
+                       """);
+    }
+
     private static void assertCoreText(final String expected, final String input) {
         assertEquals(expected, RichText.fromMarkdown(input).coreText());
     }
