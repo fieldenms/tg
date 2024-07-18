@@ -84,16 +84,10 @@ final class CoreTextRenderer implements Renderer {
         public void visit(final ThematicBreak thematicBreak) {}
 
         @Override
-        public void visit(final HtmlInline htmlInline) {
-            // TODO
-//            writer.append(htmlInline.getLiteral());
-        }
+        public void visit(final HtmlInline htmlInline) {}
 
         @Override
-        public void visit(final HtmlBlock htmlBlock) {
-            // TODO
-//            writer.append(htmlBlock.getLiteral());
-        }
+        public void visit(final HtmlBlock htmlBlock) {}
 
         @Override
         public void visit(final Image image) {
@@ -102,7 +96,6 @@ final class CoreTextRenderer implements Renderer {
 
         @Override
         public void visit(final IndentedCodeBlock indentedCodeBlock) {
-            // TODO strip indentation?
             writer.append(indentedCodeBlock.getLiteral());
         }
 
