@@ -186,10 +186,12 @@ public sealed class RichText permits RichText.Persisted {
 
         // reconstruct from sanitized parse tree
         // NOTE MarkdownRenderer is lossy, it is unable to reconstruct some nodes correctly (see its javadoc)
-        final String formattedText = MarkdownRenderer.builder().build().render(root);
+        final String formattedText = MARKDOWN_RENDERER.render(root);
         final String coreText = CoreTextRenderer.INSTANCE.render(root);
         return successful(new RichText(formattedText, coreText));
     }
+
+    private static final MarkdownRenderer MARKDOWN_RENDERER = MarkdownRenderer.builder().build();
 
     private static final class Sanitizer {
         private final List<String> violations = new ArrayList<>();
