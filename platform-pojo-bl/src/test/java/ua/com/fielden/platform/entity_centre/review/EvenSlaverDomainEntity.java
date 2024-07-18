@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity_centre.review;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 import ua.com.fielden.platform.domaintree.testing.EntityWithStringKeyType;
@@ -29,9 +30,11 @@ public class EvenSlaverDomainEntity extends AbstractEntity<DynamicEntityKey> {
     @IsProperty
     @CompositeKeyMember(1)
     private Integer integerProp = null;
+
     @IsProperty
     @CompositeKeyMember(2)
-    private Double doubleProp = 0.0;
+    private BigDecimal bigDecimalProp = BigDecimal.ZERO;
+
     @IsProperty
     private Date dateProp;
 
@@ -48,13 +51,13 @@ public class EvenSlaverDomainEntity extends AbstractEntity<DynamicEntityKey> {
         this.integerProp = integerProp;
     }
 
-    public Double getDoubleProp() {
-        return doubleProp;
+    public BigDecimal getBigDecimalProp() {
+        return bigDecimalProp;
     }
 
     @Observable
-    public void setDoubleProp(final Double doubleProp) {
-        this.doubleProp = doubleProp;
+    public void setBigDecimalProp(final BigDecimal bigDecimalProp) {
+        this.bigDecimalProp = bigDecimalProp;
     }
 
     public Date getDateProp() {

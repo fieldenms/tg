@@ -1,16 +1,7 @@
 package ua.com.fielden.platform.ioc;
 
-import static com.google.inject.matcher.Matchers.annotatedWith;
-import static com.google.inject.matcher.Matchers.subclassesOf;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
-
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -18,10 +9,18 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.ioc.session.SessionInterceptor;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import static com.google.inject.matcher.Matchers.annotatedWith;
+import static com.google.inject.matcher.Matchers.subclassesOf;
 
 /**
  * Guice injector module for platform-wide Hibernate related injections such as transaction support and domain level validation configurations.
@@ -31,30 +30,22 @@ import ua.com.fielden.platform.persistence.ProxyInterceptor;
  */
 public abstract class TransactionalModule extends EntityModule {
     protected final SessionFactory sessionFactory;
-    private final DomainMetadata domainMetadata;
+    private final IDomainMetadata domainMetadata;
     private final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
     private final ProxyInterceptor interceptor;
     private final HibernateUtil hibernateUtil;
     private final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes;
 
     /**
-     * Creates transactional module, which holds references to instances of {@link SessionFactory} and {@link DomainMetadata}. All descending classes needs to provide those two
-     * parameters.
-     *
-     * @param props
-     * @param defaultHibernateTypes
-     * @param applicationEntityTypes
+     * Creates transactional module, which holds references to instances of {@link SessionFactory} and {@link IDomainMetadata}.
+     * All descending classes needs to provide those two parameters.
      */
     public TransactionalModule(
             final Properties props, 
             final Map<Class, Class> defaultHibernateTypes, 
             final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes) {
 
-        final HibernateConfigurationFactory hcf = new HibernateConfigurationFactory(//
-                props, //
-                defaultHibernateTypes, //
-                applicationEntityTypes);
-        
+        final HibernateConfigurationFactory hcf = new HibernateConfigurationFactory(props, defaultHibernateTypes, applicationEntityTypes);
         final Configuration cfg = hcf.build();
 
         interceptor = new ProxyInterceptor();
@@ -64,7 +55,6 @@ public abstract class TransactionalModule extends EntityModule {
         this.domainMetadata = hcf.getDomainMetadata();
         this.idOnlyProxiedEntityTypeCache = hcf.getIdOnlyProxiedEntityTypeCache();
         this.applicationEntityTypes = applicationEntityTypes;
-        
     }
 
     protected void initHibernateConfig(final EntityFactory factory) {
@@ -74,9 +64,8 @@ public abstract class TransactionalModule extends EntityModule {
     @Override
     protected void configure() {
         super.configure();
-        // entity aggregates transformer
         if (domainMetadata != null) {
-            bind(DomainMetadata.class).toInstance(domainMetadata);
+            bind(IDomainMetadata.class).toInstance(domainMetadata);
         }
 
         if (idOnlyProxiedEntityTypeCache != null) {
@@ -96,7 +85,7 @@ public abstract class TransactionalModule extends EntityModule {
         );
     }
 
-    public DomainMetadata getDomainMetadata() {
+    public IDomainMetadata getDomainMetadata() {
         return domainMetadata;
     }
     

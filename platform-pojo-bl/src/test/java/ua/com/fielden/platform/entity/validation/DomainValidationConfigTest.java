@@ -5,15 +5,8 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.entity.validation.test_entities.AbstractBaseClass;
-import ua.com.fielden.platform.entity.validation.test_entities.DoublePropValidator;
-import ua.com.fielden.platform.entity.validation.test_entities.IntPropValidator;
-import ua.com.fielden.platform.entity.validation.test_entities.IntPropValidator2;
-import ua.com.fielden.platform.entity.validation.test_entities.IntPropValidator3;
-import ua.com.fielden.platform.entity.validation.test_entities.SubClass1;
-import ua.com.fielden.platform.entity.validation.test_entities.SubClass1SubClass;
-import ua.com.fielden.platform.entity.validation.test_entities.SubClass2;
-import ua.com.fielden.platform.entity.validation.test_entities.SubClass2SubClass;
+import ua.com.fielden.platform.entity.validation.test_entities.*;
+import ua.com.fielden.platform.entity.validation.test_entities.BigDecimalPropValidator;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 
@@ -34,11 +27,11 @@ public class DomainValidationConfigTest {
         assertTrue(module.getDomainValidationConfig().getValidator(SubClass2.class, "intProp") instanceof IntPropValidator);
         assertTrue(module.getDomainValidationConfig().getValidator(SubClass2SubClass.class, "intProp") instanceof IntPropValidator);
 
-        module.getDomainValidationConfig().setValidator(SubClass2.class, "doubleProp", new DoublePropValidator());
-        assertNull(module.getDomainValidationConfig().getValidator(AbstractBaseClass.class, "doubleProp"));
-        assertNull(module.getDomainValidationConfig().getValidator(SubClass1.class, "doubleProp"));
-        assertTrue(module.getDomainValidationConfig().getValidator(SubClass2.class, "doubleProp") instanceof DoublePropValidator);
-        assertTrue(module.getDomainValidationConfig().getValidator(SubClass2SubClass.class, "doubleProp") instanceof DoublePropValidator);
+        module.getDomainValidationConfig().setValidator(SubClass2.class, "bigDecimal", new BigDecimalPropValidator());
+        assertNull(module.getDomainValidationConfig().getValidator(AbstractBaseClass.class, "bigDecimal"));
+        assertNull(module.getDomainValidationConfig().getValidator(SubClass1.class, "bigDecimal"));
+        assertTrue(module.getDomainValidationConfig().getValidator(SubClass2.class, "bigDecimal") instanceof BigDecimalPropValidator);
+        assertTrue(module.getDomainValidationConfig().getValidator(SubClass2SubClass.class, "bigDecimal") instanceof BigDecimalPropValidator);
     }
 
     @Test

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.test_utils;
 import java.util.Optional;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -35,6 +36,55 @@ public class TestUtils {
     public static <T> T assertPresent(final String message, final Optional<T> opt) {
         assertTrue(message, opt.isPresent());
         return opt.get();
+    }
+
+    /**
+     * Asserts that an optional is empty.
+     *
+     * @return the given optinal
+     * @see #assertEmpty(String, Optional)
+     */
+    public static <T> Optional<T> assertEmpty(final Optional<T> opt) {
+        return assertEmpty("Optional is not empty.", opt);
+    }
+
+    /**
+     * Asserts that an optional is empty.
+     *
+     * @return the given optinal
+     */
+    public static <T> Optional<T> assertEmpty(final String message, final Optional<T> opt) {
+        assertTrue(message, opt.isEmpty());
+        return opt;
+    }
+
+    /**
+     * Asserts that an optional is present and its value is equal to the expected one.
+     *
+     * @return  value described by the Optional
+     */
+    public static <T> T assertOptEquals(final T expected, final Optional<T> opt) {
+        final T actual = assertPresent(opt);
+        assertEquals(expected, actual);
+        return actual;
+    }
+
+    /**
+     * Asserts that an optional is present and its value is equal to the expected one.
+     *
+     * @return  value described by the Optional
+     */
+    public static <T> T assertOptEquals(final String message, final T expected, final Optional<T> opt) {
+        final T actual = assertPresent(message, opt);
+        assertEquals(message, expected, actual);
+        return actual;
+    }
+
+    public static <T> T assertInstanceOf(final Class<T> type, final Object object) {
+        if (type.isInstance(object)) {
+            return type.cast(object);
+        }
+        throw new AssertionError("Expected [%s] but was: %s".formatted(type.getTypeName(), object));
     }
 
 }

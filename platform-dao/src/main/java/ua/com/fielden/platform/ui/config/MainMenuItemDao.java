@@ -35,6 +35,11 @@ public class MainMenuItemDao extends CommonEntityDao<MainMenuItem> implements Ma
     }
 
     @Override
+    public MainMenuItem new_() {
+        return super.new_().setOrder(0);
+    }
+
+    @Override
     @SessionRequired
     public void delete(final MainMenuItem entity) {
         defaultDelete(entity);

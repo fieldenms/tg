@@ -4,6 +4,8 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
+import java.math.BigDecimal;
+
 /**
  * Entity for testing purposes.
  * 
@@ -11,16 +13,17 @@ import ua.com.fielden.platform.entity.annotation.Title;
  * 
  */
 public class EntityExt extends Entity {
+
     @IsProperty
     @Title("Additional property")
-    private Double additionalProperty;
+    private BigDecimal additionalProperty;
 
-    public Double getAdditionalProperty() {
+    public BigDecimal getAdditionalProperty() {
         return additionalProperty;
     }
 
     @Observable
-    public void setAdditionalProperty(final Double additionalProperty) {
+    public void setAdditionalProperty(final BigDecimal additionalProperty) {
         this.additionalProperty = additionalProperty;
     }
 

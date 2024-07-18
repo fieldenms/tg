@@ -68,16 +68,9 @@ public class DynamicFetchBuilderTest {
 
     @Test
     public void test_that_fetch_first_level_properties_works() {
-        final Set<String> fetchProperties = new HashSet<>(Arrays.asList(new String[] { "integerProp", //
-        "doubleProp", //
-        "bigDecimalProp", //
-        "moneyProp", //
-        "dateProp", //
-        "booleanProp", //
-        "stringProp"//
-        }));
-        final fetch<? extends AbstractEntity<?>> fetchModel = fetchOnly(masterKlass).with("integerProp").with("doubleProp")//
-        .with("bigDecimalProp").with("moneyProp").with("dateProp").with("booleanProp").with("stringProp");
+        final var fetchProperties = Set.of("integerProp", "bigDecimalProp", "moneyProp", "dateProp", "booleanProp", "stringProp");
+        final fetch<? extends AbstractEntity<?>> fetchModel = fetchOnly(masterKlass)
+                .with("integerProp").with("bigDecimalProp").with("moneyProp").with("dateProp").with("booleanProp").with("stringProp");
         assertEquals("The fetch for first level property is incorrect", fetchModel, DynamicFetchBuilder.createFetchOnlyModel(masterKlass, fetchProperties));
     }
 

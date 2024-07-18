@@ -42,12 +42,15 @@ public class MainMenuItem extends AbstractEntity<String> implements ITreeNode<Ma
     @IsProperty
     @MapTo("ID_PARENT")
     private MainMenuItem parent;
+
     @IsProperty
     @MapTo("ITEM_ORDER")
-    private int order;
+    private Integer order;
+
     @IsProperty
     @MapTo("TITLE")
     private String title;
+
     /** This is a non-persistent property, which gets calculated at runtime by the application to indicate item's visibility. */
     private boolean visible = true;
     /** This is a non-persistent property, which gets calculated at runtime by the application to indicate whether item is principal (i.e. not a save as item). */
@@ -127,12 +130,12 @@ public class MainMenuItem extends AbstractEntity<String> implements ITreeNode<Ma
         return false;
     }
 
-    public int getOrder() {
+    public Integer getOrder() {
         return order;
     }
 
     @Observable
-    public MainMenuItem setOrder(final int order) {
+    public MainMenuItem setOrder(final Integer order) {
         this.order = order;
         return this;
     }

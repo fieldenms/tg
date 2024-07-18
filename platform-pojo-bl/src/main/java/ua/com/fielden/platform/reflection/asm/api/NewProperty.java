@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.reflection.asm.api;
 
 import static java.util.stream.Collectors.joining;
+import static ua.com.fielden.platform.reflection.Reflector.newParameterizedType;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -556,42 +557,6 @@ public final class NewProperty<T> {
             strBuilder.append(", annotations: " + getAnnotations().stream().map(a -> "@" + a.annotationType().getSimpleName()).collect(joining(", ")));
         }
         return strBuilder.toString();
-    }
-
-    /**
-     * Creates a new anonymous class implementing {@link ParameterizedType}.
-     * 
-     * @param rawType
-     * @param typeArguments
-     * @return
-     */
-    private static ParameterizedType newParameterizedType(final Class<?> rawType, final Type... typeArguments) {
-        final Type owner = rawType.getDeclaringClass();
-
-        return new ParameterizedType() {
-            @Override public Class<?> getRawType() { return rawType; }
-            @Override public Type getOwnerType() { return owner; }
-            @Override public Type[] getActualTypeArguments() { return typeArguments; }
-            @Override
-            public String toString() {
-                final StringBuilder sb = new StringBuilder();
-                if (owner != null) {
-                    sb.append(owner.getTypeName());
-                    sb.append('$');
-                    sb.append(rawType.getSimpleName());
-                }
-                else {
-                    sb.append(rawType.getName());
-                }
-
-                final StringJoiner sj = new StringJoiner(", ", "<", ">").setEmptyValue("");
-                for (final Type arg : typeArguments) {
-                    sj.add(arg.getTypeName());
-                }
-
-                return sb.append(sj.toString()).toString();
-            }
-        };
     }
 
 }

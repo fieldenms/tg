@@ -14,9 +14,9 @@ import java.util.Properties;
 
 import org.hibernate.dialect.Dialect;
 
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
-import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.meta.EntityMetadata;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.DbCreator;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
@@ -44,7 +44,7 @@ public class H2DbCreator extends DbCreator {
      * Generates DDL for creation of a test database.
      */
     @Override
-    protected List<String> genDdl(final DomainMetadata domainMetaData, final Dialect dialect) {
+    protected List<String> genDdl(final IDomainMetadata domainMetaData, final Dialect dialect) {
         final List<String> createDdl = domainMetaData.generateDatabaseDdl(dialect);
         return DbUtils.prependDropDdlForH2(createDdl);
     }
@@ -53,8 +53,8 @@ public class H2DbCreator extends DbCreator {
      * Generate the script for emptying the test database.
      */
     @Override
-    public List<String> genTruncStmt(final Collection<PersistedEntityMetadata<?>> entityMetadata, final Connection conn) {
-        return entityMetadata.stream().map(entry -> format("TRUNCATE TABLE %s;", entry.getTable())).collect(toList());
+    public List<String> genTruncStmt(final Collection<EntityMetadata.Persistent> entityMetadata, final Connection conn) {
+        return entityMetadata.stream().map(em -> format("TRUNCATE TABLE %s;", em.data().tableName())).collect(toList());
     }
 
 
@@ -62,7 +62,7 @@ public class H2DbCreator extends DbCreator {
      * Scripts the test database once the test data has been populated, using H2's <code>SCRIPT</code> command.
      */
     @Override
-    public List<String> genInsertStmt(final Collection<PersistedEntityMetadata<?>> entityMetadata, final Connection conn) throws SQLException {
+    public List<String> genInsertStmt(final Collection<EntityMetadata.Persistent> entityMetadata, final Connection conn) throws SQLException {
         final List<String> inserts = new ArrayList<>();
         // create insert statements
         try (final Statement st = conn.createStatement(); final ResultSet rs = st.executeQuery("SCRIPT COLUMNS");) {

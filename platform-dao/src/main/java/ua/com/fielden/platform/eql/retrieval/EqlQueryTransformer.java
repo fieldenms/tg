@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.retrieval;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.QueryProcessingModel;
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.queries.ResultQuery1;
@@ -12,6 +11,7 @@ import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.queries.ResultQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.enhance.PathsToTreeTransformer;
 import ua.com.fielden.platform.eql.stage3.queries.ResultQuery3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.IDates;
 
 /**
@@ -37,15 +37,15 @@ public class EqlQueryTransformer {
             final IFilter filter,
             final String username,
             final IDates dates,
-            final EqlDomainMetadata eqlDomainMetadata) {
+            final IDomainMetadata domainMetadata) {
         final QueryModelToStage1Transformer gen = new QueryModelToStage1Transformer(filter, username, new QueryNowValue(dates), qem.getParamValues());
         final ResultQuery1 query1 = gen.generateAsResultQuery(qem.queryModel, qem.orderModel, qem.fetchModel);
 
-        final TransformationContextFromStage1To2 context1 = TransformationContextFromStage1To2.forMainContext(eqlDomainMetadata.querySourceInfoProvider);
+        final TransformationContextFromStage1To2 context1 = TransformationContextFromStage1To2.forMainContext(domainMetadata.querySourceInfoProvider());
 		final ResultQuery2 query2 = query1.transform(context1);
 
-		final PathsToTreeTransformer p2tt = new PathsToTreeTransformer(eqlDomainMetadata.querySourceInfoProvider, gen);
-        final TransformationContextFromStage2To3 context2 = new TransformationContextFromStage2To3(p2tt.transformFinally(query2.collectProps()), eqlDomainMetadata.entityMetadataHolder);
+		final PathsToTreeTransformer p2tt = new PathsToTreeTransformer(domainMetadata.querySourceInfoProvider(), gen);
+        final TransformationContextFromStage2To3 context2 = new TransformationContextFromStage2To3(p2tt.transformFinally(query2.collectProps()), domainMetadata);
 		return query2.transform(context2);
     }
 }

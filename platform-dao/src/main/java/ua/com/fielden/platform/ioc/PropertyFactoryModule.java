@@ -4,8 +4,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.hibernate.SessionFactory;
-
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
@@ -19,8 +17,6 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.property.DefaultMetaPropertyFactory;
 import ua.com.fielden.platform.entity.query.IEntityAggregates;
-import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 
 /**
  * Hibernate driven module required for correct instantiation of entities.

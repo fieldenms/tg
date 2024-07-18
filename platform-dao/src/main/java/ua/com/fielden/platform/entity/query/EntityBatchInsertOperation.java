@@ -30,7 +30,7 @@ import ua.com.fielden.platform.dao.exceptions.EntityAlreadyExists;
 import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation.TableStructForBatchInsertion.PropColumnInfo;
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.StreamUtils;
 
@@ -47,11 +47,11 @@ import ua.com.fielden.platform.utils.StreamUtils;
  *
  */
 public class EntityBatchInsertOperation {
-    private final EqlDomainMetadata eqlDomainMetadata;
+    private final IDomainMetadata domainMetadata;
     private final Supplier<TransactionalExecution> trExecSupplier;
     
-    public EntityBatchInsertOperation(final EqlDomainMetadata dm, final Supplier<TransactionalExecution> trExecSupplier) {
-        this.eqlDomainMetadata = dm;
+    public EntityBatchInsertOperation(final IDomainMetadata domainMetadata, final Supplier<TransactionalExecution> trExecSupplier) {
+        this.domainMetadata = domainMetadata;
         this.trExecSupplier = trExecSupplier;
     }
     
@@ -87,10 +87,10 @@ public class EntityBatchInsertOperation {
             throw new EntityAlreadyExists("Trying to perform batch insert for persisted entities.");
         }
 
-        final TableStructForBatchInsertion table = eqlDomainMetadata.getTableForEntityType(entities.get(0).getType());
+        final TableStructForBatchInsertion table = domainMetadata.getTableStructsForBatchInsertion(entities.get(0).getType());
         final String tableName = table.name;
         final List<String> columnNames = table.columns.stream().flatMap(x -> x.columnNames().stream()).collect(toList());
-        final String insertStmt = generateInsertStmt(tableName, columnNames, eqlDomainMetadata.dbVersion);
+        final String insertStmt = generateInsertStmt(tableName, columnNames, domainMetadata.dbVersion());
 
         final AtomicInteger insertedCount = new AtomicInteger(0);
 

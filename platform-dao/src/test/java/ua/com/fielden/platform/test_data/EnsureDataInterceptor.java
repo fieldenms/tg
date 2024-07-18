@@ -29,7 +29,7 @@ import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
 import ua.com.fielden.platform.utils.StreamUtils;
 
 /**
- * An interceptor used to ensure correct data population based on <code>populate*</code> methods in {@link IDomainData} and their annotation {@link EnsureData}, which specifies the dependency between the methods.
+ * An interceptor used to ensure correct data population based on <code>populate*</code> methods in {@code IDomainData} and their annotation {@link EnsureData}, which specifies the dependency between the methods.
  * <p>
  * In addition it is also responsible for scripting the data populated by those methods.
  * The cached INSERT/UPDATE scripts provide a fast alternative for reusable data population.
@@ -108,7 +108,7 @@ public class EnsureDataInterceptor implements MethodInterceptor {
             // we're in business -- there is already a script prepared for us
             // so. let's just run it
             LOGGER.debug(format("There are applicable data scripts in cache for [%s] in test case [%s].", methodName, testCaseName));
-            final Connection conn = dbCreator.conn;
+            final Connection conn = dbCreator.connection();
             try {
                 final List<String> script = scripts.get(methodName);
                 LOGGER.debug(format("Executing [%s] data scripts from cache for [%s] in test case [%s].", script.size(), methodName, testCaseName));
@@ -135,8 +135,8 @@ public class EnsureDataInterceptor implements MethodInterceptor {
                 LOGGER.debug(format("Generating data scripts for [%s] in test case [%s].", methodName, testCaseName));
                 // let's collect only those records that belong to the current transaction
                 final String transactionGuid = testCase.getTransactionGuid();
-                final Connection conn = testCase.getDbCreator().conn;
-                final List<String> script = dbCreator.genInsertStmt(dbCreator.entityMetadatas, conn).stream()
+                final Connection conn = testCase.getDbCreator().connection();
+                final List<String> script = dbCreator.genInsertStmt(dbCreator.persistentEntitiesMetadata(), conn).stream()
                                             //.peek(stmt -> System.out.println(stmt))
                                             .filter(stmt -> stmt.contains(transactionGuid))
                                             .map(stmt -> transformToUpdateIfAppropriate(stmt, transactionGuid))

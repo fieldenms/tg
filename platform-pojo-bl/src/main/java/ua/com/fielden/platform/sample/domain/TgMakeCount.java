@@ -1,17 +1,11 @@
 package ua.com.fielden.platform.sample.domain;
 
-import java.math.BigInteger;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.PersistentType;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
+
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 @KeyType(TgVehicleMake.class)
@@ -28,7 +22,7 @@ public class TgMakeCount extends AbstractEntity<TgVehicleMake> {
 
     @IsProperty
     @Title(value = "Count", desc = "Vehicle Model Count per Make")
-    private BigInteger count;
+    private Long count;
 
     @IsProperty
     @Title("Value")
@@ -46,12 +40,12 @@ public class TgMakeCount extends AbstractEntity<TgVehicleMake> {
     }
 
     @Observable
-    public TgMakeCount setCount(final BigInteger count) {
+    public TgMakeCount setCount(final Long count) {
         this.count = count;
         return this;
     }
 
-    public BigInteger getCount() {
+    public Long getCount() {
         return count;
     }
 }

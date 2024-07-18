@@ -1,20 +1,19 @@
 package ua.com.fielden.platform.eql.dbschema;
 
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
-
-import java.util.Map;
-
+import com.google.inject.Injector;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
-
-import com.google.inject.Injector;
-
 import ua.com.fielden.platform.entity.annotation.PersistentType;
+import ua.com.fielden.platform.eql.dbschema.exceptions.DbSchemaException;
+
+import java.util.Map;
+
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 /**
  * A utility class for mapping application java types to Hibernate persistent types.
@@ -65,7 +64,12 @@ public class HibernateTypeDeterminer {
             if (defaultHibType != null) { // default is provided for given property java type
                 return defaultHibType;
             } else { // trying to mimic hibernate logic when no type has been specified - use hibernate's map of defaults
-                return typeResolver.heuristicType(javaType.getName());
+                try {
+                    // this has been observed to fail internally sometimes
+                    return typeResolver.heuristicType(javaType.getName());
+                } catch (final Exception e) {
+                    throw new DbSchemaException("Couldn't determine Hibernate type of [%s]".formatted(javaType.getTypeName()), e);
+                }
             }
         }
     }   

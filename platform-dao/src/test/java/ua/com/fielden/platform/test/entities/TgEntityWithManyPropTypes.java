@@ -72,11 +72,7 @@ public class TgEntityWithManyPropTypes extends AbstractEntity<String> {
     @IsProperty(precision = 10, scale = 3)
     @MapTo
     private BigDecimal bigDecimalProp;
-    
-    @IsProperty
-    @MapTo
-    private int intProp;
-    
+
     @IsProperty
     @MapTo
     private Integer integerProp;
@@ -206,16 +202,6 @@ public class TgEntityWithManyPropTypes extends AbstractEntity<String> {
 
     public Integer getIntegerProp() {
         return integerProp;
-    }
-
-    @Observable
-    public TgEntityWithManyPropTypes setIntProp(final int intProp) {
-        this.intProp = intProp;
-        return this;
-    }
-
-    public int getIntProp() {
-        return intProp;
     }
 
     @Observable

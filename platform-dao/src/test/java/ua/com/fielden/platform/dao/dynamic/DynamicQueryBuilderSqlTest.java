@@ -45,8 +45,9 @@ import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.meta.DomainMetadataBuilder;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -121,15 +122,16 @@ public class DynamicQueryBuilderSqlTest {
         domainTypes.add(MasterEntity.class);
         domainTypes.add(SlaveEntity.class);
         domainTypes.add(EvenSlaverEntity.class);
+
+        final IDomainMetadata domainMetadata = new DomainMetadataBuilder(hibTypeMap, null, domainTypes, DbVersion.H2).build();
         try {
-            hibConf.addInputStream(new ByteArrayInputStream(HibernateMappingsGenerator.generateMappings(new EqlDomainMetadata(hibTypeMap, null, domainTypes, DbVersion.H2)).getBytes("UTF8")));
+            hibConf.addInputStream(new ByteArrayInputStream(new HibernateMappingsGenerator(domainMetadata).generateMappings().getBytes("UTF8")));
         } catch (final MappingException | UnsupportedEncodingException e) {
             throw new HibernateException("Could not add mappings.", e);
         }
 
         final List<String> propertyNames = Arrays.asList(new String[] { //
         "integerProp", //
-        "doubleProp", //
         "bigDecimalProp", //
         "moneyProp", //
         "dateProp", //
@@ -138,7 +140,6 @@ public class DynamicQueryBuilderSqlTest {
         "entityProp", //
         "entityProp.masterEntityProp", //
         "entityProp.integerProp", //
-        "entityProp.doubleProp", //
         "entityProp.bigDecimalProp", //
         "entityProp.moneyProp", //
         "entityProp.dateProp", //
@@ -146,7 +147,6 @@ public class DynamicQueryBuilderSqlTest {
         "entityProp.stringProp", //
         "collection.masterEntityProp", //
         "collection.integerProp", //
-        "collection.doubleProp", //
         "collection.bigDecimalProp", //
         "collection.dateProp", //
         "collection.stringProp", //
@@ -161,7 +161,6 @@ public class DynamicQueryBuilderSqlTest {
         "collection.allOfDateProp", //
         "entityProp.collection.slaveEntityProp", //
         "entityProp.collection.integerProp", //
-        "entityProp.collection.doubleProp", //
         "entityProp.collection.bigDecimalProp", //
         "entityProp.collection.dateProp", //
         "entityProp.collection.stringProp", //
@@ -265,12 +264,6 @@ public class DynamicQueryBuilderSqlTest {
     public void test_atomic_query_composition_for_integer_range_type() {
         test_atomic_query_composition_for_range_type("integerProp");
         test_atomic_query_composition_for_range_type("entityProp.integerProp");
-    }
-
-    @Test
-    public void test_atomic_query_composition_for_double_range_type() {
-        test_atomic_query_composition_for_range_type("doubleProp");
-        test_atomic_query_composition_for_range_type("entityProp.doubleProp");
     }
 
     @Test
@@ -849,7 +842,6 @@ public class DynamicQueryBuilderSqlTest {
         // Properties sequence is the following:
         //
         // integerProp
-        // doubleProp
         // bigDecimalProp
         // moneyProp
         // dateProp

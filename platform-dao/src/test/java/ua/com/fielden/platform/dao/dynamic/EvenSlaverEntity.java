@@ -34,11 +34,9 @@ public class EvenSlaverEntity extends AbstractEntity<DynamicEntityKey> {
     @CompositeKeyMember(2)
     @MapTo("INTEGER_PROP")
     private Integer integerProp = null;
+
     @IsProperty
-    @MapTo("DOUBLE_PROP")
-    private Double doubleProp = 0.0;
-    @IsProperty
-    @MapTo("DOUBLE_PROP")
+    @MapTo("BIG_DECIMAL_PROP")
     private BigDecimal bigDecimalProp = new BigDecimal(0.0);
 
     @IsProperty
@@ -74,15 +72,6 @@ public class EvenSlaverEntity extends AbstractEntity<DynamicEntityKey> {
     @Observable
     public void setIntegerProp(final Integer integerProp) {
         this.integerProp = integerProp;
-    }
-
-    public Double getDoubleProp() {
-        return doubleProp;
-    }
-
-    @Observable
-    public void setDoubleProp(final Double doubleProp) {
-        this.doubleProp = doubleProp;
     }
 
     public BigDecimal getBigDecimalProp() {

@@ -97,6 +97,8 @@ public @interface IsProperty {
      * @return
      */
     Class<?> value() default Void.class;
+    // keep these in sync, as the field cannot be used in place of the class literal
+    Class<?> DEFAULT_VALUE = Void.class;
 
     /**
      * This setting makes sense only in case of collection property, which elements are entities. It should be used (and not missed!) to specify a property by which this collection

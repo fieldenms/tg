@@ -10,6 +10,7 @@ import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
+import ua.com.fielden.platform.eql.retrieval.exceptions.EntityRetrievalException;
 import ua.com.fielden.platform.eql.retrieval.records.HibernateScalar;
 
 public class EntityHibernateRetrievalQueryProducer {
@@ -42,7 +43,7 @@ public class EntityHibernateRetrievalQueryProducer {
         // LOGGER.debug("\nPARAMS:\n   " + queryParams + "\n");
         for (final Map.Entry<String, Object> paramEntry : queryParams.entrySet()) {
             if (paramEntry.getValue() instanceof Collection) {
-                throw new IllegalStateException("Should not have collectional param at this level: [" + paramEntry + "]");
+                throw new EntityRetrievalException("Should not have collectional param at this level: [" + paramEntry + "]");
             } else if (!(paramEntry.getValue() instanceof DynamicQueryBuilder.QueryProperty)){
                 // LOGGER.debug("setting param: name = [" + paramEntry.getKey() + "] value = [" + paramEntry.getValue() + "]");
                 query.setParameter(paramEntry.getKey(), paramEntry.getValue());

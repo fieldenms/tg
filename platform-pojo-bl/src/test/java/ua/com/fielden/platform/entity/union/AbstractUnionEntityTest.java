@@ -20,7 +20,6 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Set;
 
-import static java.lang.String.format;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.meta.MetaProperty.ERR_REQUIRED;

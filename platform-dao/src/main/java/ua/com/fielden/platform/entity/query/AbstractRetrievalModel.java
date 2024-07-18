@@ -1,38 +1,35 @@
 package ua.com.fielden.platform.entity.query;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.meta.PropertyMetadata;
+
+import java.util.*;
+import java.util.Map.Entry;
+
+import static java.lang.Boolean.FALSE;
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Collections.unmodifiableSet;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.exceptions.EqlException;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
-import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 
 public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> implements IRetrievalModel<T> {
 
     protected final fetch<T> originalFetch;
-    private DomainMetadataAnalyser domainMetadataAnalyser;
+    protected final IDomainMetadata domainMetadata;
     public final boolean topLevel;
 
     private final Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> entityProps = new HashMap<>();
     private final Set<String> primProps = new HashSet<String>();
     private final Set<String> proxiedProps = new HashSet<String>();
 
-    protected AbstractRetrievalModel(final fetch<T> originalFetch, final DomainMetadataAnalyser domainMetadataAnalyser, final boolean topLevel) {
+    protected AbstractRetrievalModel(final fetch<T> originalFetch, final IDomainMetadata domainMetadata, final boolean topLevel) {
         this.originalFetch = originalFetch;
-        this.domainMetadataAnalyser = domainMetadataAnalyser;
         this.topLevel = topLevel;
+        this.domainMetadata = domainMetadata;
     }
 
     public fetch<T> getOriginalFetch() {
@@ -42,10 +39,6 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> implem
     @Override
     public Set<String> getProxiedProps() {
         return proxiedProps;
-    }
-    
-    public DomainMetadataAnalyser getDomainMetadataAnalyser() {
-        return domainMetadataAnalyser;
     }
 
     @Override
@@ -108,26 +101,22 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> implem
         return sb.toString();
     }
 
-    protected PropertyMetadata getPropMetadata(final String propName) {
-        final PropertyMetadata ppi = domainMetadataAnalyser.getPropPersistenceInfoExplicitly(getEntityType(), propName);
-        if (ppi != null) {
-            if (ppi.getJavaType() != null) {
-                return ppi;
-            } else {
-                throw new EqlException(format("Couldn't determine type of property [%s] of entity type [%s]", propName, getEntityType()));
-            }
-        } else {
+    protected Optional<PropertyMetadata> getPropMetadata(final String propName) {
+        final var optPm = domainMetadata.forProperty(getEntityType(), propName);
+        if (optPm.isEmpty()) {
+            // allow only IDs and VERSIONs to have missing PropertyMetadata; this is sometimes useful for pure synthetic entities that yield these props
             if (ID.equals(propName) || VERSION.equals(propName)) {
-                return null; // allow only IDs and VERSIONs to have missing PropertyMetadata; this is sometimes useful for pure synthetic entities that yield these props
+                return Optional.empty();
             }
             throw new EqlException(format("Trying to fetch entity of type [%s] with non-existing property [%s]", getEntityType(), propName));
         }
+        return optPm;
     }
 
     protected void without(final String propName) {
-        final Class<?> propType = getPropMetadata(propName).getJavaType();
+        final Optional<PropertyMetadata> optPm = getPropMetadata(propName);
 
-        if (isEntityType(propType)) {
+        if (optPm.map(pm -> pm.type().isEntity()).orElse(FALSE)) {
             final Object removalResult = entityProps.remove(propName);
             if (removalResult == null) {
                 throw new EqlException(format("Couldn't find property [%s] to be excluded from fetched entity properties of entity type [%s]", propName, getEntityType()));

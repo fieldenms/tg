@@ -22,15 +22,15 @@ public class TgModelCount extends AbstractEntity<TgVehicleModel> {
     @IsProperty
     @MapTo
     @Title(value = "Count", desc = "Vehicle Count per Model")
-    private BigInteger count;
+    private Long count;
 
     @Observable
-    public TgModelCount setCount(final BigInteger count) {
+    public TgModelCount setCount(final Long count) {
         this.count = count;
         return this;
     }
 
-    public BigInteger getCount() {
+    public Long getCount() {
         return count;
     }
 

@@ -6,8 +6,7 @@ import ua.com.fielden.platform.dao.exceptions.EntityAlreadyExists;
 import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.test.entities.TgEntityWithManyPropTypes;
@@ -65,7 +64,7 @@ public class EntityBatchInsertOperationTest extends AbstractDaoTestCase {
     @SessionRequired
     public void batch_insert_operation_works_for_instances_created_with_TransactionExecutor_that_uses_Session_supplier() {
         final var up = getInstance(IUserProvider.class);
-        final var eqlDomainMetadata = getInstance(DomainMetadata.class).eqlDomainMetadata;
+        final var eqlDomainMetadata = getInstance(IDomainMetadata.class);
         final var insertOp = new EntityBatchInsertOperation(eqlDomainMetadata, () -> new TransactionalExecution(up, () -> getSession()));
 
         final var entities = createEntitiesForBatchInsert("Ent1", "Ent2", "Ent3", "Ent4", "Ent5");
@@ -96,12 +95,12 @@ public class EntityBatchInsertOperationTest extends AbstractDaoTestCase {
     }
 
     private int batchInsertEntities(final List<TgEntityWithManyPropTypes> entities, final int batchSize) {
-        final EntityBatchInsertOperation insertOp = new EntityBatchInsertOperation(getInstance(DomainMetadata.class).eqlDomainMetadata, () -> getInstance(TransactionalExecution.class));
+        final EntityBatchInsertOperation insertOp = new EntityBatchInsertOperation(getInstance(IDomainMetadata.class), () -> getInstance(TransactionalExecution.class));
         return insertOp.batchInsert(entities, batchSize);
     }
 
     private int batchInsertEntitiesAsStream(final Stream<TgEntityWithManyPropTypes> entities, final int batchSize) {
-        final EntityBatchInsertOperation insertOp = new EntityBatchInsertOperation(getInstance(DomainMetadata.class).eqlDomainMetadata, () -> getInstance(TransactionalExecution.class));
+        final EntityBatchInsertOperation insertOp = new EntityBatchInsertOperation(getInstance(IDomainMetadata.class), () -> getInstance(TransactionalExecution.class));
         return insertOp.batchInsert(entities, batchSize);
     }
 
@@ -122,7 +121,6 @@ public class EntityBatchInsertOperationTest extends AbstractDaoTestCase {
                 setStringProp("someString").
                 setBooleanProp(true).
                 setBigDecimalProp(new BigDecimal("100.999")).
-                setIntProp(20).
                 setIntegerProp(200).
                 setLongProp(100l).
                 setColourProp(BLACK).

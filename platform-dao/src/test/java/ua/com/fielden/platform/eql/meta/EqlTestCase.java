@@ -19,11 +19,11 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.generation.ioc.HelperIocModule;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
+import ua.com.fielden.platform.meta.DomainMetadataBuilder;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.types.ColourType;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.persistence.types.HyperlinkType;
@@ -89,8 +89,7 @@ public abstract class EqlTestCase {
     protected static final IDates dates = injector.getInstance(IDates.class);
     protected static final IFilter filter = new SimpleUserFilter();
     
-    private static final DomainMetadata DOMAIN_METADATA;
-    protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER;
+    private static final IDomainMetadata DOMAIN_METADATA;
 
     static {
         hibTypeDefaults.put(boolean.class, YesNoType.class);
@@ -100,12 +99,10 @@ public abstract class EqlTestCase {
         hibTypeDefaults.put(PropertyDescriptor.class, PropertyDescriptorType.class);
         hibTypeDefaults.put(Colour.class, ColourType.class);
         hibTypeDefaults.put(Hyperlink.class, HyperlinkType.class);
-        
-        DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, 
-                injector, 
-                PlatformTestDomainTypes.entityTypes, 
-                H2);
-        DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
+
+        DOMAIN_METADATA = new DomainMetadataBuilder(
+                hibTypeDefaults, injector, PlatformTestDomainTypes.entityTypes, H2)
+                .build();
     }
     
     protected static final QueryModelToStage1Transformer qb() {
@@ -120,12 +117,12 @@ public abstract class EqlTestCase {
         return new QueryModelToStage1Transformer(filter, username, new QueryNowValue(dates), paramValues);
     }
     
-    protected static final EqlDomainMetadata metadata() {
-        return DOMAIN_METADATA.eqlDomainMetadata;
+    protected static final IDomainMetadata metadata() {
+        return DOMAIN_METADATA;
     }
     
     protected static final QuerySourceInfoProvider querySourceInfoProvider() {
-        return DOMAIN_METADATA.eqlDomainMetadata.querySourceInfoProvider;
+        return DOMAIN_METADATA.querySourceInfoProvider();
     }
     
 }

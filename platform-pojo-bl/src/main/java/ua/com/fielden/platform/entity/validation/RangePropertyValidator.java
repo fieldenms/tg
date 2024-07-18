@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity.validation;
 import static java.lang.String.format;
 
 import java.lang.annotation.Annotation;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -82,6 +83,15 @@ public class RangePropertyValidator implements IBeforeChangeEventHandler<Object>
         if (property.getType() == Integer.class || property.getType() == int.class) {
             try {
                 EntityUtils.validateIntegerRange(Integer.valueOf(lowerBoundaryPropertyValue.toString()), Integer.valueOf(upperBoundaryPropertyValue.toString()), startProperty, finishProperty, upperBoundaryRangePropery);
+            } catch (final Result res) {
+                return res;
+            }
+            return valid;
+        } else if (property.getType() == BigDecimal.class) {
+            try {
+                EntityUtils.validateBigDecimalRange(new BigDecimal(lowerBoundaryPropertyValue.toString()),
+                                                    new BigDecimal(upperBoundaryPropertyValue.toString()),
+                                                    startProperty, finishProperty, upperBoundaryRangePropery);
             } catch (final Result res) {
                 return res;
             }

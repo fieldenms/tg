@@ -221,7 +221,7 @@ public class DynamicEntityTypePropertiesModificationTest {
         final Set<NewProperty<?>> newProperties = linkedSetOf(
                 NewProperty.fromField(Entity.class, "firstProperty").changeType(String.class),
                 NewProperty.fromField(Entity.class, "entity").changeType(TopLevelEntity.class),
-                NewProperty.fromField(Entity.class, "observableProperty").setValueSupplierOrThrow(() -> 123d));
+                NewProperty.fromField(Entity.class, "observableProperty").setValueSupplierOrThrow(() -> new BigDecimal("123")));
         final Class<? extends AbstractEntity<?>> newType = startModification(Entity.class)
                 .modifyProperties(newProperties)
                 .endModification();

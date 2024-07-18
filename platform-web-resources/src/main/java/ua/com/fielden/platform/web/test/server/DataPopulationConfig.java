@@ -6,9 +6,9 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.utils.DefaultDates;
 import ua.com.fielden.platform.utils.DefaultUniversalConstants;
@@ -60,7 +60,7 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
     }
 
     @Override
-    public DomainMetadata getDomainMetadata() {
+    public IDomainMetadata getDomainMetadata() {
         return module.getDomainMetadata();
     }
 

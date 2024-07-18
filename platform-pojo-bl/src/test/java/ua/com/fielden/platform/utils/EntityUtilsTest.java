@@ -661,6 +661,14 @@ public class EntityUtilsTest {
         assertFalse(maybePersistentType.isPresent());
     }
 
+    @Test
+    public void entityTypeHierachy_includes_all_parent_entity_types_starting_from_the_most_specific() {
+        assertEquals(List.of(TgReVehicleModel.class, TgVehicleModel.class, AbstractEntity.class),
+                     entityTypeHierarchy(TgReVehicleModel.class, true).toList());
+        assertEquals(List.of(TgReVehicleModel.class, TgVehicleModel.class),
+                     entityTypeHierarchy(TgReVehicleModel.class, false).toList());
+    }
+
     /**
      * A helper factory method for generating a new type based on {@code baseType} with the {@code maxNestedLevels} of nesting (i.e., a new type gets generated based on the previously generated type sequentially).  
      *

@@ -111,7 +111,7 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
     }
 
     protected static Source3BasedOnTable source(final Class<? extends AbstractEntity<?>> sourceType, final Integer sourceForContextId) {
-        return new Source3BasedOnTable(metadata().entityMetadataHolder.getTableForEntityType(sourceType), sourceForContextId, nextSqlId());
+        return new Source3BasedOnTable(metadata().getTableForEntityType(sourceType), sourceForContextId, nextSqlId());
     }
 
     protected static Source3BasedOnQueries source(final Integer sourceForContextId, final SourceQuery3... sourceQueries) {

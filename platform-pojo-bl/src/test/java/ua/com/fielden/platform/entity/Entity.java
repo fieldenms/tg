@@ -1,26 +1,6 @@
 package ua.com.fielden.platform.entity;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
-import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity.annotation.Dependent;
-import ua.com.fielden.platform.entity.annotation.DescRequired;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.Invisible;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Monitoring;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Readonly;
-import ua.com.fielden.platform.entity.annotation.Required;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
@@ -30,6 +10,13 @@ import ua.com.fielden.platform.equery.lifecycle.Categorizer;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.types.Money;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 
 /**
  * Entity class used for testing.
@@ -57,7 +44,7 @@ public class Entity extends AbstractEntity<String> {
     @Title("Observable Property")
     @Required(NOT_NULL_MSG)
     @CritOnly
-    private Double observableProperty = 0.0;
+    private BigDecimal observableProperty = BigDecimal.ZERO;
 
     @IsProperty
     @Monitoring(Categorizer.class)
@@ -65,16 +52,16 @@ public class Entity extends AbstractEntity<String> {
 
     @IsProperty
     @MapTo
-    private Double observablePropertyInitialisedAsNull;
+    private BigDecimal observablePropertyInitialisedAsNull;
 
     @IsProperty
     @Invisible
     @Final(persistedOnly = false)
-    private Double finalProperty;
+    private BigDecimal finalProperty;
     
-    @IsProperty(value = Double.class, linkProperty = "--stub to pass tests--")
+    @IsProperty(value = BigDecimal.class, linkProperty = "--stub to pass tests--")
     @Required
-    private List<Double> doubles = new ArrayList<Double>();
+    private List<BigDecimal> bigDecimals = new ArrayList<>();
     
     @IsProperty(Entity.class)
     private List<Entity> entities = new ArrayList<Entity>();
@@ -119,47 +106,47 @@ public class Entity extends AbstractEntity<String> {
         return this;
     }
 
-    public Double getObservableProperty() {
+    public BigDecimal getObservableProperty() {
         return observableProperty;
     }
 
     @Observable
-    public Entity setObservableProperty(final Double observableProperty) {
+    public Entity setObservableProperty(final BigDecimal observableProperty) {
         this.observableProperty = observableProperty;
         return this;
     }
 
-    public Double getFinalProperty() {
+    public BigDecimal getFinalProperty() {
         return finalProperty;
     }
 
     @Observable
-    public void setFinalProperty(final Double finalProperty) {
+    public void setFinalProperty(final BigDecimal finalProperty) {
         this.finalProperty = finalProperty;
     }
 
-    public List<Double> getDoubles() {
-        return doubles;
+    public List<BigDecimal> getBigDecimals() {
+        return bigDecimals;
     }
 
     @Observable
     @DomainValidation
-    public Entity setDoubles(final List<Double> doubles) {
-        this.doubles.clear();
-        this.doubles.addAll(doubles);
+    public Entity setBigDecimals(final List<BigDecimal> bigDecimals) {
+        this.bigDecimals.clear();
+        this.bigDecimals.addAll(bigDecimals);
         return this;
     }
 
     @Observable
-    public Entity addToDoubles(final Double value) {
-        doubles.add(value);
+    public Entity addToBigDecimals(final BigDecimal value) {
+        bigDecimals.add(value);
         return this;
     }
 
     @Observable
     @DomainValidation
-    public Entity removeFromDoubles(final Double value) {
-        doubles.remove(value);
+    public Entity removeFromBigDecimals(final BigDecimal value) {
+        bigDecimals.remove(value);
         return this;
     }
 
@@ -173,12 +160,12 @@ public class Entity extends AbstractEntity<String> {
         this.entities.addAll(entities);
     }
 
-    public Double getObservablePropertyInitialisedAsNull() {
+    public BigDecimal getObservablePropertyInitialisedAsNull() {
         return observablePropertyInitialisedAsNull;
     }
 
     @Observable
-    public void setObservablePropertyInitialisedAsNull(final Double observablePropertyInitialisedAsNull) {
+    public void setObservablePropertyInitialisedAsNull(final BigDecimal observablePropertyInitialisedAsNull) {
         this.observablePropertyInitialisedAsNull = observablePropertyInitialisedAsNull;
     }
 

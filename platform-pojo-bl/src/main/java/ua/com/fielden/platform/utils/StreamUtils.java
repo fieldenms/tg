@@ -6,6 +6,7 @@ import ua.com.fielden.platform.types.tuples.T2;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.*;
+import java.util.stream.BaseStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -247,6 +248,45 @@ public class StreamUtils {
                 sink.accept(type.cast(item));
             }
         };
+    }
+
+    /**
+     * If the stream is empty, returns an empty optional. Otherwise, equivalent to {@link #foldLeft(BaseStream, Object, BiFunction)}
+     * where the initial result value is the first element of the stream and folding is performed on the rest of the stream.
+     */
+    public static <T> Optional<T> foldLeft(final BaseStream<T, ?> stream,
+                                           final BiFunction<? super T, ? super T, T> fn) {
+        var iter = stream.iterator();
+
+        if (!iter.hasNext())
+            return Optional.empty();
+
+        return Optional.of(foldLeft_(iter, iter.next(), fn));
+    }
+
+    /**
+     * Sequential reduction of the stream from left to right.
+     *
+     * @param fn  function that folds an element into the result
+     * @param init  initial result value
+     */
+    public static <A, B> B foldLeft(final BaseStream<A, ?> stream,
+                                    final B init,
+                                    final BiFunction<? super B, ? super A, B> fn) {
+        return foldLeft_(stream.iterator(), init, fn);
+    }
+
+    private static <A, B> B foldLeft_(final Iterator<A> iter,
+                                      final B init,
+                                      final BiFunction<? super B, ? super A, B> fn) {
+        if (!iter.hasNext())
+            return init;
+
+        B acc = init;
+        while (iter.hasNext())
+            acc = fn.apply(acc, iter.next());
+
+        return acc;
     }
 
     /**
