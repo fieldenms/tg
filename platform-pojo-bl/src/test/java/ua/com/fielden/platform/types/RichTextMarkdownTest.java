@@ -52,11 +52,15 @@ public class RichTextMarkdownTest {
     }
 
     @Test
-    public void links_are_transformed_to_link_title_followed_by_parenthesised_uri() {
+    public void links_are_transformed_to_link_text_followed_by_parenthesised_uri_and_title() {
         assertCoreText("hackernews (https://news.ycombinator.com/)",
                        "[hackernews](https://news.ycombinator.com/)");
-        assertCoreText("hackernews (https://news.ycombinator.com/)",
-                       "[hackernews]  (https://news.ycombinator.com/)");
+        assertCoreText("hackernews (https://news.ycombinator.com/ news)",
+                       "[hackernews](https://news.ycombinator.com/ 'news')");
+        assertCoreText("hackernews (https://news.ycombinator.com/ news)",
+                       "[hackernews](https://news.ycombinator.com/ (news))");
+        assertCoreText("hackernews (https://news.ycombinator.com/ news)",
+                       "[hackernews](https://news.ycombinator.com/ \"news\")");
         assertCoreText("hackernews (https://news.ycombinator.com/)",
                        "[*hackernews*](https://news.ycombinator.com/)");
         assertCoreText("(https://news.ycombinator.com/)",

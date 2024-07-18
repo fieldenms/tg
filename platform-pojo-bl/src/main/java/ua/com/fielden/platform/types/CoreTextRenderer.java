@@ -117,11 +117,24 @@ final class CoreTextRenderer implements Renderer {
             // link text is represented by its children
             visitChildren(link);
 
-            if (link.getTitle() != null && !link.getTitle().isBlank()) {
-                writer.append(link.getTitle());
-            }
-            if (link.getDestination() != null && !link.getDestination().isBlank()) {
-                writer.append("(" + link.getDestination() + ")");
+            final boolean hasDest = link.getDestination() != null && !link.getDestination().isBlank();
+            final boolean hasTitle = link.getTitle() != null && !link.getTitle().isBlank();
+            if (hasDest || hasTitle) {
+                final var sb = new StringBuilder();
+
+                sb.append('(');
+                if (hasDest) {
+                    sb.append(link.getDestination());
+                }
+                if (hasTitle) {
+                    if (hasDest) {
+                        sb.append(' ');
+                    }
+                    sb.append(link.getTitle());
+                }
+                sb.append(')');
+
+                writer.append_(sb.toString());
             }
         }
 
