@@ -3,6 +3,7 @@ package ua.com.fielden.platform.types;
 import org.commonmark.node.*;
 import org.commonmark.renderer.Renderer;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 
 import static java.lang.Character.isWhitespace;
@@ -96,14 +97,7 @@ final class CoreTextRenderer implements Renderer {
 
         @Override
         public void visit(final Image image) {
-            final boolean hasTitle = image.getTitle() != null && !image.getTitle().isBlank();
-            final boolean hasDest = image.getDestination() != null && !image.getDestination().isBlank();
-            if (hasTitle) {
-                writer.append(image.getTitle());
-            }
-            if (hasDest) {
-                writer.append("(" + image.getDestination() + ")");
-            }
+            visitLink(image, image.getDestination(), image.getTitle());
         }
 
         @Override
@@ -114,23 +108,27 @@ final class CoreTextRenderer implements Renderer {
 
         @Override
         public void visit(final Link link) {
+            visitLink(link, link.getDestination(), link.getTitle());
+        }
+
+        private void visitLink(final Node link, final @Nullable String destination, final @Nullable String title) {
             // link text is represented by its children
             visitChildren(link);
 
-            final boolean hasDest = link.getDestination() != null && !link.getDestination().isBlank();
-            final boolean hasTitle = link.getTitle() != null && !link.getTitle().isBlank();
+            final boolean hasDest = destination != null && !destination.isBlank();
+            final boolean hasTitle = title != null && !title.isBlank();
             if (hasDest || hasTitle) {
                 final var sb = new StringBuilder();
 
                 sb.append('(');
                 if (hasDest) {
-                    sb.append(link.getDestination());
+                    sb.append(destination);
                 }
                 if (hasTitle) {
                     if (hasDest) {
                         sb.append(' ');
                     }
-                    sb.append(link.getTitle());
+                    sb.append(title);
                 }
                 sb.append(')');
 
