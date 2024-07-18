@@ -760,6 +760,7 @@ Polymer({
     },
 
     _makeDetached: function () {
+        this._preferrredSize = this._getPrefDimForDetachedView();
         const zOrder = this._getProp(ST_ZORDER);
         if (zOrder) {
             this.contextRetriever().insertionPointManager.add(this, +zOrder);
@@ -770,6 +771,7 @@ Polymer({
     },
 
     _makeAttached: function () {
+        delete this._preferrredSize;
         this.contextRetriever().insertionPointManager.remove(this);
         if (this.contextRetriever && this.contextRetriever().$.centreResultContainer) {
             this.contextRetriever().$.centreResultContainer.focus();
@@ -844,7 +846,7 @@ Polymer({
         if (this.detachedView) {
             let dimToApply = this._getPair(ST_DETACHED_VIEW_WIDTH, ST_DETACHED_VIEW_HEIGHT);
             if (!dimToApply) {
-                dimToApply = this._getPrefDimForDetachedView();
+                dimToApply = this._preferrredSize;
             }
             if (!this.minimised && !this.maximised) {
                 this.style.width = dimToApply && dimToApply[0];
@@ -1025,11 +1027,14 @@ Polymer({
 
     _clearLocalStorage: function (event) {
         if (event.detail.sourceEvent.detail && event.detail.sourceEvent.detail === 2) {
-            this._removeProp(ST_DETACHED_VIEW_WIDTH);
-            this._removeProp(ST_DETACHED_VIEW_HEIGHT);
-            this._removeProp(ST_ATTACHED_HEIGHT);
-            this._removeProp(ST_POS_X);
-            this._removeProp(ST_POS_Y);
+            if (this.detachedView) {
+                this._removeProp(ST_DETACHED_VIEW_WIDTH);
+                this._removeProp(ST_DETACHED_VIEW_HEIGHT);
+                this._removeProp(ST_POS_X);
+                this._removeProp(ST_POS_Y);
+            } else {
+                this._removeProp(ST_ATTACHED_HEIGHT);
+            }
             this._setDimension();
             this._setPosition();
         }
