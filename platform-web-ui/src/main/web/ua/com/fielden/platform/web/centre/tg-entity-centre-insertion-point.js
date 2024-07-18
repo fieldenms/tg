@@ -877,7 +877,7 @@ Polymer({
                 }
             }
         }
-        this.notifyResize();
+        this.async(() => this.notifyResize(), 1);
     },
 
     _setPosition: function () {
