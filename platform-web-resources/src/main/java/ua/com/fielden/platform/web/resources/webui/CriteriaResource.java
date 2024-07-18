@@ -750,13 +750,16 @@ public class CriteriaResource extends AbstractWebResource {
      * @param entities
      * @return
      */
-    private List<Object> createRenderingHints(final List<?> entities) {
+    private List<Object> createRenderingHints(final List<AbstractEntity<?>> entities) {
         final Optional<IRenderingCustomiser<?>> renderingCustomiser = centre.getRenderingCustomiser();
         if (renderingCustomiser.isPresent()) {
             final IRenderingCustomiser<?> renderer = renderingCustomiser.get();
             final List<Object> renderingHints = new ArrayList<>();
-            for (final Object entity : entities) {
-                renderingHints.add(renderer.getCustomRenderingFor((AbstractEntity<?>)entity).get());
+            for (final AbstractEntity<?> entity : entities) {
+                // Every entity must have a map of corresponding rendering hints, even if that map is empty.
+                // This is because association with renderings hints is index-based and depends on the order of entities.
+                // So, let's be defensive in case some implementation of a rendering customiser returns an empty optional (i.e., not containing even an empty map).
+                renderer.getCustomRenderingFor(entity).ifPresentOrElse(rend -> renderingHints.add(rend), () -> renderingHints.add(Collections.emptyMap()));
             }
             return renderingHints;
         } else {
