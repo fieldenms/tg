@@ -219,7 +219,7 @@ public sealed class RichText permits RichText.Persisted {
     private static final PolicyFactory POLICY_FACTORY =
         LINKS.and(TABLES).and(STYLES).and(IMAGES).and(BLOCKS)
         .and(new HtmlPolicyBuilder()
-                .allowElements("b", "i")
+                .allowElements("b", "i", "pre")
                 .toFactory());
     // @formatter:on
 
