@@ -815,7 +815,7 @@ Polymer({
     },
 
     _detachTooltip: function (detachedView) {
-        return detachedView ? "Attach": "Detach";
+        return detachedView ? "Snap": "Unsnap";
     },
 
     _detachedViewChanged: function (newValue) {
