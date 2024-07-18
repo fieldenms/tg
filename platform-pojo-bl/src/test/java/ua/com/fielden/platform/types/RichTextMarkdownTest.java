@@ -275,8 +275,19 @@ public class RichTextMarkdownTest {
                        """);
     }
 
+    @Test
+    public void reference_link_components_are_preserved() {
+        assertCoreTextId("[bar]: /url \"title\"");
+        assertCoreTextId("[bar]: /url");
+        assertCoreTextId("[foo bar]: /url");
+    }
+
     private static void assertCoreText(final String expected, final String input) {
         assertEquals(expected, RichText.fromMarkdown(input).coreText());
+    }
+
+    private static void assertCoreTextId(final String input) {
+        assertCoreText(input, input);
     }
 
 }

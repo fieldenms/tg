@@ -155,13 +155,13 @@ final class CoreTextRenderer implements Renderer {
         @Override
         public void visit(final LinkReferenceDefinition linkReferenceDefinition) {
             if (linkReferenceDefinition.getLabel() != null && !linkReferenceDefinition.getLabel().isBlank()) {
-                writer.append(linkReferenceDefinition.getLabel());
+                writer.append('[' + linkReferenceDefinition.getLabel() + "]:");
             }
             if (linkReferenceDefinition.getDestination() != null && !linkReferenceDefinition.getDestination().isBlank()) {
                 writer.append(linkReferenceDefinition.getDestination());
             }
             if (linkReferenceDefinition.getTitle() != null && !linkReferenceDefinition.getTitle().isBlank()) {
-                writer.append(linkReferenceDefinition.getTitle());
+                writer.append('"' + linkReferenceDefinition.getTitle() + '"');
             }
         }
 
