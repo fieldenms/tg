@@ -1233,8 +1233,30 @@ Polymer({
     /**
      * Clears the selection on current page.
      */
-    clearPageSelection: function () {
-        this.selectAll(false);
+    clearPageSelection: function (entityIds) {
+        if (this.egiModel && entityIds) {
+            const selectionDetails = [];
+            entityIds.forEach(id => {
+                const entityIndex = this.filteredEntities.findIndex(entity => entity.get('id') === id);
+                if (entityIndex >= 0 && this.egiModel[entityIndex].selected === true) {
+                    this.set(`egiModel.${entityIndex}.selected`, false);
+                    this._processEntitySelection(this.filteredEntities[entityIndex], false);
+                    selectionDetails.push({
+                        entity: this.filteredEntities[i],
+                        select: false
+                    });
+                } 
+            });
+            updateSelectAll(this, this.egiModel);
+            if (selectionDetails.length > 0) {
+                this.fire("tg-entity-selected", {
+                    shouldScrollToSelected: false,
+                    entities: selectionDetails
+                });
+            }
+        } else {
+            this.selectAll(false);
+        }
     },
 
     /**
