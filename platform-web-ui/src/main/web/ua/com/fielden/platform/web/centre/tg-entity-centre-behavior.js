@@ -1464,6 +1464,10 @@ const TgEntityCentreBehaviorImpl = {
         return criteriaIndication && criteriaIndication.style ? this._convertStyle(criteriaIndication.style) : '';
     },
 
+    /**
+     * Converts StyleAttribute-based 'styleObject' to inline 'style' attribute.
+     * The object was serialised by Jackson as part of CriteriaIndication serialisation and sent to the client application.
+     */
     _convertStyle: function (styleObject) {
         return Object.keys(styleObject.value)
             .map(key => `${key}:${styleObject.value[key].value.join(' ')}`)

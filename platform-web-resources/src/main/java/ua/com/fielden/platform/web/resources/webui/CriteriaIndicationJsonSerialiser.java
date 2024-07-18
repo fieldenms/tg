@@ -1,12 +1,14 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 import java.io.IOException;
 
+/**
+ * Jackson JSON serialiser for {@link CriteriaIndication}.
+ */
 public class CriteriaIndicationJsonSerialiser extends StdSerializer<CriteriaIndication> {
 
     public CriteriaIndicationJsonSerialiser() {
@@ -14,8 +16,7 @@ public class CriteriaIndicationJsonSerialiser extends StdSerializer<CriteriaIndi
     }
 
     @Override
-    public void serialize(final CriteriaIndication value, final JsonGenerator generator, final SerializerProvider provider)
-            throws IOException, JsonProcessingException {
+    public void serialize(final CriteriaIndication value, final JsonGenerator generator, final SerializerProvider provider) throws IOException {
         generator.writeStartObject();
         generator.writeFieldName("message");
         generator.writeObject(value.message);
