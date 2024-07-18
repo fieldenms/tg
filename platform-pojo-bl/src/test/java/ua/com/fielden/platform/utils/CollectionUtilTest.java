@@ -1,11 +1,7 @@
 package ua.com.fielden.platform.utils;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterators;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
-import ua.com.fielden.platform.test_utils.TestUtils;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -319,8 +315,8 @@ public class CollectionUtilTest {
     public void concatList_returns_a_list_resulting_from_concatenating_given_iterables() {
         assertEquals(List.of(), concatList());
         assertEquals(List.of("a"), concatList(List.of("a")));
-        assertEquals(List.of("a", "b"), concatList(List.of("a"), Set.of("b")));
-        assertEquals(List.of("a", "b", "a", "b"), concatList(List.of("a"), Set.of("b", "a"), List.of("b")));
+        assertEquals(List.of("a", "b"), concatList(List.of("a"), linkedSetOf("b")));
+        assertEquals(List.of("a", "b", "a", "b"), concatList(List.of("a"), linkedSetOf("b", "a"), List.of("b")));
     }
 
 }
