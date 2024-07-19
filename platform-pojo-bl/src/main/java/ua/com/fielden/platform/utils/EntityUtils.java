@@ -3,7 +3,6 @@ package ua.com.fielden.platform.utils;
 import static java.lang.String.format;
 import static java.lang.reflect.Modifier.isStatic;
 import static java.util.Arrays.stream;
-import static java.util.Collections.unmodifiableList;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Stream.concat;
 import static java.util.stream.Stream.empty;
@@ -23,6 +22,7 @@ import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.PROPERTY_SPLITTER;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.unmodifiableListOf;
 import static ua.com.fielden.platform.utils.StreamUtils.takeWhile;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 
@@ -916,14 +916,14 @@ public class EntityUtils {
      * {@link #laxSplitPropPathToArray(CharSequence)} and wrap the result into an unmodifiable list.
      */
     public static List<String> splitPropPath(final CharSequence path) {
-        return unmodifiableList(Arrays.asList(splitPropPathToArray(path)));
+        return unmodifiableListOf(splitPropPathToArray(path));
     }
 
     /**
      * Splits a property path into a list of simple property names, allowing empty names.
      */
     public static List<String> laxSplitPropPath(final CharSequence path) {
-        return unmodifiableList(Arrays.asList(laxSplitPropPathToArray(path)));
+        return unmodifiableListOf(laxSplitPropPathToArray(path));
     }
 
     /**
