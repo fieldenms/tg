@@ -6,6 +6,7 @@ import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
+import ua.com.fielden.platform.processors.utils.TypeSet;
 import ua.com.fielden.platform.processors.verify.ViolatingElement;
 import ua.com.fielden.platform.ref_hierarchy.AbstractTreeEntry;
 import ua.com.fielden.platform.web.action.AbstractFunEntityForDataExport;
@@ -103,7 +104,7 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
         static final String SUPERTYPE_MUST_BE_PARAMETERIZED_WITH_ENTITY_KEY_TYPE = "Supertype must be parameterized with entity key type.";
         static final String KEY_TYPE_MUST_MATCH_THE_TYPE_ARGUMENT_TO_ABSTRACT_ENTITY = "Key type must match the supertype's type argument.";
 
-        static final List<Class<? extends AbstractEntity>> ABSTRACTS = List.of(
+        static final TypeSet ABSTRACTS = TypeSet.ofClasses(
                 AbstractEntity.class, AbstractPersistentEntity.class, ActivatableAbstractEntity.class,
                 AbstractFunctionalEntityWithCentreContext.class, AbstractEntityWithInputStream.class, AbstractTreeEntry.class,
                 AbstractFunEntityForDataExport.class);
@@ -113,7 +114,7 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
         }
 
         private boolean isOneOfAbstracts(final TypeElement element) {
-            return ABSTRACTS.stream().anyMatch(clazz -> elementFinder.isSameType(element.asType(), clazz));
+            return ABSTRACTS.contains(element.asType());
         }
 
         @Override

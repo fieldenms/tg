@@ -6,6 +6,7 @@ import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderExce
 import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelException;
 import ua.com.fielden.platform.utils.StreamUtils;
 
+import javax.annotation.Nullable;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.AnnotatedConstruct;
@@ -20,6 +21,8 @@ import java.util.Map.Entry;
 import java.util.function.*;
 import java.util.stream.Stream;
 
+import static java.util.Collections.unmodifiableMap;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.iterate;
@@ -583,20 +586,7 @@ public class ElementFinder {
 
         @Override
         public Boolean visitPrimitive(final PrimitiveType t, final Class<?> clazz) {
-            return PRIMITIVE_TYPE_MAP.get(t.getKind()) == clazz;
-        }
-
-        private static final Map<TypeKind, Class<?>> PRIMITIVE_TYPE_MAP;
-        static {
-            PRIMITIVE_TYPE_MAP = new EnumMap<>(TypeKind.class);
-            PRIMITIVE_TYPE_MAP.put(TypeKind.BOOLEAN, boolean.class);
-            PRIMITIVE_TYPE_MAP.put(TypeKind.BYTE,    byte.class);
-            PRIMITIVE_TYPE_MAP.put(TypeKind.SHORT,   short.class);
-            PRIMITIVE_TYPE_MAP.put(TypeKind.INT,     int.class);
-            PRIMITIVE_TYPE_MAP.put(TypeKind.LONG,    long.class);
-            PRIMITIVE_TYPE_MAP.put(TypeKind.CHAR,    char.class);
-            PRIMITIVE_TYPE_MAP.put(TypeKind.FLOAT,   float.class);
-            PRIMITIVE_TYPE_MAP.put(TypeKind.DOUBLE,  double.class);
+            return classForPrimitiveType(t) == clazz;
         }
 
         // handle void type
@@ -615,6 +605,24 @@ public class ElementFinder {
             return isSameType(asTypeElement(t), clazz);
         }
     };
+
+    public static Class<?> classForPrimitiveType(final PrimitiveType type) {
+        return requireNonNull(PRIMITIVE_TYPE_MAP.get(type.getKind()));
+    }
+
+    private static final Map<TypeKind, Class<?>> PRIMITIVE_TYPE_MAP;
+    static {
+        final var map = new EnumMap<TypeKind, Class<?>>(TypeKind.class);
+        map.put(TypeKind.BOOLEAN, boolean.class);
+        map.put(TypeKind.BYTE,    byte.class);
+        map.put(TypeKind.SHORT,   short.class);
+        map.put(TypeKind.INT,     int.class);
+        map.put(TypeKind.LONG,    long.class);
+        map.put(TypeKind.CHAR,    char.class);
+        map.put(TypeKind.FLOAT,   float.class);
+        map.put(TypeKind.DOUBLE,  double.class);
+        PRIMITIVE_TYPE_MAP = unmodifiableMap(map);
+    }
 
     /**
      * Tests whether the type represented by the type mirror is a subtype of the given class. Any type is considered to be a subtype of itself.
