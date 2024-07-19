@@ -11,6 +11,7 @@ import '/resources/components/tg-confirmation-dialog.js';
 import '/resources/centre/tg-selection-view.js';
 import '/resources/centre/tg-centre-result-view.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
+import { hideTooltip } from '/resources/components/tg-tooltip-behavior.js';
 import { tearDownEvent, getRelativePos, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
 import '/resources/actions/tg-ui-action.js';
 import { TgElementSelectorBehavior, queryElements} from '/resources/components/tg-element-selector-behavior.js';
@@ -297,7 +298,7 @@ const template = html`
                 </tg-selection-view>
             </div>
         </div>
-        <tg-centre-result-view id="centreResultContainer" centre-scroll$="[[centreScroll]]">
+        <tg-centre-result-view id="centreResultContainer" centre-scroll$="[[centreScroll]]" on-dragstart="_startDrag" on-dragend="_endDrag" on-dragenter="_dragEntered" on-dragover="_dragOver">
             <div id="leftInsertionPointContainer" class="insertion-point-slot layout vertical" scroll-container$="[[!centreScroll]]">
                 <slot id="leftInsertionPointContent" name="left-insertion-point"></slot>
             </div>
@@ -831,5 +832,45 @@ Polymer({
      */
     _computeSaveButtonStyle: function (_buttonDisabled, _centreDirtyOrEdited) {
         return 'width:70px; margin-right:8px; ' + (this._computeSaveButtonDisabled(_buttonDisabled, _centreDirtyOrEdited) ? 'cursor:initial' : '');
-    }
+    },
+
+    /*************************Insertion point drag related events******************************/
+    _startDrag: function (dragEvent) {
+        this._insertionPointToDrag = dragEvent.target.parentElement || dragEvent.target.getRootNode().host;
+        //configure drag transfer and drag transfer image        
+        dragEvent.dataTransfer.effectAllowed = "copyMove";
+        const img = document.createElement("img");   
+        img.src = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+        dragEvent.dataTransfer.setDragImage(img, 0, 0);
+        //Hide tooltip as it is not needed during drag&drop process.
+        hideTooltip();
+    },
+
+    _endDrag: function (dragEvent) {
+        // if (this._menuItemToDrag) {
+        //     this._menuItemToDrag.classList.remove("dragging");
+        //     this.$.menu.classList.remove("dragging");
+        //     this._saveMenuOrder();
+        //     this._menuItemToDrag = null;
+        // }
+    },
+
+    _dragOver: function (e) {
+        tearDownEvent(e);
+        // if (this._menuItemToDrag) {
+        //     tearDownEvent(e);
+        //     const siblings = [...this.querySelectorAll("paper-item:not(.dragging):not(.notDraggable)")];
+        //     const nextSibling = siblings.find(sibling => {
+        //         const siblingRect = sibling.getBoundingClientRect();
+        //         return e.clientY <= siblingRect.y + siblingRect.height / 2;
+        //     });
+        //     this.insertBefore(this._menuItemToDrag, nextSibling);
+        // }
+    },
+
+    _dragEntered: function (dropToEvent) {
+        tearDownEvent(dropToEvent);
+    },
+
+    /*****************************************************************************************************/
 });
