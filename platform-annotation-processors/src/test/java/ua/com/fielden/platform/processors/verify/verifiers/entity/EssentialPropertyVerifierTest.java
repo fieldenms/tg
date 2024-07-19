@@ -6,6 +6,7 @@ import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor;
@@ -14,6 +15,7 @@ import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
 import ua.com.fielden.platform.processors.verify.AbstractVerifierTest;
 import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier;
+import ua.com.fielden.platform.types.RichText;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Modifier;
@@ -31,6 +33,7 @@ import static ua.com.fielden.platform.processors.verify.verifiers.entity.Essenti
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertySetterVerifier.*;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier.errEntityTypeMustBeRegistered;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier.errInvalidCollectionTypeArg;
+import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.RichTextPropertyVerifier.errKeyMemberRichText;
 
 /**
  * Tests related to the composable verifier {@link EssentialPropertyVerifier} and its components.
@@ -523,6 +526,30 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
             assertTypeAllowed(ParameterizedTypeName.get(List.class, PropertyDescriptor.class));
         }
 
+    }
+
+    // 5. RichText
+    public static class RichTextPropertyVerifierTest extends AbstractVerifierTest {
+        static final Class<?> VERIFIER_TYPE = EssentialPropertyVerifier.RichTextPropertyVerifier.class;
+
+        @Override
+        protected IVerifier createVerifier(final ProcessingEnvironment procEnv) {
+            return new EssentialPropertyVerifier.RichTextPropertyVerifier(procEnv);
+        }
+
+        @Test
+        public void RichText_property_cannot_be_part_of_entity_key() {
+            final TypeSpec entity = TypeSpec.classBuilder("Example")
+                    .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                    .addField(propertyBuilder(ClassName.get(RichText.class), "text")
+                                      .addAnnotation(AnnotationSpec.builder(CompositeKeyMember.class).addMember("value", "$L", 1).build())
+                                      .build())
+                    .build();
+
+            compileAndAssertErrors(List.of(entity),
+                                   errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "text"),
+                                   errKeyMemberRichText(entity.name, "text"));
+        }
     }
 
 }
