@@ -80,7 +80,7 @@ public class HibernateMappingsGenerator {
         sb.append("</hibernate-mapping>");
 
         final String result = sb.toString();
-        LOGGER.debug("\n\n" + result + "\n\n");
+//        LOGGER.debug("\n\n" + result + "\n\n");
         return result;
     }
 
