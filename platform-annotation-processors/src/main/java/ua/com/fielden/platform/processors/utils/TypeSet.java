@@ -6,6 +6,8 @@ import javax.annotation.Nullable;
 import javax.lang.model.type.*;
 import javax.lang.model.util.TypeKindVisitor14;
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.classForPrimitiveType;
@@ -24,6 +26,11 @@ import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.c
  */
 public final class TypeSet implements Set<Object> {
 
+    /**
+     * <b>WARNING</b>: builders must not be reused because they are mutable.
+     * <p>
+     * Builders are accessed through {@link TypeSet#build(Function)}.
+     */
     public static final class Builder {
         private final HashSet<String> names = new HashSet<>();
         private final HashSet<Object> elements = new HashSet<>();
@@ -61,21 +68,23 @@ public final class TypeSet implements Set<Object> {
             return this;
         }
 
-        public TypeSet build() {
+        private TypeSet build() {
             return new TypeSet(names, elements);
         }
     }
 
-    public static Builder builder() {
-        return new Builder();
+    public static TypeSet build(final Consumer<Builder> fn) {
+        final var builder = new Builder();
+        fn.accept(builder);
+        return builder.build();
     }
 
     public static TypeSet ofClasses(final Iterable<? extends Class<?>> classes) {
-        return builder().addClasses(classes).build();
+        return new Builder().addClasses(classes).build();
     }
 
     public static TypeSet ofClasses(final Class<?>... classes) {
-        return builder().addClasses(Arrays.asList(classes)).build();
+        return new Builder().addClasses(Arrays.asList(classes)).build();
     }
 
     private final HashSet<String> names;

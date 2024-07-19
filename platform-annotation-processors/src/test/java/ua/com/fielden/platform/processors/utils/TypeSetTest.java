@@ -45,14 +45,13 @@ public class TypeSetTest {
 
     @Test
     public void elements_with_the_same_canonical_names_are_deduplicated() {
-        final var set = TypeSet.builder()
+        final var set = TypeSet.build(b -> b
                 .add(int.class).add(int.class)
                 .add(char.class).add(types.getPrimitiveType(TypeKind.CHAR))
                 .add(String.class).add(elementFinder.getTypeElement(String.class).asType())
                 .add(List.class).add(types.getDeclaredType(elementFinder.getTypeElement(List.class),
                                                            elementFinder.getTypeElement(String.class).asType()))
-                .add(Double.class).add(Double.class)
-                .build();
+                .add(Double.class).add(Double.class));
         assertEquals(5, set.size());
         assertTrue(set.contains(int.class));
         assertTrue(set.contains(types.getPrimitiveType(TypeKind.INT)));
