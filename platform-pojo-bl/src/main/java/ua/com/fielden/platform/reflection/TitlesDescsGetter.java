@@ -13,6 +13,7 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determ
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.firstAndRest;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penultAndLast;
+import static ua.com.fielden.platform.utils.EntityUtils.laxSplitPropPathToArray;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.reflect.Method;
@@ -36,6 +37,7 @@ import ua.com.fielden.platform.entity.annotation.titles.Subtitles;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -62,7 +64,7 @@ public class TitlesDescsGetter {
      * @return
      */
     private static Pair<List<String>, List<String>> getPropertyTitlesAndDescriptionsPath(final Class<?> type, final String dotNotationExp) {
-        final String[] properties = dotNotationExp.split(Reflector.DOT_SPLITTER);
+        final String[] properties = laxSplitPropPathToArray(dotNotationExp);
         Class<?> ownerType = type;
         final List<String> pathOfTitles = new ArrayList<>();
         final List<String> pathOfDescs = new ArrayList<>();

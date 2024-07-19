@@ -15,12 +15,7 @@ import static ua.com.fielden.platform.reflection.Reflector.MAXIMUM_CACHE_SIZE;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
-import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
-import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -145,7 +140,7 @@ public class Finder {
      * @throws RuntimeException
      */
     public static List<MetaProperty<?>> findMetaProperties(final AbstractEntity<?> entity, final String dotNotationExp) {
-        final String[] properties = dotNotationExp.split(Reflector.DOT_SPLITTER);
+        final String[] properties = laxSplitPropPathToArray(dotNotationExp);
         final List<MetaProperty<?>> metaProperties = new ArrayList<>();
         Object owner = entity;
         for (final String propertyName : properties) {
@@ -182,7 +177,7 @@ public class Finder {
      */
     public static MetaProperty<?> findMetaProperty(final AbstractEntity<?> entity, final String dotNotationExp) {
         final List<MetaProperty<?>> metaProperties = findMetaProperties(entity, dotNotationExp);
-        if (dotNotationExp.split(Reflector.DOT_SPLITTER).length > metaProperties.size()) {
+        if (laxSplitPropPathToArray(dotNotationExp).length > metaProperties.size()) {
             return null;
         } else {
             return metaProperties.get(metaProperties.size() - 1);
@@ -525,7 +520,7 @@ public class Finder {
         if (entity == null) {
             return null;
         }
-        final String[] propNames = dotNotationExp.split(Reflector.DOT_SPLITTER);
+        final String[] propNames = splitPropPathToArray(dotNotationExp);
         Object value = entity;
         for (final String propName : propNames) {
             value = getPropertyValue((AbstractEntity<?>) value, propName);

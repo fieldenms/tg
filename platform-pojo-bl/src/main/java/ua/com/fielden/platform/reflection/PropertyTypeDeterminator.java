@@ -2,8 +2,7 @@ package ua.com.fielden.platform.reflection;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
-import static ua.com.fielden.platform.utils.EntityUtils.isDecimal;
-import static ua.com.fielden.platform.utils.EntityUtils.isInteger;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.reflect.Field;
@@ -66,7 +65,7 @@ public class PropertyTypeDeterminator {
             return stripIfNeeded(type);
         }
 
-        final String[] propertiesOrFunctions = dotNotationExp.toString().split(Reflector.DOT_SPLITTER);
+        final String[] propertiesOrFunctions = splitPropPathToArray(dotNotationExp);
         Class<?> result = type;
         for (final String propertyOrFunction : propertiesOrFunctions) {
             result = determineClass(result, propertyOrFunction, true, true);
