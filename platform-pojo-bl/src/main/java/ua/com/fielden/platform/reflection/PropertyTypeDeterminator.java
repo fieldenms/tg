@@ -47,14 +47,14 @@ public class PropertyTypeDeterminator {
     }
 
     /**
-     * Determines a class of property/function defined by <code>dotNotationExp</code>.
-     * If argument <code>dotNotationExp</code> has value "this" then the first argument <code>type</code> is returned as result (stripped if needed).
+     * Determines the type of property / method defined by a dot-notation.
+     * <p>
+     * If dot-notation is {@code "this"}, {@code type} is returned (stripped if needed).
      *
-     * @param type
-     *            -- the class that should contain property/function defined by dot-notation expression. (e.g. "Vehicle" contains "status.isGeneratePmWo()")
-     * @param dotNotationExp
-     *            - a couple of functions/properties joined by ".". (e.g. "vehicle.getKey().getStatus().generatePmWo.getWorkOrder().key")
-     * @return -- property/function class
+     * @param type  type that should contain property/method defined by the dot-notation (e.g. {@code Vehicle} contains {@code "status.isGeneratePmWo()"})
+     * @param dotNotationExp methods / properties joined by {@code "."} (e.g. {@code "vehicle.getKey().getStatus().generatePmWo.getWorkOrder().key"})
+     *
+     * @return  property type / method return type
      */
     public static Class<?> determinePropertyType(final Class<?> type, final CharSequence dotNotationExp) {
         if (type == null || StringUtils.isEmpty(dotNotationExp)) {

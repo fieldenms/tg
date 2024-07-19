@@ -507,11 +507,7 @@ public final class Reflector {
     }
     
     /**
-     * Returns <code>true</code> if the specified property is proxied for a given entity instance.
-     *  
-     * @param entity
-     * @param propName
-     * @return
+     * Tests if the specified property is proxied for a given entity instance.
      */
     public static boolean isPropertyProxied(final AbstractEntity<?> entity, final String propName) {
         return entity.proxiedPropertyNames().contains(propName);

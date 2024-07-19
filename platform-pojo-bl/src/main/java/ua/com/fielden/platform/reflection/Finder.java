@@ -169,27 +169,18 @@ public class Finder {
      * The first part of the expression should correspond to a property in the provided entity.
      * <p>
      * The last part should correspond to a property for which meta-property is being determined.
-     *
-     * @param entity
-     * @param dotNotationExp
-     * @return
-     * @throws RuntimeException
      */
     public static MetaProperty<?> findMetaProperty(final AbstractEntity<?> entity, final String dotNotationExp) {
         final List<MetaProperty<?>> metaProperties = findMetaProperties(entity, dotNotationExp);
         if (laxSplitPropPathToArray(dotNotationExp).length > metaProperties.size()) {
             return null;
         } else {
-            return metaProperties.get(metaProperties.size() - 1);
+            return metaProperties.getLast();
         }
     }
 
     /**
      * Obtains a set of meta-properties from an entity, sorted in a natural order as defined by {@link MetaProperty}.
-     *
-     * @param entity
-     * @return
-     * @throws RuntimeException
      */
     public static SortedSet<MetaProperty<?>> getMetaProperties(final AbstractEntity<?> entity) {
         final List<Field> properties = findRealProperties(entity.getType());
@@ -509,12 +500,7 @@ public class Finder {
     }
 
     /**
-     * This method is similar to {@link #findFieldByName(Class, String)}, but returns property values rather than type information.
-     *
-     * @param entity
-     * @param dotNotationExp
-     * @return
-     * @throws Exception
+     * This method is similar to {@link #findFieldByName(Class, CharSequence)}, but returns property values rather than type information.
      */
     public static <T> T findFieldValueByName(final AbstractEntity<?> entity, final String dotNotationExp) {
         if (entity == null) {
