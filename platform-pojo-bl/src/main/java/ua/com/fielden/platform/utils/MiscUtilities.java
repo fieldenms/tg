@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
@@ -54,25 +53,16 @@ public class MiscUtilities {
 
     /**
      * Creates a new array of values based on the passed list by changing * to %.
-     *
-     * @param criteria
-     * @return
      */
     public static String[] prepare(final List<String> criteria) {
-        final List<String> result = new ArrayList<>();
-        if (criteria != null) {
-            for (final String crit : criteria) {
-                result.add(prepare(crit));
-            }
+        if (criteria == null) {
+            return new String[0];
         }
-        // eliminate empty or null values
-        final List<String> finalRes = new ArrayList<>();
-        for (final String value : result) {
-            if (!StringUtils.isEmpty(value)) {
-                finalRes.add(value);
-            }
-        }
-        return finalRes.toArray(new String[] {});
+
+        return criteria.stream()
+                .map(MiscUtilities::prepare)
+                .filter(s -> !StringUtils.isEmpty(s))
+                .toArray(String[]::new);
     }
 
     /**
@@ -94,15 +84,13 @@ public class MiscUtilities {
 
     /**
      * Converts auto-completer-like regular expression to normal regular expression (simply replaces all '*' with '%' characters)
-     *
-     * @param autocompleterExp
-     * @return
      */
     public static String prepare(final String autocompleterExp) {
-        if ("*".equals(autocompleterExp.trim())) {
+        final var trimmed = autocompleterExp.trim();
+        if ("*".equals(trimmed)) {
             return null;
         }
-        return autocompleterExp.replace("*", "%").trim();
+        return trimmed.replace('*', '%');
     }
 
     /**
