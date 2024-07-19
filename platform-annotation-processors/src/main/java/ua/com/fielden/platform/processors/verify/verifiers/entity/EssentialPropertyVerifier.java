@@ -64,7 +64,8 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
                 new PropertyAccessorVerifier(procEnv),
                 new PropertySetterVerifier(procEnv),
                 new CollectionalPropertyVerifier(procEnv),
-                new PropertyTypeVerifier(procEnv));
+                new PropertyTypeVerifier(procEnv),
+                new RichTextPropertyVerifier(procEnv));
     }
 
     /**
@@ -413,6 +414,48 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
                 this.registeredEntities = $ -> result;
                 return result;
             };
+        }
+    }
+
+    /**
+     * Verifies properties with type {@link RichText}:
+     * <ol>
+     *   <li> Cannot be a part of entity key, i.e., a composite key member.
+     * </ol>
+     */
+    static class RichTextPropertyVerifier extends AbstractEntityVerifier {
+
+        protected RichTextPropertyVerifier(final ProcessingEnvironment processingEnv) {
+            super(processingEnv);
+        }
+
+        @Override
+        protected List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
+            return roundEnv.findViolatingDeclaredProperties(new PropertyVerifier(entityFinder));
+        }
+
+        private class PropertyVerifier extends AbstractPropertyElementVerifier {
+            PropertyVerifier(final EntityFinder entityFinder) {
+                super(entityFinder);
+            }
+
+            @Override
+            public Optional<ViolatingElement> verifyProperty(final EntityElement entity, final PropertyElement property) {
+                if (!elementFinder.isSameType(property.getType(), RichText.class)) {
+                    return Optional.empty();
+                }
+
+                if (entityFinder.isKeyMember(property)) {
+                    return of(new ViolatingElement(property.element(), Kind.ERROR,
+                                                   errKeyMemberRichText(getSimpleName(entity.element()), getSimpleName(property.element()))));
+                }
+
+                return Optional.empty();
+            }
+        }
+
+        public static String errKeyMemberRichText(final String entity, final String property) {
+            return "RichText property [%s] cannot be used as a key member.".formatted(entity + "." + property);
         }
     }
 

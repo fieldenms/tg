@@ -520,6 +520,10 @@ public class EntityFinder extends ElementFinder {
         return isSubtype(property.getType(), Collection.class);
     }
 
+    public boolean isKeyMember(final PropertyElement property) {
+        return property.getAnnotation(CompositeKeyMember.class) != null;
+    }
+
     /**
      * A predicate that determines whether {@code element} represent an entity that needs a meta model.
      *
