@@ -14,7 +14,9 @@ import ua.com.fielden.platform.processors.appdomain.annotation.SkipEntityRegistr
 import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
 import ua.com.fielden.platform.processors.verify.AbstractVerifierTest;
 import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
-import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier;
+import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
+import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.RichText;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -501,7 +503,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
 
         @Test
         public void select_custom_platform_types_are_allowed() {
-            for (final Class<?> cls: PropertyTypeVerifier.PLATFORM_TYPES) {
+            for (final var cls: List.of(Money.class, Colour.class, Hyperlink.class, RichText.class)) {
                 assertTypeAllowed(ClassName.get(cls));
             }
         }
