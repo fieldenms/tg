@@ -602,7 +602,7 @@ public class CriteriaResource extends AbstractWebResource {
                     if (!validationResult.isSuccessful()) {
                         LOGGER.debug("CRITERIA_RESOURCE: run finished (validation failed).");
                         final var criteriaIndication = createCriteriaIndication((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-                        return restUtil.rawListJsonRepresentation(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, user, updatedFreshCentre, new LinkedHashMap<>(), criteriaIndication, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder));
+                        return restUtil.rawListJsonRepresentation(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, updatedFreshCentre, new LinkedHashMap<>(), criteriaIndication));
                     }
                 } else {
                     updatedFreshCentre = null;
@@ -633,7 +633,7 @@ public class CriteriaResource extends AbstractWebResource {
                     if (!generationResult.isSuccessful()) {
                         LOGGER.debug("CRITERIA_RESOURCE: run finished (generation failed).");
                         final var criteriaIndication = createCriteriaIndication((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-                        final Result result = generationResult.copyWith(new ArrayList<>(Arrays.asList(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, user, updatedFreshCentre, new LinkedHashMap<>(), criteriaIndication, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder))));
+                        final Result result = generationResult.copyWith(new ArrayList<>(Arrays.asList(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, updatedFreshCentre, new LinkedHashMap<>(), criteriaIndication))));
                         return restUtil.resultJSONRepresentation(result);
                     }
                 }
@@ -662,7 +662,7 @@ public class CriteriaResource extends AbstractWebResource {
                 );
                 if (isRunning) {
                     final var changedCriteriaIndication = createChangedCriteriaIndication(updatedFreshCentre, miType, saveAsName, user, companionFinder, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-                    updateResultantCustomObject(previouslyRunCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, user, previouslyRunCentre, pair.getKey(), changedCriteriaIndication, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                    updateResultantCustomObject(previouslyRunCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, previouslyRunCentre, pair.getKey(), changedCriteriaIndication);
                 }
 
                 // Running the rendering customiser for result set of entities.
@@ -865,16 +865,9 @@ public class CriteriaResource extends AbstractWebResource {
             final Function<Optional<String>, Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Boolean>> centreDirtyCalculator,
             final Class<? extends MiWithConfigurationSupport<?>> miType,
             final Optional<String> saveAsName,
-            final User user,
             final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre,
             final Map<String, Object> resultantCustomObject,
-            final CriteriaIndication criteriaIndication,
-            final DeviceProfile device,
-            final IWebUiConfig webUiConfig,
-            final EntityCentreConfigCo eccCompanion,
-            final MainMenuItemCo mmiCompanion,
-            final IUser userCompanion,
-            final ICompanionObjectFinder companionFinder) {
+            final CriteriaIndication criteriaIndication) {
         resultantCustomObject.put(CENTRE_DIRTY, centreDirtyCalculator.apply(saveAsName).apply(() -> updatedFreshCentre));
         resultantCustomObject.put(META_VALUES, createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)));
 
