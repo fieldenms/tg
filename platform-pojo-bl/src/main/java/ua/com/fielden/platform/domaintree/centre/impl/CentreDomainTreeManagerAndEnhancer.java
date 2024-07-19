@@ -701,8 +701,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
         @Override
         public boolean selectionCriteriaEquals(final IAddToCriteriaTickManager obj) {
             return this == obj ||
-                super.equals(obj)
-                && getClass() == obj.getClass()
+                getClass() == obj.getClass()
                 && base().selectionCriteriaEquals(((AddToCriteriaTickManagerAndEnhancer) obj).base());
         }
 
