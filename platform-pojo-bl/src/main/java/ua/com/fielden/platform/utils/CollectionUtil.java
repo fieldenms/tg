@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.utils;
 
+import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -44,9 +45,12 @@ public final class CollectionUtil {
         return elements != null ? new ArrayList<>(asList(elements)) : emptyList();
     }
 
+    /**
+     * An efficient alternative to {@code Collections.unmodifiableList(Arrays.asList(array))}.
+     */
     @SafeVarargs
-    public static <T> List<T> unmodifiableListOf(final T ... elements) {
-        return unmodifiableList(asList(elements));
+    public static <T> List<T> unmodifiableListOf(final T... elements) {
+        return elements.length == 0 ? ImmutableList.of() : unmodifiableList(asList(elements));
     }
 
     /**
