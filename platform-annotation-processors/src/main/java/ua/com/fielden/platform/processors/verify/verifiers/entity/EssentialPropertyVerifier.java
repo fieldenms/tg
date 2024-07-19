@@ -38,6 +38,7 @@ import ua.com.fielden.platform.processors.verify.ViolatingElement;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.RichText;
 
 /**
  * Composable verifier for entity properties, responsible for the most essential verification, which includes:
@@ -257,7 +258,7 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
      * Acceptable property types:
      * <ol>
      *   <li>Ordinary (aka primitive) types: {@link Long}, {@link Integer}, {@link BigDecimal}, {@link Date}, {@link String}, {@code boolean}.
-     *   <li>Custom platform types: {@link Money}, {@link Colour}, {@link Hyperlink}.
+     *   <li>Custom platform types: {@link Money}, {@link Colour}, {@link Hyperlink}, {@link RichText}.
      *   <li>Entity types:
      *   <ol>
      *      <li>Any registered domain entity (at the time of writing, this means an entity, registered in an
@@ -276,7 +277,7 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
         static final List<Class<?>> ORDINARY_TYPES = List.of(String.class, Long.class, Integer.class, BigDecimal.class, Date.class, boolean.class);
         // includes boxed boolean
         static final List<Class<?>> ORDINARY_TYPE_ARGS = List.of(String.class, Long.class, Integer.class, BigDecimal.class, Date.class, Boolean.class);
-        static final List<Class<?>> PLATFORM_TYPES = List.of(Money.class, Colour.class, Hyperlink.class);
+        static final List<Class<?>> PLATFORM_TYPES = List.of(Money.class, Colour.class, Hyperlink.class, RichText.class);
         static final List<Class<?>> BINARY_TYPES = List.of(byte[].class);
         static final List<Class<?>> SPECIAL_COLLECTION_TYPES = List.of(Map.class);
         static final List<Class<?>> SPECIAL_ENTITY_TYPES = List.of(PropertyDescriptor.class);
