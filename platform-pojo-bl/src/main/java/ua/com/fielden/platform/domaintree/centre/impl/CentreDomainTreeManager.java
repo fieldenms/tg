@@ -119,8 +119,6 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
         /**
          * A tick <i>manager</i> constructor.
-         *
-         * @param serialiser
          */
         public AddToCriteriaTickManager(final Map<Class<?>, List<String>> checkedProperties, final EntityFactory entityFactory, final Map<Pair<Class<?>, String>, Object> propertiesValues1, final Map<Pair<Class<?>, String>, Object> propertiesValues2, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive1, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive2, final Map<Pair<Class<?>, String>, DateRangePrefixEnum> propertiesDatePrefixes, final Map<Pair<Class<?>, String>, MnemonicEnum> propertiesDateMnemonics, final Map<Pair<Class<?>, String>, Boolean> propertiesAndBefore, final Map<Pair<Class<?>, String>, Boolean> propertiesOrNulls, final Map<Pair<Class<?>, String>, Boolean> propertiesNots, final Map<Pair<Class<?>, String>, Integer> propertiesOrGroups, final Set<Pair<Class<?>, String>> propertiesAutocompleteActiveOnly, final Integer columnsNumber, final Set<Class<?>> rootTypes) {
             super(checkedProperties);
@@ -578,93 +576,59 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
         @Override
         public int hashCode() {
-            final int prime = 31;
-            int result = super.hashCode();
-            result = prime * result + ((columnsNumber == null) ? 0 : columnsNumber.hashCode());
-            result = prime * result + (rootTypes == null ? 0 : rootTypes.hashCode());
-            result = prime * result + propertiesAndBefore.hashCode();
-            result = prime * result + propertiesDateMnemonics.hashCode();
-            result = prime * result + propertiesDatePrefixes.hashCode();
-            result = prime * result + propertiesExclusive1.hashCode();
-            result = prime * result + propertiesExclusive2.hashCode();
-            result = prime * result + propertiesOrGroups.hashCode();
-            result = prime * result + propertiesNots.hashCode();
-            result = prime * result + propertiesOrNulls.hashCode();
-            result = prime * result + propertiesValues1.hashCode();
-            result = prime * result + propertiesValues2.hashCode();
-            result = prime * result + propertiesAutocompleteActiveOnly.hashCode();
-            return result;
+            return Objects.hash(super.hashCode(),
+                propertiesValues1,
+                propertiesValues2,
+                propertiesExclusive1,
+                propertiesExclusive2,
+                propertiesDatePrefixes,
+                propertiesDateMnemonics,
+                propertiesAndBefore,
+                propertiesOrNulls,
+                propertiesNots,
+                propertiesOrGroups,
+                propertiesAutocompleteActiveOnly,
+                columnsNumber,
+                rootTypes
+            );
         }
 
         @Override
-        public boolean selectionCriteriaEquals(final Object obj) {
-            if (this == obj) {
+        public boolean selectionCriteriaEquals(final IAddToCriteriaTickManager o) {
+            if (this == o) {
                 return true;
             }
-            if (!super.equals(obj)) {
+            else if (o == null || getClass() != o.getClass() || !super.equals(o)) {
                 return false;
             }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final AddToCriteriaTickManager other = (AddToCriteriaTickManager) obj;
-            if (rootTypes == null) {
-                if (other.rootTypes != null) {
-                    return false;
-                }
-            } else if (!rootTypes.equals(other.rootTypes)) {
-                return false;
-            }
-            if (!propertiesAndBefore.equals(other.propertiesAndBefore)) {
-                return false;
-            }
-            if (!propertiesDateMnemonics.equals(other.propertiesDateMnemonics)) {
-                return false;
-            }
-            if (!propertiesDatePrefixes.equals(other.propertiesDatePrefixes)) {
-                return false;
-            }
-            if (!propertiesExclusive1.equals(other.propertiesExclusive1)) {
-                return false;
-            }
-            if (!propertiesExclusive2.equals(other.propertiesExclusive2)) {
-                return false;
-            }
-            if (!propertiesOrGroups.equals(other.propertiesOrGroups)) {
-                return false;
-            }
-            if (!propertiesNots.equals(other.propertiesNots)) {
-                return false;
-            }
-            if (!propertiesOrNulls.equals(other.propertiesOrNulls)) {
-                return false;
-            }
-            if (propertyValuesDifferent(propertiesValues1, other.propertiesValues1)) {
-                return false;
-            }
-            if (!propertiesValues2.equals(other.propertiesValues2)) {
-                return false;
-            }
-            return true;
+            final var that = (AddToCriteriaTickManager) o;
+            return !propertyValuesDifferent(propertiesValues1, that.propertiesValues1)
+                && Objects.equals(propertiesValues2, that.propertiesValues2)
+                && Objects.equals(propertiesExclusive1, that.propertiesExclusive1)
+                && Objects.equals(propertiesExclusive2, that.propertiesExclusive2)
+                && Objects.equals(propertiesDatePrefixes, that.propertiesDatePrefixes)
+                && Objects.equals(propertiesDateMnemonics, that.propertiesDateMnemonics)
+                && Objects.equals(propertiesAndBefore, that.propertiesAndBefore)
+                && Objects.equals(propertiesOrNulls, that.propertiesOrNulls)
+                && Objects.equals(propertiesNots, that.propertiesNots)
+                && Objects.equals(propertiesOrGroups, that.propertiesOrGroups)
+                && Objects.equals(rootTypes, that.rootTypes);
         }
 
         @Override
-        public boolean equals(final Object obj) {
-            if (!selectionCriteriaEquals(obj)) {
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            else if (o == null || getClass() != o.getClass()) {
                 return false;
             }
-            final AddToCriteriaTickManager other = (AddToCriteriaTickManager) obj;
-            if (columnsNumber == null) {
-                if (other.columnsNumber != null) {
-                    return false;
-                }
-            } else if (!columnsNumber.equals(other.columnsNumber)) {
+            final var that = (AddToCriteriaTickManager) o;
+            if (!selectionCriteriaEquals(that)) {
                 return false;
             }
-            if (!propertiesAutocompleteActiveOnly.equals(other.propertiesAutocompleteActiveOnly)) {
-                return false;
-            }
-            return true;
+            return Objects.equals(propertiesAutocompleteActiveOnly, that.propertiesAutocompleteActiveOnly)
+                && Objects.equals(columnsNumber, that.columnsNumber);
         }
 
     }

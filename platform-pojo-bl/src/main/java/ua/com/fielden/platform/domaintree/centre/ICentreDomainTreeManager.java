@@ -23,7 +23,7 @@ import java.util.List;
  * <b>Important:</b> it is necessary to override {@link #equals(Object)} and {@link #hashCode()} methods in implementors to provide logical comparison of instances. <br>
  * <br>
  *
- * 1. The domain can be enhanced by <i>calculated properties</i> using {@link IDomainTreeEnhancer} instance ({@link #getEnhancer()} method).<br>
+ * 1. The domain can be enhanced by <i>calculated properties</i> using {@link IDomainTreeEnhancer} instance ({@link ICentreDomainTreeManagerAndEnhancer#getEnhancer()})} method).<br>
  * 2. Each property has two "tick" managers (refer to {@link IAddToCriteriaTickManager} and {@link IAddToResultTickManager}), which include tick checking logic, criteria values,
  * result property ordering etc.<br>
  * 3. The rules of tree representation (properties disablement, immutable checking etc.) can be changed by {@link IDomainTreeRepresentation} instance ({@link #getRepresentation()}
@@ -257,7 +257,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
     /**
      * Sets the index of preferred resultant view for this entity centre.
      *
-     * @param prefViewIndex
+     * @param preferredView
      * @return
      */
     ICentreDomainTreeManager setPreferredView(final Integer preferredView);
@@ -738,9 +738,24 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         IAddToCriteriaTickManager moveToTheEnd(final Class<?> root, final String what);
 
         /**
-         * Indicates whether selection criteria portion of this tick manager equals to selection criteria portion of other tick manager.
+         * Indicates whether {@code that} is non-empty criteria tick manager and its selection criteria portion equals to selection criteria portion of this tick manager.
+         * <p>
+         * Selection criteria portion consists only of values that affect results of Entity Centre running.
+         * This includes:
+         * <ul>
+         *     <li>value1</li>
+         *     <li>value2 (for criteria with two editors)</li>
+         *     <li>exclusive1</li>
+         *     <li>exclusive2 (for criteria with two editors)</li>
+         *     <li>date prefix</li>
+         *     <li>date mnemonic</li>
+         *     <li>date andBefore</li>
+         *     <li>missing value</li>
+         *     <li>not</li>
+         *     <li>OR group</li>
+         * </ul>
          */
-        boolean selectionCriteriaEquals(final Object obj);
+        boolean selectionCriteriaEquals(final IAddToCriteriaTickManager that);
 
     }
 
@@ -780,12 +795,9 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * {@link DomainTreeException}.<br>
          * <br>
          *
-         * @param root
-         *            -- a root type that contains property.
-         * @param property
-         *            -- a dot-notation expression that defines a property.
-         * @param width
-         *            -- a width to set
+         * @param root -- a root type that contains property.
+         * @param property -- a dot-notation expression that defines a property.
+         * @param growFactor -- a grow factor to set
          * @return -- a result tick representation
          */
         IAddToResultTickManager setGrowFactor(final Class<?> root, final String property, final int growFactor);

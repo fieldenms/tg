@@ -58,10 +58,8 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
     /**
      * A <i>manager with enhancer</i> constructor for instantiating with calculated / custom properties inside.
      *
-     * @param serialiser
      * @param rootTypes
      * @param calculatedAndCustomProperties
-     * @param miType
      */
     public CentreDomainTreeManagerAndEnhancer(
             final EntityFactory entityFactory,
@@ -142,7 +140,6 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
          * {@link AbstractDomainTreeRepresentation}.
          *
          * @param baseEnhancer
-         * @param dtr
          */
         protected CentreDomainTreeEnhancerWithPropertiesPopulation(final DomainTreeEnhancer baseEnhancer, final CentreDomainTreeManagerAndEnhancer mgrAndEnhancer) {
             super(baseEnhancer, (DomainTreeRepresentationAndEnhancer) mgrAndEnhancer.getRepresentation());
@@ -282,7 +279,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
     /**
      * Enhances centre manager domain to include COUNT_OF_SELF_DASHBOARD property, which will be used for sentinel analyses.
      *
-     * @param rootType
+     * @param rootTypes
      */
     public void provideSentinelAnalysesAggregationProperty(final Set<Class<?>> rootTypes) {
         for (final Class<?> rootType : rootTypes) {
@@ -299,7 +296,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
     /**
      * Enhances centre manager domain to include "Date Period" distribution properties, which will be used for lifecycle analyses.
      *
-     * @param rootType
+     * @param rootTypes
      */
     public void provideLifecycleAnalysesDatePeriodProperties(final Set<Class<?>> rootTypes) {
         for (final Class<?> rootType : rootTypes) {
@@ -410,7 +407,6 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
     /**
      * Unfreezes the centre instance that is currently freezed.
      *
-     * @param root
      * @param name
      */
     protected void unfreeze(final String name) {
@@ -424,7 +420,6 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
      * Throws an error when the instance is <code>null</code> (not initialised).
      *
      * @param mgr
-     * @param root
      * @param name
      */
     private void notInitiliasedError(final IAbstractAnalysisDomainTreeManager mgr, final String name) {
@@ -704,11 +699,13 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
         }
 
         @Override
-        public boolean selectionCriteriaEquals(Object obj) {
+        public boolean selectionCriteriaEquals(final IAddToCriteriaTickManager obj) {
             return this == obj ||
-                    getClass() == obj.getClass()
-                    && base().selectionCriteriaEquals(((AddToCriteriaTickManagerAndEnhancer) obj).base());
+                super.equals(obj)
+                && getClass() == obj.getClass()
+                && base().selectionCriteriaEquals(((AddToCriteriaTickManagerAndEnhancer) obj).base());
         }
+
     }
 
     /**
