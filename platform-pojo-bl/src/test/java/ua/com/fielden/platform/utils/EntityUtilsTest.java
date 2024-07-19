@@ -3,28 +3,14 @@ package ua.com.fielden.platform.utils;
 import static java.math.RoundingMode.HALF_EVEN;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
-import static ua.com.fielden.platform.utils.EntityUtils.coalesce;
-import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
-import static ua.com.fielden.platform.utils.EntityUtils.getCollectionalProperties;
-import static ua.com.fielden.platform.utils.EntityUtils.isIntrospectionDenied;
-import static ua.com.fielden.platform.utils.EntityUtils.isNaturalOrderDescending;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.keyPaths;
-import static ua.com.fielden.platform.utils.EntityUtils.safeCompare;
-import static ua.com.fielden.platform.utils.EntityUtils.toDecimal;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -680,6 +666,41 @@ public class EntityUtilsTest {
         final LinkedHashSet<Class<? extends AbstractEntity<?>>> expected = linkedSetOf(Attachment.class, DomainExplorer.class, DashboardRefreshFrequency.class, DashboardRefreshFrequencyUnit.class, KeyNumber.class, User.class, ReUser.class, UserRole.class, UserAndRoleAssociation.class, SecurityRoleAssociation.class, UserDefinableHelp.class);
         final LinkedHashSet<Class<? extends AbstractEntity<?>>> filtered = PlatformDomainTypes.types.stream().filter(EntityUtils::isIntrospectionAllowed).collect(toCollection(LinkedHashSet::new));
         assertEquals(expected, filtered);
+    }
+
+    @Test
+    public void splitPropPath_fails_if_path_contains_empty_property_names() {
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath("person."));
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath("person.."));
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath(".person"));
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath("..person"));
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath("person..desc"));
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath("person..desc."));
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath("person.desc."));
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath("person.desc.."));
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath(""));
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath("."));
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath(".."));
+    }
+
+    @Test
+    public void splitPropPath_splits_a_dot_notated_path_into_a_list_of_simple_property_names() {
+        assertEquals(List.of("person", "desc"), splitPropPath("person.desc"));
+        assertEquals(List.of("person", "vehicle", "desc"), splitPropPath("person.vehicle.desc"));
+    }
+
+    @Test
+    public void splitPropPath_returns_a_single_element_list_given_a_simple_property_name() {
+        assertEquals(List.of("person"), splitPropPath("person"));
+    }
+
+    @Test
+    public void laxSplitPropPath_allows_empty_names_in_a_path() {
+        assertEquals(List.of(""), laxSplitPropPath(""));
+        assertEquals(List.of(), laxSplitPropPath("."));
+        assertEquals(List.of("", "person"), laxSplitPropPath(".person"));
+        assertEquals(List.of("person"), laxSplitPropPath("person."));
+        assertEquals(List.of("person", "", "desc"), laxSplitPropPath("person..desc"));
     }
 
     /**

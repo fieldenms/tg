@@ -3,13 +3,12 @@ package ua.com.fielden.platform.utils;
 import static java.lang.String.format;
 import static java.lang.reflect.Modifier.isStatic;
 import static java.util.Arrays.stream;
+import static java.util.Collections.unmodifiableList;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Stream.concat;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.lastIndexOf;
-import static org.apache.commons.lang3.StringUtils.length;
+import static org.apache.commons.lang3.StringUtils.*;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
@@ -37,19 +36,7 @@ import java.math.RoundingMode;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -79,11 +66,7 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.reflection.*;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.Hyperlink;
@@ -893,6 +876,54 @@ public class EntityUtils {
             result.add(value.getClass());
         }
         return result;
+    }
+
+    /**
+     * Splits a property path into an array of simple property names.
+     * <p>
+     * The supplied path must be valid, otherwise a runtime exception is thrown. Specifically, the path:
+     * <ul>
+     *   <li> Must not be empty.
+     *   <li> Must not contain empty property names (e.g., {@code "person..desc", ".person", "person."})
+     * </ul>
+     */
+    public static String[] splitPropPathToArray(final CharSequence path) {
+        if (path.isEmpty()) {
+            throw new IllegalArgumentException("Invalid property path: [%s]".formatted(path));
+        }
+
+        if (path.charAt(0) == '.' || path.charAt(path.length() - 1) == '.') {
+            throw new IllegalArgumentException("Invalid property path: [%s]".formatted(path));
+        }
+
+        final var components = Reflector.DOT_SPLITTER_PATTERN.split(path);
+        for (final var component : components) {
+            if (component.isEmpty()) {
+                throw new IllegalArgumentException("Invalid property path: [%s]".formatted(path));
+            }
+        }
+        return components;
+    }
+
+    /**
+     * Splits a property path into an array of simple property names, allowing empty names.
+     */
+    public static String[] laxSplitPropPathToArray(final CharSequence path) {
+        return Reflector.DOT_SPLITTER_PATTERN.split(path);
+    }
+
+    /**
+     * {@link #laxSplitPropPathToArray(CharSequence)} and wrap the result into an unmodifiable list.
+     */
+    public static List<String> splitPropPath(final CharSequence path) {
+        return unmodifiableList(Arrays.asList(splitPropPathToArray(path)));
+    }
+
+    /**
+     * Splits a property path into a list of simple property names, allowing empty names.
+     */
+    public static List<String> laxSplitPropPath(final CharSequence path) {
+        return unmodifiableList(Arrays.asList(laxSplitPropPathToArray(path)));
     }
 
     /**
