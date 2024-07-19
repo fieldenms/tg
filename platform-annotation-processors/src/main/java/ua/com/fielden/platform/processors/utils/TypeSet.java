@@ -8,6 +8,8 @@ import javax.lang.model.util.TypeKindVisitor14;
 import java.util.*;
 import java.util.stream.Stream;
 
+import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.classForPrimitiveType;
+
 /**
  * An immutable set that can store instances of {@link Class} and {@link TypeMirror}, and provides an efficient implementation
  * of {@link Set#contains(Object)}.
@@ -188,6 +190,9 @@ public final class TypeSet implements Set<Object> {
         return typeMirror.accept(canonicalNameVisitor, null);
     }
 
+    /**
+     * Returns the canonical name of a type mirror if it has one, otherwise returns {@code null}.
+     */
     private static final TypeKindVisitor14<String, Void> canonicalNameVisitor = new TypeKindVisitor14<>() {
         @Override
         protected String defaultAction(TypeMirror e, Void ignore) {
@@ -196,20 +201,7 @@ public final class TypeSet implements Set<Object> {
 
         @Override
         public String visitPrimitive(final PrimitiveType t, final Void ignore) {
-            return PRIMITIVE_TYPE_MAP.get(t.getKind()).getCanonicalName();
-        }
-
-        private static final Map<TypeKind, Class<?>> PRIMITIVE_TYPE_MAP;
-        static {
-            PRIMITIVE_TYPE_MAP = new EnumMap<>(TypeKind.class);
-            PRIMITIVE_TYPE_MAP.put(TypeKind.BOOLEAN, boolean.class);
-            PRIMITIVE_TYPE_MAP.put(TypeKind.BYTE,    byte.class);
-            PRIMITIVE_TYPE_MAP.put(TypeKind.SHORT,   short.class);
-            PRIMITIVE_TYPE_MAP.put(TypeKind.INT,     int.class);
-            PRIMITIVE_TYPE_MAP.put(TypeKind.LONG,    long.class);
-            PRIMITIVE_TYPE_MAP.put(TypeKind.CHAR,    char.class);
-            PRIMITIVE_TYPE_MAP.put(TypeKind.FLOAT,   float.class);
-            PRIMITIVE_TYPE_MAP.put(TypeKind.DOUBLE,  double.class);
+            return classForPrimitiveType(t).getCanonicalName();
         }
 
         // handle void type
