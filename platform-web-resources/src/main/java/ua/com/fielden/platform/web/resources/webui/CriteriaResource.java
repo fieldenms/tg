@@ -423,7 +423,7 @@ public class CriteriaResource extends AbstractWebResource {
             final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(
                 createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
                 appliedCriteriaEntity.centreDirtyCalculator().apply(saveAsName).apply(() -> updatedFreshCentre),
-                createCriteriaIndication((String) modifiedPropertiesHolder.get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, critGenerator, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion)
+                createCriteriaIndication((String) modifiedPropertiesHolder.get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion)
             );
             customObject.put(VALIDATION_COUNTER, modifiedPropertiesHolder.get(VALIDATION_COUNTER));
             return restUtil.rawListJsonRepresentation(appliedCriteriaEntity, customObject);
@@ -505,7 +505,6 @@ public class CriteriaResource extends AbstractWebResource {
             final Optional<String> saveAsName,
             final User user,
             final ICompanionObjectFinder companionFinder,
-            final ICriteriaGenerator critGenerator,
             final DeviceProfile device,
             final IWebUiConfig webUiConfig,
             final EntityCentreConfigCo eccCompanion,
@@ -514,8 +513,8 @@ public class CriteriaResource extends AbstractWebResource {
         if (wasRun != null) {
             // When changing centre we can change selection criteria and mnemonics, but also columns sorting, order, visibility and width / grow factors.
             // From end-user perspective it is only relevant to 'know' whether selection criteria change was not applied against currently visible result-set.
-            // Thus need to only compare 'firstTick's of centre managers.
-            // Please be careful when adding some new contracts to 'firstTick' not to violate this premise.
+            // Thus need to only compare 'firstTick's (criteria data only) of centre managers.
+            // Please be careful when adding some new contracts to 'firstTick' not to violate this premise (see selectionCriteriaEquals method).
             final boolean isCriteriaStale = !updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder).getFirstTick()
                 .selectionCriteriaEquals(freshCentre.getFirstTick());
             return isCriteriaStale ? STALE : createChangedCriteriaIndication(freshCentre, miType, saveAsName, user, companionFinder, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
@@ -602,7 +601,7 @@ public class CriteriaResource extends AbstractWebResource {
                     final Result validationResult = freshCentreAppliedCriteriaEntity.isValid();
                     if (!validationResult.isSuccessful()) {
                         LOGGER.debug("CRITERIA_RESOURCE: run finished (validation failed).");
-                        final var criteriaIndication = createCriteriaIndication((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, critGenerator, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                        final var criteriaIndication = createCriteriaIndication((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
                         return restUtil.rawListJsonRepresentation(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, user, updatedFreshCentre, new LinkedHashMap<>(), criteriaIndication, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder));
                     }
                 } else {
@@ -633,7 +632,7 @@ public class CriteriaResource extends AbstractWebResource {
                     // in most cases, the generated and queried data would be represented by the same entity and, thus, the final query needs to be enhanced with user related filtering by property 'createdBy'
                     if (!generationResult.isSuccessful()) {
                         LOGGER.debug("CRITERIA_RESOURCE: run finished (generation failed).");
-                        final var criteriaIndication = createCriteriaIndication((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, critGenerator, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                        final var criteriaIndication = createCriteriaIndication((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
                         final Result result = generationResult.copyWith(new ArrayList<>(Arrays.asList(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, user, updatedFreshCentre, new LinkedHashMap<>(), criteriaIndication, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder))));
                         return restUtil.resultJSONRepresentation(result);
                     }
