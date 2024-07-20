@@ -283,7 +283,7 @@ const template = html`
                     <slot name="custom-share-action" slot="custom-share-action"></slot>
                     <slot id="customCriteria" name="custom-selection-criteria" slot="custom-selection-criteria"></slot>
                     <tg-ui-action slot="left-selection-criteria-button" id="saveAction" shortcut="ctrl+s meta+s" ui-role='BUTTON' short-desc='Save' long-desc='Save configuration, Ctrl&nbsp+&nbsps'
-                                    component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigSaveAction' element-name='tg-CentreConfigSaveAction-master' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]'
+                                    component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigSaveAction' element-name='tg-CentreConfigSaveAction-master' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolderForSave]]'
                                     attrs='[[bottomActions.0.attrs]]' pre-action='[[bottomActions.0.preAction]]' post-action-success='[[bottomActions.0.postActionSuccess]]' post-action-error='[[bottomActions.0.postActionError]]'
                                     require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false'
                                     disabled='[[_computeSaveButtonDisabled(_buttonDisabled, _centreDirtyOrEdited)]]' style$='[[_computeSaveButtonStyle(_buttonDisabled, _centreDirtyOrEdited)]]'></tg-ui-action>
@@ -392,6 +392,7 @@ Polymer({
             notify: true
         },
         _createContextHolder: Function,
+        _createContextHolderForSave: Function,
         uuid: String,
         _activateResultSetView: Function,
         criteriaIndication: {
@@ -453,8 +454,14 @@ Polymer({
             }
         });
 
-         //Add iron-resize event listener
-         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
+        //Add iron-resize event listener
+        this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
+
+        this._createContextHolderForSave = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber, relatedContexts, parentCentreContext) {
+            const context = this._createContextHolder(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber, relatedContexts, parentCentreContext);
+            this._reflector().setCustomProperty(context, "@@criteriaIndication", this.criteriaIndication.name);
+            return context;
+        }).bind(this);
     },
 
     _resizeEventListener: function (e) {

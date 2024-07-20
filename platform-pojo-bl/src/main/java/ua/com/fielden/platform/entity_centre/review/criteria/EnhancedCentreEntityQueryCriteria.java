@@ -19,6 +19,7 @@ import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -45,7 +46,7 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Function<Boolean, Map<String, Object>> centreConfigurator;
     private Runnable centreDeleter;
     /** IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE. */
-    private Supplier<Function<Map<String, Object>, Map<String, Object>>> freshCentreSaver;
+    private Supplier<BiFunction<Map<String, Object>, String, Map<String, Object>>> freshCentreSaver;
     /** IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE. */
     private Runnable configDuplicateAction;
     private Consumer<String> inheritedFromBaseCentreUpdater;
@@ -242,14 +243,14 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
      * 
      * @param freshCentreSaver
      */
-    public void setFreshCentreSaver(final Supplier<Function<Map<String, Object>, Map<String, Object>>> freshCentreSaver) {
+    public void setFreshCentreSaver(final Supplier<BiFunction<Map<String, Object>, String, Map<String, Object>>> freshCentreSaver) {
         this.freshCentreSaver = freshCentreSaver;
     }
     
     /**
      * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
      */
-    public Function<Map<String, Object>, Map<String, Object>> saveFreshCentre() {
+    public BiFunction<Map<String, Object>, String, Map<String, Object>> saveFreshCentre() {
         return freshCentreSaver.get();
     }
 

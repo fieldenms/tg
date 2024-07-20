@@ -18,6 +18,8 @@ public class CriteriaIndicationJsonSerialiser extends StdSerializer<CriteriaIndi
     @Override
     public void serialize(final CriteriaIndication value, final JsonGenerator generator, final SerializerProvider provider) throws IOException {
         generator.writeStartObject();
+        generator.writeFieldName("name");
+        generator.writeObject(value.name());
         generator.writeFieldName("message");
         generator.writeObject(value.message);
         generator.writeFieldName("style");
