@@ -82,6 +82,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPLIED_CRITERIA_ENTITY_NAME;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.*;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.*;
+import static ua.com.fielden.platform.web.resources.webui.CriteriaIndication.NONE;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.*;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.restoreMasterFunctionalEntity;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.*;
@@ -623,7 +624,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 configUuid,
                 of(false), // even though configuration can be runAutomatically, do not perform auto-running on any action (except Load, see CentreConfigLoadActionDao)
                 of(validationPrototype.centreTitleAndDesc(customObjectSaveAsName).map(titleDesc -> titleDesc._2)),
-                empty(),
+                empty(), // do not calculate criteria indication on any action (except SAVE for save-as config, see CentreConfigSaveActionProducer)
                 preferredView,
                 user,
                 shareError
@@ -666,7 +667,15 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         // overrides SAVED centre configuration by FRESH one -- 'saves' centre
         validationPrototype.setFreshCentreSaver(() -> {
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+            final ICentreDomainTreeManagerAndEnhancer savedCentre = updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+            final var wasCriteriaChanged = !freshCentre.getFirstTick().selectionCriteriaEquals(savedCentre.getFirstTick());
             commitCentreWithoutConflicts(user, miType, SAVED_CENTRE_NAME, saveAsName, device, freshCentre, null, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            return customObject -> {
+                if (wasCriteriaChanged) {
+                    customObject.put(CRITERIA_INDICATION, NONE);
+                }
+                return customObject;
+            };
         });
         // overrides FRESH default centre configuration by FRESH current centre configuration; makes default config as preferred -- 'duplicates' centre
         validationPrototype.setConfigDuplicateAction(() -> {

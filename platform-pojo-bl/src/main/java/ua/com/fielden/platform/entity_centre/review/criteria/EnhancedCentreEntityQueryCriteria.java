@@ -1,17 +1,6 @@
 package ua.com.fielden.platform.entity_centre.review.criteria;
 
-import static java.util.Optional.empty;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
-
 import com.google.inject.Inject;
-
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.dashboard.DashboardRefreshFrequency;
@@ -26,6 +15,16 @@ import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
+
+import static java.util.Optional.empty;
 
 /**
  * This class is the base class to enhance with criteria and resultant properties.
@@ -46,7 +45,7 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Function<Boolean, Map<String, Object>> centreConfigurator;
     private Runnable centreDeleter;
     /** IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE. */
-    private Runnable freshCentreSaver;
+    private Supplier<Function<Map<String, Object>, Map<String, Object>>> freshCentreSaver;
     /** IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE. */
     private Runnable configDuplicateAction;
     private Consumer<String> inheritedFromBaseCentreUpdater;
@@ -80,7 +79,6 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     /**
      * Constructs {@link EnhancedCentreEntityQueryCriteria} with specified {@link IValueMatcherFactory}. Needed mostly for instantiating through injector.
      *
-     * @param entityDao
      * @param valueMatcherFactory
      */
     @SuppressWarnings("rawtypes")
@@ -244,15 +242,15 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
      * 
      * @param freshCentreSaver
      */
-    public void setFreshCentreSaver(final Runnable freshCentreSaver) {
+    public void setFreshCentreSaver(final Supplier<Function<Map<String, Object>, Map<String, Object>>> freshCentreSaver) {
         this.freshCentreSaver = freshCentreSaver;
     }
     
     /**
      * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
      */
-    public void saveFreshCentre() {
-        freshCentreSaver.run();
+    public Function<Map<String, Object>, Map<String, Object>> saveFreshCentre() {
+        return freshCentreSaver.get();
     }
 
     public void setCentreDeleter(final Runnable centreDeleter) {
