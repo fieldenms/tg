@@ -3,6 +3,8 @@ package ua.com.fielden.platform.attachment;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.Date;
 
 import ua.com.fielden.platform.attachment.definers.AssignAttachmentTitle;
@@ -77,6 +79,8 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     public static final String pn_LAST_MODIFIED = "lastModified";
     public static final String pn_MIME = "mime";
     public static final String pn_IS_LATEST_REV = "latestRev";
+    public static final String pn_LATITUDE = "latitude";
+    public static final String pn_LONGITUDE = "longitude";
 
 
     private static final Pair<String, String> entityTitleAndDesc = getEntityTitleAndDesc(Attachment.class);
@@ -158,6 +162,39 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
             .prop(ID).eq().prop(pn_LAST_REVISION)
             .end().then().val(true)
             .otherwise().val(false).endAsBool().model();
+
+    // Latitude range: [-90, 90]
+    // 6 decimal places using decimal degrees notation is at a 10 cm resolution
+    @IsProperty(precision = 8, scale = 6)
+    @MapTo
+    @Title(value = "Latitude (North)", desc = "Latitude (North) from GPS coordinates embedded within this attachment.")
+    private BigDecimal latitude;
+
+    // Longitude range: [-180, 180]
+    @IsProperty(precision = 9, scale = 6)
+    @MapTo
+    @Title(value = "Longitude (East)", desc = "Longitude (East) from GPS coordinates embedded within this attachment.")
+    private BigDecimal longitude;
+
+    public BigDecimal getLongitude() {
+        return longitude;
+    }
+
+    @Observable
+    public Attachment setLongitude(final BigDecimal longitude) {
+        this.longitude = longitude;
+        return this;
+    }
+
+    public BigDecimal getLatitude() {
+        return latitude;
+    }
+
+    @Observable
+    public Attachment setLatitude(final BigDecimal latitude) {
+        this.latitude = latitude;
+        return this;
+    }
 
     /**
      * A necessary flag to allow modification of the last revision upon revision history rewriting.
