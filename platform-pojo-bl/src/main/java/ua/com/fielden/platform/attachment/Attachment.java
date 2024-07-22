@@ -134,7 +134,7 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
 
     @IsProperty
     @MapTo
-    @Title(value = "Prev. Rev.", desc = "An attachment that represent the previous revision of this document. Empty is there is no previous revision.")
+    @Title(value = "Prev. Rev.", desc = "An attachment that represent the previous revision of this document. Empty if there is no previous revision.")
     @Final
     @BeforeChange(@Handler(CanBeUsedAsPrevAttachmentRev.class))
     @AfterChange(UpdateAttachmentRevNo.class)
@@ -142,7 +142,7 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
 
     @IsProperty
     @MapTo
-    @Title(value = "Latest Rev.", desc = "An attachment that represents the latest revision of this document. Empty if there is no revision history. References itself is there is revision history.")
+    @Title(value = "Latest Rev.", desc = "An attachment that represents the latest revision of this document. Empty if there is no revision history. References itself if there is revision history.")
     @Readonly
     @BeforeChange(@Handler(CanBeUsedAsLastAttachmentRev.class))
     private Attachment lastRevision;
