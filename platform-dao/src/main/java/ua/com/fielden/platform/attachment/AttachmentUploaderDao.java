@@ -9,11 +9,13 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
+import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Stream;
 
@@ -35,6 +37,7 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.rx.AbstractSubjectKind;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.utils.ExifGeoUtils;
 
 /**
  * DAO implementation for companion object {@link AttachmentUploaderCo}.
@@ -75,6 +78,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
 
         final Path tmpPath = Paths.get(new File(tmpFileName()).toURI());
         final String sha1;
+        final Optional<ExifGeoUtils.Coordinates> coordinates;
         try {
             final MessageDigest md = MessageDigest.getInstance("SHA1");
             uploader.getEventSourceSubject().ifPresent(ess -> publishWithDelay(ess, 10));
@@ -97,10 +101,13 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             // convert digest to string for target file creation
             final byte[] digest = md.digest();
             sha1 = HexString.bufferToHex(digest, 0, digest.length);
-            uploader.getEventSourceSubject().ifPresent(ess -> publishWithDelay(ess, 65));
+            uploader.getEventSourceSubject().ifPresent(ess -> publishWithDelay(ess, 60));
 
             // let's validate the file nature by analysing its magic number
             canAcceptFile(uploader, tmpPath, getUser()).ifFailure(Result::throwRuntime);
+
+            coordinates = ExifGeoUtils.getCoordinates(tmpPath.toFile());
+            uploader.getEventSourceSubject().ifPresent(ess -> publishWithDelay(ess, 65));
 
             // if the target file already exist then need to create it by copying tmp file
             final File targetFile = new File(targetFileName(sha1));
@@ -109,7 +116,6 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
                 Files.copy(tmpPath, targetPath);
                 uploader.getEventSourceSubject().ifPresent(ess -> publishWithDelay(ess, 80));
             }
-
         } catch (final Exception ex) {
             LOGGER.fatal(format("Failed to upload [%s].", uploader.getOrigFileName()), ex);
             throw Result.failure(ex);
@@ -130,6 +136,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
                 .setOrigFileName(uploader.getOrigFileName())
                 .setLastModified(uploader.getLastModified())
                 .setMime(uploader.getMime());
+        coordinates.ifPresent(c -> setCoordinates(attachment, c));
         try {
             final Attachment savedAttachment = co$(Attachment.class).save(attachment);
             uploader.setKey(savedAttachment);
@@ -201,6 +208,12 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
 
     private String targetFileName(final String sha1) {
         return attachmentsLocation + File.separator  + sha1;
+    }
+
+    private static Attachment setCoordinates(final Attachment attachment, final ExifGeoUtils.Coordinates coordinates) {
+        return attachment
+                .setLatitude(BigDecimal.valueOf(coordinates.latitude()))
+                .setLongitude(BigDecimal.valueOf(coordinates.longitude()));
     }
 
 }
