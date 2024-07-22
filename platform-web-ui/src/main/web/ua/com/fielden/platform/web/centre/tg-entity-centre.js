@@ -847,30 +847,77 @@ Polymer({
     },
 
     _endDrag: function (dragEvent) {
-        // if (this._menuItemToDrag) {
-        //     this._menuItemToDrag.classList.remove("dragging");
-        //     this.$.menu.classList.remove("dragging");
-        //     this._saveMenuOrder();
-        //     this._menuItemToDrag = null;
-        // }
+        if (this._insertionPointToDrag) {
+            //TODO this._saveinsertionPointOrder();
+            this._insertionPointToDrag = null;
+        }
     },
 
     _dragOver: function (e) {
-        tearDownEvent(e);
-        // if (this._menuItemToDrag) {
-        //     tearDownEvent(e);
-        //     const siblings = [...this.querySelectorAll("paper-item:not(.dragging):not(.notDraggable)")];
-        //     const nextSibling = siblings.find(sibling => {
-        //         const siblingRect = sibling.getBoundingClientRect();
-        //         return e.clientY <= siblingRect.y + siblingRect.height / 2;
-        //     });
-        //     this.insertBefore(this._menuItemToDrag, nextSibling);
-        // }
+        if (this._insertionPointToDrag) {
+            tearDownEvent(e);
+            const insertionPointContaier = this._getInsertionPointContainer(dragEvent);
+            const insertionPoints = this._getInsertionPointsFromContainer(insertionPointContaier);
+            if (insertionPoints) {
+                const nextInsertionPoint = insertionPoints.find(insertionPoint => {
+                    const insertionPouintRect = insertionPoint.getBoundingClientRect();
+                    return e.clientY <= insertionPouintRect.y + insertionPouintRect.height / 2;
+                });
+                this.insertBefore(this._insertionPointToDrag, nextInsertionPoint);
+                this._setSlotAttribute(insertionPointContaier, nextInsertionPoint, e);
+            }
+        }
     },
 
     _dragEntered: function (dropToEvent) {
         tearDownEvent(dropToEvent);
     },
 
+    _getInsertionPointContainer: function (event) {
+        const insertionPointContainers = [this.$.leftInsertionPointContainer, this.$.centreInsertionPointContainer, this.$.rightInsertionPointContainer];
+        return insertionPointContainers.find(insertionPointContainer => this._insertionPointContainerContainsEvent(insertionPointContainer, event));
+    },
+
+    _insertionPointContainerContainsEvent: function (container, event) {
+        const containerRect = container.getBoundingClientRect();
+        return event.clientX > containerRect.left && event.clientX < containerRect.right && 
+                event.clientY > containerRect.top && event.clientY < containerRect.bottom;
+    },
+
+    _getInsertionPointsFromContainer: function (insertionPointContainer) {
+        return insertionPointContainer && insertionPointContainer.children.flatMap(child => {
+            if (child.tagName === "SLOT" && child.getAttribute("name") !== "custom-egi") {
+                return child.assignedNodes();
+            } else {
+                return [];
+            }
+        })
+    },
+
+    _setSlotAttribute: function (insertionPointContainer, insertionPoint, event) {
+        if (this.$.leftInsertionPointContainer === insertionPointContainer) {
+            insertionPoint.setAttribute("slot" , "left-insertion-point");
+        } else if (this.$.rightInsertionPointContainer === insertionPointContainer) {
+            insertionPoint.setAttribute("slot" , "right-insertion-point");
+        } else if (this.$.centreInsertionPointContainer === insertionPointContainer) {
+            const egi = this.$.customEgiSlot.assignedNodes({ flatten: true })[0];
+            const egiRect = egi && egi.offsetParent !== null && egi.getBoundingClientRect();
+            if (!egiRect) {
+                if (insertionPoint.previousSibling && 
+                    (insertionPoint.previousSibling.getAttribute("slot") === "top-insertion-point" || insertionPoint.previousSibling.getAttribute("slot") === "bottom-insertion-point")) {
+                    insertionPoint.setAttribute("slot", insertionPoint.previousSibling.getAttribute("slot"));
+                } else if (insertionPoint.nextSibling && 
+                    (insertionPoint.nextSibling.getAttribute("slot") === "top-insertion-point" || insertionPoint.nextSibling.getAttribute("slot") === "bottom-insertion-point")) {
+                    insertionPoint.setAttribute("slot", insertionPoint.nextSibling.getAttribute("slot"));
+                } else {
+                    insertionPoint.setAttribute("slot", "top-insertion-point");
+                }
+            } else if (event.clientY <= egiRect.y + egiRect.height / 2) {
+                insertionPoint.setAttribute("slot", "top-insertion-point");
+            } else {
+                insertionPoint.setAttribute("slot", "bottom-insertion-point");
+            }
+        }
+    }
     /*****************************************************************************************************/
 });
