@@ -74,6 +74,21 @@ public class AttachmentGpsCoordinatesTest extends AbstractDaoTestCase {
         assertNull(attachment.getLongitude());
     }
 
+    @Test
+    public void latitude_and_longitude_are_absent_as_a_result_of_uploading_a_non_image_file() throws IOException {
+        final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
+
+        final Path fileToUpload = Path.of(coAttachmentUploader.attachmentsLocation, "!readme.txt");
+        assertTrue(fileToUpload.toFile().exists());
+        assertTrue(fileToUpload.toFile().canRead());
+
+        final Attachment attachment = uploadJpeg(coAttachmentUploader, fileToUpload);
+
+        assertNotNull(attachment);
+        assertNull(attachment.getLatitude());
+        assertNull(attachment.getLongitude());
+    }
+
     private Attachment uploadJpeg(final AttachmentUploaderDao coAttachmentUploader, final Path fileToUpload) throws IOException {
         final Attachment attachment;
         try (final InputStream is = new FileInputStream(fileToUpload.toAbsolutePath().toString())) {
