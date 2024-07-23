@@ -319,6 +319,7 @@ const template = html`
                 <slot id="rightInsertionPointContent" name="right-insertion-point"></slot>
             </div>
             <div id="fantomSplitter" class="fantom-splitter"></div>
+            <div id="placeHolder" style="background-color: var(--paper-grey-300); height: 9px; width: auto; display: none;"></div>
         </tg-centre-result-view>
         <slot id="alternativeViewSlot" name="alternative-view-insertion-point"></slot>
     </iron-pages>`;
@@ -849,44 +850,53 @@ Polymer({
     _endDrag: function (dragEvent) {
         if (this._insertionPointToDrag) {
             this._insertionPointToDrag = null;
+            this.$.placeHolder.style.display = "none";
         }
     },
 
     _dragDrop: function (dragEvent) {
+        if (this._insertionPointToDrag && this.$.placeHolder.style.display !== "none") {
+            const containerToDrop = this.$.placeHolder.parentElement;
+            if (containerToDrop) {
+                containerToDrop.insertBefore(this._insertionPointToDrag, this.$.placeHolder);
+            }
+        }
+    },
+
+    _dragOver: function (dragEvent) {
         if (this._insertionPointToDrag) {
-            const insertionPointContainer = this._getInsertionPointContainer(dragEvent);
-            const insertionPoints = insertionPointContainer && [...insertionPointContainer.children];
+            tearDownEvent(dragEvent);
+            const containerToDrop = this._getInsertionPointContainer(dragEvent);
+            const insertionPoints = containerToDrop && [...containerToDrop.children];
             if (insertionPoints) {
                 const nextInsertionPoint = this._getNearestElementInVerticalContainer(insertionPoints, dragEvent);
-                insertionPointContainer.insertBefore(this._insertionPointToDrag, nextInsertionPoint);
+                containerToDrop.insertBefore(this.$.placeHolder, nextInsertionPoint);
+                if (this.$.placeHolder.nextSibling !== this._insertionPointToDrag && this.$.placeHolder.previousSibling !== this._insertionPointToDrag) {
+                    this.$.placeHolder.style.display = "initial";
+                } else {
+                    this.$.placeHolder.style.display = "none";
+                }
             }
-            this._insertionPointToDrag = null;
         }
     },
 
-    _dragOver: function (e) {
-        if (this._insertionPointToDrag) {
-            tearDownEvent(e);
-        }
+    _dragEntered: function (dragEvent) {
+        tearDownEvent(dragEvent);
     },
 
-    _dragEntered: function (dropToEvent) {
-        tearDownEvent(dropToEvent);
-    },
-
-    _getInsertionPointContainer: function (event) {
+    _getInsertionPointContainer: function (dragEvent) {
         const sideContainers = [this.$.leftInsertionPointContainer, this.$.rightInsertionPointContainer];
-        let container = sideContainers.find(c => this._insertionPointContainerContainsEvent(c, event));
+        let container = sideContainers.find(c => this._insertionPointContainerContainsEvent(c, dragEvent));
         if (container) {
             return container.children[0].assignedNodes()[0];
-        } else {
+        } else if (this._insertionPointContainerContainsEvent(this.$.centreInsertionPointContainer, dragEvent)) {
             const centreContainers = [this.$.topInsertionPointContent.assignedNodes()[0]];
             const egi = this.$.customEgiSlot.assignedNodes()[0];
             if (egi && egi.offsetParent !== null) {
                 centreContainers.push(egi);
             }
             centreContainers.push(this.$.bottomInsertionPointContent.assignedNodes()[0]);
-            const nextContainer = this._getNearestElementInVerticalContainer(centreContainers, event);
+            const nextContainer = this._getNearestElementInVerticalContainer(centreContainers, dragEvent);
             if (nextContainer === egi) {
                 return centreContainers[0];
             } else if (!nextContainer) {
@@ -896,17 +906,17 @@ Polymer({
         }
     },
 
-    _getNearestElementInVerticalContainer(elements, event) {
+    _getNearestElementInVerticalContainer(elements, dragEvent) {
         return elements.find(element => {
             const rect = element.getBoundingClientRect();
-            return event.clientY <= rect.y + rect.height / 2;
+            return dragEvent.clientY <= rect.y + rect.height / 2;
         });
     },
 
-    _insertionPointContainerContainsEvent: function (container, event) {
+    _insertionPointContainerContainsEvent: function (container, dragEvent) {
         const containerRect = container.getBoundingClientRect();
-        return event.clientX > containerRect.left && event.clientX < containerRect.right && 
-                event.clientY > containerRect.top && event.clientY < containerRect.bottom;
+        return dragEvent.clientX > containerRect.left && dragEvent.clientX < containerRect.right && 
+                dragEvent.clientY > containerRect.top && dragEvent.clientY < containerRect.bottom;
     }
     /*****************************************************************************************************/
 });
