@@ -163,14 +163,14 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     // 6 decimal places using decimal degrees notation is at a 10 cm resolution
     @IsProperty(precision = 8, scale = 6)
     @MapTo
-    @Title(value = "Latitude (North)", desc = "Latitude (North) from GPS coordinates embedded within this attachment.")
+    @Title(value = "Latitude", desc = "Latitude (North) from GPS coordinates embedded within this attachment.")
     @BeforeChange(@Handler(LatitudeValidator.class))
     private BigDecimal latitude;
 
     // Longitude range: [-180, 180]
     @IsProperty(precision = 9, scale = 6)
     @MapTo
-    @Title(value = "Longitude (East)", desc = "Longitude (East) from GPS coordinates embedded within this attachment.")
+    @Title(value = "Longitude", desc = "Longitude (East) from GPS coordinates embedded within this attachment.")
     @BeforeChange(@Handler(LongitudeValidator.class))
     private BigDecimal longitude;
 
