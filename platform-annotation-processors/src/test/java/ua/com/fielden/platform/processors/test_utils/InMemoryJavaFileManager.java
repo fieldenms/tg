@@ -1,18 +1,17 @@
 package ua.com.fielden.platform.processors.test_utils;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.google.testing.compile.ForwardingStandardJavaFileManager;
 
 import javax.tools.FileObject;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
 import javax.tools.StandardJavaFileManager;
-
-import com.google.testing.compile.ForwardingStandardJavaFileManager;
+import java.io.IOException;
+import java.net.URI;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Implementation of {@link JavaFileManager} that stores generated java sources in memory and provides access to retrieve them.

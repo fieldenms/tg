@@ -75,8 +75,8 @@ const template = html`
             <tg-security-tree-table id="securityMatrix" entities="[[entities]]" columns="[[columns]]"></tg-security-tree-table>
             <div id="actionPanel">
                 <slot name="reload-action"></slot>
-                <tg-action id="cancelButton" enabled-states='[[_actions.REFRESH.enabledStates]]' short-desc='CANCEL' long-desc='Cancels all changes after save' current-state='EDIT' shortcut='ctrl+r meta+r' role='refresh' action='[[_resetSecurityMatrix]]' post-action='{{_postResetSecurityMatrix}}' post-action-error='{{_postResetSecurityMatrixError}}' style="margin:10px;"></tg-action>
-                <tg-action id="saveButton" enabled-states='[[_actions.SAVE.enabledStates]]' short-desc='SAVE' long-desc='Save changes' current-state='EDIT' shortcut='ctrl+s meta+s' action='[[_saveSecurityMatrix]]' post-action='{{_postSavedDefault}}' post-action-error='{{_postSavedDefaultError}}' style="margin:10px;"></tg-action>
+                <tg-action id="cancelButton" enabled-states='[[_actions.REFRESH.enabledStates]]' exclude-new exclude-close short-desc='CANCEL' long-desc='Cancels all changes after save' current-state='EDIT' shortcut='ctrl+r meta+r' role='refresh' action='[[_resetSecurityMatrix]]' post-action='{{_postResetSecurityMatrix}}' post-action-error='{{_postResetSecurityMatrixError}}' style="margin:10px;"></tg-action>
+                <tg-action id="saveButton" enabled-states='[[_actions.SAVE.enabledStates]]' exclude-new exclude-close short-desc='SAVE' long-desc='Save changes' current-state='EDIT' shortcut='ctrl+s meta+s' action='[[_saveSecurityMatrix]]' post-action='{{_postSavedDefault}}' post-action-error='{{_postSavedDefaultError}}' style="margin:10px;"></tg-action>
                 <!-- save and cancel buttons goes here -->
             </div>
             <div class="lock-layer" lock$="[[lock]]"></div>

@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.web.layout.api.impl;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutDirection.HORIZONTAL;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutDirection.UNSPECIFIED;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutDirection.VERTICAL;

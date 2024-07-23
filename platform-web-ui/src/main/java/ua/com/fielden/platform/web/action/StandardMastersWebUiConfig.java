@@ -1,10 +1,7 @@
 package ua.com.fielden.platform.web.action;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.entity.EntityExportAction.PROP_EXPORT_ALL;
-import static ua.com.fielden.platform.entity.EntityExportAction.PROP_EXPORT_SELECTED;
-import static ua.com.fielden.platform.entity.EntityExportAction.PROP_EXPORT_TOP;
-import static ua.com.fielden.platform.entity.EntityExportAction.PROP_NUMBER;
+import static ua.com.fielden.platform.entity.EntityExportAction.*;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.MOBILE;
@@ -98,18 +95,18 @@ public class StandardMastersWebUiConfig {
                 .addProp(PROP_EXPORT_ALL).asCheckbox().also()
                 .addProp(PROP_EXPORT_SELECTED).asCheckbox().also()
                 .addProp(PROP_EXPORT_TOP).asCheckbox().also()
-                .addProp(PROP_NUMBER).asInteger()
-                .also()
+                .addProp(PROP_NUMBER).asInteger().also()
                 .addAction(MasterActions.REFRESH)
                 /*      */.shortDesc("CANCEL")
-                /*      */.longDesc("Cancel action")
+                /*      */.longDesc("Cancel action.")
                 .addAction(MasterActions.SAVE)
                 /*      */.shortDesc("EXPORT")
-                /*      */.longDesc("Start exporting")
+                /*      */.longDesc("Export data.")
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), buttonPanelLayout)
                 .setLayoutFor(DESKTOP, Optional.empty(), layout)
                 .setLayoutFor(TABLET, Optional.empty(), layout)
                 .setLayoutFor(MOBILE, Optional.empty(), layout)
+                .withDimensions(mkDim(420, 370, Unit.PX))
                 .done();
 
         return new EntityMaster<>(EntityExportAction.class, EntityExportActionProducer.class, masterConfig, injector);

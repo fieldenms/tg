@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.test.transactional;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Session;
 
 import com.google.inject.Inject;

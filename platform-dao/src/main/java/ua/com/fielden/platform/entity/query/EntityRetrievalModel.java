@@ -15,9 +15,10 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.MSG_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES;
-import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.ENTITY_AS_KEY;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY;
+import static ua.com.fielden.platform.eql.meta.EntityCategory.QUERY_BASED;
+import static ua.com.fielden.platform.eql.meta.EntityTypeInfo.getEntityTypeInfo;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
@@ -28,6 +29,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.util.Collection;
 import java.util.Map.Entry;
+import java.util.SortedMap;
 
 import org.apache.logging.log4j.Logger;
 
@@ -37,14 +39,14 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
-import ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo;
 import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
+import ua.com.fielden.platform.eql.meta.EntityTypeInfo;
 import ua.com.fielden.platform.types.tuples.T2;
 
 public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractRetrievalModel<T> {
     private final Logger logger = getLogger(this.getClass());
-    private final Collection<PropertyMetadata> propsMetadata;
-    private final EntityTypeInfo<T> entityTypeInfo;
+    private final SortedMap<String, PropertyMetadata> propsMetadata;
+    private final EntityTypeInfo<? super T> entityTypeInfo;
 
     public EntityRetrievalModel(final fetch<T> originalFetch, final DomainMetadataAnalyser domainMetadataAnalyser) {
         this(originalFetch, domainMetadataAnalyser, true);
@@ -53,8 +55,8 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     EntityRetrievalModel(final fetch<T> originalFetch, final DomainMetadataAnalyser domainMetadataAnalyser, final boolean topLevel) {
         super(originalFetch, domainMetadataAnalyser, topLevel);
         this.propsMetadata = domainMetadataAnalyser.getPropertyMetadatasForEntity(getEntityType());
-        entityTypeInfo = new EntityTypeInfo<>(getEntityType());
-        
+        entityTypeInfo = getEntityTypeInfo(getEntityType());
+
         switch (originalFetch.getFetchCategory()) {
         case ALL_INCL_CALC:
             includeAllFirstLevelPropsInclCalc();
@@ -96,7 +98,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     }
 
     private void populateProxies() {
-        for (final PropertyMetadata ppi : propsMetadata) {
+        for (final PropertyMetadata ppi : propsMetadata.values()) {
             // FIXME the following condition needs to be revisited as part of EQL 3 implementation
             final String name = ppi.getName();
             if (!ID.equals(name) &&
@@ -117,7 +119,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     }
 
     private void includeAllUnionEntityKeyMembers() {
-        for (final PropertyMetadata ppi : propsMetadata) {
+        for (final PropertyMetadata ppi : propsMetadata.values()) {
             if (ppi.isEntityOfPersistedType()) {
                 with(ppi.getName(), false);
             }
@@ -125,9 +127,9 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     }
 
     private void includeAllFirstLevelPrimPropsAndKey() {
-        for (final PropertyMetadata ppi : propsMetadata) {
+        for (final PropertyMetadata ppi : propsMetadata.values()) {
             if (!ppi.isCalculated()/* && !ppi.isSynthetic()*/ && !ppi.isCollection() && !ppi.isPure()) {
-                final boolean skipEntities = !(ppi.getCategory() == ENTITY_MEMBER_OF_COMPOSITE_KEY || ppi.getCategory() == ENTITY_AS_KEY); 
+                final boolean skipEntities = !(ppi.getCategory() == ENTITY_MEMBER_OF_COMPOSITE_KEY || ppi.getCategory() == ENTITY_AS_KEY);
                 with(ppi.getName(), skipEntities);
             }
         }
@@ -156,7 +158,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     }
 
     private void includeAllFirstLevelProps() {
-        for (final PropertyMetadata ppi : propsMetadata) {
+        for (final PropertyMetadata ppi : propsMetadata.values()) {
             if (!ppi.isCalculated() /*&& !ppi.isCalculatedCompositeUserTypeHeader() */&& !ppi.isCollection() && !ppi.isPure()) {
                 with(ppi.getName(), false);
             }
@@ -164,7 +166,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     }
 
     private void includeAllFirstLevelPropsInclCalc() {
-        for (final PropertyMetadata ppi : propsMetadata) {
+        for (final PropertyMetadata ppi : propsMetadata.values()) {
             if (!ppi.isCollection() && !ppi.isPure()) {
                 with(ppi.getName(), false);
             }
@@ -229,19 +231,31 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         if (ppi.getJavaType() != fetchModel.getEntityType()) {
             throw new EqlException(format(MSG_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES, ppi.getJavaType(), propName, getEntityType(), fetchModel.getEntityType()));
         }
-        
+
         if (ppi.isUnionEntity()) {
             for (final PropertyMetadata pmd : ppi.getComponentTypeSubprops()) {
                 addPrimProp(pmd.getName()); // is added here as primitive prop only to avoid its removal in EntQuery.adjustAccordingToFetchModel
             }
         }
-        
+
         final EntityRetrievalModel<?> existingFetch = getRetrievalModels().get(propName);
         fetch<?> finalFetch = existingFetch != null ? existingFetch.originalFetch.unionWith(fetchModel) : fetchModel;
         addEntityPropFetchModel(propName, new EntityRetrievalModel<>(finalFetch, getDomainMetadataAnalyser(), false));
     }
-    
+
     public boolean isFetchIdOnly() {
         return getPrimProps().size() == 1 && getRetrievalModels().size() == 0 && containsProp(ID);
+    }
+
+    @Override
+    public boolean containsOnlyTotals() {
+        for (final String propName : getPrimProps()) {
+            if (!propsMetadata.containsKey(propName) // handling the case of old EQL metadata not containing ID property for Synthetic Entities with modelled rather than inherited ID property.
+                    || !propsMetadata.get(propName).isAggregatedExpression()) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

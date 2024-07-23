@@ -1,27 +1,9 @@
 package ua.com.fielden.platform.processors.metamodel.utils;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.utils.Pair.pair;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.BiConsumer;
-import java.util.stream.Stream;
-
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
-
+import metamodels.MetaModels;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import metamodels.MetaModels;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.processors.metamodel.MetaModelProcessor;
 import ua.com.fielden.platform.processors.metamodel.concepts.MetaModelConcept;
@@ -29,52 +11,22 @@ import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelsElement;
 import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
-import ua.com.fielden.platform.processors.test_entities.EntityWithDescTitleWithoutMetaModel;
-import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
-import ua.com.fielden.platform.processors.test_entities.PersistentEntity;
-import ua.com.fielden.platform.processors.test_entities.SubEntity;
-import ua.com.fielden.platform.processors.test_entities.SuperEntity;
-import ua.com.fielden.platform.processors.test_entities.meta.EntityWithDescTitleMetaModel;
-import ua.com.fielden.platform.processors.test_entities.meta.EntityWithDescTitleMetaModelAliased;
-import ua.com.fielden.platform.processors.test_entities.meta.EntityWithEntityTypedAndOrdinaryPropsMetaModel;
-import ua.com.fielden.platform.processors.test_entities.meta.EntityWithEntityTypedAndOrdinaryPropsMetaModelAliased;
-import ua.com.fielden.platform.processors.test_entities.meta.EntityWithKeyTypeNoKeyMetaModel;
-import ua.com.fielden.platform.processors.test_entities.meta.EntityWithKeyTypeNoKeyMetaModelAliased;
-import ua.com.fielden.platform.processors.test_entities.meta.EntityWithKeyTypeOfEntityTypeMetaModel;
-import ua.com.fielden.platform.processors.test_entities.meta.EntityWithKeyTypeOfEntityTypeMetaModelAliased;
-import ua.com.fielden.platform.processors.test_entities.meta.EntityWithOrdinaryPropsMetaModel;
-import ua.com.fielden.platform.processors.test_entities.meta.EntityWithOrdinaryPropsMetaModelAliased;
-import ua.com.fielden.platform.processors.test_entities.meta.EntityWithPropertyDescMetaModel;
-import ua.com.fielden.platform.processors.test_entities.meta.EntityWithPropertyDescMetaModelAliased;
-import ua.com.fielden.platform.processors.test_entities.meta.EntityWithoutDescTitleAndPropertyDescMetaModel;
-import ua.com.fielden.platform.processors.test_entities.meta.EntityWithoutDescTitleAndPropertyDescMetaModelAliased;
-import ua.com.fielden.platform.processors.test_entities.meta.EntityWithoutDescTitleAndPropertyDesc_extends_EntityWithPropertyDescWithoutMetaModelMetaModel;
-import ua.com.fielden.platform.processors.test_entities.meta.EntityWithoutDescTitleAndPropertyDesc_extends_EntityWithPropertyDescWithoutMetaModelMetaModelAliased;
-import ua.com.fielden.platform.processors.test_entities.meta.EntityWithoutDescTitle_extends_EntityWithDescTitleWithoutMetaModelMetaModel;
-import ua.com.fielden.platform.processors.test_entities.meta.EntityWithoutDescTitle_extends_EntityWithDescTitleWithoutMetaModelMetaModelAliased;
-import ua.com.fielden.platform.processors.test_entities.meta.ExampleEntityMetaModel;
-import ua.com.fielden.platform.processors.test_entities.meta.ExampleEntityMetaModelAliased;
-import ua.com.fielden.platform.processors.test_entities.meta.KeyTypeAsComposite_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModel;
-import ua.com.fielden.platform.processors.test_entities.meta.KeyTypeAsComposite_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModelAliased;
-import ua.com.fielden.platform.processors.test_entities.meta.KeyTypeAsEntity_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModel;
-import ua.com.fielden.platform.processors.test_entities.meta.KeyTypeAsEntity_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModelAliased;
-import ua.com.fielden.platform.processors.test_entities.meta.KeyTypeAsString_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModel;
-import ua.com.fielden.platform.processors.test_entities.meta.KeyTypeAsString_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModelAliased;
-import ua.com.fielden.platform.processors.test_entities.meta.KeyType_AbstractSuperEntityWithoutKeyTypeMetaModel;
-import ua.com.fielden.platform.processors.test_entities.meta.KeyType_AbstractSuperEntityWithoutKeyTypeMetaModelAliased;
-import ua.com.fielden.platform.processors.test_entities.meta.NonPersistentButDomainEntityMetaModel;
-import ua.com.fielden.platform.processors.test_entities.meta.NonPersistentButDomainEntityMetaModelAliased;
-import ua.com.fielden.platform.processors.test_entities.meta.NonPersistentButWithMetaModelEntityMetaModel;
-import ua.com.fielden.platform.processors.test_entities.meta.NonPersistentButWithMetaModelEntityMetaModelAliased;
-import ua.com.fielden.platform.processors.test_entities.meta.PersistentEntityMetaModel;
-import ua.com.fielden.platform.processors.test_entities.meta.PersistentEntityMetaModelAliased;
-import ua.com.fielden.platform.processors.test_entities.meta.SubEntityMetaModel;
-import ua.com.fielden.platform.processors.test_entities.meta.SubEntityMetaModelAliased;
-import ua.com.fielden.platform.processors.test_entities.meta.SuperEntityMetaModel;
-import ua.com.fielden.platform.processors.test_entities.meta.SuperEntityMetaModelAliased;
+import ua.com.fielden.platform.processors.test_entities.*;
+import ua.com.fielden.platform.processors.test_entities.meta.*;
 import ua.com.fielden.platform.processors.test_utils.ProcessingRule;
 import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.Pair;
+
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.BiConsumer;
+import java.util.stream.Stream;
+
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 /**
  * A test case for utilities provided by {@link MetaModelFinder}.
@@ -95,11 +47,9 @@ public class MetaModelFinderTest {
 
     @BeforeClass
     public static void setupOnce() {
-        final Elements elements = rule.getElements();
-        final Types types = rule.getTypes();
-        finder = new ElementFinder(elements, types);
-        entityFinder = new EntityFinder(elements, types);
-        metaModelFinder = new MetaModelFinder(elements, types);
+        finder = new ElementFinder(rule.getProcessingEnvironment());
+        entityFinder = new EntityFinder(rule.getProcessingEnvironment());
+        metaModelFinder = new MetaModelFinder(rule.getProcessingEnvironment());
     }
 
     @Test
@@ -329,6 +279,7 @@ public class MetaModelFinderTest {
                 EntityWithoutDescTitleAndPropertyDesc_extends_EntityWithPropertyDescWithoutMetaModelMetaModel.class,
                 EntityWithoutDescTitle_extends_EntityWithDescTitleWithoutMetaModelMetaModel.class,
                 ExampleEntityMetaModel.class,
+                ExampleUnionEntityMetaModel.class,
                 KeyTypeAsComposite_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModel.class,
                 KeyTypeAsEntity_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModel.class,
                 KeyTypeAsString_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModel.class,
@@ -348,6 +299,7 @@ public class MetaModelFinderTest {
                 EntityWithoutDescTitleAndPropertyDesc_extends_EntityWithPropertyDescWithoutMetaModelMetaModelAliased.class,
                 EntityWithoutDescTitle_extends_EntityWithDescTitleWithoutMetaModelMetaModelAliased.class,
                 ExampleEntityMetaModelAliased.class,
+                ExampleUnionEntityMetaModelAliased.class,
                 KeyTypeAsComposite_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModelAliased.class,
                 KeyTypeAsEntity_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModelAliased.class,
                 KeyTypeAsString_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModelAliased.class,
@@ -371,7 +323,7 @@ public class MetaModelFinderTest {
                 .sorted((e1, e2) -> e1.getQualifiedName().toString().compareTo(e2.getQualifiedName().toString()))
                 .toList();
 
-        assertEquals(CollectionUtil.toString(expected, ","), CollectionUtil.toString(actual, ","));
+        assertEquals(CollectionUtil.toString(expected, "\n"), CollectionUtil.toString(actual, "\n"));
     }
 
     @Test

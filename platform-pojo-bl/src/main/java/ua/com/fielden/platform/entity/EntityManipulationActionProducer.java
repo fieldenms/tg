@@ -3,7 +3,7 @@ package ua.com.fielden.platform.entity;
 import static java.lang.Class.forName;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseOpening;
 

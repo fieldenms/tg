@@ -2,7 +2,6 @@ package ua.com.fielden.platform.web.centre;
 
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
-import static java.util.function.Function.identity;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnlyAndInstrument;
@@ -20,7 +19,6 @@ import java.util.function.Function;
 
 import org.apache.logging.log4j.Logger;
 
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.CalculatedPropertyInfo;
@@ -76,13 +74,12 @@ public class CentreUpdaterUtils extends CentreUpdater {
      * 
      * @param root
      * @param entityFactory
-     * @param domainTreeEnhancerCache
      * @param calculatedAndCustomProperties
      * @param miType
      * @return
      */
-    public static ICentreDomainTreeManagerAndEnhancer createEmptyCentre(final Class<?> root, final EntityFactory entityFactory, final IDomainTreeEnhancerCache domainTreeEnhancerCache, final T2<Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>> calculatedAndCustomProperties, final Class<? extends MiWithConfigurationSupport<?>> miType) {
-        final CentreDomainTreeManagerAndEnhancer centre = new CentreDomainTreeManagerAndEnhancer(entityFactory, domainTreeEnhancerCache, setOf(root), calculatedAndCustomProperties, miType);
+    public static ICentreDomainTreeManagerAndEnhancer createEmptyCentre(final Class<?> root, final EntityFactory entityFactory, final T2<Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>> calculatedAndCustomProperties, final Class<? extends MiWithConfigurationSupport<?>> miType) {
+        final CentreDomainTreeManagerAndEnhancer centre = new CentreDomainTreeManagerAndEnhancer(entityFactory, setOf(root), calculatedAndCustomProperties);
         // initialise checkedProperties tree to make it more predictable in getting meta-info from "checkedProperties"
         centre.getFirstTick().checkedProperties(root);
         centre.getSecondTick().checkedProperties(root);
@@ -150,9 +147,10 @@ public class CentreUpdaterUtils extends CentreUpdater {
         final String newName,
         final String newDesc,
         final EntityCentreConfigCo eccCompanion,
-        final MainMenuItemCo mmiCompanion
+        final MainMenuItemCo mmiCompanion,
+        final Function<EntityCentreConfig, EntityCentreConfig> adjustConfig
     ) {
-        saveNewEntityCentreManager(CENTRE_DIFF_SERIALISER.serialise(differences), menuItemType, user, newName, newDesc, eccCompanion, mmiCompanion, identity());
+        saveNewEntityCentreManager(CENTRE_DIFF_SERIALISER.serialise(differences), menuItemType, user, newName, newDesc, eccCompanion, mmiCompanion, adjustConfig);
         return differences;
     }
 
@@ -191,17 +189,18 @@ public class CentreUpdaterUtils extends CentreUpdater {
         final String name,
         final String newDesc,
         final EntityCentreConfigCo eccCompanion,
-        final MainMenuItemCo mmiCompanion
+        final MainMenuItemCo mmiCompanion,
+        final Function<EntityCentreConfig, EntityCentreConfig> adjustConfig
     ) {
         final EntityCentreConfig config = eccCompanion.getEntity(from(modelFor(user, menuItemType.getName(), name)).model());
         if (config == null) {
-            saveNewEntityCentreManager(differences, menuItemType, user, name, newDesc, eccCompanion, mmiCompanion);
+            saveNewEntityCentreManager(differences, menuItemType, user, name, newDesc, eccCompanion, mmiCompanion, adjustConfig);
         } else {
             if (newDesc != null) {
                 config.setDesc(newDesc);
             }
             config.setConfigBody(CENTRE_DIFF_SERIALISER.serialise(differences));
-            eccCompanion.saveWithRetry(config);
+            eccCompanion.saveWithRetry(adjustConfig.apply(config));
         }
         return differences;
     }

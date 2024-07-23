@@ -1,9 +1,10 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>fielden</groupId>
         <artifactId>platform-parent</artifactId>
-        <version>1.4.6-SNAPSHOT</version>
+        <version>1.4.7-SNAPSHOT</version>
     </parent>
 
     <artifactId>platform-annotation-processors</artifactId>
@@ -15,12 +16,13 @@
         <dependency>
             <groupId>fielden</groupId>
             <artifactId>platform-annotations</artifactId>
-            <version>${project.version}</version>
+            <version>${project.parent.version}</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>fielden</groupId>
             <artifactId>platform-pojo-bl</artifactId>
-            <version>${project.version}</version>
+            <version>${project.parent.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.logging.log4j</groupId>
@@ -28,17 +30,23 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
+        <dependency>
+            <groupId>fielden</groupId>
+            <artifactId>platform-pojo-bl</artifactId>
+            <version>${project.parent.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-slf4j-impl</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
         <dependency>
             <groupId>com.squareup</groupId>
             <artifactId>javapoet</artifactId>
             <version>1.13.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.auto.service</groupId>
-            <artifactId>auto-service</artifactId>
-            <version>1.0.1</version>
-            <scope>provided</scope>
         </dependency>
         <!-- https://mvnrepository.com/artifact/com.google.testing.compile/compile-testing -->
         <dependency>
@@ -65,17 +73,26 @@
             </resource>
         </resources>
         <plugins>
+            <!-- Use Maven Shade Plugin to create 2 JARs: uber JAR for standalone use 
+            and light-weight "lib" JAR for use as a dependency. The lib JAR should not
+            include META-INF/services/javax.annotation.processing.Processor to prevent
+            the compiler from discovering annotation processors (this is why it's a "lib"
+            JAR, because its purpose is to serve as a regular dependency). The uber JAR
+            is the one that should be used for the purpose of annotation processing. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.3.0</version>
                 <executions>
                     <execution>
+                        <id>uber</id>
                         <phase>package</phase>
                         <goals>
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <shadedClassifierName>uber</shadedClassifierName>
                             <transformers>
                                 <!-- This transformer is needed to collect all annotation processors, including those that are defined in dependencies,
                                      and not end-up with the last processed file overriding our own. -->
@@ -90,12 +107,49 @@
                             </transformers>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>lib</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <artifactSet>
+                                <includes>
+                                    <include>${project.groupId}:${project.artifactId}</include>
+                                </includes>
+                            </artifactSet>
+                            <filters>
+                                <filter>
+                                    <artifact>${project.groupId}:${project.artifactId}</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/services/javax.annotation.processing.Processor</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <executions>
+                    <execution>
+                        <id>default-testCompile</id>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                        <configuration>
+                            <release>21</release>
+                            <encoding>UTF-8</encoding>
+                            <showWarnings>true</showWarnings>
+                            <generatedTestSourcesDirectory>${project.build.directory}/generated-test-sources</generatedTestSourcesDirectory>
+                            <annotationProcessors>
+                                <annotationProcessor>ua.com.fielden.platform.processors.metamodel.MetaModelProcessor</annotationProcessor>
+                            </annotationProcessors>
+                        </configuration>
+                    </execution>
                     <execution>
                         <id>default-compile</id>
                         <goals>
@@ -105,31 +159,17 @@
                             <compilerArgument>-proc:none</compilerArgument>
                         </configuration>
                     </execution>
-                    <execution>
-                        <id>default-testCompile</id>
-                        <goals>
-                            <goal>testCompile</goal>
-                        </goals>
-                        <configuration>
-                            <release>17</release>
-                            <encoding>UTF-8</encoding>
-                            <generatedTestSourcesDirectory>${project.build.directory}/generated-test-sources</generatedTestSourcesDirectory>
-                            <annotationProcessors>
-                                <annotationProcessor>ua.com.fielden.platform.processors.verify.VerifyingProcessor</annotationProcessor>
-                                <annotationProcessor>ua.com.fielden.platform.processors.metamodel.MetaModelProcessor</annotationProcessor>
-                            </annotationProcessors>
-                        </configuration>
-                    </execution>
                 </executions>
             </plugin>
 
             <!-- disable maven-enforcer-plugin -->
             <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-enforcer-plugin</artifactId>
-              <configuration>
-                <skip>true</skip>
-              </configuration>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
             </plugin>
 
         </plugins>

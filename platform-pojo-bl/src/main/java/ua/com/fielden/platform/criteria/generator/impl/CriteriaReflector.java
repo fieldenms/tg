@@ -5,7 +5,7 @@ import static org.apache.commons.lang3.RegExUtils.replaceAll;
 import java.lang.reflect.Field;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ua.com.fielden.platform.criteria.enhanced.CriteriaProperty;
 import ua.com.fielden.platform.criteria.enhanced.FirstParam;

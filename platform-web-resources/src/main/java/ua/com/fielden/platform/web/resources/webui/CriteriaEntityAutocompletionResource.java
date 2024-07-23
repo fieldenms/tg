@@ -30,7 +30,6 @@ import org.restlet.resource.Post;
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -63,7 +62,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  *
  */
 public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> extends AbstractWebResource {
-    private static final String AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY = "@@activeOnlyChanged";
+    public static final String AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY = "@@activeOnlyChanged";
     private static final String CENTRE_DIRTY_KEY = "@@centreDirty";
     public static final String LOAD_MORE_DATA_KEY = "@@loadMoreData";
     
@@ -75,7 +74,6 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
     private final ICriteriaGenerator critGenerator;
     private final EntityCentre<T> centre;
 
-    private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
     private final IUserProvider userProvider;
     private final EntityFactory entityFactory;
@@ -96,7 +94,6 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             final String criterionPropertyName,
             final EntityCentre<T> centre,
             final RestServerUtil restUtil,
-            final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final ICentreConfigSharingModel sharingModel,
             final Context context,
             final Request request,
@@ -114,7 +111,6 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
         this.webUiConfig = webUiConfig;
         this.userProvider = userProvider;
         this.entityFactory = entityFactory;
-        this.domainTreeEnhancerCache = domainTreeEnhancerCache;
         this.sharingModel = sharingModel;
     }
 
@@ -143,17 +139,17 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 criteriaEntity = null;
                 enhancedCentreEntityQueryCriteria = createCriteriaValidationPrototype(
                     miType, saveAsName,
-                    updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder),
+                    updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder),
                     companionFinder, critGenerator, 0L,
                     user,
                     device(),
-                    domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel
+                    webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel
                 );
-                criteriaType = (Class<M>) enhancedCentreEntityQueryCriteria.getClass();
+                criteriaType = (Class<M>) enhancedCentreEntityQueryCriteria.getType();
             } else {
-                criteriaEntity = (M) createCriteriaEntityWithoutConflicts(modifHolder, companionFinder, critGenerator, miType, saveAsName, user, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+                criteriaEntity = (M) createCriteriaEntityWithoutConflicts(modifHolder, companionFinder, critGenerator, miType, saveAsName, user, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
                 enhancedCentreEntityQueryCriteria = criteriaEntity;
-                criteriaType = (Class<M>) criteriaEntity.getClass();
+                criteriaType = (Class<M>) criteriaEntity.getType();
             }
 
             // TODO criteriaType is necessary to be used for 1) value matcher creation 2) providing value matcher fetch model
@@ -186,7 +182,6 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 contextConfig,
                 criterionPropertyName,
                 device(),
-                domainTreeEnhancerCache,
                 eccCompanion,
                 mmiCompanion,
                 userCompanion,

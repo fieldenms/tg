@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.web.centre;
 
 import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.ASCENDING;
-import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.DESCENDING;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isShortCollection;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
@@ -134,33 +133,6 @@ public class CentreConfigUpdaterUtils {
             final String name = treeName(splitted[0]);
             secondTick.toggleOrdering(root, name);
             if ("desc".equals(splitted[1])) {
-                secondTick.toggleOrdering(root, name);
-            }
-        }
-    }
-    
-    /**
-     * Applies new sorting configuration and column order / visibility against result-set tick <code>secondTick</code>. {@link WebApiUtils#treeName(String)} normalisation of property names is required 
-     * for <code>newUsedProps</code> and <code>newSortingProps</code>.
-     * 
-     * @param secondTick
-     * @param root
-     * @param newUsedProps
-     * @param newSortingProps
-     */
-    public static void applyNewOrderVisibilityAndSorting(final IAddToResultTickManager secondTick, final Class<?> root, final List<String> newUsedProps, final List<Pair<String, Ordering>> newSortingProps) {
-        removeOrderVisibilityAndSorting(secondTick, root);
-        
-        // apply usage information
-        for (final String usedProp : newUsedProps) {
-            secondTick.use(root, usedProp, true);
-        }
-        
-        // apply sorting information
-        for (final Pair<String, Ordering> sortingProp: newSortingProps) {
-            final String name = sortingProp.getKey();
-            secondTick.toggleOrdering(root, name);
-            if (DESCENDING.equals(sortingProp.getValue())) {
                 secondTick.toggleOrdering(root, name);
             }
         }

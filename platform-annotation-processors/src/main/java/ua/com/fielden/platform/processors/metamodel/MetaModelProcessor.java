@@ -1,71 +1,18 @@
 package ua.com.fielden.platform.processors.metamodel;
 
-import static java.lang.String.format;
-import static java.lang.String.join;
-import static java.util.Collections.emptyList;
-import static java.util.Optional.empty;
-import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toCollection;
-import static java.util.stream.Collectors.toSet;
-import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION;
-import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.METAMODELS_CLASS_PKG_NAME;
-import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.METAMODELS_CLASS_SIMPLE_NAME;
-import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_SUPERCLASS_CLASSNAME;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import javax.annotation.processing.Generated;
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.annotation.processing.RoundEnvironment;
-import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.lang.model.element.AnnotationValue;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
-import javax.lang.model.element.Name;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeMirror;
-
+import com.squareup.javapoet.*;
 import org.apache.commons.lang3.StringUtils;
-
-import com.squareup.javapoet.AnnotationSpec;
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.CodeBlock;
-import com.squareup.javapoet.FieldSpec;
-import com.squareup.javapoet.JavaFile;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeSpec;
-import com.squareup.javapoet.WildcardTypeName;
-
 import ua.com.fielden.platform.annotations.metamodel.MetaModelForType;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.NoKey;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
+import ua.com.fielden.platform.processors.DateTimeUtils;
 import ua.com.fielden.platform.processors.metamodel.concepts.MetaModelConcept;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelsElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
-import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderException;
 import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelAliasedException;
 import ua.com.fielden.platform.processors.metamodel.exceptions.EntitySourceDefinitionException;
 import ua.com.fielden.platform.processors.metamodel.exceptions.MetaModelProcessorException;
@@ -75,6 +22,29 @@ import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
 import ua.com.fielden.platform.utils.Pair;
+
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.annotation.processing.RoundEnvironment;
+import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.lang.model.element.*;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+import javax.tools.Diagnostic.Kind;
+import java.io.IOException;
+import java.util.*;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static java.lang.String.format;
+import static java.lang.String.join;
+import static java.util.Collections.emptyList;
+import static java.util.Optional.empty;
+import static java.util.stream.Collectors.*;
+import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.*;
+import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.TYPE_ELEMENT_FILTER;
 
 /**
  * Annotation processor that generates meta-models for domain entities.
@@ -98,9 +68,9 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
-        this.elementFinder = new ElementFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
-        this.entityFinder = new EntityFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
-        this.metaModelFinder = new MetaModelFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
+        this.elementFinder = new ElementFinder(processingEnv);
+        this.entityFinder = new EntityFinder(processingEnv);
+        this.metaModelFinder = new MetaModelFinder(processingEnv);
     }
 
     @Override
@@ -110,10 +80,13 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         final Optional<MetaModelsElement> maybeMetaModelsElement = metaModelFinder.findMetaModelsElement();
 
         // meta-models need to be generated at every processing round for the matching entities, which where included into the round by the compiler
-        // except those that were already generated on one of the subsequent rounds during the current compilation process
+        // except those that were already generated on one of previous rounds during the current compilation process
         // also, if the meta-models entry point already exists, we should use it to identify existing meta-models to avoid excessive meta-model generation
         final var generatedMetaModels = collectEntitiesForMetaModelGeneration(roundEnv, maybeMetaModelsElement)
                                         .filter(mmc -> writeMetaModel(mmc)).collect(Collectors.toSet());
+        if (!generatedMetaModels.isEmpty()) {
+            printNote("Generated %s entity meta-models.", generatedMetaModels.size());
+        }
         allGeneratedMetaModels.addAll(generatedMetaModels);
 
         // generation or re-generation of the meta-models entry point class should occur only during the first round of processing
@@ -145,33 +118,28 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
     }
 
     /**
-     * Processes {@code roundEnv} to collect entity classes for processing.
-     * Returns a set with instances of {@link MetaModelConcept}, representing each entity that require a meta-model to be generated.
+     * Processes a round to collect entity classes for meta-model generation.
+     * Returns {@link MetaModelConcept}s representing entities that require a meta-model to be generated.
      *
-     * @param roundEnv
-     * @param maybeMetaModelsElement – qualified names for meta-models from the meta-models entry point class
-     * @return
+     * @param maybeMetaModelsElement – the meta-models entry point class
      */
     private Stream<MetaModelConcept> collectEntitiesForMetaModelGeneration(final RoundEnvironment roundEnv, final Optional<MetaModelsElement> maybeMetaModelsElement) {
-        // find classes annotated with any of DOMAIN_TYPE_ANNOTATIONS
-        final Set<TypeElement> annotatedElements = roundEnv.getElementsAnnotatedWithAny(ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION).stream()
-                // just in case make sure identified elements are top-level classes
-                // TODO support visible nested classes, in case if we start supporting "components" in a form of nested classes
-                .filter(element -> ElementFinder.isTopLevelClass(element))
-                .map(el -> (TypeElement) el).collect(toSet());
+        final Set<TypeElement> metaModeledElements = roundEnv.getRootElements().stream()
+                .mapMulti(TYPE_ELEMENT_FILTER)
+                .filter(entityFinder::isEntityThatNeedsMetaModel)
+                .collect(toSet());
 
-        if (annotatedElements.isEmpty()) {
+        if (metaModeledElements.isEmpty()) {
             printNote("There are no subjects for meta-modeling.");
             return Stream.empty();
         }
-        printNote("annotatedElements: [%s]",
-                annotatedElements.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", ")));
+        printNote(formatSequence("metaModeledElements", metaModeledElements.stream().map(Element::getSimpleName).iterator()));
 
         // let's process each type element representing a domain entity
         // all relevant types will have a meta-model concept created for them and their properties explored for the purpose of meta-modelling
         final Set<MetaModelConcept> metaModelConcepts = new HashSet<>();
         final var existingMetaModels = maybeMetaModelsElement.map(mme -> mme.getMetaModels().stream().map(m -> m.getQualifiedName().toString()).collect(toSet())).orElse(Collections.emptySet());
-        for (final TypeElement typeElement: annotatedElements) {
+        for (final TypeElement typeElement: metaModeledElements) {
             final EntityElement entityElement = entityFinder.newEntityElement(typeElement);
             final MetaModelConcept mmc = new MetaModelConcept(entityElement);
             if (!allGeneratedMetaModels.contains(mmc)) {
@@ -181,11 +149,11 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
                 // traverse all properties for the current entity element to ensure that any entity-typed properties get their type considered for meta-model generation
                 // this is mainly important to pick up entity types that come from other project dependencies, such as the TG platform itself
                 explorePropsOf(entityElement, existingMetaModels, metaModelConcepts);
-
             }
         }
 
-        printNote("metaModelConcepts: [%s]", metaModelConcepts.stream().map(MetaModelConcept::getSimpleName).sorted().collect(joining(", ")));
+        printNote(formatSequence("metaModelConcepts", metaModelConcepts.stream().map(MetaModelConcept::getSimpleName).iterator()));
+
         return metaModelConcepts.stream();
     }
 
@@ -225,16 +193,14 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         final TypeSpec.Builder emptyMetaModelBuilder = TypeSpec.interfaceBuilder(mme.getSimpleName().toString());
 
         // @Generated annotation
-        final AnnotationSpec generatedAnnotation = AnnotationSpec.builder(ClassName.get(Generated.class))
-                .addMember("value", "$S", this.getClass().getCanonicalName())
-                .addMember("date", "$S", initDateTime.toString())
-                .build();
-        final String datetime = initDateTime.toString("dd-MM-YYYY HH:mm:ss.SSS z");
+        final String dateString = DateTimeUtils.toIsoFormat(DateTimeUtils.zonedNow());
+        final AnnotationSpec annotGenerated = buildAtGenerated(dateString);
+
          emptyMetaModelBuilder
                 .addJavadoc("INACTIVE auto-generated meta-model.\n<p>\n")
-                .addJavadoc(format("Generation datetime: %s\n<p>\n", datetime))
+                .addJavadoc(format("Generation datetime: %s\n<p>\n", dateString))
                 .addJavadoc(format("Generated by {@link %s}\n<p>\n", this.getClass().getCanonicalName()))
-                .addAnnotation(generatedAnnotation);
+                .addAnnotation(annotGenerated);
 
         final TypeSpec emptyMetaModel = emptyMetaModelBuilder.build();
 
@@ -243,7 +209,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         try {
             javaFile.writeTo(filer);
         } catch (final IOException ex) {
-            printWarning(ex.getMessage());
+            printWarning("Failed to generate empty meta-model [%s]. %s", mme.getSimpleName(), ex.getMessage());
             return false;
         }
 
@@ -269,7 +235,8 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
                 inactive.add(mme);
             } else {
                 final EntityElement entity = maybeEntity.get();
-                if (!entityFinder.isEntityThatNeedsMetaModel(entity)) {
+                // don't consider entities with an unresolved supertype inactive to avoid excessive regeneration
+                if (entity.getSuperclass().getKind() != TypeKind.ERROR && !entityFinder.isEntityThatNeedsMetaModel(entity)) {
                     printNote(format("Entity [%s] is no longer a domain entity.", entity.getSimpleName()));
                     inactive.add(mme);
                 }
@@ -299,11 +266,12 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
      * </ol>
      * Therefore, 2 meta-model source files are generated for every entity.
      * <p>
-     * Properties, which test positive for COVID... {@code propertyTypeMetamodeledTest} are generated as such that have a meta-model on their own.
-     * All other properties are generated as instances of {@link PropertyMetaModel}, which are terminal and do not support property traversing.
+     * Properties, which test positive for COVID... {@code propertyTypeMetamodeledTest} are modelled with a respective
+     * meta-model type. All other properties, unless their type cannot be resovled, are modelled with {@link PropertyMetaModel},
+     * which are terminal and do not support property traversing.
      * <p>
-     * A super class for meta-models is determined based on the entity type hierarchy.
-     * If an entity extends another domain entity (i.e., it has a meta-model), then the meta-model for that entity would be used as a super class for the meta-model being generated.
+     * If an entity extends another meta-modelled entity, then the meta-model for the latter will be used as a super class
+     * for the meta-model generated for the former.
      *
      * @param mmc
      * @param propertyTypeMetamodeledTest
@@ -315,9 +283,10 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
 
         final EntityElement entityElement = mmc.getEntityElement();
         final EntityElement entitySupertype = entityFinder.getParent(entityElement).orElse(null);
-        // entityElement should extend something, but just in case if it does not, which is likely to be some erroneous situation, just report the error and move on
         if (entitySupertype == null) {
-            printError("Parent entity type not found for %s, skipping meta-model generation", entityElement.getQualifiedName());
+            messager.printMessage(Kind.WARNING,
+                    "Entity [%s] has no parent entity type, won't be meta-modelled.".formatted(entityElement.getQualifiedName()),
+                    entityElement.element());
             return false;
         }
 
@@ -326,7 +295,9 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         try {
             properties = collectProperties(entityElement, maybeMetaModelledSupertype);
         } catch (final EntitySourceDefinitionException e) {
-            printNote("Failed to generate meta-model for %s. %s", entityElement.getSimpleName(), e.getLocalizedMessage());
+            messager.printMessage(Kind.WARNING,
+                    "Failed to generate meta-model for [%s]. Reason: %s".formatted(entityElement.getSimpleName(), e.getLocalizedMessage()),
+                    entityElement.element());
             return false;
         }
 
@@ -342,6 +313,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         // now let's process all properties
         for (final PropertyElement prop: properties) {
             final var propName = prop.getSimpleName().toString();
+            final var fieldNameForProp = fieldNameForProp(propName);
             final var propName_ = propName + "_";
             // ### static property holding the property's name ###
             // private static final String ${PROPERTY}_ = "${PROPERTY}";
@@ -357,11 +329,11 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
                 // property type is target for meta-model generation
                 // private Supplier<${METAMODEL}> ${PROPERTY};
                 final ParameterizedTypeName propTypeName = ParameterizedTypeName.get(ClassName.get(Supplier.class), propTypeMmcClassName);
-                fieldSpecBuilder = FieldSpec.builder(propTypeName, propName)
+                fieldSpecBuilder = FieldSpec.builder(propTypeName, fieldNameForProp)
                                             .addModifiers(Modifier.PRIVATE);
             } else {
                 // private final PropertyMetaModel ${PROPERTY};
-                fieldSpecBuilder = FieldSpec.builder(ClassName.get(PropertyMetaModel.class), propName)
+                fieldSpecBuilder = FieldSpec.builder(ClassName.get(PropertyMetaModel.class), fieldNameForProp)
                                             .addModifiers(Modifier.PRIVATE, Modifier.FINAL);
             }
             fieldSpecs.add(fieldSpecBuilder.build());
@@ -372,6 +344,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         final List<MethodSpec> methodSpecs = new ArrayList<>();
         for (final PropertyElement prop: properties) {
             final var propName = prop.getSimpleName().toString();
+            final var fieldNameForProp = fieldNameForProp(propName);
             final MethodSpec.Builder methodSpecBuilder = MethodSpec.methodBuilder(propName);
 
             final ClassName propTypeMmcClassName;
@@ -386,7 +359,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
                  */
                 methodSpecBuilder.addModifiers(Modifier.PUBLIC)
                                  .returns(propTypeMmcClassName)
-                                 .addStatement("return $L.get()", propName);
+                                 .addStatement("return $L.get()", fieldNameForProp);
             } else {
                 propTypeMmcClassName = null;
                 /*
@@ -396,7 +369,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
                  */
                 methodSpecBuilder.addModifiers(Modifier.PUBLIC)
                                  .returns(ClassName.get(PropertyMetaModel.class))
-                                 .addStatement("return $L", propName);
+                                 .addStatement("return $L", fieldNameForProp);
             }
 
             buildJavadoc(prop, methodSpecBuilder, propTypeMmcClassName);
@@ -438,6 +411,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         final CodeBlock.Builder constructorStatementsBuilder = CodeBlock.builder();
         for (final PropertyElement prop: properties) {
             final var propName = prop.getSimpleName().toString();
+            final var fieldNameForProp = fieldNameForProp(propName);
             final var propName_ = propName + "_";
             if (propertyTypeMetamodeledTest.test(prop)) {
                 final MetaModelConcept propTypeMmc = new MetaModelConcept(entityFinder.newEntityElement(prop.getTypeAsTypeElementOrThrow()));
@@ -459,19 +433,19 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
                                 propTypeMetaModelClassName, "value", propTypeMetaModelClassName, propName_)
                         .addStatement(
                                 "$L = () -> $L",
-                                propName, "value")
+                                fieldNameForProp, "value")
                         .addStatement("return $L", "value")
                         .unindent().add("}")
                         .build();
                 final CodeBlock code = CodeBlock.builder()
-                        .addStatement("this.$L = $L", propName, lambda.toString())
+                        .addStatement("this.$L = $L", fieldNameForProp, lambda.toString())
                         .build();
                 constructorStatementsBuilder.add(code);
             } else {
                 // this.${PROPERTY} = new PropertyMetaModel ( joinPath( ${PROPERTY}_ ) );
                 constructorStatementsBuilder.addStatement(
                         "this.$L = new $T(joinPath($L))",
-                        propName, ClassName.get(PropertyMetaModel.class), propName_);
+                        fieldNameForProp, ClassName.get(PropertyMetaModel.class), propName_);
             }
         }
 
@@ -527,16 +501,12 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
             .addMember("value", "$T.class", entityClassName)
             .build();
 
-
         // @Generated annotation
-        final AnnotationSpec annotGenerated = AnnotationSpec.builder(Generated.class)
-                .addMember("value", "$S", this.getClass().getCanonicalName())
-                .addMember("date", "$S", initDateTime.toString())
-                .build();
+        final String dateString = DateTimeUtils.toIsoFormat(DateTimeUtils.zonedNow());
+        final AnnotationSpec annotGenerated = buildAtGenerated(dateString);
 
-        final String datetime = initDateTime.toString("dd-MM-YYYY HH:mm:ss.SSS z");
         final TypeSpec metaModelSpec = metaModelBuilder.addJavadoc("Auto-generated meta-model for {@link $T}.\n<p>\n", entityClassName)
-                 .addJavadoc(format("Generation datetime: %s\n<p>\n", datetime))
+                 .addJavadoc(format("Generation datetime: %s\n<p>\n", dateString))
                  .addJavadoc(format("Generated by {@link %s}\n<p>\n", this.getClass().getCanonicalName()))
                  .addAnnotation(annotGenerated)
                  .addAnnotation(annotMetaModelForType)
@@ -547,7 +517,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         try {
             metaModelJavaFile.writeTo(filer);
         } catch (final IOException ex) {
-            printWarning(ex.getMessage());
+            printWarning("Failed to generate meta-model [%s]. %s", metaModelSpec.name, ex.getMessage());
             return false;
         }
 
@@ -573,6 +543,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
          */
         final String thisMetaModelAliasedName = mmc.getAliasedSimpleName();
         final TypeSpec metaModelAliasedSpec = TypeSpec.classBuilder(thisMetaModelAliasedName)
+                .addAnnotation(annotGenerated)
                 .addAnnotation(annotMetaModelForType)
                 .addModifiers(Modifier.PUBLIC)
                 .superclass(ClassName.get(thisMetaModelPkgName, thisMetaModelName))
@@ -600,11 +571,12 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         try {
             metaModelAliasedJavaFile.writeTo(filer);
         } catch (final IOException ex) {
-            printWarning(ex.getMessage());
+            printWarning("Failed to generate aliased meta-model [%s]. %s", metaModelAliasedSpec.name, ex.getMessage());
             return false;
         }
 
-        printNote("Generated %s for entity %s.", metaModelSpec.name, entityElement.getSimpleName());
+        // TODO enable for "verbose" mode
+//        printNote("Generated %s for entity %s.", metaModelSpec.name, entityElement.getSimpleName());
         return true;
     }
 
@@ -615,18 +587,32 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
      * @return
      * @throws EntitySourceDefinitionException
      */
-    private LinkedHashSet<PropertyElement> collectProperties(final EntityElement entity, final Optional<EntityElement> maybeMetaModelledSupertype) throws EntitySourceDefinitionException {
+    private LinkedHashSet<PropertyElement> collectProperties(
+            final EntityElement entity, final Optional<EntityElement> maybeMetaModelledSupertype)
+            throws EntitySourceDefinitionException
+    {
+        final Predicate<PropertyElement> erroneousPropertyFilter = prop -> {
+            if (prop.getType().getKind() == TypeKind.ERROR) {
+                messager.printMessage(Kind.WARNING,
+                        "Property [%s] with unresolved type won't be meta-modelled.".formatted(prop.getSimpleName()),
+                        prop.element());
+                return false;
+            }
+            return true;
+        };
 
         final Set<PropertyElement> properties = new LinkedHashSet<>();
         if (maybeMetaModelledSupertype.isPresent()) {
             // declared properties + property key
-            properties.addAll(entityFinder.processProperties(entityFinder.findDeclaredProperties(entity), entity));
+            List<PropertyElement> declaredProps = entityFinder.streamDeclaredProperties(entity).filter(erroneousPropertyFilter).toList();
+            properties.addAll(entityFinder.processProperties(declaredProps, entity));
             // "key" is guaranteed to exist
             final PropertyElement keyElt = entityFinder.findProperty(maybeMetaModelledSupertype.get(), AbstractEntity.KEY)
-                    .orElseThrow(() -> new ElementFinderException("Property [%s] was not found in [%s].".formatted(AbstractEntity.KEY, entity)));
+                    .orElseThrow(() -> new EntitySourceDefinitionException("Property [%s] was not found in [%s].".formatted(AbstractEntity.KEY, entity)));
             properties.add(keyElt);
         } else {
-            properties.addAll(entityFinder.processProperties(entityFinder.findProperties(entity), entity));
+            List<PropertyElement> allProps  = entityFinder.streamProperties(entity).filter(erroneousPropertyFilter).toList();
+            properties.addAll(entityFinder.processProperties(allProps, entity));
         }
 
         // map of the following form: String propertyName -> PropertyElement property
@@ -790,11 +776,16 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         // generate static fields and methods for new meta-models
         for (final MetaModelConcept mmc: newMetaModelConcepts) {
             final String fieldName = nameFieldForMetaModel(mmc.getEntityElement().getSimpleName().toString());
-            printNote("New/Updated meta-model, generating field: %s", fieldName);
+             // TODO enable for "verbose" mode
+//            printNote("New/Updated meta-model, generating field: %s", fieldName);
             fieldSpecs.add(specFieldForMetaModel(mmc.getMetaModelClassName(), fieldName));
-
-            printNote("New/Updated aliased meta-model, generating method: %s", fieldName);
+             // TODO enable for "verbose" mode
+//            printNote("New/Updated aliased meta-model, generating method: %s", fieldName);
             methodSpecs.add(aliasMethodForMetaModel(mmc.getMetaModelAliasedClassName(), fieldName));
+        }
+        if (!metaModelConcepts.isEmpty()) {
+            printNote("Found %s new/updated meta-models: [%s]",
+                    metaModelConcepts.size(), metaModelConcepts.stream().map(MetaModelConcept::getSimpleName).collect(joining(",")));
         }
 
         // if MetaModels class exists, then generate static fields and methods for old meta-models, excluding inactive ones
@@ -803,40 +794,48 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
             final Set<MetaModelElement> declaredMetaModels = new HashSet<>(metaModelsElement.getMetaModels());
             declaredMetaModels.removeAll(inactiveMetaModelElements);
 
-            printNote("Inactive meta-models: [%s]", inactiveMetaModelElements.stream()
-                    .map(mm -> mm.getSimpleName().toString())
-                    .sorted().collect(joining(", ")));
+            if (!inactiveMetaModelElements.isEmpty()) {
+                printNote("Found %s inactive meta-models: [%s]",
+                        inactiveMetaModelElements.size(),
+                        inactiveMetaModelElements.stream() .map(mm -> mm.getSimpleName().toString()) .sorted().collect(joining(", ")));
+            }
 
-            for (final MetaModelElement mme: declaredMetaModels) {
-                // active meta-model must have a coresponding entity
-                final EntityElement entity = entityFinder.findEntityForMetaModel(mme)
-                        .orElseThrow(() -> new MetaModelProcessorException("Missing entity for active meta-model [%s]".formatted(mme.getSimpleName())));
-                final String fieldName = nameFieldForMetaModel(entity.getSimpleName().toString());
-                // add a method for an aliased meta-model
-                if (metaModelFinder.isMetaModelAliased(mme)) {
-                    printNote("Old aliased meta-model, generating method: %s", fieldName);
-                    methodSpecs.add(aliasMethodForMetaModel(mme.getMetaModelClassName(), fieldName));
+            {
+                int oldMetaModelCount = 0;
+                int oldAliasedMetaModelCount = 0;
+                for (final MetaModelElement mme: declaredMetaModels) {
+                    // active meta-model must have a coresponding entity
+                    final EntityElement entity = entityFinder.findEntityForMetaModel(mme)
+                            .orElseThrow(() -> new MetaModelProcessorException("Missing entity for active meta-model [%s]".formatted(mme.getSimpleName())));
+                    final String fieldName = nameFieldForMetaModel(entity.getSimpleName().toString());
+                    // add a method for an aliased meta-model
+                    if (metaModelFinder.isMetaModelAliased(mme)) {
+                        // TODO enable for "verbose" mode
+                        //                    printNote("Old aliased meta-model, generating method: %s", fieldName);
+                        methodSpecs.add(aliasMethodForMetaModel(mme.getMetaModelClassName(), fieldName));
+                        oldMetaModelCount++;
+                    }
+                    // add a field for a regular meta-model
+                    else {
+                        // TODO enable for "verbose" mode
+                        //                    printNote("Old meta-model, generating field: %s", fieldName);
+                        fieldSpecs.add(specFieldForMetaModel(mme.getMetaModelClassName(), fieldName));
+                        oldAliasedMetaModelCount++;
+                    }
                 }
-                // add a field for a regular meta-model
-                else {
-                    printNote("Old meta-model, generating field: %s", fieldName);
-                    fieldSpecs.add(specFieldForMetaModel(mme.getMetaModelClassName(), fieldName));
-                }
+                printNote("Unchanged meta-models: %s regular, %s aliased.".formatted(oldMetaModelCount, oldAliasedMetaModelCount));
             }
         }
 
         // @Generated annotation
-        final AnnotationSpec generatedAnnotation = AnnotationSpec.builder(ClassName.get(Generated.class))
-                .addMember("value", "$S", this.getClass().getCanonicalName())
-                .addMember("date", "$S", initDateTime.toString())
-                .build();
+        final String dateString = DateTimeUtils.toIsoFormat(DateTimeUtils.zonedNow());
+        final AnnotationSpec annotGenerated = buildAtGenerated(dateString);
 
-        final String dateTimeString = initDateTime.toString("dd-MM-YYYY HH:mm:ss.SSS z");
         final TypeSpec metaModelsTypeSpec = TypeSpec.classBuilder(METAMODELS_CLASS_SIMPLE_NAME)
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-                .addJavadoc(format("Generation datetime: %s\n<p>\n", dateTimeString))
+                .addJavadoc(format("Generation datetime: %s\n<p>\n", dateString))
                 .addJavadoc(format("Generated by {@link %s}.", this.getClass().getCanonicalName()))
-                .addAnnotation(generatedAnnotation)
+                .addAnnotation(annotGenerated)
                 .addFields(fieldSpecs)
                 .addMethods(methodSpecs)
                 .build();
@@ -846,7 +845,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         try {
             javaFile.writeTo(filer);
         } catch (final IOException ex) {
-            printWarning(ex.getMessage());
+            printWarning("Failed to generate [%s]. %s", metaModelsTypeSpec.name, ex.getMessage());
             return;
         }
 
@@ -904,6 +903,16 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
      */
     private static String nameFieldForMetaModel(final String simpleName) {
         return simpleName + "_";
+    }
+
+    /**
+     * Makes a field name to be used in a meta-model class to represent a entity property.
+     *
+     * @param propName
+     * @return
+     */
+    private static String fieldNameForProp(String propName) {
+        return propName + "_pn";
     }
 
 }

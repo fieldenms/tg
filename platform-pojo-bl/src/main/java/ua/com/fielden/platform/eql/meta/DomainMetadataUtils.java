@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.meta;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
@@ -107,10 +107,5 @@ public class DomainMetadataUtils {
         final Field firstUnionProp = unionProps.get(0);
         final ISubsequentCompletedAndYielded<PT> initialModel = firstUnionProp.equals(currProp) ? startWith.yield().prop(ID).as(firstUnionProp.getName()) : startWith.yield().val(null).as(firstUnionProp.getName()); 
         return unionProps.stream().skip(1).reduce(initialModel, (m, f) -> f.equals(currProp) ? m.yield().prop(ID).as(f.getName()) : m.yield().val(null).as(f.getName()), (m1, m2) -> {throw new UnsupportedOperationException("Combining is not applicable here.");});
-    }
-    
-    public static String getOriginalEntityTypeFullName(final String entityTypeFullClassName) {
-        final int nameEnhancementStartIndex = entityTypeFullClassName.indexOf("$$");
-        return  nameEnhancementStartIndex == -1 ? entityTypeFullClassName : entityTypeFullClassName.substring(0, nameEnhancementStartIndex);
     }
 }

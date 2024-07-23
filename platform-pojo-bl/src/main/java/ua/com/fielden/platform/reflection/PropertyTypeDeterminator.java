@@ -15,7 +15,7 @@ import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
@@ -138,14 +138,12 @@ public class PropertyTypeDeterminator {
     }
 
     /**
-     * If field is collectional property then it returns type of collection elements.
-     *
-     * @param field
-     * @return
+     * If the field is a collectional property, returns the type of collection elements, otherwise returns {@link Object}.
      */
     private static Class<?> determineElementClass(final Field field) {
-        final ParameterizedType paramType = (ParameterizedType) field.getGenericType();
-        return classFrom(paramType.getActualTypeArguments()[0]);
+        return field.getGenericType() instanceof ParameterizedType paramType
+                ? classFrom(paramType.getActualTypeArguments()[0])
+                : Object.class;
     }
 
     /**

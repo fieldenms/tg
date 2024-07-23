@@ -5,10 +5,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute.NO_ATTR;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.getEmptyValue;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -16,15 +18,18 @@ import java.util.Date;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.Entity;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum;
 import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
-import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.UnsupportedTypeException;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.utils.CollectionUtil;
 
 /**
  * A test for {@link DynamicQueryBuilder}.
@@ -604,4 +609,20 @@ public class DynamicQueryBuilderTest {
         assertEquals("Incorrect collection name in its parent type context.", "entities", qp.getCollectionNameInItsParentTypeContext());
         assertFalse("Incorrect isInNestedCollections.", qp.isInNestedUnionAndCollections());
     }
+
+    @Test
+    public void QueryProperty_for_critOnly_property_with_submodel_is_critOnlyWithModel() {
+        assertTrue(new QueryProperty(EntityForQueryPropertyTesting.class, "alternativeEntityCrit").isCritOnlyWithModel());
+    }
+
+    @Test
+    public void QueryProperty_for_critOnly_property_with_submodel_in_generated_type_is_critOnlyWithModel() {
+        final var injector = new ApplicationInjectorFactory().add(new CommonTestEntityModuleWithPropertyFactory()).getInjector();
+        final var domainTreeEnhancer = new DomainTreeEnhancer(injector.getInstance(EntityFactory.class), setOf(EntityForQueryPropertyTesting.class));
+        domainTreeEnhancer.addCalculatedProperty(EntityForQueryPropertyTesting.class, "", "COUNT(SELF)", "Kount", "Kount", NO_ATTR, "SELF", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        domainTreeEnhancer.apply();
+
+        assertTrue(new QueryProperty(domainTreeEnhancer.getManagedType(EntityForQueryPropertyTesting.class), "alternativeEntityCrit").isCritOnlyWithModel());
+    }
+
 }

@@ -1,14 +1,11 @@
 package ua.com.fielden.platform.entity.query.metadata;
 
-import java.util.HashSet;
-import java.util.Map.Entry;
-import java.util.Set;
 import java.util.SortedMap;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 public abstract class AbstractEntityMetadata<ET extends AbstractEntity<?>> {
-    private final Class<ET> type;
+    public final Class<ET> type;
     private final SortedMap<String, PropertyMetadata> props;
 
     protected AbstractEntityMetadata(final Class<ET> type, final SortedMap<String, PropertyMetadata> props) {
@@ -19,22 +16,8 @@ public abstract class AbstractEntityMetadata<ET extends AbstractEntity<?>> {
         this.props = props;
     }
 
-    public Class<? extends AbstractEntity<?>> getType() {
-        return type;
-    }
-
     public SortedMap<String, PropertyMetadata> getProps() {
         return props;
-    }
-
-    public Set<String> getNotNullableProps() {
-        final Set<String> result = new HashSet<>();
-        for (final Entry<String, PropertyMetadata> entry : props.entrySet()) {
-            if (!entry.getValue().isNullable()) {
-                result.add(entry.getKey());
-            }
-        }
-        return result;
     }
 
     @Override

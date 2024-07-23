@@ -2,7 +2,7 @@ package ua.com.fielden.platform.dynamictree;
 
 import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.AnnotationReflector;

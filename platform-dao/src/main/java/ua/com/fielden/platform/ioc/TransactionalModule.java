@@ -41,9 +41,9 @@ public abstract class TransactionalModule extends EntityModule {
      * Creates transactional module, which holds references to instances of {@link SessionFactory} and {@link DomainMetadata}. All descending classes needs to provide those two
      * parameters.
      *
-     * @param sessionFactory
-     * @param mappingExtractor
-     * @throws Exception
+     * @param props
+     * @param defaultHibernateTypes
+     * @param applicationEntityTypes
      */
     public TransactionalModule(
             final Properties props, 
@@ -69,16 +69,6 @@ public abstract class TransactionalModule extends EntityModule {
 
     protected void initHibernateConfig(final EntityFactory factory) {
         interceptor.setFactory(factory);
-    }
-
-    public TransactionalModule(final SessionFactory sessionFactory, final DomainMetadata domainMetadata, final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
-        interceptor = null;
-        hibernateUtil = null;
-        applicationEntityTypes = null;
-
-        this.sessionFactory = sessionFactory;
-        this.domainMetadata = domainMetadata;
-        this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
     }
 
     @Override

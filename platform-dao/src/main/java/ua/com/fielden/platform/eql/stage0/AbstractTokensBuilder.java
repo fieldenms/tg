@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage0;
 
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
+import static java.util.Optional.empty;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.emptyCondition;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EQUERY_TOKENS;
@@ -14,15 +15,17 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.PR
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VAL;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.buildCondition;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.queryPropertyParamName;
-import static ua.com.fielden.platform.eql.meta.EqlDomainMetadata.N;
-import static ua.com.fielden.platform.eql.meta.EqlDomainMetadata.Y;
+import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.N;
+import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.Y;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.enums.Functions;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
@@ -31,7 +34,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
-import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
+import ua.com.fielden.platform.eql.exceptions.EqlStage0ProcessingException;
 import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage0.functions.AbsOfBuilder;
 import ua.com.fielden.platform.eql.stage0.functions.AddDateIntervalBuilder;
@@ -69,17 +72,17 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Abstract builder to accumulate tokens until ready for respective model creation.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public abstract class AbstractTokensBuilder implements ITokensBuilder {
     private final ITokensBuilder parent;
     private ITokensBuilder child;
     private final List<Pair<TokenCategory, Object>> tokens = new ArrayList<>();
-    private final EntQueryGenerator queryBuilder;
+    private final QueryModelToStage1Transformer queryBuilder;
 
-    protected AbstractTokensBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder) {
+    protected AbstractTokensBuilder(final AbstractTokensBuilder parent, final QueryModelToStage1Transformer queryBuilder) {
         this.parent = parent;
         this.queryBuilder = queryBuilder;
     }
@@ -162,7 +165,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
             setChild(new ConcatFunctionBuilder(this, queryBuilder));
             break;
         default:
-            throw new RuntimeException("Unrecognised function token: " + function);
+            throw new EqlStage0ProcessingException("Unrecognised function token: " + function);
         }
     }
 
@@ -183,7 +186,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
                 setChild(new GroupedConditionsBuilder(this, queryBuilder, (Boolean) value));
                 break;
             case CRIT_COND_OPERATOR: //
-                tokens.add(pair(GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, critConditionOperatorModel((Pair<Object, String>) value), false).getModel()));
+                tokens.add(pair(GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, critConditionOperatorModel((Pair<Object, Object>) value), false).getModel()));
                 break;
             case COND_TOKENS: //
                 tokens.add(pair(GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, (ConditionModel) value, false).getModel()));
@@ -205,10 +208,26 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         }
     }
 
-    private ConditionModel critConditionOperatorModel(final Pair<Object, String> props) {
-        final String critOnlyPropName = props.getValue();
+    private ConditionModel critConditionOperatorModel(final Pair<Object, Object> props) {
+        final String critOnlyPropName = props.getValue() instanceof String ? (String) props.getValue() : ((T2<String, Optional<Object>>) props.getValue())._1;
         final String critOnlyPropParamName = queryPropertyParamName(critOnlyPropName);
         final QueryProperty qp = (QueryProperty) getParamValue(critOnlyPropParamName);
+        if (qp != null && qp.isEmptyWithoutMnemonics()) {
+            final Optional<Object> maybeDefaultValue = props.getValue() instanceof T2 ? ((T2<String, Optional<Object>>) props.getValue())._2 : empty();
+            maybeDefaultValue.ifPresent(dv -> {
+                if (dv instanceof List || dv instanceof String) {
+                    qp.setValue(dv);
+                }
+                else if (dv instanceof T2) {
+                    final T2<?,?> t2 = (T2<?,?>) dv;
+                    qp.setValue(t2._1);
+                    qp.setValue2(t2._2);
+                }
+                else {
+                    throw new EqlException(format("Default value for property [%s] in a [critCondition] call has unsupported type [%s].", critOnlyPropName, dv.getClass()));
+                }
+            });
+        }
         if (qp == null || qp.isEmptyWithoutMnemonics()) {
             return emptyCondition();
         } else if (props.getKey() instanceof String) {
@@ -230,7 +249,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         qp.setNot(originalNot);
         return result;
     }
-    
+
     /**
      * The following rules are used to build {@code ConditionModel}.
      * <pre>
@@ -253,7 +272,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         final ConditionModel criteriaCondition = prepareCollectionalCritCondition(qp, propName);
         final EntityResultQueryModel<?> anyItems = collectionQueryStart.model();
         final EntityResultQueryModel<?> matchingItems = collectionQueryStart.and().condition(criteriaCondition).model();
-        
+
         if (!hasValue) {
             return !orNull ? emptyCondition()/*---,-+-*/ : (not ? cond().exists(anyItems).model()/*-++*/ : cond().notExists(anyItems).model())/*--+*/;
         } else if (not){
@@ -308,7 +327,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     protected TokenCategory getLastCat() {
         return !tokens.isEmpty() ? tokens.get(tokens.size() - 1).getKey() : null;
     }
-    
+
     protected Object getLastValue() {
         return !tokens.isEmpty() ? tokens.get(tokens.size() - 1).getValue() : null;
     }
@@ -329,7 +348,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
             final QueryNowValue qnv = queryBuilder.nowValue;
             return new Value1(qnv != null ? qnv.get() : null);
         default:
-            throw new RuntimeException("Unrecognised zero agrument function: " + function);
+            throw new EqlStage0ProcessingException("Unrecognised zero agrument function: " + function);
         }
     }
 
@@ -355,9 +374,9 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         case EXPR_TOKENS:
             return (ISingleOperand1<? extends ISingleOperand2<?>>) new StandAloneExpressionBuilder(queryBuilder, (ExpressionModel) value).getResult().getValue();
         case EQUERY_TOKENS:
-            return queryBuilder.generateAsSubquery((QueryModel<?>) value);
+            return queryBuilder.generateAsSubQuery((QueryModel<?>) value);
         default:
-            throw new RuntimeException("Unrecognised token category for SingleOperand: " + cat);
+            throw new EqlStage0ProcessingException("Unrecognised token category for SingleOperand: " + cat);
         }
     }
 
@@ -380,8 +399,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         if (paramValue != null) {
             return preprocessValue(paramValue);
         } else {
-            return null; //TODO think through
-            //throw new RuntimeException("No value has been provided for parameter with name [" + paramName + "]");
+            return null; //TODO Once context of operand is available (future feature) -- throw exception for all contexts except YIELD (as NULL operands can't be used in SQL conditions, groupings, etc).
         }
     }
 
@@ -431,9 +449,9 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
             singleCat = EXPR_TOKENS;
             break;
         case EQUERY_TOKENS:
-            return new QueryBasedSet1(queryBuilder.generateAsSubquery((QueryModel) value));
+            return new QueryBasedSet1(queryBuilder.generateAsSubQuery((QueryModel) value));
         default:
-            throw new RuntimeException("Unrecognised token category for SingleOperand: " + cat);
+            throw new EqlStage0ProcessingException("Unrecognised token category for SingleOperand: " + cat);
         }
 
         final List<ISingleOperand1<? extends ISingleOperand2<?>>> result = new ArrayList<>();
@@ -480,7 +498,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
             singleCat = EQUERY_TOKENS;
             break;
         default:
-            throw new EqlStage1ProcessingException(format("Unrecognised token category [%s] for MultipleOperand.", cat));
+            throw new EqlStage0ProcessingException(format("Unrecognised token category [%s] for MultipleOperand.", cat));
         }
 
         for (final Object singleValue : (List<Object>) value) {
@@ -494,7 +512,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         return result;
     }
 
-    protected EntQueryGenerator getQueryBuilder() {
+    protected QueryModelToStage1Transformer getQueryBuilder() {
         return queryBuilder;
     }
 }

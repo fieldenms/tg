@@ -72,19 +72,21 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
     
     /**
      * Checks whether {@code entityType} can be executed by current user and returns error if not.
-     * Otherwise, finds an uninstrumented reader for the {@link #entityType} and retrieves first {@link #PAGE_CAPACITY} entities.<p>
+     * Otherwise, finds an uninstrumented reader for the {@link #entityType} and retrieves first {@link FieldSchema#PAGE_CAPACITY} entities.<p>
      * {@inheritDoc}
      */
     @Override
     public DataFetcherResult<List<T>> get(final DataFetchingEnvironment environment) {
-        authoriseReading(entityType.getSimpleName(), READ, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime); // always create new instance of auth model; otherwise it would contain single instance of SecurityRoleAssociationDao companion and concurrent requests may fail
+        authoriseReading(entityType.getSimpleName(), READ, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime);// reading of entities should be authorised when running GraphQL query
         final T3<String, List<GraphQLArgument>, List<Argument>> rootArguments = rootPropAndArguments(environment.getGraphQLSchema(), environment.getField());
         final T2<Optional<String>, QueryExecutionModel<T, EntityResultQueryModel<T>>> warningAndModel = generateQueryModelFrom(
             environment.getField(),
             environment.getVariables(),
             environment.getFragmentsByName(),
             entityType,
-            environment.getGraphQLSchema()
+            environment.getGraphQLSchema(),
+            environment.getGraphQlContext(),
+            environment.getLocale()
         ).apply(dates);
         final Builder<List<T>> result = DataFetcherResult.<List<T>>newResult().data(coFinder.findAsReader(entityType, true).getPage( // reader must be uninstrumented
             warningAndModel._2,
@@ -93,6 +95,8 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
                 t2(rootArguments._2, rootArguments._3),
                 environment.getVariables(),
                 environment.getGraphQLSchema().getCodeRegistry(),
+                environment.getGraphQlContext(),
+                environment.getLocale(),
                 0
             ).orElse(DEFAULT_PAGE_NUMBER),
             extractValue(
@@ -100,6 +104,8 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
                 t2(rootArguments._2, rootArguments._3),
                 environment.getVariables(),
                 environment.getGraphQLSchema().getCodeRegistry(),
+                environment.getGraphQlContext(),
+                environment.getLocale(),
                 1
             ).orElse(DEFAULT_PAGE_CAPACITY)
         ).data());

@@ -1,7 +1,7 @@
 import '/resources/egi/tg-custom-action-dialog.js';
 import '/resources/components/postal-lib.js';
 
-import { tearDownEvent, isInHierarchy, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
 import {createDialog} from '/resources/egi/tg-dialog-util.js';
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
 import { createEntityActionThenCallback } from '/resources/master/actions/tg-entity-master-closing-utils.js';
@@ -53,6 +53,17 @@ const findFirstInputToFocus = (preferredOnly, editors) => {
            firstInput ? { inputToFocus: firstInput, preferred: false } :
            null;
 };
+
+const findFirstViewWithNewAction = function (dialog, viewWithAction) {
+    let parentDialog = dialog
+    let parentView = viewWithAction;
+    while (parentDialog && parentDialog.parentElement === null) {
+        parentView = getParentAnd(parentDialog._lastAction, element => element._createContextHolder && element.tgOpenMasterAction);
+        parentDialog = getParentAnd(parentDialog._lastAction, element => element.matches('tg-custom-action-dialog'));
+        
+    }
+    return parentView;
+}
 
 /**
  * Check whether an element is visible in its 'tg-scrollable-component' viewport.
@@ -172,6 +183,20 @@ const TgEntityMasterBehaviorImpl = {
             type: String
         },
 
+        /**
+         * Represents the dynamic action that allows to open entity master for specified entity or new entity.
+         */
+        tgOpenMasterAction: {
+            type: Object
+        },
+
+        /**
+         * An action that is used by entity editors as their add/edit title action to open an Entity Master, which corresponds to the editor's entity type.
+         */
+        titleAction: {
+            type:Object
+        },
+
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
         //////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -185,6 +210,13 @@ const TgEntityMasterBehaviorImpl = {
          * Default implementation for postSaved callback.
          */
         _postSavedDefault: {
+            type: Function
+        },
+
+        /**
+         * Action that creates opens new dialog for new entity. This action will be provided fro SAVE and REFRESH actions to run new action after successful save or refresh actions.
+         */
+        _newAction: {
             type: Function
         },
 
@@ -307,6 +339,24 @@ const TgEntityMasterBehaviorImpl = {
             type: Array,
             notify: true
         },
+
+        /**
+         * Rendering hints for a data page retrieved by an entity centre on run or refresh.
+         */
+        renderingHints: {
+            type: Array,
+            notify: true
+        },
+
+        /**
+         * All rendering hints a data page retrieved by an entity centre.
+         * It is the same as rendering hints in cases where centre wasn't configured with retrieveAll option, otherwise it contains rendering hints for the data from all data pages.
+         */
+        allRenderingHints: {
+            type: Array,
+            notify: true
+        },
+
         /**
          * Summary entity retrieved when running centre that has this insertion point.
          */
@@ -316,7 +366,7 @@ const TgEntityMasterBehaviorImpl = {
         },
 
         /**
-         * Last egi selection changes to bind into insertion point.
+         * The latest EGI selection changes to bind into an insertion point.
          */
         centreSelection: {
             type: Object,
@@ -530,7 +580,7 @@ const TgEntityMasterBehaviorImpl = {
                 const elementName = 'tg-' + continuationType._simpleClassName() + '-master';
                 const actionDesc = continuationType._simpleClassName() + '-' + continuationProperty;
 
-                let action = this.querySelector('tg-ui-action[continuation-property="' + continuationProperty + '"]');
+                let action = this.shadowRoot.querySelector('tg-ui-action[continuation-property="' + continuationProperty + '"]');
                 if (!action) {
                     const actionModel = document.createElement('dom-bind');
                     actionModel.innerHTML =
@@ -556,7 +606,8 @@ const TgEntityMasterBehaviorImpl = {
                         "require-selection-criteria='false' " +
                         "require-selected-entities='NONE' " +
                         "require-master-entity='true' " +
-                        "class='primary-action'> " +
+                        "class='primary-action' " +
+                        "skip-automatic-action-completion> " +
                         "</tg-ui-action></template>";
 
                     this.shadowRoot.appendChild(actionModel);
@@ -575,12 +626,16 @@ const TgEntityMasterBehaviorImpl = {
                     actionModel.postActionSuccess = function (functionalEntity) {
                         action.success = true;
                         console.log('postActionSuccess: ' + actionDesc, functionalEntity);
-                        const saveButton = queryElements(self, "tg-action[role='save']")[0];
-                        self.save(functionalEntity, continuationProperty)
-                            .then(
-                                createEntityActionThenCallback(self.centreUuid, 'save', postal, null, saveButton ? saveButton.closeAfterExecution : true),
-                                function (value) { console.log('AJAX PROMISE CATCH', value); }
-                            );
+                        const saveButton = self.$._saveAction;
+                        if (saveButton) {
+                            saveButton._asyncRunAfterContinuation(functionalEntity, continuationProperty);
+                        } else {
+                            self.save(functionalEntity, continuationProperty)
+                                .then(
+                                    createEntityActionThenCallback(self.centreUuid, 'save', '', postal, null, true),
+                                    function (value) { console.log('AJAX PROMISE CATCH', value); }
+                                );
+                        }
                     };
                     actionModel.postActionError = function (functionalEntity) {
                         console.log('postActionError: ' + actionDesc, functionalEntity);
@@ -595,6 +650,10 @@ const TgEntityMasterBehaviorImpl = {
                     action.isActionInProgressChanged = (function (newValue, oldValue) {
                         oldIsActionInProgressChanged(newValue, oldValue);
                         if (newValue === false && !action.success) { // only enable parent master if action has failed (perhaps during retrieval or on save), otherwise leave enabling logic to the parent master itself (saving of parent master should govern that)
+                            const saveButton = self.$._saveAction;
+                            if (saveButton) {
+                                saveButton.cancelContinuation();
+                            }
                             _self.restoreAfterSave();
                             _self.fire('continuation-completed-without-success', action);
                         }
@@ -608,6 +667,27 @@ const TgEntityMasterBehaviorImpl = {
             }
 
             return potentiallySavedOrNewEntity.isValidWithoutException();
+        }).bind(self);
+
+        self._newAction = (function(parentDialog, wasPersistedBeforeAction) {
+            const firstViewWithNewAction = findFirstViewWithNewAction(parentDialog, self);
+            if (firstViewWithNewAction) {
+                if (wasPersistedBeforeAction) {
+                    firstViewWithNewAction.tgOpenMasterAction._runDynamicActionForNew(self.entityType);
+                } else {
+                    // The title action has a postActionSuccess callback that should be removed upon &NEW action in order to prevent continuous snatch backing
+                    // of values into the entity editor, it was invoked from.
+                    if (parentDialog._lastAction.hasAttribute('title-action')) {
+                        delete parentDialog._lastAction.postActionSuccess;
+                    }
+                    parentDialog._lastAction._run();
+                }
+            } else if (parentDialog && parentDialog._lastAction) {
+                const newAction = this._createOpenMasterAction();
+                newAction.requireMasterEntity = 'false';
+                newAction.createContextHolder = parentDialog._lastAction.createContextHolder;
+                newAction._runDynamicActionForNew(self.entityType);
+            }
         }).bind(self);
 
         self._postSavedDefaultPostExceptionHandler = (function () {
@@ -666,7 +746,9 @@ const TgEntityMasterBehaviorImpl = {
                 slf.disableView();
             }
 
-            return new Promise(function (resolve, reject) {
+            // Need to keep a reference to this promise, so that other components could check whether this master's saving request is still in progress or not
+            // This is needed for the SAVE&NEW action to know when a "new" master can be opened.
+            this._savingPromise = new Promise(function (resolve, reject) {
                 slf.debounce('invoke-saving', function () {
                     // cancel the 'invoke-saving' debouncer if there is any active one:
                     slf.cancelDebouncer('invoke-saving');
@@ -690,6 +772,7 @@ const TgEntityMasterBehaviorImpl = {
                     return resolve(slf._createSavingPromise());
                 }, 50);
             });
+            return this._savingPromise;
         }).bind(self);
 
         /**
@@ -716,6 +799,18 @@ const TgEntityMasterBehaviorImpl = {
             } else { // main entity (compound master) has been saved (for the first time)
                 this._currBindingEntity.setAndRegisterPropertyTouch('key', 'IRRELEVANT');
                 this._currBindingEntity['@key_id'] = savedEntityId;
+                // # 2096 Compound Master: avoid opener custom producing logic after successful save in NEW case
+                // In the NEW case, originallyProducedEntity is getting overridden after successful save of the main entity by the recalculated instance (OpenEntityMasterAction).
+                // 'modifPropsHolder' still contains origVals like 'Add new Entity' and vals like '0001: entity description' ('sectionTitle' prop).
+                // This is not enough for actions inside compound master, because actions require deep context and originallyProducedEntity will be disregarded (see 'EntityResource.retrieve')
+                // To avoid producing an instance of OpenEntityMasterAction with the original context, which is no longer relevant, we replace this original context with a surrogate one, containing only the id of the saved entity.
+                // The core logic of AbstractProducerForOpenEntityMasterAction will then be used to produce a new instance the opener with the key value taken from the surrogate context (currentEntityNotEmpty branch).
+                const currentEntity = this._reflector().newEntity(this._currEntity.get('key').type().notEnhancedFullClassName());
+                currentEntity.id = savedEntityId;
+                this.savingContext = this._reflector().createContextHolder(
+                    null, 'ONE', null,
+                    null, () => [ currentEntity ], null
+                );
             }
             // please note, that after 'key' was made touched, it will remain touched forever (until compound master closed, opened and re-retrieved); see tg-entity-master-behavior._postSavedDefault/tg-reflector.tg_convertPropertyValue for more details;
             // #1992 this is necessary because it ensures correct server-side restoration of opener if its produced 'key' (no id) equals to saved version of 'key' (with id);
@@ -728,7 +823,11 @@ const TgEntityMasterBehaviorImpl = {
         }).bind(self);
 
         self._showDialog = (function (action) {
-            const closeEventChannel = self.uuid;
+            //Calculate close event channel for dialog. It should be the same as action's centreUuid.
+            //This is done because action's centreUuid is set into centreUuid of the master opened by specified action and inserted into 
+            //opening dialog. Then the master's centreUuid is used as closeEventChannel for tg-action.
+            //|| this.uuid is used as fallback in case if action's centreUuid wasn't defined.
+            const closeEventChannel = action.attrs.centreUuid || this.uuid;
             const closeEventTopics = ['save.post.success', 'refresh.post.success'];
             this.async(function () {
                 if (this._actionDialog === null) {
@@ -744,7 +843,7 @@ const TgEntityMasterBehaviorImpl = {
 
         // focus invalid / preferred / first enabled editor (if present) when binding entity appears (refresh / cancel / save + continuous creation)
         self.addEventListener('binding-entity-appeared', function (event) {
-            const target = event.target || event.srcElement;
+            const target = event.composedPath()[0];
             if (target === this) {
                 this.focusView();
                 if (!this._hasEmbededView()) {
@@ -757,15 +856,36 @@ const TgEntityMasterBehaviorImpl = {
         
         // focus preferred property editor (if present) and select its contents (validate)
         self.addEventListener('binding-entity-validated', (event) => {
-            const target = event.target || event.srcElement;
+            const target = event.composedPath()[0];
             if (target === this) {
                 this.focusPreferredView();
             }
         });
-        
+
+        // Don't close this master on save action if it is a part of compound master.
+        const menuSectionParent = getParentAnd(self, element => element.matches('tg-master-menu-item-section'));
+        if (menuSectionParent) {
+            const saveButton = self.$._saveAction;
+            if (saveButton) {
+                saveButton.closeAfterExecution = false;
+            }
+        }
+
+        // Create open master action function
+        self.tgOpenMasterAction = self._createOpenMasterAction();
+        self.shadowRoot.appendChild(self.tgOpenMasterAction);
+        // Create entity editor's title action
+        self.titleAction = self._createOpenMasterAction();
+        self.titleAction.setAttribute("id", "titleAction");
+        self.titleAction.setAttribute('title-action', '');
+        self.shadowRoot.appendChild(self.titleAction);
     }, // end of ready callback
 
     attached: function () {
+        //centre UUID of open master action should bee updated as far as some masters receives their uuid later at attache phase.
+        this.tgOpenMasterAction.attrs.centreUuid = this.uuid;
+        this.titleAction.attrs.centreUuid = this.uuid;
+        this._resetState(); // existing state may cause problems for cached masters: for example previous entity was new and valid and next one invalid -- blocks closing of dialog with error
         this._cachedParentNode = this.parentNode;
         this.fire('tg-entity-master-attached', this, { node: this._cachedParentNode }); // as in 'detached', start bubbling on parent node
     },
@@ -915,16 +1035,19 @@ const TgEntityMasterBehaviorImpl = {
      */
     focusView: function () {
         this.async(() => {
-            if (this._hasEmbededView()) {
-                this._focusEmbededView()
-            } else {
-                // Desktop app specific: focus first input when opening dialog.
-                // This is also used when closing dialog: if child dialog was not closed, then its first input should be focused (this however can not be reproduced on mobile due to maximised nature of all dialogs).
-                // So, in mobile app the input will not be focused on dialog opening (and the keyboard will not appear suddenly until the user explicitly clicks on some editor).
-                if (!isMobileApp()) {
-                    this._focusFirstInput();
+            const insertionPoint = getParentAnd(this, parent => parent.matches('tg-entity-centre-insertion-point'));
+            if (!insertionPoint || (insertionPoint.offsetParent !== null && insertionPoint.alternativeView)) { 
+                if (this._hasEmbededView()) {
+                    this._focusEmbededView()
                 } else {
-                    this._focusPreferredInput();
+                    // Desktop app specific: focus first input when opening dialog.
+                    // This is also used when closing dialog: if child dialog was not closed, then its first input should be focused (this however can not be reproduced on mobile due to maximised nature of all dialogs).
+                    // So, in mobile app the input will not be focused on dialog opening (and the keyboard will not appear suddenly until the user explicitly clicks on some editor).
+                    if (!isMobileApp()) {
+                        this._focusFirstInput();
+                    } else {
+                        this._focusPreferredInput();
+                    }
                 }
             }
         }, 100);
@@ -950,15 +1073,21 @@ const TgEntityMasterBehaviorImpl = {
         self._actions = {};
 
         self._actions['REFRESH'] = {
+            entityType: self.entityType,
             shortDesc: 'REFRESH',
             longDesc: 'REFRESH ACTION...',
             enabledStates: ['EDIT'],
             action: function () {
                 return self.retrieve();
+            },
+            newAction: function(parentDialog, wasPersistedBeforeAction) {
+                self._newAction(parentDialog, wasPersistedBeforeAction);
             }
         };
         self._notifyActionPathsFor('REFRESH', true);
+
         self._actions['VALIDATE'] = {
+            entityType: self.entityType,
             shortDesc: 'VALIDATE',
             longDesc: 'VALIDATE ACTION...',
             enabledStates: ['EDIT'],
@@ -967,17 +1096,23 @@ const TgEntityMasterBehaviorImpl = {
             }
         };
         self._notifyActionPathsFor('VALIDATE', true);
+
         self._actions['SAVE'] = {
+            entityType: self.entityType,
             shortDesc: 'SAVE',
             longDesc: 'SAVE ACTION...',
             enabledStates: ['EDIT'],
-            action: function () {
-                return self.save();
+            action: function (continuation, continuationProperty) {
+                return self.save(continuation, continuationProperty);
+            },
+            newAction: function(parentDialog, wasPersistedBeforeAction) {
+                self._newAction(parentDialog, wasPersistedBeforeAction);
             }
         };
         self._notifyActionPathsFor('SAVE', true);
 
         self._actions['EDIT'] = {
+            entityType: self.entityType,
             shortDesc: 'EDIT',
             longDesc: 'EDIT ACTION...',
             enabledStates: ['VIEW'],
@@ -1001,6 +1136,7 @@ const TgEntityMasterBehaviorImpl = {
         }); */
 
         self._actions['VIEW'] = {
+            entityType: self.entityType,
             shortDesc: 'VIEW',
             longDesc: 'VIEW ACTION...',
             enabledStates: ['EDIT'],
@@ -1011,6 +1147,24 @@ const TgEntityMasterBehaviorImpl = {
             postAction: function (e) { }
         };
         self._notifyActionPathsFor('VIEW', false);
+    },
+
+    _createOpenMasterAction: function () {
+        const action = document.createElement('tg-ui-action');
+        action.uiRole = 'ICON'
+        action.showDialog = this._showDialog;
+        action.toaster = this.toaster;
+        action.createContextHolder = this._createContextHolder;
+        action.dynamicAction = true;
+        action.attrs = {
+            currentState: 'EDIT',
+            centreUuid: this.uuid
+        };
+        action.requireSelectionCriteria = 'false';
+        action.requireMasterEntity = 'true'
+        action.setAttribute("id", "tgOpenMasterAction");
+        action.setAttribute('hidden', '');
+        return action;
     },
 
     /**
@@ -1199,7 +1353,7 @@ const TgEntityMasterBehaviorImpl = {
                     // revalidate the current master if it is simple (i.e. doesn't have an embedded view)
                     // and entity path doesn't contain persistent and not persisted (or invalid) entity, in order to update master editors;
                     // do this, for example, if a postal 'detail.saved' event was published by child master;
-                    // these child masters include those opened with entity editor title (i.e. tgOpenMasterAction), or from property / entity / continuation actions
+                    // these child masters include those opened with entity editor title (i.e. titleAction), or from property / entity / continuation actions
                     if (!self._hasEmbededView() // skip all entity masters that has embedded masters inside
                         && !data.entityPath.some(entity => !entity.isValidWithoutException()) // skip all entities down under any unsuccessful entity in the chain
                         && !data.entityPath.some(entity => entity.type().isPersistent() && !entity.isPersisted()) // skip all entities down under any persistent entity not yet saved (NEW entity) in the chain
@@ -1209,7 +1363,13 @@ const TgEntityMasterBehaviorImpl = {
                 }
             }
         }));
-    }
+    },
+
+    confirm: function (message, buttons) {
+        if (this.$ && this.$.masterDom && this.$.masterDom.confirm) {
+            return this.$.masterDom.confirm(message, buttons);
+        }
+    },
 };
 
 export const TgEntityMasterBehavior = [

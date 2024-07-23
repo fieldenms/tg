@@ -1,49 +1,36 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
-import static org.junit.Assert.assertFalse;
-import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.assertErrorReported;
-import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.compileAndPrintDiagnostics;
-import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.propertyBuilder;
-import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.CollectionalPropertyVerifier.errMustBeFinal;
-import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyAccessorVerifier.errCollectionalIncorrectReturnType;
-import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyAccessorVerifier.errIncorrectReturnType;
-import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyAccessorVerifier.errMissingAccessor;
-import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertySetterVerifier.errIncorrectParameters;
-import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertySetterVerifier.errMissingObservable;
-import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertySetterVerifier.errMissingSetter;
-import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertySetterVerifier.errNotPublicNorProtected;
-import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier.errInvalidCollectionTypeArg;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Function;
-
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.Modifier;
-
+import com.squareup.javapoet.*;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
-
-import com.squareup.javapoet.ArrayTypeName;
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeName;
-import com.squareup.javapoet.TypeSpec;
-
+import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor;
+import ua.com.fielden.platform.processors.appdomain.annotation.SkipEntityRegistration;
 import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
-import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.verify.AbstractVerifierTest;
 import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier;
+
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.Modifier;
+import java.util.*;
+import java.util.function.Function;
+
+import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
+import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccessWithoutProcessingErrors;
+import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.compileWithTempStorage;
+import static ua.com.fielden.platform.processors.verify.VerifyingProcessor.errVerifierNotPassedBy;
+import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.propertyBuilder;
+import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.setterBuilder;
+import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.CollectionalPropertyVerifier.errMustBeFinal;
+import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyAccessorVerifier.*;
+import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertySetterVerifier.*;
+import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier.errEntityTypeMustBeRegistered;
+import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier.errInvalidCollectionTypeArg;
 
 /**
  * Tests related to the composable verifier {@link EssentialPropertyVerifier} and its components.
@@ -62,6 +49,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
 
     // 1. property accessor
     public static class PropertyAccessorVerifierTest extends AbstractVerifierTest {
+        static final Class<?> VERIFIER_TYPE = EssentialPropertyVerifier.PropertyAccessorVerifier.class;
 
         @Override
         protected IVerifier createVerifier(final ProcessingEnvironment procEnv) {
@@ -69,7 +57,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void error_is_reported_when_a_property_is_missing_a_declared_accessor() {
+        public void entity_property_must_have_a_coresponding_declared_accessor() {
             final TypeSpec parent = TypeSpec.classBuilder("Parent")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(String.class, "prop").build())
@@ -81,7 +69,9 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
                     .addField(propertyBuilder(String.class, "prop").build())
                     .build();
 
-            compileAndAssertError(List.of(parent, entity), errMissingAccessor("prop"));
+            compileAndAssertErrors(List.of(parent, entity),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "prop"),
+                    errMissingAccessor("prop"));
         }
 
         @Test
@@ -98,7 +88,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void error_is_reported_when_accessor_declares_return_type_different_from_property_type() {
+        public void accessor_return_type_must_match_its_property_type() {
             final TypeSpec entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(Integer.class, "prop1").build())
@@ -107,12 +97,15 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
                     .addMethod(MethodSpec.methodBuilder("isProp2").returns(Boolean.class).build())
                     .build();
 
-            compileAndAssertError(List.of(entity), errIncorrectReturnType("getProp1", "java.lang.Integer"));
-            compileAndAssertError(List.of(entity), errIncorrectReturnType("isProp2", "boolean"));
+            compileAndAssertErrors(List.of(entity),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "getProp1", "isProp2"),
+                    errIncorrectReturnType("getProp1", "java.lang.Integer"),
+                    errIncorrectReturnType("isProp2", "boolean"));
         }
 
         @Test
-        public void error_is_reported_when_collectional_accessor_declares_return_type_unassignable_from_property_type() {
+        public void collectional_accessor_return_type_must_be_assignable_from_property_type() {
+            // i.e., property type must be a subtype of the accessor's return type
             final TypeSpec entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(ParameterizedTypeName.get(HashSet.class, String.class), "prop1").build())
@@ -121,15 +114,17 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
                     .addMethod(MethodSpec.methodBuilder("getProp2").returns(ParameterizedTypeName.get(Set.class, AbstractEntity.class)).build())
                     .build();
 
-            // prop1 is HashSet<String>, but getProp1() returns List<String>
-            compileAndAssertError(List.of(entity), errCollectionalIncorrectReturnType("getProp1", "java.util.HashSet<java.lang.String>"));
-            // prop2 is HashSet<ExampleEntity>, but getProp2() returns Set<AbstractEntity>
-            compileAndAssertError(List.of(entity), errCollectionalIncorrectReturnType("getProp2",
+            compileAndAssertErrors(List.of(entity),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "getProp1", "getProp2"),
+                    // prop1 is HashSet<String>, but getProp1() returns List<String>
+                    errCollectionalIncorrectReturnType("getProp1", "java.util.HashSet<java.lang.String>"),
+                    // prop2 is HashSet<ExampleEntity>, but getProp2() returns Set<AbstractEntity>
+                    errCollectionalIncorrectReturnType("getProp2",
                     "java.util.HashSet<ua.com.fielden.platform.processors.test_entities.ExampleEntity>"));
         }
 
         @Test
-        public void error_is_reported_when_collectional_accessor_declares_raw_return_type() {
+        public void collectional_accessor_return_type_cannot_be_a_raw_type() {
             final TypeSpec entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(HashSet.class, "prop1").build())
@@ -138,14 +133,16 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
                     .addMethod(MethodSpec.methodBuilder("getProp2").returns(Set.class).build())
                     .build();
 
-            // prop1 is HashSet, but getProp1() returns raw List
-            compileAndAssertError(List.of(entity), errCollectionalIncorrectReturnType("getProp1", "java.util.HashSet"));
-            // prop2 is HashSet<String>, but getProp2() returns raw Set
-            compileAndAssertError(List.of(entity), errCollectionalIncorrectReturnType("getProp2", "java.util.HashSet<java.lang.String>"));
+            compileAndAssertErrors(List.of(entity),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "getProp1", "getProp2"),
+                    // prop1 is HashSet, but getProp1() returns raw List
+                    errCollectionalIncorrectReturnType("getProp1", "java.util.HashSet"),
+                    // prop2 is HashSet<String>, but getProp2() returns raw Set
+                    errCollectionalIncorrectReturnType("getProp2", "java.util.HashSet<java.lang.String>"));
         }
 
         @Test
-        public void verification_is_passed_when_collectional_accessor_declares_return_type_assignable_from_property_type_and_correctly_parameterised() {
+        public void collectional_accessors_with_return_type_assignable_from_property_type_and_correctly_parameterised_pass_verification() {
             final TypeSpec entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(ParameterizedTypeName.get(HashSet.class, String.class), "prop1").build())
@@ -160,7 +157,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void verification_is_passed_when_accessor_return_type_matches_property_type() {
+        public void accessors_with_return_type_matching_property_type_pass_verification() {
             final TypeSpec entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(Integer.class, "prop1").build())
@@ -175,6 +172,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
 
     // 2. property setter
     public static class PropertySetterVerifierTest extends AbstractVerifierTest {
+        static final Class<?> VERIFIER_TYPE = EssentialPropertyVerifier.PropertySetterVerifier.class;
 
         @Override
         protected IVerifier createVerifier(final ProcessingEnvironment procEnv) {
@@ -182,11 +180,11 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void error_is_reported_when_property_is_missing_declared_setter() {
+        public void entity_property_must_have_a_coresponding_declared_setter() {
             final TypeSpec parent = TypeSpec.classBuilder("Parent")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(String.class, "prop").build())
-                    .addMethod(MethodSpec.methodBuilder("setProp").build())
+                    .addMethod(setterBuilder("setProp", TypeName.get(String.class), ClassName.get("", "Parent")).build())
                     .build();
 
             final TypeSpec entity = TypeSpec.classBuilder("EntityWithoutDeclaredSetter")
@@ -194,43 +192,47 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
                     .addField(propertyBuilder(String.class, "prop").build())
                     .build();
 
-            compileAndAssertError(List.of(parent, entity), errMissingSetter("prop"));
+            compileAndAssertErrors(List.of(parent, entity),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "prop"),
+                    errMissingSetter("prop"));
         }
 
         @Test
-        public void error_is_reported_when_property_setter_is_missing_Observable() {
+        public void setter_must_be_annotated_with_Observable() {
             final TypeSpec entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(String.class, "prop").build())
                     .addMethod(MethodSpec.methodBuilder("setProp").build())
                     .build();
 
-            final Compilation compilation = buildCompilation(entity);
-            final boolean success = compileAndPrintDiagnostics(compilation);
-            assertFalse("Compilation should have failed.", success);
-
-            assertErrorReported(compilation, errMissingObservable("setProp"));
+            compileAndAssertErrors(List.of(entity),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "setProp"),
+                    errMissingObservable("setProp"));
         }
 
         @Test
-        public void error_is_reported_when_property_setter_is_missing_public_or_protected() {
+        public void setter_must_be_either_public_or_protected() {
             final TypeSpec entityNoSetterModifier = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(String.class, "prop").build())
                     .addMethod(MethodSpec.methodBuilder("setProp").addAnnotation(Observable.class).build())
                     .build();
-            compileAndAssertError(List.of(entityNoSetterModifier), errNotPublicNorProtected("setProp"));
+            compileAndAssertErrors(List.of(entityNoSetterModifier),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "setProp"),
+                    errNotPublicNorProtected("setProp"));
 
             final TypeSpec entityPrivateSetter = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(String.class, "prop").build())
                     .addMethod(MethodSpec.methodBuilder("setProp").addAnnotation(Observable.class).addModifiers(Modifier.PRIVATE).build())
                     .build();
-            compileAndAssertError(List.of(entityPrivateSetter), errNotPublicNorProtected("setProp"));
+            compileAndAssertErrors(List.of(entityPrivateSetter),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "setProp"),
+                    errNotPublicNorProtected("setProp"));
         }
 
         @Test
-        public void error_is_reported_when_property_setter_declares_more_than_1_parameter() {
+        public void setter_must_declare_no_more_than_1_parameter() {
             final TypeSpec entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(String.class, "prop").build())
@@ -239,22 +241,26 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
                             .build())
                     .build();
 
-            compileAndAssertError(List.of(entity), errIncorrectParameters("setProp", "java.lang.String"));
+            compileAndAssertErrors(List.of(entity),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "setProp"),
+                    errIncorrectParameters("setProp", "java.lang.String"));
         }
 
         @Test
-        public void error_is_reported_when_property_setter_declares_no_parameters() {
+        public void setter_cannot_omit_declaration_of_parameters() {
             final TypeSpec entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(String.class, "prop").build())
                     .addMethod(MethodSpec.methodBuilder("setProp").addAnnotation(Observable.class).addModifiers(Modifier.PUBLIC).build())
                     .build();
 
-            compileAndAssertError(List.of(entity), errIncorrectParameters("setProp", "java.lang.String"));
+            compileAndAssertErrors(List.of(entity),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "setProp"),
+                    errIncorrectParameters("setProp", "java.lang.String"));
         }
 
         @Test
-        public void error_is_reported_when_property_setter_declares_a_parameter_of_a_wrong_type() {
+        public void the_type_of_setter_parameter_must_match_the_property_type() {
             final TypeSpec entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(Integer.class, "prop").build())
@@ -263,11 +269,13 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
                             .build())
                     .build();
 
-            compileAndAssertError(List.of(entity), errIncorrectParameters("setProp", "java.lang.Integer"));
+            compileAndAssertErrors(List.of(entity),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "setProp"),
+                    errIncorrectParameters("setProp", "java.lang.Integer"));
         }
 
         @Test
-        public void error_is_reported_when_collectional_property_setter_declares_a_parameter_of_a_wrong_type() {
+        public void the_type_of_collectional_property_setter_must_match_the_property_type() {
             final TypeSpec entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(ParameterizedTypeName.get(List.class, String.class), "prop").build())
@@ -276,11 +284,13 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
                             .build())
                     .build();
 
-            compileAndAssertError(List.of(entity), errIncorrectParameters("setProp", "java.util.List<java.lang.String>"));
+            compileAndAssertErrors(List.of(entity),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "setProp"),
+                    errIncorrectParameters("setProp", "java.util.List<java.lang.String>"));
         }
 
         @Test
-        public void verification_is_passed_when_collectional_property_setter_declares_a_parameter_of_property_type() {
+        public void collectional_property_setters_that_declare_parameters_of_their_property_types_pass_verification() {
             final TypeSpec entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(ParameterizedTypeName.get(List.class, String.class), "prop").build())
@@ -316,6 +326,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
 
     // 3. collectional properties
     public static class CollectionalPropertyVerifierTest extends AbstractVerifierTest {
+        static final Class<?> VERIFIER_TYPE = EssentialPropertyVerifier.CollectionalPropertyVerifier.class;
 
         @Override
         protected IVerifier createVerifier(final ProcessingEnvironment procEnv) {
@@ -323,13 +334,15 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void error_is_reported_when_collectional_property_is_not_declared_final() {
+        public void collectional_property_must_be_declared_final() {
             final TypeSpec entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(List.class, "list").build())
                     .build();
 
-            compileAndAssertError(List.of(entity), errMustBeFinal("list"));
+            compileAndAssertErrors(List.of(entity),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "list"),
+                    errMustBeFinal("list"));
         }
 
         @Test
@@ -345,6 +358,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
 
     // 4. property type
     public static class PropertyTypeVerifierTest extends AbstractVerifierTest {
+        static final Class<?> VERIFIER_TYPE = EssentialPropertyVerifier.PropertyTypeVerifier.class;
 
         @Override
         protected IVerifier createVerifier(final ProcessingEnvironment procEnv) {
@@ -360,22 +374,80 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
             compileAndAssertSuccess(List.of(entity));
         }
 
-        // TODO Once verification of this constraint is supported, devise a way to provide a mock ApplicationDomain to the processor.
-        // Also remove the "NOT".
         @Test
-        public void error_is_NOT_reported_when_unregistered_entity_type_is_used() {
-            assertTypeAllowed(ClassName.get(ExampleEntity.class));
-            assertTypeAllowed(ClassName.get(AbstractEntity.class));
+        public void unregisterable_entity_type_is_disallowed() {
+            final TypeSpec unregisterableEntity = TypeSpec.classBuilder("UnregisterableEntity")
+                    .addAnnotation(SkipEntityRegistration.class)
+                    .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                    .build();
+
+            final TypeSpec entity = TypeSpec.classBuilder("Example")
+                    .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                    .addField(propertyBuilder(ClassName.get("", unregisterableEntity.name), "prop").build())
+                    .build();
+
+            compileAndAssertErrors(List.of(unregisterableEntity, entity),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "prop"),
+                    errEntityTypeMustBeRegistered("prop", "UnregisterableEntity"));
         }
 
         @Test
-        public void error_is_reported_when_unsupported_collection_type_argument_is_used() {
+        public void registered_entity_type_is_allowed() {
+            // 1. compile with ApplicationDomainProcessor to register entity Person
+            // 2. run the verifier which should be aware of the generated ApplicationDomain at that point
+
+            compileWithTempStorage((compilation, javaFileWriter) -> {
+                final String packageName = "test.entities";
+
+                // 1.
+                JavaFile javaFileEntityPerson = JavaFile.builder(packageName,
+                                TypeSpec.classBuilder("Person")
+                                        .addModifiers(Modifier.PUBLIC)
+                                        .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                                        .build())
+                        .build();
+                javaFileWriter.accept(javaFileEntityPerson);
+
+                assertSuccessWithoutProcessingErrors(
+                        compilation.setProcessor(new ApplicationDomainProcessor())
+                                .setJavaSources(List.of(javaFileEntityPerson.toJavaFileObject()))
+                                .addOptions(OPTION_PROC_ONLY)
+                                .compile());
+
+                // 2.
+                JavaFile javaFileEntityContract = JavaFile.builder(packageName,
+                                TypeSpec.classBuilder("Contract")
+                                        .addModifiers(Modifier.PUBLIC)
+                                        .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                                        .addField(propertyBuilder(ClassName.get(packageName, "Person"), "person").build())
+                                        .build())
+                        .build();
+
+                assertSuccessWithoutProcessingErrors(
+                        compilation.setProcessor(createProcessor())
+                                .setJavaSources(List.of(javaFileEntityContract.toJavaFileObject()))
+                                .addOptions(OPTION_PROC_ONLY)
+                                .compile());
+            });
+        }
+
+        @Test
+        public void platform_entity_types_are_allowed() {
+            PlatformDomainTypes.types.forEach(type -> {
+                assertTypeAllowed(ClassName.get(type));
+            });
+        }
+
+        @Test
+        public void unsupported_types_cannot_be_used_as_collection_type_arguments() {
             final TypeSpec entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(ParameterizedTypeName.get(List.class, Function.class), "list").build())
                     .build();
 
-            compileAndAssertError(List.of(entity), errInvalidCollectionTypeArg("list"));
+            compileAndAssertErrors(List.of(entity),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "list"),
+                    errInvalidCollectionTypeArg("list"));
         }
 
         @Test
@@ -395,12 +467,21 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
                     .addField(propertyBuilder(typeName, "collection").build())
                     .build();
 
-            compileAndAssertError(List.of(entity), errInvalidCollectionTypeArg("collection"));
+            compileAndAssertErrors(List.of(entity),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "collection"),
+                    errInvalidCollectionTypeArg("collection"));
         }
 
         @Test
         public void collection_type_parameterised_with_boxed_boolean_is_allowed() {
             assertTypeAllowed(ParameterizedTypeName.get(Set.class, Boolean.class));
+        }
+
+        @Test
+        public void collection_type_parameterised_with_platform_entity_type_is_allowed() {
+            PlatformDomainTypes.types.forEach(type -> {
+                assertTypeAllowed(ParameterizedTypeName.get(List.class, type));
+            });
         }
 
         // TODO this might change in the future with more thorough verification of collectional properties
@@ -426,6 +507,22 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         public void binary_array_type_is_allowed() {
             assertTypeAllowed(ArrayTypeName.of(byte.class));
         }
+
+        @Test
+        public void PropertyDescriptor_type_is_allowed() {
+            assertTypeAllowed(ParameterizedTypeName.get(PropertyDescriptor.class, ExampleEntity.class));
+        }
+
+        @Test
+        public void raw_PropertyDescriptor_type_is_allowed() {
+            assertTypeAllowed(ClassName.get(PropertyDescriptor.class));
+        }
+
+        @Test
+        public void collection_type_parameterised_with_PropertyDescriptor_is_allowed() {
+            assertTypeAllowed(ParameterizedTypeName.get(List.class, PropertyDescriptor.class));
+        }
+
     }
 
 }

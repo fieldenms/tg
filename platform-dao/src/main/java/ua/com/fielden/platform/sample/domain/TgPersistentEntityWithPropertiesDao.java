@@ -77,11 +77,11 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
                 throw failure("Saving failed with exception.");
             }
         }
-        
-        
+
+
         // IMPORTANT: the following IF statement needs to be turned off (e.g. commented or && false added to the condition) for the purpose of running web unit test.
         // let's demonstrate a simple approach to implementing user's warning acknowledgement
-        // this example, albeit artificially, also demonstrates not just one but two sequential requests for additional user input in a form of acknowledgement 
+        // this example, albeit artificially, also demonstrates not just one but two sequential requests for additional user input in a form of acknowledgement
         if (entity.hasWarnings() && false) {
             if (!moreData("acknowledgedForTheFirstTime").isPresent()) {
                 throw new NeedMoreData("Warnings need acknowledgement (first time)", AcknowledgeWarnings.class, "acknowledgedForTheFirstTime");
@@ -97,29 +97,29 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
                 }
             }
         }
-        
-        
+
+
         final boolean wasNew = false; // !entity.isPersisted();
         final TgPersistentEntityWithProperties saved = super.save(entity);
         changeSubject.publish(saved);
-        
+
         if (!wasPersisted) {
             final Date dateValue = saved.getDateProp();
             if (dateValue != null && new DateTime(2003, 2, 1, 6, 22).equals(new DateTime(dateValue))) {
                 throw new IllegalArgumentException(format("Creation failed: [1/2/3 6:22] date is not permitted."));
             }
         }
-        
+
         // if the entity was new and just successfully saved then let's return a new entity to mimic "continuous" entry
         // otherwise simply return the same entity
-        if (wasNew && saved.isValid(validateWithoutCritOnly).isSuccessful()) { 
+        if (wasNew && saved.isValid(validateWithoutCritOnly).isSuccessful()) {
             final TgPersistentEntityWithProperties newEntity = saved.getEntityFactory().newEntity(TgPersistentEntityWithProperties.class);
             // the following two lines can be uncommented to simulate the situation of an invalid new entity returned from save
             //newEntity.setRequiredValidatedProp(1);
             //newEntity.setRequiredValidatedProp(null);
             return newEntity;
         }
-        
+
         return saved;
     }
 
@@ -166,7 +166,7 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
         final TgPersistentEntityWithPropertiesAttachment entityAttachment = co$.new_()
                 .setMaster(entity)
                 .setAttachment(attachment);
-        
+
         return co$.findByEntityAndFetchOptional(co$.getFetchProvider().fetchModel(), entityAttachment)
                   .orElseGet(() -> co$.save(entityAttachment));
     }

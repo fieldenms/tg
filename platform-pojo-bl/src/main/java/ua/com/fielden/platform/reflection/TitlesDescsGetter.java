@@ -13,7 +13,10 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determ
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.firstAndRest;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penultAndLast;
+import static ua.com.fielden.platform.utils.EntityUtils.isCriteriaEntityType;
 import static ua.com.fielden.platform.utils.Pair.pair;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalPropertyName;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalType;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -36,7 +39,9 @@ import ua.com.fielden.platform.entity.annotation.titles.Subtitles;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 
 /**
  * This is a helper class to provide methods related to property/entity titles/descs determination.
@@ -227,6 +232,14 @@ public class TitlesDescsGetter {
     }
 
     /**
+     * Returns {@link Pair} with key set to entity title and value set to entity description. Traverses <code>entityType</code> hierarchy bottom-up in search of the specified
+     * entity title and description.
+     */
+    public static Pair<String, String> getEntityTitleAndDesc(final AbstractEntity<?> entity) {
+        return getEntityTitleAndDesc(entity.getType());
+    }
+
+    /**
      * Provides default values of title and description for entity. (e.g. "VehicleFinDetails.class" => "Vehicle Fin Details" and "Vehicle Fin Details entity")
      */
     public static Pair<String, String> getDefaultEntityTitleAndDesc(final Class<? extends AbstractEntity<?>> klass) {
@@ -249,6 +262,9 @@ public class TitlesDescsGetter {
     }
 
     public static String processReqErrorMsg(final String propName, final Class<? extends AbstractEntity<?>> entityType) {
+        if (isCriteriaEntityType(entityType)) {
+            return processReqErrorMsg(getOriginalPropertyName(entityType, propName), getOriginalType(entityType));
+        }
         String errorMsg = "";
         if (AbstractEntity.KEY.equals(propName)) {
             if (AnnotationReflector.isAnnotationPresentForClass(KeyTitle.class, entityType)) {

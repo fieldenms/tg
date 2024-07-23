@@ -12,11 +12,12 @@ import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.eql.stage1.operands.CompoundSingleOperand1;
 import ua.com.fielden.platform.eql.stage1.operands.Expression1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
+import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.utils.Pair;
 
 public class ExpressionBuilder extends AbstractTokensBuilder {
 
-    protected ExpressionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder) {
+    protected ExpressionBuilder(final AbstractTokensBuilder parent, final QueryModelToStage1Transformer queryBuilder) {
         super(parent, queryBuilder);
     }
 
@@ -32,12 +33,12 @@ public class ExpressionBuilder extends AbstractTokensBuilder {
         }
         final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
         final Pair<TokenCategory, Object> firstOperandPair = iterator.next();
-        final ISingleOperand1 firstOperand = getModelForSingleOperand(firstOperandPair.getKey(), firstOperandPair.getValue());
+        final ISingleOperand1<? extends ISingleOperand2<?>> firstOperand = getModelForSingleOperand(firstOperandPair.getKey(), firstOperandPair.getValue());
         final List<CompoundSingleOperand1> items = new ArrayList<>();
         for (; iterator.hasNext();) {
             final ArithmeticalOperator operator = (ArithmeticalOperator) iterator.next().getValue();
             final Pair<TokenCategory, Object> subsequentOperandPair = iterator.next();
-            final ISingleOperand1 subsequentOperand = getModelForSingleOperand(subsequentOperandPair.getKey(), subsequentOperandPair.getValue());
+            final ISingleOperand1<? extends ISingleOperand2<?>> subsequentOperand = getModelForSingleOperand(subsequentOperandPair.getKey(), subsequentOperandPair.getValue());
 
             items.add(new CompoundSingleOperand1(subsequentOperand, operator));
         }

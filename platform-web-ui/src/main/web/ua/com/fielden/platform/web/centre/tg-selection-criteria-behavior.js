@@ -196,6 +196,14 @@ const TgSelectionCriteriaBehaviorImpl = {
         },
 
         /**
+         * Indicates sharing validation error message for currently loaded configuration. 'null' in case where validation was successful.
+         */
+        shareError: {
+            type: String,
+            notify: true
+        },
+
+        /**
          * Indicates whether all data should be retrieved at once or only separate page of data.
          */
         retrieveAll: {
@@ -457,6 +465,9 @@ const TgSelectionCriteriaBehaviorImpl = {
             this.preferredView = customObject.preferredView;
         }
         this.userName = customObject.userName;
+        if (typeof customObject.shareError !== 'undefined') {
+            this.shareError = customObject.shareError;
+        }
     },
 
     /**
@@ -554,7 +565,9 @@ const TgSelectionCriteriaBehaviorImpl = {
      */
     currentPage: function () {
         this._openToast(null, "Refreshing current page", false, "", true);
-        this._validatePageCount();
+        if (this.pageCount === null) { // Refresh is always enabled, so need to perform first Run, if none performed earlier (or was unsuccessful)
+            return this._execute(RunActions.run);
+        }
         return this._execute(RunActions.refresh);
     },
 
@@ -621,9 +634,6 @@ const TgSelectionCriteriaBehaviorImpl = {
     },
     _canLast: function (pageNumber, pageCount) {
         return !(pageNumber + 1 >= pageCount);
-    },
-    _canCurrent: function (pageNumber, pageCount) {
-        return !(pageCount <= 0);
     },
 
     _calculateCentreDirtyOrEdited: function (centreDirty, _editedPropsExist) {

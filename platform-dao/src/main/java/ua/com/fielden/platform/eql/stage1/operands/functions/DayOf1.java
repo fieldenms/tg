@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.operands.functions;
 
-import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.functions.DayOf2;
@@ -11,7 +11,7 @@ public class DayOf1 extends SingleOperandFunction1<DayOf2> {
     }
 
     @Override
-    public DayOf2 transform(final TransformationContext1 context) {
+    public DayOf2 transform(final TransformationContextFromStage1To2 context) {
         return new DayOf2(operand.transform(context));
     }
     

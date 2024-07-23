@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.domaintree.centre.impl;
 
-import static java.util.Optional.of;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.validateRootTypes;
 import static ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.createFrom;
@@ -18,7 +17,6 @@ import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.IRootTyped;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -57,7 +55,6 @@ import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel.GroupingPeriods;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -92,10 +89,8 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
      */
     public CentreDomainTreeManagerAndEnhancer(
             final EntityFactory entityFactory,
-            final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final Set<Class<?>> rootTypes,
-            final T2<Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>> calculatedAndCustomProperties,
-            final Class<? extends MiWithConfigurationSupport<?>> miType) {
+            final T2<Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>> calculatedAndCustomProperties) {
         this(
             entityFactory,
             new CentreDomainTreeManager(
@@ -104,11 +99,9 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
             ),
             createFrom(
                 entityFactory,
-                domainTreeEnhancerCache,
                 validateRootTypes(rootTypes),
                 calculatedAndCustomProperties._1,
-                calculatedAndCustomProperties._2,
-                of(miType)
+                calculatedAndCustomProperties._2
             ),
             new HashMap<>(),
             new HashMap<>(),

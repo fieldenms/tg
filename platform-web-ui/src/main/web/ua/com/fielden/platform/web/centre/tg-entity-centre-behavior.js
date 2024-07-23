@@ -223,6 +223,12 @@ const TgEntityCentreBehaviorImpl = {
             type: Array,
             observer: '_retrievedEntitiesChanged'
         },
+
+        renderingHints: {
+            type: Array,
+            observer: '_renderingHintsChanged'
+        },
+
         /**
          * The selection criteria entity that can be binded to insertion point
          */
@@ -579,6 +585,13 @@ const TgEntityCentreBehaviorImpl = {
         initiateAutoRun: Function,
 
         /**
+         * Indicates sharing validation error message for currently loaded configuration. 'null' in case where validation was successful.
+         */
+        shareError: {
+            type: String
+        },
+
+        /**
          * Resets the state of centre autocompleters, specifically 'active only' state.
          * This is necessary in actions like DISCARD / NEW / etc. because we prefer client-side state over persisted one and always overwrite persisted state.
          * If we go from one configuration to another or use DISCARD / NEW / etc. actions, we must clear current autocompleter state.
@@ -703,13 +716,13 @@ const TgEntityCentreBehaviorImpl = {
     _setPageData: function (startIdx, endIdx) {
         if (typeof startIdx === 'undefined') {
             this.retrievedEntities = this.allFilteredEntities;
-            this.$.egi.renderingHints = this.allFilteredRenderingHints;
+            this.renderingHints = this.allFilteredRenderingHints;
             this.$.egi.primaryActionIndices = this.allFilteredPrimaryActionIndices;
             this.$.egi.secondaryActionIndices = this.allFilteredSecondaryActionIndices;
             this.$.egi.propertyActionIndices = this.allFilteredPropertyActionIndices;
         } else {
             this.retrievedEntities = this.allFilteredEntities.slice(startIdx, endIdx);
-            this.$.egi.renderingHints = this.allFilteredRenderingHints.slice(startIdx, endIdx);
+            this.renderingHints = this.allFilteredRenderingHints.slice(startIdx, endIdx);
             this.$.egi.primaryActionIndices = this.allFilteredPrimaryActionIndices.slice(startIdx, endIdx);
             this.$.egi.secondaryActionIndices = this.allFilteredSecondaryActionIndices.slice(startIdx, endIdx);
             this.$.egi.propertyActionIndices = this.allFilteredPropertyActionIndices.slice(startIdx, endIdx);
@@ -728,6 +741,10 @@ const TgEntityCentreBehaviorImpl = {
 
     _retrievedEntitiesChanged: function (retrievedEntities, oldValue) {
         this.$.egi.entities = retrievedEntities;
+    },
+
+    _renderingHintsChanged: function (renderingHints, oldValue) {
+        this.$.egi.renderingHints = renderingHints;
     },
 
     _retrievedTotalsChanged: function (retrievedTotals, oldValue) {
@@ -988,7 +1005,11 @@ const TgEntityCentreBehaviorImpl = {
         }).bind(self);
 
         self._showDialog = (function (action) {
-            const closeEventChannel = self.uuid;
+            //Calculate close event channel for dialog. It should be the same as action's centreUuid.
+            //This is done because action's centreUuid is set into centreUuid of the master opened by specified action and inserted into 
+            //opening dialog. Then the master's centreUuid is used as closeEventChannel for tg-action.
+            //|| this.uuid is used as fallback in case if action's centreUuid wasn't defined
+            const closeEventChannel = action.attrs.centreUuid || this.uuid;
             const closeEventTopics = ['save.post.success', 'refresh.post.success'];
             if (!self.$.egi.isEditing()) {
                 this.async(function () {
@@ -1423,7 +1444,7 @@ const TgEntityCentreBehaviorImpl = {
         return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : (isRunning || !this.$.selection_criteria._canLast(pageNumber, pageCount));
     },
     canNotCurrent: function (pageNumber, pageCount, isRunning) {
-        return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : (isRunning || !this.$.selection_criteria._canCurrent(pageNumber, pageCount));
+        return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : isRunning; // Refresh button enabled even if pageCount === null i.e. where erroneous autorun occurred
     },
 
     computeConfigButtonTooltip: function (staleCriteriaMessage) {

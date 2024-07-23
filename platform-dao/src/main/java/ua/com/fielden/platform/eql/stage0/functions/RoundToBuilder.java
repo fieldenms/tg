@@ -1,12 +1,12 @@
 package ua.com.fielden.platform.eql.stage0.functions;
 
 import ua.com.fielden.platform.eql.stage0.AbstractTokensBuilder;
-import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
+import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.operands.functions.RoundTo1;
 
 public class RoundToBuilder extends TwoArgumentsFunctionBuilder {
 
-    public RoundToBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder) {
+    public RoundToBuilder(final AbstractTokensBuilder parent, final QueryModelToStage1Transformer queryBuilder) {
         super(parent, queryBuilder);
     }
 

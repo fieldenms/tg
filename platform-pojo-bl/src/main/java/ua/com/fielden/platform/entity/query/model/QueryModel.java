@@ -1,11 +1,10 @@
 package ua.com.fielden.platform.entity.query.model;
 
 import static java.lang.String.format;
-import static org.apache.commons.lang.StringUtils.rightPad;
+import static org.apache.commons.lang3.StringUtils.rightPad;
 
 import java.util.List;
-
-import org.apache.commons.lang.StringUtils;
+import java.util.Objects;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
@@ -15,6 +14,7 @@ public abstract class QueryModel<T extends AbstractEntity<?>> extends AbstractMo
     private Class<T> resultType;
     private boolean filterable = false;
     private boolean yieldAll;
+    public boolean shouldMaterialiseCalcPropsAsColumnsInSqlQuery;
 
     protected QueryModel() {
     }
@@ -23,6 +23,7 @@ public abstract class QueryModel<T extends AbstractEntity<?>> extends AbstractMo
         super(tokens);
         this.resultType = resultType;
         this.yieldAll = yieldAll;
+        this.shouldMaterialiseCalcPropsAsColumnsInSqlQuery = false;
     }
 
     public Class<T> getResultType() {
@@ -53,6 +54,7 @@ public abstract class QueryModel<T extends AbstractEntity<?>> extends AbstractMo
         int result = super.hashCode();
         result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
         result = prime * result + (yieldAll ? 1231 : 1237);
+        result = prime * result + (shouldMaterialiseCalcPropsAsColumnsInSqlQuery ? 1231 : 1237);
         return result;
     }
 
@@ -61,23 +63,13 @@ public abstract class QueryModel<T extends AbstractEntity<?>> extends AbstractMo
         if (this == obj) {
             return true;
         }
+
         if (!super.equals(obj)) {
             return false;
         }
-        if (!(obj instanceof QueryModel)) {
-            return false;
-        }
-        final QueryModel other = (QueryModel) obj;
-        if (resultType == null) {
-            if (other.resultType != null) {
-                return false;
-            }
-        } else if (!resultType.equals(other.resultType)) {
-            return false;
-        }
-        if (yieldAll != other.yieldAll) {
-            return false;
-        }
-        return true;
+
+        final QueryModel<?> other = (QueryModel<?>) obj;
+
+        return Objects.equals(resultType, other.resultType) && (yieldAll == other.yieldAll) && (shouldMaterialiseCalcPropsAsColumnsInSqlQuery == other.shouldMaterialiseCalcPropsAsColumnsInSqlQuery);
     }
 }

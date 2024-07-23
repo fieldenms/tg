@@ -16,6 +16,7 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isValueChangeCountDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isVisibleDefault;
 import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.ID_ONLY_PROXY_PREFIX;
+import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.newSerialisationId;
 import static ua.com.fielden.platform.utils.EntityUtils.isDecimal;
 import static ua.com.fielden.platform.utils.EntityUtils.isInteger;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
@@ -63,6 +64,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
     private static final long serialVersionUID = 1L;
 
     public static final String ERR_RESTRICTED_TYPE_SERIALISATION_DUE_TO_PROP_TYPE = "Type [%s] containst property [%s] that is not permitted for serialisation.";
+    private static final String ERR_FULL_TYPE_NAME_NOT_DEFINED = "Full name of the type [%s] should be populated to be ready for serialisation.";
 
     private final Class<T> type;
     private static final Logger LOGGER = getLogger(EntityJsonSerialiser.class);
@@ -91,8 +93,8 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
 
     @Override
     public void serialize(final T entity, final JsonGenerator generator, final SerializerProvider provider) throws IOException {
-        if (entityType.get_identifier() == null) {
-            throw new SerialisationException(format("The identifier of the type [%s] should be populated to be ready for serialisation.", entityType));
+        if (entityType.getKey() == null) {
+            throw new SerialisationException(ERR_FULL_TYPE_NAME_NOT_DEFINED.formatted(entityType));
         }
         ////////////////////////////////////////////////////
         ///////////////// handle references ////////////////
@@ -118,7 +120,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
 
             generator.writeEndObject();
         } else {
-            final String newReference = EntitySerialiser.newSerialisationId(entity, references, entityType.get_identifier());
+            final String newReference = newSerialisationId(entity, references, entityType.getKey());
             references.putReference(entity, newReference);
 
             generator.writeStartObject();

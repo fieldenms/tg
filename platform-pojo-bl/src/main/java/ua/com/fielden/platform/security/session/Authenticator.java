@@ -3,7 +3,7 @@ package ua.com.fielden.platform.security.session;
 import java.util.Date;
 import java.util.Optional;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.utils.EntityUtils;

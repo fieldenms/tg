@@ -1,11 +1,11 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
-import java.util.Optional;
-
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.verify.IElementVerifier;
 import ua.com.fielden.platform.processors.verify.ViolatingElement;
+
+import java.util.Optional;
 
 /**
  * A base type for verifiers that verify entities, represented by {@link EntityElement}.

@@ -1,17 +1,11 @@
 package ua.com.fielden.platform.processors.metamodel.elements.utils;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
 
 /**
  * A singleton class representing a cache for instances of {@link TypeElement} produced by (potentially multiple) instances of {@link Elements}.
@@ -60,8 +54,8 @@ public final class TypeElementCache {
     }
 
     /**
-     * Similar to {@link Elements#getTypeElement(CharSequence)} with the results being cached. No-match results (when {@code null} is returned)
-     * are cached as well. Another distinction of this method is that in case of a multi-module application, where multiple type elements
+     * Similar to {@link Elements#getTypeElement(CharSequence)} with the results being cached.
+     * Another distinction of this method is that in case of a multi-module application, where multiple type elements
      * have the same canonical name, it will return the first one, unlike the specification, which dictates that {@code null} be returned.
      *
      * @param elements the {@link Elements} instance to use for lookup
@@ -98,6 +92,7 @@ public final class TypeElementCache {
 
     /**
      * A simple cache backed up by a {@link HashMap} with optional recording of statistics.
+     * {@code null} values are not cached.
      *
      * @author TG Team
      */
@@ -122,21 +117,10 @@ public final class TypeElementCache {
         }
 
         /**
-         * Similar to {@link HashMap#computeIfAbsent(Object, java.util.function.Function)}, but treats {@code null} values equally. 
-         * <p>
-         * The value is computed and inserted into the map only if the mapping is absent, otherwise the existing value is returned. 
-         * That is, if {@code key} is mapped to {@code null}, then {@code null} is returned and no computation takes place.
-         * <p>
-         * If {@code valueSupplier} produces {@code null}, then it is inserted into the map and returned.
+         * Equivalent to {@link HashMap#computeIfAbsent(Object, java.util.function.Function)}.
          */
         public V get(final K key, Supplier<V> valueSupplier) {
-            if (cache.containsKey(key)) {
-                return cacheGetter.apply(key);
-            } else {
-                final V value = valueSupplier.get();
-                cache.put(key, value);
-                return value;
-            }
+            return cache.computeIfAbsent(key, k -> valueSupplier.get());
         }
 
         /**

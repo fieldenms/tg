@@ -22,8 +22,7 @@ import ua.com.fielden.platform.entity.query.generation.ioc.HelperIocModule;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
-import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
-import ua.com.fielden.platform.eql.stage3.Table;
+import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.persistence.types.ColourType;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
@@ -53,7 +52,7 @@ import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.IDates;
 
-public class EqlTestCase {
+public abstract class EqlTestCase {
     protected static final Class<TeWorkOrder> WORK_ORDER = TeWorkOrder.class;
     protected static final Class<TeVehicle> VEHICLE = TeVehicle.class;
     protected static final Class<TeVehicleFuelUsage> VEHICLE_FUEL_USAGE = TeVehicleFuelUsage.class;
@@ -90,11 +89,9 @@ public class EqlTestCase {
     protected static final IDates dates = injector.getInstance(IDates.class);
     protected static final IFilter filter = new SimpleUserFilter();
     
-    protected static final DomainMetadata DOMAIN_METADATA;
+    private static final DomainMetadata DOMAIN_METADATA;
     protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER;
 
-    public static final Map<String, Table> tables = new HashMap<>();
-    
     static {
         hibTypeDefaults.put(boolean.class, YesNoType.class);
         hibTypeDefaults.put(Boolean.class, YesNoType.class);
@@ -109,26 +106,26 @@ public class EqlTestCase {
                 PlatformTestDomainTypes.entityTypes, 
                 H2);
         DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
-        try {
-            tables.putAll(DOMAIN_METADATA.eqlDomainMetadata.getTables());
-        } catch (final Exception e) {
-            e.printStackTrace();
-        }
     }
     
-    protected static final EntQueryGenerator qb() {
+    protected static final QueryModelToStage1Transformer qb() {
         return qb(new SimpleUserFilter(), null, injector.getInstance(IDates.class), emptyMap());
     }
 
-    protected static final EntQueryGenerator qb(final Map<String, Object> paramValues) {
+    protected static final QueryModelToStage1Transformer qb(final Map<String, Object> paramValues) {
         return qb(new SimpleUserFilter(), null, injector.getInstance(IDates.class), paramValues);
     }
     
-    protected static final EntQueryGenerator qb(final IFilter filter, final String username, final IDates dates, final Map<String, Object> paramValues) {
-        return new EntQueryGenerator(filter, username, new QueryNowValue(dates), paramValues);
+    protected static final QueryModelToStage1Transformer qb(final IFilter filter, final String username, final IDates dates, final Map<String, Object> paramValues) {
+        return new QueryModelToStage1Transformer(filter, username, new QueryNowValue(dates), paramValues);
     }
     
     protected static final EqlDomainMetadata metadata() {
         return DOMAIN_METADATA.eqlDomainMetadata;
     }
+    
+    protected static final QuerySourceInfoProvider querySourceInfoProvider() {
+        return DOMAIN_METADATA.eqlDomainMetadata.querySourceInfoProvider;
+    }
+    
 }

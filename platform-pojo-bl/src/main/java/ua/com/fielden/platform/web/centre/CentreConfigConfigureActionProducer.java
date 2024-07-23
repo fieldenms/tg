@@ -46,7 +46,7 @@ public class CentreConfigConfigureActionProducer extends DefaultEntityProducerWi
                 // apply criteria entity
                 final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = applyCriteria(selectionCrit());
                 entity.setRunAutomatically(selectionCrit().centreRunAutomatically(saveAsName));
-                entity.setCustomObject(getCustomObject(selectionCrit(), appliedCriteriaEntity, empty())); // no transitioning to another config occurs (neither here, in producer, nor in dao) -- do not update configUuid / saveAsName on client-side
+                entity.setCustomObject(getCustomObject(selectionCrit(), appliedCriteriaEntity, empty(), empty())); // no transitioning to another config occurs (neither here, in producer, nor in dao) -- do not update configUuid / saveAsName / shareError on client-side
             }
         }
         return entity;

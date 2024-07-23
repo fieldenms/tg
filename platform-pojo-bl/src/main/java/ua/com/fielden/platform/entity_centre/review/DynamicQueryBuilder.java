@@ -4,6 +4,7 @@ import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
+import static java.util.Optional.empty;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Stream.concat;
 import static org.apache.logging.log4j.LogManager.getLogger;
@@ -14,6 +15,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.entity_centre.mnemonics.DateMnemonicUtils.dateOfRangeThatIncludes;
 import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.paramValue;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
+import static ua.com.fielden.platform.reflection.Finder.getFields;
 import static ua.com.fielden.platform.reflection.Finder.getPropertyDescriptors;
 import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
@@ -39,7 +41,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
@@ -79,7 +81,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 
 /**
- * An utility class that is responsible for building query implementation of {@link DynamicEntityQueryCriteria}.
+ * A utility class that is responsible for building query implementation of {@link DynamicEntityQueryCriteria}.
  *
  * @author TG Team
  *
@@ -90,7 +92,7 @@ public class DynamicQueryBuilder {
     private DynamicQueryBuilder() {}
 
     /**
-     * This is a class which represents high-level abstraction for criterion in dynamic criteria. <br>
+     * This is a class that represents high-level abstraction for a crit-only property in a dynamic criteria entity. <br>
      * <br>
      * Consists of one or possibly two (for "from"/"to" or "is"/"is not") values / exclusiveness-flags, <br>
      * and strictly single datePrefix/Mnemonic/AndBefore triplet, "orNull" and "not" flags, and other stuff, which are necessary for query composition.
@@ -100,7 +102,7 @@ public class DynamicQueryBuilder {
      */
     public static class QueryProperty {
 
-        private static final String ERR_MISSING_CRITONLY_SUBMODEL = "@CritOnly property [%s] in [%s] has no submodel with name [%s_] defined.";
+        private static final String ERR_CRITONLY_SUBMODEL_INACCESSIBLE = "@CritOnly property [%s] in [%s] has inaccessible submodel with name [%s_].";
         private static final String ERR_INCOMPATIBLE_CRITONLY_SUBMODEL_TYPE = "Submodel [%s_] for @CritOnly property [%s] in [%s] should have type ICompoundCondition0.";
         private static final String QP_PREFIX = "QP_";
 
@@ -146,7 +148,7 @@ public class DynamicQueryBuilder {
         public static String queryPropertyParamName(final String propertyName) {
             return QP_PREFIX + propertyName;
         }
-        
+
         /**
          * Creates parameter name for {@link QueryProperty} instance (should be used to expand mnemonics value into conditions from EQL critCondition operator).
          *
@@ -203,10 +205,11 @@ public class DynamicQueryBuilder {
 
             final CritOnly critAnnotation = analyser.getPropertyFieldAnnotation(CritOnly.class);
             this.critOnly = critAnnotation != null;
-            this.critOnlyWithModel = critOnly && isCritOnlyWithSubmodel(critAnnotation, analyser.propertyTypes[analyser.propertyTypes.length - 2], analyser.propertyNames[analyser.propertyNames.length - 1]);
+            final Optional<Field> critOnlySubmodelFieldOpt = critOnly ? findCritOnlySubmodelField(critAnnotation, analyser.propertyTypes[analyser.propertyTypes.length - 2], analyser.propertyNames[analyser.propertyNames.length - 1]) : empty();
+            this.critOnlyWithModel = critOnlySubmodelFieldOpt.isPresent();
             if (this.critOnlyWithModel) {
                 this.propertyUnderCondition = critAnnotation.propUnderCondition();
-                this.critOnlyModel = getCritOnlySubmodel(analyser.propertyTypes[analyser.propertyTypes.length - 2], analyser.propertyNames[analyser.propertyNames.length - 1]);
+                this.critOnlyModel = getCritOnlySubmodel(critOnlySubmodelFieldOpt.get(), analyser.propertyTypes[analyser.propertyTypes.length - 2], analyser.propertyNames[analyser.propertyNames.length - 1]);
             } else {
                 this.propertyUnderCondition = "";
                 this.critOnlyModel = null;
@@ -346,27 +349,25 @@ public class DynamicQueryBuilder {
         }
 
         /**
-         * Determines if the crit-only property is defined with a sub-model, which needs to be taken into account when building the final query.
+         * Finds a submodel for a crit-only property, if present.
+         * It is important to traverse the type hierarchy. This is important for the Entity Centre generated types, because they extend the original entity type, where crit-only properties are defined.
          *
          * @param critAnnotation
          * @param entityType
          * @param propertyName
          * @return
          */
-        private static boolean isCritOnlyWithSubmodel(final CritOnly critAnnotation, final Class<?> entityType, final String propertyName) {
-            try {
-                return !StringUtils.isEmpty(critAnnotation.propUnderCondition()) /* a property name is specified */ &&
-                       !AbstractEntity.class.equals(critAnnotation.entityUnderCondition()) /* a domain entity is specified */ &&
-                        isPropertyPresent(critAnnotation.entityUnderCondition(), critAnnotation.propUnderCondition()) /* a specified property belongs to a domain entity */ &&
-                        entityType.getDeclaredField(propertyName + "_") != null /* there is a sub-model*/;
-            } catch (NoSuchFieldException | SecurityException e) {
-                return false;
-            }
+        private static Optional<Field> findCritOnlySubmodelField(final CritOnly critAnnotation, final Class<?> entityType, final String propertyName) {
+            final var canGetFieldInfo = !StringUtils.isEmpty(critAnnotation.propUnderCondition()) && /* a property name is specified */
+                                        !AbstractEntity.class.equals(critAnnotation.entityUnderCondition()) && /* a domain entity is specified */
+                                        isPropertyPresent(critAnnotation.entityUnderCondition(), critAnnotation.propUnderCondition()); /* a specified property belongs to a domain entity */
+            return canGetFieldInfo
+                   ? getFields(entityType, false).stream().filter(field -> (propertyName + "_").equals(field.getName())).findFirst() /* there may be a sub-model in type hierarchy */
+                   : empty();
         }
 
-        private static ICompoundCondition0<?> getCritOnlySubmodel(final Class<?> type, final String propertyName) {
+        private static ICompoundCondition0<?> getCritOnlySubmodel(final Field exprField, final Class<?> type, final String propertyName) {
             try {
-                final Field exprField = type.getDeclaredField(propertyName + "_");
                 exprField.setAccessible(true);
                 final Object value = exprField.get(null);
                 if (value instanceof ICompoundCondition0) {
@@ -374,8 +375,8 @@ public class DynamicQueryBuilder {
                 } else {
                     throw new EntityCentreExecutionException(format(ERR_INCOMPATIBLE_CRITONLY_SUBMODEL_TYPE, propertyName, propertyName, type.getSimpleName()));
                 }
-            } catch (final NoSuchFieldException | IllegalAccessException ex) {
-                throw new EntityCentreExecutionException(format(ERR_MISSING_CRITONLY_SUBMODEL, propertyName, type.getSimpleName(), propertyName));
+            } catch (final IllegalAccessException ex) {
+                throw new EntityCentreExecutionException(format(ERR_CRITONLY_SUBMODEL_INACCESSIBLE, propertyName, type.getSimpleName(), propertyName));
             }
         }
 
@@ -1176,7 +1177,8 @@ public class DynamicQueryBuilder {
      * @return
      */
     private static <E extends AbstractEntity<?>> IJoin<E> createJoinCondition(final Class<E> managedType) {
-        return select(select(managedType).model()).as(ALIAS);
+        // Wrapping into additional query with all calculated properties materialised into columns is needed to handle SQL Server limitation of aggregation on sub-queries.
+        return select(select(managedType).model().setShouldMaterialiseCalcPropsAsColumnsInSqlQuery(true)).as(ALIAS);
     }
 
     private static final String ALIAS = "alias_for_main_criteria_type";

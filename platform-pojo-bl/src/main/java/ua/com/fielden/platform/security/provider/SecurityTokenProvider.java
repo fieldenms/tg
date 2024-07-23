@@ -35,11 +35,13 @@ import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFreque
 import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanSave_Token;
-import ua.com.fielden.platform.security.tokens.persistent.UserDefinableHelp_CanSave_Token;
 import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanRead_Token;
+import ua.com.fielden.platform.security.tokens.persistent.UserDefinableHelp_CanSave_Token;
 import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanRead_Token;
+import ua.com.fielden.platform.security.tokens.user.ReUser_CanReadModel_Token;
+import ua.com.fielden.platform.security.tokens.user.ReUser_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.user.UserAndRoleAssociation_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.user.UserAndRoleAssociation_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.user.UserRoleTokensUpdater_CanExecute_Token;
@@ -57,7 +59,7 @@ import ua.com.fielden.platform.utils.CollectionUtil;
 
 /**
  * Searches for all available security tokens in the application based on the provided path and package name.
- * The result is presented as as a tree-like structure containing all tokens with correctly determined association between them.
+ * The result is presented as a tree-like structure containing all tokens with correctly determined association between them.
  * <p>
  * <b>A fundamental assumption:</b> simple class names uniquely identify security tokens and entities!
  *
@@ -109,6 +111,8 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
                 User_CanSave_Token.class,
                 User_CanRead_Token.class,
                 User_CanReadModel_Token.class,
+                ReUser_CanRead_Token.class,
+                ReUser_CanReadModel_Token.class,
                 User_CanDelete_Token.class,
                 UserMaster_CanOpen_Token.class,
                 UserRole_CanSave_Token.class,
@@ -184,12 +188,12 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
             final List<Class<? extends ISecurityToken>> tokenHierarchy = genHierarchyPath(token);
             tokenHierarchy.stream().reduce((SecurityTokenNode) null, (tokenNode, tokenClass) -> {
                 // Argument tokenNode can only be null if tokenClass is the top most class, implementing ISecurityToken.
-                // Otherwise tokenNode was created for a super class of tokenClass.
+                // Otherwise, tokenNode was created for a super class of tokenClass.
                 SecurityTokenNode nextNode = tokenNode == null ? topTokenNodes.get(tokenClass) : tokenNode.getSubTokenNode(tokenClass);
                 // If there is no next token node for tokenClass then create a new one, and
                 // add it to the hierarchy as a sub-node of tokenNode or, if tokenNode is null, nextNode becomes top most node.
                 if (nextNode == null) {
-                    // a token for the next node is a sub class of the token represented by tokenNode
+                    // a token for the next node is a subtype of the token represented by tokenNode
                     nextNode = new SecurityTokenNode(tokenClass, tokenNode);
                     // Is next token the top most?
                     if (tokenNode == null) {

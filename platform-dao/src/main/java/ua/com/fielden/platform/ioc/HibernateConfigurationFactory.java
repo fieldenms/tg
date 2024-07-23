@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.ioc;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
@@ -14,11 +14,11 @@ import org.hibernate.cfg.Configuration;
 
 import com.google.inject.Guice;
 
-import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
+import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
 
 /**
  * Hibernate configuration factory. All Hibernate specific properties should be passed as {@link Properties} values. The following list of properties is supported:
@@ -91,10 +91,10 @@ public class HibernateConfigurationFactory {
                 applicationEntityTypes, //
                 determineDbVersion(props),
                 determineEql2(props));
-        
-        idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata);
 
-        final String generatedMappings = domainMetadata.eql2 ? new HibernateMappingsGenerator().generateMappings(domainMetadata) : ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator.generateMappings(domainMetadata.eqlDomainMetadata);
+        idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata.eqlDomainMetadata);
+
+        final String generatedMappings = HibernateMappingsGenerator.generateMappings(domainMetadata.eqlDomainMetadata);
 
         try {
             cfg.addInputStream(new ByteArrayInputStream(generatedMappings.getBytes("UTF8")));
@@ -108,7 +108,7 @@ public class HibernateConfigurationFactory {
     public static DbVersion determineDbVersion(final Properties props) {
         return determineDbVersion(props.getProperty(DIALECT));
     }
-    
+
     private static boolean determineEql2(final Properties props) {
         final String prop = props.getProperty("eql2");
         return (prop != null && prop.toLowerCase().equals("true"));
@@ -132,7 +132,7 @@ public class HibernateConfigurationFactory {
     }
 
     public Configuration build() {
-        setSafely(cfg, "hibernate.current_session_context_class", "thread");        
+        setSafely(cfg, "hibernate.current_session_context_class", "thread");
 
         setSafely(cfg, SHOW_SQL, "false");
         setSafely(cfg, FORMAT_SQL, "true");

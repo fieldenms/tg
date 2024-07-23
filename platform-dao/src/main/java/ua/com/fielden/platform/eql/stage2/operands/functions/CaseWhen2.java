@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage2.operands.functions;
 
+import static ua.com.fielden.platform.eql.meta.PropType.STRING_PROP_TYPE;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.util.ArrayList;
@@ -8,9 +9,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.ITypeCast;
-import ua.com.fielden.platform.eql.stage2.TransformationContext2;
-import ua.com.fielden.platform.eql.stage2.TransformationResult2;
+import ua.com.fielden.platform.eql.meta.PropType;
+import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
+import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.conditions.ICondition2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
@@ -32,8 +35,8 @@ public class CaseWhen2 extends AbstractFunction2<CaseWhen3> {
         this.typeCast = typeCast;
     }
 
-    private static Set<Class<?>> extractTypes(final List<T2<ICondition2<? extends ICondition3>, ISingleOperand2<? extends ISingleOperand3>>> whenThenPairs, final ISingleOperand2<? extends ISingleOperand3> elseOperand) {
-        final Set<Class<?>> types = new HashSet<>();
+    private static Set<PropType> extractTypes(final List<T2<ICondition2<? extends ICondition3>, ISingleOperand2<? extends ISingleOperand3>>> whenThenPairs, final ISingleOperand2<? extends ISingleOperand3> elseOperand) {
+        final Set<PropType> types = new HashSet<>();
         if (elseOperand != null && elseOperand.type() != null) {
             types.add(elseOperand.type());    
         }
@@ -45,26 +48,27 @@ public class CaseWhen2 extends AbstractFunction2<CaseWhen3> {
         }
         
         if (types.isEmpty()) {
-           types.add(String.class); // Needed to handle EQL2-legacy workarounds correctly (e.g. caseWhen(...).then().val(null).otherwise().val(null).endAsStr() ..). In EQL3 there is no need to use caseWhen -- just val(null), which will be translated to the SQL NULL literal. 
+           types.add(STRING_PROP_TYPE); // Needed to handle EQL2-legacy workarounds correctly (e.g. caseWhen(...).then().val(null).otherwise().val(null).endAsStr() ..). In EQL3 there is no need to use caseWhen -- just val(null), which will be translated to the SQL NULL literal.
+           // TODO remove once transition to EQL3 is over.
         }
         
         return types;
     }
 
     @Override
-    public TransformationResult2<CaseWhen3> transform(final TransformationContext2 context) {
+    public TransformationResultFromStage2To3<CaseWhen3> transform(final TransformationContextFromStage2To3 context) {
         final List<T2<ICondition3, ISingleOperand3>> transformedWhenThenPairs = new ArrayList<>();
-        TransformationContext2 currentContext = context;
+        TransformationContextFromStage2To3 currentContext = context;
         for (final T2<ICondition2<? extends ICondition3>, ISingleOperand2<? extends ISingleOperand3>> pair : whenThenPairs) {
-            final TransformationResult2<? extends ICondition3> conditionTr = pair._1.transform(currentContext);
+            final TransformationResultFromStage2To3<? extends ICondition3> conditionTr = pair._1.transform(currentContext);
             currentContext = conditionTr.updatedContext;
-            final TransformationResult2<? extends ISingleOperand3> operandTr = pair._2.transform(currentContext);
+            final TransformationResultFromStage2To3<? extends ISingleOperand3> operandTr = pair._2.transform(currentContext);
             currentContext = operandTr.updatedContext;
             transformedWhenThenPairs.add(t2(conditionTr.item, operandTr.item));
         }
-        final TransformationResult2<? extends ISingleOperand3> elseOperandTr = elseOperand == null ? null : elseOperand.transform(currentContext);
+        final TransformationResultFromStage2To3<? extends ISingleOperand3> elseOperandTr = elseOperand == null ? null : elseOperand.transform(currentContext);
         
-        return new TransformationResult2<>(new CaseWhen3(transformedWhenThenPairs, elseOperandTr == null ? null : elseOperandTr.item, typeCast, type, hibType), elseOperandTr == null ? currentContext : elseOperandTr.updatedContext);
+        return new TransformationResultFromStage2To3<>(new CaseWhen3(transformedWhenThenPairs, elseOperandTr == null ? null : elseOperandTr.item, typeCast, type), elseOperandTr == null ? currentContext : elseOperandTr.updatedContext);
     }
 
     @Override
@@ -76,6 +80,20 @@ public class CaseWhen2 extends AbstractFunction2<CaseWhen3> {
         }
         if (elseOperand != null) {
             result.addAll(elseOperand.collectProps());    
+        }
+        
+        return result;
+    }
+    
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>();
+        for (final T2<ICondition2<? extends ICondition3>, ISingleOperand2<? extends ISingleOperand3>> pair : whenThenPairs) {
+            result.addAll(pair._1.collectEntityTypes());
+            result.addAll(pair._2.collectEntityTypes());
+        }
+        if (elseOperand != null) {
+            result.addAll(elseOperand.collectEntityTypes());    
         }
         
         return result;

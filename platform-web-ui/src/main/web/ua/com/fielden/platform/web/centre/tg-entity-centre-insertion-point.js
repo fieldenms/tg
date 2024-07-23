@@ -17,6 +17,7 @@ import '/resources/egi/tg-responsive-toolbar.js';
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
+import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
 
 import '/resources/polymer/@polymer/paper-styles/color.js';
 import '/resources/polymer/@polymer/paper-styles/shadow.js';
@@ -190,6 +191,12 @@ Polymer({
             type: Boolean,
             value: false
         },
+
+        opened: {
+            type: Boolean,
+            computed: "_isOpened(detachedView)"
+        },
+
         /**
          * The icon for insertion point
          */
@@ -237,6 +244,24 @@ Polymer({
         allRetrievedEntities: {
             type: Array,
             observer: '_updateElementWithAllRetrievedEntities',
+            notify: true
+        },
+
+        /**
+         * Rendering hints of the data page retrieved by centre on run or refresh 
+         */
+        renderingHints: {
+            type: Array,
+            observer: '_updateElementWithRenderingHints',
+            notify: true
+        },
+
+        /**
+         * Rendering hints of all data set retrieved by entity centre. (It is the same as rendering hints in case if centre wasn't configured with retrieveAll option, otherwise it contains rendering  hints of all data set from all pages).
+         */
+        allRenderingHints: {
+            type: Array,
+            observer: '_updateElementWithAllRenderingHints',
             notify: true
         },
         /**
@@ -332,16 +357,26 @@ Polymer({
         }
     },
 
-    _showDialog: function () {
+    showDialog: function () {
         this.detachedView = true;
+        InsertionPointManager.addInsertionPoint(this);
         this.$.insertionPointContent.focus();
     },
 
-    _closeDialog: function () {
+    closeDialog: function () {
         this.detachedView = false;
+        InsertionPointManager.removeInsertionPoint(this);
         if (this.contextRetriever && this.contextRetriever().$.centreResultContainer) {
             this.contextRetriever().$.centreResultContainer.focus();
         }
+    },
+
+    skipHistoryAction: function () {
+        return !(this.contextRetriever && this.contextRetriever()._visible && this.detachedView);
+    },
+
+    _isOpened: function (detachedView) {
+        return detachedView;
     },
 
     _getElement: function (customAction) {
@@ -374,9 +409,21 @@ Polymer({
         }
     },
 
+    _updateElementWithAllRenderingHints: function (newValue, oldValue) {
+        if (this._element) {
+            this._element.allRenderingHints = newValue;
+        }
+    },
+
     _updateElementWithRetrievedEntities: function (newValue, oldValue) {
         if (this._element) {
             this._element.retrievedEntities = newValue;
+        }
+    },
+
+    _updateElementWithRenderingHints: function (newValue, oldValue) {
+        if (this._element) {
+            this._element.renderingHints = newValue;
         }
     },
 
@@ -439,6 +486,14 @@ Polymer({
                         self.allRetrievedEntities = this.allRetrievedEntities;
                     });
                     self._element.allRetrievedEntities = self.allRetrievedEntities;
+                    self._element.addEventListener('rendering-hints-changed', function (e) {
+                        self.renderingHints = this.renderingHints;
+                    });
+                    self._element.renderingHints = self.renderingHints;
+                    self._element.addEventListener('all-rendering-hints-changed', function (ev) {
+                        self.allRenderingHints = this.allRenderingHints;
+                    });
+                    self._element.allRenderingHints = self.allRenderingHints;
                     self._element.addEventListener('retrieved-totals-changed', function (ev) {
                         self.retrievedTotals = this.retrievedTotals;
                     });
@@ -546,9 +601,9 @@ Polymer({
 
     _expandCollapseTap: function (event) {
         if (this.detachedView) {
-            this._closeDialog();
+            this.closeDialog();
         } else {
-            this._showDialog();
+            this.showDialog();
         }
         tearDownEvent(event);
     },

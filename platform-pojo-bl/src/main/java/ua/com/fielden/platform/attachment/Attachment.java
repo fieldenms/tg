@@ -27,6 +27,7 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Required;
+import ua.com.fielden.platform.entity.annotation.RestrictCreationByUsers;
 import ua.com.fielden.platform.entity.annotation.SkipDefaultStringKeyMemberValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
@@ -64,6 +65,7 @@ import ua.com.fielden.platform.utils.Pair;
 @DisplayDescription
 @MapEntityTo
 @CompanionObject(IAttachment.class)
+@RestrictCreationByUsers
 public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     public static final String HYPERLINK = "[hyperlink]";
     public static final String pn_TITLE = "title";

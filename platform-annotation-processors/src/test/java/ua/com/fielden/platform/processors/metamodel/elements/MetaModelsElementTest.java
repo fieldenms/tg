@@ -1,22 +1,19 @@
 package ua.com.fielden.platform.processors.metamodel.elements;
 
-import static java.util.stream.Collectors.toSet;
-import static org.junit.Assert.assertEquals;
-
-import java.util.Set;
-
-import javax.lang.model.element.TypeElement;
-
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import com.google.testing.compile.CompilationRule;
-
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
 import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
+import ua.com.fielden.platform.processors.test_utils.ProcessingRule;
 import ua.com.fielden.platform.security.user.User;
+
+import javax.lang.model.element.TypeElement;
+import java.util.Set;
+
+import static java.util.stream.Collectors.toSet;
+import static org.junit.Assert.assertEquals;
 
 /**
  * A test case for {@link MetaModelsElement}.
@@ -27,13 +24,13 @@ import ua.com.fielden.platform.security.user.User;
 public class MetaModelsElementTest {
 
     @ClassRule
-    public static CompilationRule rule = new CompilationRule();
+    public static ProcessingRule rule = new ProcessingRule();
     private static MetaModelFinder metaModelFinder;
     private static MetaModelsElement metaModelsElement;
 
     @BeforeClass
     public static void setupOnce() {
-        metaModelFinder = new MetaModelFinder(rule.getElements(), rule.getTypes());
+        metaModelFinder = new MetaModelFinder(rule.getProcessingEnvironment());
         final TypeElement typeElement = rule.getElements().getTypeElement(MetaModels.class.getCanonicalName());
         metaModelsElement = new MetaModelsElement(typeElement, metaModelFinder.streamMetaModels(typeElement).iterator());
     }

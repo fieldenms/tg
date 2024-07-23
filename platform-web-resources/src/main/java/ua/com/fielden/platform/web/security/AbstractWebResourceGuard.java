@@ -6,7 +6,7 @@ import static ua.com.fielden.platform.web.resources.webui.LoginResource.BINDING_
 
 import java.util.Optional;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;

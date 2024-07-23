@@ -10,7 +10,7 @@ import '/resources/components/postal-lib.js';
 
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
-import { tearDownEvent, getFirstEntityType } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, getFirstEntityType, deepestActiveElement } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
 import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
@@ -353,6 +353,14 @@ Polymer({
             value: false,
         },
 
+        /**
+         * Property that indicates whether action represents Share action on Entity Centre.
+         */
+        shareAction : {
+            type: Boolean,
+            value: false
+        },
+
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
         //////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -482,6 +490,11 @@ Polymer({
 
         self._run = (function (event) {
             console.log(this.shortDesc + ": execute");
+            const button = this.$ && this.$[this.isIconButton ? 'iActionButton' : 'bActionButton'];
+            const isNotFocused = button && button !== deepestActiveElement();
+            if (isNotFocused) {
+                button.focus(); // force 'tg-ui-action' UI element focusing to ensure focus lost event happens in other editor
+            }
 
             const postMasterInfoRetrieve = function () {
                 if (this.preAction) {
@@ -527,6 +540,8 @@ Polymer({
                     this.restoreActionState();
                     console.log("The action was rejected with error: " + e);
                 }
+            } else if (isNotFocused && !self.shareAction) { // avoid async action execution for share actions (even custom ones) - see #2116 (navigator.clipboard.writeText needs to be synchronous in Safari-based browsers)
+                self.async(() => postMasterInfoRetrieve(), 100); // delay action execution in case if forcefull focusing (and, possibly, focus lost on other editor) occurred
             } else {
                 postMasterInfoRetrieve();
             }

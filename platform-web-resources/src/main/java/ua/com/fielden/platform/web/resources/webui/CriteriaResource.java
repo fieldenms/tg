@@ -1,84 +1,5 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static java.lang.String.format;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
-import static java.util.UUID.randomUUID;
-import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
-import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
-import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
-import static ua.com.fielden.platform.types.either.Either.left;
-import static ua.com.fielden.platform.types.either.Either.right;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
-import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
-import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
-import static ua.com.fielden.platform.web.action.CentreConfigShareActionProducer.CONFIG_DOES_NOT_EXIST;
-import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.applyNewOrderVisibilityAndSorting;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefault;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLink;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isInherited;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.NAME_OF;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.commitCentreWithoutConflicts;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.defaultRunAutomatically;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.loadableConfigurations;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.makePreferred;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.obtainTitleFrom;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.removeCentres;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.retrievePreferredConfigName;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentreConfigUuid;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentreDesc;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.FETCH_CONFIG;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.FETCH_CONFIG_AND_INSTRUMENT;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOpt;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOptByUuid;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.saveNewEntityCentreManager;
-import static ua.com.fielden.platform.web.centre.CentreUtils.isFreshCentreChanged;
-import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
-import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.extractSaveAsName;
-import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.wasLoadedPreviouslyAndConfigUuid;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.CENTRE_DIRTY;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.META_VALUES;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.STALE_CRITERIA_MESSAGE;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.complementCriteriaEntityBeforeRunning;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntityWithoutConflicts;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValues;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValuesCustomObject;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithResult;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithSaveAsInfo;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaValidationPrototype;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.isAutoRunning;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.isRunning;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.isSorting;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.updateInheritedFromShared;
-import static ua.com.fielden.platform.web.resources.webui.EntityValidationResource.VALIDATION_COUNTER;
-import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.createPrimaryActionIndicesForCentre;
-import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.createPropertyActionIndicesForCentre;
-import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.createSecondaryActionIndicesForCentre;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
-import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
-import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
-import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreModifiedPropertiesHolderFrom;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.restlet.Context;
@@ -88,15 +9,11 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.Put;
-
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.data.generator.IGenerator;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
-import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -104,6 +21,8 @@ import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.security.IAuthorisationModel;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
@@ -130,6 +49,47 @@ import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static java.lang.String.format;
+import static java.util.Optional.*;
+import static java.util.UUID.randomUUID;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
+import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.security.tokens.Template.READ;
+import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
+import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
+import static ua.com.fielden.platform.types.either.Either.left;
+import static ua.com.fielden.platform.types.either.Either.right;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
+import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.*;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.removeCentres;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.*;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.*;
+import static ua.com.fielden.platform.web.centre.CentreUtils.isFreshCentreChanged;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
+import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.extractSaveAsName;
+import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.wasLoadedPreviouslyAndConfigUuid;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.*;
+import static ua.com.fielden.platform.web.resources.webui.EntityValidationResource.VALIDATION_COUNTER;
+import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.*;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.*;
+
 /**
  * The web resource for criteria serves as a back-end mechanism of criteria retrieval. It provides a base implementation for handling the following methods:
  * <ul>
@@ -140,7 +100,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  *
  */
 public class CriteriaResource extends AbstractWebResource {
-    private final static Logger logger = LogManager.getLogger(CriteriaResource.class);
+    private final static Logger LOGGER = LogManager.getLogger(CriteriaResource.class);
     private static final String CONFIG_COULD_NOT_BE_SHARED_WITH_BASE_USER = "No configuration can be shared with base users (%s).";
     private static final String LINK_CONFIG_COULD_NOT_BE_SHARED = "Link configurations cannot be shared.";
     private static final String CONFLICTING_TITLE_SUFFIX = " (shared%s)";
@@ -149,6 +109,20 @@ public class CriteriaResource extends AbstractWebResource {
     private static final String ERR_STALE_CRITERIA = "Selection criteria have been changed, but not applied. "
                                                      + "Previously applied values are in effect. "
                                                      + "Please tap <b>RUN</b> to apply the updated selection criteria.";
+
+    /**
+     * Map for user+miType based locks for centre running. It is used to emulate a queue for execution of run requests for the same user and centre (regardless of the {@code saveAsName} value).
+     */
+    private static final ConcurrentHashMap<T2<User, Class<? extends MiWithConfigurationSupport<?>>>, Lock> locks = new ConcurrentHashMap<>();
+
+    /**
+     * Timeout in seconds to wait for an active lock.
+     * It is expected that in practice there should less than 10 self-concurrent requests running for ~1 second each.
+     * If this timeout is in insufficient then instead of throwing an exception, a running request gets executed anyway (concurrently), as it was originally before the locking mechanism was introduced.
+     * Hypothetically specking such approach should be more appropriate from the user experience point of view.
+     */
+    private static final long RUNNING_LOCK_TIMEOUT = 10;
+
     private final RestServerUtil restUtil;
     private final ICompanionObjectFinder companionFinder;
     private final ICriteriaGenerator critGenerator;
@@ -156,8 +130,9 @@ public class CriteriaResource extends AbstractWebResource {
     private final IWebUiConfig webUiConfig;
     private final IUserProvider userProvider;
     private final EntityFactory entityFactory;
-    private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final ICentreConfigSharingModel sharingModel;
+    private final IAuthorisationModel authorisationModel;
+    private final ISecurityTokenProvider securityTokenProvider;
     private User user;
     private EntityCentreConfigCo eccCompanion;
     private MainMenuItemCo mmiCompanion;
@@ -167,7 +142,6 @@ public class CriteriaResource extends AbstractWebResource {
     public CriteriaResource(
             final RestServerUtil restUtil,
             final EntityCentre<AbstractEntity<?>> centre,
-            final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final ICompanionObjectFinder companionFinder,
             final IUserProvider userProvider,
@@ -176,6 +150,8 @@ public class CriteriaResource extends AbstractWebResource {
             final ICriteriaGenerator critGenerator,
             final EntityFactory entityFactory,
             final ICentreConfigSharingModel sharingModel,
+            final IAuthorisationModel authorisationModel,
+            final ISecurityTokenProvider securityTokenProvider,
             final Context context,
             final Request request,
             final Response response) {
@@ -187,11 +163,12 @@ public class CriteriaResource extends AbstractWebResource {
         this.centre = centre;
         this.critGenerator = critGenerator;
 
-        this.domainTreeEnhancerCache = domainTreeEnhancerCache;
         this.webUiConfig = webUiConfig;
         this.userProvider = userProvider;
         this.entityFactory = entityFactory;
         this.sharingModel = sharingModel;
+        this.authorisationModel = authorisationModel;
+        this.securityTokenProvider = securityTokenProvider;
     }
 
     /**
@@ -219,7 +196,7 @@ public class CriteriaResource extends AbstractWebResource {
                 actualSaveAsName = saveAsNameAndConfigUuid._1;
                 resolvedConfigUuid = saveAsNameAndConfigUuid._2;
                 // empty link config is taken from SAVED surrogate centre (which is always empty);
-                final ICentreDomainTreeManagerAndEnhancer emptyCentre = updateCentre(user, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                final ICentreDomainTreeManagerAndEnhancer emptyCentre = updateCentre(user, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                 // clear current 'link' surrogate FRESH centre -- this is to make it empty before applying new selection criteria parameters (client-side action after this request's response will be delivered);
                 commitCentreWithoutConflicts(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), emptyCentre, null /* newDesc */, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
             } else if (configUuid.isPresent()) {
@@ -265,9 +242,9 @@ public class CriteriaResource extends AbstractWebResource {
                     resolvedConfigUuid = empty();
                 }
             }
-            final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+            final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
             final String customDesc = updateCentreDesc(user, miType, actualSaveAsName, device(), eccCompanion);
-            return createCriteriaRetrievalEnvelope(updatedFreshCentre, miType, actualSaveAsName, user, restUtil, companionFinder, critGenerator, device(), customDesc, resolvedConfigUuid, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+            return createCriteriaRetrievalEnvelope(updatedFreshCentre, miType, actualSaveAsName, user, restUtil, companionFinder, critGenerator, device(), customDesc, resolvedConfigUuid, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
         }, restUtil);
     }
 
@@ -308,7 +285,7 @@ public class CriteriaResource extends AbstractWebResource {
             // CentreUpdater.updateCentre and .updateDifferences method should take care of that process;
             // at least FRESH config should be prepared -- making it preferred requires existence
             actualSaveAsName = of(preliminarySaveAsName);
-            updateCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+            updateCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
             return t2(actualSaveAsName, false);
         } else {
             // if current user does not have access to shared configuration then sharing process should be prevented
@@ -372,8 +349,8 @@ public class CriteriaResource extends AbstractWebResource {
                     } else { // otherwise base user changes will be loaded immediately after centre loading
                         removeCentres(user, miType, device(), saveAsName, eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
                     }
-                    updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
-                    updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
+                    updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                    updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
 
                     makePreferred(user, miType, saveAsName, device(), companionFinder, webUiConfig); // inherited from base always gets preferred on loading; must leave it preferred after deletion
                 } else {
@@ -399,7 +376,7 @@ public class CriteriaResource extends AbstractWebResource {
         // in that case it still should act as applying those params against empty configuration on 'link' configuration infrastructure
         final Optional<String> actualSaveAsName = of(LINK_CONFIG_TITLE); // 'link' configuration should saveAsName
         // ensure that FRESH link centre is present (creates automatically without configUuid if not)
-        updateCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+        updateCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
         // create configUuids there if not yet present
         final Optional<EntityCentreConfig> freshConfigOpt = findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(actualSaveAsName).apply(device()), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid"));
         if (!freshConfigOpt.isPresent()) {
@@ -407,7 +384,7 @@ public class CriteriaResource extends AbstractWebResource {
         } else if (freshConfigOpt.get().getConfigUuid() == null) {
             // if FRESH config does not have uuid yet then it was created just recently;
             // so create SAVED config first;
-            updateCentre(user, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+            updateCentre(user, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
             // and update both with newly generated config uuid
             final String newConfigUuid = randomUUID().toString();
             eccCompanion.saveWithRetry(freshConfigOpt.get().setConfigUuid(newConfigUuid));
@@ -424,8 +401,8 @@ public class CriteriaResource extends AbstractWebResource {
      */
     private boolean isCentreChanged(final Optional<String> actualSaveAsName) {
         return isFreshCentreChanged(
-            updateCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder),
-            updateCentre(user, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)
+            updateCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder),
+            updateCentre(user, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)
         );
     }
 
@@ -444,12 +421,12 @@ public class CriteriaResource extends AbstractWebResource {
             user = userProvider.getUser();
             final Map<String, Object> modifiedPropertiesHolder = restoreModifiedPropertiesHolderFrom(envelope, restUtil);
             final DeviceProfile device = device();
-            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = createCriteriaEntityWithoutConflicts(modifiedPropertiesHolder, companionFinder, critGenerator, miType, saveAsName, user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = createCriteriaEntityWithoutConflicts(modifiedPropertiesHolder, companionFinder, critGenerator, miType, saveAsName, user, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
             final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = appliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
             final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(
                 createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
                 appliedCriteriaEntity.centreDirtyCalculator().apply(saveAsName).apply(() -> updatedFreshCentre),
-                createStaleCriteriaMessage((String) modifiedPropertiesHolder.get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, critGenerator, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion)
+                createStaleCriteriaMessage((String) modifiedPropertiesHolder.get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, critGenerator, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion)
             );
             customObject.put(VALIDATION_COUNTER, modifiedPropertiesHolder.get(VALIDATION_COUNTER));
             return restUtil.rawListJsonRepresentation(appliedCriteriaEntity, customObject);
@@ -467,13 +444,12 @@ public class CriteriaResource extends AbstractWebResource {
             final DeviceProfile device,
             final String saveAsDesc,
             final Optional<String> configUuid,
-            final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final EntityCentreConfigCo eccCompanion,
             final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
-        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, user, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
         return restUtil.rawListJsonRepresentation(
             appliedCriteriaEntity,
             createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
@@ -485,7 +461,8 @@ public class CriteriaResource extends AbstractWebResource {
                 of(ofNullable(saveAsDesc)),
                 empty(),
                 of(updatedFreshCentre.getPreferredView()),
-                user
+                user,
+                of(appliedCriteriaEntity.shareError())
             )
         );
     }
@@ -501,13 +478,12 @@ public class CriteriaResource extends AbstractWebResource {
             final String staleCriteriaMessage,
             final DeviceProfile device,
             final Optional<Optional<String>> saveAsDesc,
-            final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final EntityCentreConfigCo eccCompanion,
             final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
-        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, user, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
         return restUtil.rawListJsonRepresentation(
                 appliedCriteriaEntity,
                 createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
@@ -519,7 +495,8 @@ public class CriteriaResource extends AbstractWebResource {
                         saveAsDesc,
                         of(ofNullable(staleCriteriaMessage)),
                         of(updatedFreshCentre.getPreferredView()),
-                        user
+                        user,
+                        empty() // no need to update shareError on discarding
                 )//
         );
     }
@@ -533,7 +510,6 @@ public class CriteriaResource extends AbstractWebResource {
             final ICompanionObjectFinder companionFinder,
             final ICriteriaGenerator critGenerator,
             final DeviceProfile device,
-            final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final EntityCentreConfigCo eccCompanion,
             final MainMenuItemCo mmiCompanion,
@@ -543,7 +519,7 @@ public class CriteriaResource extends AbstractWebResource {
             // From end-user perspective it is only relevant to 'know' whether selection criteria change was not applied against currently visible result-set.
             // Thus need to only compare 'firstTick's of centre managers.
             // Please be careful when adding some new contracts to 'firstTick' not to violate this premise.
-            final boolean isCriteriaStale = !equalsEx(updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder).getFirstTick(), freshCentre.getFirstTick());
+            final boolean isCriteriaStale = !equalsEx(updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder).getFirstTick(), freshCentre.getFirstTick());
             if (isCriteriaStale) {
                 return ERR_STALE_CRITERIA;
             }
@@ -559,7 +535,7 @@ public class CriteriaResource extends AbstractWebResource {
     @Override
     public Representation put(final Representation envelope) {
         return handleUndesiredExceptions(getResponse(), () -> {
-            logger.debug("CRITERIA_RESOURCE: run started.");
+            LOGGER.debug("CRITERIA_RESOURCE: run started.");
             final Optional<String> saveAsName = extractSaveAsName(getRequest());
             user = userProvider.getUser();
             eccCompanion = companionFinder.find(EntityCentreConfig.class);
@@ -567,170 +543,192 @@ public class CriteriaResource extends AbstractWebResource {
             userCompanion = companionFinder.find(User.class);
             miType = centre.getMenuItemType();
 
-            final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
-            final Map<String, Object> customObject = new LinkedHashMap<>(centreContextHolder.getCustomObject());
+            // obtain lock for current user and miType of the centre (disregard saveAsName as it is unlikely that self-concurrent running will occur for different configurations of the same centre)
+            final Lock lock = locks.computeIfAbsent(t2(user, miType), t2 -> new ReentrantLock()); // create Lock if not yet present; atomic action
+            final boolean lockAcquired = tryLocking(lock);
+            if (!lockAcquired) {
+                LOGGER.info("The lock could not be acquired for [%s] seconds. Let's continue concurrent running of the [%s] centre and user [%s].".formatted(RUNNING_LOCK_TIMEOUT, miType.getSimpleName(), user));
+            }
 
-            final boolean isRunning = isRunning(customObject);
-            final boolean isSorting = isSorting(customObject);
+            try {
+                authoriseReading(getEntityType(miType).getSimpleName(), READ, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime); // reading of entities should be authorised when running / refreshing
 
-            final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre;
-            final EnhancedCentreEntityQueryCriteria<?, ?> freshCentreAppliedCriteriaEntity;
+                final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
+                final Map<String, Object> customObject = new LinkedHashMap<>(centreContextHolder.getCustomObject());
 
-            if (isRunning) {
-                if (isAutoRunning(customObject) && isDefault(saveAsName) && defaultRunAutomatically(miType, webUiConfig)) { // do not clear criteria in case where user explicitly changed runAutomatically from false (Centre DSL value) to true in Configure dialog
-                    // clear current 'default' surrogate centres -- this is to make them empty before auto-running; saved configurations will not be touched
-                    final ICentreDomainTreeManagerAndEnhancer previousFreshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
-                    final Class<?> root = centre.getEntityType();
+                final boolean isRunning = isRunning(customObject);
+                final boolean isSorting = isSorting(customObject);
 
-                    // store current column layout into local variables to be applied after centre clearing
-                    final List<Pair<String, Ordering>> previousSortingProps = previousFreshCentre.getSecondTick().orderedProperties(root);
-                    final List<String> previousUsedProps = previousFreshCentre.getSecondTick().usedProperties(root);
-                    final T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> previousWidthsAndGrowFactors = previousFreshCentre.getSecondTick().getWidthsAndGrowFactors();
-                    final int previousPageCapacity = previousFreshCentre.getSecondTick().getPageCapacity();
-                    final int previousVisibleRowsCount = previousFreshCentre.getSecondTick().getVisibleRowsCount();
-                    final int previousNumberOfHeaderLines = previousFreshCentre.getSecondTick().getNumberOfHeaderLines();
+                final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre;
+                final EnhancedCentreEntityQueryCriteria<?, ?> freshCentreAppliedCriteriaEntity;
 
-                    // clear all surrogate centres
-                    removeCentres(user, miType, device(), saveAsName, eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
-                    final ICentreDomainTreeManagerAndEnhancer emptyFreshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
-                    findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(saveAsName).apply(device()), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("runAutomatically")).ifPresent(config -> {
-                        eccCompanion.saveWithRetry(config.setRunAutomatically(true)); // auto-running of default configuration is in progress -- restore runAutomatically as true
-                    });
+                if (isRunning) {
+                    if (isAutoRunning(customObject) && isDefault(saveAsName) && defaultRunAutomatically(miType, webUiConfig)) { // do not clear criteria in case where user explicitly changed runAutomatically from false (Centre DSL value) to true in Configure dialog
+                        // clear current 'default' surrogate centres -- this is to make them empty before auto-running; saved configurations will not be touched
+                        final ICentreDomainTreeManagerAndEnhancer previousFreshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                        final ICentreDomainTreeManagerAndEnhancer defaultCentre = getDefaultCentre(miType, webUiConfig);
 
-                    // restore previous non-distracting centre changes; at first apply widths and grow factors
-                    emptyFreshCentre.getSecondTick().setWidthsAndGrowFactors(previousWidthsAndGrowFactors);
-                    // then apply order, visibility and sorting
-                    applyNewOrderVisibilityAndSorting(emptyFreshCentre.getSecondTick(), root, previousUsedProps, previousSortingProps);
-                    // also pageCapacity, visibleRowsCount and numberOfHeaderLines
-                    emptyFreshCentre.getSecondTick().setPageCapacity(previousPageCapacity);
-                    emptyFreshCentre.getSecondTick().setVisibleRowsCount(previousVisibleRowsCount);
-                    emptyFreshCentre.getSecondTick().setNumberOfHeaderLines(previousNumberOfHeaderLines);
-                    // save the centre into the database (configUuid is not applicable here -- this is default configuration)
-                    updatedFreshCentre = commitCentreWithoutConflicts(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), emptyFreshCentre, null /* newDesc */, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                        // create empty differences object ...
+                        final Map<String, Object> diff = createEmptyDifferences();
+                        // ... and fill it in with non-intrusive changes from second tick (compare previousFreshCentre with empty default centre)
+                        extendDiffsWithNonIntrusiveDifferences(diff, previousFreshCentre.getSecondTick(), defaultCentre.getSecondTick(), centre.getEntityType());
 
-                    freshCentreAppliedCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, user, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+                        // clear all surrogate centres except 'fresh', which requires special treatment
+                        removeCentres(user, miType, device(), saveAsName, eccCompanion, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
+                        // it is necessary to make change to the 'fresh' centre as atomic as possible (i.e. not captureDiffs + remove + createNew + applyDiffs + commit, but instead captureDiffsObject + commit)
+                        // this is necessary because self-concurrent running for the same user is possible
+                        // commit newly constructed diff object into 'fresh' configuration and apply it against 'defaultCentre'
+                        updatedFreshCentre = commitCentreDiffWithoutConflicts(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), defaultCentre, diff, null /* newDesc */, eccCompanion, mmiCompanion, companionFinder, ecc -> ecc.setRunAutomatically(true)); // auto-running of default configuration is in progress -- restore runAutomatically as true
+
+                        freshCentreAppliedCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, user, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+                    } else {
+                        freshCentreAppliedCriteriaEntity = createCriteriaEntityWithoutConflicts(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, saveAsName, user, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+                        updatedFreshCentre = freshCentreAppliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
+                    }
+
+                    // There is a need to validate criteria entity with the check for 'required' properties. If it is not successful -- immediately return result without query running, fresh centre persistence, data generation etc.
+                    final Result validationResult = freshCentreAppliedCriteriaEntity.isValid();
+                    if (!validationResult.isSuccessful()) {
+                        LOGGER.debug("CRITERIA_RESOURCE: run finished (validation failed).");
+                        final String staleCriteriaMessage = createStaleCriteriaMessage((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, critGenerator, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                        return restUtil.rawListJsonRepresentation(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, user, updatedFreshCentre, new LinkedHashMap<>(), staleCriteriaMessage, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder));
+                    }
                 } else {
-                    freshCentreAppliedCriteriaEntity = createCriteriaEntityWithoutConflicts(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, saveAsName, user, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
-                    updatedFreshCentre = freshCentreAppliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
+                    updatedFreshCentre = null;
+                    freshCentreAppliedCriteriaEntity = null;
                 }
 
-                // There is a need to validate criteria entity with the check for 'required' properties. If it is not successful -- immediately return result without query running, fresh centre persistence, data generation etc.
-                final Result validationResult = freshCentreAppliedCriteriaEntity.isValid();
-                if (!validationResult.isSuccessful()) {
-                    logger.debug("CRITERIA_RESOURCE: run finished (validation failed).");
-                    final String staleCriteriaMessage = createStaleCriteriaMessage((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, critGenerator, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-                    return restUtil.rawListJsonRepresentation(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, user, updatedFreshCentre, new LinkedHashMap<>(), staleCriteriaMessage, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder));
+                // if the run() invocation warrants data generation (e.g. it has nothing to do with sorting)
+                // then for an entity centre configuration check if a generator was provided
+                final boolean createdByConstraintShouldOccur = centre.getGeneratorTypes().isPresent();
+                final boolean generationShouldOccur = isRunning && !isSorting && createdByConstraintShouldOccur;
+                if (generationShouldOccur) {
+                    // obtain the type for entities to be generated
+                    final Class<? extends AbstractEntity<?>> generatorEntityType = (Class<? extends AbstractEntity<?>>) centre.getGeneratorTypes().get().getKey();
+
+                    // create and execute a generator instance
+                    final IGenerator generator = centre.createGeneratorInstance(centre.getGeneratorTypes().get().getValue());
+                    final Map<String, Optional<?>> params = freshCentreAppliedCriteriaEntity.nonProxiedProperties().collect(toLinkedHashMap(
+                            (final MetaProperty<?> mp) -> mp.getName(),
+                            (final MetaProperty<?> mp) -> ofNullable(mp.getValue())));
+                    params.putAll(freshCentreAppliedCriteriaEntity.getParameters().entrySet().stream().collect(Collectors.toMap(entry -> entry.getKey(), entry -> Optional.ofNullable(entry.getValue()))));
+                    if (shouldForceRegeneration(customObject)) {
+                        params.put(FORCE_REGENERATION_KEY, of(true));
+                    }
+                    final Result generationResult = generator.gen(generatorEntityType, params);
+                    // if the data generation was unsuccessful based on the returned Result value then stop any further logic and return the obtained result
+                    // otherwise, proceed with the request handling further to actually query the data
+                    // in most cases, the generated and queried data would be represented by the same entity and, thus, the final query needs to be enhanced with user related filtering by property 'createdBy'
+                    if (!generationResult.isSuccessful()) {
+                        LOGGER.debug("CRITERIA_RESOURCE: run finished (generation failed).");
+                        final String staleCriteriaMessage = createStaleCriteriaMessage((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, critGenerator, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                        final Result result = generationResult.copyWith(new ArrayList<>(Arrays.asList(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, user, updatedFreshCentre, new LinkedHashMap<>(), staleCriteriaMessage, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder))));
+                        return restUtil.resultJSONRepresentation(result);
+                    }
                 }
-            } else {
-                updatedFreshCentre = null;
-                freshCentreAppliedCriteriaEntity = null;
-            }
 
-            // if the run() invocation warrants data generation (e.g. it has nothing to do with sorting)
-            // then for an entity centre configuration check if a generator was provided
-            final boolean createdByConstraintShouldOccur = centre.getGeneratorTypes().isPresent();
-            final boolean generationShouldOccur = isRunning && !isSorting && createdByConstraintShouldOccur;
-            if (generationShouldOccur) {
-                // obtain the type for entities to be generated
-                final Class<? extends AbstractEntity<?>> generatorEntityType = (Class<? extends AbstractEntity<?>>) centre.getGeneratorTypes().get().getKey();
-
-                // create and execute a generator instance
-                final IGenerator generator = centre.createGeneratorInstance(centre.getGeneratorTypes().get().getValue());
-                final Map<String, Optional<?>> params = freshCentreAppliedCriteriaEntity.nonProxiedProperties().collect(toLinkedHashMap(
-                        (final MetaProperty<?> mp) -> mp.getName(),
-                        (final MetaProperty<?> mp) -> ofNullable(mp.getValue())));
-                params.putAll(freshCentreAppliedCriteriaEntity.getParameters().entrySet().stream().collect(Collectors.toMap(entry -> entry.getKey(), entry -> Optional.ofNullable(entry.getValue()))));
-                if (shouldForceRegeneration(customObject)) {
-                    params.put(FORCE_REGENERATION_KEY, of(true));
+                if (isRunning) {
+                    commitCentreWithoutConflicts(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device(), updatedFreshCentre, null, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
                 }
-                final Result generationResult = generator.gen(generatorEntityType, params);
-                // if the data generation was unsuccessful based on the returned Result value then stop any further logic and return the obtained result
-                // otherwise, proceed with the request handling further to actually query the data
-                // in most cases, the generated and queried data would be represented by the same entity and, thus, the final query needs to be enhanced with user related filtering by property 'createdBy'
-                if (!generationResult.isSuccessful()) {
-                    logger.debug("CRITERIA_RESOURCE: run finished (generation failed).");
-                    final String staleCriteriaMessage = createStaleCriteriaMessage((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, critGenerator, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-                    final Result result = generationResult.copyWith(new ArrayList<>(Arrays.asList(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, user, updatedFreshCentre, new LinkedHashMap<>(), staleCriteriaMessage, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder))));
-                    return restUtil.resultJSONRepresentation(result);
+
+                final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> previouslyRunCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, previouslyRunCentre, companionFinder, critGenerator, 0L, user, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+                final Pair<Map<String, Object>, List<AbstractEntity<?>>> pair = createCriteriaMetaValuesCustomObjectWithResult(
+                    customObject,
+                    complementCriteriaEntityBeforeRunning( // complements previouslyRunCriteriaEntity instance
+                        previouslyRunCriteriaEntity,
+                        webUiConfig,
+                        companionFinder,
+                        user,
+                        critGenerator,
+                        entityFactory,
+                        centreContextHolder,
+                        eccCompanion,
+                        mmiCompanion,
+                        userCompanion,
+                        sharingModel
+                    )
+                );
+                if (isRunning) {
+                    updateResultantCustomObject(previouslyRunCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, user, previouslyRunCentre, pair.getKey(), null, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                }
+
+                // Running the rendering customiser for result set of entities.
+                pair.getKey().put("renderingHints", createRenderingHints(pair.getValue()));
+
+                // Apply primary and secondary action selectors
+                pair.getKey().putAll(linkedMapOf(createPrimaryActionIndicesForCentre(pair.getValue(), centre)));
+                pair.getKey().putAll(linkedMapOf(createSecondaryActionIndicesForCentre(pair.getValue(), centre)));
+                pair.getKey().putAll(linkedMapOf(createPropertyActionIndicesForCentre(pair.getValue(), centre)));
+
+                // Build dynamic properties object
+                final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext = getDynamicResultProperties(
+                        centre,
+                        webUiConfig,
+                        companionFinder,
+                        user,
+                        critGenerator,
+                        entityFactory,
+                        centreContextHolder,
+                        previouslyRunCriteriaEntity,
+                        device(),
+                        eccCompanion,
+                        mmiCompanion,
+                        userCompanion,
+                        sharingModel);
+
+                pair.getKey().put("dynamicColumns", createDynamicProperties(resPropsWithContext));
+
+                Stream<AbstractEntity<?>> processedEntities = enhanceResultEntitiesWithCustomPropertyValues(
+                        centre,
+                        centre.getCustomPropertiesDefinitions(),
+                        centre.getCustomPropertiesAsignmentHandler(),
+                        pair.getValue().stream());
+
+                //Enhance entities with values defined with consumer in each dynamic property.
+                processedEntities = enhanceResultEntitiesWithDynamicPropertyValues(processedEntities, resPropsWithContext);
+                //Enhance rendering hints with styles for each dynamic column.
+                processedEntities = enhanceResultEntitiesWithDynamicPropertyRenderingHints(processedEntities, resPropsWithContext, (List) pair.getKey().get("renderingHints"));
+
+                final ArrayList<Object> list = new ArrayList<>();
+                list.add(isRunning ? previouslyRunCriteriaEntity : null);
+                list.add(pair.getKey());
+
+                // TODO It looks like adding values directly to the list outside the map object leads to proper type/serialiser correspondence
+                // FIXME Need to investigate why this is the case.
+                processedEntities.forEach(entity -> list.add(entity));
+
+                // NOTE: the following line can be the example how 'criteria running' server errors manifest to the client application
+                // throw new IllegalStateException("Illegal state during criteria running.");
+                LOGGER.debug("CRITERIA_RESOURCE: run finished.");
+                return restUtil.rawListJsonRepresentation(list.toArray());
+            } finally {
+                if (lockAcquired) {
+                    // it is necessary to unlock Lock in finally block (exceptions will be handled properly then)
+                    lock.unlock();
                 }
             }
-
-            if (isRunning) {
-                commitCentreWithoutConflicts(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device(), updatedFreshCentre, null, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-            }
-
-            final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
-            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> previouslyRunCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, previouslyRunCentre, companionFinder, critGenerator, 0L, user, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
-            final Pair<Map<String, Object>, List<AbstractEntity<?>>> pair = createCriteriaMetaValuesCustomObjectWithResult(
-                customObject,
-                complementCriteriaEntityBeforeRunning( // complements previouslyRunCriteriaEntity instance
-                    previouslyRunCriteriaEntity,
-                    webUiConfig,
-                    companionFinder,
-                    user,
-                    critGenerator,
-                    entityFactory,
-                    centreContextHolder,
-                    domainTreeEnhancerCache,
-                    eccCompanion,
-                    mmiCompanion,
-                    userCompanion,
-                    sharingModel
-                )
-            );
-            if (isRunning) {
-                updateResultantCustomObject(previouslyRunCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, user, previouslyRunCentre, pair.getKey(), null, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
-            }
-
-            // Running the rendering customiser for result set of entities.
-            pair.getKey().put("renderingHints", createRenderingHints(pair.getValue()));
-
-            // Apply primary and secondary action selectors
-            pair.getKey().putAll(linkedMapOf(createPrimaryActionIndicesForCentre(pair.getValue(), centre)));
-            pair.getKey().putAll(linkedMapOf(createSecondaryActionIndicesForCentre(pair.getValue(), centre)));
-            pair.getKey().putAll(linkedMapOf(createPropertyActionIndicesForCentre(pair.getValue(), centre)));
-
-            // Build dynamic properties object
-            final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext = getDynamicResultProperties(
-                    centre,
-                    webUiConfig,
-                    companionFinder,
-                    user,
-                    critGenerator,
-                    entityFactory,
-                    centreContextHolder,
-                    previouslyRunCriteriaEntity,
-                    device(),
-                    domainTreeEnhancerCache,
-                    eccCompanion,
-                    mmiCompanion,
-                    userCompanion,
-                    sharingModel);
-
-            pair.getKey().put("dynamicColumns", createDynamicProperties(resPropsWithContext));
-
-            Stream<AbstractEntity<?>> processedEntities = enhanceResultEntitiesWithCustomPropertyValues(
-                    centre,
-                    centre.getCustomPropertiesDefinitions(),
-                    centre.getCustomPropertiesAsignmentHandler(),
-                    pair.getValue().stream());
-
-            //Enhance entities with values defined with consumer in each dynamic property.
-            processedEntities = enhanceResultEntitiesWithDynamicPropertyValues(processedEntities, resPropsWithContext);
-
-            final ArrayList<Object> list = new ArrayList<>();
-            list.add(isRunning ? previouslyRunCriteriaEntity : null);
-            list.add(pair.getKey());
-
-            // TODO It looks like adding values directly to the list outside the map object leads to proper type/serialiser correspondence
-            // FIXME Need to investigate why this is the case.
-            processedEntities.forEach(entity -> list.add(entity));
-
-            // NOTE: the following line can be the example how 'criteria running' server errors manifest to the client application
-            // throw new IllegalStateException("Illegal state during criteria running.");
-            logger.debug("CRITERIA_RESOURCE: run finished.");
-            return restUtil.rawListJsonRepresentation(list.toArray());
         }, restUtil);
+    }
+
+    /**
+     * A method to try acquiring a lock for running a centre.
+     * It should not throw any exceptions, but simply return {@code true} if the lock was acquired or {@code false} otherwise.
+     *
+     * @param lock
+     * @return
+     */
+    private boolean tryLocking(final Lock lock) {
+        try {
+            // try acquiring an exclusive lock for running a miType centre for the current user
+            // wait for the lock at most RUNNING_LOCK_TIMEOUT seconds
+            return lock.tryLock(RUNNING_LOCK_TIMEOUT, SECONDS);
+        } catch (final Exception ex) {
+            // any potential exception that could occur during the lock acquisition should be ignored to continue concurrent running (as it was before locking mechanism was introduced);
+            // in the future we may handle exceptions differently, e.g. by aborting the whole request
+            LOGGER.warn("Thread was an exception during the lock acquisition. But let's continue concurrent running of the [%s] centre and user [%s].".formatted(miType.getSimpleName(), user), ex);
+        }
+        return false;
     }
 
     /**
@@ -739,13 +737,16 @@ public class CriteriaResource extends AbstractWebResource {
      * @param entities
      * @return
      */
-    private List<Object> createRenderingHints(final List<?> entities) {
+    private List<Object> createRenderingHints(final List<AbstractEntity<?>> entities) {
         final Optional<IRenderingCustomiser<?>> renderingCustomiser = centre.getRenderingCustomiser();
         if (renderingCustomiser.isPresent()) {
             final IRenderingCustomiser<?> renderer = renderingCustomiser.get();
             final List<Object> renderingHints = new ArrayList<>();
-            for (final Object entity : entities) {
-                renderingHints.add(renderer.getCustomRenderingFor((AbstractEntity<?>)entity).get());
+            for (final AbstractEntity<?> entity : entities) {
+                // Every entity must have a map of corresponding rendering hints, even if that map is empty.
+                // This is because association with renderings hints is index-based and depends on the order of entities.
+                // So, let's be defensive in case some implementation of a rendering customiser returns an empty optional (i.e., not containing even an empty map).
+                renderer.getCustomRenderingFor(entity).ifPresentOrElse(rend -> renderingHints.add(rend), () -> renderingHints.add(Collections.emptyMap()));
             }
             return renderingHints;
         } else {
@@ -756,9 +757,30 @@ public class CriteriaResource extends AbstractWebResource {
     public static Stream<AbstractEntity<?>> enhanceResultEntitiesWithDynamicPropertyValues(final Stream<AbstractEntity<?>> stream, final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext) {
         return stream.map(entity -> {
             resPropsWithContext.forEach(resPropWithContext -> {
-                final Collection<? extends AbstractEntity<?>> collection = ((AbstractEntity<?>) entity).get(resPropWithContext.getKey().propName.get());
-                collection.forEach(e -> resPropWithContext.getKey().entityPreProcessor.get().accept(e, resPropWithContext.getValue()));
+                resPropWithContext.getKey().entityPreProcessor.get().accept(entity, resPropWithContext.getValue());
             });
+            return entity;
+        });
+    }
+
+    private Stream<AbstractEntity<?>> enhanceResultEntitiesWithDynamicPropertyRenderingHints(Stream<AbstractEntity<?>> stream, List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext, List<Object> renderingHints) {
+        final AtomicInteger entityCount = new AtomicInteger(0);
+        return stream.map(entity -> {
+            final int idx = entityCount.getAndIncrement();
+            final Object entityRendHints;
+            if (renderingHints.size() <= idx) {
+                entityRendHints = new HashMap<String, Object>();
+                renderingHints.add(entityRendHints);
+            } else {
+                entityRendHints = renderingHints.get(idx);
+            }
+            if (entityRendHints instanceof Map) {
+                resPropsWithContext.forEach(resPropWithContext -> {
+                    resPropWithContext.getKey().renderingHintsProvider.ifPresent(hintProvider -> {
+                        ((Map)entityRendHints).putAll(hintProvider.apply(entity, resPropWithContext.getValue()));
+                    });
+                });
+            }
             return entity;
         });
     }
@@ -773,7 +795,6 @@ public class CriteriaResource extends AbstractWebResource {
             final CentreContextHolder centreContextHolder,
             final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> criteriaEntity,
             final DeviceProfile device,
-            final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final EntityCentreConfigCo eccCompanion,
             final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
@@ -793,7 +814,6 @@ public class CriteriaResource extends AbstractWebResource {
                         resProp.contextConfig,
                         null, /* chosenProperty is not applicable in queryEnhancer context */
                         device,
-                        domainTreeEnhancerCache,
                         eccCompanion,
                         mmiCompanion,
                         userCompanion,
@@ -838,7 +858,6 @@ public class CriteriaResource extends AbstractWebResource {
             final Map<String, Object> resultantCustomObject,
             final String staleCriteriaMessage,
             final DeviceProfile device,
-            final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final EntityCentreConfigCo eccCompanion,
             final MainMenuItemCo mmiCompanion,
@@ -864,7 +883,6 @@ public class CriteriaResource extends AbstractWebResource {
             final Optional<Pair<IQueryEnhancer<AbstractEntity<?>>, Optional<CentreContextConfig>>> queryEnhancerConfig,
             final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> criteriaEntity,
             final DeviceProfile device,
-            final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final EntityCentreConfigCo eccCompanion,
             final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
@@ -884,7 +902,6 @@ public class CriteriaResource extends AbstractWebResource {
                     queryEnhancerConfig.get().getValue(),
                     null, /* chosenProperty is not applicable in queryEnhancer context */
                     device,
-                    domainTreeEnhancerCache,
                     eccCompanion,
                     mmiCompanion,
                     userCompanion,

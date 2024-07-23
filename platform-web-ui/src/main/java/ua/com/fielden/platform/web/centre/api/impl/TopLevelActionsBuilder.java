@@ -2,12 +2,16 @@ package ua.com.fielden.platform.web.centre.api.impl;
 
 import static java.lang.String.format;
 
+import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -167,14 +171,20 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
         return new ResultSetBuilder<>(builder).setHeight(height);
     }
 
+    @Deprecated
     @Override
     public IResultSetBuilder3Ordering<T> addProp(final String propName) {
-        return new ResultSetBuilder<>(builder).addProp(propName);
+        return new ResultSetBuilder<>(builder).addProp(propName, true);
     }
 
     @Override
-    public IResultSetBuilder4aWidth<T> addProp(final PropDef<?> propDef) {
-        return new ResultSetBuilder<>(builder).addProp(propDef);
+    public IResultSetBuilder3Ordering<T> addProp(final IConvertableToPath prop, final boolean presentByDefault) {
+        return new ResultSetBuilder<>(builder).addProp(prop.toPath(), presentByDefault);
+    }
+
+    @Override
+    public IResultSetBuilder4aWidth<T> addProp(final PropDef<?> propDef, final boolean presentByDefault) {
+        return new ResultSetBuilder<>(builder).addProp(propDef, presentByDefault);
     }
 
     @Override
@@ -188,8 +198,13 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     }
 
     @Override
-    public <M extends AbstractEntity<?>> IResultSetBuilderDynamicPropsAction<T> addProps(final String propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<M, Optional<CentreContext<T,?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
+    public IResultSetBuilderDynamicPropsAction<T> addProps(final String propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<T, Optional<CentreContext<T,?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
         return new ResultSetBuilder<>(builder).addProps(propName, dynColBuilderType, entityPreProcessor, contextConfig);
+    }
+
+    @Override
+    public IResultSetBuilderDynamicPropsAction<T> addProps(final IConvertableToPath propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<T, Optional<CentreContext<T, ?>>> entityPreProcessor, final BiFunction<T, Optional<CentreContext<T, ?>>, Map> renderingHintsProvider, final CentreContextConfig contextConfig) {
+        return new ResultSetBuilder<>(builder).addProps(propName, dynColBuilderType, entityPreProcessor, renderingHintsProvider, contextConfig);
     }
 
     @Override

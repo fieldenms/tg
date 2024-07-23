@@ -22,6 +22,10 @@ export function getFirstEntityTypeAndProperty (entity, propertyName) {
         const entityType = entity.constructor.prototype.type.call(entity);
         let currentProperty = propertyName;
         let currentType = entityType.prop(propertyName).type();
+        if (currentType instanceof reflector._getEntityTypePrototype() && currentType.isUnionEntity() && entity.get(propertyName)) {
+            currentProperty += "." + entity.get(propertyName)._activeProperty();
+            currentType = entityType.prop(currentProperty).type();
+        }
         while (!(currentType instanceof reflector._getEntityTypePrototype())) {
             const lastDotIndex = currentProperty.lastIndexOf(".");
             currentProperty = lastDotIndex >= 0 ? currentProperty.substring(0, lastDotIndex) : "";
@@ -323,4 +327,22 @@ export const escapeHtmlText = function(text) {
         escapedStr = escapedStr.replace(search, replaceWith[i]);
     });
     return escapedStr;
+};
+
+/**
+ * Returns name of currently authenticated user.
+ */
+const _userName = function () {
+    const appTemplate = document.body.querySelector('tg-app-template');
+    return appTemplate && appTemplate.menuConfig && appTemplate.menuConfig.userName;
+};
+
+/**
+ * Returns generated key for local storage and specified subject to save and retrieve data.
+ * 
+ * @param {String} subject - subject that should be appended to user name to create key for local storage data.
+ * @returns 
+ */
+export const localStorageKey = function (subject) {
+    return `${_userName()}_${subject}`;
 };

@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.operands.functions;
 
-import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.functions.IfNull2;
@@ -13,7 +13,7 @@ public class IfNull1 extends TwoOperandsFunction1<IfNull2> {
     }
 
     @Override
-    public IfNull2 transform(final TransformationContext1 context) {
+    public IfNull2 transform(final TransformationContextFromStage1To2 context) {
         return new IfNull2(operand1.transform(context), operand2.transform(context));
     }
     

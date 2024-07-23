@@ -5,7 +5,7 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toSet;
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
@@ -176,7 +176,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
         return savedUser;
     }
-    
+
     /**
      * A helper predicate, which return {@code true} for users who are not restricted to SSO only in the SSO authentication mode.
      *
@@ -189,7 +189,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     /**
      * Saves new {@link WebMenuItemInvisibility} for menu item URIs specified in menuItems, and specified non base user.
-     * 
+     *
      * TODO once issue https://github.com/fieldenms/tg/issues/1032 is merged, this saving should be optimised
      *
      * @param menuItems

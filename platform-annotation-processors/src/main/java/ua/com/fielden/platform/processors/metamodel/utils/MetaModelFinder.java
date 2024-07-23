@@ -1,26 +1,6 @@
 package ua.com.fielden.platform.processors.metamodel.utils;
 
-import static java.util.stream.Collectors.toCollection;
-import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.METAMODELS_CLASS_QUAL_NAME;
-import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_ALIASED_NAME_SUFFIX;
-import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_NAME_SUFFIX;
-import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_SUPERCLASS;
-
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Stream;
-
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
-
 import org.apache.commons.lang3.StringUtils;
-
 import ua.com.fielden.platform.processors.metamodel.MetaModelConstants;
 import ua.com.fielden.platform.processors.metamodel.concepts.MetaModelConcept;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
@@ -30,6 +10,18 @@ import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderExce
 import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
 import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
 
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
+
+import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.*;
+
 /**
  * A class to provide utility methods for identifying various parts of domain meta-models.
  *
@@ -38,8 +30,8 @@ import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
  */
 public class MetaModelFinder extends ElementFinder {
 
-    public MetaModelFinder(final Elements elements, final Types types) {
-        super(elements, types);
+    public MetaModelFinder(final ProcessingEnvironment procEnv) {
+        super(procEnv);
     }
 
     /**
@@ -54,9 +46,6 @@ public class MetaModelFinder extends ElementFinder {
 
     /**
      * Returns true iff the type mirror represents a meta-model type.
-     * 
-     * @param typeElement
-     * @return
      */
     public boolean isMetaModel(final TypeMirror type) {
         return isSubtype(type, META_MODEL_SUPERCLASS);
@@ -133,7 +122,7 @@ public class MetaModelFinder extends ElementFinder {
      * It is assumed that the stream will contain only methods of a meta-model to avoid excessive checks.
      */
     public Optional<ExecutableElement> findPropertyMethod(final Stream<ExecutableElement> methods, final String name) {
-        return methods.filter(elt -> elt.getSimpleName().toString().equals(name)).findFirst();
+        return methods.filter(elt -> elt.getSimpleName().contentEquals(name)).findFirst();
     }
 
     /**
@@ -195,8 +184,8 @@ public class MetaModelFinder extends ElementFinder {
      * @return
      */
     public boolean isSameMetaModel(final MetaModelConcept mmc, final MetaModelElement mme) {
-        return mmc.getQualifiedName().equals(mme.getQualifiedName().toString()) ||
-               mmc.getAliasedQualifiedName().equals(mme.getQualifiedName().toString());
+        return mmc.getQualifiedName().contentEquals(mme.getQualifiedName()) ||
+               mmc.getAliasedQualifiedName().contentEquals(mme.getQualifiedName());
     }
 
     /**
@@ -226,7 +215,8 @@ public class MetaModelFinder extends ElementFinder {
     }
 
     /**
-     * Returns a stream of all meta-model elements declared by the element representing the {@code MetaModels} class.
+     * Returns a stream of all meta-model elements declared by a type element representing the {@code MetaModels} class.
+     * Unresolved meta-model types will not be included.
      */
     public Stream<MetaModelElement> streamMetaModels(final TypeElement typeElement) {
         // find regular meta-models that are declared as fields

@@ -58,11 +58,23 @@ const entityCentreTemplate = html`
         /*toolbarStyles*/
     </style>
     <tg-entity-centre id="dom" _selected-view="[[_selectedView]]" _previous-view="[[_previousView]]" _url="[[_url]]" _centre-dirty-or-edited="[[_centreDirtyOrEdited]]" _action-in-progress="{{_actionInProgress}}" _bind-centre-info="[[_bindCentreInfo]]" _process-discarder-response="[[_processDiscarderResponse]]" _process-discarder-error="[[_processDiscarderError]]" _button-disabled="[[_buttonDisabled]]" _viewer-disabled="[[_viewerDisabled]]" save="[[save]]" discard="[[discard]]" run="[[run]]" _activate-result-set-view="[[_activateResultSetView]]" stale-criteria-message="[[staleCriteriaMessage]]" _show-dialog="[[_showDialog]]" _help-mouse-down-event-handler="[[_helpMouseDownEventHandler]]" _help-mouse-up-event-handler="[[_helpMouseUpEventHandler]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" initiate-auto-run="[[initiateAutoRun]]" _reset-autocompleter-state="[[_resetAutocompleterState]]" embedded="[[embedded]]" mi-type="[[miType]]" user-name="[[userName]]" refresh-centre="[[sseRefresh]]" cancel-centre-refresh="[[cancelSseRefresh]]" @centreScroll @leftSplitterPositionPlacehoder @rightSplitterPositionPlacehoder>
-        <tg-@mi_type-selection-criteria id="selection_criteria" slot="custom-selection-criteria" auto-run="{{autoRun}}" _centre-dirty-or-edited="{{_centreDirtyOrEdited}}" _was-run="{{_wasRun}}" _criteria-loaded="{{_criteriaLoaded}}" uuid="[[uuid]]" mi-type="[[miType]]" user-name="{{userName}}" save-as-name="{{saveAsName}}" config-uuid="{{configUuid}}" preferred-view="{{preferredView}}" query-part="[[queryPart]]" post-run="[[_postRun]]" retrieve-all="[[retrieveAll]]" get-selected-entities="[[_getSelectedEntities]]" get-master-entity="[[getMasterEntity]]" post-retrieved="[[postRetrieved]]" page-number="{{pageNumber}}" page-count="{{pageCount}}" page-number-updated="{{pageNumberUpdated}}" page-count-updated="{{pageCountUpdated}}" data-change-reason="{{dataChangeReason}}" is-running="{{isRunning}}" stale-criteria-message="{{staleCriteriaMessage}}" @queryEnhancerContextConfig></tg-@mi_type-selection-criteria>
+        <tg-@mi_type-selection-criteria id="selection_criteria" slot="custom-selection-criteria" auto-run="{{autoRun}}" _centre-dirty-or-edited="{{_centreDirtyOrEdited}}" _was-run="{{_wasRun}}" _criteria-loaded="{{_criteriaLoaded}}" uuid="[[uuid]]" mi-type="[[miType]]" user-name="{{userName}}" save-as-name="{{saveAsName}}" config-uuid="{{configUuid}}" preferred-view="{{preferredView}}" query-part="[[queryPart]]" post-run="[[_postRun]]" retrieve-all="[[retrieveAll]]" get-selected-entities="[[_getSelectedEntities]]" get-master-entity="[[getMasterEntity]]" post-retrieved="[[postRetrieved]]" page-number="{{pageNumber}}" page-count="{{pageCount}}" page-number-updated="{{pageNumberUpdated}}" page-count-updated="{{pageCountUpdated}}" data-change-reason="{{dataChangeReason}}" is-running="{{isRunning}}" stale-criteria-message="{{staleCriteriaMessage}}" share-error="{{shareError}}" @queryEnhancerContextConfig></tg-@mi_type-selection-criteria>
         
         <!--@custom-front-actions-->
         
         <!--@custom-share-actions-->
+        <tg-ui-action
+            id="tgOpenMasterAction"
+            ui-role='ICON'
+            show-dialog='[[_showDialog]]'
+            toaster='[[toaster]]'
+            create-context-holder='[[_createContextHolder]]'
+            dynamic-action
+            attrs='[[_tgOpenMasterActionAttrs]]'
+            require-selection-criteria='false'
+            require-master-entity='true'
+            hidden>
+        </tg-ui-action>
         <tg-ui-action
             id="tgOpenHelpMasterAction"
             ui-role='ICON'
@@ -76,6 +88,7 @@ const entityCentreTemplate = html`
             require-selected-entities='NONE'
             require-master-entity='false'
             pre-action = '[[_preOpenHelpMasterAction]]'
+            modify-functional-entity = '[[_modifyHelpEntity]]'
             post-action-success = '[[_postOpenHelpMasterAction]]'
             hidden>
         </tg-ui-action>
@@ -218,8 +231,8 @@ const egiMasterTemplate = html`
         _process-saver-error="[[_processSaverError]]"
         _saver-loading="{{_saverLoading}}">
             <!--@egi_editors-->
-            <tg-action slot="cancel-button" class="master-cancel-action" is-icon icon="clear" enabled-states='[[_actions.REFRESH.enabledStates]]' short-desc='Cancel' long-desc='Cancel changes' current-state='[[currentState]]' action='[[closeMaster]]' post-action='{{_postClose}}'></tg-action>
-            <tg-action slot="save-button" class="master-save-action" is-icon icon="check" enabled-states='[[_actions.SAVE.enabledStates]]' short-desc='Save' long-desc='Save changes' current-state='[[currentState]]' id='_saveAction' action='[[_actions.SAVE.action]]' post-action='{{_postSavedDefault}}' post-action-error='{{_postSavedDefaultError}}'></tg-action>
+            <tg-action role="refresh" slot="cancel-button" class="master-cancel-action" exclude-new exclude-close icon="clear" enabled-states='[[_actions.REFRESH.enabledStates]]' short-desc='Cancel' long-desc='Cancel changes' current-state='[[currentState]]' action='[[closeMaster]]' post-action='{{_postClose}}'></tg-action>
+            <tg-action role="save" slot="save-button" class="master-save-action" exclude-new exclude-close icon="check" enabled-states='[[_actions.SAVE.enabledStates]]' short-desc='Save' long-desc='Save changes' current-state='[[currentState]]' id='_saveAction' action='[[_actions.SAVE.action]]' post-action='{{_postSavedDefault}}' post-action-error='{{_postSavedDefaultError}}'></tg-action>
     </tg-entity-master>`;
 
 Polymer({

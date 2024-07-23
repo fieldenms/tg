@@ -25,9 +25,14 @@ import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
 import { TgEntityMasterBehavior } from '/resources/master/tg-entity-master-behavior.js';
+import { TgViewWithHelpBehavior } from '/resources/components/tg-view-with-help-behavior.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js'
-import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
+import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
+import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
 import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
+
+let screenWidth = window.screen.availWidth;
+let screenHeight = window.screen.availHeight;
 
 const template = html`
     <style>
@@ -42,7 +47,15 @@ const template = html`
     <tg-message-panel></tg-message-panel>
     <div class="relative flex">
         <neon-animated-pages id="pages" class="fit" attr-for-selected="name" on-neon-animation-finish="_animationFinished" animate-initial-selection>
-            <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]" app-title="[[appTitle]]"></tg-app-menu>
+            <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]" app-title="[[appTitle]]">
+                <paper-icon-button id="helpAction" slot="helpAction" icon="icons:help-outline" tabindex="1"
+                    on-mousedown="_helpMouseDownEventHandler" 
+                    on-touchstart="_helpMouseDownEventHandler" 
+                    on-mouseup="_helpMouseUpEventHandler" 
+                    on-touchend="_helpMouseUpEventHandler" 
+                    tooltip-text="Tap to open help in a window or tap with Ctrl/Cmd to open help in a tab.<br>Alt&nbsp+&nbspTap or long touch to edit the help link.">
+                </paper-icon-button>
+            </tg-app-menu>
             <template is="dom-repeat" items="[[menuConfig.menu]]" on-dom-change="_modulesRendered">
                 <tg-app-view class="fit hero-animatable" name$="[[item.key]]" menu="[[menuConfig.menu]]" menu-item="[[item]]" can-edit="[[menuConfig.canEdit]]" menu-save-callback="[[_saveMenuVisibilityChanges]]" selected-module="[[_selectedModule]]" selected-submodule="{{_selectedSubmodule}}">
                     <tg-ui-action
@@ -91,16 +104,23 @@ const template = html`
             require-master-entity='false'>
         </tg-ui-action>
         <tg-ui-action
-            id="tgOpenMasterAction"
+            id="tgOpenHelpMasterAction"
+            slot="helpAction"
             ui-role='ICON'
-            show-dialog='[[_showDialog]]'
+            component-uri = '/master_ui/ua.com.fielden.platform.entity.UserDefinableHelp'
+            element-name = 'tg-UserDefinableHelp-master'
+            short-desc="Help"
+            show-dialog='[[_showHelpDialog]]'
             toaster='[[toaster]]'
             create-context-holder='[[_createContextHolder]]'
-            dynamic-action
-            attrs='[[_openMasterAttrs]]'
+            attrs='[[_tgOpenHelpMasterActionAttrs]]'
             require-selection-criteria='false'
             require-selected-entities='ONE'
-            require-master-entity='false'>
+            require-master-entity='false'
+            current-entity = '[[_currentEntityForHelp]]'
+            modify-functional-entity = '[[_modifyHelpEntity]]'
+            post-action-success = '[[_postOpenHelpMasterAction]]'
+            hidden>
         </tg-ui-action>
     </tg-entity-master>`;
 
@@ -130,6 +150,15 @@ function addAllElements (elementsToAdd, addToArray, removeFromArray) {
         });
     }
     return addToArray;
+}
+
+/**
+ * Should return indicator whether passed overlay (it can be custom action dialog or insertion point) should not react on back button.
+ *
+ * @param {Object} overlay - a custom action dialog or an insertion point
+ */
+function skipHistoryAction (overlay) {
+    return typeof overlay.skipHistoryAction === 'function' && overlay.skipHistoryAction();
 }
 
 Polymer({
@@ -204,7 +233,7 @@ Polymer({
 
     observers: ['_routeChanged(_route.path)'],
 
-    behaviors: [TgEntityMasterBehavior, IronA11yKeysBehavior, TgTooltipBehavior, TgFocusRestorationBehavior, IronResizableBehavior],
+    behaviors: [TgEntityMasterBehavior, TgViewWithHelpBehavior, IronA11yKeysBehavior, TgTooltipBehavior, TgFocusRestorationBehavior, IronResizableBehavior],
     
     keyBindings: {
         'f3': '_searchMenu',
@@ -238,7 +267,7 @@ Polymer({
     },
 
     _tgOpenMasterAction: function () {
-        if (this.$.tgOpenMasterAction.isActionInProgress || this.disableNextHistoryChange) {
+        if (this.tgOpenMasterAction.isActionInProgress || this.disableNextHistoryChange) {
             return;
         }
         const entityInfo = this._selectedSubmodule.substring(1).split('/');
@@ -256,12 +285,12 @@ Polymer({
             const entity = this._reflector().newEntity(mainTypeName);
             entity['id'] = parseInt(idStr);
             if (menuItemTypeName) {
-                this.$.tgOpenMasterAction.modifyFunctionalEntity = (bindingEntity) => {
+                this.tgOpenMasterAction.modifyFunctionalEntity = (bindingEntity) => {
                     bindingEntity.setAndRegisterPropertyTouch('menuToOpen', menuItemTypeName);
-                    delete this.$.tgOpenMasterAction.modifyFunctionalEntity;
+                    delete this.tgOpenMasterAction.modifyFunctionalEntity;
                 };
             }
-            this.$.tgOpenMasterAction._runDynamicAction(() => entity, null);
+            this.tgOpenMasterAction._runDynamicAction(() => entity, null);
         }
     },
     
@@ -285,7 +314,7 @@ Polymer({
             const historySteps = this.currentHistoryState.currIndex - window.history.state.currIndex;
             // Computes to false/null or the first closable dialog
             // This is relevant if user went backward or forward (mobile device only) and there is overlay open and 'root' page (for e.g. https://tgdev.com:8091) is not opening
-            const currentOverlay = (historySteps !== 0 && isMobileApp() && this._findFirstClosableDialog());
+            const currentOverlay = (historySteps !== 0 && this._findFirstClosableDialog());
             if (currentOverlay) {
                 // disableNextHistoryChange flag is needed to avoid history movements cycling
                 if (!this.disableNextHistoryChange) {
@@ -341,17 +370,20 @@ Polymer({
     /**
      * In case where 'multiple back' occurs then all dialogs will be closed (if able) and multiple history back action will be performed.
      *
-     * This method skips all iron-overlay-behavior elements that contain property 'skipHistoryAction'.
+     * This method skips all overlays and insertion points elements that should 'skipHistoryAction'.
      */
     _closeAllDialogs: function () {
-        const overlays = this._manager._overlays;
+        return this._closeDialogsInTheList(this._manager._overlays) && this._closeDialogsInTheList(InsertionPointManager._insertionPoints);
+    },
+
+    _closeDialogsInTheList : function (overlays) {
         for (let i = overlays.length - 1; i >= 0; i--) {
-            if (!overlays[i].skipHistoryAction) {
+            if (!skipHistoryAction(overlays[i])) {
                 this._closeDialog(overlays[i]);
             }
         }
         for (let i = overlays.length - 1; i >= 0; i--) {
-            if (!overlays[i].skipHistoryAction && overlays[i].opened) {
+            if (overlays[i].opened && !skipHistoryAction(overlays[i])) {
                 return false;
             }
         }
@@ -359,7 +391,7 @@ Polymer({
     },
     
     /**
-     * Performs dialog closing through custom method 'closeDialog' (or in the simplest case just uses iron-overlay-behavior's 'close' method).
+     * Performs dialog/insertion-point closing through custom method 'closeDialog' (or in the simplest case just uses iron-overlay-behavior's 'close' method).
      */
     _closeDialog: function (dialog) {
         if (dialog.closeDialog) {
@@ -370,9 +402,12 @@ Polymer({
     },
     
     _findFirstClosableDialog: function () {
-        const overlays = this._manager._overlays;
+        return this._findFirstClosableDialogFromList(this._manager._overlays) || this._findFirstClosableDialogFromList(InsertionPointManager._insertionPoints);
+    },
+
+    _findFirstClosableDialogFromList: function (overlays) {
         for (let i = overlays.length - 1; i >= 0; i--) {
-            if (!overlays[i].skipHistoryAction && overlays[i].opened) {
+            if (overlays[i].opened && !skipHistoryAction(overlays[i])) {
                 return overlays[i];
             }
         }
@@ -525,15 +560,24 @@ Polymer({
         return this._masterDom()._toastGreeting();
     },
 
+    getOpenHelpMasterAction: function () {
+        return this.$.tgOpenHelpMasterAction;
+    },
+
     ready: function () {
         //setting the uuid for this master.
         this.uuid = this.is + '/' + generateUUID();
         this._attrs = {entityType: "ua.com.fielden.platform.menu.MenuSaveAction", currentState: "EDIT", centreUuid: this.uuid};
-        this._openMasterAttrs = {currentState: "EDIT", centreUuid: this.uuid};
         this._openUserMenuVisibilityAssociatorAttrs = {entityType: "ua.com.fielden.platform.menu.UserMenuVisibilityAssociator", currentState: "EDIT", centreUuid: this.uuid};
+        this.tgOpenMasterAction.requireMasterEntity = 'false';
         //Binding to 'this' functions those are used outside the scope of this component.
         this._checkWhetherCanLeave = this._checkWhetherCanLeave.bind(this);
-        
+
+        //Configure help action
+        this._currentEntityForHelp = () => {
+            return this._reflector().newEntity(this._currEntity.type().notEnhancedFullClassName());
+        }
+
         //Configuring menu visibility save functionality.
         this._saveMenuVisibilityChanges = function (visibleItems, invisibleItems) {
             if (this._saveIdentifier) {
@@ -593,8 +637,11 @@ Polymer({
         
         //Add URI (location) change event handler to set history state. 
         window.addEventListener('location-changed', this._replaceStateWithNumber.bind(this));
+
+        //Add resize listener that checks whether screen resolution changed
+        window.addEventListener('resize', this._checkResolution.bind(this));
     },
-    
+
     attached: function () {
         const self = this;
         //@use-empty-console.log
@@ -660,6 +707,17 @@ Polymer({
                 node.scrollIntoView({block: "end", inline: "end", behavior: "smooth"}); // Safari (WebKit) does not support options object (smooth scrolling). We are aiming Chrome for iOS devices at this stage.
             }
         } 
+    },
+
+    /**
+     * Window resize handler that checks whether screen resolution changes and dispatches 'tg-screen-resolution-changed' if it does.
+     */
+    _checkResolution: function () {
+        if (window.screen.availWidth !== screenWidth || window.screen.availHeight !== screenHeight) {
+            screenWidth = window.screen.availWidth;
+            screenHeight = window.screen.availHeight;
+            window.dispatchEvent(new CustomEvent('tg-screen-resolution-changed', {bubbles: true, composed: true, detail: {width: screenWidth, height: screenHeight}}));
+        }
     },
     
     /**

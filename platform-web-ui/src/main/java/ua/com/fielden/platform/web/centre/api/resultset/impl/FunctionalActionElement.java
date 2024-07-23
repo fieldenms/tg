@@ -5,7 +5,7 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang.StringUtils.join;
+import static org.apache.commons.lang3.StringUtils.join;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -118,6 +118,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         } else if (FunctionalActionKind.FRONT == functionalActionKind) {
             attrs.put("slot", "custom-front-action");
         } else if (FunctionalActionKind.SHARE == functionalActionKind) {
+            attrs.put("share-action", "true");
             attrs.put("slot", "custom-share-action");
             attrs.put("hidden", "[[embedded]]"); // let's completely hide the share action for embedded centres
             attrs.put("disabled", "[[_shareButtonDisabled]]");

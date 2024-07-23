@@ -1,10 +1,15 @@
 package ua.com.fielden.platform.test.runners;
 
-import static java.lang.String.format;
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.reflection.Reflector.assignStatic;
-import static ua.com.fielden.platform.test.DbCreator.ddlScriptFileName;
+import org.apache.logging.log4j.Logger;
+import org.junit.runner.notification.RunNotifier;
+import org.junit.runners.BlockJUnit4ClassRunner;
+import org.junit.runners.model.Statement;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
+import ua.com.fielden.platform.test.DbCreator;
+import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
+import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
@@ -13,17 +18,11 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Function;
 
-import org.apache.logging.log4j.Logger;
-import org.junit.runner.notification.RunNotifier;
-import org.junit.runners.BlockJUnit4ClassRunner;
-import org.junit.runners.model.Statement;
-
-import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
-import ua.com.fielden.platform.test.DbCreator;
-import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
-import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.reflection.Reflector.assignStatic;
+import static ua.com.fielden.platform.test.DbCreator.ddlScriptFileName;
 
 /**
  * The domain test case runner that is responsible of instantiation and initialisation of domain test cases.
@@ -190,7 +189,7 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
     }
     
     /**
-     * A helper function to instantiate test case configuration as specified in <code>src/test/resources/test.properties</code>, property <code>config-domain</code>.
+     * A helper function to instantiate test case configuration as specified in {@code props}, property {@code "config.domain"}.
      * 
      * @param props
      * @return

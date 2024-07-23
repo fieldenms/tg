@@ -17,6 +17,7 @@ import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.sse.IEventSource;
 import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
+import ua.com.fielden.platform.web.view.master.api.actions.impl.MasterActionOptions;
 
 /**
  * Represent a contract for Web UI configuring.
@@ -141,6 +142,11 @@ public interface IWebUiConfig extends IMenuRetriever {
     Map<Class<? extends MiWithConfigurationSupport<?>>, T2<EntityCentre<?>, EntityMaster<? extends AbstractEntity<?>>>> getEmbeddedCentres();
 
     /**
+     * Loads all standalone / embedded default centres for concrete 'entityType' (with their generated types and criteria types).
+     */
+    void loadCentreGeneratedTypesAndCriteriaTypes(final Class<?> entityType);
+
+    /**
      * Determines whether the centre, represented by {@code miType}, is embedded.
      *
      * @param miType
@@ -188,6 +194,14 @@ public interface IWebUiConfig extends IMenuRetriever {
      * @return
      */
     boolean independentTimeZone();
+
+
+    /**
+     * Returns {@link MasterActionOptions} instance that indicates what options should be available in master actions.
+     *
+     * @return
+     */
+    MasterActionOptions masterActionOptions();
 
     /**
      * A set of domain-specific actions for centre configurations sharing.

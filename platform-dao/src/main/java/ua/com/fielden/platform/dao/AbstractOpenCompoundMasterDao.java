@@ -95,6 +95,7 @@ public abstract class AbstractOpenCompoundMasterDao<T extends AbstractFunctional
     public T save(final T entity) {
         // if entity is a brand new not yet persisted instance then there can be no related one-2-many associations with it
         entity.setCalculated(true);
+        entity.setUserName(getUsername());
         if (!entity.getKey().isPersisted()) {
             entity.setEntityPresence(emptyPresence());
             return entity;

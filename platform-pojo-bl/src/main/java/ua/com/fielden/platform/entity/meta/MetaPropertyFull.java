@@ -28,7 +28,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -330,7 +330,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * Checks whether annotation identified by parameter <code>key</code> is amongst applicable validation annotations.
      *
      * @param applicableValidationAnnotations
-     * @param validationAnnotationEnumValue
+     * @param validationAnnotationType
      * @return
      */
     private boolean isValidatorApplicable(final Set<Annotation> applicableValidationAnnotations, final Class<? extends Annotation> validationAnnotationType) {

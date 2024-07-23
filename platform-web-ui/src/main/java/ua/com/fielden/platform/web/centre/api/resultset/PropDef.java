@@ -2,7 +2,7 @@ package ua.com.fielden.platform.web.centre.api.resultset;
 
 import java.util.Optional;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * A structure for defining custom properties for entities to be presented on an entity centre.

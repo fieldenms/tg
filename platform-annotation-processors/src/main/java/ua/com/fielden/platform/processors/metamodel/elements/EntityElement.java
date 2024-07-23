@@ -1,12 +1,10 @@
 package ua.com.fielden.platform.processors.metamodel.elements;
 
-import javax.lang.model.element.Modifier;
-
-import java.util.Objects;
-
-import javax.lang.model.element.TypeElement;
-
 import com.squareup.javapoet.ClassName;
+
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
+import java.util.Objects;
 
 /**
  * A convenient wrapper around {@link TypeElement} to represent an entity element.
@@ -14,13 +12,13 @@ import com.squareup.javapoet.ClassName;
  * @author TG Team
  *
  */
-public final class EntityElement extends AbstractForwardingTypeElement {
+public final class EntityElement extends AbstractForwardingTypeElement implements Comparable<EntityElement> {
     private final String packageName;
     private final ClassName entityClassName;
 
     /**
      * Creates an {@link EntityElement} without a package name. Use at your own risk.
-     * 
+     *
      * @param typeElement
      * @return {@link EntityElement}
      */
@@ -66,5 +64,10 @@ public final class EntityElement extends AbstractForwardingTypeElement {
     @Override
     public String toString() {
         return entityClassName.toString();
+    }
+
+    @Override
+    public int compareTo(final EntityElement that) {
+        return entityClassName.simpleName().compareTo(that.entityClassName.simpleName());
     }
 }

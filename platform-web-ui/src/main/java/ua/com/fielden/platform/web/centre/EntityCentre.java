@@ -84,7 +84,6 @@ import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
@@ -258,7 +257,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private Optional<JsCode> customCodeOnAttach = empty();
     private Optional<JsCode> customImports = empty();
 
-    private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
     private final EntityCentreConfigCo eccCompanion;
     private final MainMenuItemCo mmiCompanion;
@@ -299,7 +297,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         this.companionFinder = this.injector.getInstance(ICompanionObjectFinder.class);
         this.postCentreCreated = postCentreCreated;
 
-        domainTreeEnhancerCache = injector.getInstance(IDomainTreeEnhancerCache.class);
         webUiConfig = injector.getInstance(IWebUiConfig.class);
         eccCompanion = companionFinder.find(ua.com.fielden.platform.ui.config.EntityCentreConfig.class);
         mmiCompanion = companionFinder.find(MainMenuItem.class);
@@ -309,7 +306,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     /**
      * Validates root type corresponding to <code>menuItemType</code>.
      *
-     * @param menuItemType
+     * @param miType
      */
     private static void validateMenuItemTypeRootType(final Class<? extends MiWithConfigurationSupport<?>> miType) {
         final EntityType etAnnotation = miType.getAnnotation(EntityType.class);
@@ -404,9 +401,12 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * Creates default centre from Centre DSL configuration by adding calculated / custom props, applying selection crit defaults, EGI column widths / ordering etc.
      *
      * @param dslDefaultConfig
-     * @param serialiser
+     * @param entityFactory
      * @param postCentreCreated
      * @param userSpecific
+     * @param entityType
+     * @param miType
+     * @param injector
      * @return
      */
     public static <T extends AbstractEntity<?>> ICentreDomainTreeManagerAndEnhancer createDefaultCentreFrom(
@@ -415,14 +415,13 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated,
         final boolean userSpecific,
         final Class<T> entityType,
-        final IDomainTreeEnhancerCache domainTreeEnhancerCache,
         final Class<? extends MiWithConfigurationSupport<?>> miType,
         final Injector injector) {
 
         final Optional<List<ResultSetProp<T>>> resultSetProps = dslDefaultConfig.getResultSetProperties();
         final ListMultimap<String, SummaryPropDef> summaryExpressions = dslDefaultConfig.getSummaryExpressions();
 
-        final ICentreDomainTreeManagerAndEnhancer cdtmae = createEmptyCentre(entityType, entityFactory, domainTreeEnhancerCache, createCalculatedAndCustomProperties(entityType, resultSetProps, summaryExpressions), miType);
+        final ICentreDomainTreeManagerAndEnhancer cdtmae = createEmptyCentre(entityType, entityFactory, createCalculatedAndCustomProperties(entityType, resultSetProps, summaryExpressions), miType);
 
         cdtmae.setPreferredView(calculatePreferredViewIndex(dslDefaultConfig));
 
@@ -443,7 +442,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 final String propertyName = derivePropName(property);
                 if (!property.dynamicColBuilderType.isPresent()) {
                     cdtmae.getSecondTick().check(entityType, propertyName, true);
-                    cdtmae.getSecondTick().use(entityType, propertyName, true);
+                    if (property.presentByDefault) {
+                        cdtmae.getSecondTick().use(entityType, propertyName, true);
+                    }
                     cdtmae.getSecondTick().setWidth(entityType, propertyName, property.width);
                     if (growFactors.containsKey(propertyName)) {
                         cdtmae.getSecondTick().setGrowFactor(entityType, propertyName, growFactors.get(propertyName));
@@ -521,7 +522,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @return
      */
     private ICentreDomainTreeManagerAndEnhancer createDefaultCentre0(final EntityCentreConfig<T> dslDefaultConfig, final EntityFactory entityFactory, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated, final boolean userSpecific) {
-        return createDefaultCentreFrom(dslDefaultConfig, entityFactory, postCentreCreated, userSpecific, entityType, domainTreeEnhancerCache, miType, injector);
+        return createDefaultCentreFrom(dslDefaultConfig, entityFactory, postCentreCreated, userSpecific, entityType, miType, injector);
     }
 
     private static <T extends AbstractEntity<?>> void provideDefaultsFor(final String dslProperty, final ICentreDomainTreeManagerAndEnhancer cdtmae, final EntityCentreConfig<T> dslDefaultConfig, final Class<T> entityType, final Injector injector) {
@@ -960,7 +961,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         if (user == null) {
             return createUserUnspecificDefaultCentre(dslDefaultConfig, injector.getInstance(EntityFactory.class), postCentreCreated);
         } else {
-            return updateCentre(user, miType, FRESH_CENTRE_NAME, empty(), DESKTOP, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+            return updateCentre(user, miType, FRESH_CENTRE_NAME, empty(), DESKTOP, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
         }
     }
 

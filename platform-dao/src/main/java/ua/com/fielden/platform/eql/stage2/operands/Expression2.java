@@ -1,16 +1,17 @@
 package ua.com.fielden.platform.eql.stage2.operands;
 
-import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toSet;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import ua.com.fielden.platform.eql.stage2.TransformationContext2;
-import ua.com.fielden.platform.eql.stage2.TransformationResult2;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.eql.meta.PropType;
+import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
+import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage3.operands.CompoundSingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.Expression3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
@@ -25,24 +26,18 @@ public class Expression2 extends AbstractSingleOperand2 implements ISingleOperan
         this.first = first;
         this.items = items;
     }
-
-    public Expression2(final ISingleOperand2<? extends ISingleOperand3> first) {
-        super(first.type(), first.hibType());
-        this.first = first;
-        this.items = emptyList();
-    }
     
     @Override
-    public TransformationResult2<Expression3> transform(final TransformationContext2 context) {
+    public TransformationResultFromStage2To3<Expression3> transform(final TransformationContextFromStage2To3 context) {
         final List<CompoundSingleOperand3> transformed = new ArrayList<>();
-        final TransformationResult2<? extends ISingleOperand3> firstTr = first.transform(context);
-        TransformationContext2 currentContext = firstTr.updatedContext;
+        final TransformationResultFromStage2To3<? extends ISingleOperand3> firstTr = first.transform(context);
+        TransformationContextFromStage2To3 currentContext = firstTr.updatedContext;
         for (final CompoundSingleOperand2 item : items) {
-            final TransformationResult2<? extends ISingleOperand3> itemTr = item.operand.transform(currentContext);
+            final TransformationResultFromStage2To3<? extends ISingleOperand3> itemTr = item.operand.transform(currentContext);
             transformed.add(new CompoundSingleOperand3(itemTr.item, item.operator));
             currentContext = itemTr.updatedContext;
         }
-        return new TransformationResult2<>(new Expression3(firstTr.item, transformed, type, hibType), currentContext);
+        return new TransformationResultFromStage2To3<>(new Expression3(firstTr.item, transformed, type), currentContext);
     }
 
     @Override
@@ -57,12 +52,24 @@ public class Expression2 extends AbstractSingleOperand2 implements ISingleOperan
     }
     
     @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        final Set<Class<? extends AbstractEntity<?>>> result = items.stream().map(el -> el.operand.collectEntityTypes()).flatMap(Set::stream).collect(toSet());
+        result.addAll(first.collectEntityTypes());
+        return result;
+    }
+    
+    @Override
     public boolean ignore() {
         return false;
     }
+    
+    @Override
+    public boolean isNonnullableEntity() {
+        return items.isEmpty() ? first.isNonnullableEntity() : false;
+    }
 
-    private static Set<Class<?>> extractTypes(final ISingleOperand2<? extends ISingleOperand3> first, final List<CompoundSingleOperand2> items) {
-        final Set<Class<?>> types = new HashSet<>();
+    private static Set<PropType> extractTypes(final ISingleOperand2<? extends ISingleOperand3> first, final List<CompoundSingleOperand2> items) {
+        final Set<PropType> types = new HashSet<>();
         types.add(first.type());
         for (final CompoundSingleOperand2 item : items) {
             types.add(item.operand.type());

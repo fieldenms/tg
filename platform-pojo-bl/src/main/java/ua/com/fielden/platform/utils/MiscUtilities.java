@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 
 import javax.swing.filechooser.FileFilter;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public class MiscUtilities {
 

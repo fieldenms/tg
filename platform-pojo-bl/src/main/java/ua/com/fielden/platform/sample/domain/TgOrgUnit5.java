@@ -4,6 +4,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
@@ -22,7 +23,7 @@ import ua.com.fielden.platform.types.Money;
 @KeyType(DynamicEntityKey.class)
 @MapEntityTo
 @CompanionObject(ITgOrgUnit5.class)
-public class TgOrgUnit5 extends AbstractEntity<DynamicEntityKey> {
+public class TgOrgUnit5 extends AbstractPersistentEntity<DynamicEntityKey> {
 
     @IsProperty
     @Required
@@ -41,18 +42,18 @@ public class TgOrgUnit5 extends AbstractEntity<DynamicEntityKey> {
     @MapTo
     @Title(value = "Fuel Type", desc = "Desc")
     private TgFuelType fuelType;
-    
-    @IsProperty
-    @Readonly
-    @Calculated
-    private Money maxVehPrice;
-    protected static final ExpressionModel maxVehPrice_ = expr().model(select(TeVehicle.class).where().prop("station").eq().extProp(ID).yield().maxOf().prop("price").modelAsPrimitive()).model();
 
     @IsProperty
     @Readonly
     @Calculated
-    private Money maxVehPurchasePrice;
-    protected static final ExpressionModel maxVehPurchasePrice_ = expr().model(select(TeVehicle.class).where().prop("station").eq().extProp(ID).yield().maxOf().prop("purchasePrice").modelAsPrimitive()).model();
+    private Money averageVehPrice;
+    protected static final ExpressionModel averageVehPrice_ = expr().model(select(TgVehicle.class).where().prop("station").eq().extProp(ID).yield().avgOf().prop("price").modelAsPrimitive()).model();
+
+    @IsProperty
+    @Readonly
+    @Calculated
+    private Money averageVehPurchasePrice;
+    protected static final ExpressionModel averageVehPurchasePrice_ = expr().model(select(TgVehicle.class).where().prop("station").eq().extProp(ID).yield().avgOf().prop("purchasePrice").modelAsPrimitive()).model();
 
     @IsProperty
     @Readonly
@@ -70,25 +71,25 @@ public class TgOrgUnit5 extends AbstractEntity<DynamicEntityKey> {
     public Integer getVehicleCount() {
         return vehicleCount;
     }
-    
+
     @Observable
-    protected TgOrgUnit5 setMaxVehPurchasePrice(final Money maxVehPurchasePrice) {
-        this.maxVehPurchasePrice = maxVehPurchasePrice;
+    protected TgOrgUnit5 setAverageVehPurchasePrice(final Money averageVehPurchasePrice) {
+        this.averageVehPurchasePrice = averageVehPurchasePrice;
         return this;
     }
 
-    public Money getMaxVehPurchasePrice() {
-        return maxVehPurchasePrice;
+    public Money getAverageVehPurchasePrice() {
+        return averageVehPurchasePrice;
     }
-    
+
     @Observable
-    protected TgOrgUnit5 setMaxVehPrice(final Money maxVehPrice) {
-        this.maxVehPrice = maxVehPrice;
+    protected TgOrgUnit5 setAverageVehPrice(final Money averageVehPrice) {
+        this.averageVehPrice = averageVehPrice;
         return this;
     }
 
-    public Money getMaxVehPrice() {
-        return maxVehPrice;
+    public Money getAverageVehPrice() {
+        return averageVehPrice;
     }
 
     @Observable

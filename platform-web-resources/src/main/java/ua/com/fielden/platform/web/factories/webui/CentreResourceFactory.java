@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.factories.webui;
 
-import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.getEntityCentre;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.extractSaveAsName;
+import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.getEntityCentre;
 
 import org.restlet.Request;
 import org.restlet.Response;
@@ -11,7 +11,6 @@ import org.restlet.data.Method;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.utils.IDates;
@@ -30,7 +29,6 @@ import ua.com.fielden.platform.web.resources.webui.CentreResource;
  *
  */
 public class CentreResourceFactory extends Restlet {
-    private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
     private final RestServerUtil restUtil;
     private final ICompanionObjectFinder companionFinder;
@@ -45,7 +43,6 @@ public class CentreResourceFactory extends Restlet {
      *
      */
     public CentreResourceFactory(final IWebUiConfig webUiConfig, final Injector injector) {
-        this.domainTreeEnhancerCache = injector.getInstance(IDomainTreeEnhancerCache.class);
         this.webUiConfig = webUiConfig;
         this.restUtil = injector.getInstance(RestServerUtil.class);
         this.critGenerator = injector.getInstance(ICriteriaGenerator.class);
@@ -70,7 +67,6 @@ public class CentreResourceFactory extends Restlet {
                     dates,
                     companionFinder,
                     critGenerator,
-                    domainTreeEnhancerCache,
                     webUiConfig,
                     sharingModel,
                     getContext(),

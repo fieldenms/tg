@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.persistence.types;
 
 import static java.lang.String.format;
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.io.Serializable;
 import java.sql.PreparedStatement;

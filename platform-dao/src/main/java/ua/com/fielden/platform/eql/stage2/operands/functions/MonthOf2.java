@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.operands.functions;
 
-import ua.com.fielden.platform.eql.stage2.TransformationContext2;
-import ua.com.fielden.platform.eql.stage2.TransformationResult2;
+import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
+import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.functions.MonthOf3;
@@ -13,9 +13,9 @@ public class MonthOf2 extends DatePartFunction2<MonthOf3> {
     }
 
     @Override
-    public TransformationResult2<MonthOf3> transform(final TransformationContext2 context) {
-        final TransformationResult2<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
-        return new TransformationResult2<>(new MonthOf3(operandTransformationResult.item, type, hibType), operandTransformationResult.updatedContext);
+    public TransformationResultFromStage2To3<MonthOf3> transform(final TransformationContextFromStage2To3 context) {
+        final TransformationResultFromStage2To3<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
+        return new TransformationResultFromStage2To3<>(new MonthOf3(operandTransformationResult.item, type), operandTransformationResult.updatedContext);
     }
     
     @Override

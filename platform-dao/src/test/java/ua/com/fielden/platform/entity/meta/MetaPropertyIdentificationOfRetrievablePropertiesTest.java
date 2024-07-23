@@ -82,7 +82,7 @@ public class MetaPropertyIdentificationOfRetrievablePropertiesTest extends Abstr
         final List<MetaProperty<?>> retrievableProps = cat1.getProperties().values().stream().
                 filter(p -> p.isRetrievable()).collect(Collectors.toList());
 
-        assertEquals(2, retrievableProps.size());
+        assertEquals(8, retrievableProps.size());
 
         final Set<String> names = retrievableProps.stream().map(p -> p.getName()).collect(Collectors.toSet());
         assertTrue(names.contains("name"));
@@ -96,7 +96,7 @@ public class MetaPropertyIdentificationOfRetrievablePropertiesTest extends Abstr
         final List<MetaProperty<?>> retrievableProps = veh.getProperties().values().stream()
                 .filter(p -> p.isRetrievable()).collect(Collectors.toList());
 
-        assertEquals(23, retrievableProps.size());
+        assertEquals(24, retrievableProps.size());
 
         final Set<String> names = retrievableProps.stream().map(p -> p.getName()).collect(Collectors.toSet());
         assertTrue(names.contains(KEY));
@@ -122,6 +122,7 @@ public class MetaPropertyIdentificationOfRetrievablePropertiesTest extends Abstr
         assertTrue(names.contains("calc6"));
         assertTrue(names.contains("calcModel"));
         assertTrue(names.contains("finDetails"));
+        assertTrue(names.contains("maxReading"));
     }
 
     @Override

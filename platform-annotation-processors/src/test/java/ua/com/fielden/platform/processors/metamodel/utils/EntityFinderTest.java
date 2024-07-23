@@ -1,49 +1,37 @@
 package ua.com.fielden.platform.processors.metamodel.utils;
 
-import static java.util.stream.Collectors.joining;
-import static metamodels.MetaModels.ExampleEntity_;
-import static metamodels.MetaModels.SubEntity_;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+import ua.com.fielden.platform.annotations.metamodel.DomainEntity;
+import ua.com.fielden.platform.annotations.metamodel.WithMetaModel;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
+import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
+import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
+import ua.com.fielden.platform.processors.test_entities.SubEntity;
+import ua.com.fielden.platform.processors.test_utils.ProcessingRule;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.utils.Pair;
 
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
-
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-
-import com.google.testing.compile.CompilationRule;
-
-import ua.com.fielden.platform.annotations.metamodel.DomainEntity;
-import ua.com.fielden.platform.annotations.metamodel.WithMetaModel;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractPersistentEntity;
-import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.EntityTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
-import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
-import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
-import ua.com.fielden.platform.processors.test_entities.SubEntity;
-import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.utils.Pair;
+import static java.util.stream.Collectors.joining;
+import static metamodels.MetaModels.ExampleEntity_;
+import static metamodels.MetaModels.SubEntity_;
+import static org.junit.Assert.*;
 
 /**
  * A test case for utility functions in {@link EntityFinder}.
@@ -54,7 +42,7 @@ import ua.com.fielden.platform.utils.Pair;
 public class EntityFinderTest {
 
     @ClassRule
-    public static CompilationRule rule = new CompilationRule();
+    public static ProcessingRule rule = new ProcessingRule();
     private static Elements elements;
     private static Types types;
     private static EntityFinder entityFinder;
@@ -63,7 +51,7 @@ public class EntityFinderTest {
     public static void setup() {
         elements = rule.getElements();
         types = rule.getTypes();
-        entityFinder = new EntityFinder(elements, types);
+        entityFinder = new EntityFinder(rule.getProcessingEnvironment());
     }
 
     @Test
@@ -299,6 +287,17 @@ public class EntityFinderTest {
     }
 
     @Test
+    public void union_entities_are_meta_modeled() {
+        assertTrue(entityFinder.isEntityThatNeedsMetaModel(entityFinder.findEntity(SimpleUnionEntity.class)));
+    }
+
+    @Test
+    public void synthetic_entities_are_meta_modeled() {
+        assertTrue(entityFinder.isEntityThatNeedsMetaModel(entityFinder.findEntity(SyntheticEntityWithModel.class)));
+        assertTrue(entityFinder.isEntityThatNeedsMetaModel(entityFinder.findEntity(SyntheticEntityWithModels.class)));
+    }
+
+    @Test
     public void getEntityTitleAndDesc_is_equivalent_to_TitlesDescsGetter() {
         final var userTitleAndDesc = Pair.pair("User", "User entity");
         assertEquals(userTitleAndDesc, TitlesDescsGetter.getEntityTitleAndDesc(User.class));
@@ -467,6 +466,31 @@ public class EntityFinderTest {
      */
     @DomainEntity
     public static class NonEntity {
+    }
+
+    public static class SimpleUnionEntity extends AbstractUnionEntity {
+        @IsProperty
+        @MapTo
+        @Title(value = "User")
+        private User user;
+
+        public User getUser() {
+            return user;
+        }
+
+        @Observable
+        public SimpleUnionEntity setUser(final User user) {
+            this.user = user;
+            return this;
+        }
+    }
+
+    public static class SyntheticEntityWithModel extends AbstractEntity<String> {
+        static final EntityResultQueryModel<SyntheticEntityWithModel> model_ = null;
+    }
+
+    public static class SyntheticEntityWithModels extends AbstractEntity<String> {
+        static final List<EntityResultQueryModel<SyntheticEntityWithModels>> models_ = null;
     }
 
 }

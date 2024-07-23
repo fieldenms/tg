@@ -10,9 +10,10 @@ import org.restlet.data.Method;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.security.IAuthorisationModel;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -32,7 +33,6 @@ import ua.com.fielden.platform.web.resources.webui.CriteriaResource;
 public class CriteriaResourceFactory extends Restlet {
     private final RestServerUtil restUtil;
     private final ICompanionObjectFinder companionFinder;
-    private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
     private final ICriteriaGenerator critGenerator;
     
@@ -41,13 +41,14 @@ public class CriteriaResourceFactory extends Restlet {
     private final IDates dates;
     private final EntityFactory entityFactory;
     private final ICentreConfigSharingModel sharingModel;
+    private final IAuthorisationModel authorisationModel;
+    private final ISecurityTokenProvider securityTokenProvider;
 
     /**
      * Instantiates a factory for criteria entity resource.
      *
      */
     public CriteriaResourceFactory(final IWebUiConfig webUiConfig, final Injector injector) {
-        this.domainTreeEnhancerCache = injector.getInstance(IDomainTreeEnhancerCache.class);
         this.webUiConfig = webUiConfig;
         this.restUtil = injector.getInstance(RestServerUtil.class);
         this.critGenerator = injector.getInstance(ICriteriaGenerator.class);
@@ -57,6 +58,8 @@ public class CriteriaResourceFactory extends Restlet {
         this.dates = injector.getInstance(IDates.class);
         this.entityFactory = injector.getInstance(EntityFactory.class);
         this.sharingModel = injector.getInstance(ICentreConfigSharingModel.class);
+        this.authorisationModel = injector.getInstance(IAuthorisationModel.class);
+        this.securityTokenProvider = injector.getInstance(ISecurityTokenProvider.class);
     }
     
     @Override
@@ -67,7 +70,6 @@ public class CriteriaResourceFactory extends Restlet {
             new CriteriaResource(
                     restUtil,
                     getEntityCentre(request, webUiConfig),
-                    domainTreeEnhancerCache,
                     webUiConfig,
                     companionFinder,
                     userProvider,
@@ -76,6 +78,8 @@ public class CriteriaResourceFactory extends Restlet {
                     critGenerator,
                     entityFactory,
                     sharingModel,
+                    authorisationModel,
+                    securityTokenProvider,
                     getContext(),
                     request,
                     response //
