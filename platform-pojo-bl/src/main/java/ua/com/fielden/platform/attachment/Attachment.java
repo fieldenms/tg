@@ -4,15 +4,11 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 
 import java.math.BigDecimal;
-import java.math.MathContext;
 import java.util.Date;
 
 import ua.com.fielden.platform.attachment.definers.AssignAttachmentTitle;
 import ua.com.fielden.platform.attachment.definers.UpdateAttachmentRevNo;
-import ua.com.fielden.platform.attachment.validators.AttachmentTitleValidator;
-import ua.com.fielden.platform.attachment.validators.CanBeUsedAsLastAttachmentRev;
-import ua.com.fielden.platform.attachment.validators.CanBeUsedAsPrevAttachmentRev;
-import ua.com.fielden.platform.attachment.validators.IsRevNoAlignedWithPrevRevision;
+import ua.com.fielden.platform.attachment.validators.*;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
@@ -168,12 +164,14 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     @IsProperty(precision = 8, scale = 6)
     @MapTo
     @Title(value = "Latitude (North)", desc = "Latitude (North) from GPS coordinates embedded within this attachment.")
+    @BeforeChange(@Handler(LatitudeValidator.class))
     private BigDecimal latitude;
 
     // Longitude range: [-180, 180]
     @IsProperty(precision = 9, scale = 6)
     @MapTo
     @Title(value = "Longitude (East)", desc = "Longitude (East) from GPS coordinates embedded within this attachment.")
+    @BeforeChange(@Handler(LongitudeValidator.class))
     private BigDecimal longitude;
 
     public BigDecimal getLongitude() {
