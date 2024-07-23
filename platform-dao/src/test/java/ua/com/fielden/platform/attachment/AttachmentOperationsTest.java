@@ -14,6 +14,7 @@ import java.nio.file.Path;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.junit.Assert.*;
+import static ua.com.fielden.platform.test_utils.TestUtils.assertFileReadable;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
 /**
@@ -30,9 +31,6 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
         
         final String fileNameToUpload = "!readme.txt"; 
         final Path fileToUpload = Path.of(coAttachmentUploader.attachmentsLocation, fileNameToUpload);
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
-
         final Attachment attachment = upload(coAttachmentUploader, fileToUpload, "readme.txt");
  
         assertNotNull(attachment);
@@ -40,8 +38,7 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
         assertNotNull(attachment.getSha1());
         
         final Path uploadedFile = Path.of(coAttachmentUploader.attachmentsLocation, attachment.getSha1());
-        assertTrue(uploadedFile.toFile().exists());
-        assertTrue(uploadedFile.toFile().canRead());
+        assertFileReadable(uploadedFile);
 
         // let's do clean up by deleting just uploaded file
         assertTrue(Files.deleteIfExists(uploadedFile));
@@ -61,8 +58,7 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
         assertNotNull(attachment.getSha1());
 
         final Path uploadedFile = Path.of(coAttachmentUploader.attachmentsLocation, attachment.getSha1());
-        assertTrue(uploadedFile.toFile().exists());
-        assertTrue(uploadedFile.toFile().canRead());
+        assertFileReadable(uploadedFile);
 
         // let's do clean up by deleting just uploaded file
         assertTrue(Files.deleteIfExists(uploadedFile));
@@ -102,8 +98,7 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
             assertEquals(attachment2.getId(), attachment3.getId());
 
             uploadedFile = Path.of(coAttachmentUploader.attachmentsLocation, attachment1.getSha1());
-            assertTrue(uploadedFile.toFile().exists());
-            assertTrue(uploadedFile.toFile().canRead());
+            assertFileReadable(uploadedFile);
         } finally {
             // let's do clean up by deleting just uploaded file
             if (uploadedFile != null) {
@@ -126,8 +121,7 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
                     .setInputStream(new ByteArrayInputStream("some data".getBytes()));
             attachment1 = coAttachmentUploader.save(newUpload1).getKey();
             uploadedFile = Path.of(coAttachmentUploader.attachmentsLocation, attachment1.getSha1());
-            assertTrue(uploadedFile.toFile().exists());
-            assertTrue(uploadedFile.toFile().canRead());
+            assertFileReadable(uploadedFile);
 
             final AttachmentUploader newUpload2 = (AttachmentUploader) new_(AttachmentUploader.class)
                     .setOrigFileName("readme.txt")
@@ -162,9 +156,7 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
         
         final String fileNameToUpload = "!readme.txt"; 
         final Path fileToUpload = Path.of(coAttachmentUploader.attachmentsLocation, fileNameToUpload);
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
-        
+
         final Attachment attachment1 = upload(coAttachmentUploader, fileToUpload, "readme1.txt");
         final Attachment attachment2 = upload(coAttachmentUploader, fileToUpload, "readme2.txt");
         
@@ -176,8 +168,7 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
         assertEquals(attachment1.getSha1(), attachment2.getSha1());
         
         final Path uploadedFile = Path.of(coAttachmentUploader.attachmentsLocation, attachment1.getSha1());
-        assertTrue(uploadedFile.toFile().exists());
-        assertTrue(uploadedFile.toFile().canRead());
+        assertFileReadable(uploadedFile);
 
         // let's do clean up by deleting just uploaded file
         assertTrue(Files.deleteIfExists(uploadedFile));
@@ -189,14 +180,11 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
         
         final String fileNameToUpload = "!readme.txt"; 
         final Path fileToUpload = Path.of(coAttachmentUploader.attachmentsLocation, fileNameToUpload);
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
-        
+
         final Attachment attachment = upload(coAttachmentUploader, fileToUpload, "readme.txt");
 
         final Path uploadedFile = Path.of(coAttachmentUploader.attachmentsLocation, attachment.getSha1());
-        assertTrue(uploadedFile.toFile().exists());
-        assertTrue(uploadedFile.toFile().canRead());
+        assertFileReadable(uploadedFile);
 
         co(Attachment.class).delete(attachment);
         assertFalse(co(Attachment.class).entityExists(attachment));
@@ -209,9 +197,7 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
         
         final String fileNameToUpload = "!readme.txt"; 
         final Path fileToUpload = Path.of(coAttachmentUploader.attachmentsLocation, fileNameToUpload);
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
-        
+
         final Attachment attachment1 = upload(coAttachmentUploader, fileToUpload, "readme1.txt");
         final Attachment attachment2 = upload(coAttachmentUploader, fileToUpload, "readme2.txt");
 
@@ -219,8 +205,7 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
         assertFalse(co(Attachment.class).entityExists(attachment1));
         
         final Path uploadedFile = Path.of(coAttachmentUploader.attachmentsLocation, attachment1.getSha1());
-        assertTrue(uploadedFile.toFile().exists());
-        assertTrue(uploadedFile.toFile().canRead());
+        assertFileReadable(uploadedFile);
 
         co(Attachment.class).delete(attachment2);
         assertFalse(co(Attachment.class).entityExists(attachment2));
@@ -233,14 +218,11 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
         
         final String fileNameToUpload = "!readme.txt"; 
         final Path fileToUpload = Path.of(coAttachmentUploader.attachmentsLocation, fileNameToUpload);
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
-        
+
         final Attachment attachment = upload(coAttachmentUploader, fileToUpload, "readme.txt");
         final Path uploadedFile = Path.of(coAttachmentUploader.attachmentsLocation, attachment.getSha1());
-        assertTrue(uploadedFile.toFile().exists());
-        assertTrue(uploadedFile.toFile().canRead());
-        
+        assertFileReadable(uploadedFile);
+
         // let's delete the file to make attachment an orphan
         assertTrue(Files.deleteIfExists(uploadedFile));
         assertFalse(uploadedFile.toFile().exists());
@@ -255,9 +237,7 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
         
         final String fileNameToUpload = "!readme.txt"; 
         final Path fileToUpload = Path.of(coAttachmentUploader.attachmentsLocation, fileNameToUpload);
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
-        
+
         final Attachment attachment1 = upload(coAttachmentUploader, fileToUpload, "readme1.txt");
         final Attachment attachment2 = upload(coAttachmentUploader, fileToUpload, "readme2.txt");
         
@@ -299,14 +279,9 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
 
     /**
      * This is just a helper method for performing file uploading.
-     * 
-     * @param coAttachmentUploader
-     * @param fileToUpload
-     * @param origFileName
-     * @return
-     * @throws IOException
      */
     private Attachment upload(final AttachmentUploaderDao coAttachmentUploader, final Path fileToUpload, final String origFileName) throws IOException {
+        assertFileReadable(fileToUpload);
         try (final InputStream is = new FileInputStream(fileToUpload.toAbsolutePath().toString())) {
             final AttachmentUploader uploader = new_(AttachmentUploader.class);
             uploader.setOrigFileName(origFileName).setMime("text/plain").setInputStream(is);

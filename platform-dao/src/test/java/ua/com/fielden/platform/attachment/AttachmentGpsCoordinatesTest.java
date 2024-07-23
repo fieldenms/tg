@@ -23,6 +23,7 @@ import static ua.com.fielden.platform.attachment.Attachment.pn_LATITUDE;
 import static ua.com.fielden.platform.attachment.Attachment.pn_LONGITUDE;
 import static ua.com.fielden.platform.attachment.validators.LatitudeValidator.ERR_LATITUDE_RANGE;
 import static ua.com.fielden.platform.attachment.validators.LongitudeValidator.ERR_LONGITUDE_RANGE;
+import static ua.com.fielden.platform.test_utils.TestUtils.assertFileReadable;
 
 /**
  * Test case that covers the capturing of GPS coordinates from Exif image data..
@@ -50,13 +51,10 @@ public class AttachmentGpsCoordinatesTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void latitude_and_longitude_are_extracted_as_a_result_of_uploading_an_image_with_gps_metadata() throws IOException {
+    public void latitude_and_longitude_are_extracted_as_a_result_of_uploading_an_image_with_gps_metadata() {
         final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
 
         final Path fileToUpload = Path.of(coAttachmentUploader.attachmentsLocation, "gps-0.jpg");
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
-
         final Attachment attachment = uploadJpeg(coAttachmentUploader, fileToUpload);
  
         assertNotNull(attachment);
@@ -69,9 +67,6 @@ public class AttachmentGpsCoordinatesTest extends AbstractDaoTestCase {
         final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
 
         final Path fileToUpload = Path.of(coAttachmentUploader.attachmentsLocation, "nogps-0.jpg");
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
-
         final Attachment attachment = uploadJpeg(coAttachmentUploader, fileToUpload);
 
         assertNotNull(attachment);
@@ -84,9 +79,6 @@ public class AttachmentGpsCoordinatesTest extends AbstractDaoTestCase {
         final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
 
         final Path fileToUpload = Path.of(coAttachmentUploader.attachmentsLocation, "!readme.txt");
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
-
         final Attachment attachment = uploadJpeg(coAttachmentUploader, fileToUpload);
 
         assertNotNull(attachment);
@@ -141,9 +133,6 @@ public class AttachmentGpsCoordinatesTest extends AbstractDaoTestCase {
         final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
 
         final Path fileToUpload = Path.of(coAttachmentUploader.attachmentsLocation, "invalid-lat-gps.jpg");
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
-
         final Attachment attachment = uploadJpeg(coAttachmentUploader, fileToUpload);
 
         assertNotNull(attachment);
@@ -156,9 +145,6 @@ public class AttachmentGpsCoordinatesTest extends AbstractDaoTestCase {
         final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
 
         final Path fileToUpload = Path.of(coAttachmentUploader.attachmentsLocation, "invalid-lon-gps.jpg");
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
-
         final Attachment attachment = uploadJpeg(coAttachmentUploader, fileToUpload);
 
         assertNotNull(attachment);
@@ -167,6 +153,7 @@ public class AttachmentGpsCoordinatesTest extends AbstractDaoTestCase {
     }
 
     private Attachment uploadJpeg(final AttachmentUploaderDao coAttachmentUploader, final Path fileToUpload) {
+        assertFileReadable(fileToUpload.toFile());
         final Attachment attachment;
         try (final InputStream is = new FileInputStream(fileToUpload.toAbsolutePath().toString())) {
             final AttachmentUploader uploader = new_(AttachmentUploader.class);
