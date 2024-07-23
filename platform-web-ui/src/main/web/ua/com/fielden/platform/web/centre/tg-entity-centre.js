@@ -298,7 +298,7 @@ const template = html`
                 </tg-selection-view>
             </div>
         </div>
-        <tg-centre-result-view id="centreResultContainer" centre-scroll$="[[centreScroll]]" on-dragstart="_startDrag" on-dragend="_endDrag" on-dragenter="_dragEntered" on-dragover="_dragOver">
+        <tg-centre-result-view id="centreResultContainer" centre-scroll$="[[centreScroll]]" on-dragstart="_startDrag" on-dragend="_endDrag" on-drop="_dragDrop" on-dragenter="_dragEntered" on-dragover="_dragOver">
             <div id="leftInsertionPointContainer" class="insertion-point-slot layout vertical" scroll-container$="[[!centreScroll]]">
                 <slot id="leftInsertionPointContent" name="left-insertion-point"></slot>
             </div>
@@ -836,7 +836,7 @@ Polymer({
 
     /*************************Insertion point drag related events******************************/
     _startDrag: function (dragEvent) {
-        this._insertionPointToDrag = dragEvent.target.parentElement || dragEvent.target.getRootNode().host;
+        this._insertionPointToDrag = dragEvent.target;
         //configure drag transfer and drag transfer image        
         dragEvent.dataTransfer.effectAllowed = "copyMove";
         const img = document.createElement("img");   
@@ -848,7 +848,18 @@ Polymer({
 
     _endDrag: function (dragEvent) {
         if (this._insertionPointToDrag) {
-            //TODO this._saveinsertionPointOrder();
+            this._insertionPointToDrag = null;
+        }
+    },
+
+    _dragDrop: function (dragEvent) {
+        if (this._insertionPointToDrag) {
+            const insertionPointContainer = this._getInsertionPointContainer(dragEvent);
+            const insertionPoints = insertionPointContainer && [...insertionPointContainer.children];
+            if (insertionPoints) {
+                const nextInsertionPoint = this._getNearestElementInVerticalContainer(insertionPoints, dragEvent);
+                insertionPointContainer.insertBefore(this._insertionPointToDrag, nextInsertionPoint);
+            }
             this._insertionPointToDrag = null;
         }
     },
@@ -856,16 +867,6 @@ Polymer({
     _dragOver: function (e) {
         if (this._insertionPointToDrag) {
             tearDownEvent(e);
-            const insertionPointContaier = this._getInsertionPointContainer(dragEvent);
-            const insertionPoints = this._getInsertionPointsFromContainer(insertionPointContaier);
-            if (insertionPoints) {
-                const nextInsertionPoint = insertionPoints.find(insertionPoint => {
-                    const insertionPouintRect = insertionPoint.getBoundingClientRect();
-                    return e.clientY <= insertionPouintRect.y + insertionPouintRect.height / 2;
-                });
-                this.insertBefore(this._insertionPointToDrag, nextInsertionPoint);
-                this._setSlotAttribute(insertionPointContaier, nextInsertionPoint, e);
-            }
         }
     },
 
@@ -874,50 +875,38 @@ Polymer({
     },
 
     _getInsertionPointContainer: function (event) {
-        const insertionPointContainers = [this.$.leftInsertionPointContainer, this.$.centreInsertionPointContainer, this.$.rightInsertionPointContainer];
-        return insertionPointContainers.find(insertionPointContainer => this._insertionPointContainerContainsEvent(insertionPointContainer, event));
+        const sideContainers = [this.$.leftInsertionPointContainer, this.$.rightInsertionPointContainer];
+        let container = sideContainers.find(c => this._insertionPointContainerContainsEvent(c, event));
+        if (container) {
+            return container.children[0].assignedNodes()[0];
+        } else {
+            const centreContainers = [this.$.topInsertionPointContent.assignedNodes()[0]];
+            const egi = this.$.customEgiSlot.assignedNodes()[0];
+            if (egi && egi.offsetParent !== null) {
+                centreContainers.push(egi);
+            }
+            centreContainers.push(this.$.bottomInsertionPointContent.assignedNodes()[0]);
+            const nextContainer = this._getNearestElementInVerticalContainer(centreContainers, event);
+            if (nextContainer === egi) {
+                return centreContainers[0];
+            } else if (!nextContainer) {
+                return centreContainers[centreContainers.length - 1];
+            }
+            return nextContainer;
+        }
+    },
+
+    _getNearestElementInVerticalContainer(elements, event) {
+        return elements.find(element => {
+            const rect = element.getBoundingClientRect();
+            return event.clientY <= rect.y + rect.height / 2;
+        });
     },
 
     _insertionPointContainerContainsEvent: function (container, event) {
         const containerRect = container.getBoundingClientRect();
         return event.clientX > containerRect.left && event.clientX < containerRect.right && 
                 event.clientY > containerRect.top && event.clientY < containerRect.bottom;
-    },
-
-    _getInsertionPointsFromContainer: function (insertionPointContainer) {
-        return insertionPointContainer && insertionPointContainer.children.flatMap(child => {
-            if (child.tagName === "SLOT" && child.getAttribute("name") !== "custom-egi") {
-                return child.assignedNodes();
-            } else {
-                return [];
-            }
-        })
-    },
-
-    _setSlotAttribute: function (insertionPointContainer, insertionPoint, event) {
-        if (this.$.leftInsertionPointContainer === insertionPointContainer) {
-            insertionPoint.setAttribute("slot" , "left-insertion-point");
-        } else if (this.$.rightInsertionPointContainer === insertionPointContainer) {
-            insertionPoint.setAttribute("slot" , "right-insertion-point");
-        } else if (this.$.centreInsertionPointContainer === insertionPointContainer) {
-            const egi = this.$.customEgiSlot.assignedNodes({ flatten: true })[0];
-            const egiRect = egi && egi.offsetParent !== null && egi.getBoundingClientRect();
-            if (!egiRect) {
-                if (insertionPoint.previousSibling && 
-                    (insertionPoint.previousSibling.getAttribute("slot") === "top-insertion-point" || insertionPoint.previousSibling.getAttribute("slot") === "bottom-insertion-point")) {
-                    insertionPoint.setAttribute("slot", insertionPoint.previousSibling.getAttribute("slot"));
-                } else if (insertionPoint.nextSibling && 
-                    (insertionPoint.nextSibling.getAttribute("slot") === "top-insertion-point" || insertionPoint.nextSibling.getAttribute("slot") === "bottom-insertion-point")) {
-                    insertionPoint.setAttribute("slot", insertionPoint.nextSibling.getAttribute("slot"));
-                } else {
-                    insertionPoint.setAttribute("slot", "top-insertion-point");
-                }
-            } else if (event.clientY <= egiRect.y + egiRect.height / 2) {
-                insertionPoint.setAttribute("slot", "top-insertion-point");
-            } else {
-                insertionPoint.setAttribute("slot", "bottom-insertion-point");
-            }
-        }
     }
     /*****************************************************************************************************/
 });
