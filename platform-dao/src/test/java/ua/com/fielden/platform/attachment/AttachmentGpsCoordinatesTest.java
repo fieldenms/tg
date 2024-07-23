@@ -136,6 +136,36 @@ public class AttachmentGpsCoordinatesTest extends AbstractDaoTestCase {
         assertSuccess.accept(new BigDecimal(0));
     }
 
+    @Test
+    public void gps_coordinates_are_ignored_as_a_result_of_uploading_an_image_with_invalid_latitude() {
+        final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
+
+        final Path fileToUpload = Path.of(coAttachmentUploader.attachmentsLocation, "invalid-lat-gps.jpg");
+        assertTrue(fileToUpload.toFile().exists());
+        assertTrue(fileToUpload.toFile().canRead());
+
+        final Attachment attachment = uploadJpeg(coAttachmentUploader, fileToUpload);
+
+        assertNotNull(attachment);
+        assertNull(attachment.getLatitude());
+        assertNull(attachment.getLongitude());
+    }
+
+    @Test
+    public void gps_coordinates_are_ignored_as_a_result_of_uploading_an_image_with_invalid_longitude() {
+        final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
+
+        final Path fileToUpload = Path.of(coAttachmentUploader.attachmentsLocation, "invalid-lon-gps.jpg");
+        assertTrue(fileToUpload.toFile().exists());
+        assertTrue(fileToUpload.toFile().canRead());
+
+        final Attachment attachment = uploadJpeg(coAttachmentUploader, fileToUpload);
+
+        assertNotNull(attachment);
+        assertNull(attachment.getLatitude());
+        assertNull(attachment.getLongitude());
+    }
+
     private Attachment uploadJpeg(final AttachmentUploaderDao coAttachmentUploader, final Path fileToUpload) {
         final Attachment attachment;
         try (final InputStream is = new FileInputStream(fileToUpload.toAbsolutePath().toString())) {
