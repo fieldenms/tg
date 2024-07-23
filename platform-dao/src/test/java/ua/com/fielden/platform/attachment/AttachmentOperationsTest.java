@@ -37,7 +37,7 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
         assertTrue(attachment.isPersisted());
         assertNotNull(attachment.getSha1());
         
-        final Path uploadedFile = Path.of(coAttachmentUploader.attachmentsLocation, attachment.getSha1());
+        final Path uploadedFile = coAttachmentUploader.attachmentPath(attachment);
         assertFileReadable(uploadedFile);
 
         // let's do clean up by deleting just uploaded file
@@ -57,7 +57,7 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
         assertTrue(attachment.isPersisted());
         assertNotNull(attachment.getSha1());
 
-        final Path uploadedFile = Path.of(coAttachmentUploader.attachmentsLocation, attachment.getSha1());
+        final Path uploadedFile = coAttachmentUploader.attachmentPath(attachment);
         assertFileReadable(uploadedFile);
 
         // let's do clean up by deleting just uploaded file
@@ -97,7 +97,7 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
             assertEquals(attachment1.getId(), attachment2.getId());
             assertEquals(attachment2.getId(), attachment3.getId());
 
-            uploadedFile = Path.of(coAttachmentUploader.attachmentsLocation, attachment1.getSha1());
+            uploadedFile = coAttachmentUploader.attachmentPath(attachment1);
             assertFileReadable(uploadedFile);
         } finally {
             // let's do clean up by deleting just uploaded file
@@ -120,7 +120,7 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
                     .setMime("text/plain")
                     .setInputStream(new ByteArrayInputStream("some data".getBytes()));
             attachment1 = coAttachmentUploader.save(newUpload1).getKey();
-            uploadedFile = Path.of(coAttachmentUploader.attachmentsLocation, attachment1.getSha1());
+            uploadedFile = coAttachmentUploader.attachmentPath(attachment1);
             assertFileReadable(uploadedFile);
 
             final AttachmentUploader newUpload2 = (AttachmentUploader) new_(AttachmentUploader.class)
@@ -167,7 +167,7 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
         assertNotEquals(attachment1, attachment2);
         assertEquals(attachment1.getSha1(), attachment2.getSha1());
         
-        final Path uploadedFile = Path.of(coAttachmentUploader.attachmentsLocation, attachment1.getSha1());
+        final Path uploadedFile = coAttachmentUploader.attachmentPath(attachment1);
         assertFileReadable(uploadedFile);
 
         // let's do clean up by deleting just uploaded file
@@ -183,7 +183,7 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
 
         final Attachment attachment = upload(coAttachmentUploader, fileToUpload, "readme.txt");
 
-        final Path uploadedFile = Path.of(coAttachmentUploader.attachmentsLocation, attachment.getSha1());
+        final Path uploadedFile = coAttachmentUploader.attachmentPath(attachment);
         assertFileReadable(uploadedFile);
 
         co(Attachment.class).delete(attachment);
@@ -204,7 +204,7 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
         co(Attachment.class).delete(attachment1);
         assertFalse(co(Attachment.class).entityExists(attachment1));
         
-        final Path uploadedFile = Path.of(coAttachmentUploader.attachmentsLocation, attachment1.getSha1());
+        final Path uploadedFile = coAttachmentUploader.attachmentPath(attachment1);
         assertFileReadable(uploadedFile);
 
         co(Attachment.class).delete(attachment2);
@@ -220,7 +220,7 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
         final Path fileToUpload = Path.of(coAttachmentUploader.attachmentsLocation, fileNameToUpload);
 
         final Attachment attachment = upload(coAttachmentUploader, fileToUpload, "readme.txt");
-        final Path uploadedFile = Path.of(coAttachmentUploader.attachmentsLocation, attachment.getSha1());
+        final Path uploadedFile = coAttachmentUploader.attachmentPath(attachment);
         assertFileReadable(uploadedFile);
 
         // let's delete the file to make attachment an orphan
@@ -246,7 +246,7 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
         assertFalse(co(Attachment.class).entityExists(attachment1));
         assertFalse(co(Attachment.class).entityExists(attachment2));
         
-        final Path uploadedFile = Path.of(coAttachmentUploader.attachmentsLocation, attachment1.getSha1());
+        final Path uploadedFile = coAttachmentUploader.attachmentPath(attachment1);
         assertFalse(uploadedFile.toFile().exists());
     }
 

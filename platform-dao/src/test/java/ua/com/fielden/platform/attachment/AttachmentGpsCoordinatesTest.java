@@ -41,7 +41,7 @@ public class AttachmentGpsCoordinatesTest extends AbstractDaoTestCase {
         uploads.clear();
 
         for (final var attachment : localUploads) {
-            final var path = Path.of(coAttachmentUploader.attachmentsLocation, attachment.getSha1());
+            final var path = coAttachmentUploader.attachmentPath(attachment);
             try {
                 Files.deleteIfExists(path);
             } catch (final IOException e) {

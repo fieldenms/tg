@@ -70,6 +70,15 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
     }
 
     @Override
+    public Path attachmentPath(final Attachment attachment) {
+        return attachmentPath(attachment.getSha1());
+    }
+
+    private Path attachmentPath(final String sha1) {
+        return Path.of(attachmentsLocation, sha1);
+    }
+
+    @Override
     @SessionRequired
     public AttachmentUploader save(final AttachmentUploader uploader) {
         uploader.getEventSourceSubject().ifPresent(ess -> ess.publish(5));
@@ -112,7 +121,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             uploader.getEventSourceSubject().ifPresent(ess -> publishWithDelay(ess, 65));
 
             // if the target file already exist then need to create it by copying tmp file
-            final File targetFile = new File(targetFileName(sha1));
+            final File targetFile = attachmentPath(sha1).toFile();
             if (!targetFile.exists()) {
                 final Path targetPath = Paths.get(targetFile.toURI());
                 Files.copy(tmpPath, targetPath);
@@ -206,10 +215,6 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
 
     private String tmpFileName() {
         return attachmentsLocation + File.separator  + getUsername() + "_" + randomUUID().toString() + ".tmp";
-    }
-
-    private String targetFileName(final String sha1) {
-        return attachmentsLocation + File.separator  + sha1;
     }
 
     private static Attachment setCoordinates(final Attachment attachment, final ExifGeoUtils.Coordinates coordinates) {
