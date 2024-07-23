@@ -164,6 +164,7 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     @IsProperty(precision = 8, scale = 6)
     @MapTo
     @Title(value = "Latitude", desc = "Latitude (North) from GPS coordinates embedded within this attachment.")
+    @Readonly
     @BeforeChange(@Handler(LatitudeValidator.class))
     private BigDecimal latitude;
 
@@ -171,6 +172,7 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     @IsProperty(precision = 9, scale = 6)
     @MapTo
     @Title(value = "Longitude", desc = "Longitude (East) from GPS coordinates embedded within this attachment.")
+    @Readonly
     @BeforeChange(@Handler(LongitudeValidator.class))
     private BigDecimal longitude;
 
