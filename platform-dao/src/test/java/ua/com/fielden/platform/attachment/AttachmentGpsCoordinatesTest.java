@@ -60,6 +60,7 @@ public class AttachmentGpsCoordinatesTest extends AbstractDaoTestCase {
         assertNotNull(attachment);
         assertEquals(new BigDecimal("52.512211"), attachment.getLatitude());
         assertEquals(new BigDecimal("13.402742"), attachment.getLongitude());
+        assertFileReadable(coAttachmentUploader.attachmentPath(attachment));
     }
 
     @Test
@@ -72,6 +73,7 @@ public class AttachmentGpsCoordinatesTest extends AbstractDaoTestCase {
         assertNotNull(attachment);
         assertNull(attachment.getLatitude());
         assertNull(attachment.getLongitude());
+        assertFileReadable(coAttachmentUploader.attachmentPath(attachment));
     }
 
     @Test
@@ -84,6 +86,7 @@ public class AttachmentGpsCoordinatesTest extends AbstractDaoTestCase {
         assertNotNull(attachment);
         assertNull(attachment.getLatitude());
         assertNull(attachment.getLongitude());
+        assertFileReadable(coAttachmentUploader.attachmentPath(attachment));
     }
 
     @Test
@@ -138,6 +141,7 @@ public class AttachmentGpsCoordinatesTest extends AbstractDaoTestCase {
         assertNotNull(attachment);
         assertNull(attachment.getLatitude());
         assertNull(attachment.getLongitude());
+        assertFileReadable(coAttachmentUploader.attachmentPath(attachment));
     }
 
     @Test
@@ -150,6 +154,7 @@ public class AttachmentGpsCoordinatesTest extends AbstractDaoTestCase {
         assertNotNull(attachment);
         assertNull(attachment.getLatitude());
         assertNull(attachment.getLongitude());
+        assertFileReadable(coAttachmentUploader.attachmentPath(attachment));
     }
 
     private Attachment uploadJpeg(final AttachmentUploaderDao coAttachmentUploader, final Path fileToUpload) {
