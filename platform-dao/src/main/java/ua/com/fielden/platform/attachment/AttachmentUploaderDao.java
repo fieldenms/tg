@@ -3,6 +3,8 @@ package ua.com.fielden.platform.attachment;
 import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.attachment.Attachment.pn_LATITUDE;
+import static ua.com.fielden.platform.attachment.Attachment.pn_LONGITUDE;
 import static ua.com.fielden.platform.error.Result.*;
 
 import java.io.BufferedInputStream;
@@ -211,9 +213,19 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
     }
 
     private static Attachment setCoordinates(final Attachment attachment, final ExifGeoUtils.Coordinates coordinates) {
-        return attachment
-                .setLatitude(BigDecimal.valueOf(coordinates.latitude()))
-                .setLongitude(BigDecimal.valueOf(coordinates.longitude()));
+        attachment.setLatitude(BigDecimal.valueOf(coordinates.latitude()));
+        if (!attachment.getProperty(pn_LATITUDE).isValid()) {
+            return clearCoordinates(attachment);
+        }
+        attachment.setLongitude(BigDecimal.valueOf(coordinates.longitude()));
+        if (!attachment.getProperty(pn_LONGITUDE).isValid()) {
+            return clearCoordinates(attachment);
+        }
+        return attachment;
+    }
+
+    private static Attachment clearCoordinates(final Attachment attachment) {
+        return attachment.setLatitude(null).setLongitude(null);
     }
 
 }
