@@ -108,7 +108,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             // let's validate the file nature by analysing its magic number
             canAcceptFile(uploader, tmpPath, getUser()).ifFailure(Result::throwRuntime);
 
-            coordinates = ExifGeoUtils.getCoordinates(tmpPath.toFile());
+            coordinates = getCoordinatesSafely(tmpPath.toFile());
             uploader.getEventSourceSubject().ifPresent(ess -> publishWithDelay(ess, 65));
 
             // if the target file already exist then need to create it by copying tmp file
@@ -226,6 +226,15 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
 
     private static Attachment clearCoordinates(final Attachment attachment) {
         return attachment.setLatitude(null).setLongitude(null);
+    }
+
+    private static Optional<ExifGeoUtils.Coordinates> getCoordinatesSafely(final File file) {
+        try {
+            return ExifGeoUtils.getCoordinates(file);
+        } catch (final Exception ex) {
+            LOGGER.warn("Error while obtaining coordinates from file [%s]".formatted(file.getAbsolutePath()), ex);
+            return Optional.empty();
+        }
     }
 
 }
