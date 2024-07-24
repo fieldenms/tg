@@ -56,6 +56,23 @@ public final class DynamicPropertyAccess {
         }
     }
 
+    /**
+     * Scans an entity type and builds an internal data structure, if it's not already built, to enable efficient dynamic
+     * property access.
+     * <p>
+     * In general, such internal data structures are built on demand, but this method can be used to build them ahead of time.
+     */
+    public void scan(final Class<? extends AbstractEntity<?>> entityType) {
+        getData(entityType);
+    }
+
+    /**
+     * @see #scan(Class)
+     */
+    public void scan(final Iterable<? extends Class<? extends AbstractEntity<?>>> entityTypes) {
+        entityTypes.forEach(this::scan);
+    }
+
     // --- Implementation
 
     private final Map<Class<?>, Data> entityDataMap = new ConcurrentHashMap<>();
