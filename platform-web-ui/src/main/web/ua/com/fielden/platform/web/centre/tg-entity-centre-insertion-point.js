@@ -132,7 +132,7 @@ const template = html`
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning tg-entity-centre-styles paper-material-styles"></style>
-    <div id="titleBar" draggable='true' class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, alternativeView)]]" on-track="_moveDialog">
+    <div id="titleBar" draggable$="[[_draggable]]" class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, alternativeView)]]" on-track="_moveDialog">
         <span class="title-text truncate" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
         <div class="layout horizontal centre">
             <paper-icon-button class="title-bar-button" icon="[[_detachButtonIcon(detachedView)]]" on-tap="_toggleDetach" tooltip-text$="[[_detachTooltip(detachedView)]]"></paper-icon-button>
@@ -361,6 +361,8 @@ Polymer({
         this.addEventListener(clickEvent, this._onCaptureClick, true);
         this.addEventListener('focus', this._onCaptureClick, true);
         this.addEventListener('keydown', this._onCaptureClick, true);
+        //Title bar event to identify whether element is draggable or not
+        this.$.titleBar.addEventListener("mousedown", this._handleDraggable.bind(this), true);
     },
 
     attached: function () {
@@ -699,6 +701,14 @@ Polymer({
     _onCaptureClick: function (e) {
         if ((this.detachedView || this.maximised) && this.contextRetriever) {
             this.contextRetriever().insertionPointManager.bringToFront(this);
+        }
+    },
+
+    _handleDraggable: function (e) {
+        if ((!this.detachedView || e.altKey || e.metaKey) && (!this.maximised)) {
+            this._draggable = 'true';
+        } else {
+            this._draggable = 'false';
         }
     },
 
