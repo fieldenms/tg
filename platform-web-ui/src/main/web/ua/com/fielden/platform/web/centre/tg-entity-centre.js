@@ -842,6 +842,7 @@ Polymer({
                 containerToDrop.insertBefore(this._insertionPointToDrag, this.$.placeHolder);
                 this._insertionPointToDrag.detachedView = false;
                 this._saveInsertionPointOrder();
+                this.notifyResize();
             }
         }
     },
