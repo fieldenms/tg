@@ -527,7 +527,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             throw new StrictProxyException(format("Cannot get value for proxied property [%s] of entity [%s].", propertyName, getType().getName()));
         }
         try {
-            return Finder.findFieldValueByName(this, propertyName);
+            return (T) DynamicPropertyAccess.INSTANCE.getProperty(this, propertyName);
         } catch (final Exception e) {
             // there are cases where this.toString() may fail such as for non-initialized union entities
             // need to degrade gracefully in order to to hide the original exception...
@@ -559,19 +559,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      */
     public AbstractEntity<K> set(final String propertyName, final Object value) {
         try {
-            final Class<?> propertyType = Finder.findFieldByName(getType(), propertyName).getType();
-            final String setterName = Mutator.SETTER.getName(propertyName);
-            final Method setter = Reflector.getMethod(this, setterName, propertyType);
-            Object valueToInvokeOn = this;
-            if (!setter.getDeclaringClass().isAssignableFrom(getType()) && AbstractUnionEntity.class.isAssignableFrom(getType())) {
-                valueToInvokeOn = ((AbstractUnionEntity) this).activeEntity();
-            }
-            // making method accessible if it isn't
-            final boolean isAccessible = setter.isAccessible();
-            setter.setAccessible(true);
-            setter.invoke(valueToInvokeOn, value);
-            // reverting changes to 'accessible' property of Method class
-            setter.setAccessible(isAccessible);
+            DynamicPropertyAccess.INSTANCE.setProperty(this, propertyName, value);
             return this;
         } catch (final Exception e) {
             // let's be a little more intelligent about handling instances of InvocationTargetException to report errors without the unnecessary nesting
