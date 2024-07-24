@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity;
 
+import javax.annotation.Nullable;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
@@ -34,13 +35,26 @@ public final class DynamicPropertyAccess {
      */
     public Object getProperty(final AbstractEntity<?> entity, final CharSequence prop) {
         final String[] propPath = DOT_SPLITTER_PATTERN.split(prop);
-        return getProperty_(declaringEntity(entity, propPath), last(propPath));
+        final AbstractEntity<?> lastPropOwner = lastPropOwner(entity, propPath);
+        return lastPropOwner == null ? null : getProperty_(lastPropOwner, last(propPath));
     }
 
-    private AbstractEntity<?> declaringEntity(final AbstractEntity<?> entity, final String[] path) {
+    /**
+     * Returns an entity that owns the last property in the path.
+     * <p>
+     * Examples:
+     * <pre>
+     * (entity, "x")   -> entity
+     * (entity, "x.y") -> entity.x
+     * </pre>
+     */
+    private @Nullable AbstractEntity<?> lastPropOwner(final AbstractEntity<?> entity, final String[] path) {
         AbstractEntity<?> localEntity = entity;
         for (int i = 0; i < path.length - 1; i++) {
             localEntity = (AbstractEntity<?>) getProperty_(localEntity, path[i]);
+            if (localEntity == null) {
+                return null;
+            }
         }
         return localEntity;
     }

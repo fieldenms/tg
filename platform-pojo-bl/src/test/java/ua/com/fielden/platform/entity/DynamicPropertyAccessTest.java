@@ -6,6 +6,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgPersonName;
+import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 
 import static org.junit.Assert.assertEquals;
@@ -95,6 +96,13 @@ public class DynamicPropertyAccessTest {
         final var entity = factory.newEntity(TgAuthor.class);
         entity.setName(factory.newByKey(TgPersonName.class, "Joe"));
         assertEquals("Joe", entity.get("name.key"));
+    }
+
+    @Test
+    public void any_property_on_a_path_whose_value_is_null_makes_the_whole_result_null() {
+        final var entity = factory.newEntity(TgWorkOrder.class);
+        assertNull(entity.getVehicle());
+        assertNull(entity.get("vehicle.key"));
     }
 
 }
