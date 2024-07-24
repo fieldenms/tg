@@ -12,11 +12,12 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static graphql.com.google.common.collect.ImmutableMap.toImmutableMap;
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
 import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
+import static ua.com.fielden.platform.reflection.Reflector.DOT_SPLITTER_PATTERN;
 import static ua.com.fielden.platform.reflection.Reflector.obtainPropertySetter;
 
 /**
@@ -28,12 +29,33 @@ public final class DynamicPropertyAccess {
 
     /**
      * Returns the value of the named property in {@code entity}. Fails if the named property cannot be located.
+     *
+     * @param prop  property path
      */
-    public Object getProperty(final AbstractEntity<?> entity, final String prop) {
-        final VarHandle vh = getData((Class<? extends AbstractEntity<?>>) entity.getClass()).propertyHandles.get(prop);
+    public Object getProperty(final AbstractEntity<?> entity, final CharSequence prop) {
+        final String[] propPath = DOT_SPLITTER_PATTERN.split(prop);
+        return getProperty_(declaringEntity(entity, propPath), last(propPath));
+    }
+
+    private AbstractEntity<?> declaringEntity(final AbstractEntity<?> entity, final String[] path) {
+        AbstractEntity<?> localEntity = entity;
+        for (int i = 0; i < path.length - 1; i++) {
+            localEntity = (AbstractEntity<?>) getProperty_(localEntity, path[i]);
+        }
+        return localEntity;
+    }
+
+    /**
+     * Helper method for {@link #getProperty(AbstractEntity, CharSequence)}.
+     *
+     * @param prop  simple property name
+     */
+    private Object getProperty_(final AbstractEntity<?> entity, final String prop) {
+        Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) entity.getClass();
+        final VarHandle vh = getData(entityType).propertyHandles.get(prop);
         if (vh == null) {
-            throw new IllegalArgumentException("Failed to locate property [%s] in entity [%s]".formatted(
-                    prop, entity.getType().getTypeName()));
+            throw new IllegalArgumentException("Failed to resolve property [%s] in entity [%s]".formatted(
+                    prop, entityType.getTypeName()));
         }
 
         return vh.get(entity);
@@ -41,12 +63,17 @@ public final class DynamicPropertyAccess {
 
     /**
      * Assigns the value to the named property in {@code entity}. Fails if the named property cannot be located.
+     * <p>
+     * Unlike {@link #getProperty(AbstractEntity, CharSequence)}, property assignment is supported only for first-level properties.
+     *
+     * @param prop  simple property name
      */
-    public void setProperty(final AbstractEntity<?> entity, final String prop, final Object value) {
-        final MethodHandle setter = getData((Class<? extends AbstractEntity<?>>) entity.getClass()).setters.get(prop);
+    public void setProperty(final AbstractEntity<?> entity, final CharSequence prop, final Object value) {
+        Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) entity.getClass();
+        final MethodHandle setter = getData(entityType).setters.get(prop.toString());
         if (setter == null) {
-            throw new IllegalArgumentException("Failed to locate setter for property [%s] in entity [%s]".formatted(
-                    prop, entity.getType().getTypeName()));
+            throw new IllegalArgumentException("Failed to resolve setter for property [%s] in entity [%s]".formatted(
+                    prop, entityType.getTypeName()));
         }
 
         try {
@@ -149,6 +176,10 @@ public final class DynamicPropertyAccess {
         public MethodHandle unreflect(final Method method) {
             return DynamicPropertyAccess.unreflect(apply(method.getDeclaringClass()), method);
         }
+    }
+
+    private static <X> X last(final X[] xs) {
+        return xs[xs.length - 1];
     }
 
 }

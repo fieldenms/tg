@@ -90,4 +90,11 @@ public class DynamicPropertyAccessTest {
         assertEquals(Long.valueOf(1), entity.get("version"));
     }
 
+    @Test
+    public void property_access_supports_dot_notation() {
+        final var entity = factory.newEntity(TgAuthor.class);
+        entity.setName(factory.newByKey(TgPersonName.class, "Joe"));
+        assertEquals("Joe", entity.get("name.key"));
+    }
+
 }
