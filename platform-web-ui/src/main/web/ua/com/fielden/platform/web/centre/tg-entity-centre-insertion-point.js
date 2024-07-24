@@ -60,6 +60,20 @@ const template = html`
             @apply --shadow-elevation-2dp;
         }
 
+        :host(:not([maximised])) #titleBar:hover {
+            cursor: move;
+            /* fallback if grab cursor is unsupported */
+            cursor: grab;
+            cursor: -moz-grab;
+            cursor: -webkit-grab;
+        }
+
+        :host(:not([maximised])) #titleBar:active {
+            cursor: grabbing;
+            cursor: -moz-grabbing;
+            cursor: -webkit-grabbing;
+        }
+
         .truncate {
             white-space: nowrap;
             overflow: hidden;
@@ -669,7 +683,7 @@ Polymer({
      */
     _moveDialog: function(e) {
         const target = e.target;
-        if (target === this.$.titleBar && !this.maximised && this.detachedView) {
+        if (target === this.$.titleBar && this._draggable !== 'true' && !this.maximised && this.detachedView) {
             switch (e.detail.state) {
                 case 'start':
                     this.$.titleBar.style.cursor = 'move';
@@ -745,7 +759,6 @@ Polymer({
 
     _toggleMaximise: function (e) {
         this.maximised = !this.maximised;
-        this._saveState(ST_MAXIMISED, this.maximised);
         tearDownEvent(e);
     },
 
@@ -767,6 +780,7 @@ Polymer({
             this._setDimension();
             this._setPosition();
         }
+        this._saveState(ST_MAXIMISED, this.maximised);
     },
 
     _makeDetached: function () {
@@ -800,7 +814,6 @@ Polymer({
 
     _toggleMinimised: function (e) {
         this.minimised = !this.minimised;
-        this._saveState(ST_MINIMISED, this.minimised);
         tearDownEvent(e); 
     },
 
@@ -812,6 +825,7 @@ Polymer({
         if (this.contextRetriever) {
             this._setDimension();
         }
+        this._saveState(ST_MINIMISED, this.minimised);
     },
 
     /******************** detach button related logic *************************/
@@ -822,7 +836,6 @@ Polymer({
 
     _toggleDetach: function (e) {
         this.detachedView = !this.detachedView;
-        this._saveState(ST_DETACHED_VIEW, this.detachedView);
         tearDownEvent(e);
     },
 
@@ -840,6 +853,7 @@ Polymer({
             this._setDimension();
             this._setPosition();
         }
+        this._saveState(ST_DETACHED_VIEW, this.detachedView);
     },
 
     _alternativeViewChanged: function (newValue) {

@@ -277,7 +277,7 @@ const template = html`
                 </tg-selection-view>
             </div>
         </div>
-        <tg-centre-result-view id="centreResultContainer" centre-scroll$="[[centreScroll]]" on-dragstart="_startDrag" on-dragend="_endDrag" on-drop="_dragDrop" on-dragenter="_dragEntered" on-dragover="_dragOver">
+        <tg-centre-result-view id="centreResultContainer" centre-scroll$="[[centreScroll]]" on-dragstart="_startDrag" on-dragend="_endDrag" on-drop="_dragDrop" on-dragover="_dragOver">
             <div id="leftInsertionPointContainer" class="insertion-point-slot layout vertical" scroll-container$="[[!centreScroll]]">
                 <slot id="leftInsertionPointContent" name="left-insertion-point"></slot>
             </div>
@@ -840,6 +840,7 @@ Polymer({
             const containerToDrop = this.$.placeHolder.parentElement;
             if (containerToDrop) {
                 containerToDrop.insertBefore(this._insertionPointToDrag, this.$.placeHolder);
+                this._insertionPointToDrag.detachedView = false;
                 this._saveInsertionPointOrder();
             }
         }
@@ -853,17 +854,13 @@ Polymer({
             if (insertionPoints) {
                 const nextInsertionPoint = this._getNearestElementInVerticalContainer(insertionPoints, dragEvent);
                 containerToDrop.insertBefore(this.$.placeHolder, nextInsertionPoint);
-                if (this.$.placeHolder.nextSibling !== this._insertionPointToDrag && this.$.placeHolder.previousSibling !== this._insertionPointToDrag) {
+                if (this._insertionPointToDrag.detachedView || (this.$.placeHolder.nextElementSibling !== this._insertionPointToDrag && this.$.placeHolder.previousElementSibling !== this._insertionPointToDrag)) {
                     this.$.placeHolder.style.display = "initial";
                 } else {
                     this.$.placeHolder.style.display = "none";
                 }
             }
         }
-    },
-
-    _dragEntered: function (dragEvent) {
-        tearDownEvent(dragEvent);
     },
 
     _getInsertionPointContainer: function (dragEvent) {
