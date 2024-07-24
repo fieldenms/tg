@@ -1,4 +1,4 @@
-package ua.com.fielden.deserialisation;
+package ua.com.fielden.benchmark;
 
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
@@ -15,7 +15,7 @@ import ua.com.fielden.platform.utils.IDates;
  * @author TG Team
  * 
  */
-class DatesForBenchmarking implements IDates {
+public class DatesForBenchmarking implements IDates {
     private DateTime now;
     private Supplier<DateTime> timeSupplier;
 

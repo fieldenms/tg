@@ -1,4 +1,4 @@
-package ua.com.fielden.deserialisation;
+package ua.com.fielden.benchmark;
 
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
@@ -18,7 +18,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
  * @author TG Team
  *
  */
-class UniversalConstantsForBenchmarking implements IUniversalConstants {
+public class UniversalConstantsForBenchmarking implements IUniversalConstants {
 
     private final String appName;
     private final String smtpServer;

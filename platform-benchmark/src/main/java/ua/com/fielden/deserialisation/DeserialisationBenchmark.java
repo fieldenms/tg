@@ -22,6 +22,7 @@ import org.openjdk.jmh.infra.Blackhole;
 
 import com.google.inject.Injector;
 
+import ua.com.fielden.benchmark.EntityModuleWithPropertyFactoryForBenchmarking;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;

@@ -1,4 +1,4 @@
-package ua.com.fielden.deserialisation;
+package ua.com.fielden.benchmark;
 
 import com.google.inject.Injector;
 import com.google.inject.Scopes;
@@ -27,7 +27,7 @@ import ua.com.fielden.platform.web.test.config.ApplicationDomain;
  * 
  * @author TG Team
  */
-class EntityModuleWithPropertyFactoryForBenchmarking extends EntityModule {
+public class EntityModuleWithPropertyFactoryForBenchmarking extends EntityModule {
 
     protected final EntityFactory entityFactory;
 
