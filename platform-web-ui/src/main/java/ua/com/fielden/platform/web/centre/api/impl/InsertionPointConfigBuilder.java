@@ -10,6 +10,7 @@ import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
+import ua.com.fielden.platform.web.centre.api.IEcbCompletion;
 import ua.com.fielden.platform.web.centre.api.IWithRightSplitterPosition;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.alternative_view.IAlternativeView;
@@ -117,5 +118,10 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
                 .setNoResizing(noResizing)
                 .setToolbar(toolbarConfig));
         return new AlternativeViewConfigBuilder<>(resultSetBuilder, actionConfig);
+    }
+
+    @Override
+    public IEcbCompletion<T> enableInsertionPointRearrangement() {
+        return resultSetBuilder.enableInsertionPointRearrangement();
     }
 }

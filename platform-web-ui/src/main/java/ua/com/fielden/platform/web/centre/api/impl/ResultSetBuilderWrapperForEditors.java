@@ -7,6 +7,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
+import ua.com.fielden.platform.web.centre.api.IEcbCompletion;
 import ua.com.fielden.platform.web.centre.api.IWithRightSplitterPosition;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
@@ -159,5 +160,10 @@ public class ResultSetBuilderWrapperForEditors<T extends AbstractEntity<?>> impl
     @Override
     public IAlternativeView<T> withRightSplitterPosition(final int percentage) {
         return builder.withRightSplitterPosition(percentage);
+    }
+
+    @Override
+    public IEcbCompletion<T> enableInsertionPointRearrangement() {
+        return builder.enableInsertionPointRearrangement();
     }
 }

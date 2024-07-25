@@ -43,6 +43,7 @@ import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.OrderDirection;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.SummaryPropDef;
+import ua.com.fielden.platform.web.centre.api.IEcbCompletion;
 import ua.com.fielden.platform.web.centre.api.IWithRightSplitterPosition;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
@@ -516,6 +517,12 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         return this;
     }
 
+    @Override
+    public IEcbCompletion<T> enableInsertionPointRearrangement() {
+        this.builder.insertionPointRearrangementEnabled = true;
+        return this;
+    }
+
     /**
      * A helper class to assist in name collision resolution.
      */
@@ -579,6 +586,11 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         @Override
         public IAlternativeViewPreferred<T> addAlternativeView(final EntityActionConfig actionConfig) {
             return ResultSetBuilder.this.addAlternativeView(actionConfig);
+        }
+
+        @Override
+        public IEcbCompletion<T> enableInsertionPointRearrangement() {
+            return ResultSetBuilder.this.enableInsertionPointRearrangement();
         }
     }
 

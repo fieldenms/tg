@@ -234,6 +234,11 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     private final Integer rightSplitterPosition;
 
     /**
+     * Determines whether insertion points can be rearranged.
+     */
+    private boolean insertionPointRearrangementEnabled;
+
+    /**
      * Determines whether centre should forcibly refresh the current page upon a successful save of a related entity (regardless of the presence of that entity on the current page).
      */
     private final boolean enforcePostSaveRefresh;
@@ -521,7 +526,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Class<? extends ICustomPropsAssignmentHandler> resultSetCustomPropAssignmentHandlerType,
             final Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig,
             final Pair<Class<?>, Class<?>> generatorTypes,
-            final IFetchProvider<T> fetchProvider) {
+            final IFetchProvider<T> fetchProvider,
+            final boolean insertionPointRearrangementEnabled) {
         this.egiHidden = egiHidden;
         this.gridViewIcon = gridViewIcon;
         this.gridViewIconStyle = gridViewIconStyle;
@@ -599,6 +605,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.queryEnhancerConfig = queryEnhancerConfig;
         this.generatorTypes = generatorTypes;
         this.fetchProvider = fetchProvider;
+        this.insertionPointRearrangementEnabled = insertionPointRearrangementEnabled;
     }
 
     ///////////////////////////////////////////
@@ -661,6 +668,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public Optional<IFetchProvider<T>> getFetchProvider() {
         return Optional.ofNullable(fetchProvider);
+    }
+
+    public boolean isInsertionPointRearrangementEnabled() {
+        return insertionPointRearrangementEnabled;
     }
 
     public Optional<EntityMultiActionConfig> getResultSetPrimaryEntityAction() {

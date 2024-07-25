@@ -160,6 +160,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected Integer rightSplitterPosition = null;
     protected Class<? extends IEventSource> eventSourceClass = null;
     protected Integer refreshCountdown = null;
+    protected boolean insertionPointRearrangementEnabled = false;
 
     private EntityCentreBuilder() {
     }
@@ -251,7 +252,8 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
                 resultSetCustomPropAssignmentHandlerType,
                 queryEnhancerConfig,
                 generatorTypes,
-                fetchProvider);
+                fetchProvider,
+                insertionPointRearrangementEnabled);
     }
 
     public Class<T> getEntityType() {

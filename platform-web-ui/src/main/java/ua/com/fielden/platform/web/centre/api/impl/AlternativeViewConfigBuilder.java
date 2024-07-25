@@ -11,6 +11,7 @@ import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
+import ua.com.fielden.platform.web.centre.api.IEcbCompletion;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.alternative_view.IAlternativeView;
 import ua.com.fielden.platform.web.centre.api.alternative_view.IAlternativeViewAlso;
@@ -26,7 +27,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
  *
  * @param <T>
  */
-public class AlternativeViewConfigBuilder<T extends AbstractEntity<?>> implements IAlternativeView<T>, IAlternativeViewPreferred<T>, IAlternativeViewAlso<T>{
+public class AlternativeViewConfigBuilder<T extends AbstractEntity<?>> implements IAlternativeView<T>, IAlternativeViewPreferred<T>, IAlternativeViewAlso<T> {
 
     private final ResultSetBuilder<T> resultSetBuilder;
     private final EntityActionConfig alternativeViewAction;
@@ -80,4 +81,8 @@ public class AlternativeViewConfigBuilder<T extends AbstractEntity<?>> implement
         return this;
     }
 
+    @Override
+    public IEcbCompletion<T> enableInsertionPointRearrangement() {
+        return resultSetBuilder.enableInsertionPointRearrangement();
+    }
 }
