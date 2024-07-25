@@ -15,8 +15,9 @@ import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
-import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
+import static ua.com.fielden.platform.reflection.Finder.streamProperties;
 import static ua.com.fielden.platform.reflection.Reflector.obtainPropertySetter;
+import static ua.com.fielden.platform.utils.StreamUtils.distinct;
 
 final class PropertyIndexerImpl implements PropertyIndexer {
 
@@ -28,9 +29,14 @@ final class PropertyIndexerImpl implements PropertyIndexer {
     private Index buildIndex(final Class<? extends AbstractEntity<?>> entityType) {
         final var lookupProvider = new CachingPrivateLookupProvider();
 
-        return Stream.concat(Stream.of(getFieldByName(entityType, ID),
-                                       getFieldByName(entityType, VERSION)),
-                             streamRealProperties(entityType))
+        // 1. Include id and version explicitly, since they lack @IsProperty.
+        // 2. We could use streamRealProperties but that would misalign with the old Reflection-based behaviour, which breaks
+        // some things. The current approach is already more limiting than the old one, but reasonably so: it provides
+        // access only to properties, while the old approach provided access to all fields.
+        return distinct(Stream.concat(Stream.of(getFieldByName(entityType, ID),
+                                                getFieldByName(entityType, VERSION)),
+                                      streamProperties(entityType)),
+                        Field::getName)
                 .collect(Collectors.teeing(
                         toImmutableMap(Field::getName, lookupProvider::unreflect),
                         toImmutableMap(Field::getName, prop -> lookupProvider.unreflect(obtainPropertySetter(entityType, prop.getName()))),
