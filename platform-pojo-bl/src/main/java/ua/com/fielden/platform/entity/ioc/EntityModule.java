@@ -6,6 +6,7 @@ import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.matcher.Matcher;
 import org.aopalliance.intercept.MethodInterceptor;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.DynamicPropertyAccessModule;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.security.AuthorisationInterceptor;
 import ua.com.fielden.platform.security.Authorise;
@@ -53,6 +54,8 @@ public abstract class EntityModule extends AbstractModule implements IModuleWith
         // static injection occurs at the time when an injector is created
         // this guarantees that different implementations of IDates will be injected based on IDates binding in IoC modules that define the binding configuration;
         requestStaticInjection(GraphQLScalars.class);
+
+        install(new DynamicPropertyAccessModule());
     }
 
     @Override

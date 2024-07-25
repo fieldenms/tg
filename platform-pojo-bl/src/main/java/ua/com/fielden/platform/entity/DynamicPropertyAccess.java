@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity;
 
+import com.google.inject.Inject;
+
 import javax.annotation.Nullable;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
@@ -10,8 +12,6 @@ import static ua.com.fielden.platform.reflection.Reflector.DOT_SPLITTER_PATTERN;
  * Provides dynamic name-based access (read & write) to property values of entity instances.
  */
 final class DynamicPropertyAccess {
-
-    public static final DynamicPropertyAccess INSTANCE = new DynamicPropertyAccess(new PropertyIndexerImpl());
 
     /**
      * Returns the value of the named property in {@code entity}. Fails if the named property cannot be located.
@@ -104,6 +104,7 @@ final class DynamicPropertyAccess {
 
     private final PropertyIndexer indexer;
 
+    @Inject
     DynamicPropertyAccess(final PropertyIndexer indexer) {
         this.indexer = indexer;
     }

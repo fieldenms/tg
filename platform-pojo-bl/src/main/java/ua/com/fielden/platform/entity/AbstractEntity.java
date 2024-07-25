@@ -306,6 +306,9 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     	STRICT_MODEL_VERIFICATION = true;
     }
 
+    @Inject
+    private static DynamicPropertyAccess dynamicPropertyAccess;
+
     /**
      * Holds meta-properties for entity properties.
      */
@@ -527,7 +530,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             throw new StrictProxyException(format("Cannot get value for proxied property [%s] of entity [%s].", propertyName, getType().getName()));
         }
         try {
-            return (T) DynamicPropertyAccess.INSTANCE.getProperty(this, propertyName);
+            return (T) dynamicPropertyAccess.getProperty(this, propertyName);
         } catch (final Exception e) {
             // there are cases where this.toString() may fail such as for non-initialized union entities
             // need to degrade gracefully in order to to hide the original exception...
@@ -559,7 +562,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      */
     public AbstractEntity<K> set(final String propertyName, final Object value) {
         try {
-            DynamicPropertyAccess.INSTANCE.setProperty(this, propertyName, value);
+            dynamicPropertyAccess.setProperty(this, propertyName, value);
             return this;
         } catch (final Exception e) {
             // let's be a little more intelligent about handling instances of InvocationTargetException to report errors without the unnecessary nesting
