@@ -21,6 +21,9 @@ import static ua.com.fielden.platform.utils.StreamUtils.distinct;
 
 final class PropertyIndexerImpl implements PropertyIndexer {
 
+    private final Field idProperty = getFieldByName(AbstractEntity.class, ID);
+    private final Field versionProperty = getFieldByName(AbstractEntity.class, VERSION);
+
     @Override
     public Index indexFor(final Class<? extends AbstractEntity<?>> entityType) {
         return buildIndex(entityType);
@@ -33,9 +36,8 @@ final class PropertyIndexerImpl implements PropertyIndexer {
         // 2. We could use streamRealProperties but that would misalign with the old Reflection-based behaviour, which breaks
         // some things. The current approach is already more limiting than the old one, but reasonably so: it provides
         // access only to properties, while the old approach provided access to all fields.
-        return distinct(Stream.concat(Stream.of(getFieldByName(entityType, ID),
-                                                getFieldByName(entityType, VERSION)),
-                                      streamProperties(entityType)),
+        // 3. Properties of entityType must come before id and version to prioritise any overriden property definitions.
+        return distinct(Stream.concat(streamProperties(entityType), Stream.of(idProperty, versionProperty)),
                         Field::getName)
                 .collect(Collectors.teeing(
                         toImmutableMap(Field::getName, lookupProvider::unreflect),
