@@ -6,10 +6,7 @@ import org.openjdk.jmh.infra.Blackhole;
 import ua.com.fielden.benchmark.EntityModuleWithPropertyFactoryForBenchmarking;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.sample.domain.TgVehicle;
-import ua.com.fielden.platform.sample.domain.TgVehicleMake;
-import ua.com.fielden.platform.sample.domain.TgVehicleModel;
-import ua.com.fielden.platform.sample.domain.TgWorkOrder;
+import ua.com.fielden.platform.sample.domain.*;
 
 import java.util.List;
 
@@ -33,6 +30,7 @@ public class DynamicPropertyAccessBenchmark {
         public TgVehicle vehicle;
         public TgVehicleModel model;
         public TgVehicleMake make;
+        public TgBogieLocation bogieLocation;
 
         @Setup(Level.Trial)
         public void setUp() {
@@ -43,9 +41,12 @@ public class DynamicPropertyAccessBenchmark {
             vehicle.setModel(model);
             make = factory.newByKey(TgVehicleMake.class, "MAKE1");
             model.setMake(make);
+            final var workshop = factory.newByKey(TgWorkshop.class, "WS1");
+            bogieLocation = factory.newEntity(TgBogieLocation.class).setWorkshop(workshop);
 
             injector.getInstance(DynamicPropertyAccess.class)
-                    .index(List.of(TgWorkOrder.class, TgVehicle.class, TgVehicleModel.class, TgVehicleMake.class));
+                    .index(List.of(TgBogieLocation.class, TgWorkshop.class, TgWorkOrder.class, TgVehicle.class,
+                                   TgVehicleModel.class, TgVehicleMake.class));
         }
     }
 
@@ -77,6 +78,24 @@ public class DynamicPropertyAccessBenchmark {
     @Measurement(batchSize = 100_000)
     public void setLevel1(final Blackhole blackhole, final BenchmarkState state) {
         blackhole.consume(state.workOrder.set("vehicle", state.vehicle));
+    }
+
+    @Benchmark
+    @Measurement(batchSize = 100_000)
+    public void getLevel1_union_member(final Blackhole blackhole, final BenchmarkState state) {
+        blackhole.consume(state.bogieLocation.get("workshop"));
+    }
+
+    @Benchmark
+    @Measurement(batchSize = 100_000)
+    public void getLevel1_union_common_property(final Blackhole blackhole, final BenchmarkState state) {
+        blackhole.consume(state.bogieLocation.get("fuelType"));
+    }
+
+    @Benchmark
+    @Measurement(batchSize = 100_000)
+    public void getLevel1_union_id(final Blackhole blackhole, final BenchmarkState state) {
+        blackhole.consume(state.bogieLocation.get("id"));
     }
 
 }
