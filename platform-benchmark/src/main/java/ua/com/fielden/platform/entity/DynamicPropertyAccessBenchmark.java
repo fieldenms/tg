@@ -31,7 +31,8 @@ public class DynamicPropertyAccessBenchmark {
         public TgVehicleModel model;
         public TgVehicleMake make;
         public TgUnion union;
-
+        public TgUnionType1 union1;
+        public TgUnionCommonType unionCommon;
 
         @Setup(Level.Trial)
         public void setUp() {
@@ -42,7 +43,8 @@ public class DynamicPropertyAccessBenchmark {
             vehicle.setModel(model);
             make = factory.newByKey(TgVehicleMake.class, "MAKE1");
             model.setMake(make);
-            final var union1 = factory.newByKey(TgUnionType1.class, "U1");
+            unionCommon = factory.newByKey(TgUnionCommonType.class, "UC");
+            union1 = factory.newByKey(TgUnionType1.class, "U1").setCommon(unionCommon);
             union = factory.newEntity(TgUnion.class).setUnion1(union1);
 
             injector.getInstance(DynamicPropertyAccess.class)
@@ -91,6 +93,18 @@ public class DynamicPropertyAccessBenchmark {
     @Measurement(batchSize = 100_000)
     public void getLevel1_union_common_property(final Blackhole blackhole, final BenchmarkState state) {
         blackhole.consume(state.union.get("common"));
+    }
+
+    @Benchmark
+    @Measurement(batchSize = 100_000)
+    public void setLevel1_union_member(final Blackhole blackhole, final BenchmarkState state) {
+        blackhole.consume(state.union.set("union1", state.union1));
+    }
+
+    @Benchmark
+    @Measurement(batchSize = 100_000)
+    public void setLevel1_union_common_property(final Blackhole blackhole, final BenchmarkState state) {
+        blackhole.consume(state.union.set("common", state.unionCommon));
     }
 
 }
