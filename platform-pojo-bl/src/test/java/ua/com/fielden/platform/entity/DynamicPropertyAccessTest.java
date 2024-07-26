@@ -4,9 +4,7 @@ import com.google.inject.Injector;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.sample.domain.TgAuthor;
-import ua.com.fielden.platform.sample.domain.TgPersonName;
-import ua.com.fielden.platform.sample.domain.TgWorkOrder;
+import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.NoAuthorisation;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
@@ -106,6 +104,124 @@ public class DynamicPropertyAccessTest {
         final var entity = factory.newEntity(TgWorkOrder.class);
         assertNull(entity.getVehicle());
         assertNull(entity.get("vehicle.key"));
+    }
+
+    @Test
+    public void union_member_property_can_be_read() {
+        final var entity = factory.newEntity(TgBogieLocation.class);
+        assertNull(entity.getWorkshop());
+        assertNull(entity.get("workshop"));
+        final var workshop = factory.newEntity(TgWorkshop.class);
+        entity.setWorkshop(workshop);
+        assertEquals(workshop, entity.getWorkshop());
+        assertEquals(workshop, entity.get("workshop"));
+    }
+
+    @Test
+    public void union_member_property_can_be_set() {
+        final var entity = factory.newEntity(TgBogieLocation.class);
+        assertNull(entity.getWorkshop());
+        assertNull(entity.get("workshop"));
+        final var workshop = factory.newEntity(TgWorkshop.class);
+        entity.set("workshop", workshop);
+        assertEquals(workshop, entity.getWorkshop());
+        assertEquals(workshop, entity.get("workshop"));
+    }
+
+    @Test
+    public void common_union_property_is_null_if_active_property_is_null() {
+        final var entity = factory.newEntity(TgBogieLocation.class);
+        assertNull(entity.activeEntity());
+        assertNull(entity.get("fuelType"));
+    }
+
+    @Test
+    public void common_union_property_is_read_from_active_entity() {
+        final var entity = factory.newEntity(TgBogieLocation.class);
+        final var fuelType = factory.newByKey(TgFuelType.class, "FT1");
+        final var workshop = factory.newByKey(TgWorkshop.class, "W1").setFuelType(fuelType);
+        entity.setWorkshop(workshop);
+        assertEquals(workshop, entity.activeEntity());
+        assertEquals(fuelType, entity.getWorkshop().getFuelType());
+        assertEquals(fuelType, entity.get("fuelType"));
+    }
+
+    @Test
+    public void common_union_property_is_set_into_active_entity() {
+        final var entity = factory.newEntity(TgBogieLocation.class);
+        final var workshop = factory.newByKey(TgWorkshop.class, "W1");
+        entity.setWorkshop(workshop);
+        assertEquals(workshop, entity.activeEntity());
+        final var fuelType = factory.newByKey(TgFuelType.class, "FT1");
+        entity.set("fuelType", fuelType);
+        assertEquals(fuelType, entity.getWorkshop().getFuelType());
+        assertEquals(fuelType, entity.get("fuelType"));
+    }
+
+    @Test
+    public void property_key_in_union_entity_is_read_from_active_entity() {
+        final var entity = factory.newEntity(TgBogieLocation.class);
+        final var workshop = factory.newByKey(TgWorkshop.class, "W1");
+        entity.setWorkshop(workshop);
+        assertEquals(workshop, entity.activeEntity());
+        assertEquals("W1", entity.getKey());
+        assertEquals("W1", entity.get("key"));
+    }
+
+    @Test
+    public void property_key_in_union_entity_is_set_into_active_entity() {
+        final var entity = factory.newEntity(TgBogieLocation.class);
+        final var workshop = factory.newEntity(TgWorkshop.class);
+        entity.setWorkshop(workshop);
+        assertEquals(workshop, entity.activeEntity());
+        entity.set("key", "W1");
+        assertEquals("W1", entity.getKey());
+        assertEquals("W1", entity.get("key"));
+        assertEquals("W1", entity.activeEntity().getKey());
+    }
+
+    @Test
+    public void property_id_in_union_entity_is_read_from_active_entity() {
+        final var entity = factory.newEntity(TgBogieLocation.class);
+        final var workshop = factory.newEntity(TgWorkshop.class, 1L);
+        entity.setWorkshop(workshop);
+        assertEquals(workshop, entity.activeEntity());
+        assertEquals(Long.valueOf(1L), entity.getId());
+        assertEquals(Long.valueOf(1L), entity.get("id"));
+    }
+
+    @Test
+    public void property_id_in_union_entity_is_set_into_active_entity() {
+        final var entity = factory.newEntity(TgBogieLocation.class);
+        final var workshop = factory.newEntity(TgWorkshop.class);
+        entity.setWorkshop(workshop);
+        assertEquals(workshop, entity.activeEntity());
+        entity.set("id", 1L);
+        assertEquals(Long.valueOf(1L), entity.getId());
+        assertEquals(Long.valueOf(1L), entity.get("id"));
+        assertEquals(Long.valueOf(1L), entity.activeEntity().getId());
+    }
+
+    @Test
+    public void property_desc_in_union_entity_is_read_from_active_entity() {
+        final var entity = factory.newEntity(TgBogieLocation.class);
+        final var workshop = factory.newEntity(TgWorkshop.class, "W1", "my description");
+        entity.setWorkshop(workshop);
+        assertEquals(workshop, entity.activeEntity());
+        assertEquals("my description", entity.getDesc());
+        assertEquals("my description", entity.get("desc"));
+    }
+
+    @Test
+    public void property_desc_in_union_entity_is_set_into_active_entity() {
+        final var entity = factory.newEntity(TgBogieLocation.class);
+        final var workshop = factory.newEntity(TgWorkshop.class);
+        entity.setWorkshop(workshop);
+        assertEquals(workshop, entity.activeEntity());
+        entity.set("desc", "my description");
+        assertEquals("my description", entity.getDesc());
+        assertEquals("my description", entity.get("desc"));
+        assertEquals("my description", entity.activeEntity().getDesc());
     }
 
 }
