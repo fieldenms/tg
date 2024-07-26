@@ -30,7 +30,8 @@ public class DynamicPropertyAccessBenchmark {
         public TgVehicle vehicle;
         public TgVehicleModel model;
         public TgVehicleMake make;
-        public TgBogieLocation bogieLocation;
+        public TgUnion union;
+
 
         @Setup(Level.Trial)
         public void setUp() {
@@ -41,11 +42,11 @@ public class DynamicPropertyAccessBenchmark {
             vehicle.setModel(model);
             make = factory.newByKey(TgVehicleMake.class, "MAKE1");
             model.setMake(make);
-            final var workshop = factory.newByKey(TgWorkshop.class, "WS1");
-            bogieLocation = factory.newEntity(TgBogieLocation.class).setWorkshop(workshop);
+            final var union1 = factory.newByKey(TgUnionType1.class, "U1");
+            union = factory.newEntity(TgUnion.class).setUnion1(union1);
 
             injector.getInstance(DynamicPropertyAccess.class)
-                    .index(List.of(TgBogieLocation.class, TgWorkshop.class, TgWorkOrder.class, TgVehicle.class,
+                    .index(List.of(TgUnion.class, TgWorkOrder.class, TgVehicle.class,
                                    TgVehicleModel.class, TgVehicleMake.class));
         }
     }
@@ -83,19 +84,19 @@ public class DynamicPropertyAccessBenchmark {
     @Benchmark
     @Measurement(batchSize = 100_000)
     public void getLevel1_union_member(final Blackhole blackhole, final BenchmarkState state) {
-        blackhole.consume(state.bogieLocation.get("workshop"));
+        blackhole.consume(state.union.get("union1"));
     }
 
     @Benchmark
     @Measurement(batchSize = 100_000)
     public void getLevel1_union_common_property(final Blackhole blackhole, final BenchmarkState state) {
-        blackhole.consume(state.bogieLocation.get("fuelType"));
+        blackhole.consume(state.union.get("common"));
     }
 
     @Benchmark
     @Measurement(batchSize = 100_000)
     public void getLevel1_union_id(final Blackhole blackhole, final BenchmarkState state) {
-        blackhole.consume(state.bogieLocation.get("id"));
+        blackhole.consume(state.union.get("id"));
     }
 
 }
