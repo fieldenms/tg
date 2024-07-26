@@ -1,21 +1,19 @@
 package ua.com.fielden.platform.entity;
 
+import javax.annotation.Nullable;
 import java.lang.invoke.MethodHandle;
-import java.lang.invoke.VarHandle;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 interface PropertyIndexer {
 
     Index indexFor(final Class<? extends AbstractEntity<?>> entityType);
 
-    /**
-     * @param propertyHandles  for reading property values, keyed on property names
-     * @param setters  for writing property values, keyed on property names
-     */
-    record Index(Map<String, VarHandle> propertyHandles,
-                 Map<String, MethodHandle> setters)
-    {}
+    interface Index {
+        @Nullable MethodHandle getter(final String prop);
+
+        @Nullable MethodHandle setter(final String prop);
+
+    }
 
     // TODO concurrent with weak keys (Guava Cache)
     /**

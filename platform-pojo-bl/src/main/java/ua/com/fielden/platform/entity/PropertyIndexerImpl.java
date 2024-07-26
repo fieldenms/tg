@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.entity;
 
+import javax.annotation.Nullable;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -40,9 +40,30 @@ final class PropertyIndexerImpl implements PropertyIndexer {
         return distinct(Stream.concat(streamProperties(entityType), Stream.of(idProperty, versionProperty)),
                         Field::getName)
                 .collect(Collectors.teeing(
-                        toImmutableMap(Field::getName, lookupProvider::unreflect),
+                        toImmutableMap(Field::getName, lookupProvider::unreflectGetter),
                         toImmutableMap(Field::getName, prop -> lookupProvider.unreflect(obtainPropertySetter(entityType, prop.getName()))),
-                        Index::new));
+                        StandardIndex::new));
+    }
+
+
+    /**
+     * @param getters  for reading property values, keyed on property names
+     * @param setters  for writing property values, keyed on property names
+     */
+    record StandardIndex(Map<String, MethodHandle> getters,
+                         Map<String, MethodHandle> setters)
+            implements Index
+    {
+        @Override
+        public MethodHandle getter(final String prop) {
+            return getters.get(prop);
+        }
+
+        @Nullable
+        @Override
+        public MethodHandle setter(final String prop) {
+            return setters.get(prop);
+        }
     }
 
     // Allows us to seamlessly traverse type hierarchies without worrying about access.
@@ -62,9 +83,9 @@ final class PropertyIndexerImpl implements PropertyIndexer {
             });
         }
 
-        public VarHandle unreflect(final Field field) {
+        public MethodHandle unreflectGetter(final Field field) {
             try {
-                return apply(field.getDeclaringClass()).unreflectVarHandle(field);
+                return apply(field.getDeclaringClass()).unreflectGetter(field);
             } catch (final IllegalAccessException e) {
                 throw new RuntimeException(e);
             }

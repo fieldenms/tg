@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 
 import javax.annotation.Nullable;
 import java.lang.invoke.MethodHandle;
-import java.lang.invoke.VarHandle;
 
 import static ua.com.fielden.platform.reflection.Reflector.DOT_SPLITTER_PATTERN;
 
@@ -51,13 +50,18 @@ final class DynamicPropertyAccess {
      */
     private Object getProperty_(final AbstractEntity<?> entity, final String prop) {
         Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) entity.getClass();
-        final VarHandle vh = indexer.indexFor(entityType).propertyHandles().get(prop);
-        if (vh == null) {
+        final var getter = indexer.indexFor(entityType).getter(prop);
+        if (getter == null) {
             throw new IllegalArgumentException("Failed to resolve property [%s] in entity [%s]".formatted(
                     prop, entityType.getTypeName()));
         }
 
-        return vh.get(entity);
+        try {
+            return getter.invoke(entity);
+        } catch (final Throwable e) {
+            throw new RuntimeException("Failed to invoke getter for property [%s] in entity [%s]".formatted(
+                    prop, entityType.getTypeName()), e);
+        }
     }
 
     /**
@@ -69,7 +73,7 @@ final class DynamicPropertyAccess {
      */
     public void setProperty(final AbstractEntity<?> entity, final CharSequence prop, final Object value) {
         Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) entity.getClass();
-        final MethodHandle setter = indexer.indexFor(entityType).setters().get(prop.toString());
+        final MethodHandle setter = indexer.indexFor(entityType).setter(prop.toString());
         if (setter == null) {
             throw new IllegalArgumentException("Failed to resolve setter for property [%s] in entity [%s]".formatted(
                     prop, entityType.getTypeName()));
