@@ -87,21 +87,20 @@ final class DynamicPropertyAccess {
     }
 
     /**
-     * Scans an entity type and builds an internal data structure, if it's not already built, to enable efficient dynamic
-     * property access.
+     * Builds an index for an entity type, internally, to enable efficient dynamic property access.
      * <p>
-     * In general, such internal data structures are built on demand, but this method can be used to build them ahead of time.
+     * Whether indices are cached depends on the active Guice module bindings.
+     * If they are cached, this method can be used to build them ahead of time.
      */
-    public void scan(final Class<? extends AbstractEntity<?>> entityType) {
-        // TODO either remove this method or change its semantics
-        throw new UnsupportedOperationException();
+    public void index(final Class<? extends AbstractEntity<?>> entityType) {
+        indexer.indexFor(entityType);
     }
 
     /**
-     * @see #scan(Class)
+     * @see #index(Class)
      */
-    public void scan(final Iterable<? extends Class<? extends AbstractEntity<?>>> entityTypes) {
-        entityTypes.forEach(this::scan);
+    public void index(final Iterable<? extends Class<? extends AbstractEntity<?>>> entityTypes) {
+        entityTypes.forEach(this::index);
     }
 
     // --- Implementation

@@ -44,7 +44,8 @@ public class DynamicPropertyAccessBenchmark {
             make = factory.newByKey(TgVehicleMake.class, "MAKE1");
             model.setMake(make);
 
-            DynamicPropertyAccess.INSTANCE.scan(List.of(TgWorkOrder.class, TgVehicle.class, TgVehicleModel.class, TgVehicleMake.class));
+            injector.getInstance(DynamicPropertyAccess.class)
+                    .index(List.of(TgWorkOrder.class, TgVehicle.class, TgVehicleModel.class, TgVehicleMake.class));
         }
     }
 
