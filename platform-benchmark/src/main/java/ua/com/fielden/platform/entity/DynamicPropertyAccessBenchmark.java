@@ -1,10 +1,9 @@
-package ua.com.fielden.entity;
+package ua.com.fielden.platform.entity;
 
 import com.google.inject.Injector;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 import ua.com.fielden.benchmark.EntityModuleWithPropertyFactoryForBenchmarking;
-import ua.com.fielden.platform.entity.DynamicPropertyAccess;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
