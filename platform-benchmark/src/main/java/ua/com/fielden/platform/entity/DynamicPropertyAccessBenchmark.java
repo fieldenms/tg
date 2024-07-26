@@ -93,10 +93,4 @@ public class DynamicPropertyAccessBenchmark {
         blackhole.consume(state.union.get("common"));
     }
 
-    @Benchmark
-    @Measurement(batchSize = 100_000)
-    public void getLevel1_union_id(final Blackhole blackhole, final BenchmarkState state) {
-        blackhole.consume(state.union.get("id"));
-    }
-
 }
