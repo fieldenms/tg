@@ -60,7 +60,7 @@ const template = html`
             @apply --shadow-elevation-2dp;
         }
 
-        :host(:not([maximised])) #titleBar:hover {
+        :host([enable-draggable]:not([maximised])) #titleBar:hover {
             cursor: move;
             /* fallback if grab cursor is unsupported */
             cursor: grab;
@@ -68,7 +68,7 @@ const template = html`
             cursor: -webkit-grab;
         }
 
-        :host(:not([maximised])) #titleBar:active {
+        :host([enable-draggable]:not([maximised])) #titleBar:active {
             cursor: grabbing;
             cursor: -moz-grabbing;
             cursor: -webkit-grabbing;
@@ -146,7 +146,7 @@ const template = html`
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning tg-entity-centre-styles paper-material-styles"></style>
-    <div id="titleBar" draggable$="[[_draggable]]" class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, alternativeView)]]" on-track="_moveDialog">
+    <div id="titleBar" draggable$="[[_titleBarDraggable]]" class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, alternativeView)]]" on-track="_moveDialog">
         <span class="title-text truncate" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
         <div class="layout horizontal centre">
             <paper-icon-button class="title-bar-button" icon="[[_detachButtonIcon(detachedView)]]" on-tap="_toggleDetach" tooltip-text$="[[_detachTooltip(detachedView)]]"></paper-icon-button>
@@ -338,6 +338,17 @@ Polymer({
             type: Object
         },
 
+        _titleBarDraggable: {
+            type: Boolean,
+            value: false,
+        },
+
+        enableDraggable: {
+            type: Boolean,
+            value: false,
+            reflectToAttribute: true,
+        },
+
         /**
          * Determnes whether insertion point is maximised or not.
          */
@@ -360,7 +371,7 @@ Polymer({
         }
     },
 
-    observers: ['_restoreFromLocalStorage(_element, contextRetriever)'],
+    observers: ['_shouldEnableDraggable(contextRetriever)','_restoreFromLocalStorage(_element, contextRetriever)'],
 
     ready: function () {
         this.triggerElement = this.$.insertionPointContent;
@@ -683,7 +694,7 @@ Polymer({
      */
     _moveDialog: function(e) {
         const target = e.target;
-        if (target === this.$.titleBar && this._draggable !== 'true' && !this.maximised && this.detachedView) {
+        if (target === this.$.titleBar && this._titleBarDraggable !== 'true' && !this.maximised && this.detachedView) {
             switch (e.detail.state) {
                 case 'start':
                     this.$.titleBar.style.cursor = 'move';
@@ -719,10 +730,10 @@ Polymer({
     },
 
     _handleDraggable: function (e) {
-        if ((!this.detachedView || e.altKey || e.metaKey) && (!this.maximised)) {
-            this._draggable = 'true';
+        if (this.enableDraggable && (!this.detachedView || e.altKey || e.metaKey) && (!this.maximised)) {
+            this._titleBarDraggable = 'true';
         } else {
-            this._draggable = 'false';
+            this._titleBarDraggable = 'false';
         }
     },
 
@@ -861,6 +872,12 @@ Polymer({
             this.setAttribute('tabindex', this._getTabIndex(newValue));
             this._setDimension();
             this._setPosition();
+        }
+    },
+
+    _shouldEnableDraggable: function (contextRetriever) {
+        if (contextRetriever) {
+            this.enableDraggable = contextRetriever()._dom().enableInsertionPointRearrangement;
         }
     },
 

@@ -277,7 +277,7 @@ const template = html`
                 </tg-selection-view>
             </div>
         </div>
-        <tg-centre-result-view id="centreResultContainer" centre-scroll$="[[centreScroll]]" on-dragstart="_startDrag" on-dragend="_endDrag" on-drop="_dragDrop" on-dragover="_dragOver">
+        <tg-centre-result-view id="centreResultContainer" centre-scroll$="[[centreScroll]]">
             <div id="leftInsertionPointContainer" class="insertion-point-slot layout vertical" scroll-container$="[[!centreScroll]]">
                 <slot id="leftInsertionPointContent" name="left-insertion-point"></slot>
             </div>
@@ -315,6 +315,12 @@ Polymer({
         // These mandatory properties must be specified in attributes, when constructing <tg-*-editor>s.       //
         // No default values are allowed in this case.														   //
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        enableInsertionPointRearrangement : {
+            type: Boolean,
+            value: false,
+            observer: "_enableInsertionPointRearragementChanged"
+        },
 
         _selectedView: {
             type: Number
@@ -406,6 +412,13 @@ Polymer({
     },
 
     behaviors: [ IronResizableBehavior, TgFocusRestorationBehavior, TgElementSelectorBehavior ],
+
+    created: function () {
+        this._startDrag = this._startDrag.bind(this);
+        this._endDrag = this._endDrag.bind(this);
+        this._dragDrop = this._dragDrop.bind(this);
+        this._dragOver = this._dragOver.bind(this);
+    },
 
     ready: function () {
         this.leftInsertionPointPresent = this.$.leftInsertionPointContent.assignedNodes({ flatten: true })[0].children.length > 0;
@@ -817,6 +830,20 @@ Polymer({
     },
 
     /*************************Insertion point drag related events******************************/
+    _enableInsertionPointRearragementChanged: function (newValue) {
+        if (newValue) {
+            this.$.centreResultContainer.addEventListener("dragstart", this._startDrag);
+            this.$.centreResultContainer.addEventListener("dragend", this._endDrag);
+            this.$.centreResultContainer.addEventListener("drop", this._dragDrop);
+            this.$.centreResultContainer.addEventListener("dragover", this._dragOver);
+        } else {
+            this.$.centreResultContainer.removeEventListener("dragstart", this._startDrag);
+            this.$.centreResultContainer.removeEventListener("dragend", this._endDrag);
+            this.$.centreResultContainer.removeEventListener("drop", this._dragDrop);
+            this.$.centreResultContainer.removeEventListener("dragover", this._dragOver);
+        }
+    },
+
     _startDrag: function (dragEvent) {
         this._insertionPointToDrag = dragEvent.target;
         //configure drag transfer and drag transfer image        
