@@ -7,6 +7,8 @@ import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgPersonName;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
+import ua.com.fielden.platform.security.IAuthorisationModel;
+import ua.com.fielden.platform.security.NoAuthorisation;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 
 import static org.junit.Assert.assertEquals;
@@ -16,6 +18,7 @@ public class DynamicPropertyAccessTest {
 
     private final Injector injector = new ApplicationInjectorFactory()
             .add(new CommonTestEntityModuleWithPropertyFactory())
+            .add($ -> $.bind(IAuthorisationModel.class).to(NoAuthorisation.class))
             .getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
