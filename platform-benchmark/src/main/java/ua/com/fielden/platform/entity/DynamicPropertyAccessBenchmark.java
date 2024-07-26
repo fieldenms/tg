@@ -84,25 +84,25 @@ public class DynamicPropertyAccessBenchmark {
     }
 
     @Benchmark
-    @Measurement(batchSize = 100_000)
+    @Measurement(batchSize = 10_000)
     public void getLevel1_union_member(final Blackhole blackhole, final BenchmarkState state) {
         blackhole.consume(state.union.get("union1"));
     }
 
     @Benchmark
-    @Measurement(batchSize = 100_000)
+    @Measurement(batchSize = 10_000)
     public void getLevel1_union_common_property(final Blackhole blackhole, final BenchmarkState state) {
         blackhole.consume(state.union.get("common"));
     }
 
     @Benchmark
-    @Measurement(batchSize = 100_000)
+    @Measurement(batchSize = 10_000)
     public void setLevel1_union_member(final Blackhole blackhole, final BenchmarkState state) {
         blackhole.consume(state.union.set("union1", state.union1));
     }
 
     @Benchmark
-    @Measurement(batchSize = 100_000)
+    @Measurement(batchSize = 10_000)
     public void setLevel1_union_common_property(final Blackhole blackhole, final BenchmarkState state) {
         blackhole.consume(state.union.set("common", state.unionCommon));
     }
