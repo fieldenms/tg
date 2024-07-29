@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity;
 
 import com.google.inject.Inject;
+import ua.com.fielden.platform.entity.exceptions.DynamicPropertyAccessGraveError;
 
 import javax.annotation.Nullable;
 import java.lang.invoke.MethodHandle;
@@ -49,8 +50,16 @@ final class DynamicPropertyAccess {
      * @param prop  simple property name
      */
     private Object getProperty_(final AbstractEntity<?> entity, final String prop) throws Throwable {
-        Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) entity.getClass();
-        final var getter = indexer.indexFor(entityType).getter(prop);
+        final Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) entity.getClass();
+
+        final PropertyIndexer.Index index;
+        try {
+            index = indexer.indexFor(entityType);
+        } catch (final Exception e) {
+            throw new DynamicPropertyAccessGraveError("Failed to build an index for entity [%s]".formatted(entityType.getTypeName()), e);
+        }
+
+        final var getter = index.getter(prop);
         if (getter == null) {
             throw new IllegalArgumentException("Failed to resolve property [%s] in entity [%s]".formatted(
                     prop, entityType.getTypeName()));
@@ -68,7 +77,15 @@ final class DynamicPropertyAccess {
      */
     public void setProperty(final AbstractEntity<?> entity, final CharSequence prop, final Object value) throws Throwable {
         Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) entity.getClass();
-        final MethodHandle setter = indexer.indexFor(entityType).setter(prop.toString());
+
+        final PropertyIndexer.Index index;
+        try {
+            index = indexer.indexFor(entityType);
+        } catch (final Exception e) {
+            throw new DynamicPropertyAccessGraveError("Failed to build an index for entity [%s]".formatted(entityType.getTypeName()), e);
+        }
+
+        final MethodHandle setter = index.setter(prop.toString());
         if (setter == null) {
             throw new IllegalArgumentException("Failed to resolve setter for property [%s] in entity [%s]".formatted(
                     prop, entityType.getTypeName()));

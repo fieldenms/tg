@@ -34,7 +34,6 @@ import static ua.com.fielden.platform.utils.EntityUtils.isString;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -58,6 +57,7 @@ import ua.com.fielden.platform.entity.annotation.factory.BeforeChangeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
+import ua.com.fielden.platform.entity.exceptions.DynamicPropertyAccessGraveError;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -85,6 +85,8 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.EntityUtils;
+
+import javax.annotation.Nullable;
 
 /**
  * <h3>General Info</h3>
@@ -532,15 +534,26 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         try {
             return (T) dynamicPropertyAccess.getProperty(this, propertyName);
         } catch (final Throwable e) {
-            // there are cases where this.toString() may fail such as for non-initialized union entities
-            // need to degrade gracefully in order to to hide the original exception...
-            String thisToString;
-            try {
-                thisToString = this.toString();
-            } catch (final Exception ex) {
-                thisToString = "this.toString()";
+            // There are cases where this.toString() may fail such as for non-initialized union entities. Need to degrade
+            // gracefully in order to to hide the original exception. Also, don't try toString() if dynamic property access
+            // fails gravely since toString() itself may require it (e.g., with DynamicEntityKey).
+            @Nullable String thisToString;
+            if (e instanceof DynamicPropertyAccessGraveError) {
+                thisToString = null;
             }
-            throw new EntityException(format("Could not get the value for property [%s] in instance [%s]@[%s].", propertyName , thisToString, getType().getName()), e);
+            else {
+                try {
+                    thisToString = this.toString();
+                } catch (final Exception ex) {
+                    thisToString = null;
+                }
+            }
+            throw new EntityException(format("Could not get the value for property [%s] in instance %s.",
+                                             propertyName,
+                                             thisToString == null
+                                                     ? '[' + getType().getTypeName() + ']'
+                                                     : "[%s]@[%s]".formatted(thisToString, getType().getTypeName())),
+                                      e);
         }
     }
 
