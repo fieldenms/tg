@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity;
 
 import com.google.inject.Inject;
 import ua.com.fielden.platform.entity.exceptions.DynamicPropertyAccessGraveError;
+import ua.com.fielden.platform.entity.exceptions.EntityException;
 
 import javax.annotation.Nullable;
 import java.lang.invoke.MethodHandle;
@@ -61,8 +62,7 @@ final class DynamicPropertyAccess {
 
         final var getter = index.getter(prop);
         if (getter == null) {
-            throw new IllegalArgumentException("Failed to resolve property [%s] in entity [%s]".formatted(
-                    prop, entityType.getTypeName()));
+            throw new EntityException("Failed to resolve property [%s] in entity [%s]".formatted(prop, entityType.getTypeName()));
         }
 
         return getter.invoke(entity);
@@ -87,8 +87,7 @@ final class DynamicPropertyAccess {
 
         final MethodHandle setter = index.setter(prop.toString());
         if (setter == null) {
-            throw new IllegalArgumentException("Failed to resolve setter for property [%s] in entity [%s]".formatted(
-                    prop, entityType.getTypeName()));
+            throw new EntityException("Failed to resolve setter for property [%s] in entity [%s]".formatted(prop, entityType.getTypeName()));
         }
 
         setter.invoke(entity, value);

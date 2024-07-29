@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.entity;
 
 import com.google.common.collect.ImmutableMap;
+import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import javax.annotation.Nullable;
@@ -17,6 +19,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
+import static java.lang.String.format;
 import static java.lang.invoke.MethodType.methodType;
 import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
@@ -196,7 +199,7 @@ class PropertyIndexerImpl implements PropertyIndexer {
         // active entity might be enhanced, but getters are keyed on canonical entity types
         final var getter = getters.get(activeEntity.getType());
         if (getter == null) {
-            throw new IllegalArgumentException(
+            throw new EntityException(
                     "Failed to resolve common property [%s] in union entity [%s] with active entity [%s]"
                             .formatted(prop, entity.getType().getSimpleName(), activeEntity.getType().getSimpleName()));
         }
@@ -224,7 +227,7 @@ class PropertyIndexerImpl implements PropertyIndexer {
         // active entity might be enhanced, but setters are keyed on canonical entity types
         final var setter = setters.get(activeEntity.getType());
         if (setter == null) {
-            throw new IllegalArgumentException(
+            throw new EntityException(
                     "Failed to resolve a setter for common property [%s] in union entity [%s] with active entity [%s]"
                             .formatted(prop, entity.getType().getSimpleName(), activeEntity.getType().getSimpleName()));
         }
@@ -259,7 +262,7 @@ class PropertyIndexerImpl implements PropertyIndexer {
             return cache.computeIfAbsent(klass, k -> {
                 try {
                     return MethodHandles.privateLookupIn(k, MethodHandles.lookup());
-                } catch (IllegalAccessException e) {
+                } catch (final IllegalAccessException e) {
                     throw new RuntimeException(e);
                 }
             });
@@ -287,7 +290,9 @@ class PropertyIndexerImpl implements PropertyIndexer {
             try {
                 return unreflect(Reflector.getMethodForClass(entityType, Mutator.SETTER.getName(field.getName()), field.getType()));
             } catch (final NoSuchMethodException e) {
-                throw new RuntimeException(e);
+                throw new ReflectionException(format("Missing setter for property [%s] in entity [%s]",
+                                                     field.getName(), entityType.getTypeName()),
+                                              e);
             }
         }
 
