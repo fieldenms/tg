@@ -882,6 +882,13 @@ Polymer({
     },
 
     /****************Miscellaneous methods for restoring size and dimension***********************/
+    /**
+     * This method should be removed in the next releases as it required better name. And now it's functionality was enhanced and moved to _setDimension 
+     */
+    _adjustView: function () {
+        this._setDimension();
+    },
+
     _setDimension: function () {
         this.style.removeProperty('margin');
         if (this.detachedView) {
