@@ -848,9 +848,8 @@ Polymer({
         this._insertionPointToDrag = dragEvent.target;
         //configure drag transfer and drag transfer image        
         dragEvent.dataTransfer.effectAllowed = "copyMove";
-        const img = document.createElement("img");   
-        img.src = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
-        dragEvent.dataTransfer.setDragImage(img, 0, 0);
+        const offsetRect = this._insertionPointToDrag.$.titleBar.getBoundingClientRect();
+        dragEvent.dataTransfer.setDragImage(this._insertionPointToDrag.$.titleBar, dragEvent.clientX - offsetRect.left, dragEvent.clientY - offsetRect.top);
         //Hide tooltip as it is not needed during drag&drop process.
         hideTooltip();
     },
