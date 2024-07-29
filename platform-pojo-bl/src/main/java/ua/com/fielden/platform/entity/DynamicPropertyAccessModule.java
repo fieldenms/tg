@@ -28,14 +28,14 @@ public final class DynamicPropertyAccessModule extends AbstractModule {
     }
 
     @Provides
-    PropertyIndexer providePropertyIndexer(final PropertyIndexerImpl indexer, final Workflows workflow, final Options options) {
+    PropertyIndexer providePropertyIndexer(final Workflows workflow, final Options options) {
         if (options.forceCaching) {
-            return PropertyIndexer.caching(indexer);
+            return new CachingPropertyIndexerImpl();
         }
 
         return switch (workflow) {
-            case development -> indexer;
-            case deployment, vulcanizing -> PropertyIndexer.caching(indexer);
+            case development -> new PropertyIndexerImpl();
+            case deployment, vulcanizing -> new CachingPropertyIndexerImpl();
         };
     }
 

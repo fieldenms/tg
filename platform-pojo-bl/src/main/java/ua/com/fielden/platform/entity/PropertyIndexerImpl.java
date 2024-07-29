@@ -24,7 +24,7 @@ import static ua.com.fielden.platform.reflection.Finder.streamProperties;
 import static ua.com.fielden.platform.reflection.Reflector.obtainPropertySetter;
 import static ua.com.fielden.platform.utils.StreamUtils.distinct;
 
-final class PropertyIndexerImpl implements PropertyIndexer {
+class PropertyIndexerImpl implements PropertyIndexer {
 
     private final Field idProperty = getFieldByName(AbstractEntity.class, ID);
     private final Field versionProperty = getFieldByName(AbstractEntity.class, VERSION);
