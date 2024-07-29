@@ -531,7 +531,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         }
         try {
             return (T) dynamicPropertyAccess.getProperty(this, propertyName);
-        } catch (final Exception e) {
+        } catch (final Throwable e) {
             // there are cases where this.toString() may fail such as for non-initialized union entities
             // need to degrade gracefully in order to to hide the original exception...
             String thisToString;
@@ -564,17 +564,13 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         try {
             dynamicPropertyAccess.setProperty(this, propertyName, value);
             return this;
-        } catch (final Exception e) {
-            // let's be a little more intelligent about handling instances of InvocationTargetException to report errors without the unnecessary nesting
-            if (e instanceof InvocationTargetException && e.getCause() != null) {
-                // the cause of type Result should be reported as is
-                if (e.getCause() instanceof Result) {
-                    throw (Result) e.getCause();
-                } else { // otherwise wrap the cause in EntityException
-                    throw new EntityException(format("Error setting value [%s] into property [%s] for entity [%s]@[%s].", value, propertyName, this, getType().getName()), e.getCause());
-                }
-            } else {
-                throw new EntityException(format("Error setting value [%s] into property [%s] for entity [%s]@[%s].", value, propertyName, this, getType().getName()), e);
+        } catch (final Throwable e) {
+            if (e instanceof Result result) {
+                throw result;
+            }
+            else {
+                throw new EntityException(format("Error setting value [%s] into property [%s] for entity [%s]@[%s].",
+                                                 value, propertyName, this, getType().getName()), e);
             }
         }
     }

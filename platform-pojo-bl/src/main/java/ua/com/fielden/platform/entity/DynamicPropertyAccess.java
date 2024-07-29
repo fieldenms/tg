@@ -17,7 +17,7 @@ final class DynamicPropertyAccess {
      *
      * @param prop  property path
      */
-    public Object getProperty(final AbstractEntity<?> entity, final CharSequence prop) {
+    public Object getProperty(final AbstractEntity<?> entity, final CharSequence prop) throws Throwable {
         final String[] propPath = DOT_SPLITTER_PATTERN.split(prop);
         final AbstractEntity<?> lastPropOwner = lastPropOwner(entity, propPath);
         return lastPropOwner == null ? null : getProperty_(lastPropOwner, last(propPath));
@@ -32,7 +32,7 @@ final class DynamicPropertyAccess {
      * (entity, "x.y") -> entity.x
      * </pre>
      */
-    private @Nullable AbstractEntity<?> lastPropOwner(final AbstractEntity<?> entity, final String[] path) {
+    private @Nullable AbstractEntity<?> lastPropOwner(final AbstractEntity<?> entity, final String[] path) throws Throwable {
         AbstractEntity<?> localEntity = entity;
         for (int i = 0; i < path.length - 1; i++) {
             localEntity = (AbstractEntity<?>) getProperty_(localEntity, path[i]);
@@ -48,7 +48,7 @@ final class DynamicPropertyAccess {
      *
      * @param prop  simple property name
      */
-    private Object getProperty_(final AbstractEntity<?> entity, final String prop) {
+    private Object getProperty_(final AbstractEntity<?> entity, final String prop) throws Throwable {
         Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) entity.getClass();
         final var getter = indexer.indexFor(entityType).getter(prop);
         if (getter == null) {
@@ -56,12 +56,7 @@ final class DynamicPropertyAccess {
                     prop, entityType.getTypeName()));
         }
 
-        try {
-            return getter.invoke(entity);
-        } catch (final Throwable e) {
-            throw new RuntimeException("Failed to invoke getter for property [%s] in entity [%s]".formatted(
-                    prop, entityType.getTypeName()), e);
-        }
+        return getter.invoke(entity);
     }
 
     /**
@@ -71,7 +66,7 @@ final class DynamicPropertyAccess {
      *
      * @param prop  simple property name
      */
-    public void setProperty(final AbstractEntity<?> entity, final CharSequence prop, final Object value) {
+    public void setProperty(final AbstractEntity<?> entity, final CharSequence prop, final Object value) throws Throwable {
         Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) entity.getClass();
         final MethodHandle setter = indexer.indexFor(entityType).setter(prop.toString());
         if (setter == null) {
@@ -79,11 +74,7 @@ final class DynamicPropertyAccess {
                     prop, entityType.getTypeName()));
         }
 
-        try {
-            setter.invoke(entity, value);
-        } catch (final Throwable e) {
-            throw e instanceof RuntimeException re ? re : new RuntimeException(e);
-        }
+        setter.invoke(entity, value);
     }
 
     /**
