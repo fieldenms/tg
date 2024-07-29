@@ -224,4 +224,14 @@ public class DynamicPropertyAccessTest {
         assertEquals("my description", entity.activeEntity().getDesc());
     }
 
+    @Test
+    public void property_key_overriden_in_an_abstract_type_can_be_accessed() {
+        // AbstractFunctionalEntityToOpenCompoundMaster.key
+        final var entity = factory.newEntity(OpenEntityMasterAction.class);
+        assertNull(entity.get("key"));
+        final var user = factory.newEntity(Entity.class);
+        entity.set("key", user);
+        assertEquals(user, entity.get("key"));
+    }
+
 }

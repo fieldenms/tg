@@ -119,7 +119,7 @@ public final class Reflector {
      * @return
      * @throws NoSuchMethodException
      */
-    protected static Method getMethodForClass(final Class<?> startWithClass, final String methodName, final Class<?>... arguments) throws NoSuchMethodException {
+    public static Method getMethodForClass(final Class<?> startWithClass, final String methodName, final Class<?>... arguments) throws NoSuchMethodException {
         Class<?> klass = startWithClass;
         while (klass != Object.class) { // need to iterated thought hierarchy in
             // order to retrieve fields from above

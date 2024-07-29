@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity;
 
 import com.google.common.collect.ImmutableMap;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import javax.annotation.Nullable;
@@ -69,7 +70,7 @@ class PropertyIndexerImpl implements PropertyIndexer {
                 : streamDeclaredProperties(entityType);
         return properties.collect(Collectors.teeing(
                 toImmutableMap(Field::getName, lookupProvider::unreflectGetter),
-                toImmutableMap(Field::getName, prop -> lookupProvider.unreflect(obtainPropertySetter(entityType, prop.getName()))),
+                toImmutableMap(Field::getName, prop -> lookupProvider.unreflectPropertySetter(entityType, prop)),
                 StandardIndex::makeIndex));
     }
 
@@ -279,6 +280,17 @@ class PropertyIndexerImpl implements PropertyIndexer {
                 throw new RuntimeException(e);
             }
         }
+
+        public MethodHandle unreflectPropertySetter(final Class<? extends AbstractEntity<?>> entityType, final Field field) {
+            // Reflector.obtainPropertySetter does not support property "key" overriden in an abstract type, thus we
+            // exercise finer control over the lookup
+            try {
+                return unreflect(Reflector.getMethodForClass(entityType, Mutator.SETTER.getName(field.getName()), field.getType()));
+            } catch (final NoSuchMethodException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
     }
 
 }
