@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 import java.lang.invoke.MethodHandle;
 
 import static ua.com.fielden.platform.reflection.Reflector.DOT_SPLITTER_PATTERN;
+import static ua.com.fielden.platform.utils.ArrayUtils.getLast;
 
 /**
  * Provides dynamic name-based access (read & write) to property values of entity instances.
@@ -20,9 +21,10 @@ final class DynamicPropertyAccess {
      * @param prop  property path
      */
     public Object getProperty(final AbstractEntity<?> entity, final CharSequence prop) throws Throwable {
+        // TODO use EntityUtils.splitPropPath() from #2223
         final String[] propPath = DOT_SPLITTER_PATTERN.split(prop);
         final AbstractEntity<?> lastPropOwner = lastPropOwner(entity, propPath);
-        return lastPropOwner == null ? null : getProperty_(lastPropOwner, last(propPath));
+        return lastPropOwner == null ? null : getProperty_(lastPropOwner, getLast(propPath));
     }
 
     /**
@@ -117,10 +119,6 @@ final class DynamicPropertyAccess {
     @Inject
     DynamicPropertyAccess(final PropertyIndexer indexer) {
         this.indexer = indexer;
-    }
-
-    private static <X> X last(final X[] xs) {
-        return xs[xs.length - 1];
     }
 
 }
