@@ -153,7 +153,7 @@ public class ResultSetDynamicPropertyBuilder<T extends AbstractEntity<?>> implem
     }
 
     @Override
-    public IEcbCompletion<T> enableInsertionPointRearrangement() {
-        return builder.enableInsertionPointRearrangement();
+    public IEcbCompletion<T> withCustomisableLayout() {
+        return builder.withCustomisableLayout();
     }
 }

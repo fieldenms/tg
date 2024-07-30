@@ -82,7 +82,7 @@ public class AlternativeViewConfigBuilder<T extends AbstractEntity<?>> implement
     }
 
     @Override
-    public IEcbCompletion<T> enableInsertionPointRearrangement() {
-        return resultSetBuilder.enableInsertionPointRearrangement();
+    public IEcbCompletion<T> withCustomisableLayout() {
+        return resultSetBuilder.withCustomisableLayout();
     }
 }

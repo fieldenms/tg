@@ -15,5 +15,5 @@ public interface IEnableInsertionPointRearrangement<T extends AbstractEntity<?>>
      *
      * @return
      */
-    IEcbCompletion<T> enableInsertionPointRearrangement();
+    IEcbCompletion<T> withCustomisableLayout();
 }

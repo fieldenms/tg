@@ -163,7 +163,7 @@ public class ResultSetBuilderWrapperForEditors<T extends AbstractEntity<?>> impl
     }
 
     @Override
-    public IEcbCompletion<T> enableInsertionPointRearrangement() {
-        return builder.enableInsertionPointRearrangement();
+    public IEcbCompletion<T> withCustomisableLayout() {
+        return builder.withCustomisableLayout();
     }
 }

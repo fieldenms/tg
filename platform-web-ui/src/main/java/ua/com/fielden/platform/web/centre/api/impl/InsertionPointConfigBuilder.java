@@ -121,7 +121,7 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
     }
 
     @Override
-    public IEcbCompletion<T> enableInsertionPointRearrangement() {
-        return resultSetBuilder.enableInsertionPointRearrangement();
+    public IEcbCompletion<T> withCustomisableLayout() {
+        return resultSetBuilder.withCustomisableLayout();
     }
 }

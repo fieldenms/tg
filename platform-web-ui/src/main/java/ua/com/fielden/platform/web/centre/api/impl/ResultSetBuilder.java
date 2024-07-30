@@ -518,7 +518,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IEcbCompletion<T> enableInsertionPointRearrangement() {
+    public IEcbCompletion<T> withCustomisableLayout() {
         this.builder.insertionPointRearrangementEnabled = true;
         return this;
     }
@@ -589,8 +589,8 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         }
 
         @Override
-        public IEcbCompletion<T> enableInsertionPointRearrangement() {
-            return ResultSetBuilder.this.enableInsertionPointRearrangement();
+        public IEcbCompletion<T> withCustomisableLayout() {
+            return ResultSetBuilder.this.withCustomisableLayout();
         }
     }
 
