@@ -8,18 +8,23 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import ua.com.fielden.platform.basic.config.Workflows;
 
+import javax.annotation.Nullable;
+
 public final class DynamicPropertyAccessModule extends AbstractModule {
 
-    public static final String FORCE_CACHING = "DynamicPropertyAcesss.forceCaching";
+    public static final String ENABLE_CACHE = "DynamicPropertyAcesss.enableCache";
 
     static class Options {
+        /**
+         * Explicitly controls the use of caching, bypassing the standard choice based on the active {@linkplain Workflows workflow}.
+         */
         @Inject(optional = true)
-        @Named(FORCE_CACHING)
-        boolean forceCaching = false;
+        @Named(ENABLE_CACHE)
+        @Nullable Boolean enableCache = null;
     }
 
-    public static Module forceCaching() {
-        return binder -> binder.bindConstant().annotatedWith(Names.named(FORCE_CACHING)).to(true);
+    public static Module enableCache(final boolean value) {
+        return binder -> binder.bindConstant().annotatedWith(Names.named(ENABLE_CACHE)).to(value);
     }
 
     @Override
@@ -29,14 +34,18 @@ public final class DynamicPropertyAccessModule extends AbstractModule {
 
     @Provides
     PropertyIndexer providePropertyIndexer(final Workflows workflow, final Options options) {
-        if (options.forceCaching) {
-            return new CachingPropertyIndexerImpl();
+        final boolean caching;
+        if (options.enableCache != null) {
+            caching = options.enableCache;
+        }
+        else {
+            caching = switch (workflow) {
+                case deployment, vulcanizing -> true;
+                case development -> false;
+            };
         }
 
-        return switch (workflow) {
-            case development -> new PropertyIndexerImpl();
-            case deployment, vulcanizing -> new CachingPropertyIndexerImpl();
-        };
+        return caching ? new CachingPropertyIndexerImpl() : new PropertyIndexerImpl();
     }
 
 }
