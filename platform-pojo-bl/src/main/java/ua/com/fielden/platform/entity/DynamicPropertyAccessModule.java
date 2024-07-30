@@ -41,7 +41,19 @@ public final class DynamicPropertyAccessModule extends AbstractModule {
         else {
             caching = switch (workflow) {
                 case deployment, vulcanizing -> true;
-                case development -> false;
+                /*
+                 Caching during development can be enabled if we can guarantee that it won't get in the way of redefining
+                 entity types at runtime. So which entity types can be redefined?
+                 * Canonical entity types - if HotSpot is used, then no, because it doesn't support structural changes.
+                 If JBR (JetBrains Runtime) is used, then canonical entity types can indeed be redefined: properties
+                 can be removed, added and modified. However, the implications of such changes are far too wide, they
+                 would also affect other parts of the system (e.g., metadata). Therefore, since this isn't supported
+                 yet, we need not worry about it here.
+                 * Generated entity types - any live changes should result in generation of new entity types (e.g.,
+                 modifying an entity centre configuration). Since those types will be new, old cached types won't get
+                 in the way.
+                */
+                case development -> true;
             };
         }
 
