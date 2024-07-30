@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.IEcbCompletion;
+import ua.com.fielden.platform.web.centre.api.IWithLeftSplitterPosition;
 import ua.com.fielden.platform.web.centre.api.IWithRightSplitterPosition;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
@@ -16,6 +17,8 @@ import ua.com.fielden.platform.web.centre.api.alternative_view.IAlternativeViewP
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
 import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointConfig0;
+import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointWithConfig;
+import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointsWithCustomLayout;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
 import ua.com.fielden.platform.web.centre.api.resultset.IAlsoProp;
@@ -33,7 +36,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.tooltip.IWithTooltip;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 
-public class ResultSetBuilderWrapperForEditors<T extends AbstractEntity<?>> implements IResultSetBuilder3Ordering<T> {
+public class ResultSetBuilderWrapperForEditors<T extends AbstractEntity<?>> implements IResultSetBuilder3Ordering<T>, IInsertionPointWithConfig<T> {
 
     public final ResultSetBuilder<T> builder;
 
@@ -158,12 +161,12 @@ public class ResultSetBuilderWrapperForEditors<T extends AbstractEntity<?>> impl
     }
 
     @Override
-    public IAlternativeView<T> withRightSplitterPosition(final int percentage) {
+    public IInsertionPointsWithCustomLayout<T> withRightSplitterPosition(final int percentage) {
         return builder.withRightSplitterPosition(percentage);
     }
 
     @Override
-    public IEcbCompletion<T> withCustomisableLayout() {
+    public IAlternativeView<T> withCustomisableLayout() {
         return builder.withCustomisableLayout();
     }
 }

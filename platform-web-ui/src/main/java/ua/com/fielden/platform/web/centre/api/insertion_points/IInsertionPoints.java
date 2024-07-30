@@ -11,7 +11,7 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
  *
  * @param <T>
  */
-public interface IInsertionPoints<T extends AbstractEntity<?>> extends IWithLeftSplitterPosition<T> {
+public interface IInsertionPoints<T extends AbstractEntity<?>> {
     /**
      * Associates the specified action with an insertion point.
      * Several actions can be associated with the same insertion point, where the order of associations determines the order of insertions.

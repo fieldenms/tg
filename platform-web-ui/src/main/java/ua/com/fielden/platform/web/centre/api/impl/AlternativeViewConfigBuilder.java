@@ -80,9 +80,4 @@ public class AlternativeViewConfigBuilder<T extends AbstractEntity<?>> implement
     public IAlternativeViewWithActions<T> also() {
         return this;
     }
-
-    @Override
-    public IEcbCompletion<T> withCustomisableLayout() {
-        return resultSetBuilder.withCustomisableLayout();
-    }
 }

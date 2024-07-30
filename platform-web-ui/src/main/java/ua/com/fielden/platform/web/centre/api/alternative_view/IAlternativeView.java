@@ -3,7 +3,7 @@ package ua.com.fielden.platform.web.centre.api.alternative_view;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.IEcbCompletion;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
-import ua.com.fielden.platform.web.centre.api.insertion_points.IEnableInsertionPointRearrangement;
+import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointsWithCustomLayout;
 
 /**
  * The contract for defining entity centre alternative view, which is driven by functional entities.
@@ -12,7 +12,7 @@ import ua.com.fielden.platform.web.centre.api.insertion_points.IEnableInsertionP
  *
  * @param <T>
  */
-public interface IAlternativeView<T extends AbstractEntity<?>> extends IEnableInsertionPointRearrangement<T> {
+public interface IAlternativeView<T extends AbstractEntity<?>> extends IEcbCompletion<T> {
 
     /**
      * Adds new alternative view and associates it with the specified action.

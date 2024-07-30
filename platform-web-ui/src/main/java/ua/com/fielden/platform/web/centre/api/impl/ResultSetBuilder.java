@@ -44,6 +44,7 @@ import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.OrderDirection;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.SummaryPropDef;
 import ua.com.fielden.platform.web.centre.api.IEcbCompletion;
+import ua.com.fielden.platform.web.centre.api.IWithLeftSplitterPosition;
 import ua.com.fielden.platform.web.centre.api.IWithRightSplitterPosition;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
@@ -52,9 +53,7 @@ import ua.com.fielden.platform.web.centre.api.alternative_view.IAlternativeView;
 import ua.com.fielden.platform.web.centre.api.alternative_view.IAlternativeViewPreferred;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
-import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointConfig0;
-import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig;
-import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
+import ua.com.fielden.platform.web.centre.api.insertion_points.*;
 import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
 import ua.com.fielden.platform.web.centre.api.resultset.IAlsoProp;
 import ua.com.fielden.platform.web.centre.api.resultset.IAlsoSecondaryAction;
@@ -116,7 +115,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerW
  *
  * @param <T>
  */
-class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderDynamicProps<T>, IResultSetBuilderWidgetSelector<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder1aEgiAppearance<T>, IResultSetBuilder1aEgiIconStyle<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T>{
+class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderDynamicProps<T>, IResultSetBuilderWidgetSelector<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder1aEgiAppearance<T>, IResultSetBuilder1aEgiIconStyle<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T>, IInsertionPointWithConfig<T> {
 
     private static final String ERR_SPLITTER_OVERLAPPING = "The left and right splitters are overlapping (i.e., left splitter position + right splitter position > 100).";
     private static final String ERR_SPLITTER_POSITION_OUT_OF_BOUNDS = "The splitter position should be greater than 0 and less than 100.";
@@ -518,7 +517,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IEcbCompletion<T> withCustomisableLayout() {
+    public IAlternativeView<T> withCustomisableLayout() {
         this.builder.insertionPointRearrangementEnabled = true;
         return this;
     }
@@ -526,7 +525,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     /**
      * A helper class to assist in name collision resolution.
      */
-    private class ResultSetSecondaryActionsBuilder implements IAlsoSecondaryAction<T> {
+    private class ResultSetSecondaryActionsBuilder implements IAlsoSecondaryAction<T>, IInsertionPointWithConfig<T> {
 
         @Override
         public IResultSetBuilder9RenderingCustomiser<T> setCustomPropsValueAssignmentHandler(final Class<? extends ICustomPropsAssignmentHandler> handler) {
@@ -579,7 +578,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         }
 
         @Override
-        public IAlternativeView<T> withRightSplitterPosition(final int percentage) {
+        public IInsertionPointsWithCustomLayout<T> withRightSplitterPosition(final int percentage) {
             return ResultSetBuilder.this.withRightSplitterPosition(percentage);
         }
 
@@ -589,7 +588,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         }
 
         @Override
-        public IEcbCompletion<T> withCustomisableLayout() {
+        public IAlternativeView<T> withCustomisableLayout() {
             return ResultSetBuilder.this.withCustomisableLayout();
         }
     }
@@ -761,7 +760,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IAlternativeView<T> withRightSplitterPosition(final int percentage) {
+    public IInsertionPointsWithCustomLayout<T> withRightSplitterPosition(final int percentage) {
         if (percentage < 0 || percentage > 100) {
             throw new EntityCentreConfigurationException(ERR_SPLITTER_POSITION_OUT_OF_BOUNDS);
         }
