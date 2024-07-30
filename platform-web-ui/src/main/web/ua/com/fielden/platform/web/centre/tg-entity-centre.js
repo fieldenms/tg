@@ -190,7 +190,7 @@ const template = html`
             left: 0;
             width: 9px;
             display: none;
-            background: var(--paper-grey-300);
+            background: var(--paper-light-blue-600);
         }
         .arrow-left {
             width: 0;
@@ -298,7 +298,7 @@ const template = html`
                 <slot id="rightInsertionPointContent" name="right-insertion-point"></slot>
             </div>
             <div id="fantomSplitter" class="fantom-splitter"></div>
-            <div id="placeHolder" style="background-color: var(--paper-grey-300); height: 9px; width: auto; display: none;"></div>
+            <div id="placeHolder" style="background-color:  var(--paper-light-blue-600); height: 9px; width: auto; display: none;"></div>
         </tg-centre-result-view>
         <slot id="alternativeViewSlot" name="alternative-view-insertion-point"></slot>
     </iron-pages>`;
