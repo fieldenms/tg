@@ -4,82 +4,24 @@
     <groupId>fielden</groupId>
     <artifactId>platform-parent</artifactId>
     <packaging>pom</packaging>
-    <version>1.4.6-SNAPSHOT</version>
+    <version>1.4.7-SNAPSHOT</version>
     <name>Trident Genesis Platform Parent</name>
     <description>
         Trident Genesis is a software application platform designed for development of EAM/ERP type applications.
         Its main goal is to provide a holistic solution for development of information system with domain oriented approach.
     </description>
-    <url>https://www.fielden.com.ua/trac/pnl-tg/</url>
+    <url>https://github.com/fieldenms/tg</url>
     <inceptionYear>2008</inceptionYear>
     <organization>
         <name>Fielden Management Services</name>
         <url>http://www.fielden.com.au/</url>
     </organization>
 
-    <developers>
-        <developer>
-            <id>01es</id>
-            <url />
-            <name>Oles Hodych</name>
-            <organization>FMS.ua</organization>
-            <organizationUrl>
-                http://www.fielden.com.ua/
-            </organizationUrl>
-            <email>oles@fielden.com.au</email>
-            <timezone>+2</timezone>
-            <roles>
-                <role>owner</role>
-            </roles>
-        </developer>
-        <developer>
-            <id>nazar</id>
-            <url />
-            <name>Nazar Chaykivskyy</name>
-            <organization>FMS.ua</organization>
-            <organizationUrl>
-                http://www.fielden.com.ua/
-            </organizationUrl>
-            <email>nazar@fielden.com.au</email>
-            <timezone>+2</timezone>
-            <roles>
-                <role>owner</role>
-            </roles>
-        </developer>
-        <developer>
-            <id>jhou</id>
-            <url />
-            <name>Yura Prokopiv</name>
-            <organization>FMS.ua</organization>
-            <organizationUrl>
-                http://www.fielden.com.ua/
-            </organizationUrl>
-            <email>jhou@fielden.com.au</email>
-            <timezone>+2</timezone>
-            <roles>
-                <role>owner</role>
-            </roles>
-        </developer>
-        <developer>
-            <id>oleh</id>
-            <url />
-            <name>Oleh Maykovych</name>
-            <organization>FMS.ua</organization>
-            <organizationUrl>
-                http://www.fielden.com.ua/
-            </organizationUrl>
-            <email>oleh@fielden.com.au</email>
-            <timezone>+2</timezone>
-            <roles>
-                <role>owner</role>
-            </roles>
-        </developer>
-    </developers>
-
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <junit.version>4.13.2</junit.version>
-        <posgresql.version>42.7.2</posgresql.version>
+        <posgresql.version>42.7.3</posgresql.version>
+        <mssql.version>12.6.2.jre11</mssql.version>
     </properties>
 
     <modules>

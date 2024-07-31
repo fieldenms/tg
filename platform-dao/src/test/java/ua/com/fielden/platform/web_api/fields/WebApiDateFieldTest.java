@@ -5,7 +5,7 @@ import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
-import static ua.com.fielden.platform.web_api.TgScalars.createDateRepr;
+import static ua.com.fielden.platform.web_api.GraphQLScalars.createDateRepr;
 import static ua.com.fielden.platform.web_api.WebApiUtils.errors;
 import static ua.com.fielden.platform.web_api.WebApiUtils.input;
 import static ua.com.fielden.platform.web_api.WebApiUtils.result;

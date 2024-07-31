@@ -17,7 +17,7 @@ public class TransformationContext1DemoTest extends AbstractEqlShortcutTest {
 
     @Before
     public void setUp() {
-        System.out.println("\nEXECUTING TEST [%s]:\n".formatted(name.getMethodName()));
+        // System.out.println("\nEXECUTING TEST [%s]:\n".formatted(name.getMethodName()));
         TransformationContextFromStage1To2.showInternals();
     }
 
@@ -34,7 +34,7 @@ public class TransformationContext1DemoTest extends AbstractEqlShortcutTest {
                 prop("station").isNotNull().
                 yield().countAll().as("kount").modelAsAggregate()
                 );
-        System.out.println(mr.sql());
+        // System.out.println(mr.sql());
     }
 
     @Test
@@ -48,7 +48,7 @@ public class TransformationContext1DemoTest extends AbstractEqlShortcutTest {
                 prop("name").eq().val(1000).
                 yield().countAll().as("kount").modelAsAggregate()
                 );
-        System.out.println(mr.sql());
+        // System.out.println(mr.sql());
     }
 
     @Test
@@ -67,7 +67,7 @@ public class TransformationContext1DemoTest extends AbstractEqlShortcutTest {
                 prop("m.make").eq().val(17).
                 yield().countAll().as("kount").modelAsAggregate()
                 );
-        System.out.println(mr.sql());
+        // System.out.println(mr.sql());
     }
 
     @Test
@@ -85,7 +85,7 @@ public class TransformationContext1DemoTest extends AbstractEqlShortcutTest {
                         ).
                 yield().countAll().as("kount").modelAsAggregate()
                 );
-        System.out.println(mr.sql());
+        // System.out.println(mr.sql());
     }
 
 
@@ -111,7 +111,7 @@ public class TransformationContext1DemoTest extends AbstractEqlShortcutTest {
                         ).
                 yield().countAll().as("kount").modelAsAggregate()
                 );
-        System.out.println(mr.sql());
+        // System.out.println(mr.sql());
     }
 
     @Test
@@ -143,7 +143,7 @@ public class TransformationContext1DemoTest extends AbstractEqlShortcutTest {
                         ).
                 yield().countAll().as("kount").modelAsAggregate()
                 );
-        System.out.println(mr.sql());
+        // System.out.println(mr.sql());
     }
 
     @Test
@@ -171,6 +171,7 @@ public class TransformationContext1DemoTest extends AbstractEqlShortcutTest {
                         ).
                 yield().countAll().as("kount").modelAsAggregate()
                 );
-        System.out.println(mr.sql());
+        // System.out.println(mr.sql());
     }
+
 }
