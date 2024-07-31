@@ -3,7 +3,6 @@ package ua.com.fielden.platform.web.centre.api.alternative_view;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.IEcbCompletion;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
-import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointsWithCustomLayout;
 
 /**
  * The contract for defining entity centre alternative view, which is driven by functional entities.

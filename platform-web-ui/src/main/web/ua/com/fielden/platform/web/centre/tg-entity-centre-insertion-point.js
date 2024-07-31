@@ -877,7 +877,7 @@ Polymer({
 
     _shouldEnableDraggable: function (contextRetriever) {
         if (contextRetriever) {
-            this.enableDraggable = contextRetriever()._dom().enableInsertionPointRearrangement;
+            this.enableDraggable = contextRetriever()._dom().insertionPointCustomLayoutEnabled;
         }
     },
 

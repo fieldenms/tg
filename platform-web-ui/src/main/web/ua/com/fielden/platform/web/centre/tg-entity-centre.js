@@ -316,10 +316,10 @@ Polymer({
         // No default values are allowed in this case.														   //
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        enableInsertionPointRearrangement : {
+        insertionPointCustomLayoutEnabled : {
             type: Boolean,
             value: false,
-            observer: "_enableInsertionPointRearragementChanged"
+            observer: "_insertionPointCustomLayoutEnabledChanged"
         },
 
         _selectedView: {
@@ -830,7 +830,7 @@ Polymer({
     },
 
     /*************************Insertion point drag related events******************************/
-    _enableInsertionPointRearragementChanged: function (newValue) {
+    _insertionPointCustomLayoutEnabledChanged: function (newValue) {
         if (newValue) {
             this.$.centreResultContainer.addEventListener("dragstart", this._startDrag);
             this.$.centreResultContainer.addEventListener("dragend", this._endDrag);

@@ -7,8 +7,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
-import ua.com.fielden.platform.web.centre.api.IEcbCompletion;
-import ua.com.fielden.platform.web.centre.api.IWithLeftSplitterPosition;
 import ua.com.fielden.platform.web.centre.api.IWithRightSplitterPosition;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;

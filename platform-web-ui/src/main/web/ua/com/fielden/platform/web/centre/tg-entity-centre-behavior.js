@@ -22,7 +22,7 @@ class EntityCentreInsertionPointManager {
     }
 
     /**
-     * Adds new insertion point to manage its z index.
+     * Adds new insertion point and assigns the specified z-index or brings to front newely added insertion point.
      * 
      * @param {Object} insertionPoint - insertion point to manage
      */
@@ -38,7 +38,7 @@ class EntityCentreInsertionPointManager {
     }
 
     /**
-     * Stops managing insertion point z-index and removes from global insertion point manager
+     * Stops managing insertion point z-index
      * 
      * @param {Object} insertionPoint - insertion point to stop manage
      */
