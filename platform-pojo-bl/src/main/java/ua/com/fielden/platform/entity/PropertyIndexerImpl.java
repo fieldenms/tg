@@ -10,6 +10,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import javax.annotation.Nullable;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.invoke.VarHandle;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -35,8 +36,24 @@ import static ua.com.fielden.platform.reflection.Reflector.obtainPropertySetter;
  * <p>
  * One benefit of this extensive reuse is that derived (generated) entity types that have no additional/modified properties
  * get property indices for free by reusing those of their original entity types.
+ *
+ * <h4> Getters
  * <p>
- * Glossary of terms:
+ * Getters in a property index are method handles that read directly from a {@linkplain VarHandle property's field}.
+ * This is in accordance with the convention that all property getter methods are trivial: they return a property's value
+ * without performing any other computations.
+ * <p>
+ * <b>Caveat</b>: getters of collectional properties wrap property values with unmodifiable collections, something that
+ * is not performed by method handles stored in these indices.
+ *
+ * <h4> Overriden setters
+ * <p>
+ * No special effort is required to make sure that overriden setters are invoked. This is done automatically by 
+ * {@linkplain MethodHandle#invoke(Object...) method handles}: similary to {@linkplain Method#invoke(Object, Object...) Reflection},
+ * a dynamic lookup will be performed based on the receiver argument.
+ * 
+ * <h5> Glossary of terms:
+ * <p>
  * <ul>
  *   <li> <i>Canonical entity type</i> - an entity type without bytecode enhancements.
  * </ul>
