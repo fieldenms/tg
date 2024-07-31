@@ -234,4 +234,12 @@ public class DynamicPropertyAccessTest {
         assertEquals(user, entity.get("key"));
     }
 
+    @Test
+    public void if_a_property_has_an_overriden_setter_then_it_is_invoked() {
+        final var entity = factory.newEntity(EntityWithOverridenSetter.class);
+        assertEquals(0, entity.getWitness());
+        entity.set("active", true);
+        assertEquals(1, entity.getWitness());
+    }
+
 }
