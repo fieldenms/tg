@@ -517,25 +517,13 @@ public class CriteriaResource extends AbstractWebResource {
             // Please be careful when adding some new contracts to 'firstTick' not to violate this premise (see selectionCriteriaEquals method).
             final boolean isCriteriaStale = !updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder).getFirstTick()
                 .selectionCriteriaEquals(freshCentre.getFirstTick());
-            return isCriteriaStale ? STALE : createChangedCriteriaIndication(freshCentre, miType, saveAsName, user, companionFinder, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            return isCriteriaStale ? STALE : createChangedCriteriaIndication(freshCentre, updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder));
         }
         return NONE;
     }
 
-    public static CriteriaIndication createChangedCriteriaIndication(
-            final ICentreDomainTreeManagerAndEnhancer freshCentre,
-            final Class<? extends MiWithConfigurationSupport<?>> miType,
-            final Optional<String> saveAsName,
-            final User user,
-            final ICompanionObjectFinder companionFinder,
-            final DeviceProfile device,
-            final IWebUiConfig webUiConfig,
-            final EntityCentreConfigCo eccCompanion,
-            final MainMenuItemCo mmiCompanion,
-            final IUser userCompanion) {
-        final boolean isCriteriaChanged = !updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder).getFirstTick()
-            .selectionCriteriaEquals(freshCentre.getFirstTick());
-        return isCriteriaChanged ? CHANGED : NONE;
+    public static CriteriaIndication createChangedCriteriaIndication(final ICentreDomainTreeManagerAndEnhancer freshCentre, final ICentreDomainTreeManagerAndEnhancer savedCentre) {
+        return !savedCentre.getFirstTick().selectionCriteriaEquals(freshCentre.getFirstTick()) ? CHANGED : NONE;
     }
 
     /**
@@ -661,8 +649,9 @@ public class CriteriaResource extends AbstractWebResource {
                     )
                 );
                 if (isRunning) {
-                    final var changedCriteriaIndication = createChangedCriteriaIndication(updatedFreshCentre, miType, saveAsName, user, companionFinder, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-                    updateResultantCustomObject(previouslyRunCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, previouslyRunCentre, pair.getKey(), changedCriteriaIndication);
+                    final var updatedSavedCentre = updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);;
+                    final var changedCriteriaIndication = createChangedCriteriaIndication(updatedFreshCentre, updatedSavedCentre);
+                    updateResultantCustomObject(previouslyRunCriteriaEntity.centreDirtyCalculatorWithSavedSupplier().apply(() -> updatedSavedCentre), miType, saveAsName, previouslyRunCentre, pair.getKey(), changedCriteriaIndication);
                 }
 
                 // Running the rendering customiser for result set of entities.

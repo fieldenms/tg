@@ -591,13 +591,19 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         validationPrototype.setPreviouslyRunCentreSupplier(() -> updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder));
 
         // returns whether centre (defined by 'specificSaveAsName, freshCentreSupplier' arguments) is changed from previously saved (or the very original) configuration version or it is New (aka default, link or inherited)
-        validationPrototype.setCentreDirtyCalculator(specificSaveAsName -> freshCentreSupplier ->
+        validationPrototype.setCentreDirtyCalculatorWithSavedSupplier(savedCentreSupplier -> specificSaveAsName -> freshCentreSupplier ->
             isDefaultOrLink(specificSaveAsName) // this is very cheap operation
             || isFreshCentreChanged( // this operation has been chosen to be calculated before isInherited as it is assumed to be slightly cheaper than isInherited
                 freshCentreSupplier.get(),
-                updateCentre(user, miType, SAVED_CENTRE_NAME, specificSaveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)
+                savedCentreSupplier.get()
             )
             || isInherited(specificSaveAsName, validationPrototype)
+        );
+        validationPrototype.setCentreDirtyCalculator(specificSaveAsName -> freshCentreSupplier ->
+            validationPrototype.centreDirtyCalculatorWithSavedSupplier()
+                .apply(() -> updateCentre(user, miType, SAVED_CENTRE_NAME, specificSaveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder))
+                .apply(specificSaveAsName)
+                .apply(freshCentreSupplier)
         );
 
         // returns whether centre is changed from previously saved (or the very original) configuration version or it is New (aka default, link or inherited)

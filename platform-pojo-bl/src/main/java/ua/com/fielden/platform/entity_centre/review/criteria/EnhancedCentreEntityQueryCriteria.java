@@ -63,6 +63,7 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Function<Optional<String>, Optional<String>> centreConfigUuidGetter;
     private Supplier<Boolean> centreDirtyGetter;
     private Function<Optional<String>, Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Boolean>> centreDirtyCalculator;
+    private Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Function<Optional<String>, Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Boolean>>> centreDirtyCalculatorWithSavedSupplier;
     private Function<Optional<String>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> criteriaValidationPrototypeCreator;
     private Function<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>, Function<Optional<String>, Function<Optional<Optional<String>>, Function<Optional<Integer>, Function<Optional<Optional<String>>, Map<String, Object>>>>>> centreCustomObjectGetter;
     /**
@@ -356,6 +357,14 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
 
     public Function<Optional<String>, Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Boolean>> centreDirtyCalculator() {
         return centreDirtyCalculator;
+    }
+
+    public void setCentreDirtyCalculatorWithSavedSupplier(final Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Function<Optional<String>, Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Boolean>>> centreDirtyCalculatorWithSavedSupplier) {
+        this.centreDirtyCalculatorWithSavedSupplier = centreDirtyCalculatorWithSavedSupplier;
+    }
+
+    public Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Function<Optional<String>, Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Boolean>>> centreDirtyCalculatorWithSavedSupplier() {
+        return centreDirtyCalculatorWithSavedSupplier;
     }
 
     public void setCentreDirtyGetter(final Supplier<Boolean> centreDirtyGetter) {
