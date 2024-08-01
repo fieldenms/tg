@@ -459,7 +459,7 @@ Polymer({
 
         this._createContextHolderForSave = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber, relatedContexts, parentCentreContext) {
             const context = this._createContextHolder(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber, relatedContexts, parentCentreContext);
-            this._reflector().setCustomProperty(context, "@@criteriaIndication", this.criteriaIndication.name);
+            this._reflector().setCustomProperty(context, "@@criteriaIndication", this.criteriaIndication && this.criteriaIndication.name);
             return context;
         }).bind(this);
     },
