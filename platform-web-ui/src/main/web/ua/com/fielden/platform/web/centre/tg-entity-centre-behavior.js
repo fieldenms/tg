@@ -606,7 +606,15 @@ const TgEntityCentreBehaviorImpl = {
          * 
          * This function is intended to be bound to child elements.
          */
-        _resetAutocompleterState: Function
+        _resetAutocompleterState: Function,
+
+        /**
+         * Function that returns Promise that starts on validate() call and fullfils iff this validation attempt gets successfully resolved.
+         *
+         * If this attempt gets superseded by other attempt then the promise instance will never be resolved.
+         * However, repeated invocation of this function will return new Promise in this case.
+         */
+        lastValidationAttemptPromise: Function
     },
 
     listeners: {
@@ -805,6 +813,7 @@ const TgEntityCentreBehaviorImpl = {
             }
         };
         this._resetAutocompleterState = () => this.$.selection_criteria._resetAutocompleterState();
+        this.lastValidationAttemptPromise = () => this.$.selection_criteria.lastValidationAttemptPromise;
         
         self._postRun = (function (criteriaEntity, newBindingEntity, result) {
             if (criteriaEntity === null || criteriaEntity.isValidWithoutException()) {
