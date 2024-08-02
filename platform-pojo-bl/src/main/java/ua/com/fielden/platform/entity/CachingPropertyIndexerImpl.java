@@ -6,7 +6,6 @@ import ua.com.fielden.platform.entity.DynamicPropertyAccessModule.CacheConfig;
 
 import java.lang.invoke.MethodHandle;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isMockNotFoundType;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isProxied;
@@ -29,24 +28,22 @@ final class CachingPropertyIndexerImpl extends PropertyIndexerImpl {
     private final Cache<Class<? extends AbstractEntity<?>>, StandardIndex> tmpTypeCache;
 
     CachingPropertyIndexerImpl(final CacheConfig lastingTypeCacheConf, final CacheConfig tmpTypeCacheConf) {
-        this.lastingTypeCache = lastingTypeCacheConf.apply(
-                        CacheBuilder.newBuilder()
-                                .initialCapacity(512)
-                                .maximumSize(8192)
-                                .concurrencyLevel(50)
-                                .expireAfterAccess(1, TimeUnit.DAYS))
+        this.lastingTypeCache = CacheBuilder.newBuilder()
+                .initialCapacity(512)
+                .maximumSize(lastingTypeCacheConf.maxSize.orElse(8192))
+                .concurrencyLevel(lastingTypeCacheConf.concurrencyLevel.orElse(50))
+                .expireAfterAccess(1, TimeUnit.DAYS)
                 .build();
-        this.tmpTypeCache = tmpTypeCacheConf.apply(
-                        CacheBuilder.newBuilder()
-                                .initialCapacity(512)
-                                .maximumSize(8192)
-                                .concurrencyLevel(50)
-                                .expireAfterAccess(5, TimeUnit.MINUTES))
+        this.tmpTypeCache = CacheBuilder.newBuilder()
+                .initialCapacity(512)
+                .maximumSize(tmpTypeCacheConf.maxSize.orElse(8192))
+                .concurrencyLevel(tmpTypeCacheConf.concurrencyLevel.orElse(50))
+                .expireAfterAccess(5, TimeUnit.MINUTES)
                 .build();
     }
 
     CachingPropertyIndexerImpl() {
-        this(CacheConfig.identity(), CacheConfig.identity());
+        this(CacheConfig.EMPTY, CacheConfig.EMPTY);
     }
 
     @Override

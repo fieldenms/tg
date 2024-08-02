@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.entity;
 
-import com.google.common.cache.CacheBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -8,10 +7,7 @@ import com.google.inject.Provides;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.parser.ValueParser;
 
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
 import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
@@ -22,13 +18,13 @@ public final class DynamicPropertyAccessModule extends AbstractModule {
 
     public enum CacheOptions {
 
-        concurrencyLevel(intParser().and(i -> ok(builder -> builder.concurrencyLevel(i)))),
-        maxSize(longParser().and(l -> ok(builder -> builder.maximumSize(l)))),
+        concurrencyLevel(intParser().and(i -> ok(cfg -> cfg.concurrencyLevel(i)))),
+        maxSize(longParser().and(l -> ok(cfg -> cfg.maxSize(l)))),
         ;
 
-        public final ValueParser<Object, CacheConfig> parser;
+        public final ValueParser<Object, Function<CacheConfig, CacheConfig>> parser;
 
-        CacheOptions(final ValueParser<Object, CacheConfig> parser) {
+        CacheOptions(final ValueParser<Object, Function<CacheConfig, CacheConfig>> parser) {
             this.parser = parser;
         }
     }
@@ -105,7 +101,7 @@ public final class DynamicPropertyAccessModule extends AbstractModule {
     }
 
     public static Options options() {
-        return new Options(Options.Caching.AUTO, CacheConfig.identity(), CacheConfig.identity());
+        return new Options(Options.Caching.AUTO, CacheConfig.EMPTY, CacheConfig.EMPTY);
     }
 
     private Options getOptions(final Injector injector) {
@@ -146,21 +142,36 @@ public final class DynamicPropertyAccessModule extends AbstractModule {
         };
     }
 
-    public interface CacheConfig extends Function<CacheBuilder<Object, Object>, CacheBuilder<Object, Object>> {
+    public static final class CacheConfig {
+        public static final CacheConfig EMPTY = new CacheConfig();
 
-        default CacheConfig combine(final CacheConfig config) {
-            return builder -> config.apply(this.apply(builder));
+        public final OptionalInt concurrencyLevel;
+        public final OptionalLong maxSize;
+
+        private CacheConfig(final OptionalInt concurrencyLevel, final OptionalLong maxSize) {
+            this.concurrencyLevel = concurrencyLevel;
+            this.maxSize = maxSize;
         }
 
-        static CacheConfig identity() {
-            return x -> x;
+        private CacheConfig() {
+            this(OptionalInt.empty(), OptionalLong.empty());
         }
 
-        static CacheConfig fromProperties(final java.util.Properties properties, final String prefix) {
+        public CacheConfig concurrencyLevel(final int value) {
+            return new CacheConfig(OptionalInt.of(value), maxSize);
+        }
+
+        public CacheConfig maxSize(final long value) {
+            return new CacheConfig(concurrencyLevel, OptionalLong.of(value));
+        }
+
+        public static CacheConfig fromProperties(final java.util.Properties properties, final String prefix) {
             return Arrays.stream(CacheOptions.values()).map(opt -> {
                 final String propName = prefix + "." + opt.name();
                 return optPropertyParser(propName, opt.parser).apply(properties).getOrThrow();
-            }).flatMap(Optional::stream).reduce(identity(), CacheConfig::combine);
+            }).flatMap(Optional::stream).reduce(EMPTY, (cfg, fn) -> fn.apply(cfg),
+                                                // no combiner
+                                                ($1, $2) -> {throw new UnsupportedOperationException();});
         }
     }
 
