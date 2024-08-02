@@ -5,7 +5,7 @@ import com.google.common.cache.CacheBuilder;
 import ua.com.fielden.platform.entity.DynamicPropertyAccessModule.CacheConfig;
 
 import java.lang.invoke.MethodHandle;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isMockNotFoundType;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isProxied;
@@ -28,22 +28,29 @@ final class CachingPropertyIndexerImpl extends PropertyIndexerImpl {
     private final Cache<Class<? extends AbstractEntity<?>>, StandardIndex> tmpTypeCache;
 
     CachingPropertyIndexerImpl(final CacheConfig lastingTypeCacheConf, final CacheConfig tmpTypeCacheConf) {
-        this.lastingTypeCache = CacheBuilder.newBuilder()
-                .initialCapacity(512)
-                .maximumSize(lastingTypeCacheConf.maxSize.orElse(8192))
-                .concurrencyLevel(lastingTypeCacheConf.concurrencyLevel.orElse(50))
-                .expireAfterAccess(1, TimeUnit.DAYS)
-                .build();
-        this.tmpTypeCache = CacheBuilder.newBuilder()
-                .initialCapacity(512)
-                .maximumSize(tmpTypeCacheConf.maxSize.orElse(8192))
-                .concurrencyLevel(tmpTypeCacheConf.concurrencyLevel.orElse(50))
-                .expireAfterAccess(5, TimeUnit.MINUTES)
-                .build();
+        this.lastingTypeCache = buildCache(CacheConfig.rightMerge(defaultLastingTypeCacheConfig(), lastingTypeCacheConf));
+        this.tmpTypeCache = buildCache(CacheConfig.rightMerge(defaultTmpTypeCacheConfig(), tmpTypeCacheConf));
     }
 
     CachingPropertyIndexerImpl() {
         this(CacheConfig.EMPTY, CacheConfig.EMPTY);
+    }
+
+    private CacheConfig defaultLastingTypeCacheConfig() {
+        return CacheConfig.EMPTY.concurrencyLevel(50).maxSize(8192).expireAfterAccess(Duration.ofDays(1));
+    }
+
+    private CacheConfig defaultTmpTypeCacheConfig() {
+        return CacheConfig.EMPTY.concurrencyLevel(50).maxSize(8192).expireAfterAccess(Duration.ofMinutes(5));
+    }
+
+    private static <K, V> Cache<K, V> buildCache(final CacheConfig config) {
+        var builder = CacheBuilder.newBuilder().initialCapacity(512);
+        builder = config.maxSize.isPresent() ? builder.maximumSize(config.maxSize.getAsLong()) : builder;
+        builder = config.concurrencyLevel.isPresent() ? builder.concurrencyLevel(config.concurrencyLevel.getAsInt()) : builder;
+        builder = config.expireAfterAccess.isPresent() ? builder.expireAfterAccess(config.expireAfterAccess.get()) : builder;
+        builder = config.expireAfterWrite.isPresent() ? builder.expireAfterWrite(config.expireAfterWrite.get()) : builder;
+        return builder.build();
     }
 
     @Override

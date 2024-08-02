@@ -4,12 +4,16 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Provides;
+import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.basic.config.Workflows;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.parser.ValueParser;
 
+import java.time.Duration;
 import java.util.*;
 import java.util.function.Function;
 
+import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static ua.com.fielden.platform.parser.ValueParser.Result.ok;
 import static ua.com.fielden.platform.parser.ValueParser.*;
@@ -20,6 +24,8 @@ public final class DynamicPropertyAccessModule extends AbstractModule {
 
         concurrencyLevel(intParser().and(i -> ok(cfg -> cfg.concurrencyLevel(i)))),
         maxSize(longParser().and(l -> ok(cfg -> cfg.maxSize(l)))),
+        expireAfterAccess(new DurationParser().and(duration -> ok(cfg -> cfg.expireAfterAccess(duration)))),
+        expireAfterWrite(new DurationParser().and(duration -> ok(cfg -> cfg.expireAfterWrite(duration)))),
         ;
 
         public final ValueParser<Object, Function<CacheConfig, CacheConfig>> parser;
@@ -147,31 +153,107 @@ public final class DynamicPropertyAccessModule extends AbstractModule {
 
         public final OptionalInt concurrencyLevel;
         public final OptionalLong maxSize;
+        public final Optional<Duration> expireAfterAccess;
+        public final Optional<Duration> expireAfterWrite;
 
-        private CacheConfig(final OptionalInt concurrencyLevel, final OptionalLong maxSize) {
+        private CacheConfig(final OptionalInt concurrencyLevel, final OptionalLong maxSize,
+                            final Optional<Duration> expireAfterAccess, final Optional<Duration> expireAfterWrite) {
             this.concurrencyLevel = concurrencyLevel;
             this.maxSize = maxSize;
+            this.expireAfterAccess = expireAfterAccess;
+            this.expireAfterWrite = expireAfterWrite;
         }
 
         private CacheConfig() {
-            this(OptionalInt.empty(), OptionalLong.empty());
+            this(OptionalInt.empty(), OptionalLong.empty(), Optional.empty(), Optional.empty());
         }
 
         public CacheConfig concurrencyLevel(final int value) {
-            return new CacheConfig(OptionalInt.of(value), maxSize);
+            return new CacheConfig(OptionalInt.of(value), maxSize, expireAfterAccess, expireAfterWrite);
         }
 
         public CacheConfig maxSize(final long value) {
-            return new CacheConfig(concurrencyLevel, OptionalLong.of(value));
+            return new CacheConfig(concurrencyLevel, OptionalLong.of(value), expireAfterAccess, expireAfterWrite);
         }
 
-        public static CacheConfig fromProperties(final java.util.Properties properties, final String prefix) {
+        public CacheConfig expireAfterAccess(final Duration duration) {
+            return new CacheConfig(concurrencyLevel, maxSize, Optional.of(duration), expireAfterWrite);
+        }
+
+        public CacheConfig expireAfterWrite(final Duration duration) {
+            return new CacheConfig(concurrencyLevel, maxSize, expireAfterAccess, Optional.of(duration));
+        }
+
+        public static CacheConfig fromProperties(final Properties properties, final String prefix) {
             return Arrays.stream(CacheOptions.values()).map(opt -> {
                 final String propName = prefix + "." + opt.name();
                 return optPropertyParser(propName, opt.parser).apply(properties).getOrThrow();
             }).flatMap(Optional::stream).reduce(EMPTY, (cfg, fn) -> fn.apply(cfg),
                                                 // no combiner
                                                 ($1, $2) -> {throw new UnsupportedOperationException();});
+        }
+
+        /**
+         * Merges cache configurations preferring present values from the right one.
+         */
+        public static CacheConfig rightMerge(final CacheConfig left, final CacheConfig right) {
+            return new CacheConfig(
+                    right.concurrencyLevel.isPresent() ? right.concurrencyLevel : left.concurrencyLevel,
+                    right.maxSize.isPresent() ? right.maxSize : left.maxSize,
+                    right.expireAfterAccess.isPresent() ? right.expireAfterAccess : left.expireAfterAccess,
+                    right.expireAfterWrite.isPresent() ? right.expireAfterWrite : left.expireAfterWrite);
+        }
+    }
+
+    private static final class DurationParser implements ValueParser<Object, Duration> {
+        @Override
+        public Result<Duration> apply(final Object value) {
+            final var str = requireNonNull(value).toString();
+            final int unitIdx = StringUtils.indexOfAny(str, UNITS);
+            if (unitIdx <= 0) {
+                return incorrectFormat(str);
+            }
+
+            final long number;
+            try {
+                number = Long.parseLong(str.substring(0, unitIdx));
+            } catch (final NumberFormatException e) {
+                return incorrectFormat(str, e);
+            }
+
+            final Duration duration;
+            try {
+                final char unit = str.charAt(unitIdx);
+                duration = switch (unit) {
+                    case 's' -> Duration.ofSeconds(number);
+                    case 'm' -> Duration.ofMinutes(number);
+                    case 'h' -> Duration.ofHours(number);
+                    case 'd' -> Duration.ofDays(number);
+                    default -> throw new InvalidArgumentException("Invalid unit: %s".formatted(unit));
+                };
+            } catch (final RuntimeException e) {
+                return incorrectFormat(str, e);
+            }
+
+            return ok(duration);
+        }
+
+        private static final char[] UNITS = {
+                's', // seconds
+                'm', // minutes
+                'h', // hours
+                'd', // days
+        };
+
+        private static <T> Result<T> incorrectFormat(final String str) {
+            return Result.error(format("Incorrect duration: '%s'. Expected a decimal followed by a unit (%s)",
+                                       str, Arrays.toString(UNITS)));
+        }
+
+        private static <T> Result<T> incorrectFormat(final String str, final Throwable cause) {
+            return Result.error(format("Incorrect duration: '%s'. Expected a decimal followed by a unit (%s)",
+                                       str, Arrays.toString(UNITS)),
+                                cause);
         }
     }
 
