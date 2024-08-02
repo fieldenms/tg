@@ -39,7 +39,7 @@ public final class DynamicPropertyAccessModule extends AbstractModule {
 
         public static final String PROPERTY_PREFIX = "dynamicPropertyAccess";
         public static final String MAIN_CACHE_PROPERTY_PREFIX = String.join(".", PROPERTY_PREFIX, "typeCache");
-        public static final String TEMPORARY_CACHE_PROPERTY_PREFIX = String.join(".", PROPERTY_PREFIX, "tmpTypeCache");
+        public static final String TEMPORARY_CACHE_PROPERTY_PREFIX = String.join(".", PROPERTY_PREFIX, "tempTypeCache");
 
         /**
          * @param prefix  one of {@link #MAIN_CACHE_PROPERTY_PREFIX}, {@link #TEMPORARY_CACHE_PROPERTY_PREFIX}
