@@ -4,7 +4,7 @@
     <parent>
         <groupId>fielden</groupId>
         <artifactId>platform-parent</artifactId>
-        <version>1.4.7</version>
+        <version>1.4.8</version>
     </parent>
 
     <artifactId>platform-annotation-processors</artifactId>
@@ -73,7 +73,7 @@
             </resource>
         </resources>
         <plugins>
-            <!-- Use Maven Shade Plugin to create 2 JARs: uber JAR for standalone use 
+            <!-- Use Maven Shade Plugin to create 2 JARs: uber JAR for standalone use
             and light-weight "lib" JAR for use as a dependency. The lib JAR should not
             include META-INF/services/javax.annotation.processing.Processor to prevent
             the compiler from discovering annotation processors (this is why it's a "lib"

@@ -4,7 +4,7 @@
     <groupId>fielden</groupId>
     <artifactId>platform-parent</artifactId>
     <packaging>pom</packaging>
-    <version>1.4.7</version>
+    <version>1.4.8</version>
     <name>Trident Genesis Platform Parent</name>
     <description>
         Trident Genesis is a software application platform designed for development of EAM/ERP type applications.
@@ -61,27 +61,6 @@
                         </compilerArgs>
                     </configuration>
                 </plugin>
-                <!-- The problem described below seems to have been resolved. Keeping this description for posterity in case similar occurs again.
-
-                 The maven-source-plugin has been commented as it appears to get executed twice during
-                 `mvn deploy`, which causes uploads to GitHub to undergo upgrade as a resource cannot
-                 be overwritten, and uploading the same file with the same name and the same build
-                 timestamp causes this.  This behaviour might be fixed in maven 3.7 - see:
-                 https://issues.apache.org/jira/browse/MNG-5868 -->
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-source-plugin</artifactId>
-                    <version>3.3.0</version>
-                    <executions>
-                        <execution>
-                            <id>attach-sources</id>
-                            <goals>
-                                <goal>jar</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
-
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
@@ -109,8 +88,17 @@
                     </executions>
                 </plugin>
                 <plugin>
-                    <artifactId>maven-deploy-plugin</artifactId>
-                    <version>3.0.0-M1</version>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>3.3.1</version>
+                    <executions>
+                        <execution>
+                            <id>attach-sources</id>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -185,7 +173,10 @@
                 <!-- explicitly define maven-deploy-plugin after other to force exec order -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-deploy-plugin</artifactId>
-                <version>3.1.1</version>
+                <version>3.1.2</version>
+                <configuration>
+                    <types>jar,test-jar,javadoc,sources</types>
+                </configuration>                
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
