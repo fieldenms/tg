@@ -22,13 +22,13 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isProx
 final class CachingPropertyIndexerImpl extends PropertyIndexerImpl {
 
     /** Cache for lasting types (canonical entity types, generated entity types for centres, ...). */
-    private final Cache<Class<? extends AbstractEntity<?>>, StandardIndex> lastingTypeCache;
+    private final Cache<Class<? extends AbstractEntity<?>>, StandardIndex> mainTypeCache;
 
     /** Cache for temporary types (generated for a temporary purpose). */
     private final Cache<Class<? extends AbstractEntity<?>>, StandardIndex> tmpTypeCache;
 
-    CachingPropertyIndexerImpl(final CacheConfig lastingTypeCacheConf, final CacheConfig tmpTypeCacheConf) {
-        this.lastingTypeCache = buildCache(CacheConfig.rightMerge(defaultLastingTypeCacheConfig(), lastingTypeCacheConf));
+    CachingPropertyIndexerImpl(final CacheConfig mainTypeCacheConf, final CacheConfig tmpTypeCacheConf) {
+        this.mainTypeCache = buildCache(CacheConfig.rightMerge(defaultMainTypeCacheConfig(), mainTypeCacheConf));
         this.tmpTypeCache = buildCache(CacheConfig.rightMerge(defaultTmpTypeCacheConfig(), tmpTypeCacheConf));
     }
 
@@ -36,7 +36,7 @@ final class CachingPropertyIndexerImpl extends PropertyIndexerImpl {
         this(CacheConfig.EMPTY, CacheConfig.EMPTY);
     }
 
-    private CacheConfig defaultLastingTypeCacheConfig() {
+    private CacheConfig defaultMainTypeCacheConfig() {
         return CacheConfig.EMPTY.concurrencyLevel(50).maxSize(8192).expireAfterAccess(Duration.ofDays(1));
     }
 
@@ -56,9 +56,9 @@ final class CachingPropertyIndexerImpl extends PropertyIndexerImpl {
     @Override
     public StandardIndex indexFor(final Class<? extends AbstractEntity<?>> entityType) {
         // performing a lookup in both caches first is faster than first determining which cache to use
-        final var cachedInLasting = lastingTypeCache.getIfPresent(entityType);
-        if (cachedInLasting != null) {
-            return cachedInLasting;
+        final var cachedInMain = mainTypeCache.getIfPresent(entityType);
+        if (cachedInMain != null) {
+            return cachedInMain;
         }
         final var cachedInTmp = tmpTypeCache.getIfPresent(entityType);
         if (cachedInTmp != null) {
@@ -70,7 +70,7 @@ final class CachingPropertyIndexerImpl extends PropertyIndexerImpl {
             cache = tmpTypeCache;
         }
         else {
-            cache = lastingTypeCache;
+            cache = mainTypeCache;
         }
         return storeIndex(entityType, cache);
     }

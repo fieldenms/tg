@@ -38,11 +38,11 @@ public final class DynamicPropertyAccessModule extends AbstractModule {
     public static final class Options extends AbstractModule {
 
         public static final String PROPERTY_PREFIX = "dynamicPropertyAccess";
-        public static final String LASTING_CACHE_PROPERTY_PREFIX = String.join(".", PROPERTY_PREFIX, "typeCache");
+        public static final String MAIN_CACHE_PROPERTY_PREFIX = String.join(".", PROPERTY_PREFIX, "typeCache");
         public static final String TEMPORARY_CACHE_PROPERTY_PREFIX = String.join(".", PROPERTY_PREFIX, "tmpTypeCache");
 
         /**
-         * @param prefix  one of {@link #LASTING_CACHE_PROPERTY_PREFIX}, {@link #TEMPORARY_CACHE_PROPERTY_PREFIX}
+         * @param prefix  one of {@link #MAIN_CACHE_PROPERTY_PREFIX}, {@link #TEMPORARY_CACHE_PROPERTY_PREFIX}
          */
         public static String cachePropertyName(final String prefix, final CacheOptions option) {
             return prefix + '.' + option.name();
@@ -53,13 +53,13 @@ public final class DynamicPropertyAccessModule extends AbstractModule {
                 propertyParser(CACHING_PROPERTY, enumIgnoreCaseParser(Caching.values()), Caching.AUTO);
 
         public final Caching caching;
-        public final CacheConfig lastingCacheConfig;
+        public final CacheConfig mainCacheConfig;
         public final CacheConfig tmpCacheConfig;
 
         public enum Caching { ENABLED, DISABLED, AUTO }
 
-        private Options(final Caching caching, final CacheConfig lastingCacheConfig, final CacheConfig tmpCacheConfig) {
-            this.lastingCacheConfig = lastingCacheConfig;
+        private Options(final Caching caching, final CacheConfig mainCacheConfig, final CacheConfig tmpCacheConfig) {
+            this.mainCacheConfig = mainCacheConfig;
             this.tmpCacheConfig = tmpCacheConfig;
             requireNonNull(caching);
             this.caching = caching;
@@ -72,7 +72,7 @@ public final class DynamicPropertyAccessModule extends AbstractModule {
 
         public Options fromProperties(final Properties properties) {
             return new Options(cachingPropertyParser.apply(properties).getOrThrow(),
-                               CacheConfig.fromProperties(properties, LASTING_CACHE_PROPERTY_PREFIX),
+                               CacheConfig.fromProperties(properties, MAIN_CACHE_PROPERTY_PREFIX),
                                CacheConfig.fromProperties(properties, TEMPORARY_CACHE_PROPERTY_PREFIX));
         }
 
@@ -86,23 +86,23 @@ public final class DynamicPropertyAccessModule extends AbstractModule {
          * Explicitly controls the use of caching, bypassing the standard choice based on the active {@linkplain Workflows workflow}.
          */
         public Options caching(final Caching value) {
-            return new Options(value, lastingCacheConfig, tmpCacheConfig);
+            return new Options(value, mainCacheConfig, tmpCacheConfig);
         }
 
-        public Options configureLastingCache(final CacheConfig config) {
+        public Options configureMainCache(final CacheConfig config) {
             return new Options(caching, config, tmpCacheConfig);
         }
 
-        public Options configureLastingCache(final Properties properties) {
-            return new Options(caching, CacheConfig.fromProperties(properties, LASTING_CACHE_PROPERTY_PREFIX), tmpCacheConfig);
+        public Options configureMainCache(final Properties properties) {
+            return new Options(caching, CacheConfig.fromProperties(properties, MAIN_CACHE_PROPERTY_PREFIX), tmpCacheConfig);
         }
 
         public Options configureTemporaryCache(final CacheConfig config) {
-            return new Options(caching, lastingCacheConfig, config);
+            return new Options(caching, mainCacheConfig, config);
         }
 
         public Options configureTemporaryCache(final Properties properties) {
-            return new Options(caching, lastingCacheConfig, CacheConfig.fromProperties(properties, TEMPORARY_CACHE_PROPERTY_PREFIX));
+            return new Options(caching, mainCacheConfig, CacheConfig.fromProperties(properties, TEMPORARY_CACHE_PROPERTY_PREFIX));
         }
     }
 
@@ -127,10 +127,10 @@ public final class DynamicPropertyAccessModule extends AbstractModule {
     PropertyIndexer providePropertyIndexer(final Workflows workflow, final Injector injector) {
         final Options options = getOptions(injector);
         return switch (options.caching) {
-            case ENABLED -> new CachingPropertyIndexerImpl(options.lastingCacheConfig, options.tmpCacheConfig);
+            case ENABLED -> new CachingPropertyIndexerImpl(options.mainCacheConfig, options.tmpCacheConfig);
             case DISABLED -> new PropertyIndexerImpl();
             case AUTO -> switch (workflow) {
-                case deployment, vulcanizing -> new CachingPropertyIndexerImpl(options.lastingCacheConfig, options.tmpCacheConfig);
+                case deployment, vulcanizing -> new CachingPropertyIndexerImpl(options.mainCacheConfig, options.tmpCacheConfig);
                 /*
                  Caching during development can be enabled if we can guarantee that it won't get in the way of redefining
                  entity types at runtime. So which entity types can be redefined?
@@ -143,7 +143,7 @@ public final class DynamicPropertyAccessModule extends AbstractModule {
                  modifying an entity centre configuration). Since those types will be new, old cached types won't get
                  in the way.
                 */
-                case development -> new CachingPropertyIndexerImpl(options.lastingCacheConfig, options.tmpCacheConfig);
+                case development -> new CachingPropertyIndexerImpl(options.mainCacheConfig, options.tmpCacheConfig);
             };
         };
     }

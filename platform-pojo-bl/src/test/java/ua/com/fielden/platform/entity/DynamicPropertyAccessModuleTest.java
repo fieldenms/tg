@@ -35,47 +35,47 @@ public class DynamicPropertyAccessModuleTest {
     @Test
     public void expireAfterAccess_option_is_parsed_correctly() {
         assertThrows(ValueParsingException.class,
-                     () -> options().fromMap(Map.of(cachePropertyName(LASTING_CACHE_PROPERTY_PREFIX, expireAfterAccess), "s")));
+                     () -> options().fromMap(Map.of(cachePropertyName(MAIN_CACHE_PROPERTY_PREFIX, expireAfterAccess), "s")));
         assertThrows(ValueParsingException.class,
-                     () -> options().fromMap(Map.of(cachePropertyName(LASTING_CACHE_PROPERTY_PREFIX, expireAfterAccess), "1234")));
+                     () -> options().fromMap(Map.of(cachePropertyName(MAIN_CACHE_PROPERTY_PREFIX, expireAfterAccess), "1234")));
         assertEquals(Duration.ofDays(5),
-                     options().fromMap(Map.of(cachePropertyName(LASTING_CACHE_PROPERTY_PREFIX, expireAfterAccess), "5d"))
-                             .lastingCacheConfig.expireAfterAccess.orElseThrow());
+                     options().fromMap(Map.of(cachePropertyName(MAIN_CACHE_PROPERTY_PREFIX, expireAfterAccess), "5d"))
+                             .mainCacheConfig.expireAfterAccess.orElseThrow());
         assertEquals(Duration.ofHours(48),
-                     options().fromMap(Map.of(cachePropertyName(LASTING_CACHE_PROPERTY_PREFIX, expireAfterAccess), "48h"))
-                             .lastingCacheConfig.expireAfterAccess.orElseThrow());
+                     options().fromMap(Map.of(cachePropertyName(MAIN_CACHE_PROPERTY_PREFIX, expireAfterAccess), "48h"))
+                             .mainCacheConfig.expireAfterAccess.orElseThrow());
         assertEquals(Duration.ofMinutes(73),
-                     options().fromMap(Map.of(cachePropertyName(LASTING_CACHE_PROPERTY_PREFIX, expireAfterAccess), "73m"))
-                             .lastingCacheConfig.expireAfterAccess.orElseThrow());
+                     options().fromMap(Map.of(cachePropertyName(MAIN_CACHE_PROPERTY_PREFIX, expireAfterAccess), "73m"))
+                             .mainCacheConfig.expireAfterAccess.orElseThrow());
         assertEquals(Duration.ofSeconds(2),
-                     options().fromMap(Map.of(cachePropertyName(LASTING_CACHE_PROPERTY_PREFIX, expireAfterAccess), "2s"))
-                             .lastingCacheConfig.expireAfterAccess.orElseThrow());
+                     options().fromMap(Map.of(cachePropertyName(MAIN_CACHE_PROPERTY_PREFIX, expireAfterAccess), "2s"))
+                             .mainCacheConfig.expireAfterAccess.orElseThrow());
         assertEquals(Duration.ofSeconds(200000),
-                     options().fromMap(Map.of(cachePropertyName(LASTING_CACHE_PROPERTY_PREFIX, expireAfterAccess), "200000s"))
-                             .lastingCacheConfig.expireAfterAccess.orElseThrow());
+                     options().fromMap(Map.of(cachePropertyName(MAIN_CACHE_PROPERTY_PREFIX, expireAfterAccess), "200000s"))
+                             .mainCacheConfig.expireAfterAccess.orElseThrow());
     }
 
     @Test
     public void expireAfterWrite_option_is_parsed_correctly() {
         assertThrows(ValueParsingException.class,
-                     () -> options().fromMap(Map.of(cachePropertyName(LASTING_CACHE_PROPERTY_PREFIX, expireAfterWrite), "s")));
+                     () -> options().fromMap(Map.of(cachePropertyName(MAIN_CACHE_PROPERTY_PREFIX, expireAfterWrite), "s")));
         assertThrows(ValueParsingException.class,
-                     () -> options().fromMap(Map.of(cachePropertyName(LASTING_CACHE_PROPERTY_PREFIX, expireAfterWrite), "1234")));
+                     () -> options().fromMap(Map.of(cachePropertyName(MAIN_CACHE_PROPERTY_PREFIX, expireAfterWrite), "1234")));
         assertEquals(Duration.ofDays(5),
-                     options().fromMap(Map.of(cachePropertyName(LASTING_CACHE_PROPERTY_PREFIX, expireAfterWrite), "5d"))
-                             .lastingCacheConfig.expireAfterWrite.orElseThrow());
+                     options().fromMap(Map.of(cachePropertyName(MAIN_CACHE_PROPERTY_PREFIX, expireAfterWrite), "5d"))
+                             .mainCacheConfig.expireAfterWrite.orElseThrow());
         assertEquals(Duration.ofHours(48),
-                     options().fromMap(Map.of(cachePropertyName(LASTING_CACHE_PROPERTY_PREFIX, expireAfterWrite), "48h"))
-                             .lastingCacheConfig.expireAfterWrite.orElseThrow());
+                     options().fromMap(Map.of(cachePropertyName(MAIN_CACHE_PROPERTY_PREFIX, expireAfterWrite), "48h"))
+                             .mainCacheConfig.expireAfterWrite.orElseThrow());
         assertEquals(Duration.ofMinutes(73),
-                     options().fromMap(Map.of(cachePropertyName(LASTING_CACHE_PROPERTY_PREFIX, expireAfterWrite), "73m"))
-                             .lastingCacheConfig.expireAfterWrite.orElseThrow());
+                     options().fromMap(Map.of(cachePropertyName(MAIN_CACHE_PROPERTY_PREFIX, expireAfterWrite), "73m"))
+                             .mainCacheConfig.expireAfterWrite.orElseThrow());
         assertEquals(Duration.ofSeconds(2),
-                     options().fromMap(Map.of(cachePropertyName(LASTING_CACHE_PROPERTY_PREFIX, expireAfterWrite), "2s"))
-                             .lastingCacheConfig.expireAfterWrite.orElseThrow());
+                     options().fromMap(Map.of(cachePropertyName(MAIN_CACHE_PROPERTY_PREFIX, expireAfterWrite), "2s"))
+                             .mainCacheConfig.expireAfterWrite.orElseThrow());
         assertEquals(Duration.ofSeconds(200000),
-                     options().fromMap(Map.of(cachePropertyName(LASTING_CACHE_PROPERTY_PREFIX, expireAfterWrite), "200000s"))
-                             .lastingCacheConfig.expireAfterWrite.orElseThrow());
+                     options().fromMap(Map.of(cachePropertyName(MAIN_CACHE_PROPERTY_PREFIX, expireAfterWrite), "200000s"))
+                             .mainCacheConfig.expireAfterWrite.orElseThrow());
     }
 
 }
