@@ -82,14 +82,8 @@ git checkout master && git pull origin master && \
     git merge --no-ff release-${RELEASE_VERSION} || { error "Failed to merge release branch into master"; abort_release; }
 git tag -a ${RELEASE_VERSION} -m "Release ${RELEASE_VERSION}" || { error "Failed to tag the release"; abort_release; }
 
-info "Install locally"
-if ! mvn clean install -DdatabaseUri.prefix=${DATABASE_URI_PREFIX} -Dfork.count=${FORK_COUNT}; then
-  error "Failed to install locally. Please inspect the output for errors."
-  abort_release
-fi
-
 info "Deploy the release"
-if ! mvn deploy -Dmaven.test.skip=true -Dmaven.javadoc.skip=true -DdatabaseUri.prefix=${DATABASE_URI_PREFIX} -Dfork.count=${FORK_COUNT}; then
+if ! mvn clean install deploy -DdatabaseUri.prefix=${DATABASE_URI_PREFIX} -Dfork.count=${FORK_COUNT}; then
   error "Failed to deploy. Please inspect the output for errors."
   abort_release
 fi
