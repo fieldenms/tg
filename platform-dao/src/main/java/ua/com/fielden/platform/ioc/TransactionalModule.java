@@ -49,6 +49,7 @@ public abstract class TransactionalModule extends EntityModule {
             final Properties props, 
             final Map<Class, Class> defaultHibernateTypes, 
             final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes) {
+        super(props);
 
         final HibernateConfigurationFactory hcf = new HibernateConfigurationFactory(//
                 props, //

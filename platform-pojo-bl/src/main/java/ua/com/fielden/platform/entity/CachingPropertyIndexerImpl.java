@@ -2,9 +2,11 @@ package ua.com.fielden.platform.entity;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import ua.com.fielden.platform.entity.DynamicPropertyAccessModule.CacheConfig;
 
 import java.lang.invoke.MethodHandle;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isMockNotFoundType;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isProxied;
@@ -26,23 +28,25 @@ final class CachingPropertyIndexerImpl extends PropertyIndexerImpl {
     /** Cache for temporary types (generated for a temporary purpose). */
     private final Cache<Class<? extends AbstractEntity<?>>, StandardIndex> tmpTypeCache;
 
-    CachingPropertyIndexerImpl(final CacheBuilder<Object, Object> lastingTypeCacheBuilder,
-                               final CacheBuilder<Object, Object> tmpTypeCacheBuilder ) {
-        this.lastingTypeCache = lastingTypeCacheBuilder.build();
-        this.tmpTypeCache = tmpTypeCacheBuilder.build();
+    CachingPropertyIndexerImpl(final CacheConfig lastingTypeCacheConf, final CacheConfig tmpTypeCacheConf) {
+        this.lastingTypeCache = lastingTypeCacheConf.apply(
+                        CacheBuilder.newBuilder()
+                                .initialCapacity(512)
+                                .maximumSize(8192)
+                                .concurrencyLevel(50)
+                                .expireAfterAccess(1, TimeUnit.DAYS))
+                .build();
+        this.tmpTypeCache = tmpTypeCacheConf.apply(
+                        CacheBuilder.newBuilder()
+                                .initialCapacity(512)
+                                .maximumSize(8192)
+                                .concurrencyLevel(50)
+                                .expireAfterAccess(5, TimeUnit.MINUTES))
+                .build();
     }
 
     CachingPropertyIndexerImpl() {
-        this(CacheBuilder.newBuilder()
-                     .initialCapacity(512)
-                     .maximumSize(8192)
-                     .concurrencyLevel(50)
-                     .expireAfterAccess(1, TimeUnit.DAYS),
-             CacheBuilder.newBuilder()
-                     .initialCapacity(512)
-                     .maximumSize(8192)
-                     .concurrencyLevel(50)
-                     .expireAfterAccess(5, TimeUnit.MINUTES));
+        this(CacheConfig.identity(), CacheConfig.identity());
     }
 
     @Override

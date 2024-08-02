@@ -13,6 +13,7 @@ import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.web_api.GraphQLScalars;
 
 import java.lang.reflect.Method;
+import java.util.Properties;
 
 import static com.google.inject.matcher.Matchers.*;
 
@@ -35,6 +36,16 @@ public abstract class EntityModule extends AbstractModule implements IModuleWith
         }
     };
 
+    private final Properties properties;
+
+    public EntityModule(final Properties properties) {
+        this.properties = properties;
+    }
+
+    public EntityModule() {
+        this(new Properties());
+    }
+
     /**
      * Binds intercepter for observable property mutators to ensure property change observation and validation. Only descendants of {@link AbstractEntity} are processed.
      */
@@ -55,6 +66,7 @@ public abstract class EntityModule extends AbstractModule implements IModuleWith
         // this guarantees that different implementations of IDates will be injected based on IDates binding in IoC modules that define the binding configuration;
         requestStaticInjection(GraphQLScalars.class);
 
+        install(DynamicPropertyAccessModule.options().fromProperties(properties));
         install(new DynamicPropertyAccessModule());
     }
 
