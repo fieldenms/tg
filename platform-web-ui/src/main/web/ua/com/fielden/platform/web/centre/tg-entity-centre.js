@@ -11,7 +11,8 @@ import '/resources/components/tg-confirmation-dialog.js';
 import '/resources/centre/tg-selection-view.js';
 import '/resources/centre/tg-centre-result-view.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
-import { tearDownEvent, getRelativePos, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
+import { hideTooltip } from '/resources/components/tg-tooltip-behavior.js';
+import { tearDownEvent, getRelativePos, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, localStorageKey } from '/resources/reflection/tg-polymer-utils.js';
 import '/resources/actions/tg-ui-action.js';
 import { TgElementSelectorBehavior, queryElements} from '/resources/components/tg-element-selector-behavior.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
@@ -23,40 +24,19 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
 /**
- * @param {String} userName - the name of user that opened this entity centre
- * @param {String} miType - the type of menu item class associated with this centre
- * @returns The key in local storage for left splitter position configured by developer or specified by user manually by moving splitter.
+ * Constants related to insertion point for local storage keys.
  */
-const leftSplitterKey = function (userName, miType) {
-    return `${userName}_${miType}_leftSplitterPosition`;
-};
-
+const TOP_INSERTION_POINT_ORDER = 'topInsertionPointOrder';
+const LEFT_INSERTION_POINT_ORDER = 'leftInsertionPointOrder';
+const BOTTOM_INSERTION_POINT_ORDER = 'bottomInsertionPointOrder';
+const RIGHT_INSERTION_POINT_ORDER = 'rightInsertionPointOrder';
 /**
- * @param {String} userName - the name of user that opened this entity centre
- * @param {String} miType - the type of menu item class associated with this centre
- * @returns The key in local storage for left splitter position. This actual left position is different than left position because it contains actual position of splitter after it was moved, collapsed or expanded. 
+ * Constants related to splitters for local storage keys.
  */
-const actualLeftSplitterKey = function (userName, miType) {
-    return `${userName}_${miType}_actualLeftSplitterPosition`;
-};
-
-/**
- * @param {String} userName - the name of user that opened this entity centre
- * @param {String} miType - the type of menu item class associated with this centre
- * @returns The key in local storage for right splitter position configured by developer or specified by user manually by moving splitter.
- */
-const rightSplitterKey = function (userName, miType) {
-    return `${userName}_${miType}_rightSplitterPosition`;
-};
-
-/**
- * @param {String} userName - the name of user that opened this entity centre
- * @param {String} miType - the type of menu item class associated with this centre
- * @returns The key in local storage for right splitter position. This actual right position is different than right position because it contains actual position of splitter after it was moved, collapsed or expanded. 
- */
-const actualRightSplitterKey = function (userName, miType) {
-    return `${userName}_${miType}_actualRightSplitterPosition`;
-};
+const LEFT_SPLITTER_POSITION = 'leftSplitterPosition';
+const ACTUAL_LEFT_SPLITTER_POSITION = 'actualLeftSplitterPosition';
+const RIGHT_SPLITTER_POSITION = 'rightSplitterPosition';
+const ACTUAL_RIGHT_SPLITTER_POSITION = 'actualRightSplitterPosition';
 
 /**
  * Initial save of splitter position and actual splitter position. Also updates the width style of insertion point container to make it's width flexible.
@@ -210,7 +190,7 @@ const template = html`
             left: 0;
             width: 9px;
             display: none;
-            background: var(--paper-grey-300);
+            background: var(--paper-light-blue-600);
         }
         .arrow-left {
             width: 0;
@@ -318,6 +298,7 @@ const template = html`
                 <slot id="rightInsertionPointContent" name="right-insertion-point"></slot>
             </div>
             <div id="fantomSplitter" class="fantom-splitter"></div>
+            <div id="placeHolder" style="background-color:  var(--paper-light-blue-600); height: 9px; width: auto; display: none; margin: 10px 0;"></div>
         </tg-centre-result-view>
         <slot id="alternativeViewSlot" name="alternative-view-insertion-point"></slot>
     </iron-pages>`;
@@ -334,6 +315,12 @@ Polymer({
         // These mandatory properties must be specified in attributes, when constructing <tg-*-editor>s.       //
         // No default values are allowed in this case.														   //
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        insertionPointCustomLayoutEnabled : {
+            type: Boolean,
+            value: false,
+            observer: "_insertionPointCustomLayoutEnabledChanged"
+        },
 
         _selectedView: {
             type: Number
@@ -433,6 +420,13 @@ Polymer({
 
     behaviors: [ IronResizableBehavior, TgFocusRestorationBehavior, TgElementSelectorBehavior ],
 
+    created: function () {
+        this._startDrag = this._startDrag.bind(this);
+        this._endDrag = this._endDrag.bind(this);
+        this._dragDrop = this._dragDrop.bind(this);
+        this._dragOver = this._dragOver.bind(this);
+    },
+
     ready: function () {
         this.leftInsertionPointPresent = this.$.leftInsertionPointContent.assignedNodes({ flatten: true })[0].children.length > 0;
         this.rightInsertionPointPresent = this.$.rightInsertionPointContent.assignedNodes({ flatten: true })[0].children.length > 0;
@@ -469,6 +463,9 @@ Polymer({
             this._reflector().setCustomProperty(context, "@@criteriaIndication", this.criteriaIndication && this.criteriaIndication.name);
             return context;
         }).bind(this);
+
+        //Restore insertion point order
+        this._restoreInsertionPointOrder();
     },
 
     _resizeEventListener: function (e) {
@@ -480,12 +477,12 @@ Polymer({
             const centreWidthWithoutSplitter = centreWidth - splitterCounter * splitterWidth;
 
             if (this.leftInsertionPointPresent) {
-                this.leftSplitterPosition = initSplitter(this.leftSplitterPosition, leftSplitterKey(this.userName, this.miType), actualLeftSplitterKey(this.userName, this.miType),
+                this.leftSplitterPosition = initSplitter(this.leftSplitterPosition, this._generateKey(LEFT_SPLITTER_POSITION), this._generateKey(ACTUAL_LEFT_SPLITTER_POSITION),
                                                             this.$.leftInsertionPointContainer, centreWidth, centreWidthWithoutSplitter);
             }
 
             if (this.rightInsertionPointPresent) {
-                this.rightSplitterPosition = initSplitter(this.rightSplitterPosition, rightSplitterKey(this.userName, this.miType), actualRightSplitterKey(this.userName, this.miType),
+                this.rightSplitterPosition = initSplitter(this.rightSplitterPosition, this._generateKey(RIGHT_SPLITTER_POSITION), this._generateKey(ACTUAL_RIGHT_SPLITTER_POSITION),
                                                             this.$.rightInsertionPointContainer, centreWidth, centreWidthWithoutSplitter);
             }
             this._notifyDescendantResize();
@@ -579,13 +576,13 @@ Polymer({
     _expandLeftInsertionPoint: function () {
         this._expandContainer(this.leftSplitterPosition, this.rightSplitterPosition, this.$.leftSplitter.offsetWidth, this.rightInsertionPointPresent, 
             this.$.leftInsertionPointContainer, this.$.rightInsertionPointContainer,
-            actualLeftSplitterKey(this.userName, this.miType), actualRightSplitterKey(this.userName, this.miType));
+            this._generateKey(ACTUAL_LEFT_SPLITTER_POSITION), this._generateKey(ACTUAL_RIGHT_SPLITTER_POSITION));
     },
 
     _expandRightInsertionPoint: function () {
         this._expandContainer(this.rightSplitterPosition, this.leftSplitterPosition, this.$.rightSplitter.offsetWidth, this.leftInsertionPointPresent, 
             this.$.rightInsertionPointContainer, this.$.leftInsertionPointContainer,
-            actualRightSplitterKey(this.userName, this.miType), actualLeftSplitterKey(this.userName, this.miType));
+            this._generateKey(ACTUAL_RIGHT_SPLITTER_POSITION), this._generateKey(ACTUAL_LEFT_SPLITTER_POSITION));
     },
 
     _expandContainer: function (splitterPosition, altSplitterPosition, splitterWidth, 
@@ -607,12 +604,12 @@ Polymer({
 
     _collapseLeftInsertionPoint: function () {
         this._collapseContainer(this.leftSplitterPosition, this.rightSplitterPosition, this.$.leftSplitter.offsetWidth, this.rightInsertionPointPresent, 
-            this.$.leftInsertionPointContainer, this.$.rightInsertionPointContainer, actualLeftSplitterKey(this.userName, this.miType));
+            this.$.leftInsertionPointContainer, this.$.rightInsertionPointContainer, this._generateKey(ACTUAL_LEFT_SPLITTER_POSITION));
     },
 
     _collapseRightInsertionPoint: function () {
         this._collapseContainer(this.rightSplitterPosition, this.leftSplitterPosition, this.$.rightSplitter.offsetWidth, this.leftInsertionPointPresent, 
-            this.$.rightInsertionPointContainer, this.$.leftInsertionPointContainer, actualRightSplitterKey(this.userName, this.miType));
+            this.$.rightInsertionPointContainer, this.$.leftInsertionPointContainer, this._generateKey(ACTUAL_RIGHT_SPLITTER_POSITION));
     },
 
     _collapseContainer: function (splitterPosition, altSplitterPosition, splitterWidth, altInsertionPointPresent, 
@@ -676,8 +673,8 @@ Polymer({
         const centreWidthWithoutSplitter = centreWidth - (this.rightInsertionPointPresent ? 2 : 1) * this.$.leftSplitter.offsetWidth;
         this.leftSplitterPosition = newWidth / centreWidthWithoutSplitter + "";
         this.$.leftInsertionPointContainer.style.width = `${newWidth / centreWidth * 100}%`;
-        localStorage.setItem(leftSplitterKey(this.userName, this.miType), this.leftSplitterPosition);
-        localStorage.setItem(actualLeftSplitterKey(this.userName, this.miType), this.leftSplitterPosition);
+        localStorage.setItem(this._generateKey(LEFT_SPLITTER_POSITION), this.leftSplitterPosition);
+        localStorage.setItem(this._generateKey(ACTUAL_LEFT_SPLITTER_POSITION), this.leftSplitterPosition);
     },
 
     _rightInsertionPointContainerUpdater: function (newPos) {
@@ -691,8 +688,8 @@ Polymer({
         const centreWidthWithoutSplitter = centreWidth - (this.leftInsertionPointPresent ? 2 : 1) * this.$.rightSplitter.offsetWidth;
         this.rightSplitterPosition = newWidth / centreWidthWithoutSplitter + "";
         this.$.rightInsertionPointContainer.style.width = `${newWidth / centreWidth * 100}%`;
-        localStorage.setItem(rightSplitterKey(this.userName, this.miType), this.rightSplitterPosition);
-        localStorage.setItem(actualRightSplitterKey(this.userName, this.miType), this.rightSplitterPosition);
+        localStorage.setItem(this._generateKey(RIGHT_SPLITTER_POSITION), this.rightSplitterPosition);
+        localStorage.setItem(this._generateKey(ACTUAL_RIGHT_SPLITTER_POSITION), this.rightSplitterPosition);
     },
 
     _updateInsertionPointContainerWidth: function (newWidth, insertionPointContaier, splitterPositionUpdater) {
@@ -863,5 +860,150 @@ Polymer({
      */
     _computeSaveButtonStyle: function (_buttonDisabled, _centreDirtyOrEdited) {
         return 'width:70px; margin-right:8px; ' + (this._computeSaveButtonDisabled(_buttonDisabled, _centreDirtyOrEdited) ? 'cursor:initial' : '');
+    },
+
+    /*************************Insertion point drag related events******************************/
+    _insertionPointCustomLayoutEnabledChanged: function (newValue) {
+        if (newValue) {
+            this.$.centreResultContainer.addEventListener("dragstart", this._startDrag);
+            this.$.centreResultContainer.addEventListener("dragend", this._endDrag);
+            this.$.centreResultContainer.addEventListener("drop", this._dragDrop);
+            this.$.centreResultContainer.addEventListener("dragover", this._dragOver);
+        } else {
+            this.$.centreResultContainer.removeEventListener("dragstart", this._startDrag);
+            this.$.centreResultContainer.removeEventListener("dragend", this._endDrag);
+            this.$.centreResultContainer.removeEventListener("drop", this._dragDrop);
+            this.$.centreResultContainer.removeEventListener("dragover", this._dragOver);
+        }
+    },
+
+    _startDrag: function (dragEvent) {
+        this._insertionPointToDrag = dragEvent.target;
+        //configure drag transfer and drag transfer image
+        dragEvent.dataTransfer.effectAllowed = "copyMove";
+        const offsetRect = this._insertionPointToDrag.$.titleBar.getBoundingClientRect();
+        dragEvent.dataTransfer.setDragImage(this._insertionPointToDrag.$.titleBar, dragEvent.clientX - offsetRect.left, dragEvent.clientY - offsetRect.top);
+        //Hide tooltip as it is not needed during drag&drop process.
+        hideTooltip();
+    },
+
+    _endDrag: function (dragEvent) {
+        if (this._insertionPointToDrag) {
+            this._insertionPointToDrag = null;
+            this.$.placeHolder.style.display = "none";
+        }
+    },
+
+    _dragDrop: function (dragEvent) {
+        if (this._insertionPointToDrag && this.$.placeHolder.style.display !== "none") {
+            const containerToDrop = this.$.placeHolder.parentElement;
+            if (containerToDrop) {
+                containerToDrop.insertBefore(this._insertionPointToDrag, this.$.placeHolder);
+                this._insertionPointToDrag.detachedView = false;
+                this._saveInsertionPointOrder();
+                this.notifyResize();
+            }
+        }
+    },
+
+    _dragOver: function (dragEvent) {
+        if (this._insertionPointToDrag) {
+            tearDownEvent(dragEvent);
+            const containerToDrop = this._getInsertionPointContainer(dragEvent);
+            const insertionPoints = containerToDrop && [...containerToDrop.children];
+            if (insertionPoints) {
+                const nextInsertionPoint = this._getNearestElementInVerticalContainer(insertionPoints, dragEvent);
+                containerToDrop.insertBefore(this.$.placeHolder, nextInsertionPoint);
+                if (this._insertionPointToDrag.detachedView || (this.$.placeHolder.nextElementSibling !== this._insertionPointToDrag && this.$.placeHolder.previousElementSibling !== this._insertionPointToDrag)) {
+                    this.$.placeHolder.style.display = "initial";
+                } else {
+                    this.$.placeHolder.style.display = "none";
+                }
+            }
+        }
+    },
+
+    _getInsertionPointContainer: function (dragEvent) {
+        const sideContainers = [this.$.leftInsertionPointContainer, this.$.rightInsertionPointContainer];
+        let container = sideContainers.find(c => this._insertionPointContainerContainsEvent(c, dragEvent));
+        if (container) {
+            return container.children[0].assignedNodes()[0];
+        } else if (this._insertionPointContainerContainsEvent(this.$.centreInsertionPointContainer, dragEvent)) {
+            const centreContainers = [this.$.topInsertionPointContent.assignedNodes()[0]];
+            const egi = this.$.customEgiSlot.assignedNodes()[0];
+            if (egi && egi.offsetParent !== null) {
+                centreContainers.push(egi);
+            }
+            centreContainers.push(this.$.bottomInsertionPointContent.assignedNodes()[0]);
+            const nextContainer = this._getNearestElementInVerticalContainer(centreContainers, dragEvent);
+            if (nextContainer === egi) {
+                return centreContainers[0];
+            } else if (!nextContainer) {
+                return centreContainers[centreContainers.length - 1];
+            }
+            return nextContainer;
+        }
+    },
+
+    _getNearestElementInVerticalContainer(elements, dragEvent) {
+        return elements.find(element => {
+            const rect = element.getBoundingClientRect();
+            return dragEvent.clientY <= rect.y + rect.height / 2;
+        });
+    },
+
+    _insertionPointContainerContainsEvent: function (container, dragEvent) {
+        const containerRect = container.getBoundingClientRect();
+        return dragEvent.clientX > containerRect.left && dragEvent.clientX < containerRect.right &&
+                dragEvent.clientY > containerRect.top && dragEvent.clientY < containerRect.bottom;
+    },
+
+    /*********************************local storage related logic**************************************/
+
+    _generateKey: function (name) {
+        const extendedName = `${this.miType}_${name}`;
+        return localStorageKey(extendedName);
+    },
+
+    _saveInsertionPointOrder: function () {
+        const containers = [this.$.topInsertionPointContent.assignedNodes()[0],
+                            this.$.leftInsertionPointContent.assignedNodes()[0],
+                            this.$.bottomInsertionPointContent.assignedNodes()[0],
+                            this.$.rightInsertionPointContent.assignedNodes()[0]];
+        const keys = [this._generateKey(TOP_INSERTION_POINT_ORDER),
+                      this._generateKey(LEFT_INSERTION_POINT_ORDER),
+                      this._generateKey(BOTTOM_INSERTION_POINT_ORDER),
+                      this._generateKey(RIGHT_INSERTION_POINT_ORDER)];
+        containers.forEach((c, i) => {
+            const toSave = [...c.children].filter(child => child.tagName && child.tagName === 'TG-ENTITY-CENTRE-INSERTION-POINT').map(child => child.getAttribute("id"));
+            localStorage.setItem(keys[i], JSON.stringify(toSave));
+        });
+    },
+
+    _restoreInsertionPointOrder: function() {
+        const containers = [this.$.topInsertionPointContent.assignedNodes()[0],
+                            this.$.leftInsertionPointContent.assignedNodes()[0],
+                            this.$.bottomInsertionPointContent.assignedNodes()[0],
+                            this.$.rightInsertionPointContent.assignedNodes()[0]];
+        const keys = [this._generateKey(TOP_INSERTION_POINT_ORDER),
+                      this._generateKey(LEFT_INSERTION_POINT_ORDER),
+                      this._generateKey(BOTTOM_INSERTION_POINT_ORDER),
+                      this._generateKey(RIGHT_INSERTION_POINT_ORDER)];
+        const ips = [...this.querySelectorAll("tg-entity-centre-insertion-point")];
+        keys.forEach((key, i) => {
+            const ipOrder = JSON.parse(localStorage.getItem(key) || "[]");
+            this._restoreOrderForContainer(containers[i], ipOrder, ips);
+        });
+    },
+
+    _restoreOrderForContainer: function (container, ipOrder, ips) {
+        let nextSibling = container.children[0];
+        for (let ipIdx = ipOrder.length - 1; ipIdx >= 0; ipIdx--) {
+            const ipIdxToAdd = ips.findIndex(ip => ip.getAttribute("id") === ipOrder[ipIdx]);
+            if (ipIdxToAdd >= 0) {
+                container.insertBefore(ips[ipIdxToAdd], nextSibling);
+                nextSibling = ips[ipIdxToAdd];
+            }
+        }
     }
 });
