@@ -3,11 +3,21 @@ package ua.com.fielden.platform.entity;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
+import java.lang.invoke.MethodHandle;
 import java.util.concurrent.TimeUnit;
 
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isMockNotFoundType;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isProxied;
 
+/**
+ * <h4> On weak keys
+ * <p>
+ * Cache of the type used in this class won't benefit from weak keys due to key values ({@link Class} instances) being
+ * strongly referenced by cached values: through {@link MethodHandle} in {@link StandardIndex}
+ * ({@link java.lang.invoke.DirectMethodHandle#member} -> {@link java.lang.invoke.MemberName#clazz}).
+ * <p>
+ * Therefore, a time-based eviction strategy is required.
+ */
 final class CachingPropertyIndexerImpl extends PropertyIndexerImpl {
 
     /** Cache for lasting types (canonical entity types, generated entity types for centres, ...). */
@@ -24,7 +34,6 @@ final class CachingPropertyIndexerImpl extends PropertyIndexerImpl {
 
     CachingPropertyIndexerImpl() {
         this(CacheBuilder.newBuilder()
-                     .weakKeys() // classes can be compared with ==
                      .initialCapacity(512)
                      .maximumSize(8192)
                      .concurrencyLevel(50)
