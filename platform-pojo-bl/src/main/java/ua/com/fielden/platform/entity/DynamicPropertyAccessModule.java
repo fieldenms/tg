@@ -1,30 +1,49 @@
 package ua.com.fielden.platform.entity;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
-import com.google.inject.Module;
+import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.Provides;
-import com.google.inject.name.Named;
-import com.google.inject.name.Names;
 import ua.com.fielden.platform.basic.config.Workflows;
 
-import javax.annotation.Nullable;
+import static java.util.Objects.requireNonNull;
 
 public final class DynamicPropertyAccessModule extends AbstractModule {
 
-    public static final String ENABLE_CACHE = "DynamicPropertyAcesss.enableCache";
+    public static final class Options extends AbstractModule {
 
-    static class Options {
+        private final Caching caching;
+
+        public enum Caching { ENABLED, DISABLED, AUTO }
+
+        public Options(final Caching caching) {
+            requireNonNull(caching);
+            this.caching = caching;
+        }
+
+        @Override
+        protected void configure() {
+            bind(Options.class).toInstance(this);
+        }
+
         /**
          * Explicitly controls the use of caching, bypassing the standard choice based on the active {@linkplain Workflows workflow}.
          */
-        @Inject(optional = true)
-        @Named(ENABLE_CACHE)
-        @Nullable Boolean enableCache = null;
+        public Options caching(final Caching value) {
+            return new Options(value);
+        }
     }
 
-    public static Module enableCache(final boolean value) {
-        return binder -> binder.bindConstant().annotatedWith(Names.named(ENABLE_CACHE)).to(value);
+    public static Options options() {
+        return new Options(Options.Caching.AUTO);
+    }
+
+    private Options getOptions(final Injector injector) {
+        if (injector.getExistingBinding(Key.get(Options.class)) != null) {
+            return injector.getInstance(Options.class);
+        } else {
+            return options();
+        }
     }
 
     @Override
@@ -33,14 +52,13 @@ public final class DynamicPropertyAccessModule extends AbstractModule {
     }
 
     @Provides
-    PropertyIndexer providePropertyIndexer(final Workflows workflow, final Options options) {
-        final boolean caching;
-        if (options.enableCache != null) {
-            caching = options.enableCache;
-        }
-        else {
-            caching = switch (workflow) {
-                case deployment, vulcanizing -> true;
+    PropertyIndexer providePropertyIndexer(final Workflows workflow, final Injector injector) {
+        final Options options = getOptions(injector);
+        return switch (options.caching) {
+            case ENABLED -> new CachingPropertyIndexerImpl();
+            case DISABLED -> new PropertyIndexerImpl();
+            case AUTO -> switch (workflow) {
+                case deployment, vulcanizing -> new CachingPropertyIndexerImpl();
                 /*
                  Caching during development can be enabled if we can guarantee that it won't get in the way of redefining
                  entity types at runtime. So which entity types can be redefined?
@@ -53,11 +71,9 @@ public final class DynamicPropertyAccessModule extends AbstractModule {
                  modifying an entity centre configuration). Since those types will be new, old cached types won't get
                  in the way.
                 */
-                case development -> true;
+                case development -> new CachingPropertyIndexerImpl();
             };
-        }
-
-        return caching ? new CachingPropertyIndexerImpl() : new PropertyIndexerImpl();
+        };
     }
 
 }

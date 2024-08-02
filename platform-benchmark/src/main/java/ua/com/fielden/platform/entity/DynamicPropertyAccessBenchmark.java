@@ -20,7 +20,7 @@ public class DynamicPropertyAccessBenchmark {
 
     private static final Injector injector = new ApplicationInjectorFactory()
             .add(new EntityModuleWithPropertyFactoryForBenchmarking())
-            .add(DynamicPropertyAccessModule.enableCache(true))
+            .add(DynamicPropertyAccessModule.options().caching(DynamicPropertyAccessModule.Options.Caching.ENABLED))
             .getInjector();
     private static final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
