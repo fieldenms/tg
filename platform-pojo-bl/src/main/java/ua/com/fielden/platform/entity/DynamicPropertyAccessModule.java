@@ -22,6 +22,9 @@ import static ua.com.fielden.platform.parser.ValueParser.*;
 /**
  * This module binds {@link DynamicPropertyAccess} and its dependencies.
  * <p>
+ * This module can optionally be configured with {@link #options()}, which produces another <i>configuration</i> module
+ * that needs to be explicitly installed. Configuration is entirely optional.
+ * <p>
  * <h4> Configurable caching
  * <p>
  * Performance of {@link DynamicPropertyAccess} heavily relies on caching. This module supports cache configuration
