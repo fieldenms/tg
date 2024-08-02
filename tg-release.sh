@@ -55,6 +55,8 @@ abort_release() {
   error "Aborting release process."
   git checkout develop
   git branch -D release-${RELEASE_VERSION}
+  # a tag may or may not be created at this stage, but just in case we need to try to delete it
+  git tag -d ${RELEASE_VERSION}
   exit 1
 }
 
