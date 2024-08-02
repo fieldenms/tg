@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity;
 
+import com.google.common.cache.CacheBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -18,6 +19,41 @@ import static java.util.Objects.requireNonNull;
 import static ua.com.fielden.platform.parser.ValueParser.Result.ok;
 import static ua.com.fielden.platform.parser.ValueParser.*;
 
+/**
+ * This module binds {@link DynamicPropertyAccess} and its dependencies.
+ * <p>
+ * <h4> Configurable caching
+ * <p>
+ * Performance of {@link DynamicPropertyAccess} heavily relies on caching. This module supports cache configuration
+ * with {@link Properties}. In practice, this means that {@code application.properties} file can be used to configure
+ * {@linkplain CacheOptions cache parameters}.
+ * <p>
+ * There are 2 caches: one for primary entity types (those that exist throughout the lifetime of the application)
+ * and another one for temporary entity types (generated for a temporary purpose).
+ * <p>
+ * Supported options:
+ * <ul>
+ *   <li> {@code dynamicPropertyAccess.caching} - one of {@link Options.Caching}
+ *   <li> {@code dynamicPropertyAccess.typeCache} - configures the main type cache (see cache parameters below)
+ *   <li> {@code dynamicPropertyAccess.tempTypeCache} - configures the temporary type cache (see cache parameters below)
+ * </ul>
+ * Cache parameters:
+ * <ul>
+ *   <li> {@code concurrencyLevel} - a non-negative decimal, see {@link CacheBuilder#concurrencyLevel(int)}
+ *   <li> {@code maxSize} - a non-negative decimal, see {@link CacheBuilder#maximumSize(long)}
+ *   <li> {@code expireAfterAccess} - a {@linkplain DurationParser duration specifier}, see {@link CacheBuilder#expireAfterAccess(Duration)}
+ *   <li> {@code expireAfterWrite} - a {@linkplain DurationParser duration specifier}, see {@link CacheBuilder#expireAfterWrite(Duration)}
+ * </ul>
+ *
+ * Configuration example:
+ * <pre>
+ dynamicPropertyAccess.caching = ENABLED
+ dynamicPropertyAccess.typeCache.concurrencyLevel = 100
+ dynamicPropertyAccess.typeCache.expireAfterAccess = 12h
+ dynamicPropertyAccess.tempTypeCache.maxSize = 2048
+ dynamicPropertyAccess.tempTypeCache.expireAfterWrite = 10m
+ * </pre>
+ */
 public final class DynamicPropertyAccessModule extends AbstractModule {
 
     public enum CacheOptions {
@@ -205,6 +241,10 @@ public final class DynamicPropertyAccessModule extends AbstractModule {
         }
     }
 
+    /**
+     * Parses a duration according to the following format: a non-negative decimal followed by a
+     * {@linkplain DurationParser#UNITS unit character}.
+     */
     private static final class DurationParser implements ValueParser<Object, Duration> {
         @Override
         public Result<Duration> apply(final Object value) {
