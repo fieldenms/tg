@@ -1,17 +1,18 @@
 package ua.com.fielden.platform.eql.stage1.operands;
 
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
+import ua.com.fielden.platform.eql.stage2.operands.Expression2;
+import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
-import ua.com.fielden.platform.eql.stage2.operands.Expression2;
-import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+import static ua.com.fielden.platform.utils.StreamUtils.concat;
 
 public class Expression1 implements ISingleOperand1<Expression2> {
 
@@ -30,9 +31,10 @@ public class Expression1 implements ISingleOperand1<Expression2> {
     
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
-        final Set<Class<? extends AbstractEntity<?>>> result = items.stream().map(el -> el.operand.collectEntityTypes()).flatMap(Set::stream).collect(toSet());
-        result.addAll(first.collectEntityTypes());
-        return result;
+        return concat(
+                items.stream().map(el -> el.operand.collectEntityTypes()).flatMap(Set::stream),
+                first.collectEntityTypes().stream())
+                .collect(toSet());
     }
 
     @Override

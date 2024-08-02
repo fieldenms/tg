@@ -4,14 +4,13 @@
 package ua.com.fielden.platform.entity.validation.test_entities;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.annotation.mutator.IntParam;
 import ua.com.fielden.platform.entity.validation.MaxLengthValidator;
 import ua.com.fielden.platform.types.Hyperlink;
+import ua.com.fielden.platform.types.RichText;
 
 /**
  * Entity for testing of validator {@link MaxLengthValidator}.
@@ -44,6 +43,20 @@ public class EntityWithMaxLengthValidation extends AbstractEntity<String> {
     @IsProperty(length = 30)
     @BeforeChange(@Handler(MaxLengthValidator.class))
     private Hyperlink propHyperlink;
+
+    @IsProperty(length = 5)
+    @BeforeChange(@Handler(MaxLengthValidator.class))
+    private RichText richText;
+
+    public RichText getRichText() {
+        return richText;
+    }
+
+    @Observable
+    public EntityWithMaxLengthValidation setRichText(final RichText richText) {
+        this.richText = richText;
+        return this;
+    }
 
     @Observable
     public EntityWithMaxLengthValidation setPropHyperlink(final Hyperlink propHyperlink) {

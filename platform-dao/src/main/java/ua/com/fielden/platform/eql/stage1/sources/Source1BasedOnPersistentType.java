@@ -1,13 +1,16 @@
 package ua.com.fielden.platform.eql.stage1.sources;
 
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
 
+import java.util.Set;
+
 public class Source1BasedOnPersistentType extends AbstractSource1<Source2BasedOnPersistentType> {
 
+    /**
+     * @param alias  the alias of this source or {@code null}
+     */
     public Source1BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final String alias, final Integer id) {
         super(sourceType, alias, id);
     }
@@ -33,4 +36,10 @@ public class Source1BasedOnPersistentType extends AbstractSource1<Source2BasedOn
     public boolean equals(final Object obj) {
         return this == obj || super.equals(obj) && obj instanceof Source1BasedOnPersistentType;
     }
+
+    @Override
+    public String toString() {
+        return "Source(%s, alias=%s, id=%s)".formatted(sourceType().getTypeName(), alias, id);
+    }
+
 }

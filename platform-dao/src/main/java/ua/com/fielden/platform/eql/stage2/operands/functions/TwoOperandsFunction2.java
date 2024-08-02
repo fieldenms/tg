@@ -1,14 +1,16 @@
 package ua.com.fielden.platform.eql.stage2.operands.functions;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+
+import static ua.com.fielden.platform.utils.CollectionUtil.concat;
 
 abstract class TwoOperandsFunction2<T extends ISingleOperand3> extends AbstractFunction2<T> {
     public final ISingleOperand2<? extends ISingleOperand3> operand1;
@@ -30,10 +32,7 @@ abstract class TwoOperandsFunction2<T extends ISingleOperand3> extends AbstractF
     
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
-        final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>();
-        result.addAll(operand1.collectEntityTypes());
-        result.addAll(operand2.collectEntityTypes());
-        return result;
+        return concat(HashSet::new, operand1.collectEntityTypes(), operand2.collectEntityTypes());
     }
     
     @Override

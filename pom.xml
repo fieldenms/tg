@@ -81,6 +81,7 @@
         <junit.version>4.13.2</junit.version>
         <posgresql.version>42.7.3</posgresql.version>
         <mssql.version>12.6.2.jre11</mssql.version>
+        <javapoet.version>1.13.0</javapoet.version>
     </properties>
 
     <modules>
@@ -92,6 +93,7 @@
         <module>platform-pojo-bl</module>
         <module>platform-web-ui</module>
         <module>platform-benchmark</module>
+        <module>platform-eql-grammar</module>
     </modules>
 
     <dependencies>

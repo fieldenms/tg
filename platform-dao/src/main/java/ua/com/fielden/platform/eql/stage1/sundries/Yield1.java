@@ -8,6 +8,8 @@ import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.sundries.Yield2;
 
 public class Yield1 {
+    public static final String ABSENT_ALIAS = ""; // Used for the cases where yield requires no alias (sub-query with single yield).
+
     public final ISingleOperand1<? extends ISingleOperand2<?>> operand;
     public final String alias;
     public final boolean hasNonnullableHint;
@@ -17,7 +19,11 @@ public class Yield1 {
         this.alias = alias;
         this.hasNonnullableHint = hasNonnullableHint;
     }
-    
+
+    public Yield1(final ISingleOperand1<? extends ISingleOperand2<?>> operand) {
+        this(operand, "", false);
+    }
+
     public Yield2 transform(final TransformationContextFromStage1To2 context) {
         return new Yield2(operand.transform(context), alias, hasNonnullableHint);
     }

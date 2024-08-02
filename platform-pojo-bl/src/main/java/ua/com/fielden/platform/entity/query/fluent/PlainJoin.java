@@ -5,15 +5,16 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 
 class PlainJoin<ET extends AbstractEntity<?>> //
-		extends Completed<ET> //
-		implements IPlainJoin<ET> {
+        extends Completed<ET> //
+        implements IPlainJoin<ET> {
 
-    protected PlainJoin(final Tokens tokens) {
-        super(tokens);
+    protected PlainJoin(final EqlSentenceBuilder builder) {
+        super(builder);
     }
-    
-	@Override
-	public IWhere0<ET> where() {
-		return new Where0<ET>(getTokens().where());
-	}
+
+    @Override
+    public IWhere0<ET> where() {
+        return new Where0<ET>(builder.where());
+    }
+
 }

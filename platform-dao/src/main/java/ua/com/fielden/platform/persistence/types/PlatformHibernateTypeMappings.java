@@ -2,9 +2,7 @@ package ua.com.fielden.platform.persistence.types;
 
 import org.hibernate.type.YesNoType;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.types.Colour;
-import ua.com.fielden.platform.types.Hyperlink;
-import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.*;
 import ua.com.fielden.platform.types.markers.*;
 
 import java.util.Date;
@@ -19,12 +17,14 @@ public final class PlatformHibernateTypeMappings {
             .put(Money.class, SimpleMoneyType.INSTANCE)
             .put(Colour.class, ColourType.INSTANCE)
             .put(Hyperlink.class, HyperlinkType.INSTANCE)
+            .put(RichText.class, RichTextType.INSTANCE)
 
             .put(ISecurityTokenType.class, SecurityTokenType.INSTANCE)
             .put(IPropertyDescriptorType.class, PropertyDescriptorType.INSTANCE)
             .put(IColourType.class, ColourType.INSTANCE)
             .put(IHyperlinkType.class, HyperlinkType.INSTANCE)
             .put(IUtcDateTimeType.class, UtcDateTimeType.INSTANCE)
+            .put(IRichTextType.class, RichTextType.INSTANCE)
 
             .put(IMoneyUserType.class, MoneyUserType.INSTANCE)
             .put(ISimpleMoneyType.class, SimpleMoneyType.INSTANCE)

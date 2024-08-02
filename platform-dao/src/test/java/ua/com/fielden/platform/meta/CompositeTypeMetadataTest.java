@@ -5,6 +5,7 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.meta.Assertions.CompositeA;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata.Primitive;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.RichText;
 
 import java.math.BigDecimal;
 import java.util.Currency;
@@ -37,6 +38,17 @@ public class CompositeTypeMetadataTest {
                         .assertIs(PropertyMetadata.Persistent.class)
                         .type().assertIs(Primitive.class).assertJavaType(Currency.class))
         ;
+    }
+
+    @Test
+    public void metadata_for_RichText() {
+        CompositeA.of(generator.forComposite(RichText.class))
+                .assertProperty(RichText._coreText, p -> p
+                        .assertIs(PropertyMetadata.Persistent.class)
+                        .type().assertIs(Primitive.class).assertJavaType(String.class))
+                .assertProperty(RichText._formattedText, p -> p
+                        .assertIs(PropertyMetadata.Persistent.class)
+                        .type().assertIs(Primitive.class).assertJavaType(String.class));
     }
 
 }

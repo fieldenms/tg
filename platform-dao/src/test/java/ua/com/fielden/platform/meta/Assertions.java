@@ -4,6 +4,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -246,6 +247,10 @@ interface Assertions {
 
         static CompositeA of(final TypeMetadata.Composite typeMetadata) {
             return new CompositeA(typeMetadata);
+        }
+
+        static CompositeA of(final Optional<TypeMetadata.Composite> typeMetadata) {
+            return new CompositeA(assertPresent("Expected metadata to be generated for a composite type.", typeMetadata));
         }
 
         public TypeMetadata.Composite get() { return typeMetadata; }

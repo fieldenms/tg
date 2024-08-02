@@ -1,16 +1,5 @@
 package ua.com.fielden.platform.eql.stage1.operands;
 
-import static java.lang.String.format;
-import static java.util.Collections.emptySet;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
@@ -21,6 +10,18 @@ import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
+import ua.com.fielden.platform.types.RichText;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+
+import static java.lang.String.format;
+import static java.util.Collections.emptySet;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.utils.CollectionUtil.append1;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 public class Prop1 implements ISingleOperand1<Prop2> {
 
@@ -36,7 +37,6 @@ public class Prop1 implements ISingleOperand1<Prop2> {
 
     @Override
     public Prop2 transform(final TransformationContextFromStage1To2 context) {
-
         final Iterator<List<ISource2<? extends ISource3>>> it = context.sourcesForNestedQueries.iterator();
         if (external) {
             it.next();
@@ -54,13 +54,15 @@ public class Prop1 implements ISingleOperand1<Prop2> {
         throw new EqlStage1ProcessingException(ERR_CANNOT_RESOLVE_PROPERTY.formatted(propPath));
     }
 
-    public static final List<AbstractQuerySourceItem<?>> enhancePath(final List<AbstractQuerySourceItem<?>> originalPath) {
-        final AbstractQuerySourceItem<?> lastResolutionItem = originalPath.get(originalPath.size() - 1);
-        if (lastResolutionItem instanceof QuerySourceItemForComponentType<?> lastResolutionItemAsComponent && lastResolutionItemAsComponent.getSubitems().size() == 1) {
-            final List<AbstractQuerySourceItem<?>> enhancedPath = new ArrayList<>(originalPath);
-            final AbstractQuerySourceItem<?> autoResolvedItem = lastResolutionItemAsComponent.getSubitems().values().iterator().next();
-            enhancedPath.add(autoResolvedItem);
-            return enhancedPath;
+    public static List<AbstractQuerySourceItem<?>> enhancePath(final List<AbstractQuerySourceItem<?>> originalPath) {
+        final AbstractQuerySourceItem<?> last = originalPath.get(originalPath.size() - 1);
+        if (last instanceof QuerySourceItemForComponentType<?> lastComponent) {
+            if (lastComponent.getSubitems().size() == 1) {
+                return append1(originalPath, lastComponent.getSubitems().values().iterator().next());
+            }
+            else if (lastComponent.javaType() == RichText.class) {
+                return append1(originalPath, lastComponent.getSubitems().get(RichText._coreText));
+            }
         }
         return originalPath;
     }
@@ -82,19 +84,16 @@ public class Prop1 implements ISingleOperand1<Prop2> {
     }
 
     private static PropResolution resolveProp(final List<ISource2<? extends ISource3>> sources, final Prop1 prop) {
-        final List<PropResolution> result = new ArrayList<>();
-        for (final ISource2<? extends ISource3> source : sources) {
-            final PropResolution resolution = resolvePropAgainstSource(source, prop);
-            if (resolution != null) {
-                result.add(resolution);
-            }
-        }
+        final List<PropResolution> result = sources.stream()
+                .map(source -> resolvePropAgainstSource(source, prop))
+                .filter(Objects::nonNull)
+                .toList();
 
         if (result.size() > 1) {
             throw new EqlStage1ProcessingException(format("Ambiguity while resolving prop [%s]", prop.propPath));
         }
 
-        return result.size() == 1 ? result.get(0) : null;
+        return result.size() == 1 ? result.getFirst() : null;
     }
 
     @Override

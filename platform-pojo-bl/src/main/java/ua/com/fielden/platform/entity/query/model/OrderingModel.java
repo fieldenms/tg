@@ -1,9 +1,6 @@
 package ua.com.fielden.platform.entity.query.model;
 
-import java.util.List;
-
-import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
-import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource;
 
 /**
  * Represents a computational model for expressions, which can be used together with entity query API.
@@ -12,10 +9,8 @@ import ua.com.fielden.platform.utils.Pair;
  * 
  */
 public class OrderingModel extends AbstractModel {
-    protected OrderingModel() {
-    }
 
-    public OrderingModel(final List<Pair<TokenCategory, Object>> tokens) {
+    public OrderingModel(final ListTokenSource tokens) {
         super(tokens);
     }
 }

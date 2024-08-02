@@ -5,16 +5,16 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionCompoundCondition;
 
 public final class StandAloneConditionComparisonOperator<ET extends AbstractEntity<?>> //
-		extends ComparisonOperator<IStandAloneConditionCompoundCondition<ET>, ET> //
-		implements IStandAloneConditionComparisonOperator<ET> {
+        extends ComparisonOperator<IStandAloneConditionCompoundCondition<ET>, ET> //
+        implements IStandAloneConditionComparisonOperator<ET> {
 
-    public StandAloneConditionComparisonOperator(final Tokens tokens) {
-        super(tokens);
+    public StandAloneConditionComparisonOperator(final EqlSentenceBuilder builder) {
+        super(builder);
     }
-    
-	@Override
-	protected IStandAloneConditionCompoundCondition<ET> nextForComparisonOperator(final Tokens tokens) {
-		return new StandAloneConditionCompoundCondition<ET>(tokens);
-	}
+
+    @Override
+    protected IStandAloneConditionCompoundCondition<ET> nextForComparisonOperator(final EqlSentenceBuilder builder) {
+        return new StandAloneConditionCompoundCondition<ET>(builder);
+    }
 
 }

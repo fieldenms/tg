@@ -138,14 +138,14 @@ public sealed interface PropertyTypeMetadata {
         Class<?> javaType();
     }
 
+    CompositeKey COMPOSITE_KEY = new CompositeKey();
+
     /**
      * Type of a composite key property, i.e., property named "key" defined in an entity whose key type is {@link DynamicEntityKey}.
      * Such a property is implicitly calculated as concatenation of all composite key members and its Java type is {@link String}.
      * <p>
      * Has no corresponding {@link TypeMetadata}.
      */
-    CompositeKey COMPOSITE_KEY = new CompositeKey();
-
     final class CompositeKey implements PropertyTypeMetadata {
         private CompositeKey() {}
 

@@ -6,14 +6,15 @@ abstract class EndExpression<T> //
 		extends AbstractQueryLink //
 		implements IEndExpression<T> {
 
-    protected EndExpression(final Tokens tokens) {
-        super(tokens);
-    }
-    
-	protected abstract T nextForEndExpression(final Tokens tokens);
+	protected EndExpression(final EqlSentenceBuilder builder) {
+		super(builder);
+	}
+
+	protected abstract T nextForEndExpression(final EqlSentenceBuilder builder);
 
 	@Override
 	public T endExpr() {
-		return nextForEndExpression(getTokens().endExpression());
+		return nextForEndExpression(builder.endExpression());
 	}
+
 }
