@@ -27,6 +27,23 @@
         </resources>
 
         <plugins>
+            <!-- disable maven-source-plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <skipSource>true</skipSource>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <!-- disable maven-enforcer-plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
