@@ -174,7 +174,7 @@ public class HibernateMappingsGenerator {
         final StringBuffer sb = new StringBuffer();
         sb.append("<class name=\"" + entityType.getName() + "\" table=\"" + tableName + "\">\n");
 
-        sb.append(em.property(ID).flatMap(PropertyMetadata::asPersistent).map(pm -> {
+        sb.append(em.propertyOpt(ID).flatMap(PropertyMetadata::asPersistent).map(pm -> {
             if (isOneToOne(entityType)) {
                 return generateOneToOneEntityIdMapping(pm.name(), pm.data().column().name, pm.hibType().getClass().getName());
             } else {
@@ -182,13 +182,11 @@ public class HibernateMappingsGenerator {
             }
         }).orElseThrow(() -> unexpectedPropNature("%s.%s".formatted(entityType.getSimpleName(), ID), PropertyNature.PERSISTENT)));
 
-        sb.append(em.property(VERSION).flatMap(PropertyMetadata::asPersistent).map(pm -> {
+        sb.append(em.propertyOpt(VERSION).flatMap(PropertyMetadata::asPersistent).map(pm -> {
             return generateEntityVersionMapping(pm.name(), pm.data().column().name, pm.hibType().getClass().getName());
         }).orElseThrow(() -> unexpectedPropNature("%s.%s".formatted(entityType.getSimpleName(), VERSION), PropertyNature.PERSISTENT)));
 
-        em.property(KEY).orElseThrow(() -> new InvalidArgumentException("Missing property [%s] in [%s].".formatted(KEY, em)))
-                .asPersistent()
-                .ifPresent(pm -> sb.append(generatePropertyMappingFromPropertyMetadata(domainMetadata, pm)));
+        em.property(KEY).asPersistent().ifPresent(pm -> sb.append(generatePropertyMappingFromPropertyMetadata(domainMetadata, pm)));
 
         em.properties().stream()
                 // sort for testing purposes

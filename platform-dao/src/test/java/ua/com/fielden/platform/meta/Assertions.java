@@ -87,20 +87,20 @@ interface Assertions {
         public EntityA<E> assertProperty(final CharSequence propName, final Consumer<PropertyA<PropertyMetadata>> assertor) {
             final PropertyMetadata propertyMetadata = assertPresent(
                     "Metadata for property [%s] not found in [%s]".formatted(propName, entityMetadata),
-                    entityMetadata.property(propName.toString()));
+                    entityMetadata.propertyOpt(propName.toString()));
             assertor.accept(PropertyA.of(propertyMetadata));
             return this;
         }
 
         public EntityA<E> assertPropertyExists(final CharSequence propName) {
             assertPresent("Metadata for property [%s] not found in [%s]".formatted(propName, entityMetadata),
-                          entityMetadata.property(propName.toString()));
+                          entityMetadata.propertyOpt(propName.toString()));
             return this;
         }
 
         public PropertyA<PropertyMetadata> getProperty(final CharSequence propName) {
             assertPropertyExists(propName);
-            return PropertyA.of(entityMetadata.property(propName.toString()).orElseThrow());
+            return PropertyA.of(entityMetadata.property(propName.toString()));
         }
 
         public EntityA<E> assertPropertiesExist(final Iterable<? extends CharSequence> propNames) {
@@ -110,7 +110,7 @@ interface Assertions {
 
         public EntityA<E> assertPropertyNotExists(final CharSequence propName) {
             assertTrue("Unexpected metadata found for property [%s] in [%s]".formatted(propName, entityMetadata),
-                       entityMetadata.property(propName.toString()).isEmpty());
+                       entityMetadata.propertyOpt(propName.toString()).isEmpty());
             return this;
         }
 
@@ -258,14 +258,14 @@ interface Assertions {
         public CompositeA assertProperty(final CharSequence propName, final Consumer<PropertyA<PropertyMetadata>> assertor) {
             final PropertyMetadata propertyMetadata = assertPresent(
                     "Metadata for property [%s] not found in [%s]".formatted(propName, typeMetadata),
-                    typeMetadata.property(propName.toString()));
+                    typeMetadata.propertyOpt(propName.toString()));
             assertor.accept(PropertyA.of(propertyMetadata));
             return this;
         }
 
         public CompositeA assertPropertyExists(final CharSequence propName) {
             assertPresent("Metadata for property [%s] not found in [%s]".formatted(propName, typeMetadata),
-                          typeMetadata.property(propName.toString()));
+                          typeMetadata.propertyOpt(propName.toString()));
             return this;
         }
 

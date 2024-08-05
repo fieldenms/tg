@@ -28,7 +28,17 @@ sealed public interface EntityMetadata extends TypeMetadata {
 
     Collection<PropertyMetadata> properties();
 
-    Optional<PropertyMetadata> property(String name);
+    /**
+     * Retrieves metadata for a property if it exists in this entity type, otherwise throws an exception.
+     * </p>
+     * {@link #propertyOpt(String)} is a non-throwing alternative.
+     */
+    PropertyMetadata property(String name);
+
+    /**
+     * Non-throwing alternative to {@link #property(String)}.
+     */
+    Optional<PropertyMetadata> propertyOpt(String name);
 
     <R> R match(EntityMetadataVisitor<R> visitor);
 
