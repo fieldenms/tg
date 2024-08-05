@@ -44,7 +44,7 @@ const ST_ZORDER = "zOrder";
 
 const ST_ATTACHED_HEIGHT = 'attachedHeight';
 
-const INSERTION_POINT_MARGIN = 10;
+const INSERTION_POINT_MARGIN = 5;
 
 const template = html`
     <style>

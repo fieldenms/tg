@@ -224,6 +224,7 @@ const template = html`
             min-height: 100%
         }
         .insertion-point-slot {
+            padding: var(--tg-insertion-point-container-margin, 0);
             overflow: hidden;
         }
         .insertion-point-slot[scroll-container] {
@@ -278,7 +279,7 @@ const template = html`
             </div>
         </div>
         <tg-centre-result-view id="centreResultContainer" centre-scroll$="[[centreScroll]]">
-            <div id="leftInsertionPointContainer" class="insertion-point-slot layout vertical" scroll-container$="[[!centreScroll]]">
+            <div id="leftInsertionPointContainer" class="insertion-point-slot layout vertical" hidden$="[[!leftInsertionPointPresent]]" scroll-container$="[[!centreScroll]]">
                 <slot id="leftInsertionPointContent" name="left-insertion-point"></slot>
             </div>
             <div id="leftSplitter" class="splitter" hidden$="[[!leftInsertionPointPresent]]" on-down="_makeCentreUnselectable" on-up="_makeCentreSelectable" on-track="_changeLeftInsertionPointSize">
@@ -294,11 +295,11 @@ const template = html`
                 <div class="arrow-left" tooltip-text="Expand" on-tap="_expandRightInsertionPoint"></div>
                 <div class="arrow-right" tooltip-text="Collapse" on-tap="_collapseRightInsertionPoint"></div>
             </div>
-            <div id="rightInsertionPointContainer" class="insertion-point-slot layout vertical" scroll-container$="[[!centreScroll]]">
+            <div id="rightInsertionPointContainer" class="insertion-point-slot layout vertical" hidden$="[[!rightInsertionPointPresent]]" scroll-container$="[[!centreScroll]]">
                 <slot id="rightInsertionPointContent" name="right-insertion-point"></slot>
             </div>
             <div id="fantomSplitter" class="fantom-splitter"></div>
-            <div id="placeHolder" style="background-color:  var(--paper-light-blue-600); height: 9px; width: auto; display: none; margin: 10px 0;"></div>
+            <div id="placeHolder" style="background-color:  var(--paper-light-blue-600); height: 9px; width: auto; display: none; margin: 5px -5px;"></div>
         </tg-centre-result-view>
         <slot id="alternativeViewSlot" name="alternative-view-insertion-point"></slot>
     </iron-pages>`;
@@ -320,6 +321,12 @@ Polymer({
             type: Boolean,
             value: false,
             observer: "_insertionPointCustomLayoutEnabledChanged"
+        },
+
+        showMarginAroundInsertionPoints: {
+            type: Boolean,
+            value: false,
+            observer: "_showMarginAroundInsertionPointsChanged"
         },
 
         _selectedView: {
@@ -860,6 +867,10 @@ Polymer({
      */
     _computeSaveButtonStyle: function (_buttonDisabled, _centreDirtyOrEdited) {
         return 'width:70px; margin-right:8px; ' + (this._computeSaveButtonDisabled(_buttonDisabled, _centreDirtyOrEdited) ? 'cursor:initial' : '');
+    },
+
+    _showMarginAroundInsertionPointsChanged: function (newValue) {
+        this.updateStyles({"--tg-insertion-point-container-margin": newValue ? "5px" : "0"});
     },
 
     /*************************Insertion point drag related events******************************/

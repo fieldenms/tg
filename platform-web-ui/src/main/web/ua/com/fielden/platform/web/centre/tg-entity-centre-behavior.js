@@ -858,7 +858,9 @@ const TgEntityCentreBehaviorImpl = {
         self._showProgress = false;
         // Configures the egi's margin.
         const egiInsertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point:not([alternative-view])');
-        this.$.egi.showMarginAround = egiInsertionPoints.length > 0;
+        const showMarginAround = egiInsertionPoints.length > 0;
+        this.$.egi.showMarginAround = showMarginAround;
+        this._dom().showMarginAroundInsertionPoints = showMarginAround;
         // Configure all views to be able to switch between them
         const altViews = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point[alternative-view]');
         this.allViews = [this.$.selection_criteria, this.$.egi, ...altViews];
