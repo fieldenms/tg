@@ -4,6 +4,7 @@ import java.io.File;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import jakarta.inject.Singleton;
 
 /**
  * Default implementation of the contract for generally used in the application settings.
@@ -11,6 +12,7 @@ import com.google.inject.name.Named;
  * @author TG Team
  * 
  */
+@Singleton
 public class ApplicationSettings implements IApplicationSettings {
     private final String appName;
     private final String pathToStorage;

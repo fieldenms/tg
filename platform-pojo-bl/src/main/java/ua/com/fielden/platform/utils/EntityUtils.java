@@ -47,6 +47,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.lang.String.format;
 import static java.lang.reflect.Modifier.isStatic;
 import static java.util.Arrays.stream;
@@ -473,6 +474,30 @@ public class EntityUtils {
     }
 
     /**
+     * A convenient method for validating two {@link BigDecimal} properties that form a range [from;to].
+     */
+    public static void validateBigDecimalRange(final BigDecimal start, final BigDecimal finish,
+                                               final MetaProperty<BigDecimal> startProperty,
+                                               final MetaProperty<BigDecimal> finishProperty,
+                                               final boolean finishSetter) {
+        if (finish != null) {
+            if (start != null) {
+                if (start.compareTo(finish) > 0) { //  after(finish)
+                    throw new Result("", new Exception(
+                            finishSetter
+                                    ? finishProperty.getTitle() + " cannot be less than " + startProperty.getTitle() + "."
+                                    : startProperty.getTitle() + " cannot be greater than " + finishProperty.getTitle() + "."));
+                }
+            } else {
+                throw new Result("", new Exception(
+                        finishSetter
+                                ? finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle()
+                                : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified."));
+            }
+        }
+    }
+
+    /**
      * A convenient method for validating two money properties that form a range [from;to].
      *
      * @param start
@@ -654,6 +679,23 @@ public class EntityUtils {
                 throw new ReflectionException(msg, ex);
             }
         }
+    }
+
+    /**
+     * Returns a hierarchy of entity types starting from the given one.
+     * <p>
+     * <b>NOTE</b>: This method won't accept generic entity types.
+     *
+     * @param withAbstractEntity  whether to include {@link AbstractEntity} as the last element
+     */
+    public static Stream<Class<? extends AbstractEntity<?>>> entityTypeHierarchy(final Class<? extends AbstractEntity<?>> entityType,
+                                                                                 final boolean withAbstractEntity) {
+        final Stream<Class<? extends AbstractEntity<?>>> stream =
+                Stream.iterate(entityType, type -> (Class<? extends AbstractEntity<?>>) type.getSuperclass());
+        return withAbstractEntity
+                // won't compile without type cast...
+                ? StreamUtils.stopAfter(stream, type -> (Class) type == AbstractEntity.class)
+                : stream.takeWhile(type -> (Class) type != AbstractEntity.class);
     }
 
     /**
@@ -887,6 +929,7 @@ public class EntityUtils {
 
     /**
      * Splits dot.notated property in two parts: first level property and the rest of subproperties.
+     * If there is no rest, the 2nd pair element will be {@code null}.
      *
      * @param dotNotatedPropName
      * @return
@@ -951,21 +994,28 @@ public class EntityUtils {
     }
 
     /**
-     * Retrieves all collectional properties fields within given entity type
-     *
-     * @param entityType
-     * @return
+     * Retrieves all collectional properties of an entity.
+     */
+    public static Stream<Field> streamCollectionalProperties(final Class<? extends AbstractEntity<?>> entityType) {
+        return Finder.streamRealProperties(entityType)
+                .filter(prop -> isCollectional(prop.getType()) && Finder.hasLinkProperty(entityType, prop.getName()));
+    }
+
+    /**
+     * Retrieves all collectional properties of an entity.
      */
     public static List<Field> getCollectionalProperties(final Class<? extends AbstractEntity<?>> entityType) {
-        final List<Field> result = new ArrayList<>();
+        return streamCollectionalProperties(entityType).collect(toImmutableList());
+    }
 
-        for (final Field propField : Finder.findRealProperties(entityType)) {
-            if (Collection.class.isAssignableFrom(propField.getType()) && Finder.hasLinkProperty(entityType, propField.getName())) {
-                result.add(propField);
-            }
-        }
-
-        return result;
+    /**
+     * Finds a collectional property with the given simple name.
+     */
+    public static Optional<Field> findCollectionalProperty(final Class<? extends AbstractEntity<?>> entityType,
+                                                           final CharSequence name) {
+        return streamCollectionalProperties(entityType)
+                .filter(prop -> prop.getName().contentEquals(name))
+                .findAny();
     }
 
     public static class BigDecimalWithTwoPlaces {

@@ -93,7 +93,6 @@ public abstract class Either<L, R> {
         }
     }
 
-
     /**
      * Maps on the right value.
      *
@@ -103,6 +102,13 @@ public abstract class Either<L, R> {
     public <T> Either<L, T> map(final Function<? super R, ? extends T> f) {
         requireNonNull(f);
         return isRight() ? right(f.apply(asRight().value)) : left(asLeft().value);
+    }
+
+    public <T> T unfold(final Function<? super L, ? extends T> leftF,
+                        final Function<? super R, ? extends T> rightF) {
+        requireNonNull(leftF);
+        requireNonNull(rightF);
+        return isLeft() ? leftF.apply(asLeft().value) : rightF.apply(asRight().value);
     }
 
     /**

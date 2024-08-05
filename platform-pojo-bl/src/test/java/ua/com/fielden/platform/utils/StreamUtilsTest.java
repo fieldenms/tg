@@ -7,10 +7,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.*;
+import static ua.com.fielden.platform.test_utils.TestUtils.assertEmpty;
+import static ua.com.fielden.platform.test_utils.TestUtils.assertOptEquals;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.utils.StreamUtils.*;
@@ -255,6 +258,22 @@ public class StreamUtilsTest {
         assertEquals(List.of(1), Stream.of("one", 1).mapMulti(typeFilter(Number.class)).toList());
         assertEquals(List.of("one", 1), Stream.of("one", 1).mapMulti(typeFilter(Object.class)).toList());
         assertEquals(List.of(), Stream.of("one", 1).mapMulti(typeFilter(List.class)).toList());
+    }
+
+    @Test
+    public void foldLeft_returns_empty_optional_for_empty_stream() {
+        assertEmpty(foldLeft(IntStream.of(), Integer::sum));
+    }
+
+    @Test
+    public void foldLeft_returns_present_optional_for_non_empty_stream() {
+        assertOptEquals(1, foldLeft(IntStream.of(1), Integer::sum));
+        assertOptEquals(3, foldLeft(IntStream.of(1, 2), Integer::sum));
+    }
+
+    @Test
+    public void foldLeft_processes_stream_elements_sequentially_from_left_to_right() {
+        assertEquals("one-two-three", foldLeft(Stream.of("two-", "three"), "one-", String::concat));
     }
 
     @Test

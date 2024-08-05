@@ -13,20 +13,15 @@ import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
 import ua.com.fielden.platform.dao.GeneratedEntityDao;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
-import ua.com.fielden.platform.domain.PlatformDomainTypes;
-import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.menu.Action;
-import ua.com.fielden.platform.menu.UserMenuInvisibilityAssociationBatchActionCo;
-import ua.com.fielden.platform.menu.UserMenuInvisibilityAssociationBatchActionDao;
-import ua.com.fielden.platform.ref_hierarchy.AbstractTreeEntry;
-import ua.com.fielden.platform.security.*;
+import ua.com.fielden.platform.security.IAuthorisationModel;
+import ua.com.fielden.platform.security.ServerAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenController;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.provider.SecurityTokenController;
-import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -34,14 +29,12 @@ import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
 import ua.com.fielden.platform.web_api.GraphQLService;
 import ua.com.fielden.platform.web_api.IWebApi;
 
-import java.util.Map;
+import java.util.List;
 import java.util.Properties;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.reflection.CompanionObjectAutobinder.bindCo;
 import static ua.com.fielden.platform.web_api.GraphQLService.DEFAULT_MAX_QUERY_DEPTH;
 import static ua.com.fielden.platform.web_api.GraphQLService.WARN_INSUFFICIENT_MAX_QUERY_DEPTH;
-
 /**
  * Basic IoC module for server web applications, which should be enhanced by the application specific IoC module.
  *
@@ -49,8 +42,7 @@ import static ua.com.fielden.platform.web_api.GraphQLService.WARN_INSUFFICIENT_M
  * <ul>
  * <li>Applications settings (refer {@link IApplicationSettings});
  * <li>Serialisation mechanism;
- * <li>All essential DAO interfaces such as {@link IFilter}, {@link ICompanionObjectFinder}, {@link IValueMatcherFactory}, {@link IUser}, {@link IAuthorisationModel} and
- * more;
+ * <li>Essential DAO interfaces {@link IValueMatcherFactory}, {@link IUser}, {@link IAuthorisationModel} and more;
  * <li>Provides application main menu configuration related DAO bindings.
  * </ul>
  * <p>
@@ -60,44 +52,36 @@ import static ua.com.fielden.platform.web_api.GraphQLService.WARN_INSUFFICIENT_M
  * @author TG Team
  *
  */
-public class BasicWebServerModule extends CommonFactoryModule {
+public class BasicWebServerModule extends CompanionModule {
     private static final Logger LOGGER = getLogger(BasicWebServerModule.class);
 
     private final Properties props;
-    private final Class<? extends ISecurityTokenProvider> tokenProviderType;
     private final IApplicationDomainProvider applicationDomainProvider;
-    private final Class<? extends ISerialisationClassProvider> serialisationClassProviderType;
-    private final Class<? extends IFilter> automaticDataFilterType;
     private final Class<? extends IAuthorisationModel> authorisationModelType;
 
-    public BasicWebServerModule(final Map<Class, Class> defaultHibernateTypes,
+    public BasicWebServerModule(
             final IApplicationDomainProvider applicationDomainProvider,
-            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
-            final Class<? extends IFilter> automaticDataFilterType,
-            final Class<? extends ISecurityTokenProvider> tokenProviderType,
-            final Properties props) {
-        super(props, defaultHibernateTypes, applicationDomainProvider.entityTypes());
+            final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
+            final Properties props)
+    {
+        super(props, domainEntityTypes);
         this.props = props;
-        this.tokenProviderType = tokenProviderType;
         this.applicationDomainProvider = applicationDomainProvider;
-        this.serialisationClassProviderType = serialisationClassProviderType;
-        this.automaticDataFilterType = automaticDataFilterType;
+        // Currently there is no good way of binding the default implementation of IAuthorisationModel other than
+        // having multiple constructors in this module. Good old @ImplementedBy can't be used because the default
+        // implementations resides in platform-dao, while the interface in platform-pojo-bl.
         this.authorisationModelType = ServerAuthorisationModel.class;
     }
 
-    public BasicWebServerModule(final Map<Class, Class> defaultHibernateTypes,
+    public BasicWebServerModule(
             final IApplicationDomainProvider applicationDomainProvider,
-            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
-            final Class<? extends IFilter> automaticDataFilterType,
+            final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
             final Class<? extends IAuthorisationModel> authorisationModelType,
-            final Class<? extends ISecurityTokenProvider> tokenProviderType,
-            final Properties props) throws Exception {
-        super(props, defaultHibernateTypes, applicationDomainProvider.entityTypes());
+            final Properties props)
+    {
+        super(props, domainEntityTypes);
         this.props = props;
-        this.tokenProviderType = tokenProviderType;
         this.applicationDomainProvider = applicationDomainProvider;
-        this.serialisationClassProviderType = serialisationClassProviderType;
-        this.automaticDataFilterType = automaticDataFilterType;
         this.authorisationModelType = authorisationModelType;
     }
 
@@ -134,40 +118,29 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bindConstant().annotatedWith(Names.named("dates.finYearStartDay")).to(Integer.valueOf(props.getProperty("dates.finYearStartDay", "1"))); // 1 - the first day of the month
         bindConstant().annotatedWith(Names.named("dates.finYearStartMonth")).to(Integer.valueOf(props.getProperty("dates.finYearStartMonth", "7"))); // 7 - July, the 1st of July is the start of Fin Year in Australia
 
-        bind(IApplicationSettings.class).to(ApplicationSettings.class).in(Singleton.class);
+        bind(IApplicationSettings.class).to(ApplicationSettings.class);
         bind(IApplicationDomainProvider.class).toInstance(applicationDomainProvider);
-        if (tokenProviderType != null) {
-            bind(ISecurityTokenProvider.class).to(tokenProviderType).in(Singleton.class);
-        } else {
-            bind(ISecurityTokenProvider.class).to(SecurityTokenProvider.class).in(Singleton.class);
-        }
+        requireBinding(ISecurityTokenProvider.class);
         // serialisation related binding
-        bind(ISerialisationClassProvider.class).to(serialisationClassProviderType).in(Singleton.class);
-        bind(ISerialiser.class).to(Serialiser.class).in(Singleton.class);
+        requireBinding(ISerialisationClassProvider.class);
+        bind(ISerialiser.class).to(Serialiser.class);
 
-        // bind DAO and any other implementations of the required application controllers
-        bind(IFilter.class).to(automaticDataFilterType); // UserDrivenFilter.class
+        requireBinding(IFilter.class);
 
-        bind(ICriteriaGenerator.class).to(CriteriaGenerator.class).in(Singleton.class);
+        bind(ICriteriaGenerator.class).to(CriteriaGenerator.class);
         bind(IGeneratedEntityController.class).to(GeneratedEntityDao.class);
-
-        PlatformDomainTypes.typesNotDependentOnWebUI.stream()
-            .filter(type -> !AbstractTreeEntry.class.isAssignableFrom(type) && !Action.class.isAssignableFrom(type)) // these entity types have no companions
-            .forEach(type -> bindCo(type, binder()));
-        bind(IUserAndRoleAssociationBatchAction.class).to(UserAndRoleAssociationBatchActionDao.class);
-        bind(UserMenuInvisibilityAssociationBatchActionCo.class).to(UserMenuInvisibilityAssociationBatchActionDao.class);
-        bind(ISecurityRoleAssociationBatchAction.class).to(SecurityRoleAssociationBatchActionDao.class);
 
         bind(ISecurityTokenController.class).to(SecurityTokenController.class);
         bind(IAuthorisationModel.class).to(authorisationModelType);
+        install(new AuthorisationModule());
 
         // bind value matcher factory to support autocompleters
         // TODO is this binding really needed for the server side???
-        bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Singleton.class);
+        bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class);
 
         if (webApiPresent) { // in case where Web API has been turned-on in application.properties ...
             // ... bind Web API to platform-dao GraphQL-based implementation
-            bind(IWebApi.class).to(GraphQLService.class).in(Singleton.class);
+            bind(IWebApi.class).to(GraphQLService.class);
         }
     }
 

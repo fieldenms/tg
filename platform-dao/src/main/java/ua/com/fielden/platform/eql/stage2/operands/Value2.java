@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.eql.stage2.operands;
 
 import static java.util.Collections.emptySet;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.N;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.Y;
+import static ua.com.fielden.platform.persistence.HibernateConstants.N;
+import static ua.com.fielden.platform.persistence.HibernateConstants.Y;
 import static ua.com.fielden.platform.eql.retrieval.EntityResultTreeBuilder.hibTypeFromJavaType;
 
 import java.util.Objects;

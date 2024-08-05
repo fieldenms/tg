@@ -68,6 +68,7 @@ import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.MetaPropertyFull;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.proxy.IIdOnlyProxyEntity;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.ICustomValidator;
@@ -1512,12 +1513,15 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         return Collections.emptySet();
     }
 
+    public static final String PROXIED_PROPERTY_NAMES_METHOD_NAME = "proxiedPropertyNames";
+
     /**
      * Indicates whether this instance represents a proxied id-only value.
      *
      * @return
      */
     public boolean isIdOnlyProxy() {
-        return proxiedPropertyNames().contains(VERSION);
+        return this instanceof IIdOnlyProxyEntity;
     }
+
 }

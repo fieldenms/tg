@@ -1,12 +1,12 @@
 package ua.com.fielden.platform.eql.meta;
 
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_BIGDECIMAL;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_DATE;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_DATETIME;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_INTEGER;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_LONG;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_STRING;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_UTCDATETIME;
+import static ua.com.fielden.platform.persistence.HibernateConstants.H_BIGDECIMAL;
+import static ua.com.fielden.platform.persistence.HibernateConstants.H_DATE;
+import static ua.com.fielden.platform.persistence.HibernateConstants.H_DATETIME;
+import static ua.com.fielden.platform.persistence.HibernateConstants.H_INTEGER;
+import static ua.com.fielden.platform.persistence.HibernateConstants.H_LONG;
+import static ua.com.fielden.platform.persistence.HibernateConstants.H_STRING;
+import static ua.com.fielden.platform.persistence.HibernateConstants.H_UTCDATETIME;
 
 import java.math.BigDecimal;
 import java.util.Date;
