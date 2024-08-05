@@ -96,7 +96,7 @@ public class MigrationUtils {
         final var keyMembers = domainMetadata.entityMetadataUtils().keyMembers(em);
         if (keyMembers.isEmpty()) {
             if (EntityUtils.isOneToOne(entityType)) {
-                return keyPaths(em.property(KEY).orElseThrow(), domainMetadata);
+                return keyPaths(em.property(KEY), domainMetadata);
             } else {
                 return List.of(KEY);
             }

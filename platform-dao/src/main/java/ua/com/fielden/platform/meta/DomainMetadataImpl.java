@@ -28,6 +28,7 @@ import static java.util.Objects.requireNonNullElseGet;
 import static java.util.stream.Collectors.toConcurrentMap;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.entity.exceptions.NoSuchPropertyException.noSuchPropertyException;
 import static ua.com.fielden.platform.persistence.HibernateConstants.H_BOOLEAN;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
@@ -126,7 +127,7 @@ final class DomainMetadataImpl implements IDomainMetadata {
     }
 
     @Override
-    public Optional<PropertyMetadata> forProperty(final Class<?> enclosingType, final CharSequence propPath) {
+    public Optional<PropertyMetadata> forPropertyOpt(final Class<?> enclosingType, final CharSequence propPath) {
         return forType(enclosingType).flatMap(tm -> {
             final Pair<String, String> head_tail = EntityUtils.splitPropByFirstDot(propPath.toString());
             final var optHeadPm = propertyFromType(tm, head_tail.getKey());
@@ -135,18 +136,24 @@ final class DomainMetadataImpl implements IDomainMetadata {
         });
     }
 
+    @Override
+    public PropertyMetadata forProperty(final Class<?> enclosingType, final CharSequence propPath) {
+        return forPropertyOpt(enclosingType, propPath)
+                .orElseThrow(() -> noSuchPropertyException(enclosingType, propPath));
+    }
+
     private Optional<PropertyMetadata> forProperty_(final PropertyMetadata pm, final String propPath) {
         return switch (pm.type()) {
-            case PropertyTypeMetadata.Composite ct -> forProperty(ct.javaType(), propPath);
-            case PropertyTypeMetadata.Entity et -> forProperty(et.javaType(), propPath);
+            case PropertyTypeMetadata.Composite ct -> forPropertyOpt(ct.javaType(), propPath);
+            case PropertyTypeMetadata.Entity et -> forPropertyOpt(et.javaType(), propPath);
             default -> Optional.empty();
         };
     }
 
     private Optional<PropertyMetadata> propertyFromType(final TypeMetadata tm, final String simpleProp) {
         return switch (tm) {
-            case EntityMetadata em -> em.property(simpleProp);
-            case TypeMetadata.Composite cm -> cm.property(simpleProp);
+            case EntityMetadata em -> em.propertyOpt(simpleProp);
+            case TypeMetadata.Composite cm -> cm.propertyOpt(simpleProp);
         };
     }
 

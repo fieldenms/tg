@@ -2,6 +2,7 @@ package ua.com.fielden.platform.meta;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.exceptions.NoSuchPropertyException;
 
 import java.util.Collection;
 import java.util.Map;
@@ -10,6 +11,7 @@ import java.util.Optional;
 
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static java.util.function.Function.identity;
+import static ua.com.fielden.platform.entity.exceptions.NoSuchPropertyException.noSuchPropertyException;
 
 abstract class EntityMetadataImpl<N extends EntityNature, D extends EntityNature.Data<N>> {
 
@@ -34,8 +36,16 @@ abstract class EntityMetadataImpl<N extends EntityNature, D extends EntityNature
         return properties.values();
     }
 
-    public Optional<PropertyMetadata> property(final String name) {
+    public Optional<PropertyMetadata> propertyOpt(final String name) {
         return Optional.ofNullable(properties.get(name));
+    }
+
+    public PropertyMetadata property(final String name) {
+        final var property = properties.get(name);
+        if (property == null) {
+            throw noSuchPropertyException(javaType, name);
+        }
+        return property;
     }
 
     public N nature() {
