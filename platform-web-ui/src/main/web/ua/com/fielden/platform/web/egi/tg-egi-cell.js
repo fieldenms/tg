@@ -45,7 +45,7 @@ const template = html`
     <div class="cell-background" style$="[[_backgroundRendHints]]" modified$="[[_modified]]"></div>
     <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(_hostComponent, _entity, column)]]" style$="[[_foregroundRendHints]]" icon="[[_value]]"></iron-icon>
     <a class="truncate" hidden$="[[!_isHyperlinkProp(_hostComponent, _entity, column)]]" href$="[[_value]]" style$="[[_foregroundRendHints]]">[[_value]]</a>
-    <div class="truncate value-container" hidden$="[[!_isNotBooleanOrHyperlinkProp(_hostComponent, _entity, column)]]" style$="[[_foregroundRendHints]]">[[_value]]</div>`;
+    <div class="truncate value-container" hidden$="[[!_isNotBooleanOrHyperlinkProp(_hostComponent, _entity, column)]]" style$="[[_foregroundRendHints]]" inner-h-t-m-l="[[_value]]"></div>`;
 
 Polymer({
 

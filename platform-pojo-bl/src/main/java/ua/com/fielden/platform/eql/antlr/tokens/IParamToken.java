@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.antlr.tokens;
 
 import java.util.Objects;
 
+import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.wrap;
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.IPARAM;
 
@@ -11,7 +12,7 @@ public final class IParamToken extends AbstractParameterisedEqlToken {
 
     public IParamToken(final String paramName) {
         super(IPARAM, "iParam");
-        this.paramName = paramName;
+        this.paramName = requireNonNull(paramName);
     }
 
     @Override

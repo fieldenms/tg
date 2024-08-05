@@ -7,6 +7,7 @@ import ua.com.fielden.platform.entity.query.model.QueryModel;
 import java.util.List;
 import java.util.Objects;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.SELECT;
 import static ua.com.fielden.platform.eql.antlr.tokens.SelectToken.Values.INSTANCE;
@@ -35,7 +36,7 @@ public sealed abstract class SelectToken extends AbstractParameterisedEqlToken {
 
         public EntityType(final Class<? extends AbstractEntity<?>> entityType) {
             super();
-            this.entityType = entityType;
+            this.entityType = requireNonNull(entityType);
         }
 
         @Override

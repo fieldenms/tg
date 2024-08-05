@@ -54,13 +54,13 @@ export const TgSerialiser = Polymer({
                         // Find the index of the obj in 'array of serialised objects'. If the index equals -1 -- the object was not serialised yet
                         index = getId(obj);
                         if (index >= 0) {
-                            serialisedObj["@id_ref"] = obj.constructor.prototype.type.call(obj).identifier() + "#" + (index + 1); // use the current number
+                            serialisedObj["@id_ref"] = obj.constructor.prototype.type.call(obj).fullClassName() + "#" + (index + 1); // use the current number
                             return serialisedObj;
                         } else {
                             // If obj wasn't found in object map then
                             // create object and add property "@id" to that object, also add created object to object map with key "@id".
                             // That object map contains entity references in order to use it later for initialising cross referenced objects. 
-                            serialisedObj["@id"] = obj.constructor.prototype.type.call(obj).identifier() + "#" + (putId(obj) + 1);
+                            serialisedObj["@id"] = obj.constructor.prototype.type.call(obj).fullClassName() + "#" + (putId(obj) + 1);
                         }
                     }
                     // All object properties will be copied to new object. Just skip "_type" property.
@@ -133,13 +133,11 @@ export const TgSerialiser = Polymer({
                         return objectMap[obj["@id_ref"]];
                     } else if (obj.hasOwnProperty("@id")) {
                         // If it is an object with "@id" property then create new object with "_id" and "_type" properties and add to the object map.
-                        var typeIdentifier = obj["@id"].split("#")[0];
-                        var typeName = typeIdentifier.split(":")[0];
+                        const typeName = obj["@id"].split("#")[0];
 
                         deserialisedObject = self.$.reflector.newEntityEmpty();
-                        // deserialisedObject = {};
 
-                        var foundType = self.$.reflector.getType(typeName);
+                        const foundType = self.$.reflector.getType(typeName);
                         if (!foundType) {
                             throw "Can not find the type with name [" + typeName + "]";
                         }

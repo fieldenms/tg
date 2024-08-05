@@ -4,12 +4,12 @@ import ua.com.fielden.platform.entity.annotation.KeyTitle;
 
 /**
  * A contract defining method call authorisation token. There can only be one instance of a specific security token however per many user roles. Existence of two instances of the
- * same security token simply does not have any sense, because one instance is responsible for representing a complete information.
+ * same security token simply does not have any sense, because one instance is responsible for representing complete information.
  * <p>
  * All security token information related to its relation to the parent token is static in the way that it should be defined at the token class level rather than instance. Thus,
- * token's class hierarchy represents it's hierarchical relation to a parent token.
+ * token's class hierarchy represents its hierarchical relation to a parent token.
  * <p>
- * Since no token instance should exist with out a user role, in order to be able to provide an administrative facility for managing user permissions, it is essential to be able to
+ * Since no token instance should exist without a user role, in order to be able to provide an administrative facility for managing user permissions, it is essential to be able to
  * deduce all information about security tokens established for an application by operating reflectively just on token classes.
  * <p>
  * The following simple rules should be followed when implementing a new security token class:

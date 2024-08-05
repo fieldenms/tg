@@ -5,6 +5,7 @@ import ua.com.fielden.platform.utils.CollectionUtil;
 import java.util.List;
 import java.util.Objects;
 
+import static java.util.Objects.requireNonNull;
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.IPARAMS;
 
 public final class IParamsToken extends AbstractParameterisedEqlToken {
@@ -13,7 +14,7 @@ public final class IParamsToken extends AbstractParameterisedEqlToken {
 
     public IParamsToken(final List<String> params) {
         super(IPARAMS, "iParams");
-        this.params = params;
+        this.params = requireNonNull(params);
     }
 
     public String parametersText() {

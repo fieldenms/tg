@@ -23,7 +23,6 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.Accessor;
@@ -218,7 +217,7 @@ public final class Reflector {
                 return true;
             }
         } catch (NoSuchMethodException | SecurityException ex) {
-            LOGGER.debug(format("Checking the oberriding of method [%s] for type [%s] with base type [%s] failed.", methodName, type.getName(), baseType.getName()), ex);
+            LOGGER.debug(format("Checking the overriding of method [%s] for type [%s] with base type [%s] failed.", methodName, type.getName(), baseType.getName()), ex);
         }
         
         return false;
@@ -507,7 +506,11 @@ public final class Reflector {
     }
     
     /**
-     * Tests if the specified property is proxied for a given entity instance.
+     * Returns <code>true</code> if the specified property is proxied for a given entity instance.
+     *  
+     * @param entity
+     * @param propName
+     * @return
      */
     public static boolean isPropertyProxied(final AbstractEntity<?> entity, final String propName) {
         return entity.proxiedPropertyNames().contains(propName);

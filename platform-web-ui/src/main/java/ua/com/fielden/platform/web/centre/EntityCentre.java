@@ -306,7 +306,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     /**
      * Validates root type corresponding to <code>menuItemType</code>.
      *
-     * @param menuItemType
+     * @param miType
      */
     private static void validateMenuItemTypeRootType(final Class<? extends MiWithConfigurationSupport<?>> miType) {
         final EntityType etAnnotation = miType.getAnnotation(EntityType.class);
@@ -390,7 +390,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                         CalculatedPropertyAttribute.NO_ATTR,
                         "".equals(originationProperty) ? "SELF" : originationProperty, summaryProp.desc,
                         summaryProp.precision,
-                        summaryProp.scale, null, null));
+                        summaryProp.scale));
             }
         }
 
@@ -401,9 +401,12 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * Creates default centre from Centre DSL configuration by adding calculated / custom props, applying selection crit defaults, EGI column widths / ordering etc.
      *
      * @param dslDefaultConfig
-     * @param serialiser
+     * @param entityFactory
      * @param postCentreCreated
      * @param userSpecific
+     * @param entityType
+     * @param miType
+     * @param injector
      * @return
      */
     public static <T extends AbstractEntity<?>> ICentreDomainTreeManagerAndEnhancer createDefaultCentreFrom(

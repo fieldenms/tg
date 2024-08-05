@@ -1,31 +1,6 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
-import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
-import static ua.com.fielden.platform.utils.EntityUtils.isCollectional;
-import static ua.com.fielden.platform.utils.EntityUtils.isDate;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isInteger;
-import static ua.com.fielden.platform.utils.EntityUtils.isString;
-import static ua.com.fielden.platform.utils.Pair.pair;
-import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
-import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp.dynamicProps;
-
-import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.BiConsumer;
-import java.util.function.Supplier;
-
 import org.apache.commons.lang3.StringUtils;
-
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -56,36 +31,7 @@ import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointCo
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
-import ua.com.fielden.platform.web.centre.api.resultset.IAlsoProp;
-import ua.com.fielden.platform.web.centre.api.resultset.IAlsoSecondaryAction;
-import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
-import ua.com.fielden.platform.web.centre.api.resultset.IDynamicColumnBuilder;
-import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetAutocompleterConfig;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aEgiAppearance;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aEgiIconStyle;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bCheckbox;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cToolbar;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dCentreScroll;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dScroll;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1eDraggable;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1efRetrieveAll;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1fPageCapacity;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1gMaxPageCapacity;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1hHeaderWrap;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1iVisibleRowsCount;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1jFitBehaviour;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1kRowHeight;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2Properties;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder3Ordering;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4OrderingDirection;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4aWidth;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder7SecondaryAction;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder9RenderingCustomiser;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderDynamicProps;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderDynamicPropsAction;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderWidgetSelector;
-import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
+import ua.com.fielden.platform.web.centre.api.resultset.*;
 import ua.com.fielden.platform.web.centre.api.resultset.layout.ICollapsedCardLayoutConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.layout.IExpandedCardLayoutConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
@@ -108,6 +54,26 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.money.impl.MoneyWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.singlelinetext.impl.SinglelineTextWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerWidget;
+
+import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
+
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
+import static ua.com.fielden.platform.utils.Pair.pair;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
+import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp.dynamicProps;
 
 /**
  * A package private helper class to decompose the task of implementing the Entity Centre DSL. It has direct access to protected fields in {@link EntityCentreBuilder}.
@@ -217,8 +183,15 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public <M extends AbstractEntity<?>> IResultSetBuilderDynamicPropsAction<T> addProps(final CharSequence propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<M, Optional<CentreContext<T, ?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
+    public IResultSetBuilderDynamicPropsAction<T> addProps(final CharSequence propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<T, Optional<CentreContext<T, ?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
         final ResultSetProp<T> prop = dynamicProps(propName, dynColBuilderType, entityPreProcessor, contextConfig);
+        this.builder.addToResultSet(prop);
+        return new ResultSetDynamicPropertyBuilder<>(this, prop);
+    }
+
+    @Override
+    public IResultSetBuilderDynamicPropsAction<T> addProps(final CharSequence propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<T, Optional<CentreContext<T, ?>>> entityPreProcessor, final BiFunction<T, Optional<CentreContext<T, ?>>, Map> renderingHintsProvider, final CentreContextConfig contextConfig) {
+        final ResultSetProp<T> prop = dynamicProps(propName, dynColBuilderType, entityPreProcessor, renderingHintsProvider, contextConfig);
         this.builder.addToResultSet(prop);
         return new ResultSetDynamicPropertyBuilder<>(this, prop);
     }

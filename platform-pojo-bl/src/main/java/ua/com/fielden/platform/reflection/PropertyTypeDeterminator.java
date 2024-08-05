@@ -137,14 +137,12 @@ public class PropertyTypeDeterminator {
     }
 
     /**
-     * If field is collectional property then it returns type of collection elements.
-     *
-     * @param field
-     * @return
+     * If the field is a collectional property, returns the type of collection elements, otherwise returns {@link Object}.
      */
     private static Class<?> determineElementClass(final Field field) {
-        final ParameterizedType paramType = (ParameterizedType) field.getGenericType();
-        return classFrom(paramType.getActualTypeArguments()[0]);
+        return field.getGenericType() instanceof ParameterizedType paramType
+                ? classFrom(paramType.getActualTypeArguments()[0])
+                : Object.class;
     }
 
     /**

@@ -4,6 +4,7 @@ import ua.com.fielden.platform.entity.query.model.ConditionModel;
 
 import java.util.Objects;
 
+import static java.util.Objects.requireNonNull;
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.NEGATEDCONDITION;
 import static ua.com.fielden.platform.eql.antlr.tokens.util.TokensFormatter.getInstance;
 
@@ -13,7 +14,7 @@ public final class NegatedConditionToken extends AbstractParameterisedEqlToken {
 
     public NegatedConditionToken(final ConditionModel model) {
         super(NEGATEDCONDITION, "negatedCondition");
-        this.model = model;
+        this.model = requireNonNull(model);
     }
 
     @Override

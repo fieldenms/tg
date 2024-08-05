@@ -7,6 +7,11 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.sample.domain.EntityOne;
 import ua.com.fielden.platform.sample.domain.EntityTwo;
 
+/**
+ * Incorrectly defined union entity, which has properties of the same entity type.
+ *
+ *  @author TG Team
+ */
 public class UnionEntityWithKindTwoError extends AbstractUnionEntity {
     @IsProperty
     @Title(value = "Property One", desc = "Desc")

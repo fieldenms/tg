@@ -20,16 +20,13 @@ import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity_centre.review.criteria.DynamicColumnForExport;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.IDynamicColumnConfig;
-import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderAddProp;
-import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderDisplayProp;
-import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderGroupProp;
-import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderWithTitle;
-import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderWithTooltipProp;
+import ua.com.fielden.platform.web.centre.api.dynamic_columns.*;
 
 /**
  * Implementation and the entry point for dynamic column building API. It is used to define dynamic columns that are used for representing collectional properties in-line with the main entity.
@@ -93,7 +90,7 @@ public class DynamicColumnBuilder<T extends AbstractEntity<?>> implements IDynam
     }
 
     @Override
-    public IDynamicColumnBuilderAddProp withTooltipProp(final CharSequence tooltipProp) {
+    public IDynamicColumnBuilderAddPropWithDone withTooltipProp(final CharSequence tooltipProp) {
         this.tooltipProp = Optional.of(tooltipProp.toString());
         return this;
     }

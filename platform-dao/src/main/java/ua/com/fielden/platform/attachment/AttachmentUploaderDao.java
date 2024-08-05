@@ -100,7 +100,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             sha1 = HexString.bufferToHex(digest, 0, digest.length);
             uploader.getEventSourceSubject().ifPresent(ess -> publishWithDelay(ess, 65));
 
-            // let's validate the file nature by analysing it's magic number
+            // let's validate the file nature by analysing its magic number
             canAcceptFile(uploader, tmpPath, getUser()).ifFailure(Result::throwRuntime);
 
             // if the target file already exist then need to create it by copying tmp file
