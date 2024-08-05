@@ -1,4 +1,4 @@
-package ua.com.fielden.deserialisation;
+package ua.com.fielden.benchmark;
 
 import com.google.inject.name.Names;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
@@ -15,7 +15,7 @@ import ua.com.fielden.platform.web.test.config.ApplicationDomain;
  * 
  * @author TG Team
  */
-class EntityModuleWithPropertyFactoryForBenchmarking extends EntityModule {
+public class EntityModuleWithPropertyFactoryForBenchmarking extends EntityModule {
 
     public EntityModuleWithPropertyFactoryForBenchmarking() {}
 

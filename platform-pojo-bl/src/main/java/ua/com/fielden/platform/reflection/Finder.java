@@ -236,6 +236,11 @@ public class Finder {
         return getFieldsAnnotatedWith(entityType, true, IsProperty.class, annotations);
     }
 
+    public static Stream<Field> streamDeclaredProperties(final Class<?> entityType) {
+        return streamDeclaredFields(entityType)
+                .filter(field -> AnnotationReflector.isAnnotationPresent(field, IsProperty.class));
+    }
+
     /**
      * Returns "real" properties (fields annotated with {@link IsProperty}) for <code>entityType</code> that are also annotated with specified <code>annotations</code> (if any).
      * Refer issue <a href='https://github.com/fieldenms/tg/issues/1729'>#1729</a> for more details.
@@ -676,6 +681,10 @@ public class Finder {
         return streamFieldsAnnotatedWith(getFields(type, withUnion), allAnnotations);
     }
 
+    private static Stream<Field> streamDeclaredFields(final Class<?> type) {
+        return Arrays.stream(type.getDeclaredFields());
+    }
+
     /**
      * Returns value of the {@link AbstractUnionEntity} field specified with property.
      *
@@ -810,6 +819,11 @@ public class Finder {
 
     // ========================================================================================================
     /////////////////////////////// Miscellaneous utilities ///////////////////////////////////////////////////
+
+    public static Stream<Class<? extends AbstractEntity<?>>> streamUnionMembers(final Class<? extends AbstractUnionEntity> unionEntityType) {
+        return unionProperties(unionEntityType).stream()
+                .map(field -> (Class<AbstractEntity<?>>) field.getType());
+    }
 
     /**
      * Returns a set of properties that are present in all of the types passed into the method.

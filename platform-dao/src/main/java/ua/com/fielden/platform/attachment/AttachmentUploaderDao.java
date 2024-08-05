@@ -3,8 +3,7 @@ package ua.com.fielden.platform.attachment;
 import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.error.Result.*;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -38,7 +37,7 @@ import ua.com.fielden.platform.rx.AbstractSubjectKind;
 import ua.com.fielden.platform.security.user.User;
 
 /**
- * DAO implementation for companion object {@link IAttachmentUploader}.
+ * DAO implementation for companion object {@link AttachmentUploaderCo}.
  * <p>
  * It has two responsibilities:
  * <ul>
@@ -50,7 +49,7 @@ import ua.com.fielden.platform.security.user.User;
  *
  */
 @EntityType(AttachmentUploader.class)
-public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> implements IAttachmentUploader {
+public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> implements AttachmentUploaderCo {
 
     private static final int DEBUG_DELAY_PROCESSING_TIME_MILLIS = 0;
     private static final Random RND = new Random(100);
@@ -100,7 +99,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             sha1 = HexString.bufferToHex(digest, 0, digest.length);
             uploader.getEventSourceSubject().ifPresent(ess -> publishWithDelay(ess, 65));
 
-            // let's validate the file nature by analysing it's magic number
+            // let's validate the file nature by analysing its magic number
             canAcceptFile(uploader, tmpPath, getUser()).ifFailure(Result::throwRuntime);
 
             // if the target file already exist then need to create it by copying tmp file
@@ -155,7 +154,6 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
         return uploader;
     }
 
-    private static String[] restrictedFileTypes = new String[] {"application/x-msdownload", "application/octet-stream", "application/vnd.microsoft.portable-executable"};
     private static Result canAcceptFile(final AttachmentUploader uploader, final Path tmpPath, final User user) throws IOException {
         try (final InputStream is = Files.newInputStream(tmpPath);
              final BufferedInputStream bis = new BufferedInputStream(is)) {
@@ -169,16 +167,19 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             // application/x-tika-msoffice  application/msword
 
             LOGGER.debug(format("Mime type for uploaded file [%s] identified as [%s], the provided is [%s].", uploader.getOrigFileName(), mediaType, uploader.getMime()));
-            if (Stream.of(restrictedFileTypes).anyMatch(rft -> mediaType.toString().contains(rft))) {
+            if (Stream.of(RESTRICTED_FILE_TYPES).anyMatch(rft -> mediaType.toString().contains(rft))) {
                 LOGGER.warn(format("An attempt to load file [%s] with a restricted mime type identified as [%s] (provided a [%s]) by user [%s].", uploader.getOrigFileName(), mediaType, uploader.getMime(), user));
-                return Result.failuref("Files of type [%s] are not supported.", mediaType);
+                return failuref("Files of type [%s] are not supported.", mediaType);
             }
+            // It is possible that MIME for the uploader is already specified.
+            // Nevertheless, let's use Tika's MIME to ensure that the validated MIME is associated with the uploader.
+            uploader.setMime(mediaType.toString());
         }
-        return successful("OK");
+        return successful();
     }
 
     /**
-     * A convenient method for DEBUG purposes to mimic long running file uploads/processing.
+     * A convenient method for DEBUG purposes to mimic long-running file uploads/processing.
      *
      * @param ess
      * @param prc

@@ -4,10 +4,12 @@ import com.google.inject.AbstractModule;
 import com.google.inject.matcher.Matcher;
 import org.aopalliance.intercept.MethodInterceptor;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.DynamicPropertyAccessModule;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.web_api.GraphQLScalars;
 
 import java.lang.reflect.Method;
+import java.util.Properties;
 
 import static com.google.inject.matcher.Matchers.annotatedWith;
 import static com.google.inject.matcher.Matchers.subclassesOf;
@@ -19,6 +21,16 @@ import static ua.com.fielden.platform.ioc.Matchers.notSyntheticMethod;
  * @author TG Team
  */
 public abstract class EntityModule extends AbstractModule {
+
+    private final Properties properties;
+
+    public EntityModule(final Properties properties) {
+        this.properties = properties;
+    }
+
+    public EntityModule() {
+        this(new Properties());
+    }
 
     /**
      * Binds intercepter for observable property mutators to ensure property change observation and validation. Only descendants of {@link AbstractEntity} are processed.
@@ -34,6 +46,9 @@ public abstract class EntityModule extends AbstractModule {
         // static injection occurs at the time when an injector is created
         // this guarantees that different implementations of IDates will be injected based on IDates binding in IoC modules that define the binding configuration;
         requestStaticInjection(GraphQLScalars.class);
+
+        install(DynamicPropertyAccessModule.options().fromProperties(properties));
+        install(new DynamicPropertyAccessModule());
     }
 
     @Override

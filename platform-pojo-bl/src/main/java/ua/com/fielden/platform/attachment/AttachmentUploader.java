@@ -13,7 +13,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
  *
  */
 @KeyType(Attachment.class)
-@CompanionObject(IAttachmentUploader.class)
+@CompanionObject(AttachmentUploaderCo.class)
 public class AttachmentUploader extends AbstractEntityWithInputStream<Attachment> {
 
 }

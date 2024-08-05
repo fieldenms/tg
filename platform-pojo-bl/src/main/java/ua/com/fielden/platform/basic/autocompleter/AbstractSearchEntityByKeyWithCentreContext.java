@@ -98,7 +98,7 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
         return isNaturalOrderDescending(companion.getEntityType()) ? prop.desc().model() : prop.asc().model();
     }
 
-    private OrderingModel composeOrderingModelForQuery(final String searchString, final Class<T> entityType) {
+    protected final OrderingModel composeOrderingModelForQuery(final String searchString, final Class<T> entityType) {
         return "%".equals(searchString) ? makeOrderingModel(searchString)
                 : orderBy().expr(makeSearchResultOrderingPriority(entityType, searchString)).asc().order(makeOrderingModel(searchString)).model();
     }

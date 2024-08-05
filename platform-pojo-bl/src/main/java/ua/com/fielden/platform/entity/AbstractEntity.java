@@ -34,7 +34,6 @@ import static ua.com.fielden.platform.utils.EntityUtils.isString;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -58,6 +57,7 @@ import ua.com.fielden.platform.entity.annotation.factory.BeforeChangeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
+import ua.com.fielden.platform.entity.exceptions.DynamicPropertyAccessGraveError;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -86,6 +86,8 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.EntityUtils;
+
+import javax.annotation.Nullable;
 
 /**
  * <h3>General Info</h3>
@@ -306,6 +308,9 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     public static void useStrictModelVerification() {
     	STRICT_MODEL_VERIFICATION = true;
     }
+
+    @Inject
+    private static DynamicPropertyAccess dynamicPropertyAccess;
 
     /**
      * Holds meta-properties for entity properties.
@@ -528,17 +533,28 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             throw new StrictProxyException(format("Cannot get value for proxied property [%s] of entity [%s].", propertyName, getType().getName()));
         }
         try {
-            return Finder.findFieldValueByName(this, propertyName);
-        } catch (final Exception e) {
-            // there are cases where this.toString() may fail such as for non-initialized union entities
-            // need to degrade gracefully in order to to hide the original exception...
-            String thisToString;
-            try {
-                thisToString = this.toString();
-            } catch (final Exception ex) {
-                thisToString = "this.toString()";
+            return (T) dynamicPropertyAccess.getProperty(this, propertyName);
+        } catch (final Throwable e) {
+            // There are cases where this.toString() may fail such as for non-initialized union entities. Need to degrade
+            // gracefully in order to to hide the original exception. Also, don't try toString() if dynamic property access
+            // fails gravely since toString() itself may require it (e.g., with DynamicEntityKey).
+            @Nullable String thisToString;
+            if (e instanceof DynamicPropertyAccessGraveError) {
+                thisToString = null;
             }
-            throw new EntityException(format("Could not get the value for property [%s] in instance [%s]@[%s].", propertyName , thisToString, getType().getName()), e);
+            else {
+                try {
+                    thisToString = this.toString();
+                } catch (final Exception ex) {
+                    thisToString = null;
+                }
+            }
+            throw new EntityException(format("Could not get the value for property [%s] in instance %s.",
+                                             propertyName,
+                                             thisToString == null
+                                                     ? '[' + getType().getTypeName() + ']'
+                                                     : "[%s]@[%s]".formatted(thisToString, getType().getTypeName())),
+                                      e);
         }
     }
 
@@ -560,31 +576,15 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      */
     public AbstractEntity<K> set(final String propertyName, final Object value) {
         try {
-            final Class<?> propertyType = Finder.findFieldByName(getType(), propertyName).getType();
-            final String setterName = Mutator.SETTER.getName(propertyName);
-            final Method setter = Reflector.getMethod(this, setterName, propertyType);
-            Object valueToInvokeOn = this;
-            if (!setter.getDeclaringClass().isAssignableFrom(getType()) && AbstractUnionEntity.class.isAssignableFrom(getType())) {
-                valueToInvokeOn = ((AbstractUnionEntity) this).activeEntity();
-            }
-            // making method accessible if it isn't
-            final boolean isAccessible = setter.isAccessible();
-            setter.setAccessible(true);
-            setter.invoke(valueToInvokeOn, value);
-            // reverting changes to 'accessible' property of Method class
-            setter.setAccessible(isAccessible);
+            dynamicPropertyAccess.setProperty(this, propertyName, value);
             return this;
-        } catch (final Exception e) {
-            // let's be a little more intelligent about handling instances of InvocationTargetException to report errors without the unnecessary nesting
-            if (e instanceof InvocationTargetException && e.getCause() != null) {
-                // the cause of type Result should be reported as is
-                if (e.getCause() instanceof Result) {
-                    throw (Result) e.getCause();
-                } else { // otherwise wrap the cause in EntityException
-                    throw new EntityException(format("Error setting value [%s] into property [%s] for entity [%s]@[%s].", value, propertyName, this, getType().getName()), e.getCause());
-                }
-            } else {
-                throw new EntityException(format("Error setting value [%s] into property [%s] for entity [%s]@[%s].", value, propertyName, this, getType().getName()), e);
+        } catch (final Throwable e) {
+            if (e instanceof Result result) {
+                throw result;
+            }
+            else {
+                throw new EntityException(format("Error setting value [%s] into property [%s] for entity [%s]@[%s].",
+                                                 value, propertyName, this, getType().getName()), e);
             }
         }
     }
