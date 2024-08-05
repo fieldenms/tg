@@ -100,10 +100,10 @@ class SelectionCriteriaBuilderAsMultiString<T extends AbstractEntity<?>, V exten
 
     @SafeVarargs
     @Override
-    public final IMultiStringDefaultValueAssigner<T> withProps(final Pair<String, Boolean> propNameAndLightOption, final Pair<String, Boolean>... morePropNameAndLightOption) {
-        final List<Pair<String, Boolean>> props = new ArrayList<>();
-        props.add(propNameAndLightOption);
-        props.addAll(Arrays.asList(morePropNameAndLightOption));
+    public final IMultiStringDefaultValueAssigner<T> withProps(final Pair<? extends CharSequence, Boolean> propNameAndLightOption, final Pair<? extends CharSequence, Boolean>... morePropNameAndLightOption) {
+        final var props = StreamUtils.of(propNameAndLightOption, morePropNameAndLightOption)
+                .map(pair -> pair.mapKey(CharSequence::toString))
+                .toList();
         this.builder.additionalPropsForAutocompleter.put(builder.currSelectionCrit.get(), props);
         return this;
     }

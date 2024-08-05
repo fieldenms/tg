@@ -87,7 +87,7 @@ public class TitlesDescsGetterTest {
 
     @Test
     public void getTitleAndDesc_can_determine_prop_title_and_desc_from_IConvertableToPath() {
-        final Pair<String, String> baseCaseTitleAndDesc = TitlesDescsGetter.getTitleAndDesc(() -> "prop2.propertyTwo", FirstLevelEntityPathDependentTitles.class);
+        final Pair<String, String> baseCaseTitleAndDesc = TitlesDescsGetter.getTitleAndDesc("prop2.propertyTwo", FirstLevelEntityPathDependentTitles.class);
         assertEquals("Two", baseCaseTitleAndDesc.getKey());
         assertEquals("Two", baseCaseTitleAndDesc.getValue());
     }

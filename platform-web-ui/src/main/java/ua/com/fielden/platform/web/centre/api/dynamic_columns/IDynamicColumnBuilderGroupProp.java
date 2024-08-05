@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.web.centre.api.dynamic_columns;
 
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
-
 /**
  * A contract that specifies the name of a property that holds the group name.
  *
@@ -10,10 +8,6 @@ import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
  */
 public interface IDynamicColumnBuilderGroupProp {
 
-    IDynamicColumnBuilderDisplayProp withGroupProp(final String groupProp);
-
-    default IDynamicColumnBuilderDisplayProp withGroupProp(final IConvertableToPath groupProp) {
-        return withGroupProp(groupProp.toPath());
-    }
+    IDynamicColumnBuilderDisplayProp withGroupProp(final CharSequence groupProp);
 
 }

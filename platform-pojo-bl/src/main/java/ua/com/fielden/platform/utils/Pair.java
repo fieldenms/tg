@@ -2,6 +2,8 @@ package ua.com.fielden.platform.utils;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * Represents a pair of instances logically tied together.
@@ -46,6 +48,18 @@ public class Pair<K, V> implements Map.Entry<K, V>, Serializable {
     public V setValue(final V value) {
         this.value = value;
         return value;
+    }
+
+    public <R> Pair<R, V> mapKey(final Function<? super K, R> mapper) {
+        return new Pair<>(mapper.apply(key), value);
+    }
+
+    public <R> Pair<K, R> mapValue(final Function<? super V, R> mapper) {
+        return new Pair<>(key, mapper.apply(value));
+    }
+
+    public <R> R map(final BiFunction<? super K, ? super V, R> mapper) {
+        return mapper.apply(this.key, this.value);
     }
 
     @Override

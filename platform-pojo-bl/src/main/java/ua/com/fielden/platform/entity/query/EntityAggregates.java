@@ -12,7 +12,8 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
-import ua.com.fielden.platform.reflection.Reflector;
+
+import static ua.com.fielden.platform.utils.EntityUtils.splitPropPathToArray;
 
 /**
  * An entity class for ad-hoc construction of entities. Useful when the structure (i.e. properties) becomes known at runtime rather than design time.
@@ -151,7 +152,7 @@ public class EntityAggregates extends AbstractEntity<String> {
     @Override
     public <T> T get(final String propertyName) {
         try {
-            final String[] parts = propertyName.split(Reflector.DOT_SPLITTER);
+            final String[] parts = splitPropPathToArray(propertyName);
 
             if (!getAggregates().containsKey(parts[0])) {
                 // trying to find in root entity if such discovered

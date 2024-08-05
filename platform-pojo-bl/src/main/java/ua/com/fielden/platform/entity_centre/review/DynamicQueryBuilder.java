@@ -141,22 +141,9 @@ public class DynamicQueryBuilder {
 
         /**
          * Creates parameter name for {@link QueryProperty} instance (should be used to expand mnemonics value into conditions from EQL critCondition operator).
-         *
-         * @param propertyName
-         * @return
          */
-        public static String queryPropertyParamName(final String propertyName) {
+        public static String queryPropertyParamName(final CharSequence propertyName) {
             return QP_PREFIX + propertyName;
-        }
-
-        /**
-         * Creates parameter name for {@link QueryProperty} instance (should be used to expand mnemonics value into conditions from EQL critCondition operator).
-         *
-         * @param propertyPath
-         * @return
-         */
-        public static String queryPropertyParamName(final IConvertableToPath propertyPath) {
-            return QP_PREFIX + propertyPath.toPath();
         }
 
         public QueryProperty(final Class<?> entityClass, final String propertyName) {
@@ -1199,7 +1186,7 @@ public class DynamicQueryBuilder {
      * <b>IMPORTANT:</b> At this stage there no way to differentiate between property meta-models coming from aliased and non-aliased instance of entity meta-models.
      * It is important to use with method only in application to properties from non-aliased meta-models. Otherwise, a runtime error would occur at the EQL/SQL level due to incorrect aliases.
      *
-     * @param property – a property meta-model coming from a non-aliased instance of an entity meta-model.
+     * @param property a property meta-model coming from a non-aliased instance of an entity meta-model.
      * @return
      */
     public static String createConditionProperty(final IConvertableToPath property) {

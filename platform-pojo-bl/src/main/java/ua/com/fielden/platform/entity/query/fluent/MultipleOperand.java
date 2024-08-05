@@ -4,7 +4,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IMultipleOperand;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 abstract class MultipleOperand<T, ET extends AbstractEntity<?>> //
 		extends SingleOperand<T, ET> //
@@ -15,12 +14,7 @@ abstract class MultipleOperand<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
-	public T anyOfProps(final String... propertyNames) {
-		return nextForSingleOperand(builder.anyOfProps(propertyNames));
-	}
-
-	@Override
-	public T anyOfProps(final IConvertableToPath... propertyNames) {
+	public T anyOfProps(final CharSequence... propertyNames) {
 		return nextForSingleOperand(builder.anyOfProps(propertyNames));
 	}
 
@@ -30,12 +24,12 @@ abstract class MultipleOperand<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
-	public T anyOfParams(final String... paramNames) {
+	public T anyOfParams(final CharSequence... paramNames) {
 		return nextForSingleOperand(builder.anyOfParams(paramNames));
 	}
 
 	@Override
-	public T anyOfIParams(final String... paramNames) {
+	public T anyOfIParams(final CharSequence... paramNames) {
 		return nextForSingleOperand(builder.anyOfIParams(paramNames));
 	}
 
@@ -50,12 +44,7 @@ abstract class MultipleOperand<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
-	public T allOfProps(final String... propertyNames) {
-		return nextForSingleOperand(builder.allOfProps(propertyNames));
-	}
-
-	@Override
-	public T allOfProps(final IConvertableToPath... propertyNames) {
+	public T allOfProps(final CharSequence... propertyNames) {
 		return nextForSingleOperand(builder.allOfProps(propertyNames));
 	}
 
@@ -65,12 +54,12 @@ abstract class MultipleOperand<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
-	public T allOfParams(final String... paramNames) {
+	public T allOfParams(final CharSequence... paramNames) {
 		return nextForSingleOperand(builder.allOfParams(paramNames));
 	}
 
 	@Override
-	public T allOfIParams(final String... paramNames) {
+	public T allOfIParams(final CharSequence... paramNames) {
 		return nextForSingleOperand(builder.allOfIParams(paramNames));
 	}
 

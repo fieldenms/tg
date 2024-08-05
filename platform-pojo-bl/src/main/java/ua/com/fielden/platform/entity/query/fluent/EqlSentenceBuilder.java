@@ -7,7 +7,6 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.*;
 import ua.com.fielden.platform.eql.antlr.tokens.*;
 import ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 import java.util.*;
 
@@ -68,6 +67,10 @@ final class EqlSentenceBuilder {
         return copy;
     }
 
+    private static List<String> asStrings(final CharSequence... charSequences) {
+        return Arrays.stream(charSequences).map(CharSequence::toString).collect(toImmutableList());
+    }
+
     // -----------------------------------------------------------------------------------------------------------------
     // BUILDING METHODS
 
@@ -115,15 +118,15 @@ final class EqlSentenceBuilder {
         return _add(negated ? new NotExistsAllOfToken(asList(subQueries)) : new ExistsAllOfToken(asList(subQueries)));
     }
 
-    public EqlSentenceBuilder critCondition(final String propName, final String critPropName) {
-        return _add(new CritConditionToken(propName, critPropName));
+    public EqlSentenceBuilder critCondition(final CharSequence propName, final CharSequence critPropName) {
+        return _add(new CritConditionToken(propName.toString(), critPropName.toString()));
     }
 
     public EqlSentenceBuilder critCondition(
-            final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName,
+            final ICompoundCondition0<?> collectionQueryStart, final CharSequence propName, final CharSequence critPropName,
             final Optional<Object> defaultValue)
     {
-        return _add(new CritConditionToken(collectionQueryStart, propName, critPropName, defaultValue));
+        return _add(new CritConditionToken(collectionQueryStart, propName.toString(), critPropName.toString(), defaultValue));
     }
 
     public EqlSentenceBuilder isNull(final boolean negated) {
@@ -190,16 +193,16 @@ final class EqlSentenceBuilder {
         return _add(negated ? token(NOTIN) : token(IN));
     }
 
-    public EqlSentenceBuilder yield(final String yieldName) {
-        return _add(new YieldToken(yieldName));
+    public EqlSentenceBuilder yield(final CharSequence yieldName) {
+        return _add(new YieldToken(yieldName.toString()));
     }
 
-    public EqlSentenceBuilder prop(final String propName) {
-        return _add(new PropToken(propName));
+    public EqlSentenceBuilder prop(final CharSequence propName) {
+        return _add(new PropToken(propName.toString()));
     }
 
-    public EqlSentenceBuilder extProp(final String propName) {
-        return _add(new ExtPropToken(propName));
+    public EqlSentenceBuilder extProp(final CharSequence propName) {
+        return _add(new ExtPropToken(propName.toString()));
     }
 
     public EqlSentenceBuilder val(final Object value) {
@@ -218,12 +221,12 @@ final class EqlSentenceBuilder {
         return _add(new QueryModelToken<>(model));
     }
 
-    public EqlSentenceBuilder param(final String paramName) {
-        return _add(new ParamToken(paramName));
+    public EqlSentenceBuilder param(final CharSequence paramName) {
+        return _add(new ParamToken(paramName.toString()));
     }
 
-    public EqlSentenceBuilder iParam(final String paramName) {
-        return _add(new IParamToken(paramName));
+    public EqlSentenceBuilder iParam(final CharSequence paramName) {
+        return _add(new IParamToken(paramName.toString()));
     }
 
     public EqlSentenceBuilder expr() {
@@ -246,28 +249,24 @@ final class EqlSentenceBuilder {
         return _add(new NegatedConditionToken(conditionModel));
     }
 
-    public EqlSentenceBuilder as(final String yieldAlias) {
-        return _add(new AsToken(yieldAlias));
+    public EqlSentenceBuilder as(final CharSequence yieldAlias) {
+        return _add(new AsToken(yieldAlias.toString()));
     }
 
-    public EqlSentenceBuilder asRequired(final String yieldAlias) {
-        return _add(new AsRequiredToken(yieldAlias));
+    public EqlSentenceBuilder asRequired(final CharSequence yieldAlias) {
+        return _add(new AsRequiredToken(yieldAlias.toString()));
     }
 
-    public EqlSentenceBuilder anyOfProps(final String... props) {
-        return _add(new AnyOfPropsToken(asList(props)));
+    public EqlSentenceBuilder anyOfProps(final CharSequence... props) {
+        return _add(new AnyOfPropsToken(asStrings(props)));
     }
 
-    public EqlSentenceBuilder anyOfProps(final IConvertableToPath... props) {
-        return _add(new AnyOfPropsToken(Arrays.stream(props).map(IConvertableToPath::toPath).collect(toImmutableList())));
+    public EqlSentenceBuilder anyOfParams(final CharSequence... params) {
+        return _add(new AnyOfParamsToken(asStrings(params)));
     }
 
-    public EqlSentenceBuilder anyOfParams(final String... params) {
-        return _add(new AnyOfParamsToken(asList(params)));
-    }
-
-    public EqlSentenceBuilder anyOfIParams(final String... params) {
-        return _add(new AnyOfIParamsToken(asList(params)));
+    public EqlSentenceBuilder anyOfIParams(final CharSequence... params) {
+        return _add(new AnyOfIParamsToken(asStrings(params)));
     }
 
     public EqlSentenceBuilder anyOfModels(final PrimitiveResultQueryModel... models) {
@@ -282,20 +281,16 @@ final class EqlSentenceBuilder {
         return _add(new AnyOfExpressionsToken(asList(expressions)));
     }
 
-    public EqlSentenceBuilder allOfProps(final String... props) {
-        return _add(new AllOfPropsToken(asList(props)));
+    public EqlSentenceBuilder allOfProps(final CharSequence... props) {
+        return _add(new AllOfPropsToken(asStrings(props)));
     }
 
-    public EqlSentenceBuilder allOfProps(final IConvertableToPath... props) {
-        return _add(new AllOfPropsToken(Arrays.stream(props).map(IConvertableToPath::toPath).collect(toImmutableList())));
+    public EqlSentenceBuilder allOfParams(final CharSequence... params) {
+        return _add(new AllOfParamsToken(asStrings(params)));
     }
 
-    public EqlSentenceBuilder allOfParams(final String... params) {
-        return _add(new AllOfParamsToken(asList(params)));
-    }
-
-    public EqlSentenceBuilder allOfIParams(final String... params) {
-        return _add(new AllOfIParamsToken(asList(params)));
+    public EqlSentenceBuilder allOfIParams(final CharSequence... params) {
+        return _add(new AllOfIParamsToken(asStrings(params)));
     }
 
     public EqlSentenceBuilder allOfModels(final PrimitiveResultQueryModel... models) {
@@ -318,20 +313,16 @@ final class EqlSentenceBuilder {
         return _add(new AllToken(subQuery));
     }
 
-    public EqlSentenceBuilder setOfProps(final String... props) {
-        return _add(new PropsToken(asList(props)));
+    public EqlSentenceBuilder setOfProps(final CharSequence... props) {
+        return _add(new PropsToken(asStrings(props)));
     }
 
-    public EqlSentenceBuilder setOfProps(final IConvertableToPath... props) {
-        return _add(new PropsToken(Arrays.stream(props).map(IConvertableToPath::toPath).collect(toImmutableList())));
+    public EqlSentenceBuilder setOfParams(final CharSequence... params) {
+        return _add(new ParamsToken(asStrings(params)));
     }
 
-    public EqlSentenceBuilder setOfParams(final String... params) {
-        return _add(new ParamsToken(asList(params)));
-    }
-
-    public EqlSentenceBuilder setOfIParams(final String... params) {
-        return _add(new IParamsToken(asList(params)));
+    public EqlSentenceBuilder setOfIParams(final CharSequence... params) {
+        return _add(new IParamsToken(asStrings(params)));
     }
 
     public EqlSentenceBuilder setOfValues(final Object... values) {
@@ -579,8 +570,8 @@ final class EqlSentenceBuilder {
         return _add(token(ORDERBY));
     }
 
-    public EqlSentenceBuilder joinAlias(final String alias) {
-        return _add(new AsToken(alias));
+    public EqlSentenceBuilder joinAlias(final CharSequence alias) {
+        return _add(new AsToken(alias.toString()));
     }
 
     public <E extends AbstractEntity<?>> EqlSentenceBuilder from() {
