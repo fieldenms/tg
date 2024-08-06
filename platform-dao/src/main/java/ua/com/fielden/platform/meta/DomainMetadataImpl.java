@@ -3,6 +3,7 @@ package ua.com.fielden.platform.meta;
 import com.google.inject.Injector;
 import org.hibernate.dialect.Dialect;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation.TableStructForBatchInsertion;
 import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation.TableStructForBatchInsertion.PropColumnInfo;
@@ -12,6 +13,7 @@ import ua.com.fielden.platform.eql.meta.EqlTable;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.meta.exceptions.DomainMetadataGenerationException;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.StreamUtils;
@@ -140,6 +142,12 @@ final class DomainMetadataImpl implements IDomainMetadata {
     public PropertyMetadata forProperty(final Class<?> enclosingType, final CharSequence propPath) {
         return forPropertyOpt(enclosingType, propPath)
                 .orElseThrow(() -> noSuchPropertyException(enclosingType, propPath));
+    }
+
+    @Override
+    public Either<RuntimeException, Optional<PropertyMetadata>> forProperty(final MetaProperty<?> metaProperty) {
+        final var entityType = (Class<? extends AbstractEntity<?>>) metaProperty.getEntity().getClass();
+        return forEntity(entityType).property(metaProperty);
     }
 
     private Optional<PropertyMetadata> forProperty_(final PropertyMetadata pm, final String propPath) {

@@ -2,10 +2,12 @@ package ua.com.fielden.platform.meta;
 
 import org.hibernate.dialect.Dialect;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation;
 import ua.com.fielden.platform.eql.meta.EqlTable;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
+import ua.com.fielden.platform.types.either.Either;
 
 import java.util.List;
 import java.util.Optional;
@@ -67,6 +69,17 @@ public interface IDomainMetadata {
      * @param propPath  property path (dot-notation supported)
      */
     PropertyMetadata forProperty(Class<?> enclosingType, CharSequence propPath);
+
+    /**
+     * Returns metadata for a property represented by the given meta-property.
+     * <ul>
+     *   <li> If the property has metadata, returns an optional describing it.
+     *   <li> If the property doesn't have metadata but satisfies {@link AbstractEntity#isAlwaysMetaProperty(String)},
+     *   returns an empty optional.
+     *   <li> Otherwise, returns an error.
+     * </ul>
+     */
+    Either<RuntimeException, Optional<PropertyMetadata>> forProperty(MetaProperty<?> metaProperty);
 
     // ****************************************
     // * Temporary baggage from old metadata that can't be moved until dependency injection is properly configured.
