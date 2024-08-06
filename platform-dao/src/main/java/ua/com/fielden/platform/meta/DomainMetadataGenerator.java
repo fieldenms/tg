@@ -53,7 +53,7 @@ import static ua.com.fielden.platform.meta.PropertyTypeMetadata.COMPOSITE_KEY;
 import static ua.com.fielden.platform.persistence.HibernateConstants.*;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.*;
 import static ua.com.fielden.platform.reflection.Finder.*;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isRequiredByDefinition;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.*;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
@@ -103,6 +103,8 @@ final class DomainMetadataGenerator {
 
     /** Long-lasting (but not necessarily permanent) cache for entity types. */
     private final Cache<Class<? extends AbstractEntity>, EntityMetadata> entityMetadataCache;
+    /** Temporary cache for entity types. */
+    private final Cache<Class<? extends AbstractEntity>, EntityMetadata> tmpEntityMetadataCache;
     /** Permanent cache for composite types. */
     private final Cache<Class<?>, TypeMetadata.Composite> compositeTypeMetadataCache;
 
@@ -118,6 +120,12 @@ final class DomainMetadataGenerator {
                 .concurrencyLevel(50)
                 .maximumSize(8192)
                 .expireAfterAccess(Duration.ofDays(1))
+                .build();
+        this.tmpEntityMetadataCache = CacheBuilder.newBuilder()
+                .concurrencyLevel(50)
+                .maximumSize(8192)
+                .weakKeys()
+                .expireAfterAccess(Duration.ofMinutes(5))
                 .build();
         this.compositeTypeMetadataCache = CacheBuilder.newBuilder()
                 .concurrencyLevel(50)
@@ -202,7 +210,7 @@ final class DomainMetadataGenerator {
     // * Entity Metadata
 
     public Optional<EntityMetadata> forEntity(final Class<? extends AbstractEntity<?>> entityType) {
-        final var cached = entityMetadataCache.getIfPresent(entityType);
+        final var cached = getCachedEntityMetadata(entityType);
         if (cached != null) {
             return Optional.of(cached);
         }
@@ -219,8 +227,23 @@ final class DomainMetadataGenerator {
             return Optional.empty();
         }
 
-        entityMetadataCache.put(entityType, metadata);
+        entityCacheFor(entityType).put(entityType, metadata);
         return Optional.of(metadata);
+    }
+
+    private @Nullable EntityMetadata getCachedEntityMetadata(final Class<? extends AbstractEntity<?>> entityType) {
+        final var cached = entityMetadataCache.getIfPresent(entityType);
+        if (cached != null) {
+            return cached;
+        }
+        return tmpEntityMetadataCache.getIfPresent(entityType);
+    }
+
+    private Cache<Class<? extends AbstractEntity>, EntityMetadata> entityCacheFor(final Class<? extends AbstractEntity<?>> entityType) {
+        if (isProxied(entityType) || isMockNotFoundType(entityType)) {
+            return tmpEntityMetadataCache;
+        }
+        return entityMetadataCache;
     }
 
     private @Nullable EntityMetadata forEntity_(final Class<? extends AbstractEntity<?>> entityType) {
