@@ -30,6 +30,7 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -44,6 +45,7 @@ import java.util.*;
 import java.util.function.*;
 import java.util.stream.Collectors;
 
+import static java.lang.Boolean.FALSE;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
@@ -204,6 +206,24 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             }
         } finally {
             //logger.debug("Finished saving entity " + entity + " (ID = " + entity.getId() + ")");
+        }
+
+        final var entityMetadata = domainMetadata.forEntity(entityType);
+
+        // now that we saved, restore values for dirty non-persistent properties and reset their meta-state so that they
+        // are not dirty in the returned saved instance
+        if (!dirtyProperties.isEmpty()) {
+            final boolean resultIsInstrumented = result._2.isInstrumented();
+            for (final String prop : dirtyProperties) {
+                // ignore meta-properties for properties with no metadata
+                // TODO ignore only when it makes sense ("key" and "desc")
+                if (entityMetadata.propertyOpt(prop).filter(PropertyMetadata::isPlain).isPresent()) {
+                    result._2.set(prop, entity.get(prop));
+                    if (resultIsInstrumented) {
+                        result._2.getProperty(prop).resetState();
+                    }
+                }
+            }
         }
 
         // this call never throws any exceptions
