@@ -130,7 +130,7 @@ const template = html`
     <div id="pm" class="layout vertical flex" detached$="[[detachedView]]">
         <div id="insertionPointContent" tabindex$="[[_getTabIndex(alternativeView)]]" class="layout vertical flex relative">
             <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, alternativeView)]]">
-                <span class="title-text truncate" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
+                <span class="title-text truncate" tooltip-text$="[[_calcTitleTooltip(longDesc, saveAsName, saveAsDesc)]]">[[_calcTitle(shortDesc, saveAsName)]]</span>
                 <div class="layout horizontal centre">
                     <paper-icon-button class="title-bar-button expand-collapse-button" icon="icons:open-in-new" on-tap="_expandCollapseTap" tooltip-text$="[[_expandButtonTooltip(detachedView)]]"></paper-icon-button>
                 </div>
@@ -308,6 +308,22 @@ Polymer({
         },
 
         /**
+         * Contains name of embedded named centre configuration, if there is one in this insertion point.
+         */
+        saveAsName: {
+            type: String,
+            value: ''
+        },
+
+        /**
+         * Contains description of embedded named centre configuration, if there is one in this insertion point.
+         */
+        saveAsDesc: {
+            type: String,
+            value: ''
+        },
+
+        /**
          * Need for locking insertion point during data loading.
          */
          lock: {
@@ -331,6 +347,11 @@ Polymer({
     },
 
     observers: ['_adjustView(detachedView, alternativeView, _height)', '_restoreFromLocalStorage(_element, contextRetriever)'],
+
+    listeners: {
+        'tg-save-as-name-changed': '_updateSaveAsName',
+        'tg-save-as-desc-changed': '_updateSaveAsDesc'
+    },
 
     ready: function () {
         this.triggerElement = this.$.insertionPointContent;
@@ -722,4 +743,38 @@ Polymer({
             this.resultView._findParentCentre().$.egi._shortcutPressed(e);
         }
     },
+
+    /**
+     * Updates 'saveAsName' from its 'change' event. It is used in insertion point title.
+     */
+    _updateSaveAsName: function (event) {
+        tearDownEvent(event); // prevent event propagating to the top (tg-view-with-menu) to avoid parent standalone centre title change
+        this.saveAsName = event.detail; // LINK_CONFIG_TITLE is not possible here, only in standalone centres
+    },
+
+    /**
+     * Updates 'saveAsDesc' from its 'change' event. It is used in insertion point title's tooltip.
+     */
+    _updateSaveAsDesc: function (event) {
+        tearDownEvent(event); // prevent event propagating to the top (tg-view-with-menu) to avoid parent standalone centre title change
+        this.saveAsDesc = event.detail;
+    },
+
+    /**
+     * Calculates insertion point title's tooltip text.
+     */
+    _calcTitleTooltip: function (longDesc, saveAsName, saveAsDesc) {
+        const saveAsNameBold = saveAsName ? '<b>' + saveAsName + '</b>' : '';
+        const saveAsPart = [saveAsNameBold, saveAsDesc].filter(Boolean /* only non-empty */).join('<br>');
+        return [longDesc, saveAsPart].filter(Boolean /* only non-empty */).join('<br><br>');
+    },
+
+    /**
+     * Calculates insertion point title text.
+     */
+    _calcTitle: function (shortDesc, saveAsName) {
+        const saveAsPart = saveAsName ? '(' + saveAsName + ')' : '';
+        return [shortDesc, saveAsPart].filter(Boolean /* only non-empty */).join(' ');
+    }
+
 });

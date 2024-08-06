@@ -1,9 +1,5 @@
 package ua.com.fielden.platform.web.app;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.menu.IMenuRetriever;
@@ -18,6 +14,10 @@ import ua.com.fielden.platform.web.sse.IEventSource;
 import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.impl.MasterActionOptions;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Represent a contract for Web UI configuring.
@@ -154,6 +154,16 @@ public interface IWebUiConfig extends IMenuRetriever {
      */
     default boolean isEmbeddedCentre(final Class<? extends MiWithConfigurationSupport<?>> miType) {
         return getEmbeddedCentres().containsKey(miType);
+    }
+
+    /**
+     * Determines whether the centre, represented by {@code miType}, is embedded and allows criteria clearing for default configurations during auto-run (when master functional entity activates embedded centre).
+     *
+     * @param miType
+     * @return
+     */
+    default boolean isEmbeddedCentreAndAllowsCritClearing(final Class<? extends MiWithConfigurationSupport<?>> miType) {
+        return isEmbeddedCentre(miType) && getEmbeddedCentres().get(miType)._1.isRunAutomaticallyAndAllowsCritClearing();
     }
 
     /**

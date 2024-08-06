@@ -1,35 +1,10 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.findLoadableConfig;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.inherited;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.inheritedFromBase;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.commitCentreWithoutConflicts;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.loadableConfigurations;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.makePreferred;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.obtainTitleFrom;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.removeCentres;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentreDesc;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.updateInheritedFromShared;
-import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.createCriteriaDiscardEnvelope;
-import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.createStaleCriteriaMessage;
-import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
-import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreModifiedPropertiesHolderFrom;
-
-import java.util.Map;
-import java.util.Optional;
-
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Put;
-
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -49,6 +24,18 @@ import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
 import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+
+import java.util.Map;
+import java.util.Optional;
+
+import static java.util.Optional.*;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.*;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.*;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.updateInheritedFromShared;
+import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.createCriteriaDiscardEnvelope;
+import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.createCriteriaIndication;
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreModifiedPropertiesHolderFrom;
 
 /**
  * The web resource for criteria serves as a back-end mechanism of centre management. It provides a base implementation for handling the following methods:
@@ -148,8 +135,8 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
                 newFreshCentre = discardOwnSaveAsConfig(user, eccCompanion, mmiCompanion, userCompanion, actualSaveAsName);
             }
             
-            final String staleCriteriaMessage = createStaleCriteriaMessage(wasRun, newFreshCentre, miType, actualSaveAsName, user, companionFinder, critGenerator, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-            return createCriteriaDiscardEnvelope(newFreshCentre, miType, actualSaveAsName, user, restUtil, companionFinder, critGenerator, staleCriteriaMessage, device(), isInherited ? of(ofNullable(updateCentreDesc(user, miType, actualSaveAsName, device(), eccCompanion))) : empty(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+            final var criteriaIndication = createCriteriaIndication(wasRun, newFreshCentre, miType, actualSaveAsName, user, companionFinder, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            return createCriteriaDiscardEnvelope(newFreshCentre, miType, actualSaveAsName, user, restUtil, companionFinder, critGenerator, criteriaIndication, device(), isInherited ? of(ofNullable(updateCentreDesc(user, miType, actualSaveAsName, device(), eccCompanion))) : empty(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
         }, restUtil);
     }
     

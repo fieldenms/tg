@@ -1,18 +1,14 @@
 package ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl;
 
+import ua.com.fielden.platform.dom.*;
+import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
+import ua.com.fielden.platform.web.minijs.JsCode;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import ua.com.fielden.platform.dom.CssElement;
-import ua.com.fielden.platform.dom.CssStyles;
-import ua.com.fielden.platform.dom.DomContainer;
-import ua.com.fielden.platform.dom.DomElement;
-import ua.com.fielden.platform.dom.InnerTextElement;
-import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
-import ua.com.fielden.platform.web.minijs.JsCode;
 
 /**
  * Configuration for default toolbars available for entity centres and alternative views.
@@ -74,8 +70,7 @@ public class CentreToolbar implements IToolbarConfig {
 
     @Override
     public CssStyles styles() {
-        return new CssStyles()
-                .add(new CssElement("paper-icon-button.orange").setStyle("color", "var(--paper-orange-500)").setStyle("border-color", "var(--paper-orange-500)"));
+        return new CssStyles();
     }
 
     @Override
@@ -87,12 +82,12 @@ public class CentreToolbar implements IToolbarConfig {
         return new DomElement("paper-icon-button")
                 .attr("slot", "standart-action")
                 .attr("shortcut", "ctrl+e")
-                .attr("class$", "[[computeConfigButtonClasses(staleCriteriaMessage)]]")
+                .attr("style$", "[[computeConfigButtonStyle(criteriaIndication)]]")
                 .attr("icon", "icons:filter-list")
                 .attr("on-tap", "_activateSelectionCriteriaView")
                 .attr("disabled$", "[[isRunning]]")
                 .attr("hidden$", "[[isSelectionCriteriaEmpty]]")
-                .attr("tooltip-text$", "[[computeConfigButtonTooltip(staleCriteriaMessage)]]");
+                .attr("tooltip-text$", "[[computeConfigButtonTooltip(criteriaIndication)]]");
     }
 
     public static DomElement helpButton() {
@@ -123,7 +118,7 @@ public class CentreToolbar implements IToolbarConfig {
     public static DomElement pagination(final String slot) {
         return new DomContainer()
                 .add(new DomElement("paper-icon-button")
-                        .clazz("revers", "standart-action")
+                        .clazz("revers")
                         .attr("slot", slot)
                         .attr("shortcut", "ctrl+up")
                         .attr("icon", "hardware:keyboard-tab")
@@ -131,7 +126,6 @@ public class CentreToolbar implements IToolbarConfig {
                         .attr("disabled$", "[[canNotFirst(pageNumber, pageCount, isRunning)]]")
                         .attr("tooltip-text", "First page, Ctrl&nbsp+&nbsp<span style=\"font-size:18px;font-weight:bold\">&#8593</span>"))
                 .add(new DomElement("paper-icon-button")
-                        .clazz("standart-action")
                         .attr("slot", slot)
                         .attr("shortcut", "ctrl+left")
                         .attr("icon", "hardware:keyboard-backspace")
@@ -139,12 +133,12 @@ public class CentreToolbar implements IToolbarConfig {
                         .attr("disabled$", "[[canNotPrev(pageNumber, isRunning)]]")
                         .attr("tooltip-text", "Previous page, Ctrl&nbsp+&nbsp<span style=\"font-size:18px;font-weight:bold\">&#8592</span>"))
                 .add(new DomElement("span")
-                        .clazz("standart-action pagination-text")
+                        .clazz("pagination-text")
                         .style("white-space:nowrap")
                         .attr("slot", slot)
                         .add(new InnerTextElement("[[currPageFeedback(pageNumberUpdated, pageCountUpdated)]]")))
                 .add(new DomElement("paper-icon-button")
-                        .clazz("revers", "standart-action")
+                        .clazz("revers")
                         .attr("slot", slot)
                         .attr("shortcut", "ctrl+right")
                         .attr("icon", "hardware:keyboard-backspace")
@@ -152,7 +146,6 @@ public class CentreToolbar implements IToolbarConfig {
                         .attr("disabled$", "[[canNotNext(pageNumber, pageCount, isRunning)]]")
                         .attr("tooltip-text", "Next page, Ctrl&nbsp+&nbsp<span style=\"font-size:18px;font-weight:bold\">&#8594</span>"))
                 .add(new DomElement("paper-icon-button")
-                        .clazz("standart-action")
                         .attr("slot", slot)
                         .attr("shortcut", "ctrl+down")
                         .attr("icon", "hardware:keyboard-tab")
@@ -171,7 +164,6 @@ public class CentreToolbar implements IToolbarConfig {
 
     public static DomElement refreshButton() {
         return new DomElement("paper-icon-button")
-                .clazz("standart-action")
                 .attr("slot", "standart-action")
                 .attr("shortcut", "f5")
                 .attr("icon", "refresh")

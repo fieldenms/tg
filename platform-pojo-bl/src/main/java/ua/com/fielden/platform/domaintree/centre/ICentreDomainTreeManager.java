@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.domaintree.centre;
 
-import java.util.List;
-
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
@@ -13,6 +11,8 @@ import ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum;
 import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
 import ua.com.fielden.platform.types.tuples.T2;
 
+import java.util.List;
+
 /**
  * This interface defines how domain tree can be managed for <b>entity centres</b>. <br>
  * <br>
@@ -23,7 +23,7 @@ import ua.com.fielden.platform.types.tuples.T2;
  * <b>Important:</b> it is necessary to override {@link #equals(Object)} and {@link #hashCode()} methods in implementors to provide logical comparison of instances. <br>
  * <br>
  *
- * 1. The domain can be enhanced by <i>calculated properties</i> using {@link IDomainTreeEnhancer} instance ({@link #getEnhancer()} method).<br>
+ * 1. The domain can be enhanced by <i>calculated properties</i> using {@link IDomainTreeEnhancer} instance ({@link ICentreDomainTreeManagerAndEnhancer#getEnhancer()})} method).<br>
  * 2. Each property has two "tick" managers (refer to {@link IAddToCriteriaTickManager} and {@link IAddToResultTickManager}), which include tick checking logic, criteria values,
  * result property ordering etc.<br>
  * 3. The rules of tree representation (properties disablement, immutable checking etc.) can be changed by {@link IDomainTreeRepresentation} instance ({@link #getRepresentation()}
@@ -257,7 +257,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
     /**
      * Sets the index of preferred resultant view for this entity centre.
      *
-     * @param prefViewIndex
+     * @param preferredView
      * @return
      */
     ICentreDomainTreeManager setPreferredView(final Integer preferredView);
@@ -736,6 +736,27 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          */
         @Override
         IAddToCriteriaTickManager moveToTheEnd(final Class<?> root, final String what);
+
+        /**
+         * Indicates whether {@code that} is non-empty criteria tick manager and its selection criteria portion equals to selection criteria portion of this tick manager.
+         * <p>
+         * Selection criteria portion consists only of values that affect results of Entity Centre running.
+         * This includes:
+         * <ul>
+         *     <li>value1</li>
+         *     <li>value2 (for criteria with two editors)</li>
+         *     <li>exclusive1</li>
+         *     <li>exclusive2 (for criteria with two editors)</li>
+         *     <li>date prefix</li>
+         *     <li>date mnemonic</li>
+         *     <li>date andBefore</li>
+         *     <li>missing value</li>
+         *     <li>not</li>
+         *     <li>OR group</li>
+         * </ul>
+         */
+        boolean selectionCriteriaEquals(final IAddToCriteriaTickManager that);
+
     }
 
     /**
@@ -774,12 +795,9 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * {@link DomainTreeException}.<br>
          * <br>
          *
-         * @param root
-         *            -- a root type that contains property.
-         * @param property
-         *            -- a dot-notation expression that defines a property.
-         * @param width
-         *            -- a width to set
+         * @param root -- a root type that contains property.
+         * @param property -- a dot-notation expression that defines a property.
+         * @param growFactor -- a grow factor to set
          * @return -- a result tick representation
          */
         IAddToResultTickManager setGrowFactor(final Class<?> root, final String property, final int growFactor);

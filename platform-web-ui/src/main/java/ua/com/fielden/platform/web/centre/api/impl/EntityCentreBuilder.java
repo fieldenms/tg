@@ -1,22 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
-import static java.lang.String.format;
-import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp.derivePropName;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.SortedMap;
-import java.util.TreeMap;
-import java.util.stream.Stream;
-
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
@@ -25,21 +10,13 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
-import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.MatcherOptions;
-import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.OrderDirection;
-import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
-import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.SummaryPropDef;
+import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.*;
 import ua.com.fielden.platform.web.centre.api.IEntityCentreBuilder;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritBooleanValueMnemonic;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritStringValueMnemonic;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritDateValueMnemonic;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritOtherValueMnemonic;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritDateValueMnemonic;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.*;
 import ua.com.fielden.platform.web.centre.api.exceptions.CentreConfigException;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
@@ -52,6 +29,14 @@ import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelA
 import ua.com.fielden.platform.web.centre.exceptions.EntityCentreConfigurationException;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.sse.IEventSource;
+
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.stream.Stream;
+
+import static java.lang.String.format;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
+import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp.derivePropName;
 
 /**
  * A class implementing the Entity Centre DSL contracts.
@@ -155,6 +140,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected IFetchProvider<T> fetchProvider = null;
 
     protected boolean runAutomatically = false;
+    protected Set<RunAutomaticallyOptions> runAutomaticallyOptions = setOf();
     protected boolean enforcePostSaveRefresh = false;
     protected Integer leftSplitterPosition = null;
     protected Integer rightSplitterPosition = null;
@@ -233,6 +219,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
                 additionalPropsForAutocompleter,
                 providedTypesForAutocompletedSelectionCriteria,
                 runAutomatically,
+                runAutomaticallyOptions,
                 enforcePostSaveRefresh,
                 leftSplitterPosition,
                 rightSplitterPosition,

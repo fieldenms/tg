@@ -1,42 +1,9 @@
 package ua.com.fielden.platform.web.centre.api;
 
-import static java.lang.String.format;
-import static java.util.Collections.unmodifiableList;
-import static java.util.Collections.unmodifiableMap;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toList;
-import static ua.com.fielden.platform.domaintree.impl.CalculatedProperty.generateNameFrom;
-import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
-import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.MatcherOptions.HIDE_ACTIVE_ONLY_ACTION;
-import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints.ALTERNATIVE_VIEW;
-import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.FRONT;
-import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.INSERTION_POINT;
-import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.PRIMARY_RESULT_SET;
-import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.PROP;
-import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.SECONDARY_RESULT_SET;
-import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.SHARE;
-import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.TOP_LEVEL;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-
-import org.apache.commons.lang3.StringUtils;
-
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
-
+import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
@@ -53,12 +20,7 @@ import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.IMultiValueAutocompleterBuilder;
 import ua.com.fielden.platform.web.centre.api.crit.ISingleValueAutocompleterBuilder;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritBooleanValueMnemonic;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritStringValueMnemonic;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritDateValueMnemonic;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritOtherValueMnemonic;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritDateValueMnemonic;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.*;
 import ua.com.fielden.platform.web.centre.api.exceptions.CentreConfigException;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
@@ -72,6 +34,21 @@ import ua.com.fielden.platform.web.centre.exceptions.PropertyDefinitionException
 import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.sse.IEventSource;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
+
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+
+import static java.lang.String.format;
+import static java.util.Collections.*;
+import static java.util.Optional.*;
+import static java.util.stream.Collectors.toList;
+import static ua.com.fielden.platform.domaintree.impl.CalculatedProperty.generateNameFrom;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
+import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.MatcherOptions.HIDE_ACTIVE_ONLY_ACTION;
+import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints.ALTERNATIVE_VIEW;
+import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.*;
 
 /**
  *
@@ -223,9 +200,24 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     protected final FlexLayout resultsetSummaryCardLayout;
 
     /**
+     * Enumeration that contains options for auto-runnable centres.
+     */
+    public enum RunAutomaticallyOptions {
+        /**
+         * Prevents criteria clearing for auto-runnable centres during auto-running.
+         * <p>
+         * By default, auto-runnable centre selection criteria gets cleared during auto-run.
+         * This only applies to default configuration, not "save-as" / inherited.
+         * This option allows to customise this behaviour.
+         */
+        NO_CRITERIA_CLEARING;
+    }
+
+    /**
      * Determines whether centre should run automatically or not.
      */
     private final boolean runAutomatically;
+    private final Set<RunAutomaticallyOptions> runAutomaticallyOptions;
 
     /**
      * Determines the position of left and right splitters.
@@ -499,6 +491,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Map<String, Class<? extends AbstractEntity<?>>> providedTypesForAutocompletedSelectionCriteria,
 
             final boolean runAutomatically,
+            final Set<RunAutomaticallyOptions> runAutomaticallyOptions,
             final boolean enforcePostSaveRefresh,
 
             final Integer leftSplitterPosition,
@@ -582,6 +575,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.resultsetSummaryCardLayout = resultsetSummaryCardLayout;
 
         this.runAutomatically = runAutomatically;
+        this.runAutomaticallyOptions = runAutomaticallyOptions;
         this.enforcePostSaveRefresh = enforcePostSaveRefresh;
         this.leftSplitterPosition = leftSplitterPosition;
         this.rightSplitterPosition = rightSplitterPosition;
@@ -637,6 +631,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public boolean isRunAutomatically() {
         return runAutomatically;
+    }
+
+    public Set<RunAutomaticallyOptions> getRunAutomaticallyOptions() {
+        return unmodifiableSet(runAutomaticallyOptions);
     }
 
     public Optional<Integer> getLeftSplitterPosition() {

@@ -283,7 +283,7 @@ const template = html`
                     <slot name="custom-share-action" slot="custom-share-action"></slot>
                     <slot id="customCriteria" name="custom-selection-criteria" slot="custom-selection-criteria"></slot>
                     <tg-ui-action slot="left-selection-criteria-button" id="saveAction" shortcut="ctrl+s meta+s" ui-role='BUTTON' short-desc='Save' long-desc='Save configuration, Ctrl&nbsp+&nbsps'
-                                    component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigSaveAction' element-name='tg-CentreConfigSaveAction-master' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]'
+                                    component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigSaveAction' element-name='tg-CentreConfigSaveAction-master' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolderForSave]]'
                                     attrs='[[bottomActions.0.attrs]]' pre-action='[[bottomActions.0.preAction]]' post-action-success='[[bottomActions.0.postActionSuccess]]' post-action-error='[[bottomActions.0.postActionError]]'
                                     require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false'
                                     disabled='[[_computeSaveButtonDisabled(_buttonDisabled, _centreDirtyOrEdited)]]' style$='[[_computeSaveButtonStyle(_buttonDisabled, _centreDirtyOrEdited)]]'></tg-ui-action>
@@ -391,12 +391,19 @@ Polymer({
             type: String,
             notify: true
         },
+        /**
+         * Function that returns Promise that starts on validate() call and fullfils iff this validation attempt gets successfully resolved.
+         *
+         * If this attempt gets superseded by other attempt then the promise instance will never be resolved.
+         * However, repeated invocation of this function will return new Promise in this case.
+         */
+        lastValidationAttemptPromise: Function,
         _createContextHolder: Function,
+        _createContextHolderForSave: Function,
         uuid: String,
         _activateResultSetView: Function,
-        staleCriteriaMessage: {
-            type: String,
-            observer: '_staleCriteriaMessageChanged'
+        criteriaIndication: {
+            type: Object
         },
         _confirm: Function,
         initiateAutoRun: Function,
@@ -454,8 +461,14 @@ Polymer({
             }
         });
 
-         //Add iron-resize event listener
-         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
+        //Add iron-resize event listener
+        this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
+
+        this._createContextHolderForSave = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber, relatedContexts, parentCentreContext) {
+            const context = this._createContextHolder(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber, relatedContexts, parentCentreContext);
+            this._reflector().setCustomProperty(context, "@@criteriaIndication", this.criteriaIndication && this.criteriaIndication.name);
+            return context;
+        }).bind(this);
     },
 
     _resizeEventListener: function (e) {
@@ -535,7 +548,30 @@ Polymer({
         };
 
         self.bottomActions = [
-            self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigSaveAction')
+            self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigSaveAction',
+                () => new Promise(function (resolve, reject) {
+                    self.debounce('invoke-saving', function () { // perform saving debouncing similarly as in Entity Masters; this reduces saving requests to one when button was double-triple clicked or many Ctrl+S actions fastly performed
+                        // Cancel the 'invoke-saving' debouncer if there is any active one:
+                        self.cancelDebouncer('invoke-saving');
+
+                        // Get actual validation attempt promise -- if it exists then saving process will be chained on top of that last validation process;
+                        //   otherwise -- saving process will simply start immediately.
+                        // We do not try to abort other validation processes except last at this stage;
+                        //   this abortion is performed during validation process triggering.
+                        // In most cases, lastValidationAttemptPromise will not be empty, but often it will be old fullfilled promise;
+                        //   this will lead to immediate saving.
+                        // Rarely, currently taken lastValidationAttemptPromise may never be completed (and thus saving will be halted).
+                        //   This is possible if validation was triggered fast (in 50 millis debouncing time) since last validation and after current saving process.
+                        //   This is very artificial case, because saving will likely be last in the chain of user actions.
+                        const lastValidationAttemptPromise = self.lastValidationAttemptPromise();
+                        if (lastValidationAttemptPromise !== null) {
+                            console.warn("Saving is chained to the last validation attempt promise...", lastValidationAttemptPromise);
+                            return resolve(lastValidationAttemptPromise);
+                        }
+                        return resolve();
+                    }, 50);
+                })
+            )
         ];
     },
 
@@ -701,10 +737,6 @@ Polymer({
         insertionPointContainerUpdater(this.$.fantomSplitter.offsetLeft);
         this.$.fantomSplitter.style.removeProperty("display");
         this.$.fantomSplitter.style.removeProperty("left");
-    },
-
-    _staleCriteriaMessageChanged: function (newValue, oldValue) {
-        console.debug('_staleCriteriaMessageChanged:', newValue, oldValue);
     },
 
     /**
