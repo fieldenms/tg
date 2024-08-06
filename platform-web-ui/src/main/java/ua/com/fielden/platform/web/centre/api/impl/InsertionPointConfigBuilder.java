@@ -14,10 +14,7 @@ import ua.com.fielden.platform.web.centre.api.IWithRightSplitterPosition;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.alternative_view.IAlternativeView;
 import ua.com.fielden.platform.web.centre.api.alternative_view.IAlternativeViewPreferred;
-import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointConfig0;
-import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointWithToolbar;
-import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPoints;
-import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
+import ua.com.fielden.platform.web.centre.api.insertion_points.*;
 import ua.com.fielden.platform.web.centre.api.insertion_points.exception.InsertionPointConfigException;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 
@@ -28,7 +25,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
  *
  * @param <T>
  */
-public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements IInsertionPoints<T>, IInsertionPointConfig0<T> {
+public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements IInsertionPoints<T>, IInsertionPointConfig0<T>, IAlternativeView<T> {
 
     private static final String ERR_ALTERNATIVE_VIEW_CANNOT_BE_PREFERRED = "Insertion point for action %s cannot be preferred as it is not an alternative view.";
     private static final String ERR_ALTERNATIVE_VIEW_CANNOT_BE_RESIZABLE = "Insertion point for action %s, which is an alternative view, is not resizable by default. This option should not be specified explicitly.";
@@ -56,7 +53,7 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
     }
 
     @Override
-    public IInsertionPoints<T> setToolbar(final IToolbarConfig toolbar) {
+    public IInsertionPointWithConfig<T> setToolbar(final IToolbarConfig toolbar) {
         this.toolbarConfig = ofNullable(toolbar);
         return this;
     }
@@ -91,7 +88,7 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
     }
 
     @Override
-    public IAlternativeView<T> withRightSplitterPosition(final int percentage) {
+    public IInsertionPointsWithCustomLayout<T> withRightSplitterPosition(final int percentage) {
         resultSetBuilder.addInsertionPoint(configInsertionPoint(mkInsertionPoint(this.insertionPointAction, this.whereToInsertView))
                 .setPreferred(preferred)
                 .setNoResizing(noResizing)
@@ -117,5 +114,10 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
                 .setNoResizing(noResizing)
                 .setToolbar(toolbarConfig));
         return new AlternativeViewConfigBuilder<>(resultSetBuilder, actionConfig);
+    }
+
+    @Override
+    public IAlternativeView<T> withCustomisableLayout() {
+        return resultSetBuilder.withCustomisableLayout();
     }
 }

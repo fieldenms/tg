@@ -10,6 +10,67 @@ import { TgReflector } from '/app/tg-reflector.js';
 import { TgElementSelectorBehavior, queryElements } from '/resources/components/tg-element-selector-behavior.js';
 import { TgDelayedActionBehavior } from '/resources/components/tg-delayed-action-behavior.js';
 import { getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
+import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
+
+/**
+ * Insertion point manager that is local for entity centre to manage detached or maximised insertion points
+ */
+class EntityCentreInsertionPointManager {
+
+    constructor() {
+        this._insertionPoints = [];
+    }
+
+    /**
+     * Adds new insertion point and assigns the specified z-index or brings to front newely added insertion point.
+     * 
+     * @param {Object} insertionPoint - insertion point to manage
+     */
+    add (insertionPoint, zIndex) {
+        if (this._insertionPoints.indexOf(insertionPoint) >= 0) {
+            if (typeof zIndex === 'undefined') {
+                this.bringToFront(insertionPoint);
+            }
+        } else {
+            this._insertionPoints.push(insertionPoint);
+            insertionPoint.setZOrder(typeof zIndex !== 'undefined'  ? zIndex : this._insertionPoints.length);
+        }
+    }
+
+    /**
+     * Stops managing insertion point z-index
+     * 
+     * @param {Object} insertionPoint - insertion point to stop manage
+     */
+    remove (insertionPoint) {
+        const idx = this._insertionPoints.indexOf(insertionPoint);
+        if (idx >= 0) {
+            this.bringToFront(insertionPoint);
+            this._insertionPoints.splice(idx, 1);
+            insertionPoint.setZOrder(0);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Brings to front the specified insertion point. 
+     * 
+     * @param {Object} insertionPoint - insertion point to bring to front
+     */
+    bringToFront (insertionPoint) {
+        const zIndex = insertionPoint.getZOrder();
+        if (zIndex > 0) {
+            this._insertionPoints.forEach(p => {
+                const z = p.getZOrder();
+                if (z > zIndex) {
+                    p.setZOrder(z - 1);
+                }
+            });
+            insertionPoint.setZOrder(this._insertionPoints.length);
+        }
+    }
+}
 
 const generateCriteriaName = function (root, property, suffix) {
     const rootName = root.substring(0, 1).toLowerCase() + root.substring(1) + "_";
@@ -423,6 +484,14 @@ const TgEntityCentreBehaviorImpl = {
             value: false
         },
 
+        /**
+         * Insertion point manager for this entity centre.
+         */
+        insertionPointManager: {
+            type: Object,
+            value: null
+        },
+
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
         //////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -757,6 +826,7 @@ const TgEntityCentreBehaviorImpl = {
 
     created: function () {
         this._reflector = new TgReflector();
+        this.insertionPointManager = new EntityCentreInsertionPointManager();
     },
 
     /**
@@ -770,7 +840,9 @@ const TgEntityCentreBehaviorImpl = {
         self._showProgress = false;
         // Configures the egi's margin.
         const egiInsertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point:not([alternative-view])');
-        this.$.egi.showMarginAround = egiInsertionPoints.length > 0;
+        const showMarginAround = egiInsertionPoints.length > 0;
+        this.$.egi.showMarginAround = showMarginAround;
+        this._dom().showMarginAroundInsertionPoints = showMarginAround;
         // Configure all views to be able to switch between them
         const altViews = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point[alternative-view]');
         this.allViews = [this.$.selection_criteria, this.$.egi, ...altViews];

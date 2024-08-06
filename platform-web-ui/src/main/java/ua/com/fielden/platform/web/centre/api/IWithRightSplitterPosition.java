@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.centre.api;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.alternative_view.IAlternativeView;
+import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointsWithCustomLayout;
 
 /**
  * The contract to specify the position of right splitter.
@@ -10,7 +11,7 @@ import ua.com.fielden.platform.web.centre.api.alternative_view.IAlternativeView;
  *
  * @param <T>
  */
-public interface IWithRightSplitterPosition<T extends AbstractEntity<?>> extends IAlternativeView<T> {
+public interface IWithRightSplitterPosition<T extends AbstractEntity<?>> extends IInsertionPointsWithCustomLayout<T> {
 
     /**
      * Specifies the position of the right splitter of entity centre. The value is a percentage of total entity centre width from the right border of centre.
@@ -21,5 +22,5 @@ public interface IWithRightSplitterPosition<T extends AbstractEntity<?>> extends
      * @param percentage
      * @return
      */
-    IAlternativeView<T> withRightSplitterPosition(int percentage);
+    IInsertionPointsWithCustomLayout<T> withRightSplitterPosition(int percentage);
 }

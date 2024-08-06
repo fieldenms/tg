@@ -1799,7 +1799,7 @@ Polymer({
     //Style calculator
     _calcMaterialStyle: function (showMarginAround) {
         if (showMarginAround) {
-            return "margin:10px;";
+            return "margin:5px;";
         }
         return "";
     },

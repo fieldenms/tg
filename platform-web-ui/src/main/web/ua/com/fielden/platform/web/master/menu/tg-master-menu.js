@@ -20,6 +20,7 @@ import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
 import '/resources/polymer/@polymer/paper-toolbar/paper-toolbar.js';
 /* TG ELEMENTS */
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
+import { hideTooltip } from '/resources/components/tg-tooltip-behavior.js';
 import { getKeyEventTarget, isInHierarchy, deepestActiveElement, tearDownEvent, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import '/app/tg-app-config.js';
@@ -132,13 +133,6 @@ const _updateMenuOrder = function (menuOrder, container) {
             container.insertBefore(menuItems[menuItemIdxToAdd], nextSibling);
             nextSibling = menuItems[menuItemIdxToAdd];
         }
-    }
-};
-
-const hideTooltip = function () {
-    const tooltipElement = document.getElementsByTagName('tg-tooltip')[0];
-    if (tooltipElement) {
-        tooltipElement.hide();
     }
 };
 
