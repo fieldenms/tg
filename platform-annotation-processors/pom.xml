@@ -162,6 +162,11 @@
                 </executions>
             </plugin>
 
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+            </plugin>
+
             <!-- disable maven-enforcer-plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -171,7 +176,6 @@
                     <skip>true</skip>
                 </configuration>
             </plugin>
-
         </plugins>
     </build>
 </project>
