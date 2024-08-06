@@ -35,6 +35,7 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IUniversalConstants;
@@ -210,14 +211,13 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
         final var entityMetadata = domainMetadata.forEntity(entityType);
 
-        // now that we saved, restore values for dirty non-persistent properties and reset their meta-state so that they
-        // are not dirty in the returned saved instance
+        // now that we saved, restore values for dirty plain properties and reset their meta-state so that they are not
+        // dirty in the returned saved instance
         if (!dirtyProperties.isEmpty()) {
             final boolean resultIsInstrumented = result._2.isInstrumented();
             for (final String prop : dirtyProperties) {
-                // ignore meta-properties for properties with no metadata
-                // TODO ignore only when it makes sense ("key" and "desc")
-                if (entityMetadata.propertyOpt(prop).filter(PropertyMetadata::isPlain).isPresent()) {
+                final Optional<PropertyMetadata> propMetadata = entityMetadata.property(entity.getProperty(prop)).orElseThrow(Function.identity());
+                if (propMetadata.filter(PropertyMetadata::isPlain).isPresent()) {
                     result._2.set(prop, entity.get(prop));
                     if (resultIsInstrumented) {
                         result._2.getProperty(prop).resetState();
@@ -302,7 +302,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         for (final MetaProperty<?> prop : entity.getDirtyProperties()) {
             // set of meta-properties and set of properties with metadata may be different, but persistent properties
             // must always be present in both sets
-            if (entityMetadata.propertyOpt(prop.getName()).filter(PropertyMetadata::isPersistent).isPresent()) {
+            final Optional<PropertyMetadata> propMetadata = entityMetadata.property(prop).orElseThrow(Function.identity());
+            if (propMetadata.filter(PropertyMetadata::isPersistent).isPresent()) {
                 final Object value = prop.getValue();
                 if (shouldProcessAsActivatable(entity, prop)) {
                     handleDirtyActivatableProperty(entity, persistedEntity, prop, value, session);
