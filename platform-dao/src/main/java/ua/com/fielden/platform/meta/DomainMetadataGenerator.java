@@ -30,6 +30,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
@@ -55,8 +56,7 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.*;
 import static ua.com.fielden.platform.reflection.Finder.*;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.*;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
-import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
-import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
+import static ua.com.fielden.platform.utils.StreamUtils.*;
 
 /* General verification rules for entities:
  * - Synthetic based on Persistent - can't have an entity-typed key.
@@ -231,6 +231,11 @@ final class DomainMetadataGenerator {
         return Optional.of(metadata);
     }
 
+    private EntityMetadata requireForEntity(final Class<? extends AbstractEntity<?>> entityType) {
+        return forEntity(entityType).orElseThrow(() -> new DomainMetadataGenerationException(
+                "Could not generate metadata for entity [%s].".formatted(entityType.getTypeName())));
+    }
+
     private @Nullable EntityMetadata getCachedEntityMetadata(final Class<? extends AbstractEntity<?>> entityType) {
         final var cached = entityMetadataCache.getIfPresent(entityType);
         if (cached != null) {
@@ -249,21 +254,29 @@ final class DomainMetadataGenerator {
     private @Nullable EntityMetadata forEntity_(final Class<? extends AbstractEntity<?>> entityType) {
         final EntityMetadataBuilder<?, ?> entityBuilder;
 
+        // if this is a generated entity type with the same nature as its original type, we can reuse the original's nature data
         switch (inferEntityNature(entityType)) {
             case EntityNature.Union $ -> {
                 final var unionEntityType = (Class<? extends AbstractUnionEntity>) entityType;
                 entityBuilder = EntityMetadataBuilder.unionEntity(
-                        unionEntityType, EntityNature.Union.data(produceUnionEntityModels(unionEntityType)));
+                        unionEntityType,
+                        metadataForParentOfGenerated(entityType).flatMap(EntityMetadata::asUnion).map(EntityMetadata.Union::data)
+                                .orElseGet(() -> EntityNature.Union.data(produceUnionEntityModels(unionEntityType))));
             }
             case EntityNature.Persistent $ ->
                 entityBuilder = EntityMetadataBuilder.persistentEntity(
-                        entityType, EntityNature.Persistent.data(mkTableName(entityType)));
-            case EntityNature.Synthetic $ -> {
-                final var modelField = requireNonNull(findSyntheticModelFieldFor(entityType),
-                                                      () -> format("Synthetic entity [%s] has no model field.", entityType.getTypeName()));
-                entityBuilder = EntityMetadataBuilder.syntheticEntity(
                         entityType,
-                        EntityNature.Synthetic.data(getEntityModelsOfQueryBasedEntityType(entityType, modelField)));
+                        metadataForParentOfGenerated(entityType).flatMap(EntityMetadata::asPersistent).map(EntityMetadata.Persistent::data)
+                                .orElseGet(() -> EntityNature.Persistent.data(mkTableName(entityType))));
+            case EntityNature.Synthetic $ -> {
+                final var data = metadataForParentOfGenerated(entityType).flatMap(EntityMetadata::asSynthetic).map(EntityMetadata.Synthetic::data)
+                        .orElseGet(() -> {
+                            final var modelField = requireNonNull(
+                                    findSyntheticModelFieldFor(entityType),
+                                    () -> format("Synthetic entity [%s] has no model field.", entityType.getTypeName()));
+                            return EntityNature.Synthetic.data(getEntityModelsOfQueryBasedEntityType(entityType, modelField));
+                        });
+                entityBuilder = EntityMetadataBuilder.syntheticEntity(entityType, data);
             }
             case EntityNature.Other $ -> entityBuilder = null;
         }
@@ -272,9 +285,29 @@ final class DomainMetadataGenerator {
     }
 
     /**
+     * If entity type is generated, returns the metadata for its parent type, otherwise returns an empty optional.
+     */
+    private Optional<EntityMetadata> metadataForParentOfGenerated(final Class<? extends AbstractEntity<?>> entityType) {
+        if (isGenerated(entityType)) {
+            final var parentEntityType = (Class<? extends AbstractEntity<?>>) entityType.getSuperclass();
+            return Optional.of(requireForEntity(parentEntityType));
+        }
+
+        return Optional.empty();
+    }
+
+    private Iterable<? extends PropertyMetadata> buildProperties(final EntityMetadataBuilder<?, ?> entityBuilder) {
+        // if an entity type is generated and has the same nature as its parent entity type, we can reuse parent's properties metadata
+        return metadataForParentOfGenerated(entityBuilder.getJavaType())
+                .filter(parentEntityMetadata -> parentEntityMetadata.nature().equals(entityBuilder.getNature()))
+                .map(parentEntityMetadata -> buildPropertiesForGeneratedEntity(entityBuilder, parentEntityMetadata))
+                .orElseGet(() -> buildPropertiesFull(entityBuilder));
+    }
+
+    /**
      * Builds metadata for properties of a given entity.
      */
-    private Iterable<? extends PropertyMetadata> buildProperties(final EntityMetadataBuilder<?, ?> entityBuilder) {
+    private Iterable<PropertyMetadata> buildPropertiesFull(final EntityMetadataBuilder<?, ?> entityBuilder) {
         // DO NOT MODIFY THE GIVEN BUILDER
         switch (entityBuilder) {
             case EntityMetadataBuilder.Union u -> {
@@ -302,6 +335,19 @@ final class DomainMetadataGenerator {
                 return props.build();
             }
         }
+    }
+
+    private Iterable<PropertyMetadata> buildPropertiesForGeneratedEntity(final EntityMetadataBuilder<?, ?> entityBuilder,
+                                                                         final EntityMetadata parentEntityMetadata) {
+        return distinct(Stream.concat(
+                        streamDeclaredProperties(entityBuilder.getJavaType())
+                                .filter(field -> !SPECIAL_PROPS.contains(field.getName()))
+                                .map(field -> mkProp(field, entityBuilder))
+                                .flatMap(Optional::stream)
+                                .map(PropertyMetadataImpl.Builder::build),
+                        parentEntityMetadata.properties().stream()),
+                PropertyMetadata::name)
+                .collect(toImmutableList());
     }
 
     private Optional<PropertyMetadata> mkPropVersion(final EntityMetadataBuilder<?, ?> entityBuilder) {
@@ -776,6 +822,14 @@ final class DomainMetadataGenerator {
 
     static boolean hasAnyNature(final Class<? extends AbstractEntity<?>> entityType, final Iterable<? extends EntityNature> natures) {
         return Iterables.any(natures, nature -> hasNature(entityType, nature));
+    }
+
+    private static boolean isGenerated(final Class<?> type) {
+        // NOTE it would be nice if all generated types implemented a marker interface (e.g., IGenerated)
+        return DynamicEntityClassLoader.isGenerated(type)
+                || isInstrumented(type)
+                || isProxied(type)
+                || isMockNotFoundType(type);
     }
 
 }
