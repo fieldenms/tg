@@ -3,7 +3,6 @@ package ua.com.fielden.platform.meta;
 import com.google.inject.Injector;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
 import ua.com.fielden.platform.meta.exceptions.DomainMetadataGenerationException;
 
 import javax.annotation.Nullable;
@@ -45,12 +44,9 @@ public class DomainMetadataBuilder {
                         .map(em -> t2(type, em)).stream())
                 .collect(toConcurrentMap(pair -> pair._1, pair -> pair._2));
 
-        final Map<Class<?>, TypeMetadata.Composite> compositeTypeMetadataMap = COMPOSITE_TYPES.parallelStream()
-                .flatMap(type -> generator.forComposite(type).map(ctm -> t2(type, ctm)).stream())
-                .collect(toConcurrentMap(pair -> pair._1, pair -> pair._2));
+        COMPOSITE_TYPES.parallelStream().forEach(type -> generator.forComposite(type).map(ctm -> t2(type, ctm)));
 
-        return new DomainMetadataImpl(entityMetadataMap, compositeTypeMetadataMap, entityTypes, generator,
-                                      hibTypesInjector, hibTypesDefaults, dbVersion);
+        return new DomainMetadataImpl(entityMetadataMap, entityTypes, generator, hibTypesInjector, hibTypesDefaults, dbVersion);
     }
 
 }

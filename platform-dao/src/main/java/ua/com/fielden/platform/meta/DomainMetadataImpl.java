@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.meta;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.google.inject.Injector;
 import org.hibernate.dialect.Dialect;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -21,7 +19,6 @@ import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.StreamUtils;
 
 import javax.annotation.Nullable;
-import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -36,14 +33,9 @@ import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.exceptions.NoSuchPropertyException.noSuchPropertyException;
 import static ua.com.fielden.platform.persistence.HibernateConstants.H_BOOLEAN;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
 
 final class DomainMetadataImpl implements IDomainMetadata {
 
-    /** Long-lasting (but not necessarily permanent) cache for entity types for which metadata is generated ad-hoc. */
-    private final Cache<Class<? extends AbstractEntity>, EntityMetadata> entityMetadataCache;
-    /** Permanent cache for composite types for which metadata is generated ad-hoc. */
-    private final Cache<Class<?>, TypeMetadata.Composite> compositeTypeMetadataCache;
     private final Collection<? extends Class<? extends AbstractEntity<?>>> entityTypes;
     private final DomainMetadataGenerator generator;
     private final PropertyMetadataUtils pmUtils;
@@ -51,23 +43,11 @@ final class DomainMetadataImpl implements IDomainMetadata {
     private final QuerySourceInfoProvider querySourceInfoProvider;
 
     DomainMetadataImpl(final Map<Class<? extends AbstractEntity<?>>, EntityMetadata> entityMetadataMap,
-                       final Map<Class<?>, TypeMetadata.Composite> compositeTypeMetadataMap,
                        final Collection<? extends Class<? extends AbstractEntity<?>>> entityTypes,
                        final DomainMetadataGenerator generator,
                        final Injector hibTypesInjector,
                        final @Nullable Map<? extends Class, ? extends Class> hibTypesDefaults,
                        final DbVersion dbVersion) {
-        this.entityMetadataCache = CacheBuilder.newBuilder()
-                .concurrencyLevel(50)
-                .maximumSize(8192)
-                .expireAfterAccess(Duration.ofDays(1))
-                .build();
-        this.entityMetadataCache.putAll(entityMetadataMap);
-        this.compositeTypeMetadataCache = CacheBuilder.newBuilder()
-                .concurrencyLevel(50)
-                .maximumSize(128)
-                .build();
-        this.compositeTypeMetadataCache.putAll(compositeTypeMetadataMap);
         this.entityTypes = entityTypes.stream().distinct().collect(toImmutableList());
         this.generator = generator;
         this.pmUtils = new PropertyMetadataUtilsImpl(this, generator);
@@ -91,21 +71,12 @@ final class DomainMetadataImpl implements IDomainMetadata {
 
     @Override
     public Stream<TypeMetadata> allTypes() {
-        return Stream.concat(entityMetadataCache.asMap().values().stream(), compositeTypeMetadataCache.asMap().values().stream());
+        return generator.allTypes();
     }
 
     @Override
     public <T extends TypeMetadata> Stream<T> allTypes(final Class<T> metadataType) {
-        if (metadataType == EntityMetadata.class) {
-            return (Stream<T>) entityMetadataCache.asMap().values().stream();
-        }
-        else if (metadataType == TypeMetadata.Composite.class) {
-            return (Stream<T>) compositeTypeMetadataCache.asMap().values().stream();
-        }
-        else {
-            return entityMetadataCache.asMap().values().stream()
-                    .mapMulti(typeFilter(metadataType));
-        }
+        return generator.allTypes(metadataType);
     }
 
     @Override
@@ -125,19 +96,12 @@ final class DomainMetadataImpl implements IDomainMetadata {
 
     @Override
     public Optional<EntityMetadata> forEntityOpt(final Class<? extends AbstractEntity<?>> entityType) {
-        final var em = entityMetadataCache.getIfPresent(entityType);
-        if (em != null) {
-            return Optional.of(em);
-        }
-
-        // TODO cache?
         return generator.forEntity(entityType);
     }
 
     @Override
     public Optional<TypeMetadata.Composite> forComposite(final Class<?> javaType) {
-        return Optional.ofNullable(compositeTypeMetadataCache.getIfPresent(javaType))
-                .or(() -> generator.forComposite(javaType));
+        return generator.forComposite(javaType);
     }
 
     @Override
