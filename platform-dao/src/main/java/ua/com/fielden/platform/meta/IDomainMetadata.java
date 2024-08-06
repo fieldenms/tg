@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.meta;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.types.either.Either;
 
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -61,5 +63,16 @@ public interface IDomainMetadata {
      * @param propPath  property path (dot-notation supported)
      */
     PropertyMetadata forProperty(Class<?> enclosingType, CharSequence propPath);
+
+    /**
+     * Returns metadata for a property represented by the given meta-property.
+     * <ul>
+     *   <li> If the property has metadata, returns an optional describing it.
+     *   <li> If the property doesn't have metadata but satisfies {@link AbstractEntity#isAlwaysMetaProperty(String)},
+     *   returns an empty optional.
+     *   <li> Otherwise, returns an error.
+     * </ul>
+     */
+    Either<RuntimeException, Optional<PropertyMetadata>> forProperty(MetaProperty<?> metaProperty);
 
 }

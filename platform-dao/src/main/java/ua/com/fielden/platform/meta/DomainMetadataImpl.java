@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.meta;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.meta.exceptions.DomainMetadataGenerationException;
+import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -13,6 +15,8 @@ import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.exceptions.NoSuchPropertyException.noSuchPropertyException;
+import static ua.com.fielden.platform.types.either.Either.left;
+import static ua.com.fielden.platform.types.either.Either.right;
 import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
 
 final class DomainMetadataImpl implements IDomainMetadata {
@@ -110,6 +114,12 @@ final class DomainMetadataImpl implements IDomainMetadata {
     public PropertyMetadata forProperty(final Class<?> enclosingType, final CharSequence propPath) {
         return forPropertyOpt(enclosingType, propPath)
                 .orElseThrow(() -> noSuchPropertyException(enclosingType, propPath));
+    }
+
+    @Override
+    public Either<RuntimeException, Optional<PropertyMetadata>> forProperty(final MetaProperty<?> metaProperty) {
+        final var entityType = (Class<? extends AbstractEntity<?>>) metaProperty.getEntity().getClass();
+        return forEntity(entityType).property(metaProperty);
     }
 
     private Optional<PropertyMetadata> forProperty_(final PropertyMetadata pm, final String propPath) {
