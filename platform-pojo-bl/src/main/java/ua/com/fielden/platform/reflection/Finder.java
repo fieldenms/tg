@@ -272,6 +272,11 @@ public class Finder {
                          && (!hasCompositeKey && !isUnion || !KEY.equals(f.getName()))); // if hasCompositeKey or isUnion then exclude KEY
     }
 
+    public static Stream<Field> streamDeclaredProperties(final Class<?> entityType) {
+        return streamDeclaredFields(entityType)
+                .filter(field -> AnnotationReflector.isAnnotationPresent(field, IsProperty.class));
+    }
+
     /**
      * Returns the list of properties that could be used in lifecycle reporting.
      *
@@ -674,6 +679,10 @@ public class Finder {
         allAnnotations.add(annot);
         allAnnotations.addAll(Arrays.asList(annotations));
         return streamFieldsAnnotatedWith(getFields(type, withUnion), allAnnotations);
+    }
+
+    private static Stream<Field> streamDeclaredFields(final Class<?> type) {
+        return Arrays.stream(type.getDeclaredFields());
     }
 
     /**

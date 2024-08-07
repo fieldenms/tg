@@ -1,11 +1,13 @@
 package ua.com.fielden.platform.meta;
 
+import com.google.inject.Injector;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.meta.exceptions.DomainMetadataGenerationException;
 import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
 
@@ -37,11 +39,9 @@ public class DomainMetadataBuilder {
                         .map(em -> t2(type, em)).stream())
                 .collect(toConcurrentMap(pair -> pair._1, pair -> pair._2));
 
-        final Map<Class<?>, TypeMetadata.Composite> compositeTypeMetadataMap = COMPOSITE_TYPES.parallelStream()
-                .flatMap(type -> generator.forComposite(type).map(ctm -> t2(type, ctm)).stream())
-                .collect(toConcurrentMap(pair -> pair._1, pair -> pair._2));
+        COMPOSITE_TYPES.parallelStream().forEach(type -> generator.forComposite(type).map(ctm -> t2(type, ctm)));
 
-        return new DomainMetadataImpl(entityMetadataMap, compositeTypeMetadataMap, generator);
+        return new DomainMetadataImpl(generator);
     }
 
 }
