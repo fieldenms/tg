@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.security.interception;
 
-import ua.com.fielden.platform.security.IAuthorisationModel;
-
 import com.google.inject.AbstractModule;
+import ua.com.fielden.platform.ioc.AuthorisationModule;
+import ua.com.fielden.platform.security.IAuthorisationModel;
 
 /**
  * A test authorisation module for binding of IAuthorisationModel.
@@ -10,11 +10,12 @@ import com.google.inject.AbstractModule;
  * @author TG Team
  * 
  */
-public class AuthBindingModule extends AbstractModule {
+final class AuthBindingModule extends AbstractModule {
 
     @Override
     protected void configure() {
         bind(IAuthorisationModel.class).toInstance(new AuthorisationModel());
+        install(new AuthorisationModule());
     }
 
 }

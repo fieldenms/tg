@@ -42,6 +42,12 @@
               <artifactId>guice</artifactId>
               <version>${guice.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.google.inject.extensions</groupId>
+            <artifactId>guice-assistedinject</artifactId>
+            <!-- {version} must match the guice core version. -->
+            <version>${guice.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>joda-time</groupId>

@@ -1,12 +1,10 @@
-package ua.com.fielden.platform.entity;
+package ua.com.fielden.platform.entity.query;
 
 import org.junit.Test;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityAlreadyExists;
 import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation;
-import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.test.entities.TgEntityWithManyPropTypes;
@@ -64,8 +62,7 @@ public class EntityBatchInsertOperationTest extends AbstractDaoTestCase {
     @SessionRequired
     public void batch_insert_operation_works_for_instances_created_with_TransactionExecutor_that_uses_Session_supplier() {
         final var up = getInstance(IUserProvider.class);
-        final var eqlDomainMetadata = getInstance(IDomainMetadata.class);
-        final var insertOp = new EntityBatchInsertOperation(eqlDomainMetadata, () -> new TransactionalExecution(up, () -> getSession()));
+        final var insertOp = getInstance(EntityBatchInsertOperation.Factory.class).create(() -> new TransactionalExecution(up, this::getSession));
 
         final var entities = createEntitiesForBatchInsert("Ent1", "Ent2", "Ent3", "Ent4", "Ent5");
 
@@ -95,12 +92,12 @@ public class EntityBatchInsertOperationTest extends AbstractDaoTestCase {
     }
 
     private int batchInsertEntities(final List<TgEntityWithManyPropTypes> entities, final int batchSize) {
-        final EntityBatchInsertOperation insertOp = new EntityBatchInsertOperation(getInstance(IDomainMetadata.class), () -> getInstance(TransactionalExecution.class));
+        final var insertOp = getInstance(EntityBatchInsertOperation.Factory.class).create(() -> getInstance(TransactionalExecution.class));
         return insertOp.batchInsert(entities, batchSize);
     }
 
     private int batchInsertEntitiesAsStream(final Stream<TgEntityWithManyPropTypes> entities, final int batchSize) {
-        final EntityBatchInsertOperation insertOp = new EntityBatchInsertOperation(getInstance(IDomainMetadata.class), () -> getInstance(TransactionalExecution.class));
+        final var insertOp = getInstance(EntityBatchInsertOperation.Factory.class).create(() -> getInstance(TransactionalExecution.class));
         return insertOp.batchInsert(entities, batchSize);
     }
 

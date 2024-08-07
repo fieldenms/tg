@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.factory;
 
 import java.util.Optional;
 
+import com.google.inject.ImplementedBy;
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
@@ -13,6 +14,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  * @author TG Team
  * 
  */
+@ImplementedBy(DefaultCompanionObjectFinderImpl.class)
 public interface ICompanionObjectFinder {
     
     /**

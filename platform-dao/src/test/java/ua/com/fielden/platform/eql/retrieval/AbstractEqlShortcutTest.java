@@ -1,9 +1,5 @@
 package ua.com.fielden.platform.eql.retrieval;
 
-import static java.util.Collections.emptyMap;
-import static org.junit.Assert.assertEquals;
-import static ua.com.fielden.platform.entity.query.DbVersion.H2;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.QueryProcessingModel;
@@ -13,6 +9,11 @@ import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.eql.meta.EqlTestCase;
 import ua.com.fielden.platform.eql.retrieval.records.EntityTree;
 import ua.com.fielden.platform.eql.retrieval.records.QueryModelResult;
+
+import static java.util.Collections.emptyMap;
+import static java.util.Optional.empty;
+import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.entity.query.DbVersion.H2;
 
 public abstract class AbstractEqlShortcutTest extends EqlTestCase {
 
@@ -37,8 +38,8 @@ public abstract class AbstractEqlShortcutTest extends EqlTestCase {
         assertEquals("Qry model results (Yielded props infos) are different!", expQmr.yieldedColumns(), actQmr.yieldedColumns());
     }
 
-    private static final <T extends AbstractEntity<?>> QueryModelResult<T> transformToModelResult(final QueryProcessingModel<T, ?> qem) {
-        return EntityContainerFetcher.getModelResult(qem, H2, filter, null, dates, metadata());
+    private static <T extends AbstractEntity<?>> QueryModelResult<T> transformToModelResult(final QueryProcessingModel<T, ?> qem) {
+        return EqlQueryTransformer.getModelResult(qem, H2, filter, empty(), dates, metadata(), eqlTables(), querySourceInfoProvider());
     }
 
     protected static final <T extends AbstractEntity<?>> QueryModelResult<T> transformToModelResult(final EntityResultQueryModel<T> queryModel) {

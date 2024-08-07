@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingServi
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.decodeOriginalGeneratedTypeFromCriteriaType;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.decodeOriginalTypeFrom;
 
+import jakarta.inject.Singleton;
 import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
@@ -19,6 +20,7 @@ import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter;
 
+@Singleton
 public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
     private static final Logger LOGGER = getLogger(SerialisationTypeEncoder.class);
 

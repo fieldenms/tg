@@ -16,7 +16,7 @@ import com.google.inject.BindingAnnotation;
  *
  */
 @Retention(RUNTIME)
-@Target({ElementType.PARAMETER})
+@Target({ElementType.PARAMETER, ElementType.FIELD, ElementType.METHOD})
 @BindingAnnotation
 public @interface SessionCache {
 }

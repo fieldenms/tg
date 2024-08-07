@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -14,6 +15,7 @@ import ua.com.fielden.platform.entity.annotation.mutator.DateParam;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.before_change_event_handling.BeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -24,7 +26,6 @@ import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.entities.TopLevelEntity;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
-import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.MiscUtilities;
 import ua.com.fielden.platform.utils.Pair;
@@ -61,8 +62,16 @@ public class DynamicEntityTypePropertiesAdditionTest {
     private static final String NEW_PROPERTY_BOOL = "newProperty_BOOL";
     private static final String NEW_PROPERTY_EXPRESSION_BOOL = "2 < 3";
 
-    private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
-    private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
+    private final DomainMetaPropertyConfig domainMetaPropertyConfig = new DomainMetaPropertyConfig();
+    private final Injector injector = new ApplicationInjectorFactory()
+            .add(new CommonTestEntityModuleWithPropertyFactory())
+            .add(new AbstractModule() {
+                @Override
+                protected void configure() {
+                    bind(DomainMetaPropertyConfig.class).toInstance(domainMetaPropertyConfig);
+                }
+            })
+            .getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
     private static final IsProperty atIsPropertyWithPrecision = new IsPropertyAnnotation(19, 4).newInstance();
@@ -380,7 +389,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
                 .endModification();
 
         final boolean[] observed = {false}; // a small hack to avoid having `observed` as a class field
-        module.getDomainMetaPropertyConfig().setDefiner(newType, np1.getName(), new IAfterChangeEventHandler<Object>() {
+        domainMetaPropertyConfig.setDefiner(newType, np1.getName(), new IAfterChangeEventHandler<Object>() {
             @Override
             public void handle(final MetaProperty<Object> property, final Object entityPropertyValue) {
                 observed[0] = true;

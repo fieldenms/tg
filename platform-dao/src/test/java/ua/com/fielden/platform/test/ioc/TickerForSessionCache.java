@@ -3,6 +3,7 @@ package ua.com.fielden.platform.test.ioc;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import jakarta.inject.Singleton;
 import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.utils.IUniversalConstants;
@@ -16,6 +17,7 @@ import com.google.inject.Inject;
  * @author TG Team
  *
  */
+@Singleton
 public class TickerForSessionCache extends Ticker {
 
     private DateTime startDateTime;

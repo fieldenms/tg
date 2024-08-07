@@ -4,6 +4,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
+import jakarta.inject.Singleton;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -17,6 +18,7 @@ import ua.com.fielden.platform.utils.IDates;
  * @author TG Team
  *
  */
+@Singleton
 public class DatesForTesting implements IDates {
     private DateTime now;
     private Supplier<DateTime> timeSupplier;

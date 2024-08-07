@@ -28,6 +28,7 @@ import ua.com.fielden.platform.entity.annotation.DescRequired;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Required;
+import ua.com.fielden.platform.entity.proxy.IIdOnlyProxyEntity;
 import ua.com.fielden.platform.entity.proxy.IProxyEntity;
 import ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
@@ -309,6 +310,10 @@ public class PropertyTypeDeterminator {
      */
     public static boolean isProxied(final Class<?> clazz) {
         return IProxyEntity.class.isAssignableFrom(clazz);
+    }
+
+    public static boolean isIdOnlyProxy(final Class<?> clazz) {
+        return IIdOnlyProxyEntity.class.isAssignableFrom(clazz);
     }
 
     /**

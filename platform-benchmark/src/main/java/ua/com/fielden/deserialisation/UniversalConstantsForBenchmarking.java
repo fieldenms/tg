@@ -4,6 +4,7 @@ import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
+import jakarta.inject.Singleton;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
@@ -18,6 +19,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
  * @author TG Team
  *
  */
+@Singleton
 class UniversalConstantsForBenchmarking implements IUniversalConstants {
 
     private final String appName;

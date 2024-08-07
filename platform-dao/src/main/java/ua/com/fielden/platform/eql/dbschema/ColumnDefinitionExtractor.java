@@ -37,6 +37,7 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
 import ua.com.fielden.platform.eql.dbschema.exceptions.DbSchemaException;
+import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
@@ -51,8 +52,8 @@ public class ColumnDefinitionExtractor {
     private final HibernateTypeDeterminer hibernateTypeDeterminer;
     private static final IsProperty defaultIsPropertyAnnotation = new IsPropertyAnnotation().newInstance();
     
-    public ColumnDefinitionExtractor(final Injector hibTypesInjector, final Map<Class<?>, Object> hibTypesDefaults) {
-        this.hibernateTypeDeterminer = new HibernateTypeDeterminer(hibTypesInjector, hibTypesDefaults);
+    public ColumnDefinitionExtractor(final HibernateTypeMappings hibernateTypeMappings) {
+        this.hibernateTypeDeterminer = new HibernateTypeDeterminer(hibernateTypeMappings);
     }
 
     /**

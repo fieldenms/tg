@@ -3,6 +3,7 @@ package ua.com.fielden.platform.security.provider;
 import java.util.Optional;
 import java.util.SortedSet;
 
+import com.google.inject.ImplementedBy;
 import ua.com.fielden.platform.security.ISecurityToken;
 
 /**
@@ -13,6 +14,7 @@ import ua.com.fielden.platform.security.ISecurityToken;
  * @author TG Team
  *
  */
+@ImplementedBy(SecurityTokenProvider.class)
 public interface ISecurityTokenProvider {
     
     /**

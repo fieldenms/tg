@@ -3,10 +3,10 @@ package ua.com.fielden.platform.test.ioc;
 import com.google.common.base.Ticker;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.inject.Inject;
-import com.google.inject.Provider;
+import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
+import jakarta.inject.Singleton;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -15,7 +15,6 @@ import ua.com.fielden.platform.entity.functional.centre.CentreContextHolderDao;
 import ua.com.fielden.platform.entity.functional.centre.ICentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.ISavingInfoHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolderDao;
-import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamicRequirednessCo;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamicRequirednessDao;
 import ua.com.fielden.platform.ioc.BasicWebServerModule;
@@ -26,17 +25,14 @@ import ua.com.fielden.platform.security.annotations.SessionCache;
 import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDuration;
-import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
-import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.test.entities.*;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -48,16 +44,12 @@ import java.util.concurrent.TimeUnit;
  */
 public class PlatformTestServerModule extends BasicWebServerModule {
 
-    private final List<Class<? extends AbstractEntity<?>>> domainTypes;
-
-    public PlatformTestServerModule(final Map<Class, Class> defaultHibernateTypes,
+    public PlatformTestServerModule(
             final IApplicationDomainProvider applicationDomainProvider,
-            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
-            final Class<? extends IFilter> automaticDataFilterType,
-            final Class<? extends ISecurityTokenProvider> tokenProviderType,
-            final Properties props) {
-        super(defaultHibernateTypes, applicationDomainProvider, serialisationClassProviderType, automaticDataFilterType, tokenProviderType, props);
-        domainTypes = applicationDomainProvider.entityTypes();
+            final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
+            final Properties props)
+    {
+        super(applicationDomainProvider, domainEntityTypes, props);
     }
 
     @Override
@@ -68,13 +60,15 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bindConstant().annotatedWith(TrustedDeviceSessionDuration.class).to(60 * 24 * 3); // three days
         bindConstant().annotatedWith(UntrustedDeviceSessionDuration.class).to(5); // 5 minutes
 
-        bind(Ticker.class).to(TickerForSessionCache.class).in(Scopes.SINGLETON);
-        bind(IDates.class).to(DatesForTesting.class).in(Scopes.SINGLETON);
-        bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class).in(Scopes.SINGLETON);
-        bind(new TypeLiteral<Cache<String, UserSession>>(){}).annotatedWith(SessionCache.class).toProvider(TestSessionCacheBuilder.class).in(Scopes.SINGLETON);
+        bind(Ticker.class).to(TickerForSessionCache.class);
+        bind(IDates.class).to(DatesForTesting.class);
+        bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class);
 
-        bind(IUserProvider.class).to(ThreadLocalUserProvider.class).in(Scopes.SINGLETON);
-        // bind DAO
+        bind(IUserProvider.class).to(ThreadLocalUserProvider.class);
+    }
+
+    @Override
+    protected void bindDomainCos(final List<Class<? extends AbstractEntity<?>>> domainEntityTypes) {
         //	bind(IWheelsetDao.class).to(WheelsetDao.class);
         //	bind(IWorkshopDao2.class).to(WorkshopDao2.class);
         //	bind(IWheelsetClassDao.class).to(WheelsetClassDao.class);
@@ -186,31 +180,22 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         //       however, not all test domain entities actually have companions, hence manual binding...
         //       this should really be corrected at some stage
         // dynamically bind DAO implementations for all companion objects
-        // for (final Class<? extends AbstractEntity<?>> entityType : domainTypes) {
+        // for (final Class<? extends AbstractEntity<?>> entityType : appDomainProvider.domainTypes()) {
         //     CompanionObjectAutobinder.bindCo(entityType, binder());
         // }
     }
 
-    public static class TestSessionCacheBuilder implements Provider<Cache<String, UserSession>> {
-
-        private final Cache<String, UserSession> cache;
-
-        @Inject
-        public TestSessionCacheBuilder(final Ticker ticker) {
-            cache = CacheBuilder.newBuilder()
-                    // all authenticators should be evicted from the cache in 2 minutes time after that have been
-                    // put into the cache
-                    .expireAfterWrite(2, TimeUnit.MINUTES)
-                    // the ticker controls the eviction time
-                    // the injected instance is initialised with IUniversalConstants.now() as its start time
-                    .ticker(ticker)
-                    .build();
-        }
-
-        @Override
-        public Cache<String, UserSession> get() {
-            return cache;
-        }
-
+    @Provides
+    @Singleton
+    @SessionCache Cache<String, UserSession> provideSessionCache(final Ticker ticker) {
+        return CacheBuilder.newBuilder()
+                // all authenticators should be evicted from the cache in 2 minutes time after that have been
+                // put into the cache
+                .expireAfterWrite(2, TimeUnit.MINUTES)
+                // the ticker controls the eviction time
+                // the injected instance is initialised with IUniversalConstants.now() as its start time
+                .ticker(ticker)
+                .build();
     }
+
 }

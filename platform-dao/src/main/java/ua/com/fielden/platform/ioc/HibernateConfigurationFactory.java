@@ -1,20 +1,14 @@
 package ua.com.fielden.platform.ioc;
 
-import com.google.inject.Guice;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
-import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
-import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -72,28 +66,13 @@ public class HibernateConfigurationFactory {
     private static final String CONNECTION_PASWD = "hibernate.connection.password";
 
     private final Properties props;
-    private final IDomainMetadata domainMetadata;
-    private final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
 
     private final Configuration cfg = new Configuration();
     private final Configuration cfgManaged = new Configuration();
 
-    public HibernateConfigurationFactory(//
-            final Properties props, //
-            final Map<Class, Class> defaultHibernateTypes, //
-            final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes) {
+    public HibernateConfigurationFactory(final Properties props, final HibernateMappingsGenerator generator) {
         this.props = props;
-
-        final var dbVersion = determineDbVersion(props);
-        domainMetadata = new DomainMetadataBuilder(defaultHibernateTypes,
-                                                   Guice.createInjector(new HibernateUserTypesModule()),
-                                                   applicationEntityTypes,
-                                                   dbVersion)
-                .build();
-
-        idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata);
-
-        final String generatedMappings = new HibernateMappingsGenerator(domainMetadata).generateMappings();
+        final String generatedMappings = generator.generateMappings();
 
         try {
             cfg.addInputStream(new ByteArrayInputStream(generatedMappings.getBytes("UTF8")));
@@ -156,14 +135,6 @@ public class HibernateConfigurationFactory {
         setSafely(cfg, CONNECTION_PASWD, "");
 
         return cfg;
-    }
-
-    public IDomainMetadata getDomainMetadata() {
-        return domainMetadata;
-    }
-
-    public IdOnlyProxiedEntityTypeCache getIdOnlyProxiedEntityTypeCache() {
-        return idOnlyProxiedEntityTypeCache;
     }
 
     private Configuration setSafely(final Configuration cfg, final String propertyName, final String defaultValue) {

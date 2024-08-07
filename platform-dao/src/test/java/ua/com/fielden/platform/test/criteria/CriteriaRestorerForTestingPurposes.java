@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.inject.Inject;
 
+import jakarta.inject.Singleton;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -23,6 +24,7 @@ import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
  * <p>
  * This implementation should be bound as singleton in test-related IoC module.
  */
+@Singleton
 public class CriteriaRestorerForTestingPurposes implements ICriteriaEntityRestorer {
     protected static final String TYPE_KEY = "@@type";
     /**

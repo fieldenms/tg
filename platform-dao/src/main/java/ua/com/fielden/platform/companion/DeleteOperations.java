@@ -1,19 +1,26 @@
 package ua.com.fielden.platform.companion;
 
+import com.google.inject.ImplementedBy;
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.exception.ConstraintViolationException;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
+import ua.com.fielden.platform.dao.exceptions.EntityDeletionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleteByIdsOperation;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleteByQueryModelOperation;
-import ua.com.fielden.platform.entity.query.QueryExecutionContext;
-import ua.com.fielden.platform.dao.exceptions.EntityDeletionException;
+import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.eql.meta.EqlTables;
+import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
+import ua.com.fielden.platform.utils.IDates;
 
 import javax.persistence.PersistenceException;
 import java.util.*;
@@ -45,22 +52,41 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
     private final Supplier<Session> session;
     private final Class<T> entityType;
     private final IEntityReader<T> reader;
-    private final Supplier<QueryExecutionContext> qeCtx;
+    private final IDomainMetadata domainMetadata;
+    private final IDbVersionProvider dbVersionProvider;
+    private final EqlTables eqlTables;
+    private final QuerySourceInfoProvider querySourceInfoProvider;
+    private final IDates dates;
     private final Supplier<EntityBatchDeleteByIdsOperation<T>> batchDeleteByIdsOp;
-    
+
+    @Inject
     public DeleteOperations(
-            final IEntityReader<T> reader,
-            final Supplier<Session> session,
-            final Class<T> entityType,
-            final Supplier<QueryExecutionContext> qeCtx,
-            final Supplier<EntityBatchDeleteByIdsOperation<T>> batchDeleteByIdsOp) {
+            @Assisted final IEntityReader<T> reader,
+            @Assisted final Supplier<Session> session,
+            @Assisted final Class<T> entityType,
+            final IDomainMetadata domainMetadata,
+            final IDbVersionProvider dbVersionProvider,
+            final EqlTables eqlTables,
+            final QuerySourceInfoProvider querySourceInfoProvider,
+            final IDates dates) {
         this.reader = reader;
         this.session = session;
         this.entityType = entityType;
-        this.qeCtx = qeCtx;
-        this.batchDeleteByIdsOp = batchDeleteByIdsOp;
+        this.domainMetadata = domainMetadata;
+        this.dbVersionProvider = dbVersionProvider;
+        this.eqlTables = eqlTables;
+        this.querySourceInfoProvider = querySourceInfoProvider;
+        this.dates = dates;
+        this.batchDeleteByIdsOp = () -> new EntityBatchDeleteByIdsOperation<>(session.get(), eqlTables.getTableForEntityType(entityType));
     }
-    
+
+    @ImplementedBy(FactoryImpl.class)
+    public interface Factory {
+        <E extends AbstractEntity<?>> DeleteOperations<E> create(final IEntityReader<E> reader,
+                                                                 final Supplier<Session> session,
+                                                                 final Class<E> entityType);
+    }
+
     /**
      * A convenient default implementation for entity deletion, which should be used by overriding method {@link ua.com.fielden.platform.dao.CommonEntityDao#delete(AbstractEntity)}}.
      *
@@ -76,7 +102,7 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
         if (entity.isInstrumented() && entity.isDirty()) {
             throw new EntityCompanionException("Dirty entity instances cannot be deleted.");
         }
-        
+
         if (entity instanceof ActivatableAbstractEntity && ((ActivatableAbstractEntity<?>) entity).isActive()) {
             return deleteActivatable(entity);
         } else {
@@ -85,8 +111,8 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
     }
 
     /**
-     * Deletes an entity by ID. 
-     * 
+     * Deletes an entity by ID.
+     *
      * @param id
      * @return the number of deleted entities, which could be 1 or 0.
      */
@@ -101,11 +127,11 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
             throw new EntityDeletionException(msg, ex.getCause());
         }
     }
-    
+
     /**
      * A method for deleting activatable entities.
      * It takes care of decrementing referenced activatable dependencies if any.
-     * 
+     *
      * @param entity
      */
     private int deleteActivatable(final T entity) {
@@ -120,7 +146,7 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
             final Set<T2<String, Class<ActivatableAbstractEntity<?>>>> activatableProps = collectActivatableNotDirtyProperties(entity, keyMembers);
             // reload entity for deletion in the lock mode to make sure it is not updated while its activatable dependencies are being processed
             final ActivatableAbstractEntity<?> persistedEntityToBeDeleted = (ActivatableAbstractEntity<?>) session.get().load(entity.getType(), entity.getId(), UPGRADE);
-            
+
             activatableProps.stream()
             .map(prop -> T3.t3(persistedEntityToBeDeleted.get(prop._1), prop._2, prop._1))
             .filter(triple -> triple._1 != null)
@@ -137,10 +163,10 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
                             session.get().update(persistedValue.decRefCount());
                         }
                     });
-            
-            
+
+
         }
-        
+
         // delete entity by ID
         return deleteById(entity.getId());
     }
@@ -164,9 +190,9 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
 
     /**
      * The same as {@link #defaultDelete(EntityResultQueryModel, Map)}, but with empty parameters.
-     * 
+     *
      * @param model
-     */    
+     */
     public int defaultDelete(final EntityResultQueryModel<T> model) {
         return defaultDelete(model, Collections.<String, Object> emptyMap());
     }
@@ -185,13 +211,14 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
         if (ActivatableAbstractEntity.class.isAssignableFrom(entityType)) {
             return defaultDelete(model, paramValues);
         } else {
-            return new EntityBatchDeleteByQueryModelOperation(qeCtx.get()).deleteEntities(model, paramValues);
+            return new EntityBatchDeleteByQueryModelOperation(domainMetadata, dbVersionProvider, eqlTables, querySourceInfoProvider, dates, session)
+                    .deleteEntities(model, paramValues);
         }
     }
 
     /**
      * The same as {@link #defaultBatchDelete(EntityResultQueryModel, Map)}, but with empty parameters.
-     * 
+     *
      * @param model
      * @return
      */
@@ -201,7 +228,7 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
 
     /**
      * Batch deletion of entities by their ID values.
-     * 
+     *
      * @param entitiesIds
      * @return
      */
@@ -211,8 +238,8 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
 
     /**
      * A more generic version of batch deletion of entities {@link #defaultBatchDelete(Collection)} that accepts a property name and a collection of ID values.
-     * Those entities that have the specified property matching any of those ID values get deleted. 
-     * 
+     * Those entities that have the specified property matching any of those ID values get deleted.
+     *
      * @param propName
      * @param entitiesIds
      * @return
@@ -229,16 +256,47 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
             return batchDeleteByIdsOp.get().deleteEntities(propName, entitiesIds);
         }
     }
-    
+
     /**
      * The same as {@link #defaultBatchDeleteByPropertyValues(String, Collection)}, but for a list of entities.
-     * 
+     *
      * @param propName
      * @param propEntities
      * @return
      */
     public <E extends AbstractEntity<?>> int defaultBatchDeleteByPropertyValues(final String propName, final List<E> propEntities) {
         return defaultBatchDeleteByPropertyValues(propName, propEntities.stream().map(v -> v.getId()).collect(Collectors.toList()));
+    }
+
+    // This factory must be implemented by hand since com.google.inject.assistedinject.FactoryModuleBuilder
+    // doesn't support generic factory methods.
+    static final class FactoryImpl implements Factory {
+        private final IDomainMetadata domainMetadata;
+        private final IDbVersionProvider dbVersionProvider;
+        private final EqlTables eqlTables;
+        private final QuerySourceInfoProvider querySourceInfoProvider;
+        private final IDates dates;
+
+        @Inject
+        FactoryImpl(final IDomainMetadata domainMetadata,
+                    final IDbVersionProvider dbVersionProvider,
+                    final EqlTables eqlTables,
+                    final QuerySourceInfoProvider querySourceInfoProvider,
+                    final IDates dates) {
+            this.domainMetadata = domainMetadata;
+            this.dbVersionProvider = dbVersionProvider;
+            this.eqlTables = eqlTables;
+            this.querySourceInfoProvider = querySourceInfoProvider;
+            this.dates = dates;
+        }
+
+        public <E extends AbstractEntity<?>> DeleteOperations<E> create(final IEntityReader<E> reader,
+                                                                        final Supplier<Session> session,
+                                                                        final Class<E> entityType) {
+            return new DeleteOperations<>(reader, session, entityType,
+                                          domainMetadata, dbVersionProvider, eqlTables,
+                                          querySourceInfoProvider, dates);
+        }
     }
 
 }

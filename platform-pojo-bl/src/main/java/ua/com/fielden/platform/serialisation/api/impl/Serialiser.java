@@ -4,6 +4,7 @@ import java.io.InputStream;
 
 import com.google.inject.Inject;
 
+import jakarta.inject.Singleton;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
@@ -19,6 +20,7 @@ import ua.com.fielden.platform.serialisation.exceptions.SerialisationException;
  * @author TG Team
  *
  */
+@Singleton
 public class Serialiser implements ISerialiser {
     private final EntityFactory factory;
     private ISerialiserEngine tgJackson;

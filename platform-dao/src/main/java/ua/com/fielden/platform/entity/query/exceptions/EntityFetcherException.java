@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.entity.query.exceptions;
 
-import ua.com.fielden.platform.entity.query.EntityFetcher;
+import ua.com.fielden.platform.entity.query.IEntityFetcher;
 
 /**
- * A runtime exception that should be used to capture exceptional situations in {@link EntityFetcher}.
+ * A runtime exception that should be used to capture exceptional situations in {@link IEntityFetcher}.
  * 
  * @author TG Team
  *

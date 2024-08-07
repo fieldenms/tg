@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import jakarta.inject.Singleton;
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
@@ -20,6 +21,7 @@ import ua.com.fielden.platform.security.user.User;
  * @author TG Team
  *
  */
+@Singleton
 public class TgPersistentEntityWithPropertiesDaoStub implements ITgPersistentEntityWithProperties {
 
     @Override

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.uri;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -26,6 +27,7 @@ import static ua.com.fielden.platform.types.Hyperlink.SupportedProtocols.HTTPS;
  *
  * @author TG Team
  */
+@Singleton
 public class EntityMasterUrlProvider implements IEntityMasterUrlProvider {
 
     private static final UrlValidator URL_VALIDATOR = new UrlValidator(new String[] { HTTP.name(), HTTPS.name(), HTTP.name().toLowerCase(), HTTPS.name().toLowerCase() }, ALLOW_LOCAL_URLS);

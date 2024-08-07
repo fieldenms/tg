@@ -59,11 +59,7 @@ import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 import ua.com.fielden.platform.utils.Pair;
 
 public class CriteriaGeneratorTest {
-    private final CriteriaGeneratorTestModule module = new CriteriaGeneratorTestModule();
-    private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
-    {
-        module.setInjector(injector);
-    }
+    private final Injector injector = new ApplicationInjectorFactory().add(new CriteriaGeneratorTestModule()).getInjector();
     private final EntityFactory entityFactory = injector.getInstance(EntityFactory.class);
     private final ICriteriaGenerator cg = injector.getInstance(ICriteriaGenerator.class);
 

@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity.factory;
 import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
 
+import jakarta.inject.Singleton;
 import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
@@ -19,9 +20,9 @@ import ua.com.fielden.platform.entity.annotation.CompanionObject;
  * Default implementation for {@link ICompanionObjectFinder}, which utilises injector (thread-safe) for creating Companion Object (CO) instances.
  * 
  * @author TG Team
- * 
  */
-public class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder {
+@Singleton
+final class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder {
 
     private static final Logger LOGGER = getLogger(DefaultCompanionObjectFinderImpl.class);
     

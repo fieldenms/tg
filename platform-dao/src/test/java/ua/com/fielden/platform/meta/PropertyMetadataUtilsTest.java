@@ -3,7 +3,6 @@ package ua.com.fielden.platform.meta;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.meta.Assertions.EntityA;
 import ua.com.fielden.platform.meta.Assertions.SubPropertiesA;
 import ua.com.fielden.platform.meta.test_entities.Entity_VariousMoney;
@@ -11,21 +10,18 @@ import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
 import ua.com.fielden.platform.sample.domain.TgWagonSlot;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
-import ua.com.fielden.platform.test.PlatformTestHibernateSetup;
 
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.List;
 
-import static com.google.inject.Guice.createInjector;
+import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
+import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 
 public class PropertyMetadataUtilsTest {
 
     private final IDomainMetadata domainMetadata = new DomainMetadataBuilder(
-            PlatformTestHibernateSetup.getHibernateTypes(),
-            createInjector(new HibernateUserTypesModule()),
-            List.of(),
-            DbVersion.MSSQL)
+            PLATFORM_HIBERNATE_TYPE_MAPPINGS, List.of(), constantDbVersion(DbVersion.MSSQL))
             .build();
     private final PropertyMetadataUtils pmUtils = domainMetadata.propertyMetadataUtils();
 

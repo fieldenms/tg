@@ -2,7 +2,6 @@ package ua.com.fielden.platform.web.ioc;
 
 import com.google.inject.Binder;
 import com.google.inject.Injector;
-import com.google.inject.Scopes;
 import com.google.inject.binder.AnnotatedBindingBuilder;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
@@ -47,8 +46,7 @@ public interface IBasicWebApplicationServerModule {
      * @param webApp
      */
     default void bindWebAppResources(final IWebUiConfig webApp) {
-        // bind IDeviceProvider to its implementation as singleton
-        bindType(IDeviceProvider.class).to(ThreadLocalDeviceProvider.class).in(Scopes.SINGLETON);
+        bindType(IDeviceProvider.class).to(ThreadLocalDeviceProvider.class);
 
         /////////////////////////////// application specific ////////////////////////////
         // bind IWebApp instance with defined masters / centres and other DSL-defined configuration
@@ -56,22 +54,21 @@ public interface IBasicWebApplicationServerModule {
         bindType(IMenuRetriever.class).toInstance(webApp);
 
         // bind Entity Master URI creator
-        bindType(IEntityMasterUrlProvider.class).to(EntityMasterUrlProvider.class).in(Scopes.SINGLETON);
+        bindType(IEntityMasterUrlProvider.class).to(EntityMasterUrlProvider.class);
 
-        // bind IWebResourceLoader to its implementation as singleton
-        bindType(IWebResourceLoader.class).to(WebResourceLoader.class).in(Scopes.SINGLETON);
+        bindType(IWebResourceLoader.class).to(WebResourceLoader.class);
 
-        // bind ISerialisationTypeEncoder to its implementation as singleton -- it is dependent on IWebUiConfig, IUserProvider and other Web UI infrastructure
-        bindType(ISerialisationTypeEncoder.class).to(SerialisationTypeEncoder.class).in(Scopes.SINGLETON);
+        // dependent on IWebUiConfig, IUserProvider and other Web UI infrastructure
+        bindType(ISerialisationTypeEncoder.class).to(SerialisationTypeEncoder.class);
 
-        // bind ICriteriaEntityRestorer to its implementation as singleton -- it is dependent on IWebUiConfig, IUserProvider and other Web UI infrastructure
-        bindType(ICriteriaEntityRestorer.class).to(CriteriaEntityRestorer.class).in(Scopes.SINGLETON);
+        // dependent on IWebUiConfig, IUserProvider and other Web UI infrastructure
+        bindType(ICriteriaEntityRestorer.class).to(CriteriaEntityRestorer.class);
 
         // bind companion object implementations that are dependent on ICriteriaEntityRestorer
         PlatformDomainTypes.typesDependentOnWebUI.stream().forEach(type -> bindCo(type, (co, t) -> bindType(co).to(t)));
 
         // bind SingleActionSelector to its singleton
-        bindType(SingleActionSelector.class).toInstance(INSTANCE); // singleton
+        bindType(SingleActionSelector.class).toInstance(INSTANCE);
     }
 
     /**

@@ -9,8 +9,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -22,14 +20,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-import com.google.common.collect.ImmutableList;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.dialect.Dialect;
 
 import com.google.common.io.Files;
 
+import ua.com.fielden.platform.ddl.IDdlGenerator;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
@@ -77,7 +74,7 @@ public abstract class DbCreator {
             final Class<?> dialectType = Class.forName(defaultDbProps.getProperty("hibernate.dialect"));
             final Dialect dialect = (Dialect) dialectType.newInstance();
         
-            maybeDdl.addAll(genDdl(config.getInstance(IDomainMetadata.class), dialect));
+            maybeDdl.addAll(genDdl(config.getInstance(IDdlGenerator.class), dialect));
         }
         
         if (execDdslScripts) {
@@ -102,12 +99,8 @@ public abstract class DbCreator {
 
     /**
      * Override to implement RDBMS specific DDL script generation.
-     * 
-     * @param domainMetaData
-     * @param dialect
-     * @return
      */
-    protected abstract List<String> genDdl(final IDomainMetadata domainMetaData, final Dialect dialect);
+    protected abstract List<String> genDdl(final IDdlGenerator ddlGenerator, final Dialect dialect);
 
     public Collection<EntityMetadata.Persistent> persistentEntitiesMetadata() {
         return persistentEntitiesMetadata;

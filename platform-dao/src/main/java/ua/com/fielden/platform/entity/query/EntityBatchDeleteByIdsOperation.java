@@ -5,8 +5,8 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.exception.ConstraintViolationException;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.dao.exceptions.EntityDeletionException;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.EqlTable;
 
 import java.util.Collection;
