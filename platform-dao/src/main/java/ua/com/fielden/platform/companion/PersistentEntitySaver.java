@@ -209,11 +209,10 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             //logger.debug("Finished saving entity " + entity + " (ID = " + entity.getId() + ")");
         }
 
-        final var entityMetadata = domainMetadata.forEntity(entityType);
-
         // now that we saved, restore values for dirty plain properties and reset their meta-state so that they are not
         // dirty in the returned saved instance
         if (!dirtyProperties.isEmpty()) {
+            final var entityMetadata = domainMetadata.forEntity(entity.getType());
             final boolean resultIsInstrumented = result._2.isInstrumented();
             for (final String prop : dirtyProperties) {
                 final Optional<PropertyMetadata> propMetadata = entityMetadata.property(entity.getProperty(prop)).orElseThrow(Function.identity());
@@ -294,7 +293,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         // reconstruct entity fetch model for future retrieval at the end of the method call
         final Optional<fetch<T>> entityFetchOption = skipRefetching ? empty() : (maybeFetch.isPresent() ? maybeFetch : of(FetchModelReconstructor.reconstruct(entity)));
 
-        final var entityMetadata = domainMetadata.forEntity(entityType);
+        final var entityMetadata = domainMetadata.forEntity(entity.getType());
 
         // proceed with property assignment from entity to persistent entity, which in case of a resolvable conflict acts like a fetch/rebase in git
         // it is essential that if a property is of an entity type it should be re-associated with the current session before being set
