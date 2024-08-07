@@ -324,6 +324,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     private boolean ignoreEditableState = false;
 
     private final Class<K> keyType;
+    /** Type of this entity with all non-structural enhancements removed. */
     private final Class<? extends AbstractEntity<?>> actualEntityType;
     /**
      * A reference to the application specific {@link EntityFactory} instance responsible for instantiation of this and other entities. It is also used for entity cloning.

@@ -262,10 +262,8 @@ public class PropertyTypeDeterminator {
     }
 
     /**
-     * Returns class without enhancements if present.
-     *
-     * @param clazz
-     * @return
+     * If the given type is non-structurally enhanced, recursively finds its base type, otherwise returns the type itself.
+     * The base type is determined recursively, so the returned type may be more than one superclass away from the given one.
      */
     public static Class<?> stripIfNeeded(final Class<?> clazz) {
         if (clazz == null) {
@@ -277,11 +275,9 @@ public class PropertyTypeDeterminator {
     }
 
     /**
-     * A convenient function to identify the closest real type (i.e. not dynamically generated) that is the bases for the specified entity type.
-     * It is simular to {@link #stripIfNeeded(Class)}, but in addition it handles generated types that have suffix {@link DynamicTypeNamingService#APPENDIX} in their name.
-     *
-     * @param type
-     * @return
+     * If the type is enhanced, recursively finds its base type, otherwise returns the type itself.
+     * This method is similar to {@link #stripIfNeeded(Class)}, but also removes structural enhancements (indicated by
+     * suffix {@link DynamicTypeNamingService#APPENDIX} in the type name).
      */
     public static Class<? extends AbstractEntity<?>> baseEntityType(final Class<? extends AbstractEntity<?>> type) {
         final Class<? extends AbstractEntity<?>> strippedType = (Class<? extends AbstractEntity<?>>) stripIfNeeded(type);
