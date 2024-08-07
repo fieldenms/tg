@@ -190,7 +190,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         // this is needed for executing after save event handler
         final List<String> dirtyProperties = entity.getDirtyProperties().stream().map(MetaProperty::getName).collect(toList());
 
-        final T2<Long, T> result;
+        final T2<Long, T> savedEntityAndId;
         // let's try to save entity
         try {
             // firstly validate the entity
@@ -201,37 +201,39 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             // entity is valid, and we should proceed with saving
             // new and previously saved entities are handled differently
             if (!entity.isPersisted()) { // is it a new entity?
-                result = saveNewEntity(entity, skipRefetching, maybeFetch, session.get());
+                savedEntityAndId = saveNewEntity(entity, skipRefetching, maybeFetch, session.get());
             } else { // so, this is a modified entity
-                result = saveModifiedEntity(entity, skipRefetching, maybeFetch, session.get());
+                savedEntityAndId = saveModifiedEntity(entity, skipRefetching, maybeFetch, session.get());
             }
         } finally {
             //logger.debug("Finished saving entity " + entity + " (ID = " + entity.getId() + ")");
         }
 
+        final T savedEntity = savedEntityAndId._2;
+
         // now that we saved, restore values for dirty plain properties and reset their meta-state so that they are not
         // dirty in the returned saved instance
         if (!dirtyProperties.isEmpty()) {
             final var entityMetadata = domainMetadata.forEntity(entity.getType());
-            final boolean resultIsInstrumented = result._2.isInstrumented();
+            final boolean resultIsInstrumented = savedEntity.isInstrumented();
             // bypass the editability constraint (saved instance may not be editable)
-            result._2.setIgnoreEditableState(true);
+            savedEntity.setIgnoreEditableState(true);
             for (final String prop : dirtyProperties) {
                 final Optional<PropertyMetadata> propMetadata = entityMetadata.property(entity.getProperty(prop)).orElseThrow(Function.identity());
                 if (propMetadata.filter(PropertyMetadata::isPlain).isPresent()) {
-                    result._2.set(prop, entity.get(prop));
+                    savedEntity.set(prop, entity.get(prop));
                     if (resultIsInstrumented) {
-                        result._2.getProperty(prop).resetState();
+                        savedEntity.getProperty(prop).resetState();
                     }
                 }
             }
-            result._2.setIgnoreEditableState(false);
+            savedEntity.setIgnoreEditableState(false);
         }
 
         // this call never throws any exceptions
-        processAfterSaveEvent.accept(result._2, dirtyProperties);
+        processAfterSaveEvent.accept(savedEntity, dirtyProperties);
 
-        return result;
+        return savedEntityAndId;
     }
 
     /**
