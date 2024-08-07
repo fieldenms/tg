@@ -35,7 +35,6 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IUniversalConstants;
@@ -46,7 +45,6 @@ import java.util.*;
 import java.util.function.*;
 import java.util.stream.Collectors;
 
-import static java.lang.Boolean.FALSE;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
@@ -217,17 +215,17 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             final var entityMetadata = domainMetadata.forEntity(entity.getType());
             final boolean resultIsInstrumented = savedEntity.isInstrumented();
             // bypass the editability constraint (saved instance may not be editable)
-            savedEntity.setIgnoreEditableState(true);
-            for (final String prop : dirtyProperties) {
-                final Optional<PropertyMetadata> propMetadata = entityMetadata.property(entity.getProperty(prop)).orElseThrow(Function.identity());
-                if (propMetadata.filter(PropertyMetadata::isPlain).isPresent()) {
-                    savedEntity.set(prop, entity.get(prop));
-                    if (resultIsInstrumented) {
-                        savedEntity.getProperty(prop).resetState();
+            savedEntity.withIgnoreEditableState(true, () -> {
+                for (final String prop : dirtyProperties) {
+                    final Optional<PropertyMetadata> propMetadata = entityMetadata.property(entity.getProperty(prop)).orElseThrow(Function.identity());
+                    if (propMetadata.filter(PropertyMetadata::isPlain).isPresent()) {
+                        savedEntity.set(prop, entity.get(prop));
+                        if (resultIsInstrumented) {
+                            savedEntity.getProperty(prop).resetState();
+                        }
                     }
                 }
-            }
-            savedEntity.setIgnoreEditableState(false);
+            });
         }
 
         // this call never throws any exceptions
