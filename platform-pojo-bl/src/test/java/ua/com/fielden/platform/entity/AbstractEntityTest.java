@@ -1213,6 +1213,58 @@ public class AbstractEntityTest {
         assertTrue(entity.isDirty());
     }
 
+    @Test
+    public void withIgnoreEditableState_sets_the_ignore_flag_only_for_the_duration_of_the_computation() {
+        final var entity = factory.newEntity(Entity.class);
+
+        entity.setIgnoreEditableState(false);
+        assertFalse(entity.isIgnoreEditableState());
+        entity.withIgnoreEditableState(true, () -> {
+            assertTrue(entity.isIgnoreEditableState());
+        });
+        assertFalse(entity.isIgnoreEditableState());
+
+        entity.setIgnoreEditableState(true);
+        assertTrue(entity.isIgnoreEditableState());
+        entity.withIgnoreEditableState(false, () -> {
+            assertFalse(entity.isIgnoreEditableState());
+            return 0;
+        });
+        assertTrue(entity.isIgnoreEditableState());
+
+        entity.setIgnoreEditableState(false);
+        assertFalse(entity.isIgnoreEditableState());
+        entity.withIgnoreEditableState(false, () -> {
+            assertFalse(entity.isIgnoreEditableState());
+        });
+        assertFalse(entity.isIgnoreEditableState());
+
+        entity.setIgnoreEditableState(true);
+        assertTrue(entity.isIgnoreEditableState());
+        entity.withIgnoreEditableState(true, () -> {
+            assertTrue(entity.isIgnoreEditableState());
+            return 0;
+        });
+        assertTrue(entity.isIgnoreEditableState());
+    }
+
+    @Test
+    public void withIgnoreEditableState_restores_the_original_value_of_the_ignore_flag_if_computation_throws() {
+        class LocalException extends RuntimeException {}
+
+        final var entity = factory.newEntity(Entity.class);
+
+        entity.setIgnoreEditableState(false);
+        assertFalse(entity.isIgnoreEditableState());
+        assertThrows(LocalException.class, () -> {
+            entity.withIgnoreEditableState(true, () -> {
+                assertTrue(entity.isIgnoreEditableState());
+                throw new LocalException();
+            });
+        });
+        assertFalse(entity.isIgnoreEditableState());
+    }
+
     private static DomainValidationConfig newDomainValidationConfig() {
         final var config = new DomainValidationConfig();
         config.setValidator(Entity.class, "firstProperty", new HappyValidator());
