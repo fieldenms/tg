@@ -4,77 +4,18 @@
     <groupId>fielden</groupId>
     <artifactId>platform-parent</artifactId>
     <packaging>pom</packaging>
-    <version>1.4.6-SNAPSHOT</version>
+    <version>2.0.0-SNAPSHOT</version>
     <name>Trident Genesis Platform Parent</name>
     <description>
         Trident Genesis is a software application platform designed for development of EAM/ERP type applications.
         Its main goal is to provide a holistic solution for development of information system with domain oriented approach.
     </description>
-    <url>https://www.fielden.com.ua/trac/pnl-tg/</url>
+    <url>https://github.com/fieldenms/tg</url>
     <inceptionYear>2008</inceptionYear>
     <organization>
         <name>Fielden Management Services</name>
         <url>http://www.fielden.com.au/</url>
     </organization>
-
-    <developers>
-        <developer>
-            <id>01es</id>
-            <url />
-            <name>Oles Hodych</name>
-            <organization>FMS.ua</organization>
-            <organizationUrl>
-                http://www.fielden.com.ua/
-            </organizationUrl>
-            <email>oles@fielden.com.au</email>
-            <timezone>+2</timezone>
-            <roles>
-                <role>owner</role>
-            </roles>
-        </developer>
-        <developer>
-            <id>nazar</id>
-            <url />
-            <name>Nazar Chaykivskyy</name>
-            <organization>FMS.ua</organization>
-            <organizationUrl>
-                http://www.fielden.com.ua/
-            </organizationUrl>
-            <email>nazar@fielden.com.au</email>
-            <timezone>+2</timezone>
-            <roles>
-                <role>owner</role>
-            </roles>
-        </developer>
-        <developer>
-            <id>jhou</id>
-            <url />
-            <name>Yura Prokopiv</name>
-            <organization>FMS.ua</organization>
-            <organizationUrl>
-                http://www.fielden.com.ua/
-            </organizationUrl>
-            <email>jhou@fielden.com.au</email>
-            <timezone>+2</timezone>
-            <roles>
-                <role>owner</role>
-            </roles>
-        </developer>
-        <developer>
-            <id>oleh</id>
-            <url />
-            <name>Oleh Maykovych</name>
-            <organization>FMS.ua</organization>
-            <organizationUrl>
-                http://www.fielden.com.ua/
-            </organizationUrl>
-            <email>oleh@fielden.com.au</email>
-            <timezone>+2</timezone>
-            <roles>
-                <role>owner</role>
-            </roles>
-        </developer>
-    </developers>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -82,6 +23,7 @@
         <posgresql.version>42.7.3</posgresql.version>
         <mssql.version>12.6.2.jre11</mssql.version>
         <javapoet.version>1.13.0</javapoet.version>
+        <antlr.version>4.9.3</antlr.version>
     </properties>
 
     <modules>
@@ -122,27 +64,6 @@
                         </compilerArgs>
                     </configuration>
                 </plugin>
-                <!-- The problem described below seems to have been resolved. Keeping this description for posterity in case similar occurs again.
-
-                 The maven-source-plugin has been commented as it appears to get executed twice during
-                 `mvn deploy`, which causes uploads to GitHub to undergo upgrade as a resource cannot
-                 be overwritten, and uploading the same file with the same name and the same build
-                 timestamp causes this.  This behaviour might be fixed in maven 3.7 - see:
-                 https://issues.apache.org/jira/browse/MNG-5868 -->
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-source-plugin</artifactId>
-                    <version>3.3.0</version>
-                    <executions>
-                        <execution>
-                            <id>attach-sources</id>
-                            <goals>
-                                <goal>jar</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
-
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
@@ -170,8 +91,18 @@
                     </executions>
                 </plugin>
                 <plugin>
-                    <artifactId>maven-deploy-plugin</artifactId>
-                    <version>3.0.0-M1</version>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>3.3.1</version>
+                    <executions>
+                        <execution>
+                            <id>attach-sources</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>jar-no-fork</goal>
+                            </goals>
+                        </execution>
+                    </executions>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -246,7 +177,10 @@
                 <!-- explicitly define maven-deploy-plugin after other to force exec order -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-deploy-plugin</artifactId>
-                <version>3.1.1</version>
+                <version>3.1.2</version>
+                <configuration>
+                    <types>jar,test-jar,javadoc,sources</types>
+                </configuration>                
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
