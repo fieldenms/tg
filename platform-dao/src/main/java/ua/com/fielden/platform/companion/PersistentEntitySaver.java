@@ -214,6 +214,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         if (!dirtyProperties.isEmpty()) {
             final var entityMetadata = domainMetadata.forEntity(entity.getType());
             final boolean resultIsInstrumented = result._2.isInstrumented();
+            // bypass the editability constraint (saved instance may not be editable)
+            result._2.setIgnoreEditableState(true);
             for (final String prop : dirtyProperties) {
                 final Optional<PropertyMetadata> propMetadata = entityMetadata.property(entity.getProperty(prop)).orElseThrow(Function.identity());
                 if (propMetadata.filter(PropertyMetadata::isPlain).isPresent()) {
@@ -223,6 +225,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                     }
                 }
             }
+            result._2.setIgnoreEditableState(false);
         }
 
         // this call never throws any exceptions
