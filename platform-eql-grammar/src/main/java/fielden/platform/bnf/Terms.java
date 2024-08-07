@@ -1,5 +1,8 @@
 package fielden.platform.bnf;
 
+/**
+ * Utilities that operate on {@linkplain Term terms}.
+ */
 public final class Terms {
 
     public static Terminal label(String label, Terminal terminal) {

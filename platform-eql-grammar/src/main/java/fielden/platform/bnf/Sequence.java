@@ -4,6 +4,9 @@ import java.util.*;
 import java.util.function.*;
 import java.util.stream.Stream;
 
+/**
+ * A sequence of terms, which is itself a term. More commonly known as <i>grouping</i>.
+ */
 public final class Sequence implements List<Term>, Term {
 
     private static final Sequence EMPTY_SEQUENCE = new Sequence();

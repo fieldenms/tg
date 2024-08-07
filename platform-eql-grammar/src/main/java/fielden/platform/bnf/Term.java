@@ -21,8 +21,16 @@ public sealed interface Term permits Notation, Sequence, Symbol {
         return TermMetadata.EMPTY_METADATA;
     }
 
+    /**
+     * Produces a new term that is equal to this term but with an additional annotation specified by the given key and value.
+     */
     <V> Term annotate(TermMetadata.Key<V> key, V value);
 
+    /**
+     * Completely and recursively flattens this term's structure.
+     * If this term is a nested structure of other terms, returns all of them by recursively flattening them first.
+     * Otherwise, this term is an atom, and a single-element stream with this term is returned.
+     */
     Stream<Term> flatten();
 
     /**

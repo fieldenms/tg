@@ -6,6 +6,9 @@ import java.util.stream.Stream;
 
 import static java.util.Collections.unmodifiableSet;
 
+/**
+ * Represents a grammar in the <a href="https://en.wikipedia.org/wiki/Backus%E2%80%93Naur_form">Backus-Naur form</a>.
+ */
 public record BNF(
         Set<Terminal> terminals,
         Set<Variable> variables,

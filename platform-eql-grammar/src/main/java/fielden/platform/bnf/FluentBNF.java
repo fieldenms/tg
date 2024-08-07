@@ -2,6 +2,11 @@ package fielden.platform.bnf;
 
 import java.util.*;
 
+/**
+ * Fluent API that can be used to define a {@link BNF} grammar.
+ * <p>
+ * To use the API, begin with {@link #start(Variable)}, then add arbitrary rules, and finally end with {@link IBnfBody#build()}.
+ */
 public final class FluentBNF {
 
     private FluentBNF() {}
@@ -60,10 +65,16 @@ public final class FluentBNF {
             return new BNF(builder.terminals, builder.variables, builder.start, builder.rules);
         }
 
+        /**
+         * If this fluent interface {@linkplain #buildsRule() builds a rule}, then builds a rule and returns it, otherwise fails.
+         */
         protected Rule finishRule() {
             throw new UnsupportedOperationException();
         }
 
+        /**
+         * Does this fluent interface build a rule? If so, then {@link #finishRule()} should be used during parsing.
+         */
         protected boolean buildsRule() {
             return false;
         }
@@ -79,12 +90,20 @@ public final class FluentBNF {
             this.lhs = lhs;
         }
 
+        /**
+         * Specify a body for this derivation rule. Multiple bodies may be specified with {@link IDerivationTail#or(Term...)},
+         * which will result into an {@linkplain Alternation alternation} with bodies as choices.
+         */
         @Override
         public IDerivationTail to(final Term... terms) {
             bodies.add(new Sequence(terms));
             return this;
         }
 
+        /**
+         * Specify a body for this derivation rule. Multiple bodies may be specified, which will result into an
+         * {@linkplain Alternation alternation} with bodies as choices.
+         */
         @Override
         public IDerivationTail or(final Term... terms) {
             bodies.add(new Sequence(terms));

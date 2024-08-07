@@ -6,6 +6,16 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
 
+/**
+ * Represents an alternative choice among several terms. The BNF notation for alternation is {@code term1 | term2}.
+ * <p>
+ * Representation of options (choices) as sequences enables options that consist of several terms.
+ * <pre>
+ *     column | column AS alias
+ *     ; is viewed as
+ *     (column) | (column AS alias)
+ * </pre>
+ */
 public record Alternation(List<Sequence> options, TermMetadata metadata) implements Notation {
 
     public Alternation(final List<Sequence> options, final TermMetadata metadata) {
