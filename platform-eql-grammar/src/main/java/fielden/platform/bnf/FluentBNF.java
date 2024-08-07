@@ -185,8 +185,8 @@ public final class FluentBNF {
 
         void add(final Symbol symbol) {
             switch (symbol) {
-            case Terminal x -> add(x);
-            case Variable x -> add(x);
+                case Terminal x -> add(x);
+                case Variable x -> add(x);
             }
         }
 
