@@ -707,6 +707,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
 
     private static final Set<String> ALWAYS_PRESENT_META_PROPERTIES = ImmutableSet.of(KEY, DESC);
 
+    /**
+     * Indicates whether a property is such that a {@link MetaProperty} always exists for it, regardless of the type that
+     * declares the property.
+     */
     public static boolean isAlwaysMetaProperty(final String property) {
         return ALWAYS_PRESENT_META_PROPERTIES.contains(property);
     }
