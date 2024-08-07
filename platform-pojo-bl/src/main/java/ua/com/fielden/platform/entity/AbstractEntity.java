@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptySet;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toCollection;
@@ -36,16 +37,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
 import com.google.common.collect.ImmutableSet;
@@ -55,6 +47,7 @@ import org.apache.logging.log4j.Logger;
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.factory.BeforeChangeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
@@ -86,6 +79,8 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
+import ua.com.fielden.platform.types.try_wrapper.FailableComputation;
+import ua.com.fielden.platform.types.try_wrapper.FailableRunnable;
 import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -1518,6 +1513,47 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * At this stage there is no reason for this setter to be used as part of the domain logic. */
     public void setIgnoreEditableState(final boolean ignoreEditableStateDuringSave) {
         this.ignoreEditableState = ignoreEditableStateDuringSave;
+    }
+
+    /**
+     * Runs the computation in an environment where the editable state of this entity may be ignored. The editable state
+     * prior to this call is restored after the computation completes or even if it throws an exception. In the latter
+     * case the exception is rethrown.
+     *
+     * @param ignore  whether to ignore the editable state while running the computation
+     * @see #setIgnoreEditableState(boolean)
+     */
+    public <T> T withIgnoreEditableState(final boolean ignore, final FailableComputation<T> computation) {
+        requireNonNull(computation, "computation");
+
+        final boolean prevState = this.ignoreEditableState;
+        this.ignoreEditableState = ignore;
+        final T result;
+        try {
+            result = computation.get();
+        } catch (final Exception ex) {
+            throw ex instanceof RuntimeException rex ? rex : new RuntimeException(ex);
+        } finally {
+            this.ignoreEditableState = prevState;
+        }
+        return result;
+    }
+
+    /**
+     * Equivalent to {@link #withIgnoreEditableState(boolean, FailableComputation)} but does not return any value.
+     */
+    public void withIgnoreEditableState(final boolean ignore, final FailableRunnable runnable) {
+        requireNonNull(runnable, "runnable");
+
+        final boolean prevIgnore = this.ignoreEditableState;
+        this.ignoreEditableState = ignore;
+        try {
+            runnable.run();
+        } catch (final Exception ex) {
+            throw ex instanceof RuntimeException rex ? rex : new RuntimeException(ex);
+        } finally {
+            this.ignoreEditableState = prevIgnore;
+        }
     }
 
     /**
