@@ -172,10 +172,7 @@ import ua.com.fielden.platform.web.resources.webui.UserRoleWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserWebUiConfig;
 import ua.com.fielden.platform.web.test.eventsources.TgPersistentEntityWithPropertiesEventSrouce;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
-import ua.com.fielden.platform.web.test.server.config.StandardActions;
-import ua.com.fielden.platform.web.test.server.config.TgEntityWithTimeZoneDatesWebUiConfig;
-import ua.com.fielden.platform.web.test.server.config.TgGeneratedEntityForTrippleDecAnalysisWebUiConfig;
-import ua.com.fielden.platform.web.test.server.config.TgGeneratedEntityWebUiConfig;
+import ua.com.fielden.platform.web.test.server.config.*;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityActionWebUiConfig;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
@@ -264,6 +261,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         // Add entity centres
         MoreDataForDeleteEntityWebUiConfig.register(injector(), configApp());
+        final TgEntityWithRichTextPropWebUiConfig tgEntitWithRichTextConfig = TgEntityWithRichTextPropWebUiConfig.register(injector(),configApp());
         final TgCompoundEntityWebUiConfig tgCompoundEntityWebUiConfig = TgCompoundEntityWebUiConfig.register(injector(), configApp());
         final EntityActionConfig mkTgCompoundEntityLocator = mkLocator(configApp(), injector(), TgCompoundEntityLocator.class, "tgCompoundEntity", "color: #0d4b8a");
 
@@ -1021,6 +1019,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*  */.addMenuItem("Custom View").description("Custom view description").icon("icons:face").view(customView).done()
                 /*  */.addMenuItem("Tripple dec example").description("Tripple dec example").icon("icons:favorite-border").centre(configApp().getCentre(MiTgGeneratedEntityForTrippleDecAnalysis.class).get()).done()
                 /*  */.addMenuItem("Deletion Centre").description("Deletion centre description").icon("icons:find-in-page").centre(deletionTestCentre).done()
+                /*  */.addMenuItem("Rich Text Centre").description("Entity Centre with rich text property").icon("editor:text-fields").centre(tgCompoundEntityWebUiConfig.centre).done()
                 /*  */.addMenuItem("Last group").description("Last group").icon("icons:find-replace")
                 /*    */.addMenuItem("Property Dependency Example").description("Property Dependency Example description").centre(propDependencyCentre).done()
                 /*    */.addMenuItem("Property Descriptor Example").description("Property Descriptor Example description").centre(propDescriptorCentre).done()
