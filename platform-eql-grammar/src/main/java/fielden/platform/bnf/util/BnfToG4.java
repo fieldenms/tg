@@ -17,6 +17,7 @@ import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static fielden.platform.bnf.Rule.isSingleAltRule;
 import static fielden.platform.bnf.TermMetadata.LABEL;
 import static fielden.platform.bnf.TermMetadata.LIST_LABEL;
+import static fielden.platform.bnf.util.BnfUtils.removeUnused;
 import static java.util.stream.Collectors.*;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -52,7 +53,7 @@ public class BnfToG4 {
 
     public BnfToG4(final BNF bnf, final String grammarName) {
         this.originalBnf = bnf;
-        this.bnf = RuleInliner.inlineRules.compose(stripParameters).apply(bnf);
+        this.bnf = removeUnused.compose(RuleInliner.inlineRules.compose(stripParameters)).apply(bnf);
         this.grammarName = grammarName;
     }
 
