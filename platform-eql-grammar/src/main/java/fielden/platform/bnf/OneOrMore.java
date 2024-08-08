@@ -4,12 +4,12 @@ import java.util.function.Function;
 
 public record OneOrMore(Term term, TermMetadata metadata) implements Quantifier {
 
-    public OneOrMore(Term term) {
+    public OneOrMore(final Term term) {
         this(term, TermMetadata.EMPTY_METADATA);
     }
 
     @Override
-    public <V> OneOrMore annotate(TermMetadata.Key<V> key, V value) {
+    public <V> OneOrMore annotate(final TermMetadata.Key<V> key, final V value) {
         return new OneOrMore(term, TermMetadata.merge(metadata(), key, value));
     }
 

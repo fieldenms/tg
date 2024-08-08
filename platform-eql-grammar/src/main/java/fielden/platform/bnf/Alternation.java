@@ -23,12 +23,12 @@ public record Alternation(List<Sequence> options, TermMetadata metadata) impleme
         this.metadata = metadata;
     }
 
-    public Alternation(List<Sequence> options) {
+    public Alternation(final List<Sequence> options) {
         this(options, TermMetadata.EMPTY_METADATA);
     }
 
     @Override
-    public <V> Alternation annotate(TermMetadata.Key<V> key, V value) {
+    public <V> Alternation annotate(final TermMetadata.Key<V> key, final V value) {
         return new Alternation(options, TermMetadata.merge(metadata(), key, value));
     }
 

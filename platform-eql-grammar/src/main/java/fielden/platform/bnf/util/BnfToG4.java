@@ -48,13 +48,13 @@ public class BnfToG4 {
     protected final BNF originalBnf;
     protected final String grammarName;
 
-    public BnfToG4(BNF bnf, String grammarName) {
+    public BnfToG4(final BNF bnf, final String grammarName) {
         this.originalBnf = bnf;
         this.bnf = stripParameters(bnf);
         this.grammarName = grammarName;
     }
 
-    public static void writeResult(Result result, Path directory) throws IOException {
+    public static void writeResult(final Result result, final Path directory) throws IOException {
         Files.createDirectories(directory);
 
         Path filePath = directory.resolve(result.grammarName + ".g4");
@@ -65,7 +65,7 @@ public class BnfToG4 {
         }
     }
 
-    protected String lexerRule(Terminal terminal) {
+    protected String lexerRule(final Terminal terminal) {
         return terminal.name().toUpperCase();
     }
 
@@ -76,7 +76,7 @@ public class BnfToG4 {
     }
 
     protected String generateGrammar() {
-        var sb = new StringBuilder();
+        final var sb = new StringBuilder();
 
         sb.append("// This grammar was generated. Timestamp: %s\n\n".formatted(ZonedDateTime.now().toString()));
         sb.append("grammar %s;\n\n".formatted(grammarName));
@@ -107,8 +107,8 @@ public class BnfToG4 {
         return sb.toString();
     }
 
-    protected String convert(Rule rule) {
-        Function<String, String> labeler =  switch (rule) {
+    protected String convert(final Rule rule) {
+        final Function<String, String> labeler =  switch (rule) {
             case Derivation $ -> isSingleTerminalRule(rule) ? s -> "token=" + s : Function.identity();
             case Specialization $ -> s -> makeAltLabelName(rule, s);
         };
@@ -117,15 +117,15 @@ public class BnfToG4 {
                 rule.rhs().options().stream().map(this::convert).map(labeler).collect(joining("\n    | ")));
     }
 
-    protected String makeAltLabelName(Rule rule, String alt) {
+    protected String makeAltLabelName(final Rule rule, final String alt) {
         return "%s # %s_%s".formatted(alt, capitalize(rule.lhs().name()), capitalize(alt));
     }
 
-    protected String convert(Sequence seq) {
+    protected String convert(final Sequence seq) {
         return seq.stream().map(this::convert).collect(joining(" "));
     }
 
-    protected String convert(Term term) {
+    protected String convert(final Term term) {
         String s = switch (term) {
             case Symbol symbol -> convert(symbol);
             case Sequence sequence -> convert(sequence);
@@ -134,33 +134,33 @@ public class BnfToG4 {
         return term.metadata().get(LABEL).map(lbl -> convertLabeled(lbl, s)).orElse(s);
     }
 
-    protected String convertLabeled(String label, String term) {
+    protected String convertLabeled(final String label, final String term) {
         return "%s=%s".formatted(label, term);
     }
 
-    protected String convert(Symbol symbol) {
+    protected String convert(final Symbol symbol) {
         return switch (symbol) {
             case Terminal terminal -> convert(terminal);
             case Variable variable -> convert(variable);
         };
     }
 
-    protected String convert(Variable variable) {
+    protected String convert(final Variable variable) {
         return uncapitalize(variable.name());
     }
 
-    protected String convert(Terminal terminal) {
+    protected String convert(final Terminal terminal) {
         return switch (terminal) {
             case Token token -> convert(token);
             default -> convertTerminal(terminal);
         } ;
     }
 
-    protected String convertTerminal(Terminal terminal) {
+    protected String convertTerminal(final Terminal terminal) {
         return lexerRule(terminal);
     }
 
-    protected String convert(Token token) {
+    protected String convert(final Token token) {
         return convertTerminal(token);
     }
 
@@ -219,7 +219,7 @@ public class BnfToG4 {
     /**
      * Generates a custom token type for ANTLR corresponding to the token in the BNF grammar.
      */
-    class TokenSourceGenerator {
+    private class TokenSourceGenerator {
         final Token token;
 
         TokenSourceGenerator(final Token token) {
@@ -304,22 +304,20 @@ public class BnfToG4 {
     /**
      * @return a new rule without duplicate alternations on the right-hand side
      */
-    private static Rule deduplicate(Rule rule) {
+    private static Rule deduplicate(final Rule rule) {
         return switch (rule) {
             case Derivation d -> new Derivation(d.lhs(), new Alternation(d.rhs().options().stream().distinct().toList(), d.rhs().metadata()));
             case Specialization s -> new Specialization(s.lhs(), s.specializers().stream().distinct().toList());
         };
     }
 
-    private static <T, R> List<R> enumerate(Collection<? extends T> items, BiFunction<? super T, Integer, ? extends R> mapper) {
-        var result = new ArrayList<R>(items.size());
-
-        int i = 0;
+    private static <T, R> List<R> enumerate(final Collection<? extends T> items, final BiFunction<? super T, Integer, ? extends R> mapper) {
+        final var result = new ArrayList<R>(items.size());
+        int index = 0;
         for (final T item : items) {
-            result.add(mapper.apply(item, i));
-            i++;
+            result.add(mapper.apply(item, index));
+            index++;
         }
-
         return result;
     }
 

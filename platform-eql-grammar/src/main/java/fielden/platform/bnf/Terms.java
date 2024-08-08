@@ -5,11 +5,11 @@ package fielden.platform.bnf;
  */
 public final class Terms {
 
-    public static Terminal label(String label, Terminal terminal) {
+    public static Terminal label(final String label, final Terminal terminal) {
         return terminal.annotate(TermMetadata.LABEL, label);
     }
 
-    public static Variable label(String label, Variable variable) {
+    public static Variable label(final String label, final Variable variable) {
         return variable.annotate(TermMetadata.LABEL, label);
     }
 

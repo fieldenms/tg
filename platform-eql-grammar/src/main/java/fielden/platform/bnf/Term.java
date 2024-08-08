@@ -24,7 +24,7 @@ public sealed interface Term permits Notation, Sequence, Symbol {
     /**
      * Produces a new term that is equal to this term but with an additional annotation specified by the given key and value.
      */
-    <V> Term annotate(TermMetadata.Key<V> key, V value);
+    <V> Term annotate(final TermMetadata.Key<V> key, final V value);
 
     /**
      * Completely and recursively flattens this term's structure.
@@ -36,6 +36,6 @@ public sealed interface Term permits Notation, Sequence, Symbol {
     /**
      * Recursive map.
      */
-    Term recMap(Function<? super Term, ? extends Term> mapper);
+    Term recMap(final Function<? super Term, ? extends Term> mapper);
 
 }

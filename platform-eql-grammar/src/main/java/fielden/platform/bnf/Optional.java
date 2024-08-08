@@ -4,12 +4,12 @@ import java.util.function.Function;
 
 public record Optional(Term term, TermMetadata metadata) implements Quantifier {
 
-    public Optional(Term term) {
+    public Optional(final Term term) {
         this(term, TermMetadata.EMPTY_METADATA);
     }
 
     @Override
-    public <V> Optional annotate(TermMetadata.Key<V> key, V value) {
+    public <V> Optional annotate(final TermMetadata.Key<V> key, final V value) {
         return new Optional(term, TermMetadata.merge(metadata(), key, value));
     }
 

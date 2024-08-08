@@ -5,15 +5,15 @@ import java.util.List;
 
 public non-sealed interface Terminal extends Symbol {
 
-    default Token with(List<? extends Parameter> parameters) {
+    default Token with(final List<? extends Parameter> parameters) {
         return new Token(this, parameters);
     }
 
-    default Token with(Class<?>... parameters) {
+    default Token with(final Class<?>... parameters) {
         return with(Arrays.stream(parameters).map(NormalParameter::new).toList());
     }
 
-    default Token rest(Class<?> varArityParameter) {
+    default Token rest(final Class<?> varArityParameter) {
         return with(List.of(new VarArityParameter(varArityParameter)));
     }
 
@@ -23,7 +23,7 @@ public non-sealed interface Terminal extends Symbol {
     }
 
     @Override
-    default <V> Terminal annotate(TermMetadata.Key<V> key, V value) {
+    default <V> Terminal annotate(final TermMetadata.Key<V> key, final V value) {
         final var newMetadata = TermMetadata.merge(metadata(), key, value);
         final String name = name();
         final Terminal normal = normalize();

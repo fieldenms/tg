@@ -14,20 +14,20 @@ public final class Sequence implements List<Term>, Term {
     private final List<Term> terms;
     private final TermMetadata metadata;
 
-    public Sequence(Collection<? extends Term> terms, TermMetadata metadata) {
+    public Sequence(final Collection<? extends Term> terms, final TermMetadata metadata) {
         this.terms = List.copyOf(terms);
         this.metadata = metadata;
     }
 
-    public Sequence(Collection<? extends Term> terms) {
+    public Sequence(final Collection<? extends Term> terms) {
         this(terms, TermMetadata.EMPTY_METADATA);
     }
 
-    public Sequence(Term... terms) {
+    public Sequence(final Term... terms) {
         this(Arrays.asList(terms), TermMetadata.EMPTY_METADATA);
     }
 
-    public static Sequence of(Term... terms) {
+    public static Sequence of(final Term... terms) {
         if (terms.length == 0) {
             return EMPTY_SEQUENCE;
         }

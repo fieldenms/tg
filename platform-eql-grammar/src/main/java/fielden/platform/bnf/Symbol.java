@@ -13,7 +13,7 @@ public sealed interface Symbol extends Term permits Variable, Terminal {
     }
 
     @Override
-    default Term recMap(Function<? super Term, ? extends Term> mapper) {
+    default Term recMap(final Function<? super Term, ? extends Term> mapper) {
         return mapper.apply(this);
     }
 

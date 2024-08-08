@@ -13,7 +13,7 @@ public non-sealed interface Variable extends Symbol {
     }
 
     @Override
-    default <V> Variable annotate(TermMetadata.Key<V> key, V value) {
+    default <V> Variable annotate(final TermMetadata.Key<V> key, final V value) {
         final var newMetadata = TermMetadata.merge(metadata(), key, value);
         final String name = name();
         final Variable normal = normalize();

@@ -10,17 +10,17 @@ import static java.util.stream.Collectors.joining;
  */
 public record Token(String name, TermMetadata metadata, List<? extends Parameter> parameters) implements Terminal, Parameterised {
 
-    public Token(String name, TermMetadata metadata, List<? extends Parameter> parameters) {
+    public Token(final String name, final TermMetadata metadata, final List<? extends Parameter> parameters) {
         this.name = name;
         this.metadata = metadata;
         this.parameters = List.copyOf(parameters);
     }
 
-    public Token(Terminal terminal, List<? extends Parameter> parameters) {
+    public Token(final Terminal terminal, final List<? extends Parameter> parameters) {
         this(terminal.name(), terminal.metadata(), parameters);
     }
 
-    public Token(String name, TermMetadata metadata, Parameter... parameters) {
+    public Token(final String name, final TermMetadata metadata, final Parameter... parameters) {
         this(name, metadata, Arrays.asList(parameters));
     }
 
