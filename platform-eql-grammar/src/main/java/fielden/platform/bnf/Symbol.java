@@ -17,4 +17,8 @@ public sealed interface Symbol extends Term permits Variable, Terminal {
         return mapper.apply(this);
     }
 
+    default Term map(Function<? super Term, ? extends Term> mapper) {
+        return mapper.apply(this);
+    }
+
 }

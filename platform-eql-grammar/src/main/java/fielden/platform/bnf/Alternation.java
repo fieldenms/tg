@@ -47,6 +47,11 @@ public final class Alternation implements Notation {
     }
 
     @Override
+    public Alternation map(final Function<? super Term, ? extends Term> mapper) {
+        return new Alternation(options.stream().map(mapper).toList(), metadata);
+    }
+
+    @Override
     public Stream<Term> flatten() {
         return options.stream().flatMap(Term::flatten);
     }

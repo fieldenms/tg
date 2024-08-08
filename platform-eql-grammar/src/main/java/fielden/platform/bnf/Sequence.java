@@ -3,6 +3,7 @@ package fielden.platform.bnf;
 import com.google.common.collect.ImmutableList;
 
 import java.util.*;
+import java.util.Optional;
 import java.util.function.*;
 import java.util.stream.Stream;
 
@@ -68,6 +69,7 @@ public final class Sequence implements List<Term>, Term {
         return new Sequence(terms.stream().map(t -> t.recMap(mapper)).toList(), metadata);
     }
 
+    @Override
     public Sequence map(final Function<? super Term, ? extends Term> mapper) {
         return new Sequence(terms.stream().map(mapper).toList(), metadata);
     }

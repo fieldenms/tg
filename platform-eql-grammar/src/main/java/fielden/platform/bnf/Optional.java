@@ -24,6 +24,11 @@ public record Optional(Term term, TermMetadata metadata) implements Quantifier {
     }
 
     @Override
+    public Optional map(final Function<? super Term, ? extends Term> mapper) {
+        return new Optional(mapper.apply(term), metadata);
+    }
+
+    @Override
     public String toString() {
         return "{%s}?".formatted(term);
     }

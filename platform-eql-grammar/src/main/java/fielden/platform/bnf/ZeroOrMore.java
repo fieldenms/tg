@@ -24,6 +24,11 @@ public record ZeroOrMore(Term term, TermMetadata metadata) implements Quantifier
     }
 
     @Override
+    public ZeroOrMore map(final Function<? super Term, ? extends Term> mapper) {
+        return new ZeroOrMore(mapper.apply(term), metadata);
+    }
+
+    @Override
     public String toString() {
         return "{%s}*".formatted(term);
     }

@@ -24,6 +24,11 @@ public record OneOrMore(Term term, TermMetadata metadata) implements Quantifier 
     }
 
     @Override
+    public OneOrMore map(final Function<? super Term, ? extends Term> mapper) {
+        return new OneOrMore(mapper.apply(term), metadata);
+    }
+
+    @Override
     public String toString() {
         return "{%s}+".formatted(term);
     }

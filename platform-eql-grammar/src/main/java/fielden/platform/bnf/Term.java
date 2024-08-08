@@ -38,4 +38,11 @@ public sealed interface Term permits Notation, Sequence, Symbol {
      */
     Term recMap(final Function<? super Term, ? extends Term> mapper);
 
+    /**
+     * Map each term in this structure (non-recursively).
+     * If this term is a nested structure of other terms, map each term without recursing deeper.
+     * Otherwise, this term is an atom, and the function is applied directly to it.
+     */
+    Term map(Function<? super Term, ? extends Term> mapper);
+
 }
