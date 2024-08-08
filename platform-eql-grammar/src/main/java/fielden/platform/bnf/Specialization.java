@@ -16,7 +16,7 @@ public record Specialization(Variable lhs, List<Variable> specializers) implemen
 
     @Override
     public Alternation rhs() {
-        return new Alternation(specializers.stream().map(Sequence::new).toList());
+        return new Alternation(specializers);
     }
 
     @Override

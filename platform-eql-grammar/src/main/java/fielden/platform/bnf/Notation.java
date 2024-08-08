@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
+import static fielden.platform.bnf.Sequence.seqOrTerm;
+
 public sealed interface Notation extends Term permits Alternation, Quantifier {
 
     static OneOrMore repeat1(final Term term) {
@@ -14,7 +16,7 @@ public sealed interface Notation extends Term permits Alternation, Quantifier {
         var list = new ArrayList<Term>(1 + terms.length);
         list.add(term);
         Collections.addAll(list, terms);
-        return new OneOrMore(new Sequence(list));
+        return new OneOrMore(seqOrTerm(list));
     }
 
     static ZeroOrMore repeat(final Term term) {
@@ -25,7 +27,7 @@ public sealed interface Notation extends Term permits Alternation, Quantifier {
         var list = new ArrayList<Term>(1 + terms.length);
         list.add(term);
         Collections.addAll(list, terms);
-        return new ZeroOrMore(new Sequence(list));
+        return new ZeroOrMore(seqOrTerm(list));
     }
 
     static Optional opt(final Term term) {
@@ -36,7 +38,7 @@ public sealed interface Notation extends Term permits Alternation, Quantifier {
         var list = new ArrayList<Term>(1 + terms.length);
         list.add(term);
         Collections.addAll(list, terms);
-        return new Optional(new Sequence(list));
+        return new Optional(seqOrTerm(list));
     }
 
     static Alternation oneOf(final Term term, final Term... terms) {

@@ -204,8 +204,7 @@ public class BnfToG4 {
     static boolean isSingleTerminalRule(final Rule rule) {
         return switch (rule) {
             case Specialization $ -> false;
-            case Derivation derivation -> derivation.rhs().options().stream()
-                    .allMatch(seq -> seq.size() == 1 && seq.getFirst() instanceof Terminal);
+            case Derivation derivation -> derivation.rhs().options().stream().allMatch(term -> term instanceof Terminal);
         };
     }
 

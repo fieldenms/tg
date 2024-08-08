@@ -1,5 +1,7 @@
 package fielden.platform.bnf;
 
+import com.google.common.collect.ImmutableList;
+
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.Stream;
@@ -9,32 +11,46 @@ import java.util.stream.Stream;
  */
 public final class Sequence implements List<Term>, Term {
 
-    private static final Sequence EMPTY_SEQUENCE = new Sequence();
+    private static final Sequence EMPTY_SEQUENCE = new Sequence(ImmutableList.of());
 
     private final List<Term> terms;
     private final TermMetadata metadata;
 
-    public Sequence(final Collection<? extends Term> terms, final TermMetadata metadata) {
-        this.terms = List.copyOf(terms);
+    private Sequence(final Collection<? extends Term> terms, TermMetadata metadata) {
+        this.terms = ImmutableList.copyOf(terms);
         this.metadata = metadata;
     }
 
-    public Sequence(final Collection<? extends Term> terms) {
+    private Sequence(final Collection<? extends Term> terms) {
         this(terms, TermMetadata.EMPTY_METADATA);
     }
 
-    public Sequence(final Term... terms) {
-        this(Arrays.asList(terms), TermMetadata.EMPTY_METADATA);
+    public static Sequence of(final Term... terms) {
+        return of(Arrays.asList(terms));
     }
 
-    public static Sequence of(final Term... terms) {
-        if (terms.length == 0) {
+    public static Sequence of(final Collection<? extends Term> terms) {
+        if (terms.isEmpty()) {
             return EMPTY_SEQUENCE;
         }
-        else if (terms.length == 1 && terms[0] instanceof Sequence seq) {
+        else if (terms.size() == 1 && terms.iterator().next() instanceof Sequence seq) {
             return seq;
         }
         return new Sequence(terms);
+    }
+
+    /**
+     * Given a single term, returns it, otherwise returns a sequence containing all given terms.
+     */
+    public static Term seqOrTerm(Term... terms) {
+        return terms.length == 1 ? terms[0] : of(terms);
+    }
+
+    /**
+     * Given a single term, returns it, otherwise returns a sequence containing all given terms.
+     */
+    public static Term seqOrTerm(Collection<? extends Term> terms) {
+        return terms.size() == 1 ? terms.iterator().next() : of(terms);
     }
 
     @Override

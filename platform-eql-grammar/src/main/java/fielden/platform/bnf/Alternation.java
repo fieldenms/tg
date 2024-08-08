@@ -1,6 +1,7 @@
 package fielden.platform.bnf;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -16,14 +17,17 @@ import static java.util.stream.Collectors.joining;
  *     (column) | (column AS alias)
  * </pre>
  */
-public record Alternation(List<Sequence> options, TermMetadata metadata) implements Notation {
+public final class Alternation implements Notation {
 
-    public Alternation(final List<Sequence> options, final TermMetadata metadata) {
+    private final List<Term> options;
+    private final TermMetadata metadata;
+
+    public Alternation(final List<? extends Term> options, final TermMetadata metadata) {
         this.options = List.copyOf(options);
         this.metadata = metadata;
     }
 
-    public Alternation(final List<Sequence> options) {
+    public Alternation(final List<? extends Term> options) {
         this(options, TermMetadata.EMPTY_METADATA);
     }
 
@@ -44,12 +48,33 @@ public record Alternation(List<Sequence> options, TermMetadata metadata) impleme
 
     @Override
     public Stream<Term> flatten() {
-        return options.stream().flatMap(Sequence::flatten);
+        return options.stream().flatMap(Term::flatten);
     }
 
     @Override
     public String toString() {
         return options().stream().map(Term::toString).collect(joining(" | "));
+    }
+
+    public List<Term> options() {
+        return options;
+    }
+
+    @Override
+    public TermMetadata metadata() {
+        return metadata;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj == this || obj instanceof Alternation that &&
+                              Objects.equals(this.options, that.options) &&
+                              Objects.equals(this.metadata, that.metadata);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(options, metadata);
     }
 
 }

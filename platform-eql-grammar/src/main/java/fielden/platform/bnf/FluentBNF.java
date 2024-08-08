@@ -2,6 +2,8 @@ package fielden.platform.bnf;
 
 import java.util.*;
 
+import static fielden.platform.bnf.Sequence.seqOrTerm;
+
 /**
  * Fluent API that can be used to define a {@link BNF} grammar.
  * <p>
@@ -83,7 +85,7 @@ public final class FluentBNF {
 
     private static final class DerivationImpl extends BnfBodyImpl implements FluentBNF.IDerivation, FluentBNF.IDerivationTail {
         private final Variable lhs;
-        private final List<Sequence> bodies = new ArrayList<>();
+        private final List<Term> bodies = new ArrayList<>();
 
         DerivationImpl(final Builder builder, final Variable lhs) {
             super(builder);
@@ -96,7 +98,7 @@ public final class FluentBNF {
          */
         @Override
         public IDerivationTail to(final Term... terms) {
-            bodies.add(new Sequence(terms));
+            bodies.add(seqOrTerm(terms));
             return this;
         }
 
@@ -106,7 +108,7 @@ public final class FluentBNF {
          */
         @Override
         public IDerivationTail or(final Term... terms) {
-            bodies.add(new Sequence(terms));
+            bodies.add(seqOrTerm(terms));
             return this;
         }
 
