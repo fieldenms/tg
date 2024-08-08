@@ -53,7 +53,7 @@ class SelectionCriteriaBuilderAsSingle<T extends AbstractEntity<?>> implements I
     public ISingleStringDefaultValueAssigner<T> text() {
         // check if the specified property type is applicable to a text component
         final Class<?> propType = PropertyTypeDeterminator.determinePropertyType(builder.getEntityType(), builder.currSelectionCrit.get());
-        if (!EntityUtils.isString(propType)) {
+        if (!EntityUtils.isString(propType) || !EntityUtils.isRichText(propType)) {
             throw new IllegalArgumentException(String.format("Property '%s'@'%s' cannot be used for a text component as it is not of type String (%s).", builder.currSelectionCrit.get(), builder.getEntityType().getSimpleName(), propType.getSimpleName()));
         }
 

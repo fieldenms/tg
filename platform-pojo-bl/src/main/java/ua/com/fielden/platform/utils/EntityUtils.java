@@ -27,6 +27,7 @@ import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.try_wrapper.TryWrapper;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -580,6 +581,15 @@ public class EntityUtils {
      */
     public static boolean isString(final Class<?> type) {
         return String.class.isAssignableFrom(type);
+    }
+
+    /**
+     * Indicates whether type represents {@link RichText} values.
+     *
+     * @return
+     */
+    public static boolean isRichText(final Class<?> type) {
+        return RichText.class.isAssignableFrom(type);
     }
 
     /**

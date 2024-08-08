@@ -25,14 +25,14 @@ public class TgEntityWithRichTextProp extends AbstractPersistentEntity<String> {
     @IsProperty
     @MapTo
     @Title(value = "Rich Text Prop", desc = "Rich Text Property")
-    private String richTextProp;
+    private RichText richTextProp;
 
-    public String getRichTextProp() {
+    public RichText getRichTextProp() {
         return richTextProp;
     }
 
     @Observable
-    public TgEntityWithRichTextProp setRichTextProp(final String richTextProp) {
+    public TgEntityWithRichTextProp setRichTextProp(final RichText richTextProp) {
         this.richTextProp = richTextProp;
         return this;
     }
