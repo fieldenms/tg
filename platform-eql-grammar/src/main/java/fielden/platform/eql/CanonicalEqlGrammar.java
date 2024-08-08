@@ -78,16 +78,16 @@ public final class CanonicalEqlGrammar {
             to(label("left", ComparisonOperand), UnaryComparisonOperator).
 
         derive(ComparisonPredicate).
-            to(label("left", ComparisonOperand), label("op", ComparisonOperator), label("right", ComparisonOperand)).
+            to(label("left", ComparisonOperand), ComparisonOperator, label("right", ComparisonOperand)).
 
         derive(QuantifiedComparisonPredicate).
-            to(label("left", ComparisonOperand), label("op", ComparisonOperator), QuantifiedOperand).
+            to(label("left", ComparisonOperand), ComparisonOperator, QuantifiedOperand).
 
         derive(LikePredicate).
-            to(label("left", ComparisonOperand), label("op", LikeOperator), label("right", ComparisonOperand)).
+            to(label("left", ComparisonOperand), LikeOperator, label("right", ComparisonOperand)).
 
         derive(MembershipPredicate).
-            to(label("left", ComparisonOperand), label("op", MembershipOperator), MembershipOperand).
+            to(label("left", ComparisonOperand), MembershipOperator, MembershipOperand).
 
         derive(UnaryComparisonOperator).
             to(isNull).or(isNotNull).
