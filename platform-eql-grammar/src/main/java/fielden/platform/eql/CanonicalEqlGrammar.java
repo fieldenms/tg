@@ -105,7 +105,7 @@ public final class CanonicalEqlGrammar {
             or(notLike).or(notLikeWithCast).or(notILikeWithCast).or(notILike).
 
         specialize(ComparisonOperand).
-            into(SingleOperand, Expr, MultiOperand).
+            into(SingleOperand, MultiOperand).
 
         derive(ComparisonOperator).
             to(eq).or(gt).or(lt).or(ge).or(le).or(ne).
