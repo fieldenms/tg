@@ -3,7 +3,7 @@ package fielden.platform.bnf;
 import java.util.Objects;
 
 /**
- * A variable is a nonterminal symbol.
+ * A variable is a non-terminal symbol.
  */
 public non-sealed interface Variable extends Symbol {
 

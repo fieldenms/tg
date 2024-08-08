@@ -10,9 +10,9 @@ public final class TermMetadata {
 
     public static final Key<String> LABEL = new Key<>("label");
 
-    private final Map<Key, Object> map;
+    private final Map<Key<?>, Object> map;
 
-    public TermMetadata(Map<Key, Object> map) {
+    public TermMetadata(final Map<Key<?>, Object> map) {
         this.map = Map.copyOf(map);
     }
 
@@ -20,12 +20,8 @@ public final class TermMetadata {
         this.map = Map.of();
     }
 
-    public <T> T get(Key<T> key) {
-        return (T) map.get(key);
-    }
-
-    public <T> Optional<T> maybeGet(Key<T> key) {
-        return Optional.ofNullable(get(key));
+    public <T> Optional<T> get(final Key<T> key) {
+        return Optional.ofNullable((T) map.get(key));
     }
 
     public static <V> TermMetadata merge(final TermMetadata metadata, final Key<V> key, final V value) {
@@ -41,7 +37,7 @@ public final class TermMetadata {
          */
         private final String name;
 
-        private Key(String name) {
+        private Key(final String name) {
             this.name = name;
         }
 
@@ -51,18 +47,18 @@ public final class TermMetadata {
         }
     }
 
-    public static Builder builder() {
+    private static Builder builder() {
         return new Builder();
     }
 
-    public static final class Builder {
-        private final Map<Key, Object> map = new HashMap<>();
+    private static final class Builder {
+        private final Map<Key<?>, Object> map = new HashMap<>();
 
         public TermMetadata build() {
             return new TermMetadata(map);
         }
 
-        public <T> Builder add(Key<T> key, T value) {
+        public <T> Builder add(final Key<? extends T> key, final T value) {
             map.put(key, value);
             return this;
         }

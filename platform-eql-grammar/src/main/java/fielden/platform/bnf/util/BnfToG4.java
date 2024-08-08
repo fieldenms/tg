@@ -131,7 +131,7 @@ public class BnfToG4 {
             case Sequence sequence -> convert(sequence);
             case Notation notation -> convert(notation);
         };
-        return term.metadata().maybeGet(LABEL).map(lbl -> convertLabeled(lbl, s)).orElse(s);
+        return term.metadata().get(LABEL).map(lbl -> convertLabeled(lbl, s)).orElse(s);
     }
 
     protected String convertLabeled(String label, String term) {

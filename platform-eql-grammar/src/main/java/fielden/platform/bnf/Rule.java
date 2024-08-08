@@ -1,7 +1,7 @@
 package fielden.platform.bnf;
 
 /**
- * A rules is what makes up a grammar.
+ * A rule is what makes up a grammar.
  */
 public sealed interface Rule permits Derivation, Specialization {
 
