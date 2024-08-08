@@ -232,10 +232,10 @@ public final class CanonicalEqlGrammar {
             into(Yield1, YieldMany).
 
         derive(Yield1).
-            to(yield, label("operand", YieldOperand), label("model_", Yield1Model)).
+            to(yield, label("operand", YieldOperand), Yield1Model).
 
         derive(YieldMany).
-            to(opt(yieldAll), repeat(AliasedYield), label("model_", YieldManyModel)).
+            to(opt(yieldAll), repeat(AliasedYield), YieldManyModel).
 
         derive(AliasedYield).
             to(yield, label("operand", YieldOperand), label("alias", YieldAlias)).
