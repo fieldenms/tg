@@ -308,7 +308,7 @@ public final class CanonicalEqlGrammar {
 
         derive(OrderByOperand).
             to(SingleOperand, Order).
-            or(yield.with(STR), Order).
+            or(label("yield", yield.with(STR)), Order).
             or(order.with(OrderingModel.class)).
 
         derive(Order).
