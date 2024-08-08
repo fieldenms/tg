@@ -294,10 +294,14 @@ public final class CanonicalEqlGrammar {
         derive(StandaloneCondExpr).
             to(cond, StandaloneCondition, model).
 
-        derive(StandaloneCondition).
-            to(Predicate).
-            or(label("left", StandaloneCondition), and, label("right", StandaloneCondition)).
-            or(label("left", StandaloneCondition), or, label("right", StandaloneCondition)).
+        specialize(StandaloneCondition).
+            into(Predicate, AndStandaloneCondition, OrStandaloneCondition).
+
+        derive(AndStandaloneCondition).
+            to(label("left", StandaloneCondition), and, label("right", StandaloneCondition)).
+
+        derive(OrStandaloneCondition).
+            to(label("left", StandaloneCondition), or, label("right", StandaloneCondition)).
 
         derive(OrderBy).
             to(orderBy, repeat1(listLabel("operands", OrderByOperand)), model).
@@ -331,7 +335,7 @@ public final class CanonicalEqlGrammar {
         AnyYield, YieldOperand, YieldOperandFunction, YieldOperandFunctionName, YieldAlias, LikeOperator, SubsequentYield,
         UnaryPredicate,
         ComparisonPredicate, QuantifiedComparisonPredicate, LikePredicate, StandaloneCondExpr,
-        StandaloneCondition,
+        StandaloneCondition, OrStandaloneCondition, AndStandaloneCondition,
         OrderBy, Order, OrderByOperand, SelectFrom, SelectSource, SelectEnd, SourcelessSelect, DateIntervalUnit,
         YieldAll, YieldSome, YieldTail, Yield1Tail, YieldManyTail, AliasedYield, YieldManyModel, Yield1Model,
         MembershipPredicate
