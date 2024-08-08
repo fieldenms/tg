@@ -1,6 +1,7 @@
 package fielden.platform.bnf;
 
 import java.util.List;
+import java.util.function.Function;
 
 import static java.util.stream.Collectors.joining;
 
@@ -17,6 +18,10 @@ public record Specialization(Variable lhs, List<Variable> specializers) implemen
     @Override
     public Alternation rhs() {
         return new Alternation(specializers);
+    }
+
+    public Specialization mapRhs(final Function<? super Variable, Variable> fn) {
+        return new Specialization(lhs, specializers.stream().map(fn).toList());
     }
 
     @Override

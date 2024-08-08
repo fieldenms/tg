@@ -16,4 +16,11 @@ public sealed interface Rule permits Derivation, Specialization {
      */
     Alternation rhs();
 
+    /**
+     * Tests whether a rule has a single alternative on its right-hand side.
+     */
+    static boolean isSingleAltRule(final Rule rule) {
+        return rule.rhs().options().size() == 1;
+    }
+
 }

@@ -1,6 +1,7 @@
 package fielden.platform.bnf;
 
 import java.util.LinkedHashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -26,6 +27,14 @@ public record BNF(
     /** @return stream of all grammar symbols */
     public Stream<Symbol> symbols() {
         return Stream.concat(terminals.stream(), variables.stream());
+    }
+
+    public Optional<Rule> findRuleFor(final Variable variable) {
+        return rules.stream().filter(rule -> rule.lhs().name().equals(variable.name())).findFirst();
+    }
+
+    public Rule getRuleFor(final Variable variable) {
+        return findRuleFor(variable).orElseThrow(() -> new BnfException("No such rule: %s".formatted(variable.name())));
     }
 
     @Override

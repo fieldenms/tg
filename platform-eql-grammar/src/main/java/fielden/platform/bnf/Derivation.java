@@ -18,6 +18,10 @@ public record Derivation(Variable lhs, Alternation rhs) implements Rule {
         return new Derivation(lhs, rhs.recMap(mapper));
     }
 
+    public Rule mapRhs(final Function<? super Term, Term> fn) {
+        return new Derivation(lhs, rhs.map(fn));
+    }
+
     @Override
     public String toString() {
         return "%s -> %s".formatted(lhs.name(), rhs);

@@ -14,6 +14,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
+import static fielden.platform.bnf.Rule.isSingleAltRule;
 import static fielden.platform.bnf.TermMetadata.LABEL;
 import static fielden.platform.bnf.TermMetadata.LIST_LABEL;
 import static java.util.stream.Collectors.*;
@@ -51,7 +52,7 @@ public class BnfToG4 {
 
     public BnfToG4(final BNF bnf, final String grammarName) {
         this.originalBnf = bnf;
-        this.bnf = stripParameters.apply(bnf);
+        this.bnf = RuleInliner.inlineRules.compose(stripParameters).apply(bnf);
         this.grammarName = grammarName;
     }
 
@@ -314,6 +315,107 @@ public class BnfToG4 {
             case Derivation d -> new Derivation(d.lhs(), new Alternation(d.rhs().options().stream().distinct().toList(), d.rhs().metadata()));
             case Specialization s -> new Specialization(s.lhs(), s.specializers().stream().distinct().toList());
         };
+    }
+
+    /**
+     * A rule associated with a variable that occurs in another rule's body is inlineable if that variable doesn't occur
+     * anywhere else.
+     * <p>
+     * Specialisation can be inlined only if each specialiser can, resulting in a derivation.
+     * Inlinining of a derivation doesn't require all of its alternatives to be inlineable, only the inlineable ones will
+     * be inlined.
+     * <p>
+     * A rule can be inlined if any of the following holds:
+     * <ul>
+     *   <li> Its RHS consists of a single alternative. For example, {@code Add = Number + Number}.
+     *   <li> Its RHS consists of an alternation of sole terminals. For example, {@code Symbol = a | b | c}.
+     * </ul>
+     *
+     * To inline a rule is to inline a variable associated with that rule. For example,
+     * <pre>
+     * Condition = Predicate Argument | AndCondition
+     * AndCondition = Condition and Condition
+     *
+     * // AndCondition can be inlined
+     *
+     * Condition = Predicate Argument | Condition and Condition
+     * </pre>
+     */
+    private static final class RuleInliner {
+        public static final GrammarTransformer inlineRules = bnf -> new RuleInliner(bnf).inlineRules();
+
+        private final BNF bnf;
+
+        private RuleInliner(final BNF bnf) {
+            this.bnf = bnf;
+        }
+
+        public BNF inlineRules() {
+            final Set<Rule> newRules = bnf.rules().stream()
+                    .map(this::inline)
+                    .collect(toCollection(LinkedHashSet::new));
+
+            return new BNF(bnf.terminals(), bnf.variables(), bnf.start(), newRules);
+        }
+
+        private Rule inline(final Rule rule) {
+            return switch (rule) {
+                case Derivation derivation -> inline(derivation);
+                case Specialization specialization -> inline(specialization);
+            };
+        }
+
+        private Rule inline(final Derivation derivation) {
+            return derivation.mapRhs(term -> term instanceof Variable var ? inlineIn(var, derivation).orElse(term) : term);
+        }
+
+        private Rule inline(final Specialization rule) {
+            return new Derivation(rule.lhs(),
+                                  new Alternation(rule.specializers().stream()
+                                                          .map(var -> inlineIn(var, rule).orElse(var))
+                                                          .toList()));
+        }
+
+        /**
+         * Returns the result of inlining a variable inside a rule. If the variable can't be inlined, an empty optional
+         * is returned.
+         */
+        private java.util.Optional<Term> inlineIn(final Variable variable, final Rule rule) {
+            if (occursOnlyInRhsOf(variable, rule)) {
+                final var varRule = bnf.getRuleFor(variable);
+                if (isSingleAltRule(varRule)) {
+                    return java.util.Optional.of(varRule.rhs().options().getFirst());
+                }
+                else if (varRule instanceof Derivation derivation) {
+                    return matchRuleWithSingleTerminals(derivation).map(Alternation::new);
+                }
+            }
+
+            return java.util.Optional.empty();
+        }
+
+        /**
+         * Does a symbol occur only in the RHS of the specified rule?
+         */
+        private boolean occursOnlyInRhsOf(final Symbol symbol, final Rule rule) {
+            final var occurences = BnfUtils.findRhsOccurences(symbol, bnf).toList();
+            return occurences.size() == 1 && rule.equals(occurences.getFirst());
+        }
+
+        /**
+         * Is this a rule whose RHS is an alternation of terminals?
+         */
+        private java.util.Optional<List<Terminal>> matchRuleWithSingleTerminals(final Rule rule) {
+            final List<Terminal> terminals = new ArrayList<>();
+            for (final Term option : rule.rhs().options()) {
+                if (option instanceof Terminal terminal) {
+                    terminals.add(terminal);
+                } else {
+                    return java.util.Optional.empty();
+                }
+            }
+            return java.util.Optional.of(terminals);
+        }
     }
 
     private static <T, R> List<R> enumerate(final Collection<? extends T> items, final BiFunction<? super T, Integer, ? extends R> mapper) {
