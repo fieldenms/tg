@@ -256,7 +256,7 @@ public final class CanonicalEqlGrammar {
             to(label("firstAlias", YieldAlias), repeat(listLabel("restYields", AliasedYield)), YieldManyModel).
 
         derive(AliasedYield).
-            to(yield, label("operand", YieldOperand), label("alias", YieldAlias)).
+            to(yield, YieldOperand, YieldAlias).
 
         derive(YieldOperand).
             to(SingleOperand).
