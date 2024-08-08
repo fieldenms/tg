@@ -270,10 +270,8 @@ public class BnfToG4 {
     }
 
     private static CodeBlock makeStatements(final Collection<? extends CodeBlock> codeBlocks) {
-        var builder = CodeBlock.builder();
-        for (final CodeBlock codeBlock : codeBlocks) {
-            builder = builder.addStatement(codeBlock);
-        }
+        final var builder = CodeBlock.builder();
+        codeBlocks.forEach(builder::addStatement);
         return builder.build();
     }
 
