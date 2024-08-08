@@ -273,11 +273,11 @@ public class PopulateDb extends DomainDrivenDataPopulation {
             throw new IllegalStateException(e);
         }
 
-        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY1").setRichTextProp(RichText.fromMarkdown("Rich text for entity with RICH_TEXT_KEY1")).setDesc("rich text desc 1"));
-        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY2").setRichTextProp(RichText.fromMarkdown("Rich text for entity with RICH_TEXT_KEY2")).setDesc("rich text desc 2"));
-        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY3").setRichTextProp(RichText.fromMarkdown("Rich text for entity with RICH_TEXT_KEY3")).setDesc("rich text desc 3"));
-        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY4").setRichTextProp(RichText.fromMarkdown("Rich text for entity with RICH_TEXT_KEY4")).setDesc("rich text desc 4"));
-        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY5").setRichTextProp(RichText.fromMarkdown("Rich text for entity with RICH_TEXT_KEY5")).setDesc("rich text desc 5"));
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY1").setRichTextProp("Rich text for entity with RICH_TEXT_KEY1").setDesc("rich text desc 1"));
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY2").setRichTextProp("Rich text for entity with RICH_TEXT_KEY2").setDesc("rich text desc 2"));
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY3").setRichTextProp("Rich text for entity with RICH_TEXT_KEY3").setDesc("rich text desc 3"));
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY4").setRichTextProp("Rich text for entity with RICH_TEXT_KEY4").setDesc("rich text desc 4"));
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY5").setRichTextProp("Rich text for entity with RICH_TEXT_KEY5").setDesc("rich text desc 5"));
     }
 
     private void populateGraphQlData() {
