@@ -51,7 +51,7 @@ public class BnfToG4 {
 
     public BnfToG4(final BNF bnf, final String grammarName) {
         this.originalBnf = bnf;
-        this.bnf = stripParameters(bnf);
+        this.bnf = stripParameters.apply(bnf);
         this.grammarName = grammarName;
     }
 
@@ -285,7 +285,7 @@ public class BnfToG4 {
 
     // -------------------- Utilities
 
-    private static BNF stripParameters(final BNF bnf) {
+    private static final GrammarTransformer stripParameters = bnf -> {
         final Set<Rule> newRules = bnf.rules().stream()
                 .map(rule -> switch (rule) {
                     case Derivation derivation -> derivation.recMap(term -> switch (term) {
@@ -305,7 +305,7 @@ public class BnfToG4 {
                 .collect(toSet());
 
         return new BNF(newTerminals, bnf.variables(), bnf.start(), newRules);
-    }
+    };
 
     /**
      * @return a new rule without duplicate alternations on the right-hand side
