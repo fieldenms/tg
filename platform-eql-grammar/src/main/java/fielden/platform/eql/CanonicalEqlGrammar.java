@@ -139,7 +139,7 @@ public final class CanonicalEqlGrammar {
             to(ifNull, label("nullable", SingleOperand), then, label("other", SingleOperand)).
 
         derive(DateDiffInterval).
-            to(count, label("unit", DateIntervalUnit), between, label("startDate", SingleOperand), and, label("endDate", SingleOperand)).
+            to(count, label("unit", DateIntervalUnit), between, label("endDate", SingleOperand), and, label("startDate", SingleOperand)).
 
         derive(DateIntervalUnit).
             to(seconds).or(minutes).or(hours).or(days).or(months).or(years).
