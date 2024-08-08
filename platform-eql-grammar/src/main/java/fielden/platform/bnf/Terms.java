@@ -13,6 +13,14 @@ public final class Terms {
         return variable.annotate(TermMetadata.LABEL, label);
     }
 
+    public static Terminal listLabel(String label, Terminal terminal) {
+        return terminal.annotate(TermMetadata.LIST_LABEL, label);
+    }
+
+    public static Variable listLabel(String label, Variable variable) {
+        return variable.annotate(TermMetadata.LIST_LABEL, label);
+    }
+
     private Terms() {}
 
 }

@@ -8,7 +8,10 @@ public final class TermMetadata {
 
     public static final TermMetadata EMPTY_METADATA = new TermMetadata();
 
+    /** Label for a term. */
     public static final Key<String> LABEL = new Key<>("label");
+    /** <i>List label</i> for a term, specific to <a href="https://github.com/antlr/antlr4/blob/master/doc/parser-rules.md#rule-element-labels">ANTLR</a>. */
+    public static final Key<String> LIST_LABEL = new Key<>("list_label");
 
     private final Map<Key<?>, Object> map;
 

@@ -15,6 +15,7 @@ import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static fielden.platform.bnf.TermMetadata.LABEL;
+import static fielden.platform.bnf.TermMetadata.LIST_LABEL;
 import static java.util.stream.Collectors.*;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -131,7 +132,13 @@ public class BnfToG4 {
             case Sequence sequence -> convert(sequence);
             case Notation notation -> convert(notation);
         };
-        return term.metadata().get(LABEL).map(lbl -> convertLabeled(lbl, s)).orElse(s);
+        return term.metadata().get(LIST_LABEL).map(lbl -> convertListLabeled(lbl, s))
+                .or(() -> term.metadata().get(LABEL).map(lbl -> convertLabeled(lbl, s)))
+                .orElse(s);
+    }
+
+    protected String convertListLabeled(String label, String term) {
+        return "%s+=%s".formatted(label, term);
     }
 
     protected String convertLabeled(final String label, final String term) {
