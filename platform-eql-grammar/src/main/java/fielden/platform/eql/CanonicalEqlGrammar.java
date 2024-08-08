@@ -229,13 +229,22 @@ public final class CanonicalEqlGrammar {
             to(repeat1(groupBy, label("operand", SingleOperand))).
 
         specialize(AnyYield).
-            into(Yield1, YieldMany).
+            into(YieldAll, YieldSome).
 
-        derive(Yield1).
-            to(yield, label("operand", YieldOperand), Yield1Model).
+        derive(YieldAll).
+            to(yieldAll, repeat(AliasedYield), YieldManyModel).
 
-        derive(YieldMany).
-            to(opt(yieldAll), repeat(AliasedYield), YieldManyModel).
+        derive(YieldSome).
+            to(yield, label("firstYield", YieldOperand), YieldTail).
+
+        specialize(YieldTail).
+            into(Yield1Tail, YieldManyTail).
+
+        derive(Yield1Tail).
+            to(Yield1Model).
+
+        derive(YieldManyTail).
+            to(label("firstAlias", YieldAlias), repeat(AliasedYield), YieldManyModel).
 
         derive(AliasedYield).
             to(yield, label("operand", YieldOperand), label("alias", YieldAlias)).
@@ -312,9 +321,11 @@ public final class CanonicalEqlGrammar {
         Model, GroupBy,
         AnyYield, YieldOperand, YieldOperandFunction, YieldOperandFunctionName, YieldAlias, LikeOperator, SubsequentYield,
         UnaryPredicate,
-        ComparisonPredicate, QuantifiedComparisonPredicate, LikePredicate, AliasedYield, YieldManyModel, Yield1Model, Yield1, YieldMany, StandaloneCondExpr,
+        ComparisonPredicate, QuantifiedComparisonPredicate, LikePredicate, StandaloneCondExpr,
         StandaloneCondition,
-        OrderBy, Order, OrderByOperand, SelectFrom, SelectSource, SelectEnd, SourcelessSelect, DateIntervalUnit, MembershipPredicate
+        OrderBy, Order, OrderByOperand, SelectFrom, SelectSource, SelectEnd, SourcelessSelect, DateIntervalUnit,
+        YieldAll, YieldSome, YieldTail, Yield1Tail, YieldManyTail, AliasedYield, YieldManyModel, Yield1Model,
+        MembershipPredicate
     }
 
     public enum EqlTerminal implements Terminal {
