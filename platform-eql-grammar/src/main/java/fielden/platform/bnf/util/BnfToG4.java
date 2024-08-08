@@ -97,11 +97,12 @@ public class BnfToG4 {
                 .sorted()
                 .forEach(sb::append);
 
+        // Using "channel(HIDDEN)" instead of "skip" makes these tokens appear in error messages, making them more readable.
         sb.append("""
 
-                WHITESPACE : [ \\r\\t\\n]+ -> skip ;
-                COMMENT : '//' .*? '\\n' -> skip ;
-                BLOCK_COMMENT : '/*' .*? '*/' -> skip ;
+                WHITESPACE : [ \\r\\t\\n]+ -> channel(HIDDEN) ;
+                COMMENT : '//' .*? '\\n' -> channel(HIDDEN) ;
+                BLOCK_COMMENT : '/*' .*? '*/' -> channel(HIDDEN) ;
 
                 """);
 
