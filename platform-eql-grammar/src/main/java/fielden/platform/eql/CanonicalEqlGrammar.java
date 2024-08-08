@@ -64,12 +64,20 @@ public final class CanonicalEqlGrammar {
             to(where, Condition).
 
         // AND takes precedence over OR
-        derive(Condition).
-            to(Predicate).
-            or(label("left", Condition), and, label("right", Condition)).
-            or(label("left", Condition), or, label("right", Condition)).
-            or(begin, Condition, end).
-            or(notBegin, Condition, end).
+        specialize(Condition).
+            into(Predicate, AndCondition, OrCondition, CompoundCondition, NegatedCompoundCondition).
+
+        derive(AndCondition).
+            to(label("left", Condition), and, label("right", Condition)).
+
+        derive(OrCondition).
+            to(label("left", Condition), or, label("right", Condition)).
+
+        derive(CompoundCondition).
+            to(begin, Condition, end).
+
+        derive(NegatedCompoundCondition).
+            to(notBegin, Condition, end).
 
         specialize(Predicate).
             into(UnaryPredicate, ComparisonPredicate, QuantifiedComparisonPredicate, LikePredicate, MembershipPredicate, SingleConditionPredicate).
@@ -310,7 +318,7 @@ public final class CanonicalEqlGrammar {
         Select,
         StandaloneExpression,
         Where,
-        Condition, Predicate,
+        Condition, Predicate, OrCondition, AndCondition, CompoundCondition, NegatedCompoundCondition,
         SingleOperand, MultiOperand,
         ExtProp, Prop,
         UnaryComparisonOperator, Val, Param,
