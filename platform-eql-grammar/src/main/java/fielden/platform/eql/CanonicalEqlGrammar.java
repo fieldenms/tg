@@ -117,7 +117,7 @@ public final class CanonicalEqlGrammar {
         derive(Expr).
             to(beginExpr, ExprBody, endExpr).
         derive(ExprBody).
-            to(SingleOperand, repeat(listLabel("operators", ArithmeticalOperator), listLabel("rest", SingleOperand))).
+            to(label("first", SingleOperand), repeat(listLabel("operators", ArithmeticalOperator), listLabel("rest", SingleOperand))).
         derive(ArithmeticalOperator).
             to(add).or(sub).or(div).or(mult).or(mod).
         derive(SingleOperand).
