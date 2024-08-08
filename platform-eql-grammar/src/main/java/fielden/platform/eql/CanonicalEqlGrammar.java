@@ -10,6 +10,7 @@ import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import static fielden.platform.bnf.FluentBNF.start;
 import static fielden.platform.bnf.Notation.*;
 import static fielden.platform.bnf.Terms.label;
+import static fielden.platform.bnf.Terms.listLabel;
 import static fielden.platform.eql.CanonicalEqlGrammar.EqlTerminal.values;
 import static fielden.platform.eql.CanonicalEqlGrammar.EqlTerminal.*;
 import static fielden.platform.eql.CanonicalEqlGrammar.EqlVariable.*;
@@ -108,7 +109,7 @@ public final class CanonicalEqlGrammar {
         derive(Expr).
             to(beginExpr, ExprBody, endExpr).
         derive(ExprBody).
-            to(SingleOperand, repeat(ArithmeticalOperator, SingleOperand)).
+            to(SingleOperand, repeat(listLabel("operators", ArithmeticalOperator), listLabel("rest", SingleOperand))).
         derive(ArithmeticalOperator).
             to(add).or(sub).or(div).or(mult).or(mod).
         derive(SingleOperand).
@@ -151,11 +152,11 @@ public final class CanonicalEqlGrammar {
             to(round, SingleOperand, to.with(Integer.class)).
 
         derive(Concat).
-            to(concat, SingleOperand, (repeat(with, SingleOperand)), end).
+            to(concat, listLabel("operands", SingleOperand), (repeat(with, listLabel("operands", SingleOperand))), end).
 
         derive(CaseWhen).
-            to(caseWhen, Condition, then, SingleOperand,
-                    repeat(when, Condition, then, SingleOperand),
+            to(caseWhen, listLabel("whens", Condition), then, listLabel("thens", SingleOperand),
+                    repeat(when, listLabel("whens", Condition), then, listLabel("thens", SingleOperand)),
                     opt(otherwise, label("otherwiseOperand", SingleOperand)),
                     CaseWhenEnd).
 
@@ -226,7 +227,7 @@ public final class CanonicalEqlGrammar {
             to(on, Condition).
 
         derive(GroupBy).
-            to(repeat1(groupBy, label("operand", SingleOperand))).
+            to(repeat1(groupBy, listLabel("operands", SingleOperand))).
 
         specialize(AnyYield).
             into(YieldAll, YieldSome).
@@ -244,14 +245,14 @@ public final class CanonicalEqlGrammar {
             to(Yield1Model).
 
         derive(YieldManyTail).
-            to(label("firstAlias", YieldAlias), repeat(AliasedYield), YieldManyModel).
+            to(label("firstAlias", YieldAlias), repeat(listLabel("restYields", AliasedYield)), YieldManyModel).
 
         derive(AliasedYield).
             to(yield, label("operand", YieldOperand), label("alias", YieldAlias)).
 
         derive(YieldOperand).
             to(SingleOperand).
-            or(beginExpr, YieldOperand, repeat(ArithmeticalOperator, YieldOperand), endExpr).
+            or(beginExpr, label("first", YieldOperand), repeat(listLabel("operators", ArithmeticalOperator), listLabel("rest", YieldOperand)), endExpr).
             or(countAll).
             or(YieldOperandFunction).
 
@@ -280,7 +281,7 @@ public final class CanonicalEqlGrammar {
             or(modelAsAggregate).
 
         derive(StandaloneExpression).
-            to(expr, label("operand", YieldOperand), repeat(ArithmeticalOperator, YieldOperand), model).
+            to(expr, label("first", YieldOperand), repeat(listLabel("operators", ArithmeticalOperator), listLabel("rest", YieldOperand)), model).
 
         derive(StandaloneCondExpr).
             to(cond, StandaloneCondition, model).
@@ -291,7 +292,7 @@ public final class CanonicalEqlGrammar {
             or(label("left", StandaloneCondition), or, label("right", StandaloneCondition)).
 
         derive(OrderBy).
-            to(orderBy, repeat1(OrderByOperand), model).
+            to(orderBy, repeat1(listLabel("operands", OrderByOperand)), model).
 
         derive(OrderByOperand).
             to(SingleOperand, Order).
