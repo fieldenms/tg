@@ -4,9 +4,11 @@ import fielden.platform.bnf.BNF;
 import fielden.platform.bnf.Rule;
 import fielden.platform.bnf.Symbol;
 
+import java.util.LinkedHashSet;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
+import static java.util.stream.Collectors.toCollection;
 
 public final class BnfUtils {
 
@@ -32,6 +34,13 @@ public final class BnfUtils {
     }
 
     /**
+     * Counts all occurences of a symbol in the right-hand side of a rule.
+     */
+    public static long countRhsOccurences(final Symbol symbol, final Rule rule) {
+        return rule.rhs().flatten().filter(term -> term instanceof Symbol sym && sym.name().equals(symbol.name())).count();
+    }
+
+    /**
      * Transforms a grammar by removing all unused terminals, variables and rules associated with those variables.
      */
     public static final GrammarTransformer removeUnused = bnf -> {
@@ -44,7 +53,7 @@ public final class BnfUtils {
                 .collect(toImmutableSet());
         final var usedRules = bnf.rules().stream()
                 .filter(rule -> usedVars.contains(rule.lhs()))
-                .collect(toImmutableSet());
+                .collect(toCollection(LinkedHashSet::new));
         return new BNF(usedTerminals, usedVars, bnf.start(), usedRules);
     };
 

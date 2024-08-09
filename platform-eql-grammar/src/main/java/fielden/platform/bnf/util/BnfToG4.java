@@ -17,6 +17,7 @@ import java.util.function.Function;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static fielden.platform.bnf.Metadata.*;
 import static fielden.platform.bnf.Rule.isSingleAltRule;
+import static fielden.platform.bnf.util.BnfUtils.countRhsOccurences;
 import static fielden.platform.bnf.util.BnfUtils.removeUnused;
 import static java.util.stream.Collectors.*;
 import static javax.lang.model.element.Modifier.FINAL;
@@ -322,10 +323,6 @@ public class BnfToG4 {
      * A rule associated with a variable that occurs in another rule's body is inlineable if that variable doesn't occur
      * anywhere else.
      * <p>
-     * Specialisation can be inlined only if each specialiser can, resulting in a derivation.
-     * Inlinining of a derivation doesn't require all of its alternatives to be inlineable, only the inlineable ones will
-     * be inlined.
-     * <p>
      * A rule can be inlined if any of the following holds:
      * <ul>
      *   <li> Its RHS consists of a single alternative. For example, {@code Add = Number + Number}.
@@ -383,7 +380,7 @@ public class BnfToG4 {
 
         private Result inline(final Derivation derivation) {
             final var variables = ImmutableSet.<Variable>builder();
-            final var newRule = derivation.mapRhs(term -> {
+            final var newRule = derivation.recMap(term -> {
                 if (term instanceof Variable var) {
                     return inlineIn(var, derivation).map(inlined -> {
                         variables.add(var);
@@ -415,7 +412,7 @@ public class BnfToG4 {
          */
         private java.util.Optional<Term> inlineIn(final Variable variable, final Rule rule) {
             if (bnf.getRuleFor(variable).metadata().has(Inline.class)) {
-                if (occursOnlyInRhsOf(variable, rule)) {
+                if (countRhsOccurences(variable, rule) == 1 && occursOnlyInRhsOf(variable, rule)) {
                     final var varRule = bnf.getRuleFor(variable);
                     if (isSingleAltRule(varRule)) {
                         return java.util.Optional.of(varRule.rhs().options().getFirst());
