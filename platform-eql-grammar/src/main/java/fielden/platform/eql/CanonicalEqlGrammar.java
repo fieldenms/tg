@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.query.model.*;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 import static fielden.platform.bnf.FluentBNF.start;
+import static fielden.platform.bnf.Metadata.noInline;
 import static fielden.platform.bnf.Notation.*;
 import static fielden.platform.bnf.Terms.label;
 import static fielden.platform.bnf.Terms.listLabel;
@@ -313,6 +314,10 @@ public final class CanonicalEqlGrammar {
 
         derive(Order).
             to(asc).or(desc).
+
+        annotate(MultiOperand, noInline()).
+        annotate(Model, noInline()).
+        annotate(Yield1Model, noInline()).
 
         build();
     // @formatter:on
