@@ -1,13 +1,5 @@
 package ua.com.fielden.platform.eql.stage1.operands.functions;
 
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.ITypeCast;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
@@ -20,9 +12,14 @@ import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.types.tuples.T2;
 
+import java.util.*;
+
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+
 public class CaseWhen1 extends AbstractFunction1<CaseWhen2> {
 
     private List<T2<ICondition1<? extends ICondition2<?>>, ISingleOperand1<? extends ISingleOperand2<?>>>> whenThenPairs = new ArrayList<>();
+    /** Can be null. */
     public final ISingleOperand1<? extends ISingleOperand2<?>> elseOperand;
     private final ITypeCast typeCast;
 
@@ -30,6 +27,10 @@ public class CaseWhen1 extends AbstractFunction1<CaseWhen2> {
         this.whenThenPairs.addAll(whenThenPairs);
         this.elseOperand = elseOperand;
         this.typeCast = typeCast;
+    }
+
+    public CaseWhen1(final List<T2<ICondition1<? extends ICondition2<?>>, ISingleOperand1<? extends ISingleOperand2<?>>>> whenThenPairs, final ITypeCast typeCast) {
+        this(whenThenPairs, null, typeCast);
     }
 
     @Override

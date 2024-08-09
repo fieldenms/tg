@@ -1,25 +1,43 @@
 package ua.com.fielden.platform.eql.stage1.operands;
 
-import static java.util.Collections.emptySet;
-
-import java.util.Objects;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage2.operands.Value2;
 
+import java.util.Objects;
+import java.util.Set;
+
+import static java.util.Collections.emptySet;
+
 public class Value1 implements ISingleOperand1<Value2> {
+    public static final Value1 NULL = new Value1(null, false);
+    public static final Value1 INULL = new Value1(null, true);
+
     public final Object value;
     public final boolean ignoreNull;
 
-    public Value1(final Object value) {
+    private Value1(final Object value) {
         this(value, false);
     }
 
-    public Value1(final Object value, final boolean ignoreNull) {
+    private Value1(final Object value, final boolean ignoreNull) {
         this.value = value;
         this.ignoreNull = ignoreNull;
+    }
+
+    public static Value1 value(final Object value, final boolean ignoreNull) {
+        if (value == null) {
+            return ignoreNull ? INULL : NULL;
+        }
+        return new Value1(value, ignoreNull);
+    }
+
+    public static Value1 value(final Object value) {
+        return value == null ? NULL : new Value1(value);
+    }
+
+    public static Value1 nullValue(final boolean ignoreNull) {
+        return ignoreNull ? INULL : NULL;
     }
 
     @Override

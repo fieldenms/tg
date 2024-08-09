@@ -9,6 +9,8 @@ import static java.lang.String.format;
  *
  */
 public class LikeOptions {
+    public static final LikeOptions DEFAULT_OPTIONS = options().build();
+
     public final boolean negated;
     public final boolean caseInsensitive;
     public final boolean withCast;

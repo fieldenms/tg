@@ -6,21 +6,21 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 final class SubsequentYieldedItemAlias<T, ET extends AbstractEntity<?>> //
-		extends AbstractQueryLink //
-		implements ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>> {
+        extends AbstractQueryLink //
+        implements ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>> {
 
-    public SubsequentYieldedItemAlias(final Tokens tokens) {
-        super(tokens);
+    public SubsequentYieldedItemAlias(final EqlSentenceBuilder builder) {
+        super(builder);
     }
 
     @Override
     public ISubsequentCompletedAndYielded<ET> as(final String alias) {
-        return new SubsequentCompletedAndYielded<ET>(getTokens().as(alias));
+        return new SubsequentCompletedAndYielded<ET>(builder.as(alias));
     }
 
     @Override
     public ISubsequentCompletedAndYielded<ET> asRequired(final String alias) {
-        return new SubsequentCompletedAndYielded<ET>(getTokens().asRequired(alias));
+        return new SubsequentCompletedAndYielded<ET>(builder.asRequired(alias));
     }
 
     @Override

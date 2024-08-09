@@ -7,6 +7,7 @@ import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
 
 public abstract class AbstractSource2 {
     public final Integer id;
+    /** Alias or {@code null}. */
     public final String alias;
     public final QuerySourceInfo<?> querySourceInfo;
     public final boolean isExplicit; 

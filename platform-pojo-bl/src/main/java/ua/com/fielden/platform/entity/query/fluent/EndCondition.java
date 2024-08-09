@@ -6,14 +6,15 @@ abstract class EndCondition<T> //
 		extends AbstractQueryLink //
 		implements IEndCondition<T> {
 
-    protected EndCondition(final Tokens tokens) {
-        super(tokens);
-    }
-    
-	protected abstract T nextForEndCondition(final Tokens tokens);
+	protected EndCondition(final EqlSentenceBuilder builder) {
+		super(builder);
+	}
+
+	protected abstract T nextForEndCondition(final EqlSentenceBuilder builder);
 
 	@Override
 	public T end() {
-		return nextForEndCondition(getTokens().endCondition());
+		return nextForEndCondition(builder.endCondition());
 	}
+
 }

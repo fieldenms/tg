@@ -10,10 +10,14 @@ public abstract class AbstractSource1<T extends ISource2<?>> implements ISource1
     private final Class<? extends AbstractEntity<?>> sourceType;
     /**
      * Business name for query source. Can be also dot.notated, but should stick to property alias naming rules (e.g. no dots in beginning/end).
+     * Can be {@code null}.
      */
     protected final String alias;
     public final Integer id;
 
+    /**
+     * @param alias  the alias of this source or {@code null}
+     */
     public AbstractSource1(final Class<? extends AbstractEntity<?>> sourceType, final String alias, final Integer id) {
         this.id = id;
         this.alias = alias;
