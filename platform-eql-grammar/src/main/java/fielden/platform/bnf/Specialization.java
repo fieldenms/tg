@@ -13,7 +13,11 @@ import static java.util.stream.Collectors.joining;
  *     Statement := Conditional | Assignment | MethodCall
  * </pre>
  */
-public record Specialization(Variable lhs, List<Variable> specializers) implements Rule {
+public record Specialization(Variable lhs, List<Variable> specializers, Metadata metadata) implements Rule {
+
+    public Specialization(final Variable lhs, final List<Variable> specializers) {
+        this(lhs, specializers, Metadata.EMPTY_METADATA);
+    }
 
     @Override
     public Alternation rhs() {
@@ -21,7 +25,12 @@ public record Specialization(Variable lhs, List<Variable> specializers) implemen
     }
 
     public Specialization mapRhs(final Function<? super Variable, Variable> fn) {
-        return new Specialization(lhs, specializers.stream().map(fn).toList());
+        return new Specialization(lhs, specializers.stream().map(fn).toList(), metadata);
+    }
+
+    @Override
+    public <V> Specialization annotate(final Metadata.Key<V> key, final V value) {
+        return new Specialization(lhs, specializers, Metadata.merge(metadata, key, value));
     }
 
     @Override

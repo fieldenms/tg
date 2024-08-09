@@ -16,6 +16,15 @@ public sealed interface Rule permits Derivation, Specialization {
      */
     Alternation rhs();
 
+    default Metadata metadata() {
+        return Metadata.EMPTY_METADATA;
+    }
+
+    /**
+     * Produces a new rule that is equal to this rule but with an additional annotation specified by the given key and value.
+     */
+    <V> Rule annotate(final Metadata.Key<V> key, final V value);
+
     /**
      * Tests whether a rule has a single alternative on its right-hand side.
      */

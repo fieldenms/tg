@@ -313,8 +313,8 @@ public class BnfToG4 {
      */
     private static Rule deduplicate(final Rule rule) {
         return switch (rule) {
-            case Derivation d -> new Derivation(d.lhs(), new Alternation(d.rhs().options().stream().distinct().toList(), d.rhs().metadata()));
-            case Specialization s -> new Specialization(s.lhs(), s.specializers().stream().distinct().toList());
+            case Derivation d -> new Derivation(d.lhs(), new Alternation(d.rhs().options().stream().distinct().toList(), d.rhs().metadata()), d.metadata());
+            case Specialization s -> new Specialization(s.lhs(), s.specializers().stream().distinct().toList(), s.metadata());
         };
     }
 
@@ -374,7 +374,8 @@ public class BnfToG4 {
             return new Derivation(rule.lhs(),
                                   new Alternation(rule.specializers().stream()
                                                           .map(var -> inlineIn(var, rule).orElse(var))
-                                                          .toList()));
+                                                          .toList()),
+                                  rule.metadata());
         }
 
         /**
