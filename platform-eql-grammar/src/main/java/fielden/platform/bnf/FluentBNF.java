@@ -1,8 +1,11 @@
 package fielden.platform.bnf;
 
+import ua.com.fielden.platform.types.tuples.T3;
+
 import java.util.*;
 
 import static fielden.platform.bnf.Sequence.seqOrTerm;
+import static ua.com.fielden.platform.types.tuples.T3.t3;
 
 /**
  * Fluent API that can be used to define a {@link BNF} grammar.
@@ -20,6 +23,8 @@ public final class FluentBNF {
     public interface IBnfBody {
         IDerivation derive(Variable v);
         ISpecialization specialize(Variable v);
+        /** Annotate a rule. */
+        <V> IBnfBody annotate(Variable v, Metadata.Key<V> key, V value);
         BNF build();
     }
 
@@ -38,6 +43,7 @@ public final class FluentBNF {
     private static class BnfBodyImpl implements FluentBNF.IBnfBody {
 
         protected final Builder builder;
+        protected final List<T3<Variable, Metadata.Key, Object>> annotations = new ArrayList<>();
 
         BnfBodyImpl(final Variable start) {
             this.builder = new Builder(start);
@@ -62,8 +68,15 @@ public final class FluentBNF {
         }
 
         @Override
+        public <V> IBnfBody annotate(final Variable v, final Metadata.Key<V> key, final V value) {
+            annotations.add(t3(v, key, value));
+            return this;
+        }
+
+        @Override
         public BNF build() {
             builder.add(finishRule());
+            annotateRules();
             return new BNF(builder.terminals, builder.variables, builder.start, builder.rules);
         }
 
@@ -81,6 +94,16 @@ public final class FluentBNF {
             return false;
         }
 
+        private void annotateRules() {
+            annotations.forEach(t3 -> {
+                final var variable = t3._1;
+                final var rule = builder.rules.stream().filter(r -> r.lhs().name().equals(variable.name()))
+                        .findFirst()
+                        .orElseThrow(() -> new BnfException("Annotation specified for non-existent rule [%s]".formatted(variable)));
+                builder.rules.remove(rule);
+                builder.rules.add(rule.annotate(t3._2, t3._3));
+            });
+        }
     }
 
     private static final class DerivationImpl extends BnfBodyImpl implements FluentBNF.IDerivation, FluentBNF.IDerivationTail {
