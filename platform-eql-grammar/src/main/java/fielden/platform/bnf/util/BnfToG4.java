@@ -6,6 +6,8 @@ import fielden.platform.bnf.Optional;
 import fielden.platform.bnf.*;
 import fielden.platform.eql.CanonicalEqlGrammar;
 import org.antlr.v4.runtime.CommonToken;
+import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.StreamUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -14,6 +16,8 @@ import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static fielden.platform.bnf.Metadata.*;
@@ -22,6 +26,8 @@ import static fielden.platform.bnf.util.BnfUtils.countRhsOccurences;
 import static fielden.platform.bnf.util.BnfUtils.removeUnused;
 import static fielden.platform.eql.CanonicalEqlGrammar.EqlVariable.Select;
 import static fielden.platform.eql.CanonicalEqlGrammar.EqlVariable.SelectFrom;
+import static java.util.Comparator.comparing;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.*;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -89,7 +95,7 @@ public class BnfToG4 {
         sb.append("grammar %s;\n\n".formatted(grammarName));
         sb.append("start : %s EOF;\n\n".formatted(convert(bnf.start())));
 
-        bnf.rules().stream()
+        replicateOrder(bnf.rules(), originalBnf.rules())
                 .map(this::convert)
                 .forEach(rule -> {
                     sb.append(rule);
@@ -117,7 +123,7 @@ public class BnfToG4 {
 
     protected String convert(final Rule rule) {
         final Function<String, String> labeler =  switch (rule) {
-            case Derivation $ -> isSingleTerminalRule(rule) ? s -> "token=" + s : Function.identity();
+            case Derivation $ -> isSingleTerminalRule(rule) ? s -> "token=" + s : identity();
             case Specialization $ -> s -> makeAltLabelName(rule, s);
         };
         return "%s :\n      %s\n;".formatted(
@@ -201,7 +207,7 @@ public class BnfToG4 {
         };
         final Function<String, String> wrapper = switch (quantifier.term()) {
             case Sequence seq when (seq.size() > 1) -> "(%s)"::formatted;
-            default -> Function.identity();
+            default -> identity();
         };
 
         return wrapper.apply(convert(quantifier.term())) + q;
@@ -466,14 +472,18 @@ public class BnfToG4 {
         }
     }
 
-    private static <T, R> List<R> enumerate(final Collection<? extends T> items, final BiFunction<? super T, Integer, ? extends R> mapper) {
-        final var result = new ArrayList<R>(items.size());
-        int index = 0;
-        for (final T item : items) {
-            result.add(mapper.apply(item, index));
-            index++;
-        }
-        return result;
+    private static <T, R> List<R> enumerate(final Collection<? extends T> items, final BiFunction<? super T, Integer, R> mapper) {
+        return enumerate(items.stream(), mapper).toList();
+    }
+
+    private static <X, R> Stream<R> enumerate(final Stream<? extends X> xs, final BiFunction<? super X, Integer, R> fn) {
+        return StreamUtils.zip(xs, IntStream.iterate(0, i -> i + 1).boxed(), fn);
+    }
+
+    private static Stream<Rule> replicateOrder(final Collection<Rule> rules, final Collection<Rule> orderedRules) {
+        final var orderedRulesIndexes = enumerate(orderedRules.stream(), T2::t2)
+                .collect(toMap(t2 -> t2._1.lhs().name(), t2 -> t2._2));
+        return rules.stream().sorted(comparing(rule -> orderedRulesIndexes.getOrDefault(rule.lhs().name(), Integer.MAX_VALUE)));
     }
 
 //    private static <X> java.util.Optional<X> matchSingleElementCollection(final Collection<? extends X> xs) {
