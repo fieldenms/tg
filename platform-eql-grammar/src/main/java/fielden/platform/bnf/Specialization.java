@@ -29,8 +29,8 @@ public record Specialization(Variable lhs, List<Variable> specializers, Metadata
     }
 
     @Override
-    public <V> Specialization annotate(final Metadata.Key<V> key, final V value) {
-        return new Specialization(lhs, specializers, Metadata.merge(metadata, key, value));
+    public Specialization annotate(final Metadata.Annotation annotation) {
+        return new Specialization(lhs, specializers, Metadata.merge(metadata, annotation));
     }
 
     @Override

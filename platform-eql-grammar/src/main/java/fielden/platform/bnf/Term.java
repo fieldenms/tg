@@ -22,9 +22,9 @@ public sealed interface Term permits Notation, Sequence, Symbol {
     }
 
     /**
-     * Produces a new term that is equal to this term but with an additional annotation specified by the given key and value.
+     * Produces a new term that is equal to this term but with an additional annotation.
      */
-    <V> Term annotate(final Metadata.Key<V> key, final V value);
+    Term annotate(final Metadata.Annotation annotation);
 
     /**
      * Completely and recursively flattens this term's structure.

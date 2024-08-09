@@ -1,11 +1,11 @@
 package fielden.platform.bnf;
 
-import ua.com.fielden.platform.types.tuples.T3;
+import ua.com.fielden.platform.types.tuples.T2;
 
 import java.util.*;
 
 import static fielden.platform.bnf.Sequence.seqOrTerm;
-import static ua.com.fielden.platform.types.tuples.T3.t3;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 /**
  * Fluent API that can be used to define a {@link BNF} grammar.
@@ -23,8 +23,9 @@ public final class FluentBNF {
     public interface IBnfBody {
         IDerivation derive(Variable v);
         ISpecialization specialize(Variable v);
+
         /** Annotate a rule. */
-        <V> IBnfBody annotate(Variable v, Metadata.Key<V> key, V value);
+        <V> IBnfBody annotate(Variable v, Metadata.Annotation annotation);
         BNF build();
     }
 
@@ -43,7 +44,7 @@ public final class FluentBNF {
     private static class BnfBodyImpl implements FluentBNF.IBnfBody {
 
         protected final Builder builder;
-        protected final List<T3<Variable, Metadata.Key, Object>> annotations = new ArrayList<>();
+        protected final List<T2<Variable, Metadata.Annotation>> annotations = new ArrayList<>();
 
         BnfBodyImpl(final Variable start) {
             this.builder = new Builder(start);
@@ -68,8 +69,8 @@ public final class FluentBNF {
         }
 
         @Override
-        public <V> IBnfBody annotate(final Variable v, final Metadata.Key<V> key, final V value) {
-            annotations.add(t3(v, key, value));
+        public IBnfBody annotate(final Variable v, final Metadata.Annotation annotation) {
+            annotations.add(t2(v, annotation));
             return this;
         }
 
@@ -101,7 +102,7 @@ public final class FluentBNF {
                         .findFirst()
                         .orElseThrow(() -> new BnfException("Annotation specified for non-existent rule [%s]".formatted(variable)));
                 builder.rules.remove(rule);
-                builder.rules.add(rule.annotate(t3._2, t3._3));
+                builder.rules.add(rule.annotate(t3._2));
             });
         }
     }

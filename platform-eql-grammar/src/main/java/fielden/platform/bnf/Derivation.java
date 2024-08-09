@@ -27,8 +27,8 @@ public record Derivation(Variable lhs, Alternation rhs, Metadata metadata) imple
     }
 
     @Override
-    public <V> Derivation annotate(final Metadata.Key<V> key, final V value) {
-        return new Derivation(lhs, rhs, Metadata.merge(metadata, key, value));
+    public Derivation annotate(final Metadata.Annotation annotation) {
+        return new Derivation(lhs, rhs, Metadata.merge(metadata, annotation));
     }
 
     @Override

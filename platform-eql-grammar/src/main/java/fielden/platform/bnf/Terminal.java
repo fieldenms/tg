@@ -23,8 +23,8 @@ public non-sealed interface Terminal extends Symbol {
     }
 
     @Override
-    default <V> Terminal annotate(final Metadata.Key<V> key, final V value) {
-        final var newMetadata = Metadata.merge(metadata(), key, value);
+    default Terminal annotate(final Metadata.Annotation annotation) {
+        final var newMetadata = Metadata.merge(metadata(), annotation);
         final String name = name();
         final Terminal normal = normalize();
 

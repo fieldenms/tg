@@ -8,9 +8,8 @@ public record OneOrMore(Term term, Metadata metadata) implements Quantifier {
         this(term, Metadata.EMPTY_METADATA);
     }
 
-    @Override
-    public <V> OneOrMore annotate(final Metadata.Key<V> key, final V value) {
-        return new OneOrMore(term, Metadata.merge(metadata(), key, value));
+    public OneOrMore annotate(final Metadata.Annotation annotation) {
+        return new OneOrMore(term, Metadata.merge(metadata(), annotation));
     }
 
     @Override

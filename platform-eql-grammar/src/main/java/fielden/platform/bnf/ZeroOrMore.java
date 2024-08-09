@@ -9,8 +9,8 @@ public record ZeroOrMore(Term term, Metadata metadata) implements Quantifier {
     }
 
     @Override
-    public <V> ZeroOrMore annotate(final Metadata.Key<V> key, final V value) {
-        return new ZeroOrMore(term, Metadata.merge(metadata(), key, value));
+    public ZeroOrMore annotate(final Metadata.Annotation annotation) {
+        return new ZeroOrMore(term, Metadata.merge(metadata(), annotation));
     }
 
     @Override

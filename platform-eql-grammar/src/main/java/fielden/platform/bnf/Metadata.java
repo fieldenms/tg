@@ -9,13 +9,20 @@ public final class Metadata {
     public static final Metadata EMPTY_METADATA = new Metadata();
 
     /** Label for a term. */
-    public static final Key<String> LABEL = new Key<>("label");
+    public record Label (String label) implements Annotation {}
+    public static Label label(final String label) {
+        return new Label(label);
+    }
+
     /** <i>List label</i> for a term, specific to <a href="https://github.com/antlr/antlr4/blob/master/doc/parser-rules.md#rule-element-labels">ANTLR</a>. */
-    public static final Key<String> LIST_LABEL = new Key<>("list_label");
+    public record ListLabel (String label) implements Annotation {}
+    public static ListLabel listLabel(final String label) {
+        return new ListLabel(label);
+    }
 
-    private final Map<Key<?>, Object> map;
+    private final Map<Class<? extends Annotation>, Annotation> map;
 
-    public Metadata(final Map<Key<?>, Object> map) {
+    public Metadata(final Map<Class<? extends Annotation>, Annotation> map) {
         this.map = Map.copyOf(map);
     }
 
@@ -23,46 +30,36 @@ public final class Metadata {
         this.map = Map.of();
     }
 
-    public <T> Optional<T> get(final Key<T> key) {
-        return Optional.ofNullable((T) map.get(key));
+    public <A extends Annotation> Optional<A> get(final Class<A> annotationType) {
+        return Optional.ofNullable((A) map.get(annotationType));
     }
 
-    public static <V> Metadata merge(final Metadata metadata, final Key<V> key, final V value) {
+    public boolean has(final Class<? extends Annotation> annotationType) {
+        return map.containsKey(annotationType);
+    }
+
+    public static Metadata merge(final Metadata metadata, final Annotation annotation) {
         var builder = new Builder();
-        metadata.map.forEach(builder::add);
-        builder.add(key, value);
+        metadata.map.values().forEach(builder::add);
+        builder.add(annotation);
         return builder.build();
     }
 
-    public static final class Key<T> {
-        /**
-         * This key's name. Doesn't affect its identity (there might be multiple keys with the same name).
-         */
-        private final String name;
-
-        private Key(final String name) {
-            this.name = name;
-        }
-
-        @Override
-        public String toString() {
-            return name;
-        }
-    }
+    public interface Annotation {}
 
     private static Builder builder() {
         return new Builder();
     }
 
     private static final class Builder {
-        private final Map<Key<?>, Object> map = new HashMap<>();
+        private final Map<Class<? extends Annotation>, Annotation> map = new HashMap<>();
 
         public Metadata build() {
             return new Metadata(map);
         }
 
-        public <T> Builder add(final Key<? extends T> key, final T value) {
-            map.put(key, value);
+        public Builder add(final Annotation annotation) {
+            map.put(annotation.getClass(), annotation);
             return this;
         }
     }

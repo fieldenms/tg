@@ -9,8 +9,8 @@ public record Optional(Term term, Metadata metadata) implements Quantifier {
     }
 
     @Override
-    public <V> Optional annotate(final Metadata.Key<V> key, final V value) {
-        return new Optional(term, Metadata.merge(metadata(), key, value));
+    public Optional annotate(final Metadata.Annotation annotation) {
+        return new Optional(term, Metadata.merge(metadata(), annotation));
     }
 
     @Override

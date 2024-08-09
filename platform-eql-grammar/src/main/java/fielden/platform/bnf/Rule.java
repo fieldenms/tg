@@ -23,7 +23,7 @@ public sealed interface Rule permits Derivation, Specialization {
     /**
      * Produces a new rule that is equal to this rule but with an additional annotation specified by the given key and value.
      */
-    <V> Rule annotate(final Metadata.Key<V> key, final V value);
+    Rule annotate(final Metadata.Annotation annotation);
 
     /**
      * Tests whether a rule has a single alternative on its right-hand side.

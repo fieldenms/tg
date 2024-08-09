@@ -32,8 +32,8 @@ public final class Alternation implements Notation {
     }
 
     @Override
-    public <V> Alternation annotate(final Metadata.Key<V> key, final V value) {
-        return new Alternation(options, Metadata.merge(metadata(), key, value));
+    public Alternation annotate(final Metadata.Annotation annotation) {
+        return new Alternation(options, Metadata.merge(metadata(), annotation));
     }
 
     @Override

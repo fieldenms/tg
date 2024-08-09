@@ -14,9 +14,8 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
+import static fielden.platform.bnf.Metadata.*;
 import static fielden.platform.bnf.Rule.isSingleAltRule;
-import static fielden.platform.bnf.Metadata.LABEL;
-import static fielden.platform.bnf.Metadata.LIST_LABEL;
 import static fielden.platform.bnf.util.BnfUtils.removeUnused;
 import static java.util.stream.Collectors.*;
 import static javax.lang.model.element.Modifier.FINAL;
@@ -135,17 +134,17 @@ public class BnfToG4 {
             case Sequence sequence -> convert(sequence);
             case Notation notation -> convert(notation);
         };
-        return term.metadata().get(LIST_LABEL).map(lbl -> convertListLabeled(lbl, s))
-                .or(() -> term.metadata().get(LABEL).map(lbl -> convertLabeled(lbl, s)))
+        return term.metadata().get(ListLabel.class).map(lbl -> convertListLabeled(lbl, s))
+                .or(() -> term.metadata().get(Label.class).map(lbl -> convertLabeled(lbl, s)))
                 .orElse(s);
     }
 
-    protected String convertListLabeled(String label, String term) {
-        return "%s+=%s".formatted(label, term);
+    protected String convertListLabeled(ListLabel label, String term) {
+        return "%s+=%s".formatted(label.label(), term);
     }
 
-    protected String convertLabeled(final String label, final String term) {
-        return "%s=%s".formatted(label, term);
+    protected String convertLabeled(final Label label, final String term) {
+        return "%s=%s".formatted(label.label(), term);
     }
 
     protected String convert(final Symbol symbol) {
