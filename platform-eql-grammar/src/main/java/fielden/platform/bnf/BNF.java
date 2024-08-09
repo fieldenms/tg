@@ -124,6 +124,10 @@ public record BNF(
         };
     }
 
+    public BNF transformRule(final Variable variable, final Function<? super Rule, Rule> fn) {
+        return addRule(fn.apply(getRuleFor(variable)));
+    }
+
     /**
      * Merges the grammar resulting from the given function into this grammar as if by {@code mergeRight(this, that)}.
      *

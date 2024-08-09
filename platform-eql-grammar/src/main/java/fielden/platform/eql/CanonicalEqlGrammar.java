@@ -261,9 +261,12 @@ public final class CanonicalEqlGrammar {
 
         derive(YieldOperand).
             to(SingleOperand).
-            or(beginExpr, label("first", YieldOperand), repeat(listLabel("operators", ArithmeticalOperator), listLabel("rest", YieldOperand)), endExpr).
+            or(YieldOperandExpr).
             or(countAll).
             or(YieldOperandFunction).
+
+        derive(YieldOperandExpr).
+            to(beginExpr, label("first", YieldOperand), repeat(listLabel("operators", ArithmeticalOperator), listLabel("rest", YieldOperand)), endExpr).
 
         derive(YieldOperandFunction).
             to(label("funcName", YieldOperandFunctionName), label("argument", SingleOperand)).
@@ -353,6 +356,7 @@ public final class CanonicalEqlGrammar {
         annotate(Yield1Tail, inline()).
         annotate(YieldManyTail, inline()).
         annotate(YieldOperandFunction, inline()).
+        annotate(YieldOperandExpr, inline()).
 
         annotate(AndStandaloneCondition, inline()).
         annotate(OrStandaloneCondition, inline()).
@@ -381,6 +385,7 @@ public final class CanonicalEqlGrammar {
         StandaloneCondition, OrStandaloneCondition, AndStandaloneCondition,
         OrderBy, Order, OrderByOperand, SelectFrom, SelectSource, SelectEnd, SourcelessSelect, DateIntervalUnit,
         YieldAll, YieldSome, YieldTail, Yield1Tail, YieldManyTail, AliasedYield, YieldManyModel, Yield1Model,
+        YieldOperandExpr,
         MembershipPredicate
     }
 
@@ -431,7 +436,7 @@ public final class CanonicalEqlGrammar {
         beginExpr, endExpr,
         join, leftJoin, on,
         yield, yieldAll,
-        groupBy, asc, desc, order, cond, orderBy,
+        groupBy, asc, desc, order, cond, orderBy, beginYieldExpr, endYieldExpr,
     }
 
     private CanonicalEqlGrammar() {}
