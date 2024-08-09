@@ -59,7 +59,7 @@ public final class CanonicalEqlGrammar {
             to(select, opt(GroupBy), SelectEnd).
 
         specialize(SelectEnd).
-            into(AnyYield, Model).
+            into(Model, AnyYield).
 
         derive(Where).
             to(where, Condition).
