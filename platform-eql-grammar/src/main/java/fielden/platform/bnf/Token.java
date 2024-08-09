@@ -8,9 +8,9 @@ import static java.util.stream.Collectors.joining;
 /**
  * A token is a parameterised terminal.
  */
-public record Token(String name, TermMetadata metadata, List<? extends Parameter> parameters) implements Terminal, Parameterised {
+public record Token(String name, Metadata metadata, List<? extends Parameter> parameters) implements Terminal, Parameterised {
 
-    public Token(final String name, final TermMetadata metadata, final List<? extends Parameter> parameters) {
+    public Token(final String name, final Metadata metadata, final List<? extends Parameter> parameters) {
         this.name = name;
         this.metadata = metadata;
         this.parameters = List.copyOf(parameters);
@@ -20,7 +20,7 @@ public record Token(String name, TermMetadata metadata, List<? extends Parameter
         this(terminal.name(), terminal.metadata(), parameters);
     }
 
-    public Token(final String name, final TermMetadata metadata, final Parameter... parameters) {
+    public Token(final String name, final Metadata metadata, final Parameter... parameters) {
         this(name, metadata, Arrays.asList(parameters));
     }
 
@@ -30,7 +30,7 @@ public record Token(String name, TermMetadata metadata, List<? extends Parameter
 
     @Override
     public Token normalize() {
-        return new Token(name, TermMetadata.EMPTY_METADATA, parameters);
+        return new Token(name, Metadata.EMPTY_METADATA, parameters);
     }
 
     public Token stripParameters() {

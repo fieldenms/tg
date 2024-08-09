@@ -4,9 +4,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public final class TermMetadata {
+public final class Metadata {
 
-    public static final TermMetadata EMPTY_METADATA = new TermMetadata();
+    public static final Metadata EMPTY_METADATA = new Metadata();
 
     /** Label for a term. */
     public static final Key<String> LABEL = new Key<>("label");
@@ -15,11 +15,11 @@ public final class TermMetadata {
 
     private final Map<Key<?>, Object> map;
 
-    public TermMetadata(final Map<Key<?>, Object> map) {
+    public Metadata(final Map<Key<?>, Object> map) {
         this.map = Map.copyOf(map);
     }
 
-    public TermMetadata() {
+    public Metadata() {
         this.map = Map.of();
     }
 
@@ -27,7 +27,7 @@ public final class TermMetadata {
         return Optional.ofNullable((T) map.get(key));
     }
 
-    public static <V> TermMetadata merge(final TermMetadata metadata, final Key<V> key, final V value) {
+    public static <V> Metadata merge(final Metadata metadata, final Key<V> key, final V value) {
         var builder = new Builder();
         metadata.map.forEach(builder::add);
         builder.add(key, value);
@@ -57,8 +57,8 @@ public final class TermMetadata {
     private static final class Builder {
         private final Map<Key<?>, Object> map = new HashMap<>();
 
-        public TermMetadata build() {
-            return new TermMetadata(map);
+        public Metadata build() {
+            return new Metadata(map);
         }
 
         public <T> Builder add(final Key<? extends T> key, final T value) {

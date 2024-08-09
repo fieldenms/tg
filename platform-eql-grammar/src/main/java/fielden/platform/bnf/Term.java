@@ -17,14 +17,14 @@ public sealed interface Term permits Notation, Sequence, Symbol {
         return this;
     }
 
-    default TermMetadata metadata() {
-        return TermMetadata.EMPTY_METADATA;
+    default Metadata metadata() {
+        return Metadata.EMPTY_METADATA;
     }
 
     /**
      * Produces a new term that is equal to this term but with an additional annotation specified by the given key and value.
      */
-    <V> Term annotate(final TermMetadata.Key<V> key, final V value);
+    <V> Term annotate(final Metadata.Key<V> key, final V value);
 
     /**
      * Completely and recursively flattens this term's structure.

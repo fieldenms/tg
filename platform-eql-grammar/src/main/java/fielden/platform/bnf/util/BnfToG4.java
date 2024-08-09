@@ -15,8 +15,8 @@ import java.util.function.Function;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static fielden.platform.bnf.Rule.isSingleAltRule;
-import static fielden.platform.bnf.TermMetadata.LABEL;
-import static fielden.platform.bnf.TermMetadata.LIST_LABEL;
+import static fielden.platform.bnf.Metadata.LABEL;
+import static fielden.platform.bnf.Metadata.LIST_LABEL;
 import static fielden.platform.bnf.util.BnfUtils.removeUnused;
 import static java.util.stream.Collectors.*;
 import static javax.lang.model.element.Modifier.FINAL;

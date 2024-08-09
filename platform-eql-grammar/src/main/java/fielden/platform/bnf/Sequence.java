@@ -3,7 +3,6 @@ package fielden.platform.bnf;
 import com.google.common.collect.ImmutableList;
 
 import java.util.*;
-import java.util.Optional;
 import java.util.function.*;
 import java.util.stream.Stream;
 
@@ -15,15 +14,15 @@ public final class Sequence implements List<Term>, Term {
     private static final Sequence EMPTY_SEQUENCE = new Sequence(ImmutableList.of());
 
     private final List<Term> terms;
-    private final TermMetadata metadata;
+    private final Metadata metadata;
 
-    private Sequence(final Collection<? extends Term> terms, TermMetadata metadata) {
+    private Sequence(final Collection<? extends Term> terms, Metadata metadata) {
         this.terms = ImmutableList.copyOf(terms);
         this.metadata = metadata;
     }
 
     private Sequence(final Collection<? extends Term> terms) {
-        this(terms, TermMetadata.EMPTY_METADATA);
+        this(terms, Metadata.EMPTY_METADATA);
     }
 
     public static Sequence of(final Term... terms) {
@@ -60,8 +59,8 @@ public final class Sequence implements List<Term>, Term {
     }
 
     @Override
-    public <V> Sequence annotate(final TermMetadata.Key<V> key, final V value) {
-        return new Sequence(terms, TermMetadata.merge(metadata, key, value));
+    public <V> Sequence annotate(final Metadata.Key<V> key, final V value) {
+        return new Sequence(terms, Metadata.merge(metadata, key, value));
     }
 
     @Override

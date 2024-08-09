@@ -20,25 +20,25 @@ import static java.util.stream.Collectors.joining;
 public final class Alternation implements Notation {
 
     private final List<Term> options;
-    private final TermMetadata metadata;
+    private final Metadata metadata;
 
-    public Alternation(final List<? extends Term> options, final TermMetadata metadata) {
+    public Alternation(final List<? extends Term> options, final Metadata metadata) {
         this.options = List.copyOf(options);
         this.metadata = metadata;
     }
 
     public Alternation(final List<? extends Term> options) {
-        this(options, TermMetadata.EMPTY_METADATA);
+        this(options, Metadata.EMPTY_METADATA);
     }
 
     @Override
-    public <V> Alternation annotate(final TermMetadata.Key<V> key, final V value) {
-        return new Alternation(options, TermMetadata.merge(metadata(), key, value));
+    public <V> Alternation annotate(final Metadata.Key<V> key, final V value) {
+        return new Alternation(options, Metadata.merge(metadata(), key, value));
     }
 
     @Override
     public Alternation normalize() {
-        return metadata == TermMetadata.EMPTY_METADATA ? this : new Alternation(options);
+        return metadata == Metadata.EMPTY_METADATA ? this : new Alternation(options);
     }
 
     @Override
@@ -66,7 +66,7 @@ public final class Alternation implements Notation {
     }
 
     @Override
-    public TermMetadata metadata() {
+    public Metadata metadata() {
         return metadata;
     }
 
