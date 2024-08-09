@@ -1,5 +1,6 @@
 package fielden.platform.bnf.util;
 
+import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.*;
 import fielden.platform.bnf.Optional;
 import fielden.platform.bnf.*;
@@ -342,7 +343,11 @@ public class BnfToG4 {
      * </pre>
      */
     private static final class RuleInliner {
-        public static final GrammarTransformer inlineRules = bnf -> new RuleInliner(bnf).inlineRules();
+        public static final GrammarTransformer inlineRules = bnf ->
+                bnf.rules().stream()
+                        .reduce(bnf,
+                                (accBnf, rule) -> new RuleInliner(accBnf).inlineRule(rule.lhs()),
+                                ($1, $2) -> {throw new UnsupportedOperationException("No combiner.");});
 
         private final BNF bnf;
 
@@ -350,31 +355,58 @@ public class BnfToG4 {
             this.bnf = bnf;
         }
 
-        public BNF inlineRules() {
-            final Set<Rule> newRules = bnf.rules().stream()
-                    .map(this::inline)
-                    .collect(toCollection(LinkedHashSet::new));
-
-            return new BNF(bnf.terminals(), bnf.variables(), bnf.start(), newRules);
+        public BNF inlineRule(final Variable variable) {
+            return bnf.findRuleFor(variable).map(rule -> {
+                final var result = inline(rule);
+                return !result.wasInlined()
+                        ? bnf
+                        : new RuleInliner(bnf.addRule(result.rule()).removeVars(result.variables()))
+                                .inlineRule(result.rule().lhs());
+            }).orElse(bnf);
         }
 
-        private Rule inline(final Rule rule) {
+        private record Result (Rule rule, Set<Variable> variables) {
+            public boolean wasInlined() {
+                return !variables.isEmpty();
+            }
+        }
+
+        /**
+         * Returns an inlined rule and variables that were inlined in the original rule.
+         */
+        private Result inline(final Rule rule) {
             return switch (rule) {
                 case Derivation derivation -> inline(derivation);
                 case Specialization specialization -> inline(specialization);
             };
         }
 
-        private Rule inline(final Derivation derivation) {
-            return derivation.mapRhs(term -> term instanceof Variable var ? inlineIn(var, derivation).orElse(term) : term);
+        private Result inline(final Derivation derivation) {
+            final var variables = ImmutableSet.<Variable>builder();
+            final var newRule = derivation.mapRhs(term -> {
+                if (term instanceof Variable var) {
+                    return inlineIn(var, derivation).map(inlined -> {
+                        variables.add(var);
+                        return inlined;
+                    }).orElse(term);
+                }
+                return term;
+            });
+            return new Result(newRule, variables.build());
         }
 
-        private Rule inline(final Specialization rule) {
-            return new Derivation(rule.lhs(),
-                                  new Alternation(rule.specializers().stream()
-                                                          .map(var -> inlineIn(var, rule).orElse(var))
-                                                          .toList()),
-                                  rule.metadata());
+        private Result inline(final Specialization rule) {
+            final var variables = new HashSet<Variable>();
+            final var inlinedSpecializers = rule.specializers().stream()
+                    .map(var -> {
+                        return inlineIn(var, rule).map(inlined -> {
+                            variables.add(var);
+                            return inlined;
+                        }).orElse(var);
+                    }).toList();
+            return variables.isEmpty()
+                    ? new Result(rule, variables)
+                    : new Result(new Derivation(rule.lhs(), new Alternation(inlinedSpecializers), rule.metadata()), variables);
         }
 
         /**
@@ -432,5 +464,12 @@ public class BnfToG4 {
         }
         return result;
     }
+
+//    private static <X> java.util.Optional<X> matchSingleElementCollection(final Collection<? extends X> xs) {
+//        if (xs.size() == 1) {
+//            return java.util.Optional.of(xs instanceof SequencedCollection<? extends X> seq ? seq.getFirst() : xs.iterator().next());
+//        }
+//        return java.util.Optional.empty();
+//    }
 
 }

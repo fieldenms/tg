@@ -1,5 +1,9 @@
 package fielden.platform.bnf;
 
+import ua.com.fielden.platform.utils.StreamUtils;
+
+import java.util.stream.Stream;
+
 /**
  * A rule is what makes up a grammar.
  */
@@ -30,6 +34,10 @@ public sealed interface Rule permits Derivation, Specialization {
      */
     static boolean isSingleAltRule(final Rule rule) {
         return rule.rhs().options().size() == 1;
+    }
+
+    static Stream<Symbol> rhsSymbols(final Rule rule) {
+        return rule.rhs().flatten().mapMulti(StreamUtils.typeFilter(Symbol.class));
     }
 
 }
