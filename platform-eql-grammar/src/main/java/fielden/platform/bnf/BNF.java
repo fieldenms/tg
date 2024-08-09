@@ -1,8 +1,12 @@
 package fielden.platform.bnf;
 
+import ua.com.fielden.platform.utils.StreamUtils;
+
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
@@ -120,9 +124,42 @@ public record BNF(
         };
     }
 
+    /**
+     * Merges the grammar resulting from the given function into this grammar as if by {@code mergeRight(this, that)}.
+     *
+     * @param fn  function that builds a BNF using the fluent API
+     */
+    public BNF mergeFrom(final Function<FluentBNF.IBnfBody, FluentBNF.IBnfBody> fn) {
+        final var bnf = fn.apply(FluentBNF.start(start)).build();
+        return mergeRight(this, bnf);
+    }
+
+    /**
+     * Merges 2 grammars preferring the starting variable and the rules from the right one.
+     */
+    public static BNF mergeRight(final BNF left, final BNF right) {
+        final var newTerminals = concatSet(left.terminals(), right.terminals(), toImmutableSet());
+        final var newVariables = concatSet(left.variables(), right.variables(), toImmutableSet());
+        // right rules should come first so that distinct() prefers them over left rules
+        final var newRules = StreamUtils.distinct(Stream.concat(right.rules.stream(), left.rules.stream()),
+                                                  rule -> rule.lhs().name())
+                .collect(toCollection(LinkedHashSet::new));
+        return new BNF(newTerminals, newVariables, right.start(), newRules);
+    }
+
     @Override
     public String toString() {
         return "<Σ=" + terminals + ", Γ=" + variables + ", ε=" + start + ", R=" + rules + ">";
+    }
+
+    private static <X> Set<X> concatSet(final Set<X> set1, final Set<X> set2, final Collector<X, ?, ? extends Set<X>> collector) {
+        if (set1.isEmpty()) {
+            return set2;
+        } else if (set2.isEmpty()) {
+            return set1;
+        } else {
+            return Stream.concat(set1.stream(), set2.stream()).collect(collector);
+        }
     }
 
 }

@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.*;
 import fielden.platform.bnf.Optional;
 import fielden.platform.bnf.*;
+import fielden.platform.eql.CanonicalEqlGrammar;
 import org.antlr.v4.runtime.CommonToken;
 
 import java.io.IOException;
@@ -19,6 +20,8 @@ import static fielden.platform.bnf.Metadata.*;
 import static fielden.platform.bnf.Rule.isSingleAltRule;
 import static fielden.platform.bnf.util.BnfUtils.countRhsOccurences;
 import static fielden.platform.bnf.util.BnfUtils.removeUnused;
+import static fielden.platform.eql.CanonicalEqlGrammar.EqlVariable.Select;
+import static fielden.platform.eql.CanonicalEqlGrammar.EqlVariable.SelectFrom;
 import static java.util.stream.Collectors.*;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -54,7 +57,7 @@ public class BnfToG4 {
 
     public BnfToG4(final BNF bnf, final String grammarName) {
         this.originalBnf = bnf;
-        this.bnf = removeUnused.compose(RuleInliner.inlineRules.compose(stripParameters)).apply(bnf);
+        this.bnf = removeUnused.compose(RuleInliner.inlineRules.compose(stripParameters)).compose(transformSelect).apply(bnf);
         this.grammarName = grammarName;
     }
 
@@ -286,6 +289,20 @@ public class BnfToG4 {
     }
 
     // -------------------- Utilities
+
+    /**
+     * Transform the {@link CanonicalEqlGrammar.EqlVariable#Select} rule.
+     * <p>
+     * On the ANTLR grammar level all {@linkplain CanonicalEqlGrammar.EqlTerminal#select selects} are equal as there is
+     * no information about token parameters, thus there is no need to distinguish {@linkplain CanonicalEqlGrammar.EqlVariable#SourcelessSelect sourceless selects}
+     * (which would also introduce ambiguity and slow down the parser).
+     */
+    private static final GrammarTransformer transformSelect = bnf -> {
+        return bnf.mergeFrom($ -> $.
+                specialize(Select).into(SelectFrom).
+                annotate(Select, inline())
+                );
+    };
 
     private static final GrammarTransformer stripParameters = bnf -> {
         final Set<Rule> newRules = bnf.rules().stream()
