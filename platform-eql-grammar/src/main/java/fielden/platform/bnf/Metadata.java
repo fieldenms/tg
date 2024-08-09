@@ -20,6 +20,15 @@ public final class Metadata {
         return new ListLabel(label);
     }
 
+    /** Signals that the annotated rule should not be inlined during transformation. */
+    public static final class NoInline implements Annotation {
+        private static final NoInline INSTANCE = new NoInline();
+        private NoInline() {}
+    }
+    public static NoInline noInline() {
+        return NoInline.INSTANCE;
+    }
+
     private final Map<Class<? extends Annotation>, Annotation> map;
 
     public Metadata(final Map<Class<? extends Annotation>, Annotation> map) {
