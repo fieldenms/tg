@@ -8,7 +8,7 @@ import ua.com.fielden.platform.entity.query.model.*;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 import static fielden.platform.bnf.FluentBNF.start;
-import static fielden.platform.bnf.Metadata.noInline;
+import static fielden.platform.bnf.Metadata.inline;
 import static fielden.platform.bnf.Notation.*;
 import static fielden.platform.bnf.Terms.label;
 import static fielden.platform.bnf.Terms.listLabel;
@@ -315,9 +315,47 @@ public final class CanonicalEqlGrammar {
         derive(Order).
             to(asc).or(desc).
 
-        annotate(MultiOperand, noInline()).
-        annotate(Model, noInline()).
-        annotate(Yield1Model, noInline()).
+
+        annotate(Select, inline()).
+        annotate(SelectFrom, inline()).
+        annotate(SelectSource, inline()).
+        annotate(StandaloneExpression, inline()).
+        annotate(StandaloneCondExpr, inline()).
+        annotate(OrderBy, inline()).
+
+        annotate(AndCondition, inline()).
+        annotate(OrCondition, inline()).
+        annotate(CompoundCondition, inline()).
+        annotate(NegatedCompoundCondition, inline()).
+
+        annotate(UnaryPredicate, inline()).
+        annotate(ComparisonPredicate, inline()).
+        annotate(QuantifiedComparisonPredicate, inline()).
+        annotate(LikePredicate, inline()).
+        annotate(MembershipPredicate, inline()).
+        annotate(SingleConditionPredicate, inline()).
+
+        annotate(Prop, inline()).
+        annotate(ExtProp, inline()).
+        annotate(Val, inline()).
+        annotate(Param, inline()).
+        annotate(UnaryFunction, inline()).
+        annotate(IfNull, inline()).
+        annotate(DateDiffInterval, inline()).
+        annotate(DateAddInterval, inline()).
+        annotate(Round, inline()).
+        annotate(Concat, inline()).
+        annotate(CaseWhen, inline()).
+        annotate(Expr, inline()).
+
+        annotate(YieldAll, inline()).
+        annotate(YieldSome, inline()).
+        annotate(Yield1Tail, inline()).
+        annotate(YieldManyTail, inline()).
+        annotate(YieldOperandFunction, inline()).
+
+        annotate(AndStandaloneCondition, inline()).
+        annotate(OrStandaloneCondition, inline()).
 
         build();
     // @formatter:on

@@ -414,17 +414,14 @@ public class BnfToG4 {
          * is returned.
          */
         private java.util.Optional<Term> inlineIn(final Variable variable, final Rule rule) {
-            if (bnf.getRuleFor(variable).metadata().has(NoInline.class)) {
-                return java.util.Optional.empty();
-            }
-
-            if (occursOnlyInRhsOf(variable, rule)) {
-                final var varRule = bnf.getRuleFor(variable);
-                if (isSingleAltRule(varRule)) {
-                    return java.util.Optional.of(varRule.rhs().options().getFirst());
-                }
-                else if (varRule instanceof Derivation derivation) {
-                    return matchRuleWithSingleTerminals(derivation).map(Alternation::new);
+            if (bnf.getRuleFor(variable).metadata().has(Inline.class)) {
+                if (occursOnlyInRhsOf(variable, rule)) {
+                    final var varRule = bnf.getRuleFor(variable);
+                    if (isSingleAltRule(varRule)) {
+                        return java.util.Optional.of(varRule.rhs().options().getFirst());
+                    } else if (varRule instanceof Derivation derivation) {
+                        return matchRuleWithSingleTerminals(derivation).map(Alternation::new);
+                    }
                 }
             }
 
