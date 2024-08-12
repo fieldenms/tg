@@ -1,6 +1,7 @@
 package fielden.platform.bnf;
 
-import java.util.Arrays;
+import com.google.common.collect.ImmutableList;
+
 import java.util.List;
 import java.util.Objects;
 
@@ -14,7 +15,7 @@ public record Token(String name, Metadata metadata, List<? extends Parameter> pa
     public Token(final String name, final Metadata metadata, final List<? extends Parameter> parameters) {
         this.name = name;
         this.metadata = metadata;
-        this.parameters = List.copyOf(parameters);
+        this.parameters = ImmutableList.copyOf(parameters);
     }
 
     public Token(final Terminal terminal, final List<? extends Parameter> parameters) {
@@ -22,7 +23,7 @@ public record Token(String name, Metadata metadata, List<? extends Parameter> pa
     }
 
     public Token(final String name, final Metadata metadata, final Parameter... parameters) {
-        this(name, metadata, Arrays.asList(parameters));
+        this(name, metadata, ImmutableList.copyOf(parameters));
     }
 
     public boolean hasParameters() {

@@ -1,8 +1,12 @@
 package fielden.platform.bnf;
 
+import com.google.common.collect.ImmutableList;
+
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.stream.Collectors.joining;
 
 /**
@@ -16,7 +20,7 @@ import static java.util.stream.Collectors.joining;
 public record Specialization(Variable lhs, List<Variable> specializers, Metadata metadata) implements Rule {
 
     public Specialization(final Variable lhs, final List<Variable> specializers) {
-        this(lhs, specializers, Metadata.EMPTY_METADATA);
+        this(lhs, ImmutableList.copyOf(specializers), Metadata.EMPTY_METADATA);
     }
 
     @Override
@@ -25,7 +29,7 @@ public record Specialization(Variable lhs, List<Variable> specializers, Metadata
     }
 
     public Specialization mapRhs(final Function<? super Variable, Variable> fn) {
-        return new Specialization(lhs, specializers.stream().map(fn).toList(), metadata);
+        return new Specialization(lhs, specializers.stream().map(fn).collect(toImmutableList()), metadata);
     }
 
     @Override

@@ -1,5 +1,7 @@
 package fielden.platform.bnf;
 
+import com.google.common.collect.ImmutableMap;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -41,11 +43,11 @@ public final class Metadata {
     private final Map<Class<? extends Annotation>, Annotation> map;
 
     public Metadata(final Map<Class<? extends Annotation>, Annotation> map) {
-        this.map = Map.copyOf(map);
+        this.map = ImmutableMap.copyOf(map);
     }
 
     public Metadata() {
-        this.map = Map.of();
+        this.map = ImmutableMap.of();
     }
 
     public <A extends Annotation> Optional<A> get(final Class<A> annotationType) {
@@ -70,14 +72,14 @@ public final class Metadata {
     }
 
     private static final class Builder {
-        private final Map<Class<? extends Annotation>, Annotation> map = new HashMap<>();
+        private final ImmutableMap.Builder<Class<? extends Annotation>, Annotation> mapBuilder = ImmutableMap.builder();
 
         public Metadata build() {
-            return new Metadata(map);
+            return new Metadata(mapBuilder.buildKeepingLast());
         }
 
         public Builder add(final Annotation annotation) {
-            map.put(annotation.getClass(), annotation);
+            mapBuilder.put(annotation.getClass(), annotation);
             return this;
         }
     }

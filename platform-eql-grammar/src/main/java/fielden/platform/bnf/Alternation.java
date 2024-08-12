@@ -1,10 +1,13 @@
 package fielden.platform.bnf;
 
+import com.google.common.collect.ImmutableList;
+
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.stream.Collectors.joining;
 
 /**
@@ -23,7 +26,7 @@ public final class Alternation implements Notation {
     private final Metadata metadata;
 
     public Alternation(final List<? extends Term> options, final Metadata metadata) {
-        this.options = List.copyOf(options);
+        this.options = ImmutableList.copyOf(options);
         this.metadata = metadata;
     }
 
@@ -43,12 +46,12 @@ public final class Alternation implements Notation {
 
     @Override
     public Alternation recMap(final Function<? super Term, ? extends Term> mapper) {
-        return new Alternation(options.stream().map(seq -> seq.recMap(mapper)).toList(), metadata);
+        return new Alternation(options.stream().map(seq -> seq.recMap(mapper)).collect(toImmutableList()), metadata);
     }
 
     @Override
     public Alternation map(final Function<? super Term, ? extends Term> mapper) {
-        return new Alternation(options.stream().map(mapper).toList(), metadata);
+        return new Alternation(options.stream().map(mapper).collect(toImmutableList()), metadata);
     }
 
     @Override

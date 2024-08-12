@@ -6,6 +6,8 @@ import java.util.*;
 import java.util.function.*;
 import java.util.stream.Stream;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
 /**
  * A sequence of terms, which is itself a term. More commonly known as <i>grouping</i>.
  */
@@ -26,7 +28,7 @@ public final class Sequence implements List<Term>, Term {
     }
 
     public static Sequence of(final Term... terms) {
-        return of(Arrays.asList(terms));
+        return of(ImmutableList.copyOf(terms));
     }
 
     public static Sequence of(final Collection<? extends Term> terms) {
@@ -77,12 +79,12 @@ public final class Sequence implements List<Term>, Term {
 
     @Override
     public Sequence recMap(final Function<? super Term, ? extends Term> mapper) {
-        return new Sequence(terms.stream().map(t -> t.recMap(mapper)).toList(), metadata);
+        return new Sequence(terms.stream().map(t -> t.recMap(mapper)).collect(toImmutableList()), metadata);
     }
 
     @Override
     public Sequence map(final Function<? super Term, ? extends Term> mapper) {
-        return new Sequence(terms.stream().map(mapper).toList(), metadata);
+        return new Sequence(terms.stream().map(mapper).collect(toImmutableList()), metadata);
     }
 
     @Override
