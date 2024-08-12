@@ -167,7 +167,7 @@ public final class Sequence implements List<Term>, Term {
 
     @Override
     public boolean equals(final Object o) {
-        return terms.equals(o);
+        return this == o || o instanceof Sequence that && terms.equals(that.terms);
     }
 
     @Override

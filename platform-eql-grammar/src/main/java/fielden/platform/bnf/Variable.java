@@ -40,8 +40,13 @@ public non-sealed interface Variable extends Symbol {
             }
 
             @Override
+            public boolean equals(final Object o) {
+                return this == o || o instanceof Variable that && name.equals(that.name());
+            }
+
+            @Override
             public int hashCode() {
-                return Objects.hash(name, newMetadata);
+                return Objects.hash(name);
             }
         };
     }

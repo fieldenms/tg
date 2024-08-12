@@ -2,6 +2,7 @@ package fielden.platform.bnf;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import static java.util.stream.Collectors.joining;
 
@@ -44,6 +45,16 @@ public record Token(String name, Metadata metadata, List<? extends Parameter> pa
         return "%s%s".formatted(
                 name,
                 parameters.isEmpty() ? "" : parameters.stream().map(Parameter::toString).collect(joining(",", "(", ")")));
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        return this == o || o instanceof Token that && name.equals(that.name) && parameters.equals(that.parameters);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, parameters);
     }
 
 }

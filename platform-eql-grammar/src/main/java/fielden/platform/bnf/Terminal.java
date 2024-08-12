@@ -2,6 +2,7 @@ package fielden.platform.bnf;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public non-sealed interface Terminal extends Symbol {
 
@@ -42,6 +43,21 @@ public non-sealed interface Terminal extends Symbol {
             @Override
             public Metadata metadata() {
                 return newMetadata;
+            }
+
+            @Override
+            public String toString() {
+                return name;
+            }
+
+            @Override
+            public boolean equals(final Object o) {
+                return this == o || o instanceof Terminal that && name.equals(that.name());
+            }
+
+            @Override
+            public int hashCode() {
+                return Objects.hash(name);
             }
         };
     }

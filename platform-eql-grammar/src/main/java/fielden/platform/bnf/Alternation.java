@@ -73,13 +73,12 @@ public final class Alternation implements Notation {
     @Override
     public boolean equals(Object obj) {
         return obj == this || obj instanceof Alternation that &&
-                              Objects.equals(this.options, that.options) &&
-                              Objects.equals(this.metadata, that.metadata);
+                              Objects.equals(this.options, that.options);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(options, metadata);
+        return Objects.hash(options);
     }
 
 }

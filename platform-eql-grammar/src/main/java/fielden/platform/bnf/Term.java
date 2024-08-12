@@ -5,6 +5,8 @@ import java.util.stream.Stream;
 
 /**
  * The most general grammar term.
+ * <p>
+ * Equality is defined only in terms of structure, excluding metadata.
  */
 public sealed interface Term permits Notation, Sequence, Symbol {
 
