@@ -65,7 +65,9 @@ public class BnfToG4 {
     public BnfToG4(final BNF bnf, final String grammarName) {
         this.originalBnf = bnf;
         this.bnf = removeUnused
-                .compose(RuleInliner.inlineRules.compose(stripParameters))
+                .compose(RuleInliner.inlineRules)
+                .compose(labelTokens)
+                .compose(stripParameters)
                 .compose(transformYieldOperandExpr)
                 .compose(transformSelect)
                 .apply(bnf);
@@ -134,17 +136,9 @@ public class BnfToG4 {
     }
 
     private BiFunction<Term, String, String> makeLabeler(final Rule rule) {
-        final Function<String, String> defaultLabeler = switch (rule) {
-            case Derivation $ -> isSingleTerminalRule(rule) ? s -> "token=" + s : identity();
-            case Specialization $ -> s -> makeAltLabelName(rule, s);
-        };
         return (term, s) -> term.metadata().get(AltLabel.class)
                 .map(altLabel -> makeRuleWithAltLabel(s, altLabel.label()))
-                .orElseGet(() -> defaultLabeler.apply(s));
-    }
-
-    protected String makeAltLabelName(final Rule rule, final String alt) {
-        return "%s # %s_%s".formatted(alt, capitalize(rule.lhs().name()), capitalize(alt));
+                .orElse(s);
     }
 
     private static String makeRuleWithAltLabel(final String rule, final String label) {
@@ -311,6 +305,16 @@ public class BnfToG4 {
     }
 
     // -------------------- Utilities
+
+    public static final GrammarTransformer labelTokens = bnf -> bnf.transformRules(rule -> switch (rule) {
+        case Derivation derivation when isSingleTerminalRule(derivation) -> derivation.mapRhs(term -> {
+            final Terminal terminal = (Terminal) term;
+            return !terminal.metadata().has(Metadata.Label.class)
+                    ? terminal.annotate(Metadata.label("token"))
+                    : terminal;
+        });
+        default -> rule;
+    });
 
     /**
      * Transform the {@link CanonicalEqlGrammar.EqlVariable#Select} rule.

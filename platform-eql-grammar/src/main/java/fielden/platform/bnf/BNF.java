@@ -128,6 +128,10 @@ public record BNF(
         return addRule(fn.apply(getRuleFor(variable)));
     }
 
+    public BNF transformRules(final Function<? super Rule, Rule> fn) {
+        return updateRules(rules.stream().map(fn).collect(toCollection(LinkedHashSet::new)));
+    }
+
     /**
      * Merges the grammar resulting from the given function into this grammar as if by {@code mergeRight(this, that)}.
      *
