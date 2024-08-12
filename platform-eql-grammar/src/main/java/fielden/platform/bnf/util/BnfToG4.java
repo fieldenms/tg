@@ -127,17 +127,28 @@ public class BnfToG4 {
     }
 
     protected String convert(final Rule rule) {
-        final Function<String, String> labeler =  switch (rule) {
+        final var labeler = makeLabeler(rule);
+        return "%s :\n      %s\n;".formatted(
+                convert(rule.lhs()),
+                rule.rhs().options().stream().map(term -> labeler.apply(term, convert(term))).collect(joining("\n    | ")));
+    }
+
+    private BiFunction<Term, String, String> makeLabeler(final Rule rule) {
+        final Function<String, String> defaultLabeler = switch (rule) {
             case Derivation $ -> isSingleTerminalRule(rule) ? s -> "token=" + s : identity();
             case Specialization $ -> s -> makeAltLabelName(rule, s);
         };
-        return "%s :\n      %s\n;".formatted(
-                convert(rule.lhs()),
-                rule.rhs().options().stream().map(this::convert).map(labeler).collect(joining("\n    | ")));
+        return (term, s) -> term.metadata().get(AltLabel.class)
+                .map(altLabel -> makeRuleWithAltLabel(s, altLabel.label()))
+                .orElseGet(() -> defaultLabeler.apply(s));
     }
 
     protected String makeAltLabelName(final Rule rule, final String alt) {
         return "%s # %s_%s".formatted(alt, capitalize(rule.lhs().name()), capitalize(alt));
+    }
+
+    private static String makeRuleWithAltLabel(final String rule, final String label) {
+        return rule + " # " + label;
     }
 
     protected String convert(final Sequence seq) {

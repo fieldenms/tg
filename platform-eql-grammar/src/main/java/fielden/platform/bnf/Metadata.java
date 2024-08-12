@@ -29,6 +29,15 @@ public final class Metadata {
         return Inline.INSTANCE;
     }
 
+    /**
+     * <a href="https://github.com/antlr/antlr4/blob/master/doc/parser-rules.md#rule-element-labels">Alternative Labels</a>,
+     * specific to ANTLR. This kind of label can be applied to an alternative (i.e., a constituent of {@link Alternation}).
+     */
+    public record AltLabel (String label) implements Annotation {}
+    public static AltLabel altLabel(final String label) {
+        return new AltLabel(label);
+    }
+
     private final Map<Class<? extends Annotation>, Annotation> map;
 
     public Metadata(final Map<Class<? extends Annotation>, Annotation> map) {

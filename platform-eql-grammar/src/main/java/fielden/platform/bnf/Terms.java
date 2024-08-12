@@ -1,5 +1,7 @@
 package fielden.platform.bnf;
 
+import static fielden.platform.bnf.Sequence.seqOrTerm;
+
 /**
  * Utilities that operate on {@linkplain Term terms}.
  */
@@ -19,6 +21,14 @@ public final class Terms {
 
     public static Variable listLabel(String label, Variable variable) {
         return variable.annotate(Metadata.listLabel(label));
+    }
+
+    public static Term altLabel(final String label, final Term term, final Term... terms) {
+        return seqOrTerm(term, terms).annotate(Metadata.altLabel(label));
+    }
+
+    public static Variable altLabel(final String label, final Variable variable) {
+        return variable.annotate(Metadata.altLabel(label));
     }
 
     private Terms() {}

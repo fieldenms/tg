@@ -49,6 +49,13 @@ public final class Sequence implements List<Term>, Term {
     /**
      * Given a single term, returns it, otherwise returns a sequence containing all given terms.
      */
+    public static Term seqOrTerm(Term term, Term... terms) {
+        return terms.length == 0 ? term : of(ImmutableList.<Term>builder().add(term).add(terms).build());
+    }
+
+    /**
+     * Given a single term, returns it, otherwise returns a sequence containing all given terms.
+     */
     public static Term seqOrTerm(Collection<? extends Term> terms) {
         return terms.size() == 1 ? terms.iterator().next() : of(terms);
     }
