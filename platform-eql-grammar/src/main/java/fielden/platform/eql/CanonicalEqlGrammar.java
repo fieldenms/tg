@@ -10,8 +10,7 @@ import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import static fielden.platform.bnf.FluentBNF.start;
 import static fielden.platform.bnf.Metadata.inline;
 import static fielden.platform.bnf.Notation.*;
-import static fielden.platform.bnf.Terms.label;
-import static fielden.platform.bnf.Terms.listLabel;
+import static fielden.platform.bnf.Terms.*;
 import static fielden.platform.eql.CanonicalEqlGrammar.EqlTerminal.values;
 import static fielden.platform.eql.CanonicalEqlGrammar.EqlTerminal.*;
 import static fielden.platform.eql.CanonicalEqlGrammar.EqlVariable.*;
@@ -59,14 +58,16 @@ public final class CanonicalEqlGrammar {
             to(select, opt(GroupBy), SelectEnd).
 
         specialize(SelectEnd).
-            into(Model, AnyYield).
+            into(altLabel("SelectEnd_Model", Model),
+                 altLabel("SelectEnd_AnyYield", AnyYield)).
 
         derive(Where).
             to(where, Condition).
 
         // AND takes precedence over OR
         specialize(Condition).
-            into(Predicate, AndCondition, OrCondition, CompoundCondition, NegatedCompoundCondition).
+            into(altLabel("PredicateCondition", Predicate),
+                 AndCondition, OrCondition, CompoundCondition, NegatedCompoundCondition).
 
         derive(AndCondition).
             to(label("left", Condition), and, label("right", Condition)).
@@ -106,7 +107,8 @@ public final class CanonicalEqlGrammar {
             or(notLike).or(notLikeWithCast).or(notILikeWithCast).or(notILike).
 
         specialize(ComparisonOperand).
-            into(SingleOperand, MultiOperand).
+            into(altLabel("ComparisonOperand_Single", SingleOperand),
+                 altLabel("ComparisonOperand_Multi", MultiOperand)).
 
         derive(ComparisonOperator).
             to(eq).or(gt).or(lt).or(ge).or(le).or(ne).
@@ -124,11 +126,11 @@ public final class CanonicalEqlGrammar {
         derive(SingleOperand).
             to(Prop).or(ExtProp).
             or(Val).or(Param).
-            or(expr.with(ExpressionModel.class)).
-            or(model.with(SingleResultQueryModel.class)).
+            or(altLabel("SingleOperand_Expr", expr.with(ExpressionModel.class))).
+            or(altLabel("SingleOperand_Model", model.with(SingleResultQueryModel.class))).
             or(UnaryFunction).
             or(IfNull).
-            or(now).
+            or(altLabel("SingleOperand_Now", now)).
             or(DateDiffInterval).
             or(DateAddInterval).
             or(Round).
@@ -260,9 +262,9 @@ public final class CanonicalEqlGrammar {
             to(yield, YieldOperand, YieldAlias).
 
         derive(YieldOperand).
-            to(SingleOperand).
+            to(altLabel("YieldOperand_SingleOperand", SingleOperand)).
             or(YieldOperandExpr).
-            or(countAll).
+            or(altLabel("YieldOperand_CountAll", countAll)).
             or(YieldOperandFunction).
 
         derive(YieldOperandExpr).
@@ -299,7 +301,8 @@ public final class CanonicalEqlGrammar {
             to(cond, StandaloneCondition, model).
 
         specialize(StandaloneCondition).
-            into(Predicate, AndStandaloneCondition, OrStandaloneCondition).
+            into(altLabel("StandaloneCondition_Predicate", Predicate),
+                 AndStandaloneCondition, OrStandaloneCondition).
 
         derive(AndStandaloneCondition).
             to(label("left", StandaloneCondition), and, label("right", StandaloneCondition)).
@@ -310,10 +313,17 @@ public final class CanonicalEqlGrammar {
         derive(OrderBy).
             to(orderBy, repeat1(listLabel("operands", OrderByOperand)), model).
 
-        derive(OrderByOperand).
+        specialize(OrderByOperand).
+            into(OrderByOperand_Single, OrderByOperand_Yield, OrderByOperand_OrderingModel).
+
+        derive(OrderByOperand_Single).
             to(SingleOperand, Order).
-            or(label("yield", yield.with(STR)), Order).
-            or(order.with(OrderingModel.class)).
+
+        derive(OrderByOperand_Yield).
+            to(label("yield", yield.with(STR)), Order).
+
+        derive(OrderByOperand_OrderingModel).
+            to(order.with(OrderingModel.class)).
 
         derive(Order).
             to(asc).or(desc).
@@ -361,6 +371,10 @@ public final class CanonicalEqlGrammar {
         annotate(AndStandaloneCondition, inline()).
         annotate(OrStandaloneCondition, inline()).
 
+        annotate(OrderByOperand_Single, inline()).
+        annotate(OrderByOperand_Yield, inline()).
+        annotate(OrderByOperand_OrderingModel, inline()).
+
         build();
     // @formatter:on
 
@@ -386,7 +400,7 @@ public final class CanonicalEqlGrammar {
         OrderBy, Order, OrderByOperand, SelectFrom, SelectSource, SelectEnd, SourcelessSelect, DateIntervalUnit,
         YieldAll, YieldSome, YieldTail, Yield1Tail, YieldManyTail, AliasedYield, YieldManyModel, Yield1Model,
         YieldOperandExpr,
-        MembershipPredicate
+        OrderByOperand_Yield, OrderByOperand_OrderingModel, OrderByOperand_Single, MembershipPredicate
     }
 
     public enum EqlTerminal implements Terminal {
