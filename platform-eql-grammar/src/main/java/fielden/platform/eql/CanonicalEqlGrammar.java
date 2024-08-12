@@ -50,9 +50,9 @@ public final class CanonicalEqlGrammar {
                SelectEnd).
 
         derive(SelectSource).
-            to(select.with(Class.class)).
-            or(select.rest(EntityResultQueryModel.class)).
-            or(select.rest(AggregatedResultQueryModel.class)).
+            to(label("select", select.with(Class.class))).
+            or(label("select", select.rest(EntityResultQueryModel.class))).
+            or(label("select", select.rest(AggregatedResultQueryModel.class))).
 
         derive(SourcelessSelect).
             to(select, opt(GroupBy), SelectEnd).
