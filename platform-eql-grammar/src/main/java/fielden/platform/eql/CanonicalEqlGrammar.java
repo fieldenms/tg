@@ -126,8 +126,8 @@ public final class CanonicalEqlGrammar {
         derive(SingleOperand).
             to(Prop).or(ExtProp).
             or(Val).or(Param).
-            or(altLabel("SingleOperand_Expr", expr.with(ExpressionModel.class))).
-            or(altLabel("SingleOperand_Model", model.with(SingleResultQueryModel.class))).
+            or(altLabel("SingleOperand_Expr", label("token", expr.with(ExpressionModel.class)))).
+            or(altLabel("SingleOperand_Model", label("token", model.with(SingleResultQueryModel.class)))).
             or(UnaryFunction).
             or(IfNull).
             or(altLabel("SingleOperand_Now", now)).
@@ -160,7 +160,7 @@ public final class CanonicalEqlGrammar {
             to(addTimeIntervalOf, label("left", SingleOperand), label("unit", DateIntervalUnit), to, label("right", SingleOperand)).
 
         derive(Round).
-            to(round, SingleOperand, to.with(Integer.class)).
+            to(round, SingleOperand, label("to", to.with(Integer.class))).
 
         derive(Concat).
             to(concat, listLabel("operands", SingleOperand), (repeat(with, listLabel("operands", SingleOperand))), end).
