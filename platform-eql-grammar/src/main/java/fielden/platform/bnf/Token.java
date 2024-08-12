@@ -57,4 +57,9 @@ public record Token(String name, Metadata metadata, List<? extends Parameter> pa
         return Objects.hash(name, parameters);
     }
 
+    @Override
+    public Token annotate(final Metadata.Annotation annotation) {
+        return new Token(name, Metadata.merge(metadata, annotation), parameters);
+    }
+
 }

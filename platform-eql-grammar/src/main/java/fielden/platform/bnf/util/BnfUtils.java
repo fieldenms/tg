@@ -3,6 +3,7 @@ package fielden.platform.bnf.util;
 import fielden.platform.bnf.BNF;
 import fielden.platform.bnf.Rule;
 import fielden.platform.bnf.Symbol;
+import fielden.platform.bnf.Variable;
 
 import java.util.LinkedHashSet;
 import java.util.stream.Stream;
@@ -52,7 +53,7 @@ public final class BnfUtils {
                 .filter(terminal -> occursInAnyRhs(terminal, bnf))
                 .collect(toImmutableSet());
         final var usedRules = bnf.rules().stream()
-                .filter(rule -> usedVars.contains(rule.lhs()))
+                .filter(rule -> usedVars.stream().anyMatch(usedVar -> usedVar.name().equals(rule.lhs().name())))
                 .collect(toCollection(LinkedHashSet::new));
         return new BNF(usedTerminals, usedVars, bnf.start(), usedRules);
     };
