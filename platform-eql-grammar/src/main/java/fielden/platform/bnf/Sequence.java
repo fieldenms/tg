@@ -59,6 +59,11 @@ public final class Sequence implements List<Term>, Term {
     }
 
     @Override
+    public Metadata metadata() {
+        return metadata;
+    }
+
+    @Override
     public Sequence annotate(final Metadata.Annotation annotation) {
         return new Sequence(terms, Metadata.merge(metadata, annotation));
     }
