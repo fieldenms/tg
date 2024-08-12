@@ -436,16 +436,35 @@ public class BnfToG4 {
             public boolean wasInlined() {
                 return !variables.isEmpty();
             }
+
+            public boolean wasInlined(final Variable variable) {
+                return variables.contains(variable);
+            }
+
+            public Result mapRuleIfInlined(final Function<? super Derivation, ? extends Rule> fn) {
+                return wasInlined() ? new Result(fn.apply((Derivation) rule), variables) : this;
+            }
         }
 
         /**
          * Returns an inlined rule and variables that were inlined in the original rule.
          */
         private Result inline(final Rule rule) {
-            return switch (rule) {
+            final var result = switch (rule) {
                 case Derivation derivation -> inline(derivation);
                 case Specialization specialization -> inline(specialization);
             };
+            return result.mapRuleIfInlined(newRule -> {
+                // inlined single-variable alternatives should be annotated with alternative labels named after the inlined variable
+                // Condition = AndCondition
+                // after inlining:
+                // Condition = Condition and Condition # AndCondition
+                return newRule.updateRhs(options -> StreamUtils.zip(rule.rhs().options(), newRule.rhs().options(), (origTerm, newTerm) -> {
+                    return origTerm instanceof Variable origVar && result.wasInlined(origVar)
+                            ? newTerm.annotate(altLabel(origVar.name()))
+                            : newTerm;
+                }).toList());
+            });
         }
 
         private Result inline(final Derivation derivation) {

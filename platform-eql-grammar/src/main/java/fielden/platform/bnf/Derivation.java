@@ -1,5 +1,6 @@
 package fielden.platform.bnf;
 
+import java.util.List;
 import java.util.function.Function;
 
 /**
@@ -24,6 +25,10 @@ public record Derivation(Variable lhs, Alternation rhs, Metadata metadata) imple
 
     public Rule mapRhs(final Function<? super Term, Term> fn) {
         return new Derivation(lhs, rhs.map(fn), metadata);
+    }
+
+    public Rule updateRhs(final Function<? super List<Term>, ? extends List<Term>> fn) {
+        return new Derivation(lhs, new Alternation(fn.apply(rhs.options())), metadata);
     }
 
     @Override
