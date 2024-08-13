@@ -33,6 +33,7 @@ import ua.com.fielden.platform.entity.query.IEntityFetcher;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.FillModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.utils.Pair;
@@ -87,8 +88,8 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
 
     @Override
     @SessionRequired
-    public T findById(final boolean filtered, final Long id, final fetch<T> fetchModel) {
-        return fetchOneEntityInstance(filtered, id, fetchModel);
+    public T findById(final boolean filtered, final Long id, final fetch<T> fetchModel, final FillModel fillModel) {
+        return fetchOneEntityInstance(filtered, id, fetchModel, fillModel);
     }
     
     @Override
@@ -292,20 +293,17 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
 
     /**
      * A private helper method.
-     * 
-     * @param filtered -- <code>true</code> to turn filtering on.
-     * @param id
-     * @param fetchModel
-     * @return
+     *
+     * @param filtered  <code>true</code> to turn filtering on.
      */
-    private T fetchOneEntityInstance(final boolean filtered, final Long id, final fetch<T> fetchModel) {
+    private T fetchOneEntityInstance(final boolean filtered, final Long id, final fetch<T> fetchModel, final FillModel fillModel) {
         if (id == null) {
             throw new EntityCompanionException(format(ERR_MISSING_ID_VALUE, getEntityType().getName()));
         }
         try {
             final EntityResultQueryModel<T> query = select(getEntityType()).where().prop(ID).eq().val(id).model();
             query.setFilterable(filtered);
-            return getEntity(instrumented() ? from(query).with(fetchModel).model(): from(query).with(fetchModel).lightweight().model());
+            return getEntity(from(query).with(fetchModel).with(fillModel).lightweight(!instrumented()).model());
         } catch (final Exception e) {
             throw new EntityCompanionException(format("Could not fetch one entity of type [%s].", getEntityType().getName()), e);
         }
