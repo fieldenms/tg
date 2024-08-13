@@ -8,6 +8,7 @@ import ua.com.fielden.platform.companion.PersistentEntityWithAllKindsOfPropertie
 import ua.com.fielden.platform.companion.TrivialPersistentEntity;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.model.EntityToFill;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamicRequiredness;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.composite.EntityWithSingleMemberDynamicCompositeKey;
@@ -219,6 +220,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgUnionCommonType.class);
         add(PersistentEntityWithAllKindsOfProperties.class);
         add(TrivialPersistentEntity.class);
+        add(EntityToFill.class);
     }
 
     @Override
