@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.error.Result.warning;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
+import static ua.com.fielden.platform.utils.DefinersExecutor.definersExecutor;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -197,7 +198,7 @@ public class FactoryForTestingEntities {
         final EntityWithMetaProperty entity = factory.newEntity(EntityWithMetaProperty.class, 1L);
         entity.beginInitialising();
         entity.setProp("Ok");
-        DefinersExecutor.execute(entity);
+        definersExecutor().execute(entity);
 
         return entity.setProp("Not Ok");
     }
@@ -257,7 +258,7 @@ public class FactoryForTestingEntities {
         final EntityWithMetaProperty entity = factory.newEntity(EntityWithMetaProperty.class, 1L);
         entity.beginInitialising();
         entity.set("requiredProp", "Ok");
-        DefinersExecutor.execute(entity);
+        definersExecutor().execute(entity);
 
         entity.getProperty("requiredProp").setRequired(false);
         return entity;
@@ -267,7 +268,7 @@ public class FactoryForTestingEntities {
         final EntityWithMetaProperty entity = factory.newEntity(EntityWithMetaProperty.class, 1L);
         entity.beginInitialising();
         entity.set("nonEditableProp", "Ok");
-        DefinersExecutor.execute(entity);
+        definersExecutor().execute(entity);
 
         entity.getProperty("nonEditableProp").setEditable(true);
         return entity;
@@ -277,7 +278,7 @@ public class FactoryForTestingEntities {
         final EntityWithMetaProperty entity = factory.newEntity(EntityWithMetaProperty.class, 1L);
         entity.beginInitialising();
         entity.set("nonVisibleProp", "Ok");
-        DefinersExecutor.execute(entity);
+        definersExecutor().execute(entity);
 
         entity.getProperty("nonVisibleProp").setVisible(true);
         return entity;
@@ -287,7 +288,7 @@ public class FactoryForTestingEntities {
         final EntityWithMetaProperty entity = factory.newEntity(EntityWithMetaProperty.class, 1L);
         entity.beginInitialising();
         entity.set("propWithValueChangeCount", "Ok");
-        DefinersExecutor.execute(entity);
+        definersExecutor().execute(entity);
 
         entity.set("propWithValueChangeCount", "Ok Ok"); // value change count becomes 1
 

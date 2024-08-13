@@ -18,15 +18,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.ImmutableSet;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 
 /**
- * Finalises initialisation of the specified entity instance by traversing an object graph to execute ACE handlers and assign original property values. 
- * Method {@link #execute(LinkedHashSet)} can be conveniently used to finalise initialisation of multiple dependent entities.
+ * Finalises initialisation of the specified entity instance by traversing an object graph to execute ACE handlers and assign original property values.
  * <p>
- * The process of finalising entity initialisation consists of:<br>
+ * An instance of this class can be created with one of the static methods {@link #definersExecutor()}.
+ * Method {@link #execute(List)} can be conveniently used to finalise initialisation of multiple dependent entities.
+ * <p>
+ * The process of finalising entity initialisation consists of:
  * <ul>
  *  <li>Execution of ACE handlers.
  *  <li>(re)Setting of property original values.
@@ -34,10 +37,32 @@ import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
  * </ul>
  * 
  * @author TG Team
- *
  */
 public class DefinersExecutor {
-    private DefinersExecutor() {}
+
+    /**
+     * Entity-typed properties that should not be explored. The effect is that definers are not executed further down
+     * the graph.
+     */
+    private final Set<String> noExploreProps;
+
+    private DefinersExecutor(final Collection<String> noExploreProps) {
+        this.noExploreProps = ImmutableSet.copyOf(noExploreProps);
+    }
+
+    /**
+     * @param noExploreProps  entity-typed properties that should not be explored, which will prevent execution of definers
+     *                        further down the graph
+     */
+    public static DefinersExecutor definersExecutor(final Collection<String> noExploreProps) {
+        return noExploreProps.isEmpty() ? definersExecutor() : new DefinersExecutor(noExploreProps);
+    }
+
+    public static DefinersExecutor definersExecutor() {
+        return DEFAULT_INSTANCE;
+    }
+
+    private static final DefinersExecutor DEFAULT_INSTANCE = new DefinersExecutor(ImmutableSet.of());
 
     /**
      * Employs the DFS algorithm to traverse the object graph starting with a node represented by <code>entity</code>. 
@@ -47,7 +72,7 @@ public class DefinersExecutor {
      * 
      * @return
      */
-    public static <T extends AbstractEntity<?>> T execute(final T entity) {
+    public <T extends AbstractEntity<?>> T execute(final T entity) {
         if (entity != null) {
             execute(Arrays.asList(entity));
         }
@@ -61,7 +86,7 @@ public class DefinersExecutor {
      * 
      * @return
      */
-    public static <T extends AbstractEntity<?>> List<T> execute(final List<T> entities) {
+    public <T extends AbstractEntity<?>> List<T> execute(final List<T> entities) {
         if (entities == null || entities.isEmpty()) {
             return entities;
         }
@@ -92,7 +117,7 @@ public class DefinersExecutor {
      * @param explored
      * @return
      */
-    private static void explore(
+    private void explore(
             final Deque<AbstractEntity<?>> frontier, 
             final Set<String> explored) {
         
@@ -144,28 +169,29 @@ public class DefinersExecutor {
         final List<Field> nonProxiedPropFields = propFieldsToProcess.get(false);
         for (final Field propField : nonProxiedPropFields) {
             final String propName = propField.getName();
-            final boolean isEntity = AbstractEntity.class.isAssignableFrom(propField.getType());
-            final boolean isCollectional = Collection.class.isAssignableFrom(propField.getType());
-
             final Object propertyValue = entity.get(propName);
 
-            if (isCollectional) { // handle collectional properties
-                if (propertyValue != null) {
-                    final Collection<?> collection = (Collection<?>) propertyValue;
-                    for (final Object item: collection) {
-                        if (item != null && item instanceof AbstractEntity) {
-                            final AbstractEntity<?> value = (AbstractEntity<?>) item;
-                            frontier.push(value);
-                            explore(frontier, explored);
+            if (shouldExplore(propName)) {
+                final boolean isEntity = AbstractEntity.class.isAssignableFrom(propField.getType());
+                final boolean isCollectional = Collection.class.isAssignableFrom(propField.getType());
+                if (isCollectional) { // handle collectional properties
+                    if (propertyValue != null) {
+                        final Collection<?> collection = (Collection<?>) propertyValue;
+                        for (final Object item : collection) {
+                            if (item != null && item instanceof AbstractEntity) {
+                                final AbstractEntity<?> value = (AbstractEntity<?>) item;
+                                frontier.push(value);
+                                explore(frontier, explored);
+                            }
                         }
                     }
-                }
-            } else if (isEntity) { // handle entity-typed properties
-                if (propertyValue != null) {
-                    final AbstractEntity<?> value = (AbstractEntity<?>) propertyValue;
-                    // produce fetch
-                    frontier.push(value);
-                    explore(frontier, explored);
+                } else if (isEntity) { // handle entity-typed properties
+                    if (propertyValue != null) {
+                        final AbstractEntity<?> value = (AbstractEntity<?>) propertyValue;
+                        // produce fetch
+                        frontier.push(value);
+                        explore(frontier, explored);
+                    }
                 }
             }
             
@@ -175,7 +201,10 @@ public class DefinersExecutor {
 
         entity.endInitialising();
     }
-    
+
+    private boolean shouldExplore(final String property) {
+        return !noExploreProps.contains(property);
+    }
 
     private static boolean isValueProxied(final AbstractEntity<?> entity, final Field field) {
         Object value;
