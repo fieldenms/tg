@@ -5,11 +5,11 @@ public class BnfException extends RuntimeException {
     @java.io.Serial
     private static final long serialVersionUID = 1L;
 
-    public BnfException(String s) {
+    public BnfException(final String s) {
         super(s);
     }
 
-    public BnfException(String message, Throwable cause) {
+    public BnfException(final String message, final Throwable cause) {
         super(message, cause);
     }
 

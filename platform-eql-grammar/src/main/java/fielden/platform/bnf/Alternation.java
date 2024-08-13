@@ -74,7 +74,7 @@ public final class Alternation implements Notation {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final Object obj) {
         return obj == this || obj instanceof Alternation that &&
                               Objects.equals(this.options, that.options);
     }

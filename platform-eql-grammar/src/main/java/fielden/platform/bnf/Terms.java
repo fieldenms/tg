@@ -15,11 +15,11 @@ public final class Terms {
         return variable.annotate(Metadata.label(label));
     }
 
-    public static Terminal listLabel(String label, Terminal terminal) {
+    public static Terminal listLabel(final String label, final Terminal terminal) {
         return terminal.annotate(Metadata.listLabel(label));
     }
 
-    public static Variable listLabel(String label, Variable variable) {
+    public static Variable listLabel(final String label, final Variable variable) {
         return variable.annotate(Metadata.listLabel(label));
     }
 

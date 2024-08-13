@@ -16,7 +16,7 @@ public final class FluentBNF {
 
     private FluentBNF() {}
 
-    public static IBnfBody start(Variable start) {
+    public static IBnfBody start(final Variable start) {
         return new BnfBodyImpl(start);
     }
 
@@ -25,7 +25,7 @@ public final class FluentBNF {
         ISpecialization specialize(Variable v);
 
         /** Annotate a rule. */
-        <V> IBnfBody annotate(Variable v, Metadata.Annotation annotation);
+        <V> IBnfBody annotate(final Variable v, final Metadata.Annotation annotation);
         BNF build();
     }
 
@@ -174,12 +174,12 @@ public final class FluentBNF {
     }
 
     private static final class Builder {
-        final Set<Terminal> terminals = new LinkedHashSet<>();
-        final Set<Variable> variables = new LinkedHashSet<>();
-        final Set<Rule> rules = new LinkedHashSet<>();
-        final Variable start;
+        private final Set<Terminal> terminals = new LinkedHashSet<>();
+        private final Set<Variable> variables = new LinkedHashSet<>();
+        private final Set<Rule> rules = new LinkedHashSet<>();
+        private final Variable start;
 
-        Builder(Variable start) {
+        Builder(final Variable start) {
             this.start = start;
             add(start);
         }
