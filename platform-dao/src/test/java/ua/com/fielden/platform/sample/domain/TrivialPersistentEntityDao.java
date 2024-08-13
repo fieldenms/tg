@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.companion;
+package ua.com.fielden.platform.sample.domain;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.entity.annotation.EntityType;

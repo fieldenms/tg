@@ -5,7 +5,7 @@ import java.util.List;
 
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.companion.PersistentEntityWithAllKindsOfProperties;
-import ua.com.fielden.platform.companion.TrivialPersistentEntity;
+import ua.com.fielden.platform.sample.domain.TrivialPersistentEntity;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.EntityToFill;

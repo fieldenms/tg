@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.entity.query.model;
 
-import ua.com.fielden.platform.companion.TrivialPersistentEntity;
+import ua.com.fielden.platform.sample.domain.TrivialPersistentEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.annotation.*;
 

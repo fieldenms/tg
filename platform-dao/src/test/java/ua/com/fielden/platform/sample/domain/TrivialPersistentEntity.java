@@ -1,11 +1,10 @@
-package ua.com.fielden.platform.companion;
+package ua.com.fielden.platform.sample.domain;
 
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
-import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
+import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 
-/**
- * Entity type for tests in {@link PersistentEntitySaverTest}.
- */
 @MapEntityTo
 @KeyType(String.class)
 @CompanionObject(TrivialPersistentEntityDao.class)

@@ -3,6 +3,7 @@ package ua.com.fielden.platform.companion;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.sample.domain.TrivialPersistentEntity;
 import ua.com.fielden.platform.types.Money;
 
 import static ua.com.fielden.platform.entity.annotation.CritOnly.Type.MULTI;

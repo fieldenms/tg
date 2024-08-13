@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.companion;
 
 import org.junit.Test;
+import ua.com.fielden.platform.sample.domain.TrivialPersistentEntity;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
 
