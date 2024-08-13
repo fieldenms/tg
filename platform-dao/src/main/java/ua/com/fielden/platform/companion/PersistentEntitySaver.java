@@ -28,6 +28,8 @@ import ua.com.fielden.platform.entity.query.IEntityFetcher;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.FillModel;
+import ua.com.fielden.platform.entity.query.model.FillModels;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
@@ -42,7 +44,10 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 import javax.persistence.OptimisticLockException;
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.function.*;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
@@ -56,6 +61,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity.query.model.FillModels.emptyFillModel;
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
 import static ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.*;
@@ -93,7 +99,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     private final BiConsumer<T, List<String>> processAfterSaveEvent;
     private final Consumer<MetaProperty<?>> assignBeforeSave;
 
-    private final BiFunction<Long, fetch<T>, T> findById;
+    private final FindEntityById<T> findById;
     private final Function<EntityResultQueryModel<T>, Boolean> entityExists;
 
     private Boolean targetEntityTypeHasValidateOverridden;
@@ -108,7 +114,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             @Assisted final Class<? extends Comparable<?>> keyType,
             @Assisted final BiConsumer<T, List<String>> processAfterSaveEvent,
             @Assisted final Consumer<MetaProperty<?>> assignBeforeSave,
-            @Assisted final BiFunction<Long, fetch<T>, T> findById,
+            @Assisted final FindEntityById<T> findById,
             @Assisted final Function<EntityResultQueryModel<T>, Boolean> entityExists,
             @Assisted final Logger logger,
             final IDbVersionProvider dbVersionProvider,
@@ -144,7 +150,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                 final Class<? extends Comparable<?>> keyType,
                 final BiConsumer<E, List<String>> processAfterSaveEvent,
                 final Consumer<MetaProperty<?>> assignBeforeSave,
-                final BiFunction<Long, fetch<E>, E> findById,
+                final FindEntityById<E> findById,
                 final Function<EntityResultQueryModel<E>, Boolean> entityExists,
                 final Logger logger);
     }
@@ -176,7 +182,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             final Result isValid = validateEntity(entity);
             if (isValid.isSuccessful()) {
                 //logger.debug(format("Entity [%s] is not dirty (ID = %s). Saving is skipped. Entity refetched.", entity, entity.getId()));
-                return t2(entity.getId(), skipRefetching ? entity : findById.apply(entity.getId(), maybeFetch.orElseGet(() -> FetchModelReconstructor.reconstruct(entity))));
+                return t2(entity.getId(), skipRefetching ? entity : findById.find(entity.getId(), maybeFetch.orElseGet(() -> FetchModelReconstructor.reconstruct(entity))));
             } else {
                 throw isValid;
             }
@@ -196,42 +202,44 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             if (!isValid.isSuccessful()) {
                 throw isValid;
             }
+            final Supplier<FillModel> fillModel = () -> buildFillModel(entity, dirtyProperties);
             // entity is valid, and we should proceed with saving
             // new and previously saved entities are handled differently
             if (!entity.isPersisted()) { // is it a new entity?
-                savedEntityAndId = saveNewEntity(entity, skipRefetching, maybeFetch, session.get());
+                savedEntityAndId = saveNewEntity(entity, skipRefetching, maybeFetch, fillModel, session.get());
             } else { // so, this is a modified entity
-                savedEntityAndId = saveModifiedEntity(entity, skipRefetching, maybeFetch, session.get());
+                savedEntityAndId = saveModifiedEntity(entity, skipRefetching, maybeFetch, fillModel, session.get());
             }
         } finally {
             //logger.debug("Finished saving entity " + entity + " (ID = " + entity.getId() + ")");
         }
 
         final T savedEntity = savedEntityAndId._2;
-
-        // now that we saved, restore values for dirty plain properties and reset their meta-state so that they are not
-        // dirty in the returned saved instance
-        if (!dirtyProperties.isEmpty()) {
-            final var entityMetadata = domainMetadata.forEntity(entity.getType());
-            final boolean resultIsInstrumented = savedEntity.isInstrumented();
-            // bypass the editability constraint (saved instance may not be editable)
-            savedEntity.withIgnoreEditableState(true, () -> {
-                for (final String prop : dirtyProperties) {
-                    final Optional<PropertyMetadata> propMetadata = entityMetadata.property(entity.getProperty(prop)).orElseThrow(Function.identity());
-                    if (propMetadata.filter(PropertyMetadata::isPlain).isPresent()) {
-                        savedEntity.set(prop, entity.get(prop));
-                        if (resultIsInstrumented) {
-                            savedEntity.getProperty(prop).resetState();
-                        }
-                    }
-                }
-            });
-        }
-
         // this call never throws any exceptions
         processAfterSaveEvent.accept(savedEntity, dirtyProperties);
 
         return savedEntityAndId;
+    }
+
+    private FillModel buildFillModel(final T entity, final Collection<String> dirtyProperties) {
+        // now that we saved, restore values for dirty plain properties and reset their meta-state so that they are not
+        // dirty in the returned saved instance
+        if (!dirtyProperties.isEmpty()) {
+            final var entityMetadata = domainMetadata.forEntity(entity.getType());
+            return FillModels.fill(builder -> {
+                for (final String prop : dirtyProperties) {
+                    final Optional<PropertyMetadata> propMetadata = entityMetadata.property(entity.getProperty(prop)).orElseThrow(Function.identity());
+                    if (propMetadata.filter(PropertyMetadata::isPlain).isPresent()) {
+                        final var value = entity.get(prop);
+                        if (value != null) {
+                            builder.set(prop, value);
+                        }
+                    }
+                }
+            });
+        } else {
+            return emptyFillModel();
+        }
     }
 
     /**
@@ -268,12 +276,11 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     /**
      * Saves previously persisted and now modified entity.
      *
-     * @param entity
-     * @param skipRefetching
-     * @param maybeFetch
-     * @param session
+     * @param maybeFetch  fetch model to apply to an entity instance after saving
+     * @param fillModel  will be applied only in presence of a fetch model
      */
-    private T2<Long, T> saveModifiedEntity(final T entity, final boolean skipRefetching, final Optional<fetch<T>> maybeFetch, final Session session) {
+    private T2<Long, T> saveModifiedEntity(final T entity, final boolean skipRefetching, final Optional<fetch<T>> maybeFetch,
+                                           final Supplier<FillModel> fillModel, final Session session) {
         // let's first prevent not permissibly modifications that could not be checked any earlier than this,
         // which pertain to required and marked as assign before save properties that must have values
         checkDirtyMarkedForAssignmentBeforeSaveProperties(entity);
@@ -341,7 +348,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             session.clear();
         }
 
-        return t2(persistedEntity.getId(), entityFetchOption.map(fetch -> findById.apply(persistedEntity.getId(), fetch)).orElse(persistedEntity));
+        return t2(persistedEntity.getId(),
+                  entityFetchOption.map(fetch -> findById.find(persistedEntity.getId(), fetch, fillModel.get())).orElse(persistedEntity));
     }
 
     /**
@@ -519,12 +527,11 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      * values. Unless there is a special case of skipping entity exists validation, but then the developer would need to take case of that somehow specifically for each specific
      * case.
      *
-     * @param entity
-     * @param skipRefetching
-     * @param maybeFetch
-     * @param session
+     * @param maybeFetch  fetch model to apply to an entity instance after saving
+     * @param fillModel  will be applied only in presence of a fetch model
      */
-    private T2<Long, T> saveNewEntity(final T entity, final boolean skipRefetching, final Optional<fetch<T>> maybeFetch, final Session session) {
+    private T2<Long, T> saveNewEntity(final T entity, final boolean skipRefetching, final Optional<fetch<T>> maybeFetch,
+                                      final Supplier<FillModel> fillModel, final Session session) {
         // let's make sure that entity is not a duplicate
         if (entityExists.apply(createQueryByKey(dbVersionProvider.dbVersion(), entityType, keyType, false, entity.getKey()))) {
             throw new EntityAlreadyExists(format("%s [%s] already exists.", getEntityTitleAndDesc(entity.getType()).getKey(), entity));
@@ -595,7 +602,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             entity.set(ID, null);
         }
         
-        return t2(newEntityId, entityFetchOption.map(fetch -> findById.apply(newEntityId, fetch)).orElse(entity));
+        return t2(newEntityId,
+                  entityFetchOption.map(fetch -> findById.find(newEntityId, fetch, fillModel.get())).orElse(entity));
     }
 
     /**
@@ -724,7 +732,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                 final Class<? extends Comparable<?>> keyType,
                 final BiConsumer<E, List<String>> processAfterSaveEvent,
                 final Consumer<MetaProperty<?>> assignBeforeSave,
-                final BiFunction<Long, fetch<E>, E> findById,
+                final FindEntityById<E> findById,
                 final Function<EntityResultQueryModel<E>, Boolean> entityExists,
                 final Logger logger)
         {
@@ -733,6 +741,17 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                                                dbVersionProvider, entityFetcher, userProvider, universalConstants,
                                                coFinder, domainMetadata);
         }
+    }
+
+    @FunctionalInterface
+    public interface FindEntityById<E extends AbstractEntity<?>> {
+
+        E find(Long id, fetch<E> fetchModel, FillModel fillModel);
+
+        default E find(Long id, fetch<E> fetchModel) {
+            return find(id, fetchModel, emptyFillModel());
+        }
+
     }
 
 }
