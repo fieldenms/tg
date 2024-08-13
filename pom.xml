@@ -23,7 +23,7 @@
         <posgresql.version>42.7.3</posgresql.version>
         <mssql.version>12.6.2.jre11</mssql.version>
         <javapoet.version>1.13.0</javapoet.version>
-        <antlr.version>4.9.3</antlr.version>
+        <antlr.version>4.13.2</antlr.version>
     </properties>
 
     <modules>
