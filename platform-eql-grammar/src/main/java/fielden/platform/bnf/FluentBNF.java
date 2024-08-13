@@ -43,8 +43,8 @@ public final class FluentBNF {
 
     private static class BnfBodyImpl implements FluentBNF.IBnfBody {
 
-        protected final Builder builder;
-        protected final List<T2<Variable, Metadata.Annotation>> annotations = new ArrayList<>();
+        private final Builder builder;
+        private final List<T2<Variable, Metadata.Annotation>> annotations = new ArrayList<>();
 
         BnfBodyImpl(final Variable start) {
             this.builder = new Builder(start);
