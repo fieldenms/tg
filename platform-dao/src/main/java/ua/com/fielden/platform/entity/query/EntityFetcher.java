@@ -81,20 +81,20 @@ final class EntityFetcher implements IEntityFetcher {
     getContainers(final Session session, final QueryExecutionModel<E, ?> queryModel,
                   final Integer pageNumber, final Integer pageCapacity) {
         final IRetrievalModel<E> fm = produceRetrievalModel(queryModel.getFetchModel(), queryModel.getQueryModel().getResultType());
-        final QueryProcessingModel<E, ?> qpm = new QueryProcessingModel<>(queryModel.getQueryModel(), queryModel.getOrderModel(), fm, queryModel.getParamValues(), queryModel.isLightweight());
+        final var qpm = new QueryProcessingModel<>(queryModel.getQueryModel(), queryModel.getOrderModel(),
+                                                   fm, queryModel.getParamValues(), queryModel.isLightweight());
         return entityContainerFetcher.listAndEnhanceContainers(session, qpm, pageNumber, pageCapacity);
     }
-    
+
     private <E extends AbstractEntity<?>> IRetrievalModel<E>
     produceRetrievalModel(final fetch<E> fetchModel, final Class<E> resultType) {
-        return fetchModel == null ? //
-        (resultType.equals(EntityAggregates.class) ? null
-                : new EntityRetrievalModel<E>(fetch(resultType), domainMetadata))
-                : // 
-                (resultType.equals(EntityAggregates.class) ? new EntityAggregatesRetrievalModel<E>(fetchModel, domainMetadata)
-                        : new EntityRetrievalModel<E>(fetchModel, domainMetadata));
+        return fetchModel == null
+                ? (resultType.equals(EntityAggregates.class) ? null : new EntityRetrievalModel<E>(fetch(resultType), domainMetadata))
+                : (resultType.equals(EntityAggregates.class)
+                    ? new EntityAggregatesRetrievalModel<E>(fetchModel, domainMetadata)
+                    : new EntityRetrievalModel<E>(fetchModel, domainMetadata));
     }
-    
+
     @Override
     public <E extends AbstractEntity<?>> Stream<E>
     streamEntities(final Session session, final QueryExecutionModel<E, ?> queryModel, final Optional<Integer> fetchSize) {
