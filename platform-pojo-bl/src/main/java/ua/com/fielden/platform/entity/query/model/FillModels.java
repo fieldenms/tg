@@ -21,6 +21,19 @@ public final class FillModels {
         return EMPTY_FILL_MODEL;
     }
 
+    /**
+     * Produces a new fill model by merging two fill models, giving preference to entries from the right one.
+     */
+    public static FillModel mergeRight(final FillModel left, final FillModel right) {
+        if (left.isEmpty()) {
+            return right;
+        } else if (right.isEmpty()) {
+            return left;
+        } else {
+            return new FillModelBuilderImpl().include(left).include(right).buildKeepingLast();
+        }
+    }
+
     private FillModels() {}
 
 }
