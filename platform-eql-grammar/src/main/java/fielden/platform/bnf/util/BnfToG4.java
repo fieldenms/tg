@@ -58,9 +58,9 @@ import static ua.com.fielden.platform.utils.StreamUtils.zip;
  */
 public class BnfToG4 {
 
-    protected final BNF bnf;
-    protected final BNF originalBnf;
-    protected final String grammarName;
+    private final BNF bnf;
+    private final BNF originalBnf;
+    private final String grammarName;
 
     public BnfToG4(final BNF bnf, final String grammarName) {
         this.originalBnf = bnf;
@@ -77,7 +77,7 @@ public class BnfToG4 {
     public static void writeResult(final Result result, final Path directory) throws IOException {
         Files.createDirectories(directory);
 
-        Path filePath = directory.resolve(result.grammarName + ".g4");
+        final var filePath = directory.resolve(result.grammarName + ".g4");
         Files.writeString(filePath, result.grammarSource());
 
         for (final JavaFile file : result.files) {
@@ -150,7 +150,7 @@ public class BnfToG4 {
     }
 
     protected String convert(final Term term) {
-        String s = switch (term) {
+        final var s = switch (term) {
             case Symbol symbol -> convert(symbol);
             case Sequence sequence -> convert(sequence);
             case Notation notation -> convert(notation);
@@ -160,7 +160,7 @@ public class BnfToG4 {
                 .orElse(s);
     }
 
-    protected String convertListLabeled(ListLabel label, String term) {
+    protected String convertListLabeled(final ListLabel label, final String term) {
         return "%s+=%s".formatted(label.label(), term);
     }
 
@@ -210,7 +210,7 @@ public class BnfToG4 {
     }
 
     protected String convert(final Quantifier quantifier) {
-        final String q = switch (quantifier) {
+        final var q = switch (quantifier) {
             case ZeroOrMore x -> "*";
             case OneOrMore x ->  "+";
             case Optional x ->   "?";
@@ -249,7 +249,7 @@ public class BnfToG4 {
      * Generates a custom token type for ANTLR corresponding to the token in the BNF grammar.
      */
     private class TokenSourceGenerator {
-        final Token token;
+        private final Token token;
 
         TokenSourceGenerator(final Token token) {
             this.token = token;
@@ -267,7 +267,7 @@ public class BnfToG4 {
         }
 
         protected MethodSpec makeConstructor(final List<FieldSpec> fields) {
-            final List<ParameterSpec> parameterSpecs = fields.stream()
+            final var parameterSpecs = fields.stream()
                     .map(f -> ParameterSpec.builder(f.type, f.name, FINAL).build())
                     .toList();
 
@@ -555,12 +555,5 @@ public class BnfToG4 {
                 .collect(toMap(t2 -> t2._1.lhs().name(), t2 -> t2._2));
         return rules.stream().sorted(comparing(rule -> orderedRulesIndexes.getOrDefault(rule.lhs().name(), Integer.MAX_VALUE)));
     }
-
-//    private static <X> java.util.Optional<X> matchSingleElementCollection(final Collection<? extends X> xs) {
-//        if (xs.size() == 1) {
-//            return java.util.Optional.of(xs instanceof SequencedCollection<? extends X> seq ? seq.getFirst() : xs.iterator().next());
-//        }
-//        return java.util.Optional.empty();
-//    }
 
 }
