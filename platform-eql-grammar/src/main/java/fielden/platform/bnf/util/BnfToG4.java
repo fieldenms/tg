@@ -23,7 +23,7 @@ import java.util.stream.Stream;
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static fielden.platform.bnf.Metadata.*;
 import static fielden.platform.bnf.Rule.isSingleAltRule;
-import static fielden.platform.bnf.util.BnfUtils.countRhsOccurences;
+import static fielden.platform.bnf.util.BnfUtils.countRhsOccurrences;
 import static fielden.platform.bnf.util.BnfUtils.removeUnused;
 import static fielden.platform.eql.CanonicalEqlGrammar.EqlTerminal.*;
 import static fielden.platform.eql.CanonicalEqlGrammar.EqlVariable.*;
@@ -505,7 +505,7 @@ public class BnfToG4 {
          */
         private java.util.Optional<Term> inlineIn(final Variable variable, final Rule rule) {
             if (bnf.getRuleFor(variable).metadata().has(Inline.class)) {
-                if (countRhsOccurences(variable, rule) == 1 && occursOnlyInRhsOf(variable, rule)) {
+                if (countRhsOccurrences(variable, rule) == 1 && occursOnlyInRhsOf(variable, rule)) {
                     final var varRule = bnf.getRuleFor(variable);
                     if (isSingleAltRule(varRule)) {
                         return java.util.Optional.of(varRule.rhs().options().getFirst());
