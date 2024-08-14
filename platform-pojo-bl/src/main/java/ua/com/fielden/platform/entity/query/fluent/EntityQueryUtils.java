@@ -19,7 +19,13 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
+/**
+ * Provides convenient entry points to start building EQL statements and fetch models.
+ *
+ * @author TG Team
+ */
 public class EntityQueryUtils {
+
     public static <T extends AbstractEntity<?>> IFromAlias<T> select(final Class<T> entityType) {
         return new FromAlias<>(new EqlSentenceBuilder().from(entityType));
     }

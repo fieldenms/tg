@@ -14,8 +14,7 @@ import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 /**
- * Class for collecting all interfaces, which are part of Entity Query
- * Progressive Interfaces.
+ * Class for collecting all interfaces, which are part of Entity Query Progressive Interfaces.
  *
  * @author TG Team
  *

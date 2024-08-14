@@ -22,6 +22,7 @@ import static ua.com.fielden.platform.eql.antlr.tokens.util.SimpleTokens.token;
 
 /**
  * Builds a sentence in the EQL language out of {@linkplain Token ANTLR tokens}.
+ * Classes that implement EQL's DSL (fluent API) delegate to this builder.
  *
  * @author TG Team
  */
