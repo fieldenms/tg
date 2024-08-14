@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity.query.fluent;
 import org.antlr.v4.runtime.Token;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.model.*;
 import ua.com.fielden.platform.eql.antlr.tokens.*;
@@ -590,14 +591,14 @@ final class EqlSentenceBuilder {
 
     public <E extends AbstractEntity<?>> EqlSentenceBuilder from(final Class<E> entityType) {
         if (entityType == null) {
-            throw new IllegalArgumentException("Missing entity type in query: " + tokens.stream().map(Token::getText).collect(joining(" ")));
+            throw new EqlException("Missing entity type in query: " + tokens.stream().map(Token::getText).collect(joining(" ")));
         }
         return _add(SelectToken.entityType(entityType), state.withMainSourceType(entityType));
     }
 
     public EqlSentenceBuilder from(final AggregatedResultQueryModel... sourceModels) {
         if (sourceModels.length == 0) {
-            throw new IllegalArgumentException("No models were specified as a source in the FROM statement!");
+            throw new EqlException("No models were specified as a source in the FROM statement!");
         }
         return _add(SelectToken.models(List.of(sourceModels)), state.withMainSourceType(EntityAggregates.class));
     }
@@ -605,7 +606,7 @@ final class EqlSentenceBuilder {
     @SafeVarargs
     public final <T extends AbstractEntity<?>> EqlSentenceBuilder from(final EntityResultQueryModel<T>... sourceModels) {
         if (sourceModels.length == 0) {
-            throw new IllegalArgumentException("No models were specified as a source in the FROM statement!");
+            throw new EqlException("No models were specified as a source in the FROM statement!");
         }
         return _add(SelectToken.models(List.of(sourceModels)), state.withMainSourceType(sourceModels[0].getResultType()));
     }
@@ -622,7 +623,7 @@ final class EqlSentenceBuilder {
         if (sourceModels.length >= 1) {
             return _add(JoinToken.models(asList(sourceModels)));
         } else {
-            throw new IllegalArgumentException("No models were specified as a source in the FROM statement!");
+            throw new EqlException("No models were specified as a source in the FROM statement!");
         }
     }
 
@@ -630,7 +631,7 @@ final class EqlSentenceBuilder {
         if (sourceModels.length >= 1) {
             return _add(JoinToken.models(asList(sourceModels)));
         } else {
-            throw new IllegalArgumentException("No models were specified as a source in the FROM statement!");
+            throw new EqlException("No models were specified as a source in the FROM statement!");
         }
     }
 
@@ -638,7 +639,7 @@ final class EqlSentenceBuilder {
         if (sourceModels.length >= 1) {
             return _add(LeftJoinToken.models(asList(sourceModels)));
         } else {
-            throw new IllegalArgumentException("No models were specified as a source in the FROM statement!");
+            throw new EqlException("No models were specified as a source in the FROM statement!");
         }
     }
 
@@ -647,7 +648,7 @@ final class EqlSentenceBuilder {
         if (sourceModels.length >= 1) {
             return _add(LeftJoinToken.models(asList(sourceModels)));
         } else {
-            throw new IllegalArgumentException("No models were specified as a source in the FROM statement!");
+            throw new EqlException("No models were specified as a source in the FROM statement!");
         }
     }
 
