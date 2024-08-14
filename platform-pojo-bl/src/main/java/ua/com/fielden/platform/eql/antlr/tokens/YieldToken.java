@@ -9,7 +9,7 @@ public final class YieldToken extends AbstractParameterisedEqlToken {
 
     public final String yieldName;
 
-    public YieldToken(String yieldName) {
+    public YieldToken(final String yieldName) {
         super(YIELD, "yield");
         this.yieldName = requireNonNull(yieldName);
     }

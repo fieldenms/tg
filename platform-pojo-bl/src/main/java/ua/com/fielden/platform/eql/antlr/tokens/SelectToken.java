@@ -35,7 +35,6 @@ public sealed abstract class SelectToken extends AbstractParameterisedEqlToken {
         public final Class<? extends AbstractEntity<?>> entityType;
 
         public EntityType(final Class<? extends AbstractEntity<?>> entityType) {
-            super();
             this.entityType = requireNonNull(entityType);
         }
 
