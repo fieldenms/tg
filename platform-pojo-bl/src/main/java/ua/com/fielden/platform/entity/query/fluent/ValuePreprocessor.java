@@ -41,7 +41,7 @@ public class ValuePreprocessor {
         return apply(Arrays.stream(values));
     }
 
-    public Stream<Object> apply(final Stream<?> values) {
+    private Stream<Object> apply(final Stream<?> values) {
         return values.map(this::convertValue);
     }
 
@@ -66,4 +66,5 @@ public class ValuePreprocessor {
         }
         return result;
     }
+
 }

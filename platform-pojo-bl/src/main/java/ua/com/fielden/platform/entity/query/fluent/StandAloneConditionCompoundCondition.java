@@ -6,21 +6,21 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 
 public final class StandAloneConditionCompoundCondition<ET extends AbstractEntity<?>> //
-		extends LogicalCondition<IStandAloneConditionOperand<ET>> //
-		implements IStandAloneConditionCompoundCondition<ET> {
+        extends LogicalCondition<IStandAloneConditionOperand<ET>> //
+        implements IStandAloneConditionCompoundCondition<ET> {
 
-	public StandAloneConditionCompoundCondition(final EqlSentenceBuilder builder) {
-		super(builder);
-	}
+    public StandAloneConditionCompoundCondition(final EqlSentenceBuilder builder) {
+        super(builder);
+    }
 
-	@Override
-	public ConditionModel model() {
-		return new ConditionModel(builder.model().getTokenSource());
-	}
+    @Override
+    public ConditionModel model() {
+        return new ConditionModel(builder.model().getTokenSource());
+    }
 
-	@Override
-	protected IStandAloneConditionOperand<ET> nextForLogicalCondition(final EqlSentenceBuilder builder) {
-		return new StandAloneConditionOperand<ET>(builder);
-	}
+    @Override
+    protected IStandAloneConditionOperand<ET> nextForLogicalCondition(final EqlSentenceBuilder builder) {
+        return new StandAloneConditionOperand<ET>(builder);
+    }
 
 }
