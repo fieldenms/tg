@@ -16,6 +16,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.joining;
+import static ua.com.fielden.platform.entity.query.exceptions.EqlException.requireNotNullArgument;
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.*;
 import static ua.com.fielden.platform.eql.antlr.tokens.IValToken.iValToken;
 import static ua.com.fielden.platform.eql.antlr.tokens.ValToken.valToken;
@@ -36,6 +37,8 @@ final class EqlSentenceBuilder {
     }
 
     private EqlSentenceBuilder(final List<Token> tokens, final State state) {
+        requireNotNullArgument(tokens, "tokens");
+        requireNotNullArgument(state, "state");
         this.tokens = tokens;
         this.state = state;
     }
