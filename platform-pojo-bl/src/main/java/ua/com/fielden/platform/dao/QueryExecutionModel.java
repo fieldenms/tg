@@ -1,19 +1,19 @@
 package ua.com.fielden.platform.dao;
 
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.entity.query.model.FillModels.emptyFillModel;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.logging.log4j.Logger;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.ValuePreprocessor;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.*;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.query.model.FillModels.emptyFillModel;
 
 public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends QueryModel<T>> {
     private final Q queryModel;
@@ -68,6 +68,7 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
         return new StringBuilder()
         .append("\nQEM")
         .append("\n  fetch:").append(fetchModel != null ? fetchModel : "")
+        .append("\n  fill:").append(fillModel != null ? fillModel : "")
         .append("\n  query:").append(queryModel)
         .append("\n  order:").append(orderModel != null ? orderModel : "")
         .append("\n  param:").append(paramValues.size() > 0 ? paramValues : "")
@@ -181,6 +182,7 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
         final int prime = 31;
         int result = 1;
         result = prime * result + ((fetchModel == null) ? 0 : fetchModel.hashCode());
+        result = prime * result + ((fillModel == null) ? 0 : fillModel.hashCode());
         result = prime * result + (lightweight ? 1231 : 1237);
         result = prime * result + ((orderModel == null) ? 0 : orderModel.hashCode());
         result = prime * result + ((paramValues == null) ? 0 : paramValues.hashCode());
@@ -203,6 +205,9 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
                 return false;
             }
         } else if (!fetchModel.equals(that.fetchModel)) {
+            return false;
+        }
+        if (!Objects.equals(fillModel, that.fillModel)) {
             return false;
         }
         if (lightweight != that.lightweight) {
