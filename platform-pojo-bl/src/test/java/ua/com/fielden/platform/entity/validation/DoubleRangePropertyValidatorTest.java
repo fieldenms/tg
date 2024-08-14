@@ -33,7 +33,7 @@ public class DoubleRangePropertyValidatorTest {
         entity.setFromDouble(12.5);
         assertTrue("Should be valid", entity.getProperty("fromDouble").isValid());
         assertTrue("Should be valid", entity.getProperty("toDouble").isValid());
-        assertEquals("Incorrect value", new Double(12.5), entity.getFromDouble());
+        assertEquals("Incorrect value", Double.valueOf(12.5), entity.getFromDouble());
     }
 
     @Test
@@ -51,8 +51,8 @@ public class DoubleRangePropertyValidatorTest {
         entity.setToDouble(16.5);
         assertTrue("Should be valid", entity.getProperty("fromDouble").isValid());
         assertTrue("Should not be valid", entity.getProperty("toDouble").isValid());
-        assertEquals("Incorrect value", new Double(12.5), entity.getFromDouble());
-        assertEquals("Incorrect value", new Double(16.5), entity.getToDouble());
+        assertEquals("Incorrect value", Double.valueOf(12.5), entity.getFromDouble());
+        assertEquals("Incorrect value", Double.valueOf(16.5), entity.getToDouble());
     }
 
     @Test
@@ -62,7 +62,7 @@ public class DoubleRangePropertyValidatorTest {
         entity.setToDouble(12.5);
 
         assertTrue("Should be valid", entity.getProperty("fromDouble").isValid());
-        assertEquals("Incorrect value", new Double(16.5), entity.getFromDouble());
+        assertEquals("Incorrect value", Double.valueOf(16.5), entity.getFromDouble());
         assertFalse("Should not be valid", entity.getProperty("toDouble").isValid());
         assertNull("Incorrect value", entity.getToDouble());
 
@@ -71,8 +71,8 @@ public class DoubleRangePropertyValidatorTest {
         assertTrue("Should be valid", entity.getProperty("fromDouble").isValid());
         assertTrue("Should not be valid", entity.getProperty("toDouble").isValid());
 
-        assertEquals("Incorrect value", new Double(6.5), entity.getFromDouble());
-        assertEquals("Incorrect value", new Double(12.5), entity.getToDouble());
+        assertEquals("Incorrect value", Double.valueOf(6.5), entity.getFromDouble());
+        assertEquals("Incorrect value", Double.valueOf(12.5), entity.getToDouble());
     }
 
 }
