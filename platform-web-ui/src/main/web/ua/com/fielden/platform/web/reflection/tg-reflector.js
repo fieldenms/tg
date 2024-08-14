@@ -1212,6 +1212,8 @@ const _convert = function (value) {
         // That's because they are processed manually on client and only gets back to server with some data.
         // Here we allows such processing instead of throwing 'unsupported type' exception.
         return value;
+    } else if (typeof value === 'object' && value.hasOwnProperty('coreText') && value.hasOwnProperty('formattedText')) { // for rich text type
+        return value;
     } else {
         throw new _UCEPrototype(value);
     }

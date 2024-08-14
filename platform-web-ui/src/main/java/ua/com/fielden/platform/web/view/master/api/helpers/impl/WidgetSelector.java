@@ -13,24 +13,7 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.web.view.master.api.helpers.IWidgetSelector;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
-import ua.com.fielden.platform.web.view.master.api.widgets.IAutocompleterConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.ICheckboxConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.ICollectionalEditorConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.ICollectionalRepresentorConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.IColourConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.IDatePickerConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.IDateTimePickerConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.IDecimalConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.IEmailConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.IFileConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.IHiddenTextConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.IHyperlinkConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.IMoneyConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.IMultilineTextConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.IPhoneNumberConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.ISinglelineTextConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.ISpinnerConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.ITimePickerConfig;
+import ua.com.fielden.platform.web.view.master.api.widgets.*;
 import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.EntityAutocompletionWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.checkbox.impl.CheckboxWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.collectional.impl.CollectionalEditorWidget;
@@ -114,6 +97,11 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
     public IMultilineTextConfig<T> asMultilineText() {
         widget = new MultilineTextWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), smBuilder.getEntityType(), propertyName);
         return new MultilineTextConfig<>((MultilineTextWidget) widget, smBuilder);
+    }
+
+    @Override
+    public IRichTextConfig<T> asRichText() {
+        return null;
     }
 
     @Override
