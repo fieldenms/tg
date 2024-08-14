@@ -6,7 +6,7 @@ import ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource;
  * Models a query that returns a primitive result (as opposed to an entity result).
  * <p>
  * The result of such a query cannot be obtained directly due to the nature of the relational model.
- * Instead it has to be embedded, as a subquery, into a query the results of which can be returned.
+ * Instead, it has to be embedded, as a subquery, into a query the results of which can be returned.
  * <p>
  * Usage example with embedding the result into an {@linkplain AggregatedResultQueryModel aggregated result}:
  * {@snippet lang="java" :
