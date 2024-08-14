@@ -3,13 +3,13 @@ package ua.com.fielden.platform.entity.query.model;
 import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource;
 
-import static java.util.Objects.requireNonNull;
+import static ua.com.fielden.platform.entity.query.exceptions.EqlException.requireNotNullArgument;
 
 public abstract class AbstractModel {
     protected final ListTokenSource tokenSource;
 
     public AbstractModel(final ListTokenSource tokenSource) {
-        requireNonNull(tokenSource, "tokenSource should not be null.");
+        requireNotNullArgument(tokenSource, "tokenSource");
         this.tokenSource = tokenSource;
     }
 
