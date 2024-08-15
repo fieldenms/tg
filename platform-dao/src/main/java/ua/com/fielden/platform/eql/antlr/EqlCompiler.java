@@ -158,7 +158,7 @@ public final class EqlCompiler {
                 resultType.getSimpleName(), result.getClass().getSimpleName()));
     }
 
-    private final class Visitor extends EQLBaseVisitor<EqlCompilationResult> {
+    private final class Visitor extends StrictEQLBaseVisitor<EqlCompilationResult> {
 
         @Override
         public EqlCompilationResult visitStart(final StartContext ctx) {
