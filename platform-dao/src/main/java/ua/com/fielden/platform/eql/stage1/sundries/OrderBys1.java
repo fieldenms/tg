@@ -38,6 +38,10 @@ public class OrderBys1 {
     public Stream<OrderBy1> models() {
         return models.stream();
     }
+
+    public boolean isEmpty() {
+        return models.isEmpty();
+    }
     
     @Override
     public int hashCode() {

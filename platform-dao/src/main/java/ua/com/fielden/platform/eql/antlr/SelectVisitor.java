@@ -16,6 +16,7 @@ import ua.com.fielden.platform.eql.stage1.conditions.ICondition1;
 import ua.com.fielden.platform.eql.stage1.queries.SourceQuery1;
 import ua.com.fielden.platform.eql.stage1.sources.*;
 import ua.com.fielden.platform.eql.stage1.sundries.GroupBys1;
+import ua.com.fielden.platform.eql.stage1.sundries.OrderBys1;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 
@@ -41,6 +42,7 @@ final class SelectVisitor extends AbstractEqlVisitor<EqlCompilationResult.Select
                 compileWhere(ctx.where()),
                 yieldsResult.yields(),
                 compileGroups(ctx.groupBy()),
+                compileOrderBy(ctx.orderBy()),
                 yieldsResult.yieldAll());
     }
 
@@ -48,6 +50,12 @@ final class SelectVisitor extends AbstractEqlVisitor<EqlCompilationResult.Select
         return groupByContext == null
                 ? GroupBys1.EMPTY_GROUP_BYS
                 : new GroupByVisitor(transformer).visitGroupBy(groupByContext);
+    }
+
+    private OrderBys1 compileOrderBy(final OrderByContext orderByContext) {
+        return orderByContext == null
+                ? OrderBys1.EMPTY_ORDER_BYS
+                : new OrderByVisitor(transformer).visitOrderBy(orderByContext);
     }
 
     private YieldsVisitor.Result compileYields(final SelectEndContext selectEndContext) {

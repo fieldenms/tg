@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.stage0;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.IRetrievalModel;
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
@@ -79,12 +80,18 @@ public class QueryModelToStage1Transformer {
 
     private QueryComponents1 parseTokensIntoComponents(final QueryModel<?> qryModel, final OrderingModel orderModel) {
         final EqlCompilationResult.Select result = new EqlCompiler(this).compile(qryModel.getTokenSource(), EqlCompilationResult.Select.class);
+
+        if (orderModel != null && !result.orderBys().isEmpty()) {
+            throw new EqlException("Ordering model conflict: cannot be specified both as standalone and as part of a query.");
+        }
+        final OrderBys1 orderBys = orderModel != null ? produceOrderBys(orderModel) : result.orderBys();
+
         final Conditions1 udfModel = result.joinRoot() == null
                 ? EMPTY_CONDITIONS
                 : generateUserDataFilteringCondition(qryModel.isFilterable(), filter, username, result.joinRoot().mainSource());
         return new QueryComponents1(
                 result.joinRoot(), result.whereConditions(), udfModel, result.yields(), result.groups(),
-                orderModel == null ? EMPTY_ORDER_BYS : produceOrderBys(orderModel),
+                orderBys,
                 qryModel.isYieldAll(), qryModel.shouldMaterialiseCalcPropsAsColumnsInSqlQuery());
     }
 

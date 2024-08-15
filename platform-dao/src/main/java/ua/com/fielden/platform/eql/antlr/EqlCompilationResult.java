@@ -16,6 +16,7 @@ public sealed interface EqlCompilationResult {
                   Conditions1 whereConditions,
                   Yields1 yields,
                   GroupBys1 groups,
+                  OrderBys1 orderBys,
                   boolean yieldAll)
             implements EqlCompilationResult
     {
