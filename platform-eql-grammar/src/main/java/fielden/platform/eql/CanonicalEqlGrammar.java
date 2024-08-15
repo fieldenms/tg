@@ -47,6 +47,7 @@ public final class CanonicalEqlGrammar {
                opt(Join),
                opt(Where),
                opt(GroupBy),
+               opt(OrderBy),
                SelectEnd).
 
         derive(SelectSource).
@@ -313,6 +314,9 @@ public final class CanonicalEqlGrammar {
         derive(StandaloneOrderBy).
             to(orderBy, repeat1(listLabel("operands", OrderByOperand)), model).
 
+        derive(OrderBy).
+            to(orderBy, repeat1(listLabel("operands", OrderByOperand))).
+
         specialize(OrderByOperand).
             into(OrderByOperand_Single, OrderByOperand_Yield, OrderByOperand_OrderingModel).
 
@@ -401,6 +405,7 @@ public final class CanonicalEqlGrammar {
         YieldAll, YieldSome, YieldTail, Yield1Tail, YieldManyTail, AliasedYield, YieldManyModel, Yield1Model,
         YieldOperandExpr,
         OrderByOperand_Yield, OrderByOperand_OrderingModel, OrderByOperand_Single,
+        OrderBy,
         MembershipPredicate
     }
 

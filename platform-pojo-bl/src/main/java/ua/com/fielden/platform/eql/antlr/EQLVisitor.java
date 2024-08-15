@@ -470,6 +470,12 @@ public interface EQLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitOrStandaloneCondition(EQLParser.OrStandaloneConditionContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link EQLParser#orderBy}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitOrderBy(EQLParser.OrderByContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code OrderByOperand_Single}
 	 * labeled alternative in {@link EQLParser#orderByOperand}.
 	 * @param ctx the parse tree

@@ -501,6 +501,13 @@ public class EQLBaseVisitor<T> extends AbstractParseTreeVisitor<T> implements EQ
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
+	@Override public T visitOrderBy(EQLParser.OrderByContext ctx) { return visitChildren(ctx); }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
 	@Override public T visitOrderByOperand_Single(EQLParser.OrderByOperand_SingleContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}

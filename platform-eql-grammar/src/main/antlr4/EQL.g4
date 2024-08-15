@@ -1,11 +1,11 @@
-// This grammar was generated. Timestamp: 2024-08-15T12:23:31.436343871+03:00[Europe/Kyiv]
+// This grammar was generated. Timestamp: 2024-08-15T12:25:44.523956214+03:00[Europe/Kyiv]
 
 grammar EQL;
 
 start : query EOF;
 
 query :
-      select=SELECT alias=AS? join? where? groupBy? selectEnd # Select
+      select=SELECT alias=AS? join? where? groupBy? orderBy? selectEnd # Select
     | EXPR first=yieldOperand (operators+=arithmeticalOperator rest+=yieldOperand)* MODEL # StandaloneExpression
     | COND standaloneCondition MODEL # StandaloneCondExpr
     | ORDERBY operands+=orderByOperand+ MODEL # StandaloneOrderBy
@@ -235,6 +235,10 @@ standaloneCondition :
       predicate # StandaloneCondition_Predicate
     | left=standaloneCondition AND right=standaloneCondition # AndStandaloneCondition
     | left=standaloneCondition OR right=standaloneCondition # OrStandaloneCondition
+;
+
+orderBy :
+      ORDERBY operands+=orderByOperand+
 ;
 
 orderByOperand :
