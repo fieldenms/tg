@@ -51,7 +51,7 @@ public class EntityFetcher {
             return result;
         } catch (final Exception e) {
             logger.error(e);
-            throw new IllegalStateException(e);
+            throw e;
         }
     }
     
