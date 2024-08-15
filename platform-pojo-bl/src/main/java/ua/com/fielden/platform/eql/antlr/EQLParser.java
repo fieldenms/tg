@@ -222,25 +222,6 @@ public class EQLParser extends Parser {
 		}
 	}
 	@SuppressWarnings("CheckReturnValue")
-	public static class OrderByContext extends QueryContext {
-		public OrderByOperandContext orderByOperand;
-		public List<OrderByOperandContext> operands = new ArrayList<OrderByOperandContext>();
-		public TerminalNode ORDERBY() { return getToken(EQLParser.ORDERBY, 0); }
-		public TerminalNode MODEL() { return getToken(EQLParser.MODEL, 0); }
-		public List<OrderByOperandContext> orderByOperand() {
-			return getRuleContexts(OrderByOperandContext.class);
-		}
-		public OrderByOperandContext orderByOperand(int i) {
-			return getRuleContext(OrderByOperandContext.class,i);
-		}
-		public OrderByContext(QueryContext ctx) { copyFrom(ctx); }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof EQLVisitor ) return ((EQLVisitor<? extends T>)visitor).visitOrderBy(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-	@SuppressWarnings("CheckReturnValue")
 	public static class StandaloneExpressionContext extends QueryContext {
 		public YieldOperandContext first;
 		public ArithmeticalOperatorContext arithmeticalOperator;
@@ -279,6 +260,25 @@ public class EQLParser extends Parser {
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
 			if ( visitor instanceof EQLVisitor ) return ((EQLVisitor<? extends T>)visitor).visitStandaloneCondExpr(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	@SuppressWarnings("CheckReturnValue")
+	public static class StandaloneOrderByContext extends QueryContext {
+		public OrderByOperandContext orderByOperand;
+		public List<OrderByOperandContext> operands = new ArrayList<OrderByOperandContext>();
+		public TerminalNode ORDERBY() { return getToken(EQLParser.ORDERBY, 0); }
+		public TerminalNode MODEL() { return getToken(EQLParser.MODEL, 0); }
+		public List<OrderByOperandContext> orderByOperand() {
+			return getRuleContexts(OrderByOperandContext.class);
+		}
+		public OrderByOperandContext orderByOperand(int i) {
+			return getRuleContext(OrderByOperandContext.class,i);
+		}
+		public StandaloneOrderByContext(QueryContext ctx) { copyFrom(ctx); }
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof EQLVisitor ) return ((EQLVisitor<? extends T>)visitor).visitStandaloneOrderBy(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -410,7 +410,7 @@ public class EQLParser extends Parser {
 				}
 				break;
 			case ORDERBY:
-				_localctx = new OrderByContext(_localctx);
+				_localctx = new StandaloneOrderByContext(_localctx);
 				enterOuterAlt(_localctx, 4);
 				{
 				setState(105);
@@ -424,8 +424,8 @@ public class EQLParser extends Parser {
 						{
 						{
 						setState(106);
-						((OrderByContext)_localctx).orderByOperand = orderByOperand();
-						((OrderByContext)_localctx).operands.add(((OrderByContext)_localctx).orderByOperand);
+						((StandaloneOrderByContext)_localctx).orderByOperand = orderByOperand();
+						((StandaloneOrderByContext)_localctx).operands.add(((StandaloneOrderByContext)_localctx).orderByOperand);
 						}
 						}
 						break;

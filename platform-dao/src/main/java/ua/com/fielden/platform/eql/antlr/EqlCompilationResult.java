@@ -39,10 +39,10 @@ public sealed interface EqlCompilationResult {
         }
     }
 
-    record OrderBy(OrderBys1 model) implements EqlCompilationResult {
+    record StandaloneOrderBy(OrderBys1 model) implements EqlCompilationResult {
         @Override
         public String description() {
-            return "Order By";
+            return "Standalone Order By";
         }
     }
 

@@ -1,4 +1,4 @@
-// This grammar was generated. Timestamp: 2024-08-12T13:27:50.096302183+03:00[Europe/Kyiv]
+// This grammar was generated. Timestamp: 2024-08-15T12:23:31.436343871+03:00[Europe/Kyiv]
 
 grammar EQL;
 
@@ -8,7 +8,7 @@ query :
       select=SELECT alias=AS? join? where? groupBy? selectEnd # Select
     | EXPR first=yieldOperand (operators+=arithmeticalOperator rest+=yieldOperand)* MODEL # StandaloneExpression
     | COND standaloneCondition MODEL # StandaloneCondExpr
-    | ORDERBY operands+=orderByOperand+ MODEL # OrderBy
+    | ORDERBY operands+=orderByOperand+ MODEL # StandaloneOrderBy
 ;
 
 selectEnd :

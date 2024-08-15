@@ -12,16 +12,16 @@ import java.util.stream.Stream;
 
 import static ua.com.fielden.platform.eql.antlr.EQLParser.*;
 
-final class OrderByVisitor extends AbstractEqlVisitor<EqlCompilationResult.OrderBy> {
+final class StandaloneOrderByVisitor extends AbstractEqlVisitor<EqlCompilationResult.StandaloneOrderBy> {
 
-    OrderByVisitor(final QueryModelToStage1Transformer transformer) {
+    StandaloneOrderByVisitor(final QueryModelToStage1Transformer transformer) {
         super(transformer);
     }
 
     @Override
-    public EqlCompilationResult.OrderBy visitOrderBy(final OrderByContext ctx) {
+    public EqlCompilationResult.StandaloneOrderBy visitStandaloneOrderBy(final StandaloneOrderByContext ctx) {
         final var visitor = new OrderByOperandVisitor(transformer);
-        return new EqlCompilationResult.OrderBy(new OrderBys1(ctx.operands.stream().flatMap(o -> o.accept(visitor)).toList()));
+        return new EqlCompilationResult.StandaloneOrderBy(new OrderBys1(ctx.operands.stream().flatMap(o -> o.accept(visitor)).toList()));
     }
 
     private static final class OrderByOperandVisitor extends AbstractEqlVisitor<Stream<OrderBy1>> {
@@ -45,7 +45,7 @@ final class OrderByVisitor extends AbstractEqlVisitor<EqlCompilationResult.Order
         @Override
         public Stream<OrderBy1> visitOrderByOperand_OrderingModel(final OrderByOperand_OrderingModelContext ctx) {
             final OrderToken orderToken = (OrderToken) ctx.token;
-            final OrderBys1 innerModel = new EqlCompiler(transformer).compile(orderToken.model.getTokenSource(), EqlCompilationResult.OrderBy.class).model();
+            final OrderBys1 innerModel = new EqlCompiler(transformer).compile(orderToken.model.getTokenSource(), EqlCompilationResult.StandaloneOrderBy.class).model();
             return innerModel.models();
         }
 

@@ -36,7 +36,7 @@ public final class CanonicalEqlGrammar {
         start(Query).
 
         specialize(Query).
-            into(Select, StandaloneExpression, StandaloneCondExpr, OrderBy).
+            into(Select, StandaloneExpression, StandaloneCondExpr, StandaloneOrderBy).
 
         specialize(Select).
             into(SelectFrom, SourcelessSelect).
@@ -310,7 +310,7 @@ public final class CanonicalEqlGrammar {
         derive(OrStandaloneCondition).
             to(label("left", StandaloneCondition), or, label("right", StandaloneCondition)).
 
-        derive(OrderBy).
+        derive(StandaloneOrderBy).
             to(orderBy, repeat1(listLabel("operands", OrderByOperand)), model).
 
         specialize(OrderByOperand).
@@ -334,7 +334,7 @@ public final class CanonicalEqlGrammar {
         annotate(SelectSource, inline()).
         annotate(StandaloneExpression, inline()).
         annotate(StandaloneCondExpr, inline()).
-        annotate(OrderBy, inline()).
+        annotate(StandaloneOrderBy, inline()).
 
         annotate(AndCondition, inline()).
         annotate(OrCondition, inline()).
@@ -397,10 +397,11 @@ public final class CanonicalEqlGrammar {
         UnaryPredicate,
         ComparisonPredicate, QuantifiedComparisonPredicate, LikePredicate, StandaloneCondExpr,
         StandaloneCondition, OrStandaloneCondition, AndStandaloneCondition,
-        OrderBy, Order, OrderByOperand, SelectFrom, SelectSource, SelectEnd, SourcelessSelect, DateIntervalUnit,
+        StandaloneOrderBy, Order, OrderByOperand, SelectFrom, SelectSource, SelectEnd, SourcelessSelect, DateIntervalUnit,
         YieldAll, YieldSome, YieldTail, Yield1Tail, YieldManyTail, AliasedYield, YieldManyModel, Yield1Model,
         YieldOperandExpr,
-        OrderByOperand_Yield, OrderByOperand_OrderingModel, OrderByOperand_Single, MembershipPredicate
+        OrderByOperand_Yield, OrderByOperand_OrderingModel, OrderByOperand_Single,
+        MembershipPredicate
     }
 
     public enum EqlTerminal implements Terminal {

@@ -102,7 +102,7 @@ public class QueryModelToStage1Transformer {
     }
 
     private OrderBys1 produceOrderBys(final OrderingModel orderModel) {
-        final EqlCompilationResult.OrderBy result = new EqlCompiler(this).compile(orderModel.getTokenSource(), EqlCompilationResult.OrderBy.class);
+        final EqlCompilationResult.StandaloneOrderBy result = new EqlCompiler(this).compile(orderModel.getTokenSource(), EqlCompilationResult.StandaloneOrderBy.class);
         return result.model();
     }
 
