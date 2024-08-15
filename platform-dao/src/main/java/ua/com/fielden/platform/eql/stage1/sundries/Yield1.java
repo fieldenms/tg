@@ -1,11 +1,13 @@
 package ua.com.fielden.platform.eql.stage1.sundries;
 
-import java.util.Objects;
-
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.sundries.Yield2;
+
+import java.util.Objects;
+
+import static ua.com.fielden.platform.entity.query.exceptions.EqlException.requireNotNullArgument;
 
 public class Yield1 {
     public static final String ABSENT_ALIAS = ""; // Used for the cases where yield requires no alias (sub-query with single yield).
@@ -15,6 +17,7 @@ public class Yield1 {
     public final boolean hasNonnullableHint;
 
     public Yield1(final ISingleOperand1<? extends ISingleOperand2<?>> operand, final String alias, final boolean hasNonnullableHint) {
+        requireNotNullArgument(alias, "alias");
         this.operand = operand;
         this.alias = alias;
         this.hasNonnullableHint = hasNonnullableHint;
