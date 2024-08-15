@@ -287,7 +287,7 @@ public class BnfToG4 {
 
         protected FieldSpec makeFieldForParam(final Parameter parameter, final int counter) {
             final TypeName typeName = switch (parameter) {
-                case NormalParameter p -> ClassName.get(p.type());
+                case NormalParameter p -> TypeName.get(p.type());
                 case VarArityParameter p -> ParameterizedTypeName.get(List.class, p.type());
             };
             return FieldSpec.builder(typeName, "x%s".formatted(counter), PUBLIC, FINAL).build();
