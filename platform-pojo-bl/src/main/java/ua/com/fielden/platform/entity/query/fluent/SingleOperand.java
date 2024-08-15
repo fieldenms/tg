@@ -169,7 +169,7 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
         return new DateAddIntervalFunctionArgument<T, ET>(builder) {
 
             @Override
-            protected T nextForDateAddIntervalFunctionArgument(EqlSentenceBuilder builder) {
+            protected T nextForDateAddIntervalFunctionArgument(final EqlSentenceBuilder builder) {
                 return SingleOperand.this.nextForSingleOperand(builder);
             }
 
