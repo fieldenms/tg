@@ -24,7 +24,7 @@ public class Yield1 {
     }
 
     public Yield1(final ISingleOperand1<? extends ISingleOperand2<?>> operand) {
-        this(operand, "", false);
+        this(operand, ABSENT_ALIAS, false);
     }
 
     public Yield2 transform(final TransformationContextFromStage1To2 context) {
@@ -35,7 +35,7 @@ public class Yield1 {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((alias == null) ? 0 : alias.hashCode());
+        result = prime * result + alias.hashCode();
         result = prime * result + (hasNonnullableHint ? 1231 : 1237);
         result = prime * result + operand.hashCode();
         return result;
