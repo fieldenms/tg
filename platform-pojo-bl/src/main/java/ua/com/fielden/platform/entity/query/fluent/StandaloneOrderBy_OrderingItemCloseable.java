@@ -1,13 +1,13 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItemCloseable;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.StandaloneOrderBy.IOrderingItemCloseable;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 
-final class OrderingItemCloseable //
-        extends OrderingItem //
+final class StandaloneOrderBy_OrderingItemCloseable //
+        extends StandaloneOrderBy_OrderingItem //
         implements IOrderingItemCloseable {
 
-    public OrderingItemCloseable(final EqlSentenceBuilder builder) {
+    public StandaloneOrderBy_OrderingItemCloseable(final EqlSentenceBuilder builder) {
         super(builder);
     }
 

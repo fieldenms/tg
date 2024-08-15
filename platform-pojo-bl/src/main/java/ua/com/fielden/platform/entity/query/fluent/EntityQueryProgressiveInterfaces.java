@@ -653,6 +653,8 @@ public interface EntityQueryProgressiveInterfaces {
     public interface ICompleted<ET extends AbstractEntity<?>> //
             extends ICompletedAndYielded<ET> {
         IFunctionLastArgument<ICompleted<ET>, ET> groupBy();
+
+        IOrderingItem1<ET> orderBy();
     }
 
     public interface ICompletedAndYielded<ET extends AbstractEntity<?>> //
@@ -1037,21 +1039,63 @@ public interface EntityQueryProgressiveInterfaces {
 //	interface ISingleOperandOrderable //
 //			extends IOrder<IOrderingItemCloseable> {
 //	}
-    interface ISingleOperandOrderable  {
-        IOrderingItemCloseable asc();
-        IOrderingItemCloseable desc();
+
+    /**
+     * Sort order of an ordering item.
+     * <p>
+     * Continuation: {@link IOrderingItem}
+     */
+    interface ISingleOperandOrderable<ET extends AbstractEntity<?>>  {
+        IOrderingItem<ET> asc();
+        IOrderingItem<ET> desc();
     }
 
-
-    interface IOrderingItemCloseable //
-            extends IOrderingItem {
-        OrderingModel model();
-    }
-
-    interface IOrderingItem //
+    /**
+     * Mandatory ordering item.
+     *
+     * @param <ET>  entity type
+     */
+    interface IOrderingItem1<ET extends AbstractEntity<?>>
             extends
-            IExprOperand<ISingleOperandOrderable, IExprOperand0<ISingleOperandOrderable, AbstractEntity<?>>, AbstractEntity<?>> {
-        ISingleOperandOrderable yield(final String yieldAlias);
-        IOrderingItemCloseable order(final OrderingModel model);
+            IExprOperand<ISingleOperandOrderable<ET>, IExprOperand0<ISingleOperandOrderable<ET>, ET>, ET>
+    {
+        ISingleOperandOrderable<ET> yield(final String yieldAlias);
+
+        /**
+         * Include the given ordering model into this one.
+         */
+        IOrderingItem<ET> order(final OrderingModel model);
     }
+
+    /**
+     * Subsequent ordering item (after the first one) or the end of this order model.
+     *
+     * @param <ET>  entity type
+     */
+    interface IOrderingItem<ET extends AbstractEntity<?>>
+            extends
+            IOrderingItem1<ET>,
+            ICompletedAndYielded<ET> {}
+
+    interface StandaloneOrderBy {
+
+        interface ISingleOperandOrderable  {
+            IOrderingItemCloseable asc();
+            IOrderingItemCloseable desc();
+        }
+
+        interface IOrderingItemCloseable
+                extends IOrderingItem {
+            OrderingModel model();
+        }
+
+        interface IOrderingItem
+                extends
+                IExprOperand<ISingleOperandOrderable, IExprOperand0<ISingleOperandOrderable, AbstractEntity<?>>, AbstractEntity<?>> {
+            ISingleOperandOrderable yield(final String yieldAlias);
+            IOrderingItemCloseable order(final OrderingModel model);
+        }
+
+    }
+
 }
