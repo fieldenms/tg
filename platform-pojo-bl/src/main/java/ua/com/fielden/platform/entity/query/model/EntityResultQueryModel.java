@@ -20,8 +20,10 @@ public class EntityResultQueryModel<T extends AbstractEntity<?>> extends SingleR
         return this;
     }
 
+    @Override
     public EntityResultQueryModel<T> setShouldMaterialiseCalcPropsAsColumnsInSqlQuery(final boolean value) {
-        this.shouldMaterialiseCalcPropsAsColumnsInSqlQuery = value;
+        super.setShouldMaterialiseCalcPropsAsColumnsInSqlQuery(value);
         return this;
     }
+
 }

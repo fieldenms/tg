@@ -1,37 +1,11 @@
 package ua.com.fielden.platform.entity;
 
-import static java.lang.String.format;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_FOR_PRECITION_AND_SCALE_MSG;
-import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_OF_NUMERIC_PARAMS_MSG;
-import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_OF_PARAM_LENGTH_MSG;
-import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_VALUES_FOR_PRECITION_AND_SCALE_MSG;
-import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
-
-import java.lang.annotation.Annotation;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
-
+import com.google.inject.Injector;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import com.google.inject.Injector;
-
-import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity1;
-import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity2;
-import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity3;
-import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity4;
-import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity6;
+import ua.com.fielden.platform.associations.one2many.incorrect.*;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -45,23 +19,20 @@ import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.reflection.test_entities.EntityWithInvalidIntegerProp;
-import ua.com.fielden.platform.reflection.test_entities.EntityWithInvalidMoneyPropWithLength;
-import ua.com.fielden.platform.reflection.test_entities.EntityWithInvalidMoneyPropWithNegativePrecisionAndPositiveScale;
-import ua.com.fielden.platform.reflection.test_entities.EntityWithInvalidMoneyPropWithPositivePrecisionAndNegativeScale;
-import ua.com.fielden.platform.reflection.test_entities.EntityWithInvalidMoneyPropWithPrecision;
-import ua.com.fielden.platform.reflection.test_entities.EntityWithInvalidMoneyPropWithScale;
-import ua.com.fielden.platform.reflection.test_entities.EntityWithInvalidStringPropWithPrecision;
-import ua.com.fielden.platform.reflection.test_entities.EntityWithInvalidStringPropWithScale;
-import ua.com.fielden.platform.reflection.test_entities.EntityWithInvalidStringPropWithTrailingZeros;
-import ua.com.fielden.platform.reflection.test_entities.SecondLevelEntity;
-import ua.com.fielden.platform.reflection.test_entities.SimplePartEntity;
-import ua.com.fielden.platform.reflection.test_entities.UnionEntityForReflector;
+import ua.com.fielden.platform.reflection.test_entities.*;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.either.Left;
+
+import java.lang.annotation.Annotation;
+import java.util.*;
+
+import static java.lang.String.format;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.*;
+import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 
 /**
  * Unit test for :
@@ -109,12 +80,12 @@ public class AbstractEntityTest {
 
     @Test
     public void testThatObservablePropertyMaintainsOriginalAndPrevValue() {
-        entity.getProperty("observableProperty").setPrevValue(new Double("0.0")); // setting the same value as the current one does not change prev-value
+        entity.getProperty("observableProperty").setPrevValue(Double.valueOf("0.0")); // setting the same value as the current one does not change prev-value
         assertEquals("current value must be changed (original value null)", true, entity.getProperty("observableProperty").isChangedFromOriginal());
         assertEquals("current value must be changed (previous value null)", true, entity.getProperty("observableProperty").isChangedFromPrevious());
-        final Double newValue = new Double("22.0");
+        final Double newValue = Double.valueOf("22.0");
         entity.setObservableProperty(newValue);
-        assertEquals("Prev property value is incorrect", new Double("0.0"), entity.getProperty("observableProperty").getPrevValue());
+        assertEquals("Prev property value is incorrect", Double.valueOf("0.0"), entity.getProperty("observableProperty").getPrevValue());
         assertNull("Original property value is incorrect", entity.getProperty("observableProperty").getOriginalValue());
         assertEquals("Property change count is incorrect", 1, entity.getProperty("observableProperty").getValueChangeCount());
         assertEquals("current value must be changed (original value 1)", true, entity.getProperty("observableProperty").isChangedFromOriginal());
@@ -137,12 +108,12 @@ public class AbstractEntityTest {
         // try to assign null
         entity.setFirstProperty(null);
         assertFalse("Property validation failed.", entity.getProperty("firstProperty").isValid());
-        assertEquals("Value assignment should have been prevented by the validator,", new Integer(60), entity.getFirstProperty());
+        assertEquals("Value assignment should have been prevented by the validator,", Integer.valueOf(60), entity.getFirstProperty());
         // try to assign value less than 50
         entity.setFirstProperty(23);
         assertFalse("Property validation failed.", entity.getProperty("firstProperty").isValid());
-        assertEquals("Value assignment should have been prevented by the validator,", new Integer(60), entity.getFirstProperty());
-        assertEquals("Incorrect value for last invalid value.", new Integer(23), entity.getProperty("firstProperty").getLastInvalidValue());
+        assertEquals("Value assignment should have been prevented by the validator,", Integer.valueOf(60), entity.getFirstProperty());
+        assertEquals("Incorrect value for last invalid value.", Integer.valueOf(23), entity.getProperty("firstProperty").getLastInvalidValue());
     }
 
     @Test
@@ -908,29 +879,12 @@ public class AbstractEntityTest {
     }
 
     @Test
-    public void test_that_set_method_works() {
+    public void method_set_works_for_non_union_entities() {
         final SecondLevelEntity inst = new SecondLevelEntity();
         inst.setPropertyOfSelfType(inst);
 
-        final SimplePartEntity simpleProperty = factory.newEntity(SimplePartEntity.class, 1L, "KEY");
-        simpleProperty.setDesc("DESC");
-        simpleProperty.setLevelEntity(inst);
-        simpleProperty.setUncommonProperty("uncommon value");
-
-        final UnionEntityForReflector unionEntity = factory.newEntity(UnionEntityForReflector.class);
-
         inst.set("property", "value");
         assertEquals("The property value of the SecondLevelInstance must be \"value\"", "value", inst.getProperty());
-        unionEntity.set("simplePartEntity", simpleProperty);
-        assertEquals("The simplePartEntity value must be equla to simpleProperty", simpleProperty, unionEntity.activeEntity());
-        unionEntity.set("commonProperty", "another common value");
-        assertEquals("The commonProperty value of the UnionEntity must be equla to \"another common value\"", "another common value", unionEntity.get("commonProperty"));
-        try {
-            unionEntity.set("uncommonProperty", "uncommon value");
-            fail("There is no uncommonProperty in the UnionEntity");
-        } catch (final Exception e) {
-            System.out.println(e.getMessage());
-        }
     }
 
     @Test

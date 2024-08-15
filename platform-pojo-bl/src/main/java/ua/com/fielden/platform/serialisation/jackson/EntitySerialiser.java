@@ -242,9 +242,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             }
             entityTypeInfo.set_props(props);
         }
-        final EntityType registered = entityTypeInfoGetter.register(entityTypeInfo);
-        registered.set_identifier(serialisationTypeEncoder.encode(type));
-        return registered;
+        return entityTypeInfoGetter.register(entityTypeInfo);
     }
 
     /**
@@ -262,8 +260,8 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         return entityTypeInfo;
     }
 
-    public static <M extends AbstractEntity<?>> String newSerialisationId(final M entity, final References references, final String entityTypeId) {
-        return entityTypeId + "#" + newIdWithinTheType(entity, references);
+    public static <M extends AbstractEntity<?>> String newSerialisationId(final M entity, final References references, final String entityTypeName) {
+        return entityTypeName + "#" + newIdWithinTheType(entity, references);
     }
 
     private static <M extends AbstractEntity<?>> String newIdWithinTheType(final M entity, final References references) {

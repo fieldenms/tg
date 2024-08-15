@@ -1,4 +1,4 @@
-// Generated from EQL.g4 by ANTLR 4.9.3
+// Generated from EQL.g4 by ANTLR 4.13.2
 package ua.com.fielden.platform.eql.antlr;
 import org.antlr.v4.runtime.tree.AbstractParseTreeVisitor;
 
@@ -10,6 +10,7 @@ import org.antlr.v4.runtime.tree.AbstractParseTreeVisitor;
  * @param <T> The return type of the visit operation. Use {@link Void} for
  * operations with no return type.
  */
+@SuppressWarnings("CheckReturnValue")
 public class EQLBaseVisitor<T> extends AbstractParseTreeVisitor<T> implements EQLVisitor<T> {
 	/**
 	 * {@inheritDoc}

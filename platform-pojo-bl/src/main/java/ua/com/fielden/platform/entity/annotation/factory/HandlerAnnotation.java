@@ -2,16 +2,7 @@ package ua.com.fielden.platform.entity.annotation.factory;
 
 import java.lang.annotation.Annotation;
 
-import ua.com.fielden.platform.entity.annotation.mutator.ClassParam;
-import ua.com.fielden.platform.entity.annotation.mutator.DateParam;
-import ua.com.fielden.platform.entity.annotation.mutator.DateTimeParam;
-import ua.com.fielden.platform.entity.annotation.mutator.DblParam;
-import ua.com.fielden.platform.entity.annotation.mutator.EnumParam;
-import ua.com.fielden.platform.entity.annotation.mutator.Handler;
-import ua.com.fielden.platform.entity.annotation.mutator.IntParam;
-import ua.com.fielden.platform.entity.annotation.mutator.MoneyParam;
-import ua.com.fielden.platform.entity.annotation.mutator.PropParam;
-import ua.com.fielden.platform.entity.annotation.mutator.StrParam;
+import ua.com.fielden.platform.entity.annotation.mutator.*;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 
 /**
@@ -33,6 +24,7 @@ public class HandlerAnnotation {
     private DateTimeParam[] date_time = new DateTimeParam[] {};
     private MoneyParam[] money = new MoneyParam[] {};
     private EnumParam[] enumeration = new EnumParam[] {};
+    private BooleanParam[] bool = new BooleanParam[] {};
 
     public <T extends IBeforeChangeEventHandler<?>> HandlerAnnotation(final Class<T> value) {
         this.value = value;
@@ -151,6 +143,12 @@ public class HandlerAnnotation {
             public EnumParam[] enumeration() {
                 return enumeration;
             }
+
+            @Override
+            public BooleanParam[] bool() {
+                return bool;
+            }
+
         };
     }
 
@@ -217,6 +215,12 @@ public class HandlerAnnotation {
                 return handler.enumeration();
             }
 
+            @Override
+            public BooleanParam[] bool() {
+                return bool;
+            }
+
         };
     }
+
 }

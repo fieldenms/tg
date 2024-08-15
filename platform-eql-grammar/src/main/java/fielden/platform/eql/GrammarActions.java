@@ -19,9 +19,9 @@ final class GrammarActions {
     private static void printUsage() {
         System.out.print("""
         Usage:
-          print-bnf html FILE -- creates an HTML document with the BNF
-          generate antlr4 DIR -- creates an ANTLR4 grammar for the BNF in the given directory
-          print-bnf text [FILE] -- prints the BNF to file (or stdout) in human-readable format
+          generate html [FILE] -- generates an HTML document for the BNF, which gets saved to FILE if specified.
+          generate antlr4 DIR -- generates an ANTLR4 grammar for the BNF in the specified directory.
+          generate text [FILE] -- generates a human-readable text for the BNF, which gets saved to FILE is specified.
           verify -- verifies the BNF for correctness
           """);
     }

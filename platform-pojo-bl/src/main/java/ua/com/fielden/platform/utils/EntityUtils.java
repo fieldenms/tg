@@ -191,8 +191,8 @@ public class EntityUtils {
     /**
      * Null-safe comparator.
      *
-     * @param o1
-     * @param o2
+     * @param c1
+     * @param c2
      * @return
      */
     public static <T> int safeCompare(final Comparable<T> c1, final T c2) {
@@ -241,7 +241,7 @@ public class EntityUtils {
 
 
     /**
-     * Returns value that indicates whether entity is among entities. The equality comparison is based on {@link #areEquals(AbstractEntity, AbstractEntity)} method
+     * Returns value that indicates whether entity is among entities. The equality comparison is based on {@link #areEqual(AbstractEntity, AbstractEntity)} method
      *
      * @param entities
      * @param entity
@@ -257,7 +257,7 @@ public class EntityUtils {
     }
 
     /**
-     * Returns index of the entity in the entities list. The equality comparison is based on the {@link #areEquals(AbstractEntity, AbstractEntity)} method.
+     * Returns index of the entity in the entities list. The equality comparison is based on the {@link #areEqual(AbstractEntity, AbstractEntity)} method.
      *
      * @param entities
      * @param entity
@@ -393,12 +393,11 @@ public class EntityUtils {
     /**
      * This method throws Result (so can be used to specify DYNAMIC validation inside the date setters) when the specified finish/start dates are invalid together.
      *
-     * @param start
-     * @param finish
-     * @param fieldPrefix
-     *            - the prefix for the field in the error message for e.g. "actual" or "early".
-     * @param finishSetter
-     *            - use true if validation have to be performed inside the "finish" date setter, false - inside the "start" date setter
+     * @param start a lower value for a range.
+     * @param finish an upper value for a range.
+     * @param startProperty a property representing the start of a range.
+     * @param finishProperty a property representing the finish of a range.
+     * @param finishSetter specify {@code true} if validation has to be performed for the finish property, {@code false} - for the start property.
      * @throws Result
      */
     public static void validateDateRange(final Date start, final Date finish, final MetaProperty<Date> startProperty, final MetaProperty<Date> finishProperty, final boolean finishSetter, final IDates dates) {
@@ -419,14 +418,13 @@ public class EntityUtils {
     }
 
     /**
-     * This method throws Result (so can be used to specify DYNAMIC validation inside the date setters) when the specified finish/start date times are invalid together.
+     * This method throws {@link Result} when the specified finish/start date times are invalid together.
      *
      * @param start
      * @param finish
-     * @param fieldPrefix
-     *            - the prefix for the field in the error message for e.g. "actual" or "early".
-     * @param finishSetter
-     *            - use true if validation have to be performed inside the "finish" date setter, false - inside the "start" date setter
+     * @param startProperty a property representing the start of a range.
+     * @param finishProperty a property representing the finish of a range.
+     * @param finishSetter specify {@code true} if validation has to be performed for the finish property, {@code false} - for the start property.
      * @throws Result
      */
     public static void validateDateTimeRange(final DateTime start, final DateTime finish, final MetaProperty<DateTime> startProperty, final MetaProperty<DateTime> finishProperty, final boolean finishSetter, final IDates dates) {
@@ -685,6 +683,24 @@ public class EntityUtils {
     }
 
     /**
+     * Returns the first persistent entity type of the type hierarchy for {@code entityType}. This could be {@code entityType} itself or the first super type that represents a persistent entity.
+     * Otherwise, an empty result is returned.
+     *
+     * @param entityType
+     * @return
+     */
+    public static Optional<Class<? extends AbstractEntity<?>>> findFirstPersistentTypeInHierarchyFor(final Class<? extends AbstractEntity<?>> entityType) {
+        Class<?> type = entityType;
+        while (type != AbstractEntity.class) {
+            if (isPersistedEntityType(type)) {
+                return Optional.of((Class<? extends AbstractEntity<?>>) type);
+            }
+            type = type.getSuperclass();
+        }
+        return Optional.empty();
+    }
+
+    /**
      * Determines whether the provided entity type is of synthetic nature, which means that is based on an EQL model.
      *
      * @param type
@@ -731,7 +747,7 @@ public class EntityUtils {
 
     /**
      * Determines whether the provided entity type is of synthetic nature that at the same time is based on a persistent type.
-     * This kind of entities most typically should have a model with <code>yieldAll</code> clause.
+     * This kind of entity most typically should have a model with <code>yieldAll</code> clause.
      *
      * @param type
      * @return
@@ -1037,8 +1053,8 @@ public class EntityUtils {
      * @param instrumented
      * @return
      */
-    public static <T extends AbstractEntity<?>> IFetchProvider<T> fetch(final Class<T> entityType, final boolean instumented) {
-        return createDefaultFetchProvider(entityType, instumented);
+    public static <T extends AbstractEntity<?>> IFetchProvider<T> fetch(final Class<T> entityType, final boolean instrumented) {
+        return createDefaultFetchProvider(entityType, instrumented);
     }
 
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetch(final Class<T> entityType) {

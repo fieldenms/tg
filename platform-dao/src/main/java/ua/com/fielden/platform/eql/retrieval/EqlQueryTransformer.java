@@ -15,7 +15,7 @@ import ua.com.fielden.platform.eql.stage3.queries.ResultQuery3;
 import ua.com.fielden.platform.utils.IDates;
 
 /**
- * A entry point for transforming an EQL query to SQL.
+ * An entry point for transforming an EQL query to SQL.
  * <p>
  * There are 3 stages in the transformation from EQL to SQL:
  * <ol>

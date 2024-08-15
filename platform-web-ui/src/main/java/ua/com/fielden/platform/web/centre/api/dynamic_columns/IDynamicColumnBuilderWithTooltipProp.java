@@ -6,8 +6,8 @@ package ua.com.fielden.platform.web.centre.api.dynamic_columns;
  * @author TG Team
  *
  */
-public interface IDynamicColumnBuilderWithTooltipProp extends IDynamicColumnBuilderAddProp, IDynamicColumnBuilderDone{
+public interface IDynamicColumnBuilderWithTooltipProp extends IDynamicColumnBuilderAddPropWithDone{
 
-    IDynamicColumnBuilderAddProp withTooltipProp(final CharSequence tooltipProp);
+    IDynamicColumnBuilderAddPropWithDone withTooltipProp(final CharSequence tooltipProp);
 
 }

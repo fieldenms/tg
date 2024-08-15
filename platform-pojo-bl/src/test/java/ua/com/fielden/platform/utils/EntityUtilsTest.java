@@ -1,63 +1,17 @@
 package ua.com.fielden.platform.utils;
 
-import static java.math.RoundingMode.HALF_EVEN;
-import static java.util.stream.Collectors.toCollection;
-import static java.util.stream.Collectors.toList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
-import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
-import static ua.com.fielden.platform.utils.EntityUtils.coalesce;
-import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
-import static ua.com.fielden.platform.utils.EntityUtils.getCollectionalProperties;
-import static ua.com.fielden.platform.utils.EntityUtils.isIntrospectionDenied;
-import static ua.com.fielden.platform.utils.EntityUtils.isNaturalOrderDescending;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.keyPaths;
-import static ua.com.fielden.platform.utils.EntityUtils.safeCompare;
-import static ua.com.fielden.platform.utils.EntityUtils.toDecimal;
-
-import java.lang.reflect.Field;
-import java.math.BigDecimal;
-import java.math.MathContext;
-import java.math.RoundingMode;
-import java.sql.Timestamp;
-import java.util.Date;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Stream;
-
+import com.google.inject.Injector;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.junit.Test;
-
-import com.google.inject.Injector;
-
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.dashboard.DashboardRefreshFrequency;
 import ua.com.fielden.platform.dashboard.DashboardRefreshFrequencyUnit;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.domain.metadata.DomainExplorer;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.ChildEntity;
-import ua.com.fielden.platform.entity.Entity;
-import ua.com.fielden.platform.entity.EntityExt;
+import ua.com.fielden.platform.entity.*;
 import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.UserDefinableHelp;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -65,26 +19,31 @@ import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.keygen.KeyNumber;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
-import ua.com.fielden.platform.sample.domain.TgAuthor;
-import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
-import ua.com.fielden.platform.sample.domain.TgMeterReading;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
-import ua.com.fielden.platform.sample.domain.TgReVehicleModel;
-import ua.com.fielden.platform.sample.domain.TgVehicle;
-import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
-import ua.com.fielden.platform.sample.domain.UnionEntity;
-import ua.com.fielden.platform.security.user.ReUser;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
-import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
-import ua.com.fielden.platform.security.user.UserRole;
+import ua.com.fielden.platform.sample.domain.*;
+import ua.com.fielden.platform.security.user.*;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
+
+import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
+import java.sql.Timestamp;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Stream;
+
+import static java.math.RoundingMode.HALF_EVEN;
+import static java.util.stream.Collectors.toCollection;
+import static java.util.stream.Collectors.toList;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.AbstractEntity.*;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 public class EntityUtilsTest {
     private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
@@ -377,7 +336,7 @@ public class EntityUtilsTest {
 
     @Test(expected = NoSuchElementException.class)
     public void coalesce_throws_exception_if_all_values_are_null_and_gracefully_handles_null_for_array_argument() {
-        coalesce(null, null, null /*this is an array argument*/);
+        coalesce(null, null, (Object[]) null /* this is an array argument */);
     }
 
     @Test
@@ -680,6 +639,26 @@ public class EntityUtilsTest {
         final LinkedHashSet<Class<? extends AbstractEntity<?>>> expected = linkedSetOf(Attachment.class, DomainExplorer.class, DashboardRefreshFrequency.class, DashboardRefreshFrequencyUnit.class, KeyNumber.class, User.class, ReUser.class, UserRole.class, UserAndRoleAssociation.class, SecurityRoleAssociation.class, UserDefinableHelp.class);
         final LinkedHashSet<Class<? extends AbstractEntity<?>>> filtered = PlatformDomainTypes.types.stream().filter(EntityUtils::isIntrospectionAllowed).collect(toCollection(LinkedHashSet::new));
         assertEquals(expected, filtered);
+    }
+
+    @Test
+    public void findFirstPersistentTypeInHierarchyFor_a_persistent_type_returns_that_type() {
+        final var maybePersistentType = EntityUtils.findFirstPersistentTypeInHierarchyFor(Attachment.class);
+        assertTrue(maybePersistentType.isPresent());
+        assertEquals(Attachment.class , maybePersistentType.get());
+    }
+
+    @Test
+    public void findFirstPersistentTypeInHierarchyFor_a_synthetic_entity_based_on_persistent_type_returns_that_type() {
+        final var maybePersistentType = EntityUtils.findFirstPersistentTypeInHierarchyFor(TgReVehicleModel.class);
+        assertTrue(maybePersistentType.isPresent());
+        assertEquals(TgVehicleModel.class , maybePersistentType.get());
+    }
+
+    @Test
+    public void findFirstPersistentTypeInHierarchyFor_an_entity_with_no_persistent_type_in_its_hierarhcy_returns_empty_result() {
+        final var maybePersistentType = EntityUtils.findFirstPersistentTypeInHierarchyFor(Entity.class);
+        assertFalse(maybePersistentType.isPresent());
     }
 
     /**

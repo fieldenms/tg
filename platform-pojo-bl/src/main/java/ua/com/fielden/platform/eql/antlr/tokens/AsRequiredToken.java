@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.antlr.tokens;
 
 import java.util.Objects;
 
+import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.wrap;
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.ASREQUIRED;
 
@@ -11,7 +12,7 @@ public final class AsRequiredToken extends AbstractParameterisedEqlToken {
 
     public AsRequiredToken(final String alias) {
         super(ASREQUIRED, "asRequired");
-        this.alias = alias;
+        this.alias = requireNonNull(alias);
     }
 
     @Override

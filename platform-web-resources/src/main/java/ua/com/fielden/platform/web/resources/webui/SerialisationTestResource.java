@@ -451,14 +451,10 @@ public class SerialisationTestResource extends AbstractWebResource {
     
     private static AbstractEntity<String> createGeneratedEntity(final ISerialiser serialiser, final boolean instrumented) {
         final Class<AbstractEntity<?>> emptyEntityTypeEnhanced;
-        try {
-            final Class<? extends AbstractEntity<?>> tmp = startModification(EmptyEntity.class)
-                    .modifyTypeName(nextTypeName(EmptyEntity.class.getName()))
-                    .endModification();
-            emptyEntityTypeEnhanced = (Class<AbstractEntity<?>>) tmp;
-        } catch (final ClassNotFoundException e) {
-            throw Result.failure(e);
-        }
+        final Class<? extends AbstractEntity<?>> tmp = startModification(EmptyEntity.class)
+                .modifyTypeName(nextTypeName(EmptyEntity.class.getName()))
+                .endModification();
+        emptyEntityTypeEnhanced = (Class<AbstractEntity<?>>) tmp;
         final TgJackson tgJackson = (TgJackson) serialiser.getEngine(SerialiserEngines.JACKSON);
         tgJackson.registerNewEntityType(emptyEntityTypeEnhanced);
         

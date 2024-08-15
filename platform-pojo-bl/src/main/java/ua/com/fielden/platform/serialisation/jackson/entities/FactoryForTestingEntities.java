@@ -182,7 +182,7 @@ public class FactoryForTestingEntities {
     }
 
     public EntityWithInteger createEntityWithInteger() {
-        return finalise(createPersistedEntity(EntityWithInteger.class, 1L, "key", "description").setProp(new Integer(23)));
+        return finalise(createPersistedEntity(EntityWithInteger.class, 1L, "key", "description").setProp(Integer.valueOf(23)));
     }
 
     public EntityWithString createEntityWithString() {
@@ -305,26 +305,16 @@ public class FactoryForTestingEntities {
     }
 
     public T2<AbstractEntity<?>, Class<AbstractEntity<?>>> createUninstrumentedGeneratedEntity(final boolean proxiedType, final Class entityType) {
-        final Class<AbstractEntity<?>> entityTypeGenerated;
-        try {
-            entityTypeGenerated = startModification(entityType)
+        final Class<AbstractEntity<?>> entityTypeGenerated = startModification(entityType)
             .modifyTypeName(nextTypeName(entityType.getName()))
             .endModification();
-        } catch (final ClassNotFoundException e) {
-            throw Result.failure(e);
-        }
         return T2.t2(createUninstrumentedPersistedEntity(proxiedType ? (Class<AbstractEntity<?>>) EntityProxyContainer.proxy(entityTypeGenerated, "prop") : entityTypeGenerated, 1L, "key", "description"), entityTypeGenerated);
     }
 
     public T2<AbstractEntity<?>, Class<AbstractEntity<?>>> createInstrumentedGeneratedEntity(final boolean proxiedType, final Class entityType) {
-        final Class<AbstractEntity<?>> entityTypeGenerated;
-        try {
-            entityTypeGenerated = startModification(entityType)
+        final Class<AbstractEntity<?>> entityTypeGenerated = startModification(entityType)
             .modifyTypeName(nextTypeName(entityType.getName()))
             .endModification();
-        } catch (final ClassNotFoundException e) {
-            throw Result.failure(e);
-        }
         return T2.t2(createPersistedEntity(proxiedType ? (Class<AbstractEntity<?>>) EntityProxyContainer.proxy(entityTypeGenerated, "prop") : entityTypeGenerated, 1L, "key", "description"), entityTypeGenerated);
     }
 

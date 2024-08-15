@@ -2,8 +2,10 @@ package ua.com.fielden.platform.web.centre.api.impl;
 
 import static java.lang.String.format;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -194,8 +196,13 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     }
 
     @Override
-    public <M extends AbstractEntity<?>> IResultSetBuilderDynamicPropsAction<T> addProps(final CharSequence propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<M, Optional<CentreContext<T,?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
+    public IResultSetBuilderDynamicPropsAction<T> addProps(final CharSequence propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<T, Optional<CentreContext<T,?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
         return new ResultSetBuilder<>(builder).addProps(propName, dynColBuilderType, entityPreProcessor, contextConfig);
+    }
+
+    @Override
+    public IResultSetBuilderDynamicPropsAction<T> addProps(final CharSequence propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<T, Optional<CentreContext<T, ?>>> entityPreProcessor, final BiFunction<T, Optional<CentreContext<T, ?>>, Map> renderingHintsProvider, final CentreContextConfig contextConfig) {
+        return new ResultSetBuilder<>(builder).addProps(propName, dynColBuilderType, entityPreProcessor, renderingHintsProvider, contextConfig);
     }
 
     @Override

@@ -49,6 +49,8 @@ public class InsertionPointBuilder implements IRenderable, IExecutable {
                 .attr("data-change-reason", "[[dataChangeReason]]")
                 .attr("retrieved-entities", "{{retrievedEntities}}")
                 .attr("all-retrieved-entities", "{{allRetrievedEntities}}")
+                .attr("rendering-hints", "{{renderingHints}}")
+                .attr("all-rendering-hints", "{{allRenderingHints}}")
                 .attr("retrieved-totals", "{{retrievedTotals}}")
                 .attr("centre-selection", "[[centreSelection]]")
                 .attr("centre-state", "[[currentState]]")

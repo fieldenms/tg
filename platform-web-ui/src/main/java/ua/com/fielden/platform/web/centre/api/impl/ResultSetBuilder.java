@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang3.StringUtils;
@@ -30,6 +31,7 @@ import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
@@ -141,6 +143,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.builder = builder;
     }
 
+    @Deprecated
     @Override
     public IResultSetBuilder3Ordering<T> addProp(final CharSequence propName) {
         return addProp(propName, true);
@@ -217,8 +220,15 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public <M extends AbstractEntity<?>> IResultSetBuilderDynamicPropsAction<T> addProps(final CharSequence propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<M, Optional<CentreContext<T, ?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
+    public IResultSetBuilderDynamicPropsAction<T> addProps(final CharSequence propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<T, Optional<CentreContext<T, ?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
         final ResultSetProp<T> prop = dynamicProps(propName, dynColBuilderType, entityPreProcessor, contextConfig);
+        this.builder.addToResultSet(prop);
+        return new ResultSetDynamicPropertyBuilder<>(this, prop);
+    }
+
+    @Override
+    public IResultSetBuilderDynamicPropsAction<T> addProps(final CharSequence propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<T, Optional<CentreContext<T, ?>>> entityPreProcessor, final BiFunction<T, Optional<CentreContext<T, ?>>, Map> renderingHintsProvider, final CentreContextConfig contextConfig) {
+        final ResultSetProp<T> prop = dynamicProps(propName, dynColBuilderType, entityPreProcessor, renderingHintsProvider, contextConfig);
         this.builder.addToResultSet(prop);
         return new ResultSetDynamicPropertyBuilder<>(this, prop);
     }

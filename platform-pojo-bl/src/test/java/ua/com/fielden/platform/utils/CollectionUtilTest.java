@@ -1,27 +1,15 @@
 package ua.com.fielden.platform.utils;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
-import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
-import static ua.com.fielden.platform.utils.CollectionUtil.removeFirst;
-import static ua.com.fielden.platform.utils.CollectionUtil.tail;
-
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.junit.Test;
-
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
+
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.*;
 
 public class CollectionUtilTest {
 
@@ -39,7 +27,7 @@ public class CollectionUtilTest {
 
     @Test
     public void listOf_null_is_the_same_as_listOf_with_no_arguments() {
-        assertEquals(0, listOf(null).size());
+        assertEquals(0, listOf((Object[]) null).size());
     }
 
     @Test
@@ -174,6 +162,117 @@ public class CollectionUtilTest {
     public void removeFirst_does_not_permit_null_elements_throwing_InvalidArgumentException() {
         final List<Integer> xs = listOf(1, null, 3);
         assertThrows(InvalidArgumentException.class, () -> removeFirst(xs, x -> x >=2));
+    }
+
+    @Test
+    public void merge_for_a_single_map_produces_a_new_map_of_the_same_type_with_elements_from_that_map() {
+        final var map1 = new HashMap<Integer, String>();
+        map1.put(1, "a");
+        map1.put(2, "b");
+
+        final var result = merge(map1);
+        assertNotNull(result);
+        assertNotSame(map1, result);
+        assertEquals(map1.getClass(), result.getClass());
+        assertEquals(map1, result);
+    }
+
+    @Test
+    public void merge_for_several_maps_of_the_same_type_produces_a_new_map_of_that_type_with_elements_from_all_maps() {
+        final var map1 = new HashMap<Integer, String>();
+        map1.put(1, "a");
+        map1.put(2, "b");
+        final var map2 = new HashMap<Integer, String>();
+        map2.put(1, "a");
+        map2.put(3, "c");
+        final var map3 = new HashMap<Integer, String>();
+        map3.put(4, "d");
+        map3.put(5, "e");
+
+        final var expectedResult = new HashMap<Integer, String>();
+        expectedResult.putAll(map1);
+        expectedResult.putAll(map2);
+        expectedResult.putAll(map3);
+
+        final var result = merge(map1, map2, map3);
+        assertNotNull(result);
+        assertNotSame(map1, result);
+        assertEquals(expectedResult.getClass(), result.getClass());
+        assertEquals(expectedResult, result);
+    }
+
+    @Test
+    public void merge_for_several_maps_of_different_types_produces_a_new_map_of_the_type_as_first_argument_with_elements_from_all_maps() {
+        final var map1 = new TreeMap<Integer, String>();
+        map1.put(1, "a");
+        map1.put(2, "b");
+        final var map2 = new HashMap<Integer, String>();
+        map2.put(1, "a");
+        map2.put(3, "c");
+        final var map3 = new LinkedHashMap<Integer, String>();
+        map3.put(4, "d");
+        map3.put(5, "e");
+
+        final var expectedResult = new TreeMap<Integer, String>();
+        expectedResult.putAll(map1);
+        expectedResult.putAll(map2);
+        expectedResult.putAll(map3);
+
+        final var result = merge(map1, map2, map3);
+        assertNotNull(result);
+        assertNotSame(map1, result);
+        assertEquals(expectedResult.getClass(), result.getClass());
+        assertEquals(expectedResult, result);
+    }
+
+    @Test
+    public void merge_skips_null_arguments_while_mering_all_other() {
+        final var map1 = new TreeMap<Integer, String>();
+        map1.put(1, "a");
+        map1.put(2, "b");
+        final var map2 = new HashMap<Integer, String>();
+        map2.put(1, "c");
+        map2.put(3, "c");
+        final var map3 = new LinkedHashMap<Integer, String>();
+        map3.put(4, "d");
+        map3.put(5, "e");
+
+        final var expectedResult = new TreeMap<Integer, String>();
+        expectedResult.putAll(map1);
+        expectedResult.putAll(map2);
+        expectedResult.putAll(map3);
+
+        final var result = merge(map1, null, map2, null, map3, null);
+        assertNotNull(result);
+        assertNotSame(map1, result);
+        assertEquals(expectedResult.getClass(), result.getClass());
+        assertEquals(expectedResult, result);
+    }
+
+    public void merge_supports_maps_with_keys_and_values_of_compatible_types() {
+        final var map1 = new HashMap<Number, CharSequence>();
+        map1.put(1, "a");
+        map1.put(2, "b");
+        final var map2 = new HashMap<Integer, String>();
+        map2.put(1, "c");
+        map2.put(3, "d");
+        final var map3 = new HashMap<BigDecimal, StringBuffer>();
+        map3.put(BigDecimal.valueOf(2), new StringBuffer("e"));
+        map3.put(BigDecimal.valueOf(3), new StringBuffer("f"));
+
+        final var expectedResult = new HashMap<Number, CharSequence>();
+        expectedResult.putAll(map1);
+        expectedResult.putAll(map2);
+        expectedResult.putAll(map3);
+
+        final var result = merge(map1, map2, map3);
+        assertNotNull(result);
+        assertNotSame(map1, result);
+        assertEquals(expectedResult.getClass(), result.getClass());
+        assertEquals(expectedResult, result);
+        assertEquals(5, result.size());
+        final String values = result.values().stream().sorted().collect(Collectors.joining(","));
+        assertEquals("b,c,d,e,f", values);
     }
 
 }
