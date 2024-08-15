@@ -28,19 +28,14 @@
 <body unresolved class="fullbleed">
     <dom-bind>
         <template>
-            <tg-rich-text-input rich-text-content="[[customContent]]"></tg-rich-text-input>
+            <tg-rich-text-input id="richTextInput"></tg-rich-text-input>
         </template>
     </dom-bind>
     <script>
         (function () {
             window.addEventListener('WebComponentsReady', function (e) {
-                const date = function (value) {
-                    return moment(value, "DD/MM/YYYY").toDate();
-                };
-
                 const app = document.querySelector('dom-bind');
-
-                app.customContent = "<h1>Hello content world</h1>";
+                app.$.richTextInput.editor.setHTML("<h1>Hello world!</h1>", true);
             });
         })();
     </script>

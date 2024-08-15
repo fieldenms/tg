@@ -1,20 +1,19 @@
 
 import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
+import '/resources/toastui-editor/toastui-editor-all.min.js';
 
 const template = html`
+    <link rel="stylesheet" href="/resources/toastui-editor/toastui-editor.min.css" />
     <style>
         :host {
             @apply --layout-vertical;
         }
-        .toolbar {
-            @apply --layout-horizontal; 
+        .toastui-editor-toolbar {
+            display: none;
         }
-        .content {
-            @apply --layout-flex;
-        }
+
     </style>
-    <div class="toolbar"></div>
-    <div id="textContainer" class="content" contenteditable="true" inner-H-T-M-L="[[richTextContent]]"></div>`; 
+    <div id="editor"></div>`; 
 
 class TgRichTextInput extends PolymerElement {
 
@@ -24,14 +23,21 @@ class TgRichTextInput extends PolymerElement {
 
     static get properties() {
         return {
-            richTextContent: String,
+            editor: String,
         }
     }
 
     ready () {
         super.ready();
         
-        
+        this.editor = new toastui.Editor({
+            el: this.$.editor,
+            height: '500px',
+            initialEditType: 'wysiwyg',
+            usageStatistics: false,
+            toolbarItems: [],
+            hideModeSwitch: false
+        });
     }
 }
 
