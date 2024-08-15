@@ -20,7 +20,7 @@ abstract class AbstractEqlVisitor<T> extends StrictEQLBaseVisitor<T> {
 
     protected final QueryModelToStage1Transformer transformer;
 
-    AbstractEqlVisitor(QueryModelToStage1Transformer transformer) {
+    AbstractEqlVisitor(final QueryModelToStage1Transformer transformer) {
         this.transformer = transformer;
     }
 
