@@ -2,14 +2,15 @@ package ua.com.fielden.platform.entity.query.fetching;
 
 import org.junit.Test;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
+import ua.com.fielden.platform.eql.stage0.OrderingModelConflictException;
 import ua.com.fielden.platform.sample.domain.TgPersonName;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 import static java.util.stream.IntStream.rangeClosed;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static ua.com.fielden.platform.dao.QueryExecutionModel.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 
 public class OrderByTest extends AbstractDaoTestCase {
 
@@ -72,6 +73,19 @@ public class OrderByTest extends AbstractDaoTestCase {
                 .model();
         final var entities = co(TgPersonName.class).getAllEntities(qem);
         assertEquals(keys.reversed(), entities.stream().map(TgPersonName::getKey).toList());
+    }
+
+    @Test
+    public void ordering_model_cannot_be_specified_both_as_standalone_and_as_part_of_a_query() {
+        final var qem = from(
+                select(TgPersonName.class).where().condition(testDataCond)
+                        .orderBy().prop("key").desc()
+                        .model())
+                .with(orderBy().prop("id").asc().model())
+                .model();
+
+        assertThrows(OrderingModelConflictException.class,
+                     () -> co(TgPersonName.class).getAllEntities(qem));
     }
 
 }

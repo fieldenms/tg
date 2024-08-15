@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.stage0;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.IRetrievalModel;
-import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
@@ -24,7 +23,6 @@ import java.util.Map;
 
 import static java.util.Collections.emptyMap;
 import static ua.com.fielden.platform.eql.stage1.conditions.Conditions1.EMPTY_CONDITIONS;
-import static ua.com.fielden.platform.eql.stage1.sundries.OrderBys1.EMPTY_ORDER_BYS;
 
 /**
  * Transforms EQL models in form of fluent API tokens to the stage 1 representation.
@@ -82,7 +80,7 @@ public class QueryModelToStage1Transformer {
         final EqlCompilationResult.Select result = new EqlCompiler(this).compile(qryModel.getTokenSource(), EqlCompilationResult.Select.class);
 
         if (orderModel != null && !result.orderBys().isEmpty()) {
-            throw new EqlException("Ordering model conflict: cannot be specified both as standalone and as part of a query.");
+            throw new OrderingModelConflictException("Ordering model cannot be specified both as standalone and as part of a query.");
         }
         final OrderBys1 orderBys = orderModel != null ? produceOrderBys(orderModel) : result.orderBys();
 
