@@ -14,248 +14,249 @@ import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
-		extends AbstractQueryLink //
-		implements ISingleOperand<T, ET> {
+        extends AbstractQueryLink //
+        implements ISingleOperand<T, ET> {
 
-    protected SingleOperand(final Tokens tokens) {
-        super(tokens);
+    protected SingleOperand(final EqlSentenceBuilder builder) {
+        super(builder);
     }
-    
-	protected abstract T nextForSingleOperand(final Tokens tokens);
 
-	@Override
-	public T val(final Object value) {
-		return nextForSingleOperand(getTokens().val(value));
-	}
+    protected abstract T nextForSingleOperand(final EqlSentenceBuilder builder);
 
-	@Override
-	public T iVal(final Object value) {
-		return nextForSingleOperand(getTokens().iVal(value));
-	}
+    @Override
+    public T val(final Object value) {
+        return nextForSingleOperand(builder.val(value));
+    }
 
-	@Override
-	public T model(final SingleResultQueryModel<?> model) {
-		return nextForSingleOperand(getTokens().model(model));
-	}
+    @Override
+    public T iVal(final Object value) {
+        return nextForSingleOperand(builder.iVal(value));
+    }
 
-	@Override
-	public T param(final String paramName) {
-		return nextForSingleOperand(getTokens().param(paramName));
-	}
+    @Override
+    public T model(final SingleResultQueryModel<?> model) {
+        return nextForSingleOperand(builder.model(model));
+    }
 
-	@Override
-	public T param(final Enum paramName) {
-		return param(paramName.toString());
-	}
+    @Override
+    public T param(final String paramName) {
+        return nextForSingleOperand(builder.param(paramName));
+    }
 
-	@Override
-	public T iParam(final String paramName) {
-		return nextForSingleOperand(getTokens().iParam(paramName));
-	}
+    @Override
+    public T param(final Enum paramName) {
+        return param(paramName.toString());
+    }
 
-	@Override
-	public T iParam(final Enum paramName) {
-		return iParam(paramName.toString());
-	}
+    @Override
+    public T iParam(final String paramName) {
+        return nextForSingleOperand(builder.iParam(paramName));
+    }
 
-	@Override
-	public T prop(final String propertyName) {
-		return nextForSingleOperand(getTokens().prop(propertyName));
-	}
+    @Override
+    public T iParam(final Enum paramName) {
+        return iParam(paramName.toString());
+    }
 
-	@Override
-	public T prop(final Enum propertyName) {
-		return prop(propertyName.toString());
-	}
+    @Override
+    public T prop(final String propertyName) {
+        return nextForSingleOperand(builder.prop(propertyName));
+    }
+
+    @Override
+    public T prop(final Enum propertyName) {
+        return prop(propertyName.toString());
+    }
 
     @Override
     public T prop(final IConvertableToPath propertyName) {
         return prop(propertyName.toPath());
     }
 
-	@Override
-	public T extProp(final String propertyName) {
-		return nextForSingleOperand(getTokens().extProp(propertyName));
-	}
+    @Override
+    public T extProp(final String propertyName) {
+        return nextForSingleOperand(builder.extProp(propertyName));
+    }
 
-	@Override
-	public T extProp(final Enum propertyName) {
-		return extProp(propertyName.toString());
-	}
+    @Override
+    public T extProp(final Enum propertyName) {
+        return extProp(propertyName.toString());
+    }
 
     @Override
     public T extProp(final IConvertableToPath propertyName) {
         return extProp(propertyName.toPath());
     }
 
-	@Override
-	public T expr(final ExpressionModel expr) {
-		return nextForSingleOperand(getTokens().expr(expr));
-	}
+    @Override
+    public T expr(final ExpressionModel expr) {
+        return nextForSingleOperand(builder.expr(expr));
+    }
 
-	@Override
-	public IDateAddIntervalFunctionArgument<T, ET> addTimeIntervalOf() {
-		return createDateAddIntervalFunctionArgument(getTokens().addDateInterval());
-	}
+    @Override
+    public IDateAddIntervalFunctionArgument<T, ET> addTimeIntervalOf() {
+        return createDateAddIntervalFunctionArgument(builder.addDateInterval());
+    }
 
-	@Override
-	public IDateDiffIntervalFunction<T, ET> count() {
-		return createDateDiffIntervalFunction(getTokens().countDateIntervalFunction());
-	}
+    @Override
+    public IDateDiffIntervalFunction<T, ET> count() {
+        return createDateDiffIntervalFunction(builder.countDateIntervalFunction());
+    }
 
-	@Override
-	public IFunctionWhere0<T, ET> caseWhen() {
-		return createFunctionWhere0(getTokens().caseWhenFunction());
-	}
+    @Override
+    public IFunctionWhere0<T, ET> caseWhen() {
+        return createFunctionWhere0(builder.caseWhenFunction());
+    }
 
-	@Override
-	public IIfNullFunctionArgument<T, ET> ifNull() {
-		return createIfNullFunctionArgument(getTokens().ifNull());
-	}
+    @Override
+    public IIfNullFunctionArgument<T, ET> ifNull() {
+        return createIfNullFunctionArgument(builder.ifNull());
+    }
 
-	@Override
-	public IConcatFunctionArgument<T, ET> concat() {
-		return createConcatFunctionArgument(getTokens().concat());
-	}
+    @Override
+    public IConcatFunctionArgument<T, ET> concat() {
+        return createConcatFunctionArgument(builder.concat());
+    }
 
-	@Override
-	public IRoundFunctionArgument<T, ET> round() {
-		return createRoundFunctionArgument(getTokens().round());
-	}
+    @Override
+    public IRoundFunctionArgument<T, ET> round() {
+        return createRoundFunctionArgument(builder.round());
+    }
 
-	@Override
-	public T now() {
-		return nextForSingleOperand(getTokens().now());
-	}
+    @Override
+    public T now() {
+        return nextForSingleOperand(builder.now());
+    }
 
-	@Override
-	public IFunctionLastArgument<T, ET> upperCase() {
-		return createFunctionLastArgument(getTokens().uppercase());
-	}
+    @Override
+    public IFunctionLastArgument<T, ET> upperCase() {
+        return createFunctionLastArgument(builder.uppercase());
+    }
 
-	@Override
-	public IFunctionLastArgument<T, ET> lowerCase() {
-		return createFunctionLastArgument(getTokens().lowercase());
-	}
+    @Override
+    public IFunctionLastArgument<T, ET> lowerCase() {
+        return createFunctionLastArgument(builder.lowercase());
+    }
 
-	@Override
-	public IFunctionLastArgument<T, ET> secondOf() {
-		return createFunctionLastArgument(getTokens().secondOf());
-	}
+    @Override
+    public IFunctionLastArgument<T, ET> secondOf() {
+        return createFunctionLastArgument(builder.secondOf());
+    }
 
-	@Override
-	public IFunctionLastArgument<T, ET> minuteOf() {
-		return createFunctionLastArgument(getTokens().minuteOf());
-	}
+    @Override
+    public IFunctionLastArgument<T, ET> minuteOf() {
+        return createFunctionLastArgument(builder.minuteOf());
+    }
 
-	@Override
-	public IFunctionLastArgument<T, ET> hourOf() {
-		return createFunctionLastArgument(getTokens().hourOf());
-	}
+    @Override
+    public IFunctionLastArgument<T, ET> hourOf() {
+        return createFunctionLastArgument(builder.hourOf());
+    }
 
-	@Override
-	public IFunctionLastArgument<T, ET> dayOf() {
-		return createFunctionLastArgument(getTokens().dayOf());
-	}
+    @Override
+    public IFunctionLastArgument<T, ET> dayOf() {
+        return createFunctionLastArgument(builder.dayOf());
+    }
 
-	@Override
-	public IFunctionLastArgument<T, ET> monthOf() {
-		return createFunctionLastArgument(getTokens().monthOf());
-	}
+    @Override
+    public IFunctionLastArgument<T, ET> monthOf() {
+        return createFunctionLastArgument(builder.monthOf());
+    }
 
-	@Override
-	public IFunctionLastArgument<T, ET> yearOf() {
-		return createFunctionLastArgument(getTokens().yearOf());
-	}
-	
-	@Override
-	public IFunctionLastArgument<T, ET> dayOfWeekOf() {
-		return createFunctionLastArgument(getTokens().dayOfWeekOf());
-	}
+    @Override
+    public IFunctionLastArgument<T, ET> yearOf() {
+        return createFunctionLastArgument(builder.yearOf());
+    }
 
-	@Override
-	public IFunctionLastArgument<T, ET> dateOf() {
-		return createFunctionLastArgument(getTokens().dateOf());
-	}
+    @Override
+    public IFunctionLastArgument<T, ET> dayOfWeekOf() {
+        return createFunctionLastArgument(builder.dayOfWeekOf());
+    }
 
-	@Override
-	public IFunctionLastArgument<T, ET> absOf() {
-		return createFunctionLastArgument(getTokens().absOf());
-	}
-	
-	private IDateAddIntervalFunctionArgument<T, ET> createDateAddIntervalFunctionArgument(final Tokens tokens) {
-		return new DateAddIntervalFunctionArgument<T, ET>(tokens) {
+    @Override
+    public IFunctionLastArgument<T, ET> dateOf() {
+        return createFunctionLastArgument(builder.dateOf());
+    }
 
-			@Override
-			protected T nextForDateAddIntervalFunctionArgument(Tokens tokens) {
-				return SingleOperand.this.nextForSingleOperand(tokens);
-			}
+    @Override
+    public IFunctionLastArgument<T, ET> absOf() {
+        return createFunctionLastArgument(builder.absOf());
+    }
 
-		};
-	}
+    private IDateAddIntervalFunctionArgument<T, ET> createDateAddIntervalFunctionArgument(final EqlSentenceBuilder builder) {
+        return new DateAddIntervalFunctionArgument<T, ET>(builder) {
 
-	private DateDiffIntervalFunction<T, ET> createDateDiffIntervalFunction(final Tokens tokens) {
-		return new DateDiffIntervalFunction<T, ET>(tokens) {
+            @Override
+            protected T nextForDateAddIntervalFunctionArgument(final EqlSentenceBuilder builder) {
+                return SingleOperand.this.nextForSingleOperand(builder);
+            }
 
-			@Override
-			protected T nextForDateDiffIntervalFunction(final Tokens tokens) {
-				return SingleOperand.this.nextForSingleOperand(tokens);
-			}
+        };
+    }
 
-		};
-	}
+    private DateDiffIntervalFunction<T, ET> createDateDiffIntervalFunction(final EqlSentenceBuilder builder) {
+        return new DateDiffIntervalFunction<T, ET>(builder) {
 
-	private FunctionWhere0<T, ET> createFunctionWhere0(final Tokens tokens) {
-		return new FunctionWhere0<T, ET>(tokens) {
+            @Override
+            protected T nextForDateDiffIntervalFunction(final EqlSentenceBuilder builder) {
+                return SingleOperand.this.nextForSingleOperand(builder);
+            }
 
-			@Override
-			protected T nextForFunctionWhere0(final Tokens tokens) {
-				return SingleOperand.this.nextForSingleOperand(tokens);
-			}
+        };
+    }
 
-		};
-	}
+    private FunctionWhere0<T, ET> createFunctionWhere0(final EqlSentenceBuilder builder) {
+        return new FunctionWhere0<T, ET>(builder) {
 
-	private IfNullFunctionArgument<T, ET> createIfNullFunctionArgument(final Tokens tokens) {
-		return new IfNullFunctionArgument<T, ET>(tokens) {
+            @Override
+            protected T nextForFunctionWhere0(final EqlSentenceBuilder builder) {
+                return SingleOperand.this.nextForSingleOperand(builder);
+            }
 
-			@Override
-			protected T nextForIfNullFunctionArgument(final Tokens tokens) {
-				return SingleOperand.this.nextForSingleOperand(tokens);
-			}
+        };
+    }
 
-		};
-	}
+    private IfNullFunctionArgument<T, ET> createIfNullFunctionArgument(final EqlSentenceBuilder builder) {
+        return new IfNullFunctionArgument<T, ET>(builder) {
 
-	private ConcatFunctionArgument<T, ET> createConcatFunctionArgument(final Tokens tokens) {
-		return new ConcatFunctionArgument<T, ET>(tokens) {
+            @Override
+            protected T nextForIfNullFunctionArgument(final EqlSentenceBuilder builder) {
+                return SingleOperand.this.nextForSingleOperand(builder);
+            }
 
-			@Override
-			protected T nextForConcatFunctionArgument(final Tokens tokens) {
-				return SingleOperand.this.nextForSingleOperand(tokens);
-			}
+        };
+    }
 
-		};
-	}
+    private ConcatFunctionArgument<T, ET> createConcatFunctionArgument(final EqlSentenceBuilder builder) {
+        return new ConcatFunctionArgument<T, ET>(builder) {
 
-	private RoundFunctionArgument<T, ET> createRoundFunctionArgument(final Tokens tokens) {
-		return new RoundFunctionArgument<T, ET>(tokens) {
+            @Override
+            protected T nextForConcatFunctionArgument(final EqlSentenceBuilder builder) {
+                return SingleOperand.this.nextForSingleOperand(builder);
+            }
 
-			@Override
-			protected T nextForRoundFunctionArgument(final Tokens tokens) {
-				return SingleOperand.this.nextForSingleOperand(tokens);
-			}
+        };
+    }
 
-		};
-	}
+    private RoundFunctionArgument<T, ET> createRoundFunctionArgument(final EqlSentenceBuilder builder) {
+        return new RoundFunctionArgument<T, ET>(builder) {
 
-	protected FunctionLastArgument<T, ET> createFunctionLastArgument(final Tokens tokens) {
-		return new FunctionLastArgument<T, ET>(tokens) {
+            @Override
+            protected T nextForRoundFunctionArgument(final EqlSentenceBuilder builder) {
+                return SingleOperand.this.nextForSingleOperand(builder);
+            }
 
-			@Override
-			protected T nextForFunctionLastArgument(final Tokens tokens) {
-				return SingleOperand.this.nextForSingleOperand(tokens);
-			}
-		};
-	}
+        };
+    }
+
+    protected FunctionLastArgument<T, ET> createFunctionLastArgument(final EqlSentenceBuilder builder) {
+        return new FunctionLastArgument<T, ET>(builder) {
+
+            @Override
+            protected T nextForFunctionLastArgument(final EqlSentenceBuilder builder) {
+                return SingleOperand.this.nextForSingleOperand(builder);
+            }
+        };
+    }
+
 }

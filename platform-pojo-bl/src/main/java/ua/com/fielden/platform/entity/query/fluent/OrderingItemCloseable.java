@@ -4,15 +4,16 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 
 final class OrderingItemCloseable //
-		extends OrderingItem //
-		implements IOrderingItemCloseable {
+        extends OrderingItem //
+        implements IOrderingItemCloseable {
 
-    public OrderingItemCloseable(final Tokens tokens) {
-        super(tokens);
+    public OrderingItemCloseable(final EqlSentenceBuilder builder) {
+        super(builder);
     }
-    
-	@Override
-	public OrderingModel model() {
-		return new OrderingModel(getTokens().getValues());
-	}
+
+    @Override
+    public OrderingModel model() {
+        return new OrderingModel(builder.model().getTokenSource());
+    }
+
 }

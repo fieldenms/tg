@@ -1,33 +1,21 @@
 package ua.com.fielden.platform.utils;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.unmodifiableList;
-import static java.util.Collections.unmodifiableSet;
-
-import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.types.tuples.T2;
 
 import javax.annotation.Nonnull;
+import java.lang.reflect.Constructor;
+import java.util.*;
+import java.util.function.Function;
+import java.util.function.IntFunction;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.*;
 
 /**
  * A convenience class to provide common collection related routines and algorithms.
@@ -62,6 +50,48 @@ public final class CollectionUtil {
     @SafeVarargs
     public static <T> List<T> unmodifiableListOf(final T ... elements) {
         return unmodifiableList(asList(elements));
+    }
+
+    /**
+     * An alternative of {@link List#copyOf(Collection)} that allows the given collection to contain nulls.
+     */
+    public static <T> List<T> listCopy(final Collection<? extends T> collection) {
+        return collection.isEmpty() ? List.of() : unmodifiableList(new ArrayList<>(collection));
+    }
+
+    /**
+     * Returns a new list builder initialised with given elements.
+     * @param xs  initial contents
+     */
+    @SafeVarargs
+    public static <T> CollectionBuilder<List<T>, T> listb(final T... xs) {
+        final List<T> list = new ArrayList<>(xs.length);
+        Collections.addAll(list, xs);
+        return new CollectionBuilder<>(list);
+    }
+
+    /**
+     * Returns a new set builder initialised with given elements.
+     * @param xs  initial contents
+     */
+    @SafeVarargs
+    public static <T> CollectionBuilder<Set<T>, T> setb(final T... xs) {
+        final Set<T> set = new HashSet<>(xs.length);
+        Collections.addAll(set, xs);
+        return new CollectionBuilder<>(set);
+    }
+
+    /**
+     * Returns a collection that results from concatenating given collections.
+     * The resulting collection is created by calling the supplied constructor.
+     */
+    @SafeVarargs
+    public static <T, C extends Collection<T>> C concat(final IntFunction<C> constructor, final Collection<? extends T>... collections) {
+        final C result = constructor.apply(Arrays.stream(collections).map(Collection::size).reduce(0, Integer::sum));
+        for (final var collection : collections) {
+            result.addAll(collection);
+        }
+        return result;
     }
 
     @SafeVarargs
@@ -130,6 +160,7 @@ public final class CollectionUtil {
 
         return Optional.of(Arrays.copyOfRange(array, 1, array.length));
     }
+
     /**
      * Converts collection to a string separating the elements with a provided separator.
      * <p>
@@ -139,6 +170,24 @@ public final class CollectionUtil {
         final StringBuilder buffer = new StringBuilder();
         for (final Iterator<T> iter = collection.iterator(); iter.hasNext();) {
             buffer.append(iter.next() + (iter.hasNext() ? separator : ""));
+        }
+        return buffer.toString();
+    }
+
+    /**
+     * Converts collection to a string separating the elements with a provided separator.
+     * <p>
+     * No precaution is taken if toString representation of an element already contains a symbol equal to a separator.
+     *
+     * @param mapper  maps each collection element to its string representation
+     */
+    public static <T> String toString(final Collection<T> collection, final Function<? super T, String> mapper, final String separator) {
+        final StringBuilder buffer = new StringBuilder();
+        for (final Iterator<T> iter = collection.iterator(); iter.hasNext();) {
+            buffer.append(mapper.apply(iter.next()));
+            if (iter.hasNext()) {
+                buffer.append(separator);
+            }
         }
         return buffer.toString();
     }
@@ -209,6 +258,32 @@ public final class CollectionUtil {
         }
 
         return Optional.empty();
+    }
+
+    public static final class CollectionBuilder<C extends Collection<E>, E> {
+        private final C collection;
+
+        private CollectionBuilder(final C collection) {
+            this.collection = collection;
+        }
+
+        private CollectionBuilder(final Supplier<? extends C> supplier) {
+            this.collection = supplier.get();
+        }
+
+        public CollectionBuilder<C, E> add(final E e) {
+            collection.add(e);
+            return this;
+        }
+
+        public CollectionBuilder<C, E> addAll(final Collection<? extends E> es) {
+            collection.addAll(es);
+            return this;
+        }
+
+        public C $() {
+            return collection;
+        }
     }
 
 }

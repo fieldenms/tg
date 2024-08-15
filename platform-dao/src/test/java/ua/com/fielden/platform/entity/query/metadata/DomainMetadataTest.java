@@ -1,5 +1,11 @@
 package ua.com.fielden.platform.entity.query.metadata;
 
+import org.junit.Test;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.eql.meta.BaseEntQueryTCase1;
+import ua.com.fielden.platform.eql.meta.EntityTypeInfo;
+import ua.com.fielden.platform.sample.domain.*;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
@@ -7,18 +13,6 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.EXPRESSION;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.SYNTHETIC;
 import static ua.com.fielden.platform.eql.meta.EntityTypeInfo.getEntityTypeInfoPair;
-
-import org.junit.Test;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.meta.BaseEntQueryTCase1;
-import ua.com.fielden.platform.eql.meta.EntityTypeInfo;
-import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
-import ua.com.fielden.platform.sample.domain.TgBogie;
-import ua.com.fielden.platform.sample.domain.TgBogieLocation;
-import ua.com.fielden.platform.sample.domain.TgFuelUsage;
-import ua.com.fielden.platform.sample.domain.TgVehicle;
-import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
 
 public class DomainMetadataTest extends BaseEntQueryTCase1 {
 
@@ -43,13 +37,10 @@ public class DomainMetadataTest extends BaseEntQueryTCase1 {
         final PersistedEntityMetadata<TgVehicle> entityMetadata = pem(VEHICLE);
         final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("lastFuelUsage");
 
-        final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("lastFuelUsage", TgFuelUsage.class, true, eti(VEHICLE).category). //
-        hibType(H_LONG). //
-        category(EXPRESSION). //
-        expression(expr().model(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("id").and().notExists(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("vehicle").and().prop("date").gt().extProp("date").model()).model()).model()). //
-        build();
+        final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("lastFuelUsage", TgFuelUsage.class, true, eti(VEHICLE).category).
+                                                                                  hibType(H_LONG).category(EXPRESSION).expression(TgVehicle.lastFuelUsage_).build();
 
-        assertEquals("Should be equal", expPropertyMetadata, actPropertyMetadata);
+        assertEquals(expPropertyMetadata, actPropertyMetadata);
     }
 
     

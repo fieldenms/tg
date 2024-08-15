@@ -5,26 +5,27 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionLastArgument;
 
 class Completed<ET extends AbstractEntity<?>> //
-		extends CompletedAndYielded<ET> //
-		implements ICompleted<ET> {
+        extends CompletedAndYielded<ET> //
+        implements ICompleted<ET> {
 
-    public Completed(final Tokens tokens) {
-        super(tokens);
+    public Completed(final EqlSentenceBuilder builder) {
+        super(builder);
     }
-    
-	@Override
-	public IFunctionLastArgument<ICompleted<ET>, ET> groupBy() {
-		return createFunctionLastArgument(getTokens().groupBy());
-	}
 
-	private FunctionLastArgument<ICompleted<ET>, ET> createFunctionLastArgument(final Tokens tokens) {
-		return new FunctionLastArgument<ICompleted<ET>, ET> (tokens) {
+    @Override
+    public IFunctionLastArgument<ICompleted<ET>, ET> groupBy() {
+        return createFunctionLastArgument(builder.groupBy());
+    }
 
-			@Override
-			protected ICompleted<ET> nextForFunctionLastArgument(final Tokens tokens) {
-				return new Completed<ET>(tokens);
-			}
+    private FunctionLastArgument<ICompleted<ET>, ET> createFunctionLastArgument(final EqlSentenceBuilder builder) {
+        return new FunctionLastArgument<ICompleted<ET>, ET>(builder) {
 
-		};
-	}
+            @Override
+            protected ICompleted<ET> nextForFunctionLastArgument(final EqlSentenceBuilder builder) {
+                return new Completed<ET>(builder);
+            }
+
+        };
+    }
+
 }

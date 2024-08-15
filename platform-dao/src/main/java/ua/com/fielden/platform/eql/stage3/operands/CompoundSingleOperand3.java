@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.eql.stage3.operands;
 
-import java.util.Objects;
-
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator;
+
+import java.util.Objects;
 
 public class CompoundSingleOperand3 {
     public final ISingleOperand3 operand;
@@ -15,7 +15,7 @@ public class CompoundSingleOperand3 {
     }
 
     public String sql(final DbVersion dbVersion) {
-        return operator.getValue() + operand.sql(dbVersion);
+        return operator.value + operand.sql(dbVersion);
     }
     
     @Override

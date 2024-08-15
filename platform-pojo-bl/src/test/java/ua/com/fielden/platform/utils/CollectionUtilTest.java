@@ -1,17 +1,15 @@
 package ua.com.fielden.platform.utils;
 
-import static org.junit.Assert.*;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.CollectionUtil.*;
+import org.junit.Test;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import org.junit.Test;
-
-import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.*;
 
 public class CollectionUtilTest {
 
@@ -29,7 +27,7 @@ public class CollectionUtilTest {
 
     @Test
     public void listOf_null_is_the_same_as_listOf_with_no_arguments() {
-        assertEquals(0, listOf(null).size());
+        assertEquals(0, listOf((Object[]) null).size());
     }
 
     @Test
