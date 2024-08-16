@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.sundries;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.Limit;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
@@ -10,10 +12,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptySet;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static ua.com.fielden.platform.eql.stage2.sundries.OrderBys2.orderBys2;
 
 /**
@@ -22,7 +22,7 @@ import static ua.com.fielden.platform.eql.stage2.sundries.OrderBys2.orderBys2;
  */
 public class OrderBys1 {
     public static final long NO_OFFSET = 0;
-    public static final OrderBys1 EMPTY_ORDER_BYS = new OrderBys1(emptyList(), Limit.all(), NO_OFFSET);
+    public static final OrderBys1 EMPTY_ORDER_BYS = new OrderBys1(ImmutableList.of(), Limit.all(), NO_OFFSET);
 
     private final List<OrderBy1> models;
     private final Limit limit;
@@ -40,7 +40,7 @@ public class OrderBys1 {
     }
 
     private OrderBys1(final List<OrderBy1> models, final Limit limit, final long offset) {
-        this.models = models;
+        this.models = ImmutableList.copyOf(models);
         this.limit = limit;
         this.offset = offset;
     }
@@ -49,12 +49,17 @@ public class OrderBys1 {
         if (this == EMPTY_ORDER_BYS) {
             return OrderBys2.EMPTY_ORDER_BYS;
         } else {
-            return orderBys2(models.stream().map(el -> el.transform(context)).collect(toList()), limit, offset);
+            return orderBys2(models.stream().map(el -> el.transform(context)).collect(toImmutableList()), limit, offset);
         }
     }
 
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
-        return models.isEmpty() ? emptySet() : models.stream().filter(el -> el.operand != null).map(el -> el.operand.collectEntityTypes()).flatMap(Set::stream).collect(toSet());
+        return models.isEmpty()
+                ? ImmutableSet.of()
+                : models.stream()
+                        .filter(el -> el.operand != null)
+                        .map(el -> el.operand.collectEntityTypes()).flatMap(Set::stream)
+                        .collect(toImmutableSet());
     }
 
     public Stream<OrderBy1> models() {

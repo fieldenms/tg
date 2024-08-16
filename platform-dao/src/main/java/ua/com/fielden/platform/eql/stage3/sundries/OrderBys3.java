@@ -1,12 +1,12 @@
 package ua.com.fielden.platform.eql.stage3.sundries;
 
+import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.Limit;
 
 import java.util.List;
 import java.util.Objects;
 
-import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.eql.stage1.sundries.OrderBys1.NO_OFFSET;
 
@@ -21,13 +21,13 @@ public class OrderBys3 {
     }
 
     public OrderBys3(final List<OrderBy3> models, final Limit limit, final long offset) {
-        this.models = models;
+        this.models = ImmutableList.copyOf(models);
         this.limit = limit;
         this.offset = offset;
     }
 
     public List<OrderBy3> getModels() {
-        return unmodifiableList(models);
+        return models;
     }
 
     public long offset() {
