@@ -34,26 +34,25 @@ public class OrderByTest extends AbstractDaoTestCase {
 
     @Test
     public void orderBy_can_be_used_in_a_top_level_query() {
-        final var keys = rangeClosed(1, 3).mapToObj(i -> TEST_DATA_KEY_PREFIX + i).toList();
-        keys.stream()
+        final var entities = rangeClosed(1, 3)
+                .mapToObj(i -> TEST_DATA_KEY_PREFIX + i)
                 .map(key -> new_(TgPersonName.class, key))
-                .forEach(this::save);
+                .map(this::save)
+                .toList();
 
         withQem(select(TgPersonName.class).where().condition(testDataCond),
                 $ -> $.prop("key").asc().model(),
                 $ -> $.prop("key").asc().model(),
-                qem -> {
-                    final var entities = co(TgPersonName.class).getAllEntities(qem);
-                    assertEquals(keys, entities.stream().map(TgPersonName::getKey).toList());
-                });
+                qem -> assertEquals(entities, co(TgPersonName.class).getAllEntities(qem)));
     }
 
     @Test
     public void orderBy_can_be_used_in_a_subquery() {
-        final var keys = rangeClosed(1, 3).mapToObj(i -> TEST_DATA_KEY_PREFIX + i).toList();
-        keys.stream()
+        final var entities = rangeClosed(1, 3)
+                .mapToObj(i -> TEST_DATA_KEY_PREFIX + i)
                 .map(key -> new_(TgPersonName.class, key))
-                .forEach(this::save);
+                .map(this::save)
+                .toList();
 
         final var qem = from(
                 select(select(TgPersonName.class).where().condition(testDataCond)
@@ -61,8 +60,7 @@ public class OrderByTest extends AbstractDaoTestCase {
                                .model())
                         .model())
                 .model();
-        final var entities = co(TgPersonName.class).getAllEntities(qem);
-        assertEquals(keys, entities.stream().map(TgPersonName::getKey).toList());
+        assertEquals(entities, co(TgPersonName.class).getAllEntities(qem));
 
     }
 
@@ -84,18 +82,16 @@ public class OrderByTest extends AbstractDaoTestCase {
         final var total = 3;
         final var limit = 2;
         assertTrue(limit < total);
-        final var keys = rangeClosed(1, total).mapToObj(i -> TEST_DATA_KEY_PREFIX + i).toList();
-        keys.stream()
+        final var entities = rangeClosed(1, total)
+                .mapToObj(i -> TEST_DATA_KEY_PREFIX + i)
                 .map(key -> new_(TgPersonName.class, key))
-                .forEach(this::save);
+                .map(this::save)
+                .toList();
 
         withQem(select(TgPersonName.class).where().condition(testDataCond),
                 $ -> $.prop("key").desc().limit(limit).model(),
                 $ -> $.prop("key").desc().limit(limit).model(),
-                qem -> {
-                    final var entities = co(TgPersonName.class).getAllEntities(qem);
-                    assertEquals(keys.reversed().subList(0, limit), entities.stream().map(TgPersonName::getKey).toList());
-                });
+                qem -> assertEquals(entities.reversed().subList(0, limit), co(TgPersonName.class).getAllEntities(qem)));
     }
 
     @Test
@@ -103,18 +99,16 @@ public class OrderByTest extends AbstractDaoTestCase {
         final var total = 1;
         final var limit = 2;
         assertTrue(limit > total);
-        final var keys = rangeClosed(1, total).mapToObj(i -> TEST_DATA_KEY_PREFIX + i).toList();
-        keys.stream()
+        final var entities = rangeClosed(1, total)
+                .mapToObj(i -> TEST_DATA_KEY_PREFIX + i)
                 .map(key -> new_(TgPersonName.class, key))
-                .forEach(this::save);
+                .map(this::save)
+                .toList();
 
         withQem(select(TgPersonName.class).where().condition(testDataCond),
                 $ -> $.prop("key").asc().limit(limit).model(),
                 $ -> $.prop("key").asc().limit(limit).model(),
-                qem -> {
-                    final var entities = co(TgPersonName.class).getAllEntities(qem);
-                    assertEquals(keys.subList(0, total), entities.stream().map(TgPersonName::getKey).toList());
-                });
+                qem -> assertEquals(entities.subList(0, total), co(TgPersonName.class).getAllEntities(qem)));
     }
 
     @Test
@@ -122,62 +116,53 @@ public class OrderByTest extends AbstractDaoTestCase {
         final var total = 2;
         final var limit = 2;
         assertTrue(limit == total);
-        final var keys = rangeClosed(1, total).mapToObj(i -> TEST_DATA_KEY_PREFIX + i).toList();
-        keys.stream()
+        final var entities = rangeClosed(1, total)
+                .mapToObj(i -> TEST_DATA_KEY_PREFIX + i)
                 .map(key -> new_(TgPersonName.class, key))
-                .forEach(this::save);
+                .map(this::save)
+                .toList();
 
         withQem(select(TgPersonName.class).where().condition(testDataCond),
                 $ -> $.prop("key").asc().limit(limit).model(),
                 $ -> $.prop("key").asc().limit(limit).model(),
-                qem -> {
-                    final var entities = co(TgPersonName.class).getAllEntities(qem);
-                    assertEquals(keys, entities.stream().map(TgPersonName::getKey).toList());
-                });
+                qem -> assertEquals(entities, co(TgPersonName.class).getAllEntities(qem)));
     }
 
     @Test
     public void query_with_limit_all_returns_all_rows() {
-        final var keys = rangeClosed(1, 3).mapToObj(i -> TEST_DATA_KEY_PREFIX + i).toList();
-        keys.stream()
+        final var entities = rangeClosed(1, 3)
+                .mapToObj(i -> TEST_DATA_KEY_PREFIX + i)
                 .map(key -> new_(TgPersonName.class, key))
-                .forEach(this::save);
+                .map(this::save)
+                .toList();
 
         withQem(select(TgPersonName.class).where().condition(testDataCond),
                 $ -> $.prop("key").desc().limit(Limit.all()).model(),
                 $ -> $.prop("key").desc().limit(Limit.all()).model(),
-                qem -> {
-                    final var entities = co(TgPersonName.class).getAllEntities(qem);
-                    assertEquals(keys.reversed(), entities.stream().map(TgPersonName::getKey).toList());
-                });
+                qem -> assertEquals(entities.reversed(), co(TgPersonName.class).getAllEntities(qem)));
     }
 
     @Test
     public void query_with_offset_skips_specified_number_of_rows_from_start() {
         final var offset = 1;
         final var total = 3;
-        final var keys = rangeClosed(1, total).mapToObj(i -> TEST_DATA_KEY_PREFIX + i).toList();
-        keys.stream()
+        final var entities = rangeClosed(1, total)
+                .mapToObj(i -> TEST_DATA_KEY_PREFIX + i)
                 .map(key -> new_(TgPersonName.class, key))
-                .forEach(this::save);
+                .map(this::save)
+                .toList();
 
         // ascending order
         withQem(select(TgPersonName.class).where().condition(testDataCond),
                 $ -> $.prop("key").asc().offset(offset).model(),
                 $ -> $.prop("key").asc().offset(offset).model(),
-                qem -> {
-                    final var entities = co(TgPersonName.class).getAllEntities(qem);
-                    assertEquals(keys.subList(1, total), entities.stream().map(TgPersonName::getKey).toList());
-                });
+                qem -> assertEquals(entities.subList(1, total), co(TgPersonName.class).getAllEntities(qem)));
 
         // descending order
         withQem(select(TgPersonName.class).where().condition(testDataCond),
                 $ -> $.prop("key").desc().offset(offset).model(),
                 $ -> $.prop("key").desc().offset(offset).model(),
-                qem -> {
-                    final var entities = co(TgPersonName.class).getAllEntities(qem);
-                    assertEquals(keys.reversed().subList(1, total), entities.stream().map(TgPersonName::getKey).toList());
-                });
+                qem -> assertEquals(entities.reversed().subList(1, total), co(TgPersonName.class).getAllEntities(qem)));
    }
 
     @Test
@@ -185,18 +170,16 @@ public class OrderByTest extends AbstractDaoTestCase {
         final var offset = 0;
         final var total = 3;
         assertTrue(offset == 0);
-        final var keys = rangeClosed(1, total).mapToObj(i -> TEST_DATA_KEY_PREFIX + i).toList();
-        keys.stream()
+        final var entities = rangeClosed(1, total)
+                .mapToObj(i -> TEST_DATA_KEY_PREFIX + i)
                 .map(key -> new_(TgPersonName.class, key))
-                .forEach(this::save);
+                .map(this::save)
+                .toList();
 
         withQem(select(TgPersonName.class).where().condition(testDataCond),
                 $ -> $.prop("key").asc().offset(offset).model(),
                 $ -> $.prop("key").asc().offset(offset).model(),
-                qem -> {
-                    final var entities = co(TgPersonName.class).getAllEntities(qem);
-                    assertEquals(keys, entities.stream().map(TgPersonName::getKey).toList());
-                });
+                qem -> assertEquals(entities, co(TgPersonName.class).getAllEntities(qem)));
     }
 
     @Test
@@ -204,18 +187,16 @@ public class OrderByTest extends AbstractDaoTestCase {
         final var offset = 2;
         final var total = 1;
         assertTrue(offset > total);
-        final var keys = rangeClosed(1, total).mapToObj(i -> TEST_DATA_KEY_PREFIX + i).toList();
-        keys.stream()
+        final var entities = rangeClosed(1, total)
+                .mapToObj(i -> TEST_DATA_KEY_PREFIX + i)
                 .map(key -> new_(TgPersonName.class, key))
-                .forEach(this::save);
+                .map(this::save)
+                .toList();
 
         withQem(select(TgPersonName.class).where().condition(testDataCond),
                 $ -> $.prop("key").desc().offset(offset).model(),
                 $ -> $.prop("key").desc().offset(offset).model(),
-                qem -> {
-                    final var entities = co(TgPersonName.class).getAllEntities(qem);
-                    assertEquals(List.of(), entities.stream().map(TgPersonName::getKey).toList());
-                });
+                qem -> assertEquals(List.of(), co(TgPersonName.class).getAllEntities(qem)));
     }
 
     @Test
@@ -223,29 +204,25 @@ public class OrderByTest extends AbstractDaoTestCase {
         final var limit = 3;
         final var offset = 1;
         final var total = 5;
-        final var keys = rangeClosed(1, total).mapToObj(i -> TEST_DATA_KEY_PREFIX + i).toList();
-        keys.stream()
+        final var entities = rangeClosed(1, total)
+                .mapToObj(i -> TEST_DATA_KEY_PREFIX + i)
                 .map(key -> new_(TgPersonName.class, key))
-                .forEach(this::save);
+                .map(this::save)
+                .toList();
 
         // ascending order
         withQem(select(TgPersonName.class).where().condition(testDataCond),
                 $ -> $.prop("key").asc().limit(limit).offset(offset).model(),
                 $ -> $.prop("key").asc().limit(limit).offset(offset).model(),
-                qem -> {
-                    final var entities = co(TgPersonName.class).getAllEntities(qem);
-                    assertEquals(keys.subList(offset, offset + limit),
-                                 entities.stream().map(TgPersonName::getKey).toList());
-                });
+                qem -> assertEquals(entities.subList(offset, offset + limit),
+                                    co(TgPersonName.class).getAllEntities(qem)));
+
         // descending order
         withQem(select(TgPersonName.class).where().condition(testDataCond),
                 $ -> $.prop("key").desc().limit(limit).offset(offset).model(),
                 $ -> $.prop("key").desc().limit(limit).offset(offset).model(),
-                qem -> {
-                    final var entities = co(TgPersonName.class).getAllEntities(qem);
-                    assertEquals(keys.reversed().subList(offset, offset + limit),
-                                 entities.stream().map(TgPersonName::getKey).toList());
-                });
+                qem -> assertEquals(entities.reversed().subList(offset, offset + limit),
+                                    co(TgPersonName.class).getAllEntities(qem)));
     }
 
     /**
