@@ -49,6 +49,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
 import static ua.com.fielden.platform.eql.stage2.conditions.Conditions2.EMPTY_CONDITIONS;
 import static ua.com.fielden.platform.eql.stage2.sundries.GroupBys2.EMPTY_GROUP_BYS;
 import static ua.com.fielden.platform.eql.stage2.sundries.OrderBys2.EMPTY_ORDER_BYS;
+import static ua.com.fielden.platform.eql.stage2.sundries.OrderBys2.orderBys2;
 import static ua.com.fielden.platform.eql.stage2.sundries.Yields2.EMPTY_YIELDS;
 import static ua.com.fielden.platform.eql.stage2.sundries.Yields2.nullYields;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
@@ -139,11 +140,7 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static OrderBys2 orderBys(final OrderBy2... orderBys) {
-        if (orderBys.length > 0) {
-            return new OrderBys2(asList(orderBys));
-        } else {
-            return EMPTY_ORDER_BYS;
-        }
+        return orderBys2(asList(orderBys));
     }
 
     protected static Yield2 yieldCountAll(final String alias) {

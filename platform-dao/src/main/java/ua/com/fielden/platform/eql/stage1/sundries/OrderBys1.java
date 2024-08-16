@@ -1,33 +1,55 @@
 package ua.com.fielden.platform.eql.stage1.sundries;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptySet;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.fluent.Limit;
+import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
+import ua.com.fielden.platform.eql.stage2.sundries.OrderBys2;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
-import ua.com.fielden.platform.eql.stage2.sundries.OrderBys2;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+import static ua.com.fielden.platform.eql.stage2.sundries.OrderBys2.orderBys2;
 
+/**
+ * To identify empty order-bys with no limit and no offset, {@link #EMPTY_ORDER_BYS} can be compared with {@code ==}
+ * (due to only static methods available for creating instances).
+ */
 public class OrderBys1 {
-    public static final OrderBys1 EMPTY_ORDER_BYS = new OrderBys1(emptyList());
-    
-    private final List<OrderBy1> models;
+    public static final long NO_OFFSET = 0;
+    public static final OrderBys1 EMPTY_ORDER_BYS = new OrderBys1(emptyList(), Limit.all(), NO_OFFSET);
 
-    public OrderBys1(final List<OrderBy1> models) {
+    private final List<OrderBy1> models;
+    private final Limit limit;
+    private final long offset;
+
+    public static OrderBys1 orderBys1(final List<OrderBy1> models, final Limit limit, final long offset) {
+        if (models.isEmpty() && limit instanceof Limit.All && offset == NO_OFFSET) {
+            return EMPTY_ORDER_BYS;
+        }
+        return new OrderBys1(models, limit, offset);
+    }
+
+    public static OrderBys1 orderBys1(final List<OrderBy1> models) {
+        return models.isEmpty() ? EMPTY_ORDER_BYS : new OrderBys1(models, Limit.all(), NO_OFFSET);
+    }
+
+    private OrderBys1(final List<OrderBy1> models, final Limit limit, final long offset) {
         this.models = models;
+        this.limit = limit;
+        this.offset = offset;
     }
 
     public OrderBys2 transform(final TransformationContextFromStage1To2 context) {
-        if (models.isEmpty()) {
+        if (this == EMPTY_ORDER_BYS) {
             return OrderBys2.EMPTY_ORDER_BYS;
         } else {
-            return new OrderBys2(models.stream().map(el -> el.transform(context)).collect(toList()));
+            return orderBys2(models.stream().map(el -> el.transform(context)).collect(toList()), limit, offset);
         }
     }
 
@@ -39,30 +61,29 @@ public class OrderBys1 {
         return models.stream();
     }
 
+    public Limit limit() {
+        return limit;
+    }
+
+    public long offset() {
+        return offset;
+    }
+
     public boolean isEmpty() {
         return models.isEmpty();
     }
     
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + models.hashCode();
-        return result;
+        return Objects.hash(models, limit, offset);
     }
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof OrderBys1)) {
-            return false;
-        }
-
-        final OrderBys1 other = (OrderBys1) obj;
-
-        return Objects.equals(models, other.models);
+        return this == obj || obj instanceof OrderBys1 that
+                              && offset == that.offset
+                              && limit.equals(that.limit)
+                              && models.equals(that.models);
     }
+
 }
