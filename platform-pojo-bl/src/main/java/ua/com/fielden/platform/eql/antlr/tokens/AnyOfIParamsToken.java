@@ -13,7 +13,7 @@ public final class AnyOfIParamsToken extends AbstractParameterisedEqlToken {
 
     public final List<String> params;
 
-    public AnyOfIParamsToken(final Collection<? extends String> params) {
+    public AnyOfIParamsToken(final Collection<String> params) {
         super(ANYOFIPARAMS, "anyOfIParams");
         this.params = ImmutableList.copyOf(params);
     }

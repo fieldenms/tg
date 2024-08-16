@@ -14,7 +14,7 @@ public final class IParamsToken extends AbstractParameterisedEqlToken {
 
     public final List<String> params;
 
-    public IParamsToken(final Collection<? extends String> params) {
+    public IParamsToken(final Collection<String> params) {
         super(IPARAMS, "iParams");
         requireNotNullArgument(params, "params");
         this.params = ImmutableList.copyOf(params);
