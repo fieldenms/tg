@@ -7,7 +7,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 
-abstract class SingleOperandFunction1<T extends ISingleOperand2<?>> extends AbstractFunction1<T> {
+public abstract class SingleOperandFunction1<T extends ISingleOperand2<?>> extends AbstractFunction1<T> {
 
     public final ISingleOperand1<? extends ISingleOperand2<?>> operand;
 

@@ -13,7 +13,10 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determ
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.firstAndRest;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penultAndLast;
+import static ua.com.fielden.platform.utils.EntityUtils.isCriteriaEntityType;
 import static ua.com.fielden.platform.utils.Pair.pair;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalPropertyName;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalType;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -36,7 +39,9 @@ import ua.com.fielden.platform.entity.annotation.titles.Subtitles;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 
 /**
  * This is a helper class to provide methods related to property/entity titles/descs determination.
@@ -121,20 +126,10 @@ public class TitlesDescsGetter {
      * @param entityType -- a type that holds the first property in {@code propPath}
      * @return
      */
-    public static Pair<String, String> getTitleAndDesc(final String propPath, final Class<?> entityType) {
-            return processSubtitles(propPath, entityType).orElseGet(() -> processTitles(propPath, entityType));
+    public static Pair<String, String> getTitleAndDesc(final CharSequence propPath, final Class<?> entityType) {
+            return processSubtitles(propPath.toString(), entityType).orElseGet(() -> processTitles(propPath.toString(), entityType));
     }
 
-    /**
-     * The same as {@link #getTitleAndDesc(String, Class)}, but with {@link IConvertableToPath} {@code prop} argument.
-     *
-     * @param prop
-     * @param entityType
-     * @return
-     */
-    public static Pair<String, String> getTitleAndDesc(final IConvertableToPath prop, final Class<?> entityType) {
-        return getTitleAndDesc(prop.toPath(), entityType);
-    }
     /**
      * Determines property titles and desc without analysing {@link Subtitles}. Effectively this represents the logic before subtitles were introduced.
      * This method should not be used directly and therefore it is private.
@@ -257,6 +252,9 @@ public class TitlesDescsGetter {
     }
 
     public static String processReqErrorMsg(final String propName, final Class<? extends AbstractEntity<?>> entityType) {
+        if (isCriteriaEntityType(entityType)) {
+            return processReqErrorMsg(getOriginalPropertyName(entityType, propName), getOriginalType(entityType));
+        }
         String errorMsg = "";
         if (AbstractEntity.KEY.equals(propName)) {
             if (AnnotationReflector.isAnnotationPresentForClass(KeyTitle.class, entityType)) {

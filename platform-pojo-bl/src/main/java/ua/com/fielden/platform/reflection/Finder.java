@@ -1,54 +1,8 @@
 package ua.com.fielden.platform.reflection;
 
-import static java.lang.String.format;
-import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toList;
-import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.AbstractUnionEntity.commonProperties;
-import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
-import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_LINK_PROPERTY;
-import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.pd;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
-import static ua.com.fielden.platform.reflection.Reflector.MAXIMUM_CACHE_SIZE;
-import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
-import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
-import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.SortedSet;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.concurrent.ExecutionException;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
-
-import org.apache.commons.lang3.StringUtils;
-
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-
+import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
@@ -64,6 +18,29 @@ import ua.com.fielden.platform.types.either.Right;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+
+import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toList;
+import static ua.com.fielden.platform.entity.AbstractEntity.*;
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.commonProperties;
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
+import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_LINK_PROPERTY;
+import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.pd;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+import static ua.com.fielden.platform.reflection.Reflector.MAXIMUM_CACHE_SIZE;
+import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /**
  * This is a helper class to provide :
@@ -367,7 +344,7 @@ public class Finder {
 
         try {
             return new ArrayList<>(ENTITY_KEY_MEMBERS.get(type, () -> Collections.unmodifiableList(loadKeyMembers(type))));
-        } catch (final ExecutionException ex) {
+        } catch (final Exception ex) {
             throw new ReflectionException("Could not get key members for type [%s]".formatted(type), ex);
         }
     }
@@ -475,7 +452,7 @@ public class Finder {
      *            -- dot-notation field/method definition (e.g. "prop1.prop2", "prop1.method2()", "method1().prop2", "method1().method2()")
      * @return
      */
-    public static Field findFieldByName(final Class<?> type, final String dotNotationExp) {
+    public static Field findFieldByName(final Class<?> type, final CharSequence dotNotationExp) {
         return findFieldByNameWithOwningType(type, dotNotationExp)._2;
     }
 
@@ -487,10 +464,10 @@ public class Finder {
      * @param dotNotationExpr
      * @return
      */
-    public static T2<Class<?>, Field> findFieldByNameWithOwningType(final Class<?> type, final String dotNotationExpr) {
+    public static T2<Class<?>, Field> findFieldByNameWithOwningType(final Class<?> type, final CharSequence dotNotationExpr) {
         // check if passed "dotNotationExpr" is correct:
         PropertyTypeDeterminator.determinePropertyType(type, dotNotationExpr);
-        if (dotNotationExpr.endsWith("()")) {
+        if (dotNotationExpr.toString().endsWith("()")) {
             throw new MethodFoundException("Illegal situation : a method was found from the dot-notation expression == [" + dotNotationExpr + "]");
         }
         final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(type, dotNotationExpr);

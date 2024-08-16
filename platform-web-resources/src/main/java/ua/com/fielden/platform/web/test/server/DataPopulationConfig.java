@@ -26,9 +26,6 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
     private final Injector injector;
     private final TgTestApplicationServerModule module;
 
-    /**
-     * Default constructor is required for dynamic instantiation by {@code DbDrivenTestCase}.
-     */
     public DataPopulationConfig(final Properties props) {
         // instantiate all the factories and Hibernate utility
         try {

@@ -1,33 +1,32 @@
 package ua.com.fielden.platform.companion;
 
-import static java.lang.String.format;
-import static org.hibernate.LockOptions.UPGRADE;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.collectActivatableNotDirtyProperties;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-
+import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.exception.ConstraintViolationException;
-
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleteByIdsOperation;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleteByQueryModelOperation;
 import ua.com.fielden.platform.entity.query.QueryExecutionContext;
+import ua.com.fielden.platform.dao.exceptions.EntityDeletionException;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
+
+import javax.persistence.PersistenceException;
+import java.util.*;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static org.hibernate.LockOptions.UPGRADE;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.collectActivatableNotDirtyProperties;
 
 /**
  * A set of various delete operations that are used by entity companions. 
@@ -39,7 +38,9 @@ import ua.com.fielden.platform.types.tuples.T3;
  */
 public final class DeleteOperations<T extends AbstractEntity<?>> {
 
-    private static final String DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES = "Deletion was unsuccessful due to existing dependencies.";
+    private static final Logger LOGGER = getLogger(DeleteOperations.class);
+    public static final String ERR_DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES = "Deletion was unsuccessful due to existing dependencies.";
+    public static final String ERR_DELETION_WAS_UNSUCCESSFUL_DUE_TO_OTHER_REASONS = "Deletion was unsuccessful due to: %s";
 
     private final Supplier<Session> session;
     private final Class<T> entityType;
@@ -61,7 +62,7 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
     }
     
     /**
-     * A convenient default implementation for entity deletion, which should be used by overriding method {@link #delete(Long)}.
+     * A convenient default implementation for entity deletion, which should be used by overriding method {@link ua.com.fielden.platform.dao.CommonEntityDao#delete(AbstractEntity)}}.
      *
      * @param entity
      */
@@ -92,8 +93,12 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
     private int deleteById(final long id) {
         try {
             return session.get().createQuery(format("delete %s where id = %s", entityType.getName(), id)).executeUpdate();
-        } catch (final ConstraintViolationException e) {
-            throw new EntityCompanionException(DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES, e);
+        } catch (final PersistenceException ex) {
+            final var msg = ex.getCause() instanceof ConstraintViolationException
+                    ? ERR_DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES
+                    : ERR_DELETION_WAS_UNSUCCESSFUL_DUE_TO_OTHER_REASONS.formatted(ex.getMessage());
+            LOGGER.error(msg, ex);
+            throw new EntityDeletionException(msg, ex.getCause());
         }
     }
     
@@ -144,7 +149,8 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
     /**
      * A convenient default implementation for deletion of entities specified by provided query model.
      *
-     * @param entity
+     * @param model
+     * @param paramValues
      */
     public int defaultDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
         if (model == null) {
@@ -168,7 +174,8 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
     /**
      * A convenient default implementation for batch deletion of entities specified by provided query model.
      *
-     * @param entity
+     * @param model
+     * @param paramValues
      */
     public int defaultBatchDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
         if (model == null) {
@@ -177,10 +184,8 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
 
         if (ActivatableAbstractEntity.class.isAssignableFrom(entityType)) {
             return defaultDelete(model, paramValues);
-        } else try {
+        } else {
             return new EntityBatchDeleteByQueryModelOperation(qeCtx.get()).deleteEntities(model, paramValues);
-        } catch (final ConstraintViolationException e) {
-            throw new EntityCompanionException(DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES, e);
         }
     }
 
@@ -220,10 +225,8 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
         if (ActivatableAbstractEntity.class.isAssignableFrom(entityType)) {
             final EntityResultQueryModel<T> model = select(entityType).where().prop(propName).in().values(entitiesIds.toArray()).model();
             return defaultDelete(model);
-        } else try {
+        } else {
             return batchDeleteByIdsOp.get().deleteEntities(propName, entitiesIds);
-        } catch (final ConstraintViolationException e) {
-            throw new EntityCompanionException(DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES, e);
         }
     }
     

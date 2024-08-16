@@ -55,7 +55,7 @@ public class AnalysisResultClass extends AbstractEntity<String> {
         try {
             final Class<?> generatedClass = startModification(AnalysisResultClass.class).addProperties(newProperties.toArray(new NewProperty[0])).endModification();
             return new AnalysisResultClassBundle<>(null, (Class<AbstractEntity<?>>) generatedClass, null);
-        } catch (final ClassNotFoundException e) {
+        } catch (final Exception e) {
             throw new IllegalStateException(e);
         }
     }

@@ -2,13 +2,14 @@ package ua.com.fielden.platform.web.centre.api.impl;
 
 import static java.lang.String.format;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 
 import org.apache.commons.lang3.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -90,21 +91,21 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     }
 
     @Override
-    public ISelectionCritKindSelector<T> addCrit(final String propName) {
+    public ISelectionCritKindSelector<T> addCrit(final CharSequence propName) {
         if (StringUtils.isEmpty(propName)) {
             throw new EntityCentreConfigurationException("Property name should not be empty.");
         }
 
-        if (!"this".equals(propName) && !EntityUtils.isProperty(this.builder.getEntityType(), propName)) {
+        if (!"this".contentEquals(propName) && !EntityUtils.isProperty(this.builder.getEntityType(), propName)) {
             throw new EntityCentreConfigurationException(format("Property expression [%s] is not valid for entity [%s].", propName, builder.getEntityType().getSimpleName()));
         }
 
-        if (builder.selectionCriteria.contains(propName)) {
+        if (builder.selectionCriteria.contains(propName.toString())) {
             throw new EntityCentreConfigurationException(format("Property [%s] has been already added to the selection critera for entity [%s].", propName, builder.getEntityType().getSimpleName()));
         }
 
-        builder.currSelectionCrit = Optional.of(propName);
-        builder.selectionCriteria.add(propName);
+        builder.currSelectionCrit = Optional.of(propName.toString());
+        builder.selectionCriteria.add(propName.toString());
         return new SelectionCriteriaBuilder<>(builder, this);
     }
 
@@ -170,13 +171,13 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
 
     @Deprecated
     @Override
-    public IResultSetBuilder3Ordering<T> addProp(final String propName) {
+    public IResultSetBuilder3Ordering<T> addProp(final CharSequence propName) {
         return new ResultSetBuilder<>(builder).addProp(propName, true);
     }
 
     @Override
-    public IResultSetBuilder3Ordering<T> addProp(final IConvertableToPath prop, final boolean presentByDefault) {
-        return new ResultSetBuilder<>(builder).addProp(prop.toPath(), presentByDefault);
+    public IResultSetBuilder3Ordering<T> addProp(final CharSequence prop, final boolean presentByDefault) {
+        return new ResultSetBuilder<>(builder).addProp(prop, presentByDefault);
     }
 
     @Override
@@ -195,12 +196,17 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     }
 
     @Override
-    public <M extends AbstractEntity<?>> IResultSetBuilderDynamicPropsAction<T> addProps(final String propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<M, Optional<CentreContext<T,?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
+    public IResultSetBuilderDynamicPropsAction<T> addProps(final CharSequence propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<T, Optional<CentreContext<T,?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
         return new ResultSetBuilder<>(builder).addProps(propName, dynColBuilderType, entityPreProcessor, contextConfig);
     }
 
     @Override
-    public IResultSetBuilderWidgetSelector<T> addEditableProp(final String propName) {
+    public IResultSetBuilderDynamicPropsAction<T> addProps(final CharSequence propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<T, Optional<CentreContext<T, ?>>> entityPreProcessor, final BiFunction<T, Optional<CentreContext<T, ?>>, Map> renderingHintsProvider, final CentreContextConfig contextConfig) {
+        return new ResultSetBuilder<>(builder).addProps(propName, dynColBuilderType, entityPreProcessor, renderingHintsProvider, contextConfig);
+    }
+
+    @Override
+    public IResultSetBuilderWidgetSelector<T> addEditableProp(final CharSequence propName) {
         return new ResultSetBuilder<>(builder).addEditableProp(propName);
     }
 

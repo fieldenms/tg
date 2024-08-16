@@ -24,7 +24,21 @@ public class Yields1 {
 
     private final SortedMap<String, Yield1> yieldsMap = new TreeMap<String, Yield1>();
 
-    public Yields1(final List<Yield1> yields) {
+    public static Yields1 yields(final Collection<Yield1> yields) {
+        return yields.isEmpty() ? EMPTY_YIELDS : new Yields1(yields);
+    }
+
+    public static Yields1 yields(final Yield1... yields) {
+        return yields.length == 0 ? EMPTY_YIELDS : new Yields1(yields);
+    }
+
+    public Yields1(final Collection<Yield1> yields) {
+        for (final Yield1 yield : yields) {
+            addYield(yield);
+        }
+    }
+
+    private Yields1(final Yield1... yields) {
         for (final Yield1 yield : yields) {
             addYield(yield);
         }

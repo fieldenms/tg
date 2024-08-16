@@ -5,20 +5,21 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoinWhere0;
 
 final class JoinCompoundCondition0<ET extends AbstractEntity<?>> //
-		extends Join<ET> //
-		implements IJoinCompoundCondition0<ET> {
+        extends Join<ET> //
+        implements IJoinCompoundCondition0<ET> {
 
-    public JoinCompoundCondition0(final Tokens tokens) {
-        super(tokens);
+    public JoinCompoundCondition0(final EqlSentenceBuilder builder) {
+        super(builder);
     }
-    
- 	@Override
-	public IJoinWhere0<ET> and() {
-		return new JoinWhere0<ET>(getTokens().and());
-	}
 
-	@Override
-	public IJoinWhere0<ET> or() {
-		return new JoinWhere0<ET>(getTokens().or());
-	}
+    @Override
+    public IJoinWhere0<ET> and() {
+        return new JoinWhere0<ET>(builder.and());
+    }
+
+    @Override
+    public IJoinWhere0<ET> or() {
+        return new JoinWhere0<ET>(builder.or());
+    }
+
 }

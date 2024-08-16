@@ -1,11 +1,11 @@
 package ua.com.fielden.platform.entity.meta.impl;
 
 import com.google.inject.Inject;
-
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
+import ua.com.fielden.platform.utils.IDates;
 
 /**
  * A convenient base class for implementing {@link IAfterChangeEventHandler} that would benefit from easy access to various companion objects as entity readers.
@@ -19,14 +19,26 @@ public abstract class AbstractAfterChangeEventHandler<T> implements IAfterChange
 
     @Inject
     private ICompanionObjectFinder coFinder;
-    
-    @Override
-    public <R extends IEntityReader<E>, E extends AbstractEntity<?>> R co(final Class<E> type) {
-        if (coFinder == null) {
-            throw new BceOrAceInitException("Companion object finder has not been instantiatiated.");
-        }
-        
+    @Inject
+    private IDates dates;
+
+    /**
+     * Returns an instance of a companion object for entity of {@code type} as {@link IEntityReader}.
+     *
+     * @param type
+     * @return
+     */
+    protected <R extends IEntityReader<E>, E extends AbstractEntity<?>> R co(final Class<E> type) {
         return coFinder.findAsReader(type, true);
+    }
+
+    /**
+     * Returns {@link ua.com.fielden.platform.utils.IDates} instance to provide access to dates API in definers (post-conditions).
+     *
+     * @return
+     */
+    protected IDates dates() {
+        return dates;
     }
 
 }

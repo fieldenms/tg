@@ -1,93 +1,5 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static java.lang.String.format;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
-import static java.util.UUID.randomUUID;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
-import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
-import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.security.tokens.Template.READ;
-import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
-import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
-import static ua.com.fielden.platform.types.either.Either.left;
-import static ua.com.fielden.platform.types.either.Either.right;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
-import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
-import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefault;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLink;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isInherited;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.NAME_OF;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.commitCentreDiffWithoutConflicts;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.commitCentreWithoutConflicts;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.createEmptyDifferences;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.defaultRunAutomatically;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.extendDiffsWithNonIntrusiveDifferences;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.getDefaultCentre;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.loadableConfigurations;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.makePreferred;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.obtainTitleFrom;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.removeCentres;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.retrievePreferredConfigName;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentreConfigUuid;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentreDesc;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.FETCH_CONFIG;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.FETCH_CONFIG_AND_INSTRUMENT;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOpt;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOptByUuid;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.saveNewEntityCentreManager;
-import static ua.com.fielden.platform.web.centre.CentreUtils.isFreshCentreChanged;
-import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
-import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.extractSaveAsName;
-import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.wasLoadedPreviouslyAndConfigUuid;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.CENTRE_DIRTY;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.CONFIG_DOES_NOT_EXIST;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.META_VALUES;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.STALE_CRITERIA_MESSAGE;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.complementCriteriaEntityBeforeRunning;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntityWithoutConflicts;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValues;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValuesCustomObject;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithResult;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithSaveAsInfo;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaValidationPrototype;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.isAutoRunning;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.isRunning;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.isSorting;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.updateInheritedFromShared;
-import static ua.com.fielden.platform.web.resources.webui.EntityValidationResource.VALIDATION_COUNTER;
-import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.createPrimaryActionIndicesForCentre;
-import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.createPropertyActionIndicesForCentre;
-import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.createSecondaryActionIndicesForCentre;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
-import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
-import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
-import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreModifiedPropertiesHolderFrom;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.restlet.Context;
@@ -97,7 +9,6 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.Put;
-
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.data.generator.IGenerator;
@@ -137,6 +48,47 @@ import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static java.lang.String.format;
+import static java.util.Optional.*;
+import static java.util.UUID.randomUUID;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
+import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.security.tokens.Template.READ;
+import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
+import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
+import static ua.com.fielden.platform.types.either.Either.left;
+import static ua.com.fielden.platform.types.either.Either.right;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
+import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.*;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.removeCentres;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.*;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.*;
+import static ua.com.fielden.platform.web.centre.CentreUtils.isFreshCentreChanged;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
+import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.extractSaveAsName;
+import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.wasLoadedPreviouslyAndConfigUuid;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.*;
+import static ua.com.fielden.platform.web.resources.webui.EntityValidationResource.VALIDATION_COUNTER;
+import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.*;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.*;
 
 /**
  * The web resource for criteria serves as a back-end mechanism of criteria retrieval. It provides a base implementation for handling the following methods:
@@ -735,6 +687,8 @@ public class CriteriaResource extends AbstractWebResource {
 
                 //Enhance entities with values defined with consumer in each dynamic property.
                 processedEntities = enhanceResultEntitiesWithDynamicPropertyValues(processedEntities, resPropsWithContext);
+                //Enhance rendering hints with styles for each dynamic column.
+                processedEntities = enhanceResultEntitiesWithDynamicPropertyRenderingHints(processedEntities, resPropsWithContext, (List) pair.getKey().get("renderingHints"));
 
                 final ArrayList<Object> list = new ArrayList<>();
                 list.add(isRunning ? previouslyRunCriteriaEntity : null);
@@ -783,13 +737,16 @@ public class CriteriaResource extends AbstractWebResource {
      * @param entities
      * @return
      */
-    private List<Object> createRenderingHints(final List<?> entities) {
+    private List<Object> createRenderingHints(final List<AbstractEntity<?>> entities) {
         final Optional<IRenderingCustomiser<?>> renderingCustomiser = centre.getRenderingCustomiser();
         if (renderingCustomiser.isPresent()) {
             final IRenderingCustomiser<?> renderer = renderingCustomiser.get();
             final List<Object> renderingHints = new ArrayList<>();
-            for (final Object entity : entities) {
-                renderingHints.add(renderer.getCustomRenderingFor((AbstractEntity<?>)entity).get());
+            for (final AbstractEntity<?> entity : entities) {
+                // Every entity must have a map of corresponding rendering hints, even if that map is empty.
+                // This is because association with renderings hints is index-based and depends on the order of entities.
+                // So, let's be defensive in case some implementation of a rendering customiser returns an empty optional (i.e., not containing even an empty map).
+                renderer.getCustomRenderingFor(entity).ifPresentOrElse(rend -> renderingHints.add(rend), () -> renderingHints.add(Collections.emptyMap()));
             }
             return renderingHints;
         } else {
@@ -800,9 +757,30 @@ public class CriteriaResource extends AbstractWebResource {
     public static Stream<AbstractEntity<?>> enhanceResultEntitiesWithDynamicPropertyValues(final Stream<AbstractEntity<?>> stream, final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext) {
         return stream.map(entity -> {
             resPropsWithContext.forEach(resPropWithContext -> {
-                final Collection<? extends AbstractEntity<?>> collection = ((AbstractEntity<?>) entity).get(resPropWithContext.getKey().propName.get());
-                collection.forEach(e -> resPropWithContext.getKey().entityPreProcessor.get().accept(e, resPropWithContext.getValue()));
+                resPropWithContext.getKey().entityPreProcessor.get().accept(entity, resPropWithContext.getValue());
             });
+            return entity;
+        });
+    }
+
+    private Stream<AbstractEntity<?>> enhanceResultEntitiesWithDynamicPropertyRenderingHints(Stream<AbstractEntity<?>> stream, List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext, List<Object> renderingHints) {
+        final AtomicInteger entityCount = new AtomicInteger(0);
+        return stream.map(entity -> {
+            final int idx = entityCount.getAndIncrement();
+            final Object entityRendHints;
+            if (renderingHints.size() <= idx) {
+                entityRendHints = new HashMap<String, Object>();
+                renderingHints.add(entityRendHints);
+            } else {
+                entityRendHints = renderingHints.get(idx);
+            }
+            if (entityRendHints instanceof Map) {
+                resPropsWithContext.forEach(resPropWithContext -> {
+                    resPropWithContext.getKey().renderingHintsProvider.ifPresent(hintProvider -> {
+                        ((Map)entityRendHints).putAll(hintProvider.apply(entity, resPropWithContext.getValue()));
+                    });
+                });
+            }
             return entity;
         });
     }

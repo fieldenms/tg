@@ -50,8 +50,7 @@ public class DomainMetadataUtils {
         }
         final Iterator<String> iterator = unionMembers.iterator();
         final String firstUnionPropName = (contextPropName == null ? "" :  contextPropName + ".") + iterator.next();
-        ICaseWhenFunctionWhen<IStandAloneExprOperationAndClose, AbstractEntity<?>> expressionModelInProgress = expr().caseWhen().prop(firstUnionPropName).isNotNull().then().prop(firstUnionPropName
-                + "." + commonSubpropName);
+        var expressionModelInProgress = expr().caseWhen().prop(firstUnionPropName).isNotNull().then().prop(firstUnionPropName + "." + commonSubpropName);
 
         for (; iterator.hasNext();) {
             final String unionPropName = (contextPropName == null ? "" :  contextPropName + ".") + iterator.next();
@@ -72,7 +71,7 @@ public class DomainMetadataUtils {
                 return (ExpressionModel) exprField.get(null);
             }
         } catch (final Exception e) {
-            throw new EqlMetadataGenerationException(format("Can't extract hard-coded expression model for prop [%s] due to: [%s]", calculatedPropfield.getName(), e.getMessage()));
+            throw new EqlMetadataGenerationException("Cannot extract hard-coded expression model for prop [%s] due to: [%s]".formatted(calculatedPropfield.getName(), e.getMessage()), e);
         }
     }
 
@@ -108,4 +107,5 @@ public class DomainMetadataUtils {
         final ISubsequentCompletedAndYielded<PT> initialModel = firstUnionProp.equals(currProp) ? startWith.yield().prop(ID).as(firstUnionProp.getName()) : startWith.yield().val(null).as(firstUnionProp.getName()); 
         return unionProps.stream().skip(1).reduce(initialModel, (m, f) -> f.equals(currProp) ? m.yield().prop(ID).as(f.getName()) : m.yield().val(null).as(f.getName()), (m1, m2) -> {throw new UnsupportedOperationException("Combining is not applicable here.");});
     }
+
 }

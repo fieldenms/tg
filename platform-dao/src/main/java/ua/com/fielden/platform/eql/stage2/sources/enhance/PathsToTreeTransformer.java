@@ -1,30 +1,11 @@
 package ua.com.fielden.platform.eql.stage2.sources.enhance;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.emptySet;
-import static java.util.Collections.unmodifiableList;
-import static java.util.Collections.unmodifiableMap;
-import static ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.getFirstCalcChunks;
-import static ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.groupByExplicitSources;
-import static ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.groupByFirstChunk;
-import static ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.groupBySource;
-import static ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.orderHelperNodes;
-import static ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.tailFromProp;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.eql.antlr.EqlCompilationResult;
+import ua.com.fielden.platform.eql.antlr.EqlCompiler;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForEntityType;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
-import ua.com.fielden.platform.eql.stage0.StandAloneExpressionBuilder;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.Expression1;
 import ua.com.fielden.platform.eql.stage2.operands.Expression2;
@@ -32,10 +13,12 @@ import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sources.HelperNodeForImplicitJoins;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
-import ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.FirstChunkGroup;
-import ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.PendingTail;
-import ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.Prop2Lite;
-import ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.SourceTails;
+
+import java.util.*;
+
+import static java.util.Collections.*;
+import static ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.*;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 public class PathsToTreeTransformer {
 
@@ -133,7 +116,10 @@ public class PathsToTreeTransformer {
 
         for (final PropChunk calcChunk : getFirstCalcChunks(incomingTails)) {
             if (!processedCalcData.containsKey(calcChunk.name())) { // consider only calc props that have not yet been processed on the previous iteration(s)
-                final Expression1 exp1 = (Expression1) (new StandAloneExpressionBuilder(gen, calcChunk.data().expression.expressionModel())).getResult().getValue();
+                final Expression1 exp1 = new EqlCompiler(gen).compile(
+                                calcChunk.data().expression.expressionModel().getTokenSource(),
+                                EqlCompilationResult.StandaloneExpression.class)
+                        .model();
                 final TransformationContextFromStage1To2 prc = TransformationContextFromStage1To2.forCalcPropContext(querySourceInfoProvider).cloneWithAdded(sourceForCalcPropResolution);
                 final Expression2 exp2 = exp1.transform(prc);
                 final Set<Prop2> expProps = exp2.collectProps();
