@@ -1,14 +1,6 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
-import static java.lang.String.format;
-
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-
 import org.apache.commons.lang3.StringUtils;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -16,26 +8,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCritKindSelector;
-import ua.com.fielden.platform.web.centre.api.resultset.IDynamicColumnBuilder;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aEgiIconStyle;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bCheckbox;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cToolbar;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dCentreScroll;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dScroll;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1eDraggable;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1efRetrieveAll;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1fPageCapacity;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1gMaxPageCapacity;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1hHeaderWrap;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1iVisibleRowsCount;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1jFitBehaviour;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1kRowHeight;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2Properties;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder3Ordering;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4aWidth;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderDynamicPropsAction;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderWidgetSelector;
-import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
+import ua.com.fielden.platform.web.centre.api.resultset.*;
 import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.IAlsoCentreTopLevelActions;
@@ -43,6 +16,13 @@ import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelA
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsInGroup;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsInGroup0;
 import ua.com.fielden.platform.web.centre.exceptions.EntityCentreConfigurationException;
+
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+
+import static java.lang.String.format;
 
 /**
  * A package private helper class to decompose the task of implementing the Entity Centre DSL. It has direct access to protected fields in {@link EntityCentreBuilder}.
@@ -200,6 +180,7 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
         return new ResultSetBuilder<>(builder).addProps(propName, dynColBuilderType, entityPreProcessor, contextConfig);
     }
 
+    @Override
     public IResultSetBuilderDynamicPropsAction<T> addProps(final CharSequence propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<T, Optional<CentreContext<T, ?>>> entityPreProcessor, final BiFunction<T, Optional<CentreContext<T, ?>>, Map> renderingHintsProvider, final CentreContextConfig contextConfig) {
         return new ResultSetBuilder<>(builder).addProps(propName, dynColBuilderType, entityPreProcessor, renderingHintsProvider, contextConfig);
     }

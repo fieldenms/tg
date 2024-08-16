@@ -1,14 +1,13 @@
 package ua.com.fielden.platform.web.centre.api.resultset;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.web.centre.CentreContext;
+import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
+
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
-import ua.com.fielden.platform.web.centre.CentreContext;
-import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 
 public interface IResultSetBuilderDynamicProps<T extends AbstractEntity<?>> {
 
@@ -36,6 +35,7 @@ public interface IResultSetBuilderDynamicProps<T extends AbstractEntity<?>> {
      *                              the main purpose of this is to perform additional computations that are context dependent and are used for display-only purposes.
      * @param renderingHintsProvider -- an optional context dependent function that defines rendering hints for specified entity that is used to provide data for dynamic column.
      * @param contextConfig -- configuration that defines the context for executing column builder {@code dynColBuilderType}, pre-processor {@code entityPreProcessor} and rendering hints provider {@code renderingHintsProvider}.
+     * @return
      */
     IResultSetBuilderDynamicPropsAction<T> addProps(final CharSequence propName,
                                                     final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType,
