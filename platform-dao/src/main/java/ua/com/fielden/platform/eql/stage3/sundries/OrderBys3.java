@@ -38,8 +38,35 @@ public class OrderBys3 {
         return limit;
     }
 
+    // NOTE: Always add OFFSET, even if it's zero, to ensure ORDER BY is accepted in subqueries.
+    // SQL Server, for example, will reject ORDER BY in a subquery without OFFSET or TOP.
     public String sql(final DbVersion dbVersion) {
-        return models.stream().map(y -> y.sql(dbVersion)).collect(joining(", "));
+        final var modelsStr = models.stream().map(y -> y.sql(dbVersion)).collect(joining(", "));
+
+        final var sb = new StringBuilder();
+
+        switch (dbVersion) {
+            // PostgreSQL supports shorter syntax (MySQL too)
+            case POSTGRESQL, MYSQL -> {
+                sb.append(modelsStr);
+                if (limit instanceof Limit.Count (long count)) {
+                    sb.append(" LIMIT ").append(count).append(' ');
+                }
+                sb.append(" OFFSET ").append(offset).append(' ');
+            }
+            // OFFSET and FETCH FIRST from SQL standard
+            // Supported by: MSSQL
+            default -> {
+                sb.append(modelsStr);
+                // limit (FETCH) can only appear after OFFSET, so we need offset if we have limit
+                sb.append(" OFFSET ").append(offset).append(" ROWS ");
+                if (limit instanceof Limit.Count (long count)) {
+                    sb.append(" FETCH FIRST ").append(count).append(" ROWS ONLY ");
+                }
+            }
+        }
+
+        return sb.toString();
     }
 
     @Override
