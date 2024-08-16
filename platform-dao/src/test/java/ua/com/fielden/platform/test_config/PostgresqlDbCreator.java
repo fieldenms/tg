@@ -79,8 +79,7 @@ public class PostgresqlDbCreator extends DbCreator {
 
                         // Must pass mytable.* to create_insert_statement: if table "mytable" has column named "mytable",
                         // then "mytable" will refer to the column, not the table.
-                        try (final PreparedStatement ps = conn.prepareStatement(
-                                format("select create_insert_statement(tableoid, %1$s.*) from %1$s", table))) {
+                        try (final PreparedStatement ps = conn.prepareStatement("select create_insert_statement(tableoid, %1$s.*) from %1$s".formatted(table))) {
                             try (final ResultSet rs = ps.executeQuery()) {
                                 while (rs.next()) {
                                     inserts.add(rs.getString(1));
