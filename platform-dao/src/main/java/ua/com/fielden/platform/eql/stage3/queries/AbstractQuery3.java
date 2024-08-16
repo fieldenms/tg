@@ -1,9 +1,5 @@
 package ua.com.fielden.platform.eql.stage3.queries;
 
-import static ua.com.fielden.platform.entity.query.DbVersion.ORACLE;
-
-import java.util.Objects;
-
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.QueryComponents3;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
@@ -11,6 +7,10 @@ import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 import ua.com.fielden.platform.eql.stage3.sundries.GroupBys3;
 import ua.com.fielden.platform.eql.stage3.sundries.OrderBys3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
+
+import java.util.Objects;
+
+import static ua.com.fielden.platform.entity.query.DbVersion.ORACLE;
 
 public abstract class AbstractQuery3 {
 
@@ -36,7 +36,7 @@ public abstract class AbstractQuery3 {
         sb.append(joinRoot != null ? "\nFROM\n" + joinRoot.sql(dbVersion) : (dbVersion == ORACLE ? " FROM DUAL " : ""));
         sb.append(whereConditions != null ? "\nWHERE " + whereConditions.sql(dbVersion) : "");
         sb.append(groups != null ? "\nGROUP BY " + groups.sql(dbVersion) : "");
-        sb.append(orderings != null ? "\nORDER BY " + orderings.sql(dbVersion) : "");
+        sb.append(orderings != null ? "\nORDER BY " + orderings.sql(dbVersion, this) : "");
         return sb.toString();
     }
 
@@ -77,4 +77,13 @@ public abstract class AbstractQuery3 {
                 Objects.equals(orderings, other.orderings) &&
                 Objects.equals(resultType, other.resultType);
     }
+
+    public static boolean isTopLevelQuery(final AbstractQuery3 query) {
+        return query instanceof ResultQuery3;
+    }
+
+    public static boolean isSubQuery(final AbstractQuery3 query) {
+        return !isTopLevelQuery(query);
+    }
+
 }
