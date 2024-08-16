@@ -126,20 +126,10 @@ public class TitlesDescsGetter {
      * @param entityType -- a type that holds the first property in {@code propPath}
      * @return
      */
-    public static Pair<String, String> getTitleAndDesc(final String propPath, final Class<?> entityType) {
-            return processSubtitles(propPath, entityType).orElseGet(() -> processTitles(propPath, entityType));
+    public static Pair<String, String> getTitleAndDesc(final CharSequence propPath, final Class<?> entityType) {
+            return processSubtitles(propPath.toString(), entityType).orElseGet(() -> processTitles(propPath.toString(), entityType));
     }
 
-    /**
-     * The same as {@link #getTitleAndDesc(String, Class)}, but with {@link IConvertableToPath} {@code prop} argument.
-     *
-     * @param prop
-     * @param entityType
-     * @return
-     */
-    public static Pair<String, String> getTitleAndDesc(final IConvertableToPath prop, final Class<?> entityType) {
-        return getTitleAndDesc(prop.toPath(), entityType);
-    }
     /**
      * Determines property titles and desc without analysing {@link Subtitles}. Effectively this represents the logic before subtitles were introduced.
      * This method should not be used directly and therefore it is private.

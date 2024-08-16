@@ -5,7 +5,6 @@ import fielden.platform.bnf.Terminal;
 import fielden.platform.bnf.Variable;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.model.*;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 import static fielden.platform.bnf.FluentBNF.start;
 import static fielden.platform.bnf.Metadata.inline;
@@ -24,7 +23,7 @@ public final class CanonicalEqlGrammar {
     private static final Class<String> STR = String.class;
     private static final Class<Object> OBJ = Object.class;
     private static final Class<Enum> ENUM = Enum.class;
-    private static final Class<IConvertableToPath> PROP_PATH = IConvertableToPath.class;
+    private static final Class<CharSequence> CS = CharSequence.class;
 
     /**
      * Canonical EQL grammar in Extended Backus-Naur form.
@@ -43,7 +42,7 @@ public final class CanonicalEqlGrammar {
 
         derive(SelectFrom).
             to(SelectSource,
-               opt(label("alias", as).with(STR)),
+               opt(label("alias", as).with(CS)),
                opt(Join),
                opt(Where),
                opt(GroupBy),
@@ -177,10 +176,10 @@ public final class CanonicalEqlGrammar {
             or(endAsDecimal.with(Integer.class, Integer.class)).
 
         derive(Prop).
-            to(prop.with(STR)).or(prop.with(PROP_PATH)).or(prop.with(ENUM)).
+            to(prop.with(CS)).or(prop.with(ENUM)).
 
         derive(ExtProp).
-            to(extProp.with(STR)).or(extProp.with(PROP_PATH)).or(extProp.with(ENUM)).
+            to(extProp.with(CS)).or(extProp.with(ENUM)).
 
         derive(Val).
             to(val.with(OBJ)).or(iVal.with(OBJ)).
@@ -190,8 +189,8 @@ public final class CanonicalEqlGrammar {
             or(iParam.with(STR)).or(iParam.with(ENUM)).
 
         derive(MultiOperand).
-            to(anyOfProps.rest(STR)).or(anyOfProps.rest(PROP_PATH)).
-            or(allOfProps.rest(STR)).or(allOfProps.rest(PROP_PATH)).
+            to(anyOfProps.rest(CS)).
+            or(allOfProps.rest(CS)).
             or(anyOfValues.rest(OBJ)).or(allOfValues.rest(OBJ)).
             or(anyOfParams.rest(STR)).or(anyOfIParams.rest(STR)).
             or(allOfParams.rest(STR)).or(allOfIParams.rest(STR)).
@@ -205,7 +204,7 @@ public final class CanonicalEqlGrammar {
 
         derive(MembershipOperand).
             to(values.rest(OBJ)).
-            or(props.rest(STR)).or(props.rest(PROP_PATH)).
+            or(props.rest(CS)).
             or(params.rest(STR)).or(iParams.rest(STR)).
             or(model.with(SingleResultQueryModel.class)).
 
@@ -216,15 +215,14 @@ public final class CanonicalEqlGrammar {
             or(notExistsAnyOf.rest(QueryModel.class)).
             or(existsAllOf.rest(QueryModel.class)).
             or(notExistsAllOf.rest(QueryModel.class)).
-            or(critCondition.with(STR, STR)).
-            or(critCondition.with(PROP_PATH, PROP_PATH)).
-            or(critCondition.with(ICompoundCondition0.class, STR, STR)).
-            or(critCondition.with(ICompoundCondition0.class, STR, STR, OBJ)).
+            or(critCondition.with(CS, CS)).
+            or(critCondition.with(ICompoundCondition0.class, CS, CS)).
+            or(critCondition.with(ICompoundCondition0.class, CS, CS, OBJ)).
             or(condition.with(ConditionModel.class)).
             or(negatedCondition.with(ConditionModel.class)).
 
         derive(Join).
-            to(JoinOperator, opt(label("alias", as).with(STR)), JoinCondition, opt(Join)).
+            to(JoinOperator, opt(label("alias", as).with(CS)), JoinCondition, opt(Join)).
 
         derive(JoinOperator).
             to(join.with(Class.class)).
@@ -278,8 +276,8 @@ public final class CanonicalEqlGrammar {
             or(sumOfDistinct).or(countOfDistinct).or(avgOfDistinct).
 
         derive(YieldAlias).
-            to(as.with(STR)).or(as.with(ENUM)).or(as.with(PROP_PATH)).
-            or(asRequired.with(STR)).or(asRequired.with(ENUM)).or(asRequired.with(PROP_PATH)).
+            to(as.with(CS)).or(as.with(ENUM)).
+            or(asRequired.with(CS)).or(asRequired.with(ENUM)).
 
         derive(Yield1Model).
             to(modelAsEntity.with(Class.class)).
@@ -320,7 +318,7 @@ public final class CanonicalEqlGrammar {
             to(SingleOperand, Order).
 
         derive(OrderByOperand_Yield).
-            to(label("yield", yield.with(STR)), Order).
+            to(label("yield", yield.with(CS)), Order).
 
         derive(OrderByOperand_OrderingModel).
             to(order.with(OrderingModel.class)).

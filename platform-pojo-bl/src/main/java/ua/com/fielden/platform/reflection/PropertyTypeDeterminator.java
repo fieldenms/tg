@@ -57,16 +57,16 @@ public class PropertyTypeDeterminator {
      *            - a couple of functions/properties joined by ".". (e.g. "vehicle.getKey().getStatus().generatePmWo.getWorkOrder().key")
      * @return -- property/function class
      */
-    public static Class<?> determinePropertyType(final Class<?> type, final String dotNotationExp) {
+    public static Class<?> determinePropertyType(final Class<?> type, final CharSequence dotNotationExp) {
         if (type == null || StringUtils.isEmpty(dotNotationExp)) {
             throw new ReflectionException(ERR_TYPE_AND_PROP_REQUIRED);
         }
         
-        if ("this".equals(dotNotationExp)) {
+        if ("this".contentEquals(dotNotationExp)) {
             return stripIfNeeded(type);
         }
 
-        final String[] propertiesOrFunctions = dotNotationExp.split(Reflector.DOT_SPLITTER);
+        final String[] propertiesOrFunctions = dotNotationExp.toString().split(Reflector.DOT_SPLITTER);
         Class<?> result = type;
         for (final String propertyOrFunction : propertiesOrFunctions) {
             result = determineClass(result, propertyOrFunction, true, true);
@@ -325,27 +325,29 @@ public class PropertyTypeDeterminator {
         return entityType.getName().endsWith(MockNotFoundEntityMaker.MOCK_TYPE_ENDING);
     }
 
-    public static boolean isDotNotation(final String exp) {
-        return exp.contains(PROPERTY_SPLITTER);
+    public static boolean isDotNotation(final CharSequence exp) {
+        return exp.toString().contains(PROPERTY_SPLITTER);
     }
 
-    public static Pair<String, String> penultAndLast(final String dotNotationExp) {
+    public static Pair<String, String> penultAndLast(final CharSequence dotNotationExp) {
         if (!isDotNotation(dotNotationExp)) {
             throw new ReflectionException("Should be dot-notation.");
         }
-        final int indexOfLastDot = dotNotationExp.lastIndexOf(PROPERTY_SPLITTER);
-        final String penultPart = dotNotationExp.substring(0, indexOfLastDot);
-        final String lastPart = dotNotationExp.substring(indexOfLastDot + 1);
+        final String dotNotationStr = dotNotationExp.toString();
+        final int indexOfLastDot = dotNotationStr.lastIndexOf(PROPERTY_SPLITTER);
+        final String penultPart = dotNotationStr.substring(0, indexOfLastDot);
+        final String lastPart = dotNotationStr.substring(indexOfLastDot + 1);
         return new Pair<>(penultPart, lastPart);
     }
 
-    public static Pair<String, String> firstAndRest(final String dotNotationExp) {
+    public static Pair<String, String> firstAndRest(final CharSequence dotNotationExp) {
         if (!isDotNotation(dotNotationExp)) {
             throw new ReflectionException("Should be dot-notation.");
         }
-        final int indexOfFirstDot = dotNotationExp.indexOf(PROPERTY_SPLITTER);
-        final String firstPart = dotNotationExp.substring(0, indexOfFirstDot);
-        final String restPart = dotNotationExp.substring(indexOfFirstDot + 1);
+        final String dotNotationStr = dotNotationExp.toString();
+        final int indexOfFirstDot = dotNotationStr.indexOf(PROPERTY_SPLITTER);
+        final String firstPart = dotNotationStr.substring(0, indexOfFirstDot);
+        final String restPart = dotNotationStr.substring(indexOfFirstDot + 1);
         return pair(firstPart, restPart);
     }
 
@@ -356,12 +358,12 @@ public class PropertyTypeDeterminator {
      * @param dotNotationExp
      * @return
      */
-    public static Pair<Class<?>, String> transform(final Class<?> type, final String dotNotationExp) {
+    public static Pair<Class<?>, String> transform(final Class<?> type, final CharSequence dotNotationExp) {
         if (isDotNotation(dotNotationExp)) { // dot-notation expression defines property/function.
             final Pair<String, String> pl = penultAndLast(dotNotationExp);
             return pair(determinePropertyType(type, pl.getKey()), pl.getValue());
         } else { // empty or first level property/function.
-            return pair(type, dotNotationExp);
+            return pair(type, dotNotationExp.toString());
         }
     }
 

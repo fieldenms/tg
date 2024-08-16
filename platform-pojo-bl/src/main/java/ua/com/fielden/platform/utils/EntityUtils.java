@@ -18,7 +18,6 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -925,13 +924,9 @@ public class EntityUtils {
     }
 
     /**
-     * Returns true if the provided <code>dotNotationProp</code> is a valid property in the specified entity type.
-     *
-     * @param type
-     * @param dotNotationProp
-     * @return
+     * Returns true if the provided property path leads to a valid property in the specified entity type.
      */
-    public static boolean isProperty(final Class<?> type, final String dotNotationProp) {
+    public static boolean isProperty(final Class<?> type, final CharSequence dotNotationProp) {
         try {
             return AnnotationReflector.isAnnotationPresent(Finder.findFieldByName(type, dotNotationProp), IsProperty.class);
         } catch (final Exception ex) {
@@ -1123,15 +1118,10 @@ public class EntityUtils {
     }
 
     /**
-     * The same as {@link #copy(AbstractEntity, AbstractEntity, String...)}, but with a set of {@link IConvertableToPath} as the last argument.
-     *
-     * @param fromEntity
-     * @param toEntity
-     * @param skipProperties
-     * @param <T>
+     * @see #copy(AbstractEntity, AbstractEntity, String...)
      */
-    public static <T extends AbstractEntity> void copy(final AbstractEntity<?> fromEntity, final T toEntity, final Set<? extends IConvertableToPath> skipProperties) {
-        copy(fromEntity, toEntity, skipProperties.stream().map(IConvertableToPath::toPath).toList().toArray(new String[]{}));
+    public static <T extends AbstractEntity> void copy(final AbstractEntity<?> fromEntity, final T toEntity, final Set<? extends CharSequence> skipProperties) {
+        copy(fromEntity, toEntity, skipProperties.stream().map(CharSequence::toString).toList().toArray(new String[]{}));
     }
 
     /**
@@ -1201,23 +1191,10 @@ public class EntityUtils {
      * @param keyValues
      * @return
      */
-    public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final String propName, final IEntityReader<?> coOther, final Object... keyValues) {
+    public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final CharSequence propName, final IEntityReader<?> coOther, final Object... keyValues) {
         final Class<T> entityClass = (Class<T>) PropertyTypeDeterminator.determinePropertyType(coOther.getEntityType(), propName);
         final fetch<T> eFetch = coOther.getFetchProvider().<T> fetchFor(propName).fetchModel();
         return coOther.co(entityClass).findByKeyAndFetchOptional(eFetch, keyValues);
-    }
-
-    /**
-     * The same as {@link #fetchEntityForPropOf(String, IEntityReader, Object...)}, but accepting {@link IConvertableToPath} to represent a property a property.
-     *
-     * @param <T>
-     * @param propName
-     * @param coOther
-     * @param keyValues
-     * @return
-     */
-    public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final IConvertableToPath propName, final IEntityReader<?> coOther, final Object... keyValues) {
-        return fetchEntityForPropOf(propName.toPath(), coOther, keyValues);
     }
 
     /**
@@ -1231,13 +1208,8 @@ public class EntityUtils {
      * <pre>
      * final PmRoutine pmRoutine = EntityUtils.<PmRoutine>fetchEntityForPropOf(pmId, "pmRoutine", co(PmExpendable.class)).orElseThrow(...);
      * </pre>
-     *
-     * @param id
-     * @param propName
-     * @param coOther
-     * @return
      */
-    public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final Long id, final String propName, final IEntityReader<?> coOther) {
+    public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final Long id, final CharSequence propName, final IEntityReader<?> coOther) {
         final Class<T> entityClass = (Class<T>) PropertyTypeDeterminator.determinePropertyType(coOther.getEntityType(), propName);
         final fetch<T> eFetch = coOther.getFetchProvider().<T> fetchFor(propName).fetchModel();
         return coOther.co(entityClass).findByIdOptional(id, eFetch);
@@ -1254,27 +1226,9 @@ public class EntityUtils {
      * <pre>
      * final PmRoutine freshPmRoutine = EntityUtils.<PmRoutine>fetchEntityForPropOf(stalePmRoutine, "pmRoutine", co(PmExpendable.class)).orElseThrow(...);
      * </pre>
-     *
-     * @param instance
-     * @param propName
-     * @param coOther
-     * @return
      */
-    public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final T instance, final String propName, final IEntityReader<?> coOther) {
+    public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final T instance, final CharSequence propName, final IEntityReader<?> coOther) {
         return fetchEntityForPropOf(instance.getId(), propName, coOther);
-    }
-
-    /**
-     * The same as {@link #fetchEntityForPropOf(AbstractEntity, String, IEntityReader)}, but accepting an argument of type {@link IConvertableToPath} to represent a property.
-     *
-     * @param <T>
-     * @param instance
-     * @param propPath
-     * @param coOther
-     * @return
-     */
-    public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final T instance, final IConvertableToPath propPath, final IEntityReader<?> coOther) {
-        return fetchEntityForPropOf(instance, propPath.toPath(), coOther);
     }
 
     /**

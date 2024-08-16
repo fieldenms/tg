@@ -33,7 +33,7 @@ class OrderingItem //
     }
 
     @Override
-    public ISingleOperandOrderable yield(final String yieldAlias) {
+    public ISingleOperandOrderable yield(final CharSequence yieldAlias) {
         return new SingleOperandOrderable(builder.yield(yieldAlias));
     }
 
