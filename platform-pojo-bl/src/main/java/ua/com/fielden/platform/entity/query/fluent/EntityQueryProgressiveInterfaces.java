@@ -190,16 +190,12 @@ public interface EntityQueryProgressiveInterfaces {
         T param(final Enum<?> paramName);
 
         /**
-         * Ignore parameter -- ignore condition with this operator if null is passed as an argument.
-         *
-         * @return
+         * Ignore parameter -- ignore condition with this operator if the given parameter's value is set to null.
          */
         T iParam(final CharSequence paramName);
 
         /**
-         * Ignore parameter -- ignore condition with this operator if null is passed as an argument.
-         *
-         * @return
+         * Ignore parameter -- ignore condition with this operator if the given parameter's value is set to null.
          */
         T iParam(final Enum<?> paramName);
 
