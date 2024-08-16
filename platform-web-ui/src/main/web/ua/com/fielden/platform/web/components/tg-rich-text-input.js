@@ -8,8 +8,14 @@ const template = html`
         :host {
             @apply --layout-vertical;
         }
+        .toastui-editor-defaultUI {
+            border: none !important;
+        }
         .toastui-editor-toolbar {
             display: none;
+        }
+        .toastui-editor-defaultUI .ProseMirror {
+            padding: 0 !important;
         }
 
     </style>
@@ -23,21 +29,41 @@ class TgRichTextInput extends PolymerElement {
 
     static get properties() {
         return {
-            editor: String,
+            value: {
+                type: String,
+                observer: "_valueChanged"
+            },
+
+            _editor: Object,
         }
     }
 
     ready () {
         super.ready();
         
-        this.editor = new toastui.Editor({
+        this._editor = new toastui.Editor({
             el: this.$.editor,
             height: '500px',
             initialEditType: 'wysiwyg',
             usageStatistics: false,
             toolbarItems: [],
-            hideModeSwitch: false
+            hideModeSwitch: true
         });
+        if (this.value) {
+            this._editor.setMarkdown(this.value);
+        }
+    }
+
+    getMarkdownText () {
+        if (this._editor) {
+            return this._editor.getMarkdown();
+        }
+    }
+
+    _valueChanged(newValue) {
+        if(this._editor) {
+            this._editor.setMarkdown(newValue);
+        }
     }
 }
 

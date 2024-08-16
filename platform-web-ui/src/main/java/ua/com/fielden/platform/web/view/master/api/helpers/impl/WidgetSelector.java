@@ -22,23 +22,10 @@ import ua.com.fielden.platform.web.view.master.api.widgets.colour.impl.ColourWid
 import ua.com.fielden.platform.web.view.master.api.widgets.datetimepicker.impl.DateTimePickerWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.decimal.impl.DecimalWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.hyperlink.impl.HyperlinkWidget;
-import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
-import ua.com.fielden.platform.web.view.master.api.widgets.impl.CheckboxConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.impl.CollectionalEditorConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.impl.CollectionalRepresentorConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.impl.ColourConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.impl.DatePickerConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.impl.DateTimePickerConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.impl.DecimalConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.impl.EntityAutocompletionConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.impl.HyperlinkConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.impl.MoneyConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.impl.MultilineTextConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.impl.SinglelineTextConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.impl.SpinnerConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.impl.TimePickerConfig;
+import ua.com.fielden.platform.web.view.master.api.widgets.impl.*;
 import ua.com.fielden.platform.web.view.master.api.widgets.money.impl.MoneyWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.multilinetext.impl.MultilineTextWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.richtext.impl.RichTextWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.singlelinetext.impl.SinglelineTextWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerWidget;
 import ua.com.fielden.platform.web.view.master.exceptions.EntityMasterConfigurationException;
@@ -101,7 +88,8 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public IRichTextConfig<T> asRichText() {
-        return null;
+        widget = new RichTextWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), smBuilder.getEntityType(), propertyName);
+        return new RichTextConfig<>((RichTextWidget)widget, smBuilder);
     }
 
     @Override

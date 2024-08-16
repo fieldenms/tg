@@ -1,5 +1,7 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 
+import '/resources/components/tg-rich-text-input.js';
+
 import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js';
@@ -18,11 +20,10 @@ const customLabelTemplate = html`
     </label>`;
 
 const customInputTemplate = html`
-    <div id="input" 
-        class="custom-input" 
-        tabindex="0" 
+    <tg-rich-text-input id="input" 
+        class="custom-input paper-input-input"
         tooltip-text$="[[_getTooltip(_editingValue, entity)]]"
-        disabled$="[[_disabled]]">[[_editingValue]]</div>`;
+        disabled$="[[_disabled]]" markdown-text="[[_editingValue]]"></tg-rich-text-input>`;
 const propertyActionTemplate = html`<slot id="actionSlot" name="property-action"></slot>`;
 
 export class TgRichTextEditor extends TgEditor {
@@ -39,17 +40,10 @@ export class TgRichTextEditor extends TgEditor {
     }
 
     /**
-     * This method promotes 'IRRELEVANT' into _acceptedValue which should not be a problem, since this 'representor' is not editable at all.
+     * This method converts 
      */
     convertFromString (strValue) {
         return {formattedText: strValue};
-    }
-
-    /**
-     * This 'representor' is disabled for editing (just gives a view of the entity collection).
-     */
-    _isDisabled (currentState, bindingEntity, propertyName) {
-        return true;
     }
 }
 

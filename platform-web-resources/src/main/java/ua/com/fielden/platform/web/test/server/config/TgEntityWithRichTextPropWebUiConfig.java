@@ -99,7 +99,7 @@ public class TgEntityWithRichTextPropWebUiConfig {
         final IMaster<TgEntityWithRichTextProp> masterConfig = new SimpleMasterBuilder<TgEntityWithRichTextProp>().forEntity(TgEntityWithRichTextProp.class)
                 .addProp("key").asSinglelineText().also()
                 .addProp("desc").asSinglelineText().also()
-                .addProp("richTextProp").asMultilineText().also()
+                .addProp("richTextProp").asRichText().also()
                 .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancel action")
                 .addAction(MasterActions.SAVE)
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), LayoutComposer.mkActionLayoutForMaster())
