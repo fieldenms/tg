@@ -76,6 +76,10 @@ final class EqlSentenceBuilder {
         return charSequences.stream().map(CharSequence::toString).collect(toImmutableList());
     }
 
+    private static List<String> asStrings(final CharSequence... charSequences) {
+        return Arrays.stream(charSequences).map(CharSequence::toString).collect(toImmutableList());
+    }
+
     // -----------------------------------------------------------------------------------------------------------------
     // BUILDING METHODS
 
@@ -271,7 +275,7 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder anyOfParams(final CharSequence... params) {
-        return _add(new AnyOfParamsToken(asStrings(asList(params))));
+        return _add(new AnyOfParamsToken(asStrings(params)));
     }
 
     public EqlSentenceBuilder anyOfParams(final Collection<? extends CharSequence> params) {
@@ -279,7 +283,7 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder anyOfIParams(final CharSequence... params) {
-        return _add(new AnyOfIParamsToken(asStrings(asList(params))));
+        return _add(new AnyOfIParamsToken(asStrings(params)));
     }
 
     public EqlSentenceBuilder anyOfIParams(final Collection<? extends CharSequence> params) {
@@ -307,7 +311,7 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder allOfParams(final CharSequence... params) {
-        return _add(new AllOfParamsToken(asStrings(asList(params))));
+        return _add(new AllOfParamsToken(asStrings(params)));
     }
 
     public EqlSentenceBuilder allOfParams(final Collection<? extends CharSequence> params) {
@@ -315,7 +319,7 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder allOfIParams(final CharSequence... params) {
-        return _add(new AllOfIParamsToken(asStrings(asList(params))));
+        return _add(new AllOfIParamsToken(asStrings(params)));
     }
 
     public EqlSentenceBuilder allOfIParams(final Collection<? extends CharSequence> params) {
@@ -351,7 +355,7 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder setOfParams(final CharSequence... params) {
-        return _add(new ParamsToken(asStrings(asList(params))));
+        return _add(new ParamsToken(asStrings(params)));
     }
 
     public EqlSentenceBuilder setOfParams(final Collection<? extends CharSequence> params) {
@@ -359,7 +363,7 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder setOfIParams(final CharSequence... params) {
-        return _add(new IParamsToken(asStrings(asList(params))));
+        return _add(new IParamsToken(asStrings(params)));
     }
 
     public EqlSentenceBuilder setOfIParams(final Collection<? extends CharSequence> params) {

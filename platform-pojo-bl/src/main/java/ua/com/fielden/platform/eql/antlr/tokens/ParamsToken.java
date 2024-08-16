@@ -7,16 +7,15 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
-import static com.google.common.collect.ImmutableList.toImmutableList;
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.PARAMS;
 
 public final class ParamsToken extends AbstractParameterisedEqlToken {
 
     public final List<String> params;
 
-    public ParamsToken(final Collection<? extends CharSequence> params) {
+    public ParamsToken(final Collection<? extends String> params) {
         super(PARAMS, "params");
-        this.params = params.stream().map(CharSequence::toString).collect(toImmutableList());
+        this.params = ImmutableList.copyOf(params);
     }
 
     public String parametersText() {
