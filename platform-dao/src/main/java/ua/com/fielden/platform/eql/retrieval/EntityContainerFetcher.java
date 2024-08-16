@@ -94,7 +94,13 @@ public class EntityContainerFetcher {
 
         // let's execute the query and time the duration
         final DateTime st = new DateTime();
-        final List<?> res = query.list();
+        final List<?> res;
+        try {
+            res = query.list();
+        } catch (final Exception e) {
+            logger.error("Failed to execute query.\nSQL: %s".formatted(modelResult.sql()));
+            throw e;
+        }
         final Period pd = new Period(st, new DateTime());
         logger.debug(format("Query exec duration: %s m %s s %s ms for type [%s].", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), modelResult.resultType().getSimpleName()));
 
