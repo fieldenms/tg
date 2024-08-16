@@ -1,11 +1,11 @@
 package ua.com.fielden.platform.eql.stage3.queries;
 
-import java.util.Objects;
-
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.QueryComponents3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+
+import java.util.Objects;
 
 public class SubQuery3 extends AbstractQuery3 implements ISingleOperand3 {
     private final PropType type;
@@ -35,21 +35,7 @@ public class SubQuery3 extends AbstractQuery3 implements ISingleOperand3 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        
-        if (!super.equals(obj)) {
-            return false;
-        }
-        
-        if (!(obj instanceof SubQuery3)) {
-            return false;
-        }
-        
-        final SubQuery3 other = (SubQuery3) obj;
-        
-        return Objects.equals(type, other.type);
+        return this == obj || obj instanceof SubQuery3 that && super.equals(that) && Objects.equals(type, that.type);
     }
     
 }
