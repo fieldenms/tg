@@ -13,7 +13,7 @@ public final class ParamsToken extends AbstractParameterisedEqlToken {
 
     public final List<String> params;
 
-    public ParamsToken(final Collection<? extends String> params) {
+    public ParamsToken(final Collection<String> params) {
         super(PARAMS, "params");
         this.params = ImmutableList.copyOf(params);
     }

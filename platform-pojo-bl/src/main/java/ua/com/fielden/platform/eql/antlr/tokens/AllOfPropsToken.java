@@ -14,7 +14,7 @@ public final class AllOfPropsToken extends AbstractParameterisedEqlToken {
 
     public final List<String> props;
 
-    public AllOfPropsToken(final Collection<? extends String> props) {
+    public AllOfPropsToken(final Collection<String> props) {
         super(ALLOFPROPS, "allOfProps");
         this.props = ImmutableList.copyOf(props);
     }

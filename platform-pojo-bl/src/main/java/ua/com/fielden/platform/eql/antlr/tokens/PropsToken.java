@@ -13,7 +13,7 @@ public final class PropsToken extends AbstractParameterisedEqlToken {
 
     public final List<String> props;
 
-    public PropsToken(final Collection<? extends String> props) {
+    public PropsToken(final Collection<String> props) {
         super(PROPS, "props");
         this.props = ImmutableList.copyOf(props);
     }

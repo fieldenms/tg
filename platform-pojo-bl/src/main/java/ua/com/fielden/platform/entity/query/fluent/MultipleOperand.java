@@ -32,25 +32,28 @@ abstract class MultipleOperand<T, ET extends AbstractEntity<?>> //
         return nextForSingleOperand(builder.anyOfValues(values));
     }
 
+    @Override
     public T anyOfValues(final Object... values) {
         return anyOfValues(asList(values));
     }
 
     @Override
-    public T anyOfParams(final Collection<String> paramNames) {
-        return nextForSingleOperand(builder.anyOfParams(paramNames));
-    }
-
-    public T anyOfParams(final String... paramNames) {
+    public T anyOfParams(final CharSequence... paramNames) {
         return anyOfParams(asList(paramNames));
     }
 
     @Override
-    public T anyOfIParams(final Collection<String> paramNames) {
+    public T anyOfParams(final Collection<? extends CharSequence> paramNames) {
+        return nextForSingleOperand(builder.anyOfParams(paramNames));
+    }
+
+    @Override
+    public T anyOfIParams(final Collection<? extends CharSequence> paramNames) {
         return nextForSingleOperand(builder.anyOfIParams(paramNames));
     }
 
-    public T anyOfIParams(final String... paramNames) {
+    @Override
+    public T anyOfIParams(final CharSequence... paramNames) {
         return anyOfIParams(asList(paramNames));
     }
 
@@ -59,6 +62,7 @@ abstract class MultipleOperand<T, ET extends AbstractEntity<?>> //
         return nextForSingleOperand(builder.anyOfModels(models));
     }
 
+    @Override
     public T anyOfModels(final PrimitiveResultQueryModel... models) {
         return anyOfModels(asList(models));
     }
@@ -68,6 +72,7 @@ abstract class MultipleOperand<T, ET extends AbstractEntity<?>> //
         return nextForSingleOperand(builder.anyOfExpressions(expressions));
     }
 
+    @Override
     public T anyOfExpressions(final ExpressionModel... expressions) {
         return anyOfExpressions(asList(expressions));
     }
@@ -87,25 +92,28 @@ abstract class MultipleOperand<T, ET extends AbstractEntity<?>> //
         return nextForSingleOperand(builder.allOfValues(values));
     }
 
+    @Override
     public T allOfValues(final Object... values) {
         return allOfValues(asList(values));
     }
 
     @Override
-    public T allOfParams(final Collection<String> paramNames) {
+    public T allOfParams(final Collection<? extends CharSequence> paramNames) {
         return nextForSingleOperand(builder.allOfParams(paramNames));
     }
 
-    public T allOfParams(final String... paramNames) {
+    @Override
+    public T allOfParams(final CharSequence... paramNames) {
         return allOfParams(asList(paramNames));
     }
 
     @Override
-    public T allOfIParams(final Collection<String> paramNames) {
+    public T allOfIParams(final Collection<? extends CharSequence> paramNames) {
         return nextForSingleOperand(builder.allOfIParams(paramNames));
     }
 
-    public T allOfIParams(final String... paramNames) {
+    @Override
+    public T allOfIParams(final CharSequence... paramNames) {
         return allOfIParams(asList(paramNames));
     }
 
@@ -114,6 +122,7 @@ abstract class MultipleOperand<T, ET extends AbstractEntity<?>> //
         return nextForSingleOperand(builder.allOfModels(models));
     }
 
+    @Override
     public T allOfModels(final PrimitiveResultQueryModel... models) {
         return allOfModels(asList(models));
     }
@@ -123,6 +132,7 @@ abstract class MultipleOperand<T, ET extends AbstractEntity<?>> //
         return nextForSingleOperand(builder.allOfExpressions(expressions));
     }
 
+    @Override
     public T allOfExpressions(final ExpressionModel... expressions) {
         return allOfExpressions(asList(expressions));
     }

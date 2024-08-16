@@ -7,16 +7,17 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
-import static java.util.Objects.requireNonNull;
+import static ua.com.fielden.platform.entity.query.exceptions.EqlException.requireNotNullArgument;
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.IPARAMS;
 
 public final class IParamsToken extends AbstractParameterisedEqlToken {
 
     public final List<String> params;
 
-    public IParamsToken(final Collection<? extends String> params) {
+    public IParamsToken(final Collection<String> params) {
         super(IPARAMS, "iParams");
-        this.params = ImmutableList.copyOf(requireNonNull(params));
+        requireNotNullArgument(params, "params");
+        this.params = ImmutableList.copyOf(params);
     }
 
     public String parametersText() {

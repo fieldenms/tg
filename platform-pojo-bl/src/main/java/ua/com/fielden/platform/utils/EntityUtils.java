@@ -18,10 +18,7 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.reflection.*;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.Hyperlink;
@@ -62,6 +59,7 @@ import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.PROPERTY_SPLITTER;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.unmodifiableListOf;
 import static ua.com.fielden.platform.utils.StreamUtils.takeWhile;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 
@@ -885,6 +883,54 @@ public class EntityUtils {
     }
 
     /**
+     * Splits a property path into an array of simple property names.
+     * <p>
+     * The supplied path must be valid, otherwise a runtime exception is thrown. Specifically, the path:
+     * <ul>
+     *   <li> Must not be empty.
+     *   <li> Must not contain empty property names (e.g., {@code "person..desc", ".person", "person."})
+     * </ul>
+     */
+    public static String[] splitPropPathToArray(final CharSequence path) {
+        if (path.isEmpty()) {
+            throw new IllegalArgumentException("Invalid property path: [%s]".formatted(path));
+        }
+
+        if (path.charAt(0) == '.' || path.charAt(path.length() - 1) == '.') {
+            throw new IllegalArgumentException("Invalid property path: [%s]".formatted(path));
+        }
+
+        final var components = Reflector.DOT_SPLITTER_PATTERN.split(path);
+        for (final var component : components) {
+            if (component.isEmpty()) {
+                throw new IllegalArgumentException("Invalid property path: [%s]".formatted(path));
+            }
+        }
+        return components;
+    }
+
+    /**
+     * Splits a property path into an array of simple property names, allowing empty names.
+     */
+    public static String[] laxSplitPropPathToArray(final CharSequence path) {
+        return Reflector.DOT_SPLITTER_PATTERN.split(path);
+    }
+
+    /**
+     * {@link #laxSplitPropPathToArray(CharSequence)} and wrap the result into an unmodifiable list.
+     */
+    public static List<String> splitPropPath(final CharSequence path) {
+        return unmodifiableListOf(splitPropPathToArray(path));
+    }
+
+    /**
+     * Splits a property path into a list of simple property names, allowing empty names.
+     */
+    public static List<String> laxSplitPropPath(final CharSequence path) {
+        return unmodifiableListOf(laxSplitPropPathToArray(path));
+    }
+
+    /**
      * Splits dot.notated property in two parts: first level property and the rest of subproperties.
      *
      * @param dotNotatedPropName
@@ -924,7 +970,11 @@ public class EntityUtils {
     }
 
     /**
-     * Returns true if the provided property path leads to a valid property in the specified entity type.
+     * Returns true if the provided <code>dotNotationProp</code> is a valid property in the specified entity type.
+     *
+     * @param type
+     * @param dotNotationProp
+     * @return
      */
     public static boolean isProperty(final Class<?> type, final CharSequence dotNotationProp) {
         try {
@@ -1118,7 +1168,12 @@ public class EntityUtils {
     }
 
     /**
-     * @see #copy(AbstractEntity, AbstractEntity, String...)
+     * The same as {@link #copy(AbstractEntity, AbstractEntity, String...)}, but with a set of {@link IConvertableToPath} as the last argument.
+     *
+     * @param fromEntity
+     * @param toEntity
+     * @param skipProperties
+     * @param <T>
      */
     public static <T extends AbstractEntity> void copy(final AbstractEntity<?> fromEntity, final T toEntity, final Set<? extends CharSequence> skipProperties) {
         copy(fromEntity, toEntity, skipProperties.stream().map(CharSequence::toString).toList().toArray(new String[]{}));

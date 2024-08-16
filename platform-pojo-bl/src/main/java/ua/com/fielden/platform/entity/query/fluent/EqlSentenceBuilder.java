@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import com.google.common.collect.ImmutableList;
 import org.antlr.v4.runtime.Token;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -12,7 +13,6 @@ import ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource;
 import java.util.*;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.entity.query.exceptions.EqlException.requireNotNullArgument;
@@ -74,6 +74,10 @@ final class EqlSentenceBuilder {
 
     private static List<String> asStrings(final Collection<? extends CharSequence> charSequences) {
         return charSequences.stream().map(CharSequence::toString).collect(toImmutableList());
+    }
+
+    private static List<String> asStrings(final CharSequence... charSequences) {
+        return Arrays.stream(charSequences).map(CharSequence::toString).collect(toImmutableList());
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -226,12 +230,12 @@ final class EqlSentenceBuilder {
         return _add(new QueryModelToken<>(model));
     }
 
-    public EqlSentenceBuilder param(final String paramName) {
-        return _add(new ParamToken(paramName));
+    public EqlSentenceBuilder param(final CharSequence paramName) {
+        return _add(new ParamToken(paramName.toString()));
     }
 
-    public EqlSentenceBuilder iParam(final String paramName) {
-        return _add(new IParamToken(paramName));
+    public EqlSentenceBuilder iParam(final CharSequence paramName) {
+        return _add(new IParamToken(paramName.toString()));
     }
 
     public EqlSentenceBuilder expr() {
@@ -262,20 +266,28 @@ final class EqlSentenceBuilder {
         return _add(new AsRequiredToken(yieldAlias.toString()));
     }
 
+    public EqlSentenceBuilder anyOfProps(final CharSequence... props) {
+        return _add(new AnyOfPropsToken(asStrings(props)));
+    }
+
     public EqlSentenceBuilder anyOfProps(final Collection<? extends CharSequence> props) {
         return _add(new AnyOfPropsToken(asStrings(props)));
     }
 
-    public EqlSentenceBuilder anyOfProps(final CharSequence... props) {
-        return anyOfProps(asList(props));
+    public EqlSentenceBuilder anyOfParams(final CharSequence... params) {
+        return _add(new AnyOfParamsToken(asStrings(params)));
     }
 
-    public EqlSentenceBuilder anyOfParams(final Collection<String> params) {
-        return _add(new AnyOfParamsToken(params));
+    public EqlSentenceBuilder anyOfParams(final Collection<? extends CharSequence> params) {
+        return _add(new AnyOfParamsToken(asStrings(params)));
     }
 
-    public EqlSentenceBuilder anyOfIParams(final Collection<String> params) {
-        return _add(new AnyOfIParamsToken(params));
+    public EqlSentenceBuilder anyOfIParams(final CharSequence... params) {
+        return _add(new AnyOfIParamsToken(asStrings(params)));
+    }
+
+    public EqlSentenceBuilder anyOfIParams(final Collection<? extends CharSequence> params) {
+        return _add(new AnyOfIParamsToken(asStrings(params)));
     }
 
     public EqlSentenceBuilder anyOfModels(final Collection<? extends PrimitiveResultQueryModel> models) {
@@ -290,20 +302,28 @@ final class EqlSentenceBuilder {
         return _add(new AnyOfExpressionsToken(expressions));
     }
 
+    public EqlSentenceBuilder allOfProps(final CharSequence... props) {
+        return _add(new AllOfPropsToken(asStrings(props)));
+    }
+
     public EqlSentenceBuilder allOfProps(final Collection<? extends CharSequence> props) {
         return _add(new AllOfPropsToken(asStrings(props)));
     }
 
-    public EqlSentenceBuilder allOfProps(final CharSequence... props) {
-        return allOfProps(asList(props));
+    public EqlSentenceBuilder allOfParams(final CharSequence... params) {
+        return _add(new AllOfParamsToken(asStrings(params)));
     }
 
-    public EqlSentenceBuilder allOfParams(final Collection<String> params) {
-        return _add(new AllOfParamsToken(params));
+    public EqlSentenceBuilder allOfParams(final Collection<? extends CharSequence> params) {
+        return _add(new AllOfParamsToken(asStrings(params)));
     }
 
-    public EqlSentenceBuilder allOfIParams(final Collection<String> params) {
-        return _add(new AllOfIParamsToken(params));
+    public EqlSentenceBuilder allOfIParams(final CharSequence... params) {
+        return _add(new AllOfIParamsToken(asStrings(params)));
+    }
+
+    public EqlSentenceBuilder allOfIParams(final Collection<? extends CharSequence> params) {
+        return _add(new AllOfIParamsToken(asStrings(params)));
     }
 
     public EqlSentenceBuilder allOfModels(final Collection<? extends PrimitiveResultQueryModel> models) {
@@ -326,20 +346,28 @@ final class EqlSentenceBuilder {
         return _add(new AllToken(subQuery));
     }
 
+    public EqlSentenceBuilder setOfProps(final CharSequence... props) {
+        return _add(new PropsToken(asStrings(props)));
+    }
+
     public EqlSentenceBuilder setOfProps(final Collection<? extends CharSequence> props) {
         return _add(new PropsToken(asStrings(props)));
     }
 
-    public EqlSentenceBuilder setOfProps(final CharSequence... props) {
-        return setOfProps(asList(props));
+    public EqlSentenceBuilder setOfParams(final CharSequence... params) {
+        return _add(new ParamsToken(asStrings(params)));
     }
 
-    public EqlSentenceBuilder setOfParams(final Collection<String> params) {
-        return _add(new ParamsToken(params));
+    public EqlSentenceBuilder setOfParams(final Collection<? extends CharSequence> params) {
+        return _add(new ParamsToken(asStrings(params)));
     }
 
-    public EqlSentenceBuilder setOfIParams(final Collection<String> params) {
-        return _add(new IParamsToken(params));
+    public EqlSentenceBuilder setOfIParams(final CharSequence... params) {
+        return _add(new IParamsToken(asStrings(params)));
+    }
+
+    public EqlSentenceBuilder setOfIParams(final Collection<? extends CharSequence> params) {
+        return _add(new IParamsToken(asStrings(params)));
     }
 
     public EqlSentenceBuilder setOfValues(final Collection<?> values) {
@@ -630,7 +658,7 @@ final class EqlSentenceBuilder {
 
     public EqlSentenceBuilder innerJoin(final AggregatedResultQueryModel... sourceModels) {
         if (sourceModels.length >= 1) {
-            return _add(JoinToken.models(asList(sourceModels)));
+            return _add(JoinToken.models(ImmutableList.copyOf(sourceModels)));
         } else {
             throw new EqlException("No models were specified as a source in the FROM statement!");
         }
@@ -638,7 +666,7 @@ final class EqlSentenceBuilder {
 
     public <E extends AbstractEntity<?>> EqlSentenceBuilder innerJoin(final EntityResultQueryModel<E>... sourceModels) {
         if (sourceModels.length >= 1) {
-            return _add(JoinToken.models(asList(sourceModels)));
+            return _add(JoinToken.models(ImmutableList.copyOf(sourceModels)));
         } else {
             throw new EqlException("No models were specified as a source in the FROM statement!");
         }
@@ -646,7 +674,7 @@ final class EqlSentenceBuilder {
 
     public EqlSentenceBuilder leftJoin(final AggregatedResultQueryModel... sourceModels) {
         if (sourceModels.length >= 1) {
-            return _add(LeftJoinToken.models(asList(sourceModels)));
+            return _add(LeftJoinToken.models(ImmutableList.copyOf(sourceModels)));
         } else {
             throw new EqlException("No models were specified as a source in the FROM statement!");
         }
@@ -655,7 +683,7 @@ final class EqlSentenceBuilder {
     @SafeVarargs
     public final <E extends AbstractEntity<?>> EqlSentenceBuilder leftJoin(final EntityResultQueryModel<E>... sourceModels) {
         if (sourceModels.length >= 1) {
-            return _add(LeftJoinToken.models(asList(sourceModels)));
+            return _add(LeftJoinToken.models(ImmutableList.copyOf(sourceModels)));
         } else {
             throw new EqlException("No models were specified as a source in the FROM statement!");
         }

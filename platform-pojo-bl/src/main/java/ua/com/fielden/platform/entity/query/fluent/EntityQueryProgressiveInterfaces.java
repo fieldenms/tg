@@ -185,21 +185,17 @@ public interface EntityQueryProgressiveInterfaces {
          */
         T iVal(final Object value);
 
-        T param(final String paramName);
+        T param(final CharSequence paramName);
 
         T param(final Enum<?> paramName);
 
         /**
-         * Ignore parameter -- ignore condition with this operator if null is passed as an argument.
-         *
-         * @return
+         * Ignore parameter -- ignore condition with this operator if the given parameter's value is set to null.
          */
-        T iParam(final String paramName);
+        T iParam(final CharSequence paramName);
 
         /**
-         * Ignore parameter -- ignore condition with this operator if null is passed as an argument.
-         *
-         * @return
+         * Ignore parameter -- ignore condition with this operator if the given parameter's value is set to null.
          */
         T iParam(final Enum<?> paramName);
 
@@ -286,18 +282,18 @@ public interface EntityQueryProgressiveInterfaces {
 
         T anyOfValues(final Object... values);
 
-        T anyOfParams(final Collection<String> paramNames);
+        T anyOfParams(final CharSequence... paramNames);
 
-        T anyOfParams(final String... paramNames);
+        T anyOfParams(final Collection<? extends CharSequence> paramNames);
 
         /**
          * Shortcut for the group of OR-ed iParam(..) calls.
          *
          * @return
          */
-        T anyOfIParams(final Collection<String> paramNames);
+        T anyOfIParams(final Collection<? extends CharSequence> paramNames);
 
-        T anyOfIParams(final String... paramNames);
+        T anyOfIParams(final CharSequence... paramNames);
 
         T anyOfModels(final Collection<? extends PrimitiveResultQueryModel> models);
 
@@ -315,18 +311,18 @@ public interface EntityQueryProgressiveInterfaces {
 
         T allOfValues(final Object... values);
 
-        T allOfParams(final Collection<String> paramNames);
+        T allOfParams(final CharSequence... paramNames);
 
-        T allOfParams(final String... paramNames);
+        T allOfParams(final Collection<? extends CharSequence> paramNames);
 
         /**
          * Shortcut for the group of AND-ed iParam(..) calls.
          *
          * @return
          */
-        T allOfIParams(final Collection<String> paramNames);
+        T allOfIParams(final Collection<? extends CharSequence> paramNames);
 
-        T allOfIParams(final String... paramNames);
+        T allOfIParams(final CharSequence... paramNames);
 
         T allOfModels(final Collection<? extends PrimitiveResultQueryModel> models);
 
@@ -452,13 +448,13 @@ public interface EntityQueryProgressiveInterfaces {
 
         T props(final Collection<? extends CharSequence> properties);
 
-        T params(final Collection<String> paramNames);
+        T params(final CharSequence... paramNames);
 
-        T params(final String... paramNames);
+        T params(final Collection<? extends CharSequence> paramNames);
 
-        T iParams(final Collection<String> paramNames);
+        T iParams(final CharSequence... paramNames);
 
-        T iParams(final String... paramNames);
+        T iParams(final Collection<? extends CharSequence> paramNames);
 
         T model(final SingleResultQueryModel<?> model);
         // beginSet();

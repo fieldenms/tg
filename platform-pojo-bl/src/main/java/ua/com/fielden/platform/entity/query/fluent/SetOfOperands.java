@@ -42,20 +42,20 @@ abstract class SetOfOperands<T, ET extends AbstractEntity<?>> //
     }
 
     @Override
-    public T params(final Collection<String> paramNames) {
+    public T params(final Collection<? extends CharSequence> paramNames) {
         return nextForSingleOperand(builder.setOfParams(paramNames));
     }
 
-    public T params(final String... paramNames) {
+    public T params(final CharSequence... paramNames) {
         return params(asList(paramNames));
     }
 
     @Override
-    public T iParams(final Collection<String> paramNames) {
+    public T iParams(final Collection<? extends CharSequence> paramNames) {
         return nextForSingleOperand(builder.setOfIParams(paramNames));
     }
 
-    public T iParams(final String... paramNames) {
+    public T iParams(final CharSequence... paramNames) {
         return iParams(asList(paramNames));
     }
 
