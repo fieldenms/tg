@@ -79,9 +79,6 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     
     /**
      * Constructs {@link EnhancedCentreEntityQueryCriteria} with specified {@link IValueMatcherFactory}. Needed mostly for instantiating through injector.
-     *
-     * @param entityDao
-     * @param valueMatcherFactory
      */
     @SuppressWarnings("rawtypes")
     @Inject
