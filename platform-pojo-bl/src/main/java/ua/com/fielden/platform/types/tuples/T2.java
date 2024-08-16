@@ -35,6 +35,9 @@ public class T2<T_1, T_2> {
         return new T2<>(_1, _2);
     }
 
+    ////////////////////////////////////
+    //////// Mapping functions /////////
+    ////////////////////////////////////
     public <R> T2<R, T_2> map1(final Function<? super T_1, R> mapper) {
         return new T2<>(mapper.apply(_1), _2);
     }
@@ -46,6 +49,7 @@ public class T2<T_1, T_2> {
     public <R> R map(final BiFunction<? super T_1, ? super T_2, R> mapper) {
         return mapper.apply(this._1, this._2);
     }
+    ////////////////////////////////////
 
     @Override
     public int hashCode() {

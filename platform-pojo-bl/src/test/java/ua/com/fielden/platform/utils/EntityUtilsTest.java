@@ -336,7 +336,7 @@ public class EntityUtilsTest {
 
     @Test(expected = NoSuchElementException.class)
     public void coalesce_throws_exception_if_all_values_are_null_and_gracefully_handles_null_for_array_argument() {
-        coalesce(null, null, null /*this is an array argument*/);
+        coalesce(null, null, (Object[]) null /* this is an array argument */);
     }
 
     @Test

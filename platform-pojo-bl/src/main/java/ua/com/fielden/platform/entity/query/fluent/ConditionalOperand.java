@@ -1,9 +1,12 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -37,23 +40,39 @@ abstract class ConditionalOperand<T1 extends IComparisonOperator<T2, ET>, T2 ext
     }
 
     @Override
-    public T2 existsAnyOf(final QueryModel... subQueries) {
+    public T2 existsAnyOf(final Collection<? extends QueryModel<?>> subQueries) {
         return nextForConditionalOperand(builder.existsAnyOf(false, subQueries));
     }
 
+    public T2 existsAnyOf(final QueryModel<?>... subQueries) {
+        return existsAnyOf(asList(subQueries));
+    }
+
     @Override
-    public T2 notExistsAnyOf(final QueryModel... subQueries) {
+    public T2 notExistsAnyOf(final Collection<? extends QueryModel<?>>  subQueries) {
         return nextForConditionalOperand(builder.existsAnyOf(true, subQueries));
     }
 
-    @Override
-    public T2 existsAllOf(final QueryModel... subQueries) {
-        return nextForConditionalOperand(builder.existsAllOf(false, subQueries));
+    public T2 notExistsAnyOf(final QueryModel<?>... subQueries) {
+        return notExistsAnyOf(asList(subQueries));
     }
 
     @Override
-    public T2 notExistsAllOf(final QueryModel... subQueries) {
+    public T2 existsAllOf(final Collection<? extends QueryModel<?>>  subQueries) {
+        return nextForConditionalOperand(builder.existsAllOf(false, subQueries));
+    }
+
+    public T2 existsAllOf(final QueryModel<?>... subQueries) {
+        return existsAllOf(asList(subQueries));
+    }
+
+    @Override
+    public T2 notExistsAllOf(final Collection<? extends QueryModel<?>>  subQueries) {
         return nextForConditionalOperand(builder.existsAllOf(true, subQueries));
+    }
+
+    public T2 notExistsAllOf(final QueryModel<?>... subQueries) {
+        return notExistsAllOf(asList(subQueries));
     }
 
     /**

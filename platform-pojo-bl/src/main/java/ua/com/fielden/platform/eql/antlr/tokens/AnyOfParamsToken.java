@@ -1,20 +1,21 @@
 package ua.com.fielden.platform.eql.antlr.tokens;
 
-import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.utils.CollectionUtil;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.ANYOFPARAMS;
 
 public final class AnyOfParamsToken extends AbstractParameterisedEqlToken {
 
     public final List<String> params;
 
-    public AnyOfParamsToken(final List<String> params) {
+    public AnyOfParamsToken(final Collection<? extends CharSequence> params) {
         super(ANYOFPARAMS, "anyOfParams");
-        this.params = ImmutableList.copyOf(params);
+        this.params = params.stream().map(CharSequence::toString).collect(toImmutableList());
     }
 
     public String parametersText() {

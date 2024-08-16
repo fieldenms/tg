@@ -92,7 +92,7 @@ public class fetch<T extends AbstractEntity<?>> {
      * Should be used to indicate a name of the first level property that should be initialised in the retrieved entity instances.
      *
      * @param propName
-     *            - Could be name of the primitive property (e.g. "desc", "numberOfPages"), entity property ("station"), composite type property ("cost", "cost.amount"), union
+     *            this could be a name of a primitive property (e.g. "desc", "numberOfPages"), entity property ("station"), composite type property ("cost", "cost.amount"), union
      *            entity property ("location", "location.workshop"), collectional property ("slots"), one-to-one association property ("financialDetails").
      * @return
      */
@@ -107,7 +107,7 @@ public class fetch<T extends AbstractEntity<?>> {
      * Should be used to indicate a name of the first level property that should not be initialised in the retrieved entity instances.
      *
      * @param propName
-     *            - Could be name of the primitive property (e.g. "desc", "numberOfPages"), entity property ("station"), composite type property ("cost", "cost.amount"), union
+     *            this could be a name of a primitive property (e.g. "desc", "numberOfPages"), entity property ("station"), composite type property ("cost", "cost.amount"), union
      *            entity property ("location", "location.workshop"), collectional property ("slots"), one-to-one association property ("financialDetails").
      * @return
      */
@@ -119,8 +119,8 @@ public class fetch<T extends AbstractEntity<?>> {
     }
 
     /**
-     * Should be used to indicate a name of the first level entity property that should be initialised in the retrieved entity instances and the model to indicate which
-     * subproperties of the given property should be initialised as well.
+     * Used to indicate a name of the first level entity property that should be initialised in the retrieved entity instances and the model to indicate which
+     * subproperties of a given property should also be initialised.
      */
     public fetch<T> with(final CharSequence propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
         validate(propName.toString());

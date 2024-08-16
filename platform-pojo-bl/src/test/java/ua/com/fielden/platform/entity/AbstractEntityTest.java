@@ -80,12 +80,12 @@ public class AbstractEntityTest {
 
     @Test
     public void testThatObservablePropertyMaintainsOriginalAndPrevValue() {
-        entity.getProperty("observableProperty").setPrevValue(new Double("0.0")); // setting the same value as the current one does not change prev-value
+        entity.getProperty("observableProperty").setPrevValue(Double.valueOf("0.0")); // setting the same value as the current one does not change prev-value
         assertEquals("current value must be changed (original value null)", true, entity.getProperty("observableProperty").isChangedFromOriginal());
         assertEquals("current value must be changed (previous value null)", true, entity.getProperty("observableProperty").isChangedFromPrevious());
-        final Double newValue = new Double("22.0");
+        final Double newValue = Double.valueOf("22.0");
         entity.setObservableProperty(newValue);
-        assertEquals("Prev property value is incorrect", new Double("0.0"), entity.getProperty("observableProperty").getPrevValue());
+        assertEquals("Prev property value is incorrect", Double.valueOf("0.0"), entity.getProperty("observableProperty").getPrevValue());
         assertNull("Original property value is incorrect", entity.getProperty("observableProperty").getOriginalValue());
         assertEquals("Property change count is incorrect", 1, entity.getProperty("observableProperty").getValueChangeCount());
         assertEquals("current value must be changed (original value 1)", true, entity.getProperty("observableProperty").isChangedFromOriginal());
@@ -108,12 +108,12 @@ public class AbstractEntityTest {
         // try to assign null
         entity.setFirstProperty(null);
         assertFalse("Property validation failed.", entity.getProperty("firstProperty").isValid());
-        assertEquals("Value assignment should have been prevented by the validator,", new Integer(60), entity.getFirstProperty());
+        assertEquals("Value assignment should have been prevented by the validator,", Integer.valueOf(60), entity.getFirstProperty());
         // try to assign value less than 50
         entity.setFirstProperty(23);
         assertFalse("Property validation failed.", entity.getProperty("firstProperty").isValid());
-        assertEquals("Value assignment should have been prevented by the validator,", new Integer(60), entity.getFirstProperty());
-        assertEquals("Incorrect value for last invalid value.", new Integer(23), entity.getProperty("firstProperty").getLastInvalidValue());
+        assertEquals("Value assignment should have been prevented by the validator,", Integer.valueOf(60), entity.getFirstProperty());
+        assertEquals("Incorrect value for last invalid value.", Integer.valueOf(23), entity.getProperty("firstProperty").getLastInvalidValue());
     }
 
     @Test

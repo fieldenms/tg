@@ -1,4 +1,4 @@
-// Generated from EQL.g4 by ANTLR 4.9.3
+// Generated from EQL.g4 by ANTLR 4.13.2
 package ua.com.fielden.platform.eql.antlr;
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 

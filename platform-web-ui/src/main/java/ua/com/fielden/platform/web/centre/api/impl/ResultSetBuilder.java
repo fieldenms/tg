@@ -114,9 +114,6 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     /**
      * Implementation used by both {@link IResultSetBuilder2Properties#addProp(CharSequence, boolean)} and deprecated {@link IResultSetBuilder2Properties#addProp(CharSequence)}.
-     * <p>
-     * <b>TODO</b> Once {@link IResultSetBuilder2Properties#addProp(CharSequence)} is removed, this implementation needs to be moved to {@link IResultSetBuilder2Properties#addProp(CharSequence, boolean)}.
-     * </p>
      *
      * @param propName
      * @param presentByDefault

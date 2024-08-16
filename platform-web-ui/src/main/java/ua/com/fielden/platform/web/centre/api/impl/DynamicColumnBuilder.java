@@ -1,23 +1,5 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
-import static java.util.stream.Collectors.toList;
-import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_DESC;
-import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_DISPLAY_PROP;
-import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_GROUP_PROP;
-import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_GROUP_PROP_VALUE;
-import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_GROW_FACTOR;
-import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_MIN_WIDTH;
-import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_TITLE;
-import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_TOOLTIP_PROP;
-import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_TYPE;
-import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_WIDTH;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity_centre.review.criteria.DynamicColumnForExport;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
@@ -27,6 +9,11 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.IDynamicColumnConfig;
 import ua.com.fielden.platform.web.centre.api.dynamic_columns.*;
+
+import java.util.*;
+
+import static java.util.stream.Collectors.toList;
+import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.*;
 
 /**
  * Implementation and the entry point for dynamic column building API. It is used to define dynamic columns that are used for representing collectional properties in-line with the main entity.
@@ -47,6 +34,9 @@ public class DynamicColumnBuilder<T extends AbstractEntity<?>> implements IDynam
 
     /**
      * This is the entry to the Dynamic Column Builder API.
+     * @param type
+     * @param collectionalPropertyName
+     * @return
      */
     public static <M extends AbstractEntity<?>> IDynamicColumnBuilderGroupProp forProperty(final Class<M> type, final CharSequence collectionalPropertyName) {
         return new DynamicColumnBuilder<M>(type, collectionalPropertyName.toString());

@@ -20,7 +20,7 @@ abstract class AbstractEqlVisitor<T> extends StrictEQLBaseVisitor<T> {
 
     protected final QueryModelToStage1Transformer transformer;
 
-    AbstractEqlVisitor(QueryModelToStage1Transformer transformer) {
+    AbstractEqlVisitor(final QueryModelToStage1Transformer transformer) {
         this.transformer = transformer;
     }
 
@@ -47,6 +47,7 @@ abstract class AbstractEqlVisitor<T> extends StrictEQLBaseVisitor<T> {
     }
 
     protected static Object preprocessValue(final Object value) {
+        // TODO Consider if value processing should be aligned with ValuePreprocessor.convertValue(value).
         if (value != null) {
             if (value.getClass().isArray()) {
                 return preprocessValues(Arrays.asList((Object[]) value));

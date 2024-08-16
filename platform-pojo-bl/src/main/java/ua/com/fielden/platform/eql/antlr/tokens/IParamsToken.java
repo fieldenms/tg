@@ -2,19 +2,22 @@ package ua.com.fielden.platform.eql.antlr.tokens;
 
 import ua.com.fielden.platform.utils.CollectionUtil;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
-import static java.util.Objects.requireNonNull;
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static ua.com.fielden.platform.entity.query.exceptions.EqlException.requireNotNullArgument;
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.IPARAMS;
 
 public final class IParamsToken extends AbstractParameterisedEqlToken {
 
     public final List<String> params;
 
-    public IParamsToken(final List<String> params) {
+    public IParamsToken(final Collection<? extends CharSequence> params) {
         super(IPARAMS, "iParams");
-        this.params = requireNonNull(params);
+        requireNotNullArgument(params, "params");
+        this.params = params.stream().map(CharSequence::toString).collect(toImmutableList());
     }
 
     public String parametersText() {

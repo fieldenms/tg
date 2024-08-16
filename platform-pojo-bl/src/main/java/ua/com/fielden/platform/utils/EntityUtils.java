@@ -18,7 +18,6 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.*;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -1264,11 +1263,6 @@ public class EntityUtils {
      * <pre>
      * final PmRoutine pmRoutine = EntityUtils.<PmRoutine>fetchEntityForPropOf(pmId, "pmRoutine", co(PmExpendable.class)).orElseThrow(...);
      * </pre>
-     *
-     * @param id
-     * @param propName
-     * @param coOther
-     * @return
      */
     public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final Long id, final CharSequence propName, final IEntityReader<?> coOther) {
         final Class<T> entityClass = (Class<T>) PropertyTypeDeterminator.determinePropertyType(coOther.getEntityType(), propName);
@@ -1287,11 +1281,6 @@ public class EntityUtils {
      * <pre>
      * final PmRoutine freshPmRoutine = EntityUtils.<PmRoutine>fetchEntityForPropOf(stalePmRoutine, "pmRoutine", co(PmExpendable.class)).orElseThrow(...);
      * </pre>
-     *
-     * @param instance
-     * @param propName
-     * @param coOther
-     * @return
      */
     public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final T instance, final CharSequence propName, final IEntityReader<?> coOther) {
         return fetchEntityForPropOf(instance.getId(), propName, coOther);
