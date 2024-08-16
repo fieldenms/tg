@@ -1075,7 +1075,25 @@ public interface EntityQueryProgressiveInterfaces {
     interface IOrderingItem<ET extends AbstractEntity<?>>
             extends
             IOrderingItem1<ET>,
-            ICompletedAndYielded<ET> {}
+            ICompletedAndYielded<ET>,
+            IOrderByLimit<ET>,
+            IOrderByOffset<ET>
+    {}
+
+    /**
+     * Limit or the end of this order model.
+     */
+    interface IOrderByLimit<ET extends AbstractEntity<?>> extends ICompletedAndYielded<ET> {
+        IOrderByOffset<ET> limit(long n);
+        IOrderByOffset<ET> limit(Limit limit);
+    }
+
+    /**
+     * Offset or the end of this order model.
+     */
+    interface IOrderByOffset<ET extends AbstractEntity<?>> extends ICompletedAndYielded<ET> {
+        ICompletedAndYielded<ET> offset(long n);
+    }
 
     interface StandaloneOrderBy {
 
@@ -1084,16 +1102,38 @@ public interface EntityQueryProgressiveInterfaces {
             IOrderingItemCloseable desc();
         }
 
-        interface IOrderingItemCloseable
-                extends IOrderingItem {
+        interface IOrderByEnd {
             OrderingModel model();
         }
+
+        interface IOrderingItemCloseable
+                extends
+                IOrderingItem,
+                IOrderByEnd,
+                IOrderByLimit,
+                IOrderByOffset
+        {}
 
         interface IOrderingItem
                 extends
                 IExprOperand<ISingleOperandOrderable, IExprOperand0<ISingleOperandOrderable, AbstractEntity<?>>, AbstractEntity<?>> {
             ISingleOperandOrderable yield(final String yieldAlias);
             IOrderingItemCloseable order(final OrderingModel model);
+        }
+
+        /**
+         * Limit or the end of this order model.
+         */
+        interface IOrderByLimit extends IOrderByEnd {
+            IOrderByOffset limit(long n);
+            IOrderByOffset limit(Limit limit);
+        }
+
+        /**
+         * Offset or the end of this order model.
+         */
+        interface IOrderByOffset extends IOrderByEnd {
+            IOrderByEnd offset(long n);
         }
 
     }

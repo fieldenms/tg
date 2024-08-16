@@ -1,10 +1,7 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFirstYieldedItemAlias;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionYieldedLastArgument;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItem;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.*;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
@@ -44,6 +41,21 @@ final class OrderingItem<ET extends AbstractEntity<?>>
     @Override
     public AggregatedResultQueryModel modelAsAggregate() {
         return new CompletedAndYielded<ET>(builder).modelAsAggregate();
+    }
+
+    @Override
+    public IOrderByOffset<ET> limit(final long n) {
+        return new OrderingItem<>(builder.limit(n));
+    }
+
+    @Override
+    public IOrderByOffset<ET> limit(final Limit limit) {
+        return new OrderingItem<>(builder.limit(limit));
+    }
+
+    @Override
+    public ICompletedAndYielded<ET> offset(final long n) {
+        return new OrderingItem<>(builder.offset(n));
     }
 
 }

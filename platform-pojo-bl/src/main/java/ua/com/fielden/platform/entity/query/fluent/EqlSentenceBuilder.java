@@ -536,6 +536,18 @@ final class EqlSentenceBuilder {
         return _add(token(DESC));
     }
 
+    public EqlSentenceBuilder limit(final long limit) {
+        return _add(LimitToken.limit(limit));
+    }
+
+    public EqlSentenceBuilder limit(final Limit limit) {
+        return _add(LimitToken.limit(limit));
+    }
+
+    public EqlSentenceBuilder offset(final long offset) {
+        return _add(new OffsetToken(offset));
+    }
+
     public EqlSentenceBuilder on() {
         return _add(token(ON));
     }
