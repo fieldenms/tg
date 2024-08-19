@@ -1,17 +1,12 @@
 package ua.com.fielden.platform.eql.stage3.sources;
 
-import static java.util.stream.Collectors.joining;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.queries.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
+
+import java.util.*;
+
+import static java.util.stream.Collectors.joining;
 
 public class Source3BasedOnQueries extends AbstractSource3 {
     private final List<SourceQuery3> models = new ArrayList<>();
@@ -31,7 +26,19 @@ public class Source3BasedOnQueries extends AbstractSource3 {
 
     @Override
     public String sql(final DbVersion dbVersion) {
-        return "(" + models.stream().map(m -> m.sql(dbVersion)).collect(joining("\n UNION ALL \n")) + ") AS " + sqlAlias;
+        return switch (dbVersion) {
+            // a SELECT with an ORDER BY inside a UNION must be enclosed in parentheses, although this inner ordering
+            // is not guaranteed to have an effect on the results of UNION
+            // https://www.postgresql.org/docs/16/sql-select.html#SQL-UNION
+            case POSTGRESQL ->
+                    "("
+                    + models.stream().map(m -> '(' + m.sql(dbVersion) + ')').collect(joining("\n UNION ALL \n"))
+                    + ") AS " + sqlAlias;
+            default ->
+                    "("
+                    + models.stream().map(m -> m.sql(dbVersion)).collect(joining("\n UNION ALL \n"))
+                    + ") AS " + sqlAlias;
+        };
     }
 
     @Override

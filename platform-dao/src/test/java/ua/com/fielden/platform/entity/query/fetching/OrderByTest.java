@@ -225,6 +225,30 @@ public class OrderByTest extends AbstractDaoTestCase {
                                     co(TgPersonName.class).getAllEntities(qem)));
     }
 
+    @Test
+    public void orderBy_can_be_applied_to_multiple_subqueries() {
+        final var total = 3;
+        final var entities = rangeClosed(1, total)
+                .mapToObj(i -> TEST_DATA_KEY_PREFIX + i)
+                .map(key -> new_(TgPersonName.class, key))
+                .map(this::save)
+                .toList();
+
+        // first 2 + last 1
+        withQem(select(select(TgPersonName.class).where().condition(testDataCond)
+                               .orderBy().prop("key").asc()
+                               .limit(2)
+                               .model(),
+                       select(TgPersonName.class).where().condition(testDataCond)
+                               .orderBy().prop("key").asc()
+                               .limit(1)
+                               .offset(2)
+                               .model()),
+                $ -> $.prop("key").asc().model(),
+                $ -> $.prop("key").asc().model(),
+                qem -> assertEquals(entities, co(TgPersonName.class).getAllEntities(qem)));
+    }
+
     /**
      * Runs an action twice: once with a {@linkplain QueryExecutionModel QEM} built with an odering model inside a query,
      * and once with a QEM built with a standalone ordering model. This doubles test coverage while reducing the amount
