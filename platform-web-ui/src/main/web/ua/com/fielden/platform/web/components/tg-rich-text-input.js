@@ -31,7 +31,13 @@ class TgRichTextInput extends PolymerElement {
         return {
             value: {
                 type: String,
-                observer: "_valueChanged"
+                observer: "_valueChanged",
+                notify: true,
+            },
+
+            changeEventHandler: {
+                type: Function,
+                value: null
             },
 
             _editor: Object,
@@ -44,25 +50,28 @@ class TgRichTextInput extends PolymerElement {
         this._editor = new toastui.Editor({
             el: this.$.editor,
             height: '500px',
+            initialValue: this.value,
             initialEditType: 'wysiwyg',
+            events: {
+                change: this._changeValue.bind(this),
+                blur: this.changeEventHandler.bind(this)
+            },
             usageStatistics: false,
             toolbarItems: [],
             hideModeSwitch: true
         });
-        if (this.value) {
-            this._editor.setMarkdown(this.value);
-        }
-    }
-
-    getMarkdownText () {
-        if (this._editor) {
-            return this._editor.getMarkdown();
-        }
+        this._editor.setMarkdown(this.value);
     }
 
     _valueChanged(newValue) {
-        if(this._editor) {
+        if(this._editor && newValue !== this._editor.getMarkdown()) {
             this._editor.setMarkdown(newValue);
+        }
+    }
+
+    _changeValue (e) {
+        if (e === "wysiwyg" && this.value !== this._editor.getMarkdown()) {
+            this.value = this._editor.getMarkdown();
         }
     }
 }

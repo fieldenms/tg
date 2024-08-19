@@ -23,7 +23,10 @@ const customInputTemplate = html`
     <tg-rich-text-input id="input" 
         class="custom-input paper-input-input"
         tooltip-text$="[[_getTooltip(_editingValue, entity)]]"
-        disabled$="[[_disabled]]" markdown-text="[[_editingValue]]"></tg-rich-text-input>`;
+        disabled$="[[_disabled]]" 
+        value="{{_editingValue}}"
+        change-event-handler="[[_onChange]]">
+    </tg-rich-text-input>`;
 const propertyActionTemplate = html`<slot id="actionSlot" name="property-action"></slot>`;
 
 export class TgRichTextEditor extends TgEditor {
@@ -31,20 +34,29 @@ export class TgRichTextEditor extends TgEditor {
     static get template() { 
         return createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, propertyActionTemplate, customLabelTemplate);
     }
-    
-    /**
-     * Converts the value into string representation (which is used in edititing / comm values).
-     */
-    convertToString (value) {
-        return value.formattedText || "";
-    }
 
     /**
-     * This method converts 
+     * This method converts string value to rich test object
      */
     convertFromString (strValue) {
-        return {formattedText: strValue};
+        if (strValue === '') {
+            return null;
+        }
+
+        return {'formattedText': strValue};
     }
+
+    // _copyTap () {
+    //     if (this.multi) {
+    //         super._copyTap();
+    //     } else if (this.lastValidationAttemptPromise) {
+    //         this.lastValidationAttemptPromise.then(res => {
+    //             this._copyFromLayerIfPresent(super._copyTap.bind(this));
+    //         });
+    //     } else {
+    //         this._copyFromLayerIfPresent(super._copyTap.bind(this));
+    //     }
+    // }
 }
 
 customElements.define('tg-rich-text-editor', TgRichTextEditor);
