@@ -907,7 +907,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
 
         assertThrows(() -> qry(query), EqlException.class, ex -> {
             assertEquals(
-                    "Illegal 'caseWhen' expression: at least one returned value must be non-null or a type cast must be specified.",
+                    "Illegal [caseWhen] expression: at least one returned value must be non-null or a type cast must be specified.",
                     ex.getMessage());
         });
     }

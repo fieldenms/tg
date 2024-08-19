@@ -5,8 +5,6 @@ import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.AbstractSingleOperand3;
 
-import static java.lang.String.format;
-
 public abstract class AbstractFunction3 extends AbstractSingleOperand3 {
 
     public AbstractFunction3(PropType type) {
@@ -15,7 +13,7 @@ public abstract class AbstractFunction3 extends AbstractSingleOperand3 {
 
     @Override
     public String sql(final EqlDomainMetadata metadata) {
-        throw new EqlStage3ProcessingException(format("Function [%s] is not yet implemented for RDBMS [%s]!", getClass().getSimpleName(), metadata.dbVersion));
+        throw new EqlStage3ProcessingException("Function [%s] is not yet implemented for RDBMS [%s]!".formatted(getClass().getSimpleName(), metadata.dbVersion));
     }
 
 }
