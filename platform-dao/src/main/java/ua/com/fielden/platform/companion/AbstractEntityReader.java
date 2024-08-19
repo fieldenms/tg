@@ -298,19 +298,18 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
     }
 
     /**
-     * @param filtered -- controls whether filtering is on
+     * @param filtered controls whether user-filtering is on
      */
     private T fetchOneEntityInstance(final boolean filtered, final Long id, final fetch<T> fetchModel) {
         if (id == null) {
-            throw new EntityCompanionException(format(ERR_MISSING_ID_VALUE, getEntityType().getName()));
+            throw new EntityCompanionException(ERR_MISSING_ID_VALUE.formatted(getEntityType().getName()));
         }
 
-        final EntityResultQueryModel<T> query = select(getEntityType()).where().prop(ID).eq().val(id).model()
-                .setFilterable(filtered);
+        final var query = select(getEntityType()).where().prop(ID).eq().val(id).model()
+                          .setFilterable(filtered);
         final var qem = instrumented()
-                ? from(query).with(fetchModel).model()
-                : from(query).with(fetchModel).lightweight().model();
-
+                        ? from(query).with(fetchModel).model()
+                        : from(query).with(fetchModel).lightweight().model();
         try {
             return getEntity(qem);
         } catch (final Exception e) {

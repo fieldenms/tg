@@ -5,6 +5,7 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
+import ua.com.fielden.platform.eql.antlr.exceptions.EqlCompilationException;
 import ua.com.fielden.platform.eql.antlr.tokens.PropToken;
 import ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource;
 import ua.com.fielden.platform.eql.antlr.tokens.util.TokensFormatter;
@@ -21,7 +22,7 @@ import static ua.com.fielden.platform.eql.antlr.EQLParser.*;
  * <h3>ANTLR visitor implementation patterns</h3>
  *
  * <ol>
- *     <li> Terminal derivation rules: context class with a {@code token} field holding the value of the concrete token.
+ *     <li> Terminal derivation rules: a context class with a {@code token} field holding the value of a specific token.
  * {@snippet :
  * unaryComparisonOperator :
  *       token=ISNULL
@@ -35,11 +36,11 @@ import static ua.com.fielden.platform.eql.antlr.EQLParser.*;
  *     ...
  * }
  * }
- *     Visitor code should use the value of {@code token} to determine the actual token.
+ *     The visitor code should use the value of {@code token} to identify the actual token.
  *     <p>
  *     If the token is parameterised it will have a corresponding custom token type.
  *     For example, {@code prop("a.b.c")} would be represented by an instance of {@link PropToken} carrying the specified property path.
- *     In such cases the {@code token} field should be type-casted to the respective type.
+ *     In such cases field {@code token} should be typecast to a corresponding type.
  *
  *     <li> Specialization rules: a hierarchy of context classes.
  * {@snippet :
@@ -56,10 +57,10 @@ import static ua.com.fielden.platform.eql.antlr.EQLParser.*;
  * }
  *
  *     The visitor interface will not contain an explicit visiting method for the base type ({@code ConditionContext})
- *     but rather will dispatch on its actual type and invoke the respective visiting method (for one of its subtypes).
+ *     but will instead dispatch on its actual type and invoke a corresponding visiting method (for one of its subtypes).
  *
  * {@snippet :
- * // ConditionContext is not visited, but rather dispatches on its actual ype
+ * // ConditionContext is not visited, but dispatches on its actual type
  * ConditionContext cc = ..;
  * cc.accept(visitor);
  * }
@@ -88,7 +89,7 @@ import static ua.com.fielden.platform.eql.antlr.EQLParser.*;
  * }
  * }
  *
- *              One consequence of this is that visitor code must implement an additional method to handle the indirection.
+ *              One consequence of this is that the visitor code must implement an additional method to handle the indirection.
  *
  * {@snippet :
  * public Object visitPredicateCondition(PredicateConditionContext ctx) {
@@ -109,26 +110,26 @@ public final class EqlCompiler {
     }
 
     /**
-     * Throws a runtime exception if parsing fails.
+     * Throws exception {@link EqlCompilationException} if parsing fails.
      *
-     * @param tokenSource  source of tokens representing the expression to compile
+     * @param tokenSource  source of tokens representing an expression to compile
      * @return  compilation result
      */
-    public EqlCompilationResult compile(final ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource tokenSource) {
+    public EqlCompilationResult compile(final ListTokenSource tokenSource) {
         final var tokenStream = new CommonTokenStream(tokenSource);
         final var parser = new EQLParser(tokenStream);
 
         parser.addErrorListener(new ThrowingErrorListener(tokenSource));
 
         // parsing stage, results in a complete parse tree
-        final var tree = parser.start();
+        final StartContext tree = parser.start();
 
         // compilation stage
         final var visitor = new Visitor();
         try {
-            return tree.accept(visitor);
+            return visitor.visitStart(tree);
         } catch (final Exception e) {
-            throw new EqlStage0ProcessingException(
+            throw new EqlCompilationException(
                     """
                     Failed to compile an EQL expression.
                     Expression: %s
@@ -153,11 +154,11 @@ public final class EqlCompiler {
         if (resultType.isInstance(result)) {
             return (T) result;
         }
-        throw new RuntimeException("Expected EQL expression of type %s but was: %s".formatted(
+        throw new EqlCompilationException("Expected EQL expression of type %s but was: %s".formatted(
                 resultType.getSimpleName(), result.getClass().getSimpleName()));
     }
 
-    private final class Visitor extends EQLBaseVisitor<EqlCompilationResult> {
+    private final class Visitor extends StrictEQLBaseVisitor<EqlCompilationResult> {
 
         @Override
         public EqlCompilationResult visitStart(final StartContext ctx) {

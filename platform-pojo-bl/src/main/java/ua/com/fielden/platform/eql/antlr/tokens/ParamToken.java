@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.antlr.tokens;
 
 import java.util.Objects;
 
+import static java.util.Objects.requireNonNull;
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.PARAM;
 
 public final class ParamToken extends AbstractParameterisedEqlToken {
@@ -10,7 +11,7 @@ public final class ParamToken extends AbstractParameterisedEqlToken {
 
     public ParamToken(final String paramName) {
         super(PARAM, "param");
-        this.paramName = paramName;
+        this.paramName = requireNonNull(paramName);
     }
 
     @Override

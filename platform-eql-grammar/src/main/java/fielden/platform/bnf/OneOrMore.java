@@ -1,16 +1,16 @@
 package fielden.platform.bnf;
 
+import java.util.Objects;
 import java.util.function.Function;
 
-public record OneOrMore(Term term, TermMetadata metadata) implements Quantifier {
+public record OneOrMore(Term term, Metadata metadata) implements Quantifier {
 
-    public OneOrMore(Term term) {
-        this(term, TermMetadata.EMPTY_METADATA);
+    public OneOrMore(final Term term) {
+        this(term, Metadata.EMPTY_METADATA);
     }
 
-    @Override
-    public <V> OneOrMore annotate(TermMetadata.Key<V> key, V value) {
-        return new OneOrMore(term, TermMetadata.merge(metadata(), key, value));
+    public OneOrMore annotate(final Metadata.Annotation annotation) {
+        return new OneOrMore(term, Metadata.merge(metadata(), annotation));
     }
 
     @Override
@@ -24,8 +24,23 @@ public record OneOrMore(Term term, TermMetadata metadata) implements Quantifier 
     }
 
     @Override
+    public OneOrMore map(final Function<? super Term, ? extends Term> mapper) {
+        return new OneOrMore(mapper.apply(term), metadata);
+    }
+
+    @Override
     public String toString() {
         return "{%s}+".formatted(term);
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        return this == obj || obj instanceof Optional that && term.equals(that.term());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(term);
     }
 
 }

@@ -1,21 +1,16 @@
 package ua.com.fielden.platform.entity;
 
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY_NOT_ASSIGNED;
-
-import java.lang.reflect.Field;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
+
+import java.lang.reflect.Field;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY_NOT_ASSIGNED;
 
 /**
  * Represents a composite entity key that should be used whenever entity key has a reference to another entity. This class provides dynamic implementation of required methods (i.e.
@@ -32,12 +27,10 @@ import ua.com.fielden.platform.reflection.Reflector;
  * {@link #addKeyMemberComparator(Integer, Comparator)}.
  *
  * @author TG Team
- *
- * @param <T>
  */
 public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
 
-    private List<String> memberNames = new ArrayList<>();
+    private final List<String> memberNames = new ArrayList<>();
 
     private transient final AbstractEntity<DynamicEntityKey> entity;
     private final SimpleDateFormat dateFormatter = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
@@ -57,12 +50,11 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
      * Constructs composite key for the specified entity based on the list of expressions, which are in most cases properties of the entity.
      *
      * @param entity
-     * @param expressions
      */
     public DynamicEntityKey(final AbstractEntity<DynamicEntityKey> entity) {
-        final List<Field> compositeKeyMambers = Finder.getKeyMembers(entity.getType());
-        // If there is only one key member and it has name KEY then this is the wrong place to be using composite key
-        if (compositeKeyMambers.size() == 1 && AbstractEntity.KEY.equals(compositeKeyMambers.get(0).getName())) {
+        final List<Field> compositeKeyMembers = Finder.getKeyMembers(entity.getType());
+        // If there is only one key member, and it has name KEY then this is the wrong place to be using a composite key
+        if (compositeKeyMembers.size() == 1 && AbstractEntity.KEY.equals(compositeKeyMembers.get(0).getName())) {
             throw new EntityDefinitionException("Composite key should have at least one member.");
         }
 
@@ -70,7 +62,7 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
 
         KEY_MEMBERS_SEPARATOR = Reflector.getKeyMemberSeparator((Class<? extends AbstractEntity<DynamicEntityKey>>) entity.getType());
 
-        for (final Field member : compositeKeyMambers) {
+        for (final Field member : compositeKeyMembers) {
             memberNames.add(member.getName());
         }
     }
@@ -205,6 +197,7 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
     }
 
     public final List<String> getMemberNames() {
-        return memberNames;
+        return Collections.unmodifiableList(memberNames);
     }
+
 }

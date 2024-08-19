@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.antlr;
 
 import org.antlr.v4.runtime.Token;
+import ua.com.fielden.platform.eql.antlr.exceptions.EqlSyntaxException;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
@@ -15,17 +16,12 @@ import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.Y;
 import static ua.com.fielden.platform.eql.stage1.operands.Value1.nullValue;
 import static ua.com.fielden.platform.eql.stage1.operands.Value1.value;
 
-abstract class AbstractEqlVisitor<T> extends EQLBaseVisitor<T> {
+abstract class AbstractEqlVisitor<T> extends StrictEQLBaseVisitor<T> {
 
     protected final QueryModelToStage1Transformer transformer;
 
-    AbstractEqlVisitor(QueryModelToStage1Transformer transformer) {
+    AbstractEqlVisitor(final QueryModelToStage1Transformer transformer) {
         this.transformer = transformer;
-    }
-
-    @Override
-    protected T defaultResult() {
-        throw new UnsupportedOperationException();
     }
 
     protected Object getParamValue(final String paramName) {
@@ -51,6 +47,7 @@ abstract class AbstractEqlVisitor<T> extends EQLBaseVisitor<T> {
     }
 
     protected static Object preprocessValue(final Object value) {
+        // TODO Consider if value processing should be aligned with ValuePreprocessor.convertValue(value).
         if (value != null) {
             if (value.getClass().isArray()) {
                 return preprocessValues(Arrays.asList((Object[]) value));
@@ -83,8 +80,8 @@ abstract class AbstractEqlVisitor<T> extends EQLBaseVisitor<T> {
     }
 
     // a generic return type is needed to be able to use this method in switch expressions
-    protected static <T> T unexpectedToken(final Token token) throws EqlParseException {
-        throw new EqlParseException("Unexpected token: %s".formatted(token.getText()));
+    protected static <T> T unexpectedToken(final Token token) throws EqlSyntaxException {
+        throw new EqlSyntaxException("Unexpected token: %s".formatted(token.getText()));
     }
 
 }

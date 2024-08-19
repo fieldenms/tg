@@ -3,7 +3,7 @@ package ua.com.fielden.platform.reflection;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.utils.EntityUtils.laxSplitPropPathToArray;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.annotation.Annotation;
@@ -23,7 +23,6 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.Accessor;
@@ -34,7 +33,6 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -59,10 +57,8 @@ public final class Reflector {
         return METHOD_CACHE.size();
     }
 
-    /** A symbol that represents a separator between properties in property path expressions. */
-    public static final String DOT_SPLITTER = "\\.";
-    /** A regex pattern for matching DOT_SPLITTER. */
-    public static final Pattern DOT_SPLITTER_PATTERN = Pattern.compile(DOT_SPLITTER);
+    /** Regex pattern that represents a separator between properties in property path expressions. */
+    public static final Pattern DOT_SPLITTER_PATTERN = Pattern.compile("\\.");
     /**
      * A symbol used as the property name substitution in property path expressions representing the next level up in the context of nested properties. Should occur only at the
      * beginning of the expression. There can be several sequentially linked ← separated by dot splitter.
@@ -221,7 +217,7 @@ public final class Reflector {
                 return true;
             }
         } catch (NoSuchMethodException | SecurityException ex) {
-            LOGGER.debug(format("Checking the oberriding of method [%s] for type [%s] with base type [%s] failed.", methodName, type.getName(), baseType.getName()), ex);
+            LOGGER.debug(format("Checking the overriding of method [%s] for type [%s] with base type [%s] failed.", methodName, type.getName(), baseType.getName()), ex);
         }
         
         return false;
@@ -414,8 +410,8 @@ public final class Reflector {
         }
 
         // calculate the matching path depth from the beginning
-        final String[] contextElements = context.split(DOT_SPLITTER);
-        final String[] propertyElements = absolutePropertyPath.split(DOT_SPLITTER);
+        final String[] contextElements = laxSplitPropPathToArray(context);
+        final String[] propertyElements = laxSplitPropPathToArray(absolutePropertyPath);
         final int length = Math.min(contextElements.length, propertyElements.length);
         int longestPathUp = propertyDepth(context);
         for (int index = 0; index < length; index++) {
@@ -451,7 +447,7 @@ public final class Reflector {
         if (StringUtils.isEmpty(propertyPath)) {
             return 0;
         }
-        return propertyPath.split(DOT_SPLITTER).length;
+        return laxSplitPropPathToArray(propertyPath).length;
     }
 
     /**
@@ -473,7 +469,7 @@ public final class Reflector {
 
         String currProp = contextProperty;
 
-        final String[] path = dotNotaionalExp.split(DOT_SPLITTER);
+        final String[] path = laxSplitPropPathToArray(dotNotaionalExp);
         int index = 0;
         while ("←".equals(path[index])) {
             // find link property and add it to the absolute path

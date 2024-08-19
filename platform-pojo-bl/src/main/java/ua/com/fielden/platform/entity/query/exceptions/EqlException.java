@@ -10,6 +10,7 @@ import ua.com.fielden.platform.exceptions.AbstractPlatformRuntimeException;
  */
 public class EqlException extends AbstractPlatformRuntimeException {
     private static final long serialVersionUID = 1L;
+    private static final String ERR_NULL_ARGUMENT = "Invalid argument: [%s] should not be null.";
 
     public EqlException(final String msg) {
         super(msg);
@@ -18,5 +19,11 @@ public class EqlException extends AbstractPlatformRuntimeException {
     public EqlException(final String msg, final Throwable cause) {
         super(msg, cause);
     }
-   
+
+    public static void requireNotNullArgument(final Object argumentValue, final String argumentName) {
+        if (argumentValue == null) {
+            throw new EqlException(ERR_NULL_ARGUMENT.formatted(argumentName));
+        }
+    }
+
 }

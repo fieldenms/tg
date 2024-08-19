@@ -17,6 +17,7 @@ import java.util.Map;
 
 import org.junit.Test;
 
+import graphql.AssertException;
 import graphql.execution.UnknownOperationException;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
@@ -31,7 +32,7 @@ public class WebApiInputSpecificationTest extends AbstractDaoTestCase {
     
     //////////////////////// GraphiQL unnatural cases, for completeness ////////////////////////
     
-    @Test(expected = NullPointerException.class)
+    @Test(expected = AssertException.class)
     public void null_query_results_in_exception() {
         webApi.execute(input(null));
     }

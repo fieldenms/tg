@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.antlr;
 
 import org.antlr.v4.runtime.Token;
 import ua.com.fielden.platform.eql.antlr.EQLParser.ComparisonOperand_MultiContext;
+import ua.com.fielden.platform.eql.antlr.exceptions.EqlSyntaxException;
 import ua.com.fielden.platform.eql.antlr.tokens.*;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
@@ -109,7 +110,7 @@ final class ComparisonOperandVisitor extends AbstractEqlVisitor<ComparisonOperan
                         .map(m -> compiler.compile(m.getTokenSource(), EqlCompilationResult.StandaloneExpression.class).model())
                         .toList();
             }
-            default -> throw new EqlParseException("Unexpected token: %s".formatted(token.getText()));
+            default -> throw new EqlSyntaxException("Unexpected token: %s".formatted(token.getText()));
         }
 
         final Function<List<? extends ICondition1<? extends ICondition2<?>>>, Conditions1> constructor = any ? Conditions1::or : Conditions1::and;

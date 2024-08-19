@@ -240,7 +240,7 @@ template.setAttribute('strip-whitespace', '');
                 newSubheader = rowElement;
                 this._subheaders.push(newSubheader)
             } else if (newSubheader) {
-                newSubheader.addRelativeElement(rowElement);
+                newSubheader.addRelativeElement(rowElement.tagName === "SLOT" ? this.slottedElements[rowElement.getAttribute("name")] : rowElement);
             }
             layoutElem.forEach((function (columnLayout) {
                 newSubheader = createFlexCell.bind(this)(rowElement, columnLayout, selectedElements, orderedElements, newSubheader, !horizontal);

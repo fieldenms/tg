@@ -102,10 +102,6 @@ const TgEntityMasterTemplateBehaviorImpl = {
         IronA11yKeysBehavior.removeOwnKeyBindings.call(this);
     },
 
-    confirm: function (message, buttons) {
-        return this._masterDom().confirm(message, buttons);
-    },
-
     _shouldOverridePrefDim: function () {
         let parent = this.parentElement || this.getRootNode().host;
         while (parent && (parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG' && parent.tagName !== 'TG-MENU-ITEM-VIEW')) {

@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.antlr.tokens;
 
 import java.util.Objects;
 
+import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.wrap;
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.AS;
 
@@ -11,7 +12,7 @@ public final class AsToken extends AbstractParameterisedEqlToken {
 
     public AsToken(final String alias) {
         super(AS, "as");
-        this.alias = alias;
+        this.alias = requireNonNull(alias);
     }
 
     public String parametersText() {
