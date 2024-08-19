@@ -261,14 +261,14 @@ public class StreamUtils {
     /**
      * Creates a filtering function that accepts only instances of the given type. Intended to be passed to {@link Stream#mapMulti(BiConsumer)}.
      * It replaces the following pattern:
-     * <pre>{@code
+     * {@snippet :
      *     stream.map(x -> x instanceof Y y ? y : null)
      *           .filter(y -> y != null)
-     * }</pre>
+     * }
      * with:
-     * <pre>{@code
+     * {@snippet :
      *     stream.mapMulti(typeFilter(Y.class))
-     * }</pre>
+     * }
      *
      * <b>NOTE</b>: this method, unlike {@code instanceof}, can be used to test incompatible types. As such, it sacrifices
      * the benefit of compile-time detection of "meaningless" filtering for succinctness.
@@ -376,7 +376,7 @@ public class StreamUtils {
 
     /**
      * Tests whether a stream contains a single element.
-     * This is a terminal operation on the stream.
+     * This is a <b>terminal</b> operation on the stream.
      */
     public static boolean isSingleElementStream(final BaseStream<?, ?> stream) {
         final var it = stream.iterator();
@@ -391,7 +391,7 @@ public class StreamUtils {
 
     /**
      * Tests whether a stream contains more than one element.
-     * This is a terminal operation on the stream.
+     * This is a <b>terminal</b> operation on the stream.
      */
     public static boolean isMultiElementStream(final BaseStream<?, ?> stream) {
         final var it = stream.iterator();

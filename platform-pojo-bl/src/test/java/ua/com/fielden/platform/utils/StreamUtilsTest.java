@@ -274,7 +274,7 @@ public class StreamUtilsTest {
     }
 
     @Test
-    public void transpose_returns_an_mxn_matrix_given_nxm_matrix() {
+    public void transpose_returns_MxN_matrix_given_NxM_matrix() {
         final var matrix = List.of(List.of(1, 2), List.of(3, 4), List.of(5, 6));
         assertEquals(
                 List.of(List.of(1, 3, 5), List.of(2, 4, 6)),
