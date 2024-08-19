@@ -1,19 +1,34 @@
 package ua.com.fielden.platform.eql.stage3.sundries;
 
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-
-import java.util.Objects;
-
-import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
+import java.util.Objects;
+
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
+import static ua.com.fielden.platform.eql.dbschema.HibernateToJdbcSqlTypeCorrespondence.sqlCastTypeName;
+import static ua.com.fielden.platform.eql.meta.PropType.propType;
+import static ua.com.fielden.platform.persistence.types.PlaceholderType.newPlaceholderType;
+
 public class Yield3 {
+
     public final ISingleOperand3 operand;
     public final String alias;
+
+    /** Name of the column in the resulting set that this value is yielded under or {@code null}. */
     public final String column;
-    public final PropType type; // declared type (the one from property declarations (java type and annotation); for non-calculated properties it will be the same as operand.type(); 
-    //for calculated properties operand.type() will be inferred from actual expression and may differ from the declared one.
+
+    /**
+     * The expected type of this yield.
+     * <ul>
+     *   <li>for calculated properties -- the type declared at the model level; the type of {@link #operand} will be
+     *       inferred from the actual expression and may be different.
+     *   <li>for other operands -- equal to the type of {@link #operand}.
+     * </ul>
+     */
+    public final PropType type;
 
     public Yield3(final ISingleOperand3 operand, final String alias, final int columnId, final PropType type) {
         this.operand = operand;
@@ -22,10 +37,41 @@ public class Yield3 {
         this.type = type;
     }
 
-    public String sql(final DbVersion dbVersion) {
-        return operand.sql(dbVersion) + (column == null ? "" : " AS " + column);
+    /**
+     * @param expectedType  unless equal to {@link #NO_EXPECTED_TYPE}, then the yielded value is cast to the given type
+     */
+    public String sql(final EqlDomainMetadata metadata, final PropType expectedType) {
+        final String operandSql = operand.sql(metadata);
+        final var sb = new StringBuilder(operandSql.length());
+
+        // Cast even if the expected type is the same as this type to cover the auto-yield case where a yielded null
+        // can be represented as Prop3 "id" with type Long.
+        // Expected type should never be the null type but let's be vigilant.
+        if (metadata.dbVersion == POSTGRESQL && expectedType != NO_EXPECTED_TYPE && expectedType.isNotNull()) {
+            sb.append(POSTGRESQL.castSql(operandSql, sqlCastTypeName(expectedType.hibType(), metadata.dialect)));
+        } else {
+            sb.append(operandSql);
+        }
+
+        if (column != null) {
+            sb.append(" AS ");
+            sb.append(column);
+        }
+
+        return sb.toString();
     }
-    
+
+    /**
+     * A placeholder value to be used when there is no expectation of a particular type.
+     *
+     * @see #sql(EqlDomainMetadata, PropType)
+     */
+    public static final PropType NO_EXPECTED_TYPE = propType(String.class, newPlaceholderType("no_expected_type"));
+
+    public String sql(final EqlDomainMetadata metadata) {
+        return sql(metadata, NO_EXPECTED_TYPE);
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -50,4 +96,10 @@ public class Yield3 {
         
         return Objects.equals(operand, other.operand) && Objects.equals(alias, other.alias) && Objects.equals(type, other.type);
     }
+
+    @Override
+    public String toString() {
+        return "Yield3(alias=%s, column=%s, type=%s, operand=%s)".formatted(alias, column, type, operand);
+    }
+
 }

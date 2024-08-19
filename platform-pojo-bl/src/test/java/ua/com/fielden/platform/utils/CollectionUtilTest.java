@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.utils;
 
+import static ua.com.fielden.platform.utils.CollectionUtil.*;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 
@@ -162,6 +163,26 @@ public class CollectionUtilTest {
     public void removeFirst_does_not_permit_null_elements_throwing_InvalidArgumentException() {
         final List<Integer> xs = listOf(1, null, 3);
         assertThrows(InvalidArgumentException.class, () -> removeFirst(xs, x -> x >=2));
+    }
+
+    @Test
+    public void map_Map_disallows_duplicates_among_resulting_keys() {
+        final Map<String, Integer> inMap = Map.of("a", 1, "b", 2);
+        assertThrows(IllegalStateException.class, () -> map(inMap, (k, v) -> "x", (k, v) -> v));
+    }
+
+    @Test
+    public void map_Map_disallows_nulls_as_keys() {
+        final Map<String, Integer> inMap = Map.of("a", 1);
+        assertThrows(IllegalStateException.class, () -> map(inMap, (k, v) -> null, (k, v) -> v));
+    }
+
+    @Test
+    public void map_Map_returns_a_map_of_equal_size() {
+        final Map<String, Integer> inMap = Map.of("a", 1, "b", 2);
+        assertEquals(
+                Map.of("A", 10, "B", 20),
+                map(inMap, (k, v) -> k.toUpperCase(), (k, v) -> v * 10));
     }
 
     @Test

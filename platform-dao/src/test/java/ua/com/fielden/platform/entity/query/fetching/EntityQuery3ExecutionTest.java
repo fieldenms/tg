@@ -1,25 +1,7 @@
 package ua.com.fielden.platform.entity.query.fetching;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
-import java.math.BigDecimal;
-import java.util.Currency;
-import java.util.List;
-
 import org.junit.Ignore;
 import org.junit.Test;
-
 import ua.com.fielden.platform.dao.EntityWithTaxMoneyDao;
 import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -31,48 +13,21 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.persistence.types.EntityWithTaxMoney;
-import ua.com.fielden.platform.sample.domain.ITeAverageFuelUsage;
-import ua.com.fielden.platform.sample.domain.ITeVehicle;
-import ua.com.fielden.platform.sample.domain.ITeVehicleFuelUsage;
-import ua.com.fielden.platform.sample.domain.ITeVehicleModel;
-import ua.com.fielden.platform.sample.domain.ITgBogie;
-import ua.com.fielden.platform.sample.domain.ITgEntityWithComplexSummaries;
-import ua.com.fielden.platform.sample.domain.ITgOrgUnit5;
-import ua.com.fielden.platform.sample.domain.ITgVehicle;
-import ua.com.fielden.platform.sample.domain.TeAverageFuelUsage;
-import ua.com.fielden.platform.sample.domain.TeVehicle;
-import ua.com.fielden.platform.sample.domain.TeVehicleFuelUsage;
-import ua.com.fielden.platform.sample.domain.TeVehicleMake;
-import ua.com.fielden.platform.sample.domain.TeVehicleModel;
-import ua.com.fielden.platform.sample.domain.TeWorkOrder;
-import ua.com.fielden.platform.sample.domain.TgAuthor;
-import ua.com.fielden.platform.sample.domain.TgAuthorship;
-import ua.com.fielden.platform.sample.domain.TgBogie;
-import ua.com.fielden.platform.sample.domain.TgBogieLocation;
-import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummaries;
-import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries;
-import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummariesThatActuallyDeclareThoseSummariesCo;
-import ua.com.fielden.platform.sample.domain.TgFuelType;
-import ua.com.fielden.platform.sample.domain.TgFuelUsage;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
-import ua.com.fielden.platform.sample.domain.TgPersonName;
-import ua.com.fielden.platform.sample.domain.TgTimesheet;
-import ua.com.fielden.platform.sample.domain.TgVehicle;
-import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
-import ua.com.fielden.platform.sample.domain.TgVehicleMake;
-import ua.com.fielden.platform.sample.domain.TgVehicleModel;
-import ua.com.fielden.platform.sample.domain.TgWagon;
-import ua.com.fielden.platform.sample.domain.TgWagonSlot;
-import ua.com.fielden.platform.sample.domain.TgWorkshop;
+import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
+
+import java.math.BigDecimal;
+import java.util.Currency;
+import java.util.List;
+
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.test_utils.CollectionTestUtils.assertEqualByContents;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
 public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     private final IEntityAggregatesOperations aggregateDao = getInstance(IEntityAggregatesOperations.class);
@@ -1055,6 +1010,266 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         run(select(TgVehicle.class).where().prop("id").in().values(1, null));
         run(select(TgVehicle.class).where().prop("id").eq().anyOfValues(1, null));
         run(select(TgVehicle.class).where().prop("id").eq().allOfValues(1, null));
+    }
+
+    /**
+     * @see <a href="https://github.com/fieldenms/tg/issues/2213">Issue #2213</a>
+     */
+    @Test
+    public void union_query_with_nulls_correctly_matches_column_types_01() {
+        // null UNION null UNION not-null
+        final var qNull = select()
+                .yield().val(null).as("a")
+                .yield().val(5).as("b")
+                .modelAsAggregate();
+
+        final var qNotNull = select()
+                .yield().val(10).as("a")
+                .yield().val(20).as("b")
+                .modelAsAggregate();
+
+        final var qUnion = select(qNull, qNull, qNotNull)
+                .yieldAll().modelAsAggregate();
+
+        final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(qUnion).model());
+        assertEqualByContents(
+                List.of(listOf(null, 5), listOf(null, 5), listOf(10, 20)),
+                entities.stream().map(ent -> listOf(ent.get("a"), ent.get("b"))).toList());
+    }
+
+    /**
+     * @see <a href="https://github.com/fieldenms/tg/issues/2213">Issue #2213</a>
+     */
+    @Test
+    public void union_query_with_nulls_correctly_matches_column_types_02() {
+        // null UNION (null UNION null) UNION not-null
+        final var qNull = select()
+                .yield().val(null).as("a")
+                .yield().val(5).as("b")
+                .modelAsAggregate();
+
+        final var qNotNull = select()
+                .yield().val(10).as("a")
+                .yield().val(20).as("b")
+                .modelAsAggregate();
+
+        final var qUnion = select(qNull, select(qNull, qNull).modelAsAggregate(), qNotNull)
+                .yieldAll().modelAsAggregate();
+
+        final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(qUnion).model());
+        assertEqualByContents(
+                List.of(listOf(null, 5), listOf(null, 5), listOf(null, 5), listOf(10, 20)),
+                entities.stream().map(ent -> listOf(ent.get("a"), ent.get("b"))).toList());
+    }
+
+    /**
+     * @see <a href="https://github.com/fieldenms/tg/issues/2213">Issue #2213</a>
+     */
+    @Test
+    public void union_query_with_nulls_correctly_matches_column_types_03() {
+        // (null UNION (not-null UNION null)) UNION (null UNION null)
+        final var qNull = select()
+                .yield().val(null).as("a")
+                .yield().val(5).as("b")
+                .modelAsAggregate();
+
+        final var qNotNull = select()
+                .yield().val(10).as("a")
+                .yield().val(20).as("b")
+                .modelAsAggregate();
+
+        final var qUnion = select(
+                select(qNull, select(qNotNull, qNull).modelAsAggregate()).modelAsAggregate(),
+                select(qNull, qNull).modelAsAggregate())
+                .yieldAll().modelAsAggregate();
+
+        final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(qUnion).model());
+        final List<?> qNullResult = listOf(null, 5);
+        assertEqualByContents(
+                List.of(qNullResult, listOf(10, 20), qNullResult, qNullResult, qNullResult),
+                entities.stream().map(ent -> listOf(ent.get("a"), ent.get("b"))).toList());
+    }
+    
+    @Test
+    public void nulls_can_be_compared_to_nonNulls_in_join_conditions() {
+        // @formatter:off
+        final var query =
+                select(select().yield().val(null).as("a1").modelAsAggregate())
+                 .join(select().yield().val(1).as("b1").modelAsAggregate())
+                 .on().prop("a1").eq().prop("b1")
+                 .modelAsAggregate();
+        // @formatter:on
+
+        final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(query).model());
+        assertEquals(List.of(), entities);
+    }
+
+    @Test
+    public void nulls_can_be_compared_to_nulls_in_join_conditions() {
+        // @formatter:off
+        final var query =
+                select(select().yield().val(null).as("a1").modelAsAggregate())
+                 .join(select().yield().val(null).as("b1").modelAsAggregate())
+                 .on().prop("a1").eq().prop("b1")
+                 .modelAsAggregate();
+        // @formatter:on
+
+        co(EntityAggregates.class).getAllEntities(from(query).model());
+        // don't assert anything about the result set because the boolean result of (NULL = NULL) may vary across SQL implementations
+    }
+
+    @Test
+    public void nonNulls_can_be_compared_to_nonNulls_in_join_conditions() {
+        // @formatter:off
+        final var query =
+                select(select().yield().val(1).as("a1").modelAsAggregate())
+                 .join(select().yield().val(5).as("b1").modelAsAggregate())
+                 .on().prop("a1").eq().prop("b1")
+                 .modelAsAggregate();
+        // @formatter:on
+
+        final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(query).model());
+        assertEquals(List.of(), entities);
+    }
+
+    @Test
+    public void like_is_applicable_to_nonString_values() {
+        final var sourceQuery = select()
+                .yield().val(55).as("myInt")
+                .yield().val(new BigDecimal("33.3")).as("myBigDecimal")
+                .yield().val(date("1936-05-31 11:00:00")).as("myDate")
+                .modelAsAggregate();
+
+        final var co = co(EntityAggregates.class);
+        assertTrue(co.exists(select(sourceQuery).where()
+                .prop("myInt").like().val("5%").and().prop("myInt").notLike().val("abc")
+                .and()
+                .prop("myInt").iLike().val("5%").and().prop("myInt").notILike().val("abc")
+                .model()));
+        assertTrue(co.exists(select(sourceQuery).where()
+                .prop("myBigDecimal").like().val("33%").and().prop("myBigDecimal").notLike().val("abc")
+                .and()
+                .prop("myBigDecimal").iLike().val("33%").and().prop("myBigDecimal").notILike().val("abc")
+                .model()));
+        // NOTE assume dd/MM/YYYY date format
+        assertTrue(co.exists(select(sourceQuery).where()
+                .prop("myDate").like().val("%31/05%").and().prop("myDate").notLike().val("abc")
+                .and()
+                .prop("myDate").iLike().val("%31/05%").and().prop("myDate").notILike().val("abc")
+                .model()));
+    }
+
+    @Test
+    public void like_is_applicable_to_null_values() {
+        final var sourceQuery = select().yield().val(null).as("myNull").modelAsAggregate();
+        assertFalse(co(EntityAggregates.class).exists(
+                select(sourceQuery).where().prop("myNull").like().val("abc").or().val(null).like().val("abc").model()));
+    }
+
+    @Test
+    public void caseWhen_returning_only_nulls_can_be_used_in_comparison_with_a_nonNull_and_nonString() {
+        final var sourceQuery = select().yield().val(55).as("n").modelAsAggregate();
+        final var query = select(sourceQuery).where()
+                // endAs* must be used, end() is illegal when there are only nulls
+                .prop("n").eq().caseWhen().val(1).isNotNull().then().val(null).endAsInt()
+                .model();
+
+        final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(query).model());
+        assertEquals(List.of(), entities);
+    }
+
+    @Test
+    public void caseWhen_returning_a_null_and_a_nonNull_can_be_used_in_comparison_with_a_nonNull() {
+        final BigDecimal n = new BigDecimal("1487432.56788765");
+        final var sourceQuery = select().yield().val(n).as("n").modelAsAggregate();
+        final var query = select(sourceQuery).where()
+                .prop("n").eq().caseWhen().val(1).isNotNull().then().val(n).end()
+                .model();
+
+        final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(query).model());
+        assertEquals(List.of(n), entities.stream().map(ent -> ent.get("n")).toList());
+    }
+
+    @Test
+    public void caseWhen_endAsInt_returns_integer_values() {
+        final Integer n = 15;
+        final var sourceQuery = select().yield().val(n).as("n").modelAsAggregate();
+        final var query = select(sourceQuery).where()
+                .prop("n").eq().caseWhen().val(1).isNotNull().then().val(n.toString()).endAsInt()
+                .yieldAll()
+                .modelAsAggregate();
+
+        final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(query).model());
+        assertEqualByContents(
+                List.of(n),
+                entities.stream().map(ent -> ent.get("n")).toList());
+    }
+
+    @Test
+    public void caseWhen_endAsDecimal_returns_decimal_value() {
+        final BigDecimal n = new BigDecimal("123.456789");
+        final var sourceQuery = select().yield().val(n).as("n").modelAsAggregate();
+        final var query = select(sourceQuery).where()
+                .prop("n").eq().caseWhen().val(1).isNotNull().then().val(n.toString()).endAsDecimal(n.precision(), n.scale())
+                .yieldAll()
+                .modelAsAggregate();
+
+        final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(query).model());
+        assertEqualByContents(
+                List.of(n),
+                entities.stream().map(ent -> ent.get("n")).toList());
+    }
+
+    @Test
+    public void caseWhen_endAsDecimal_returns_decimal_value_when_all_values_are_null() {
+        final BigDecimal n = new BigDecimal("123.456789");
+        final var sourceQuery = select().yield().val(n).as("n").modelAsAggregate();
+        final var query = select(sourceQuery).where()
+                .prop("n").eq().caseWhen().val(1).isNotNull().then().val(null).otherwise().val(null).endAsDecimal(n.precision(), n.scale())
+                .yieldAll()
+                .modelAsAggregate();
+
+        final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(query).model());
+        assertEquals(List.of(), entities);
+    }
+
+    @Test
+    public void caseWhen_endAsString_returns_string_value() {
+        final String n = "15";
+        final var sourceQuery = select().yield().val(n).as("n").modelAsAggregate();
+        final var query = select(sourceQuery).where()
+                .prop("n").eq().caseWhen().val(1).isNotNull().then().val(15).endAsStr(16)
+                .yieldAll()
+                .modelAsAggregate();
+
+        final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(query).model());
+        assertEqualByContents(
+                List.of(n),
+                entities.stream().map(ent -> ent.get("n")).toList());
+    }
+
+    @Test
+    public void caseWhen_endAsString_returns_string_value_when_all_values_are_null() {
+        final var sourceQuery = select().yield().val("15").as("n").modelAsAggregate();
+        final var query = select(sourceQuery).where()
+                .prop("n").eq().caseWhen().val(1).isNotNull().then().val(null).otherwise().val(null).endAsStr(16)
+                .yieldAll()
+                .modelAsAggregate();
+
+        final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(query).model());
+        assertEquals(List.of(), entities);
+    }
+
+    @Test
+    public void caseWhen_endAsBool_returns_boolean_value_when_all_values_are_null() {
+        final var sourceQuery = select().yield().val("word").as("x").modelAsAggregate();
+        final var query = select(sourceQuery).where()
+                .prop("x").eq().caseWhen().val(1).isNotNull().then().val(null).otherwise().val(null).endAsBool()
+                .yieldAll()
+                .modelAsAggregate();
+
+        final List<EntityAggregates> entities = co(EntityAggregates.class).getAllEntities(from(query).model());
+        assertEquals(List.of(), entities);
     }
 
     @Override

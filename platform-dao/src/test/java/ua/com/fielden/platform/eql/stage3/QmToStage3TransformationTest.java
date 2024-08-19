@@ -1,21 +1,23 @@
 package ua.com.fielden.platform.eql.stage3;
 
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.eql.meta.PropType.BIGDECIMAL_PROP_TYPE;
-import static ua.com.fielden.platform.eql.meta.PropType.INTEGER_PROP_TYPE;
-import static ua.com.fielden.platform.eql.meta.PropType.LONG_PROP_TYPE;
-import static ua.com.fielden.platform.eql.meta.PropType.STRING_PROP_TYPE;
+import static ua.com.fielden.platform.eql.meta.PropType.*;
 import static ua.com.fielden.platform.eql.stage1.sundries.Yield1.ABSENT_ALIAS;
+import static ua.com.fielden.platform.test_utils.TestUtils.assertThrows;
 
 import org.junit.Ignore;
 import org.junit.Test;
 
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
+import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 import ua.com.fielden.platform.eql.meta.EqlStage3TestCase;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
@@ -34,6 +36,7 @@ import ua.com.fielden.platform.sample.domain.TeVehicleModel;
 import ua.com.fielden.platform.sample.domain.TeWorkOrder;
 import ua.com.fielden.platform.sample.domain.TgSynBogie;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
+import ua.com.fielden.platform.test_utils.TestUtils;
 
 public class QmToStage3TransformationTest extends EqlStage3TestCase {
 
@@ -106,7 +109,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable source = source(MODEL, 1);
 
         final Yield3 modelYield = yieldId(source, "model");
-        final Yield3 makeYield = yieldProp("make", source, "make", new PropType(MAKE, H_LONG));
+        final Yield3 makeYield = yieldProp("make", source, "make", propType(MAKE, H_LONG));
         final Yields3 yields = yields(modelYield, makeYield);
 
         final ResultQuery3 expQry = qry(sources(source), yields);
@@ -269,7 +272,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
 
         final Conditions3 subQryConditions = cond(eq(idProp(veh), entityProp("vehicle", wo, VEHICLE)));
 
-        final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleEntity("make", model, MAKE)), new PropType(MAKE, H_LONG));
+        final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleEntity("make", model, MAKE)), propType(MAKE, H_LONG));
 
         final IJoinNode3 sources =
                 lj(
@@ -300,7 +303,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
 
         final Conditions3 subQryConditions = cond(eq(idProp(veh), entityProp("vehicle", wo, VEHICLE)));
 
-        final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleEntity("make", model, MAKE)), new PropType(MAKE, H_LONG));
+        final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleEntity("make", model, MAKE)), propType(MAKE, H_LONG));
 
         final IJoinNode3 sources = sources(wo);
         final Conditions3 conditions = or(isNotNull(expSubQry));
@@ -895,4 +898,31 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
 
         assertEquals(expQry, actQry);
     }
+
+    @Test
+    public void caseWhen_returning_only_nulls_cannot_use_plain_end() {
+        final var query = select()
+                .yield().caseWhen().val(1).isNotNull().then().val(null).end().as("x")
+                .modelAsAggregate();
+
+        assertThrows(() -> qry(query), EqlException.class, ex -> {
+            assertEquals(
+                    "Illegal [caseWhen] expression: at least one returned value must be non-null or a type cast must be specified.",
+                    ex.getMessage());
+        });
+    }
+
+    @Test
+    public void union_of_queries_with_different_numbers_of_yields_fails() {
+        final var q1 = select().yield().val(200).as("x").modelAsAggregate();
+        final var q2 = select().yield().val(100).as("x").yield().val(300).as("y").modelAsAggregate();
+        final var union = select(q1, q2).yieldAll().modelAsAggregate();
+
+        assertThrows(() -> qry(union), EqlException.class, ex -> {
+            assertNotNull(ex.getMessage());
+            assertTrue(ex.getMessage().startsWith("Queries whose results are concatenated must have the same number of yields.")
+                    || ex.getMessage().startsWith("Incorrect models used as query source - their result types are different!"));
+        });
+    }
+
  }

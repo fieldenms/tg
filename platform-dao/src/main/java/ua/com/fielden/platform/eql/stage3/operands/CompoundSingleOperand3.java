@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage3.operands;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 
 import java.util.Objects;
 
@@ -14,10 +15,10 @@ public class CompoundSingleOperand3 {
         this.operator = operator;
     }
 
-    public String sql(final DbVersion dbVersion) {
-        return operator.value + operand.sql(dbVersion);
+    public String sql(final EqlDomainMetadata metadata) {
+        return operator.value + operand.sql(metadata);
     }
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -36,9 +37,10 @@ public class CompoundSingleOperand3 {
         if (!(obj instanceof CompoundSingleOperand3)) {
             return false;
         }
-        
+
         final CompoundSingleOperand3 other = (CompoundSingleOperand3) obj;
-        
+
         return Objects.equals(operand, other.operand) && Objects.equals(operator, other.operator);
     }
+
 }

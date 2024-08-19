@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.stage3.operands.functions;
 
 import static ua.com.fielden.platform.eql.meta.PropType.INTEGER_PROP_TYPE;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 
 public class CountAll3 extends AbstractFunction3 {
     
@@ -15,7 +15,7 @@ public class CountAll3 extends AbstractFunction3 {
     private static final String COUNT_ALL_SQL = "COUNT(*)";
     
     @Override
-    public String sql(final DbVersion dbVersion) {
+    public String sql(final EqlDomainMetadata metadata) {
         return COUNT_ALL_SQL;
     }
 }

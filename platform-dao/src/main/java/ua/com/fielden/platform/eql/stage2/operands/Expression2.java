@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage2.operands;
 
+import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
@@ -21,7 +22,7 @@ public class Expression2 extends AbstractSingleOperand2 implements ISingleOperan
     public Expression2(final ISingleOperand2<? extends ISingleOperand3> first, final List<CompoundSingleOperand2> items) {
         super(extractTypes(first, items));
         this.first = first;
-        this.items = items;
+        this.items = ImmutableList.copyOf(items);
     }
     
     @Override
