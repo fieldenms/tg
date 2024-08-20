@@ -1,51 +1,92 @@
 package ua.com.fielden.platform.eql.stage3.sources;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
+import com.google.common.collect.ImmutableList;
+import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
+import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.queries.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
+import ua.com.fielden.platform.utils.StreamUtils;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toMap;
+import static ua.com.fielden.platform.eql.stage3.sundries.Yield3.NO_EXPECTED_TYPE;
+import static ua.com.fielden.platform.utils.StreamUtils.enumerated;
+import static ua.com.fielden.platform.utils.StreamUtils.transpose;
 
+/**
+ * A query source formed by concatenating results of its underlying queries.
+ */
 public class Source3BasedOnQueries extends AbstractSource3 {
-    private final List<SourceQuery3> models = new ArrayList<>();
+
+    private final List<SourceQuery3> models;
     
     public Source3BasedOnQueries(final List<SourceQuery3> models, final Integer id, final int sqlId) {
-        super("Q_" + sqlId, id, obtainColumnsFromYields(models.get(0).yields.getYields()));
-        this.models.addAll(models);
+        super("Q_" + sqlId, id, obtainColumnsFromYields(validateModels(models).getFirst().yields.getYields()));
+        this.models = ImmutableList.copyOf(models);
+    }
+
+    private static List<SourceQuery3> validateModels(final List<SourceQuery3> models) {
+        // number of yields is valid only if either there are no yields or all models have the same number of yields
+        final Boolean isValidNumberOfYields = StreamUtils.areAllEqual(models.stream().mapToInt(m -> m.yields.size())).orElse(true);
+        if (!isValidNumberOfYields) {
+            throw new EqlStage3ProcessingException("""
+                    Queries whose results are concatenated must have the same number of yields. Queries:
+                    %s""".formatted(
+                    enumerated(models.stream(), 1, (i, model) -> "%s. %s".formatted(i, model)).collect(joining("\n"))));
+        }
+
+        return models;
     }
     
     private static Map<String, String> obtainColumnsFromYields(final Collection<Yield3> yields) {
-        final Map<String, String> result = new HashMap<>();
-        for (final Yield3 entry : yields) {
-            result.put(entry.alias, entry.column);    
-        }
-        return result;
+        return yields.stream().collect(toMap(y -> y.alias, y -> y.column));
     }
 
     @Override
-    public String sql(final DbVersion dbVersion) {
-        return switch (dbVersion) {
-            // a SELECT with an ORDER BY inside a UNION must be enclosed in parentheses, although this inner ordering
+    public String sql(final EqlDomainMetadata metadata) {
+        return switch (metadata.dbVersion) {
+            // 1. Issue #2313 - PostgreSQL requires explicit type casts
+            // 2. a SELECT with an ORDER BY inside a UNION must be enclosed in parentheses, although this inner ordering
             // is not guaranteed to have an effect on the results of UNION
             // https://www.postgresql.org/docs/16/sql-select.html#SQL-UNION
-            case POSTGRESQL ->
-                    "("
-                    + models.stream().map(m -> '(' + m.sql(dbVersion) + ')').collect(joining("\n UNION ALL \n"))
-                    + ") AS " + sqlAlias;
+            case POSTGRESQL -> {
+                final List<PropType> types = expectedYieldTypes();
+                yield "("
+                      + models.stream().map(m -> '(' + m.sql(metadata, types) + ')').collect(joining("\n UNION ALL \n"))
+                      + ") AS " + sqlAlias;
+            }
             default ->
                     "("
-                    + models.stream().map(m -> m.sql(dbVersion)).collect(joining("\n UNION ALL \n"))
+                    + models.stream().map(m -> m.sql(metadata)).collect(joining("\n UNION ALL \n"))
                     + ") AS " + sqlAlias;
         };
     }
 
+    /**
+     * Returns a list of types corresponding to yielded values that will form columns of the result set.
+     * <p>
+     * It is assumed that the types of yielded values are compatible across underlying queries.
+     * It is also assumed that the underlying queries are equal in the number of yielded values.
+     */
+    private List<PropType> expectedYieldTypes() {
+        // in each column of the result set find the first value with non-NULL type; assume that all values in the same
+        // column are compatible with each other in terms of their types
+        return transpose(models, q -> q.yields.getYields().stream())
+                .map(column -> column.stream().map(y -> y.type).filter(PropType::isNotNull).findFirst().orElse(NO_EXPECTED_TYPE))
+                .toList();
+    }
+
     @Override
     public String toString() {
-        return "Source3BasedOnQueries of type " + models.get(0).resultType;
+        return "Source3BasedOnQueries of type " + models.getFirst().resultType;
     }
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -72,4 +113,5 @@ public class Source3BasedOnQueries extends AbstractSource3 {
         
         return Objects.equals(models, other.models);
     }
+
 }

@@ -18,11 +18,7 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.reflection.*;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.Hyperlink;
@@ -63,6 +59,7 @@ import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.PROPERTY_SPLITTER;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.unmodifiableListOf;
 import static ua.com.fielden.platform.utils.StreamUtils.takeWhile;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 
@@ -886,6 +883,54 @@ public class EntityUtils {
     }
 
     /**
+     * Splits a property path into an array of simple property names.
+     * <p>
+     * The supplied path must be valid, otherwise a runtime exception is thrown. Specifically, the path:
+     * <ul>
+     *   <li> Must not be empty.
+     *   <li> Must not contain empty property names (e.g., {@code "person..desc", ".person", "person."})
+     * </ul>
+     */
+    public static String[] splitPropPathToArray(final CharSequence path) {
+        if (path.isEmpty()) {
+            throw new IllegalArgumentException("Invalid property path: [%s]".formatted(path));
+        }
+
+        if (path.charAt(0) == '.' || path.charAt(path.length() - 1) == '.') {
+            throw new IllegalArgumentException("Invalid property path: [%s]".formatted(path));
+        }
+
+        final var components = Reflector.DOT_SPLITTER_PATTERN.split(path);
+        for (final var component : components) {
+            if (component.isEmpty()) {
+                throw new IllegalArgumentException("Invalid property path: [%s]".formatted(path));
+            }
+        }
+        return components;
+    }
+
+    /**
+     * Splits a property path into an array of simple property names, allowing empty names.
+     */
+    public static String[] laxSplitPropPathToArray(final CharSequence path) {
+        return Reflector.DOT_SPLITTER_PATTERN.split(path);
+    }
+
+    /**
+     * {@link #laxSplitPropPathToArray(CharSequence)} and wrap the result into an unmodifiable list.
+     */
+    public static List<String> splitPropPath(final CharSequence path) {
+        return unmodifiableListOf(splitPropPathToArray(path));
+    }
+
+    /**
+     * Splits a property path into a list of simple property names, allowing empty names.
+     */
+    public static List<String> laxSplitPropPath(final CharSequence path) {
+        return unmodifiableListOf(laxSplitPropPathToArray(path));
+    }
+
+    /**
      * Splits dot.notated property in two parts: first level property and the rest of subproperties.
      *
      * @param dotNotatedPropName
@@ -931,7 +976,7 @@ public class EntityUtils {
      * @param dotNotationProp
      * @return
      */
-    public static boolean isProperty(final Class<?> type, final String dotNotationProp) {
+    public static boolean isProperty(final Class<?> type, final CharSequence dotNotationProp) {
         try {
             return AnnotationReflector.isAnnotationPresent(Finder.findFieldByName(type, dotNotationProp), IsProperty.class);
         } catch (final Exception ex) {
@@ -1130,8 +1175,8 @@ public class EntityUtils {
      * @param skipProperties
      * @param <T>
      */
-    public static <T extends AbstractEntity> void copy(final AbstractEntity<?> fromEntity, final T toEntity, final Set<? extends IConvertableToPath> skipProperties) {
-        copy(fromEntity, toEntity, skipProperties.stream().map(IConvertableToPath::toPath).toList().toArray(new String[]{}));
+    public static <T extends AbstractEntity> void copy(final AbstractEntity<?> fromEntity, final T toEntity, final Set<? extends CharSequence> skipProperties) {
+        copy(fromEntity, toEntity, skipProperties.stream().map(CharSequence::toString).toList().toArray(new String[]{}));
     }
 
     /**
@@ -1201,23 +1246,10 @@ public class EntityUtils {
      * @param keyValues
      * @return
      */
-    public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final String propName, final IEntityReader<?> coOther, final Object... keyValues) {
+    public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final CharSequence propName, final IEntityReader<?> coOther, final Object... keyValues) {
         final Class<T> entityClass = (Class<T>) PropertyTypeDeterminator.determinePropertyType(coOther.getEntityType(), propName);
         final fetch<T> eFetch = coOther.getFetchProvider().<T> fetchFor(propName).fetchModel();
         return coOther.co(entityClass).findByKeyAndFetchOptional(eFetch, keyValues);
-    }
-
-    /**
-     * The same as {@link #fetchEntityForPropOf(String, IEntityReader, Object...)}, but accepting {@link IConvertableToPath} to represent a property a property.
-     *
-     * @param <T>
-     * @param propName
-     * @param coOther
-     * @param keyValues
-     * @return
-     */
-    public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final IConvertableToPath propName, final IEntityReader<?> coOther, final Object... keyValues) {
-        return fetchEntityForPropOf(propName.toPath(), coOther, keyValues);
     }
 
     /**
@@ -1231,13 +1263,8 @@ public class EntityUtils {
      * <pre>
      * final PmRoutine pmRoutine = EntityUtils.<PmRoutine>fetchEntityForPropOf(pmId, "pmRoutine", co(PmExpendable.class)).orElseThrow(...);
      * </pre>
-     *
-     * @param id
-     * @param propName
-     * @param coOther
-     * @return
      */
-    public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final Long id, final String propName, final IEntityReader<?> coOther) {
+    public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final Long id, final CharSequence propName, final IEntityReader<?> coOther) {
         final Class<T> entityClass = (Class<T>) PropertyTypeDeterminator.determinePropertyType(coOther.getEntityType(), propName);
         final fetch<T> eFetch = coOther.getFetchProvider().<T> fetchFor(propName).fetchModel();
         return coOther.co(entityClass).findByIdOptional(id, eFetch);
@@ -1254,27 +1281,9 @@ public class EntityUtils {
      * <pre>
      * final PmRoutine freshPmRoutine = EntityUtils.<PmRoutine>fetchEntityForPropOf(stalePmRoutine, "pmRoutine", co(PmExpendable.class)).orElseThrow(...);
      * </pre>
-     *
-     * @param instance
-     * @param propName
-     * @param coOther
-     * @return
      */
-    public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final T instance, final String propName, final IEntityReader<?> coOther) {
+    public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final T instance, final CharSequence propName, final IEntityReader<?> coOther) {
         return fetchEntityForPropOf(instance.getId(), propName, coOther);
-    }
-
-    /**
-     * The same as {@link #fetchEntityForPropOf(AbstractEntity, String, IEntityReader)}, but accepting an argument of type {@link IConvertableToPath} to represent a property.
-     *
-     * @param <T>
-     * @param instance
-     * @param propPath
-     * @param coOther
-     * @return
-     */
-    public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final T instance, final IConvertableToPath propPath, final IEntityReader<?> coOther) {
-        return fetchEntityForPropOf(instance, propPath.toPath(), coOther);
     }
 
     /**

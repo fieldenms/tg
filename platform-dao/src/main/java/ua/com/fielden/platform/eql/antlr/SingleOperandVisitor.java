@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.function.Function;
 
 import static java.util.Optional.ofNullable;
+import static ua.com.fielden.platform.entity.query.fluent.ITypeCast.AsBoolean.AS_BOOLEAN;
+import static ua.com.fielden.platform.entity.query.fluent.ITypeCast.AsInteger.AS_INTEGER;
 import static ua.com.fielden.platform.eql.antlr.EQLParser.*;
 import static ua.com.fielden.platform.eql.stage1.operands.Value1.value;
 import static ua.com.fielden.platform.utils.StreamUtils.zipDo;
@@ -170,15 +172,15 @@ final class SingleOperandVisitor extends AbstractEqlVisitor<ISingleOperand1<? ex
         final Token token = ctx.token;
         return switch (token.getType()) {
             case EQLLexer.END -> null;
-            case EQLLexer.ENDASBOOL -> TypeCastAsBoolean.INSTANCE;
-            case EQLLexer.ENDASINT -> TypeCastAsInteger.INSTANCE;
+            case EQLLexer.ENDASBOOL -> AS_BOOLEAN;
+            case EQLLexer.ENDASINT -> AS_INTEGER;
             case EQLLexer.ENDASSTR -> {
                 final EndAsStrToken tok = (EndAsStrToken) token;
-                yield TypeCastAsString.getInstance(tok.length);
+                yield ITypeCast.AsString.getInstance(tok.length);
             }
             case EQLLexer.ENDASDECIMAL -> {
                 final EndAsDecimalToken tok = (EndAsDecimalToken) token;
-                yield TypeCastAsDecimal.getInstance(tok.precision, tok.scale);
+                yield ITypeCast.AsDecimal.getInstance(tok.precision, tok.scale);
             }
             default -> unexpectedToken(token);
         };

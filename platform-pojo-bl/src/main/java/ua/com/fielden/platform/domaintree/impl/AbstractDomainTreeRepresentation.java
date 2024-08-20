@@ -1,37 +1,7 @@
 package ua.com.fielden.platform.domaintree.impl;
 
-import static java.lang.String.format;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
-import static ua.com.fielden.platform.entity.AbstractEntity.isStrictModelVerification;
-import static ua.com.fielden.platform.reflection.Finder.findProperties;
-import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
-import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determineClass;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.transform;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
-import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
-import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
-
 import ua.com.fielden.platform.domaintree.Function;
 import ua.com.fielden.platform.domaintree.FunctionUtils;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
@@ -40,12 +10,7 @@ import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.ITickRepresentationWithMutability;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.Ignore;
-import ua.com.fielden.platform.entity.annotation.Invisible;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
@@ -56,6 +21,20 @@ import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.*;
+
+import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.AbstractEntity.*;
+import static ua.com.fielden.platform.reflection.Finder.*;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.*;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
+import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 /**
  * A base domain tree representation for all TG trees. Includes strict TG domain rules that should be used by all specific tree implementations. <br>
@@ -114,7 +93,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     /**
      * Constructs recursively the list of properties using given list of fields.
      *
-     * @param rootType
+     * @param managedType
      * @param path
      * @param fieldsAndKeys
      * @return
@@ -476,7 +455,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @param root
      * @param property
      * @param addCollectionalElementType
-     *            -- true => then correct element type of collectional property will be added to set, otherwise a {@link Collection.class} will be added.
+     *            if {@code true} then a correct element type of collectional property will be added to the result, otherwise – {@code Collection.class} will be added.
      * @return
      */
     protected static Set<Class<?>> typesInHierarchy(final Class<?> root, final String property, final boolean addCollectionalElementType) {
@@ -607,7 +586,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * Please note that you can only mutate this list with methods {@link List#add(Object)} and {@link List#remove(Object)} to correctly reflect the changes on depending objects.
      * (e.g. UI tree models, checked properties etc.)
      *
-     * @param root
+     * @param managedType
      * @return
      */
     @Override

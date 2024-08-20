@@ -1,17 +1,9 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IConcatFunctionArgument;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateAddIntervalFunctionArgument;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateDiffIntervalFunction;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionLastArgument;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionWhere0;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IIfNullFunctionArgument;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IRoundFunctionArgument;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISingleOperand;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.*;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
         extends AbstractQueryLink //
@@ -39,7 +31,7 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
     }
 
     @Override
-    public T param(final String paramName) {
+    public T param(final CharSequence paramName) {
         return nextForSingleOperand(builder.param(paramName));
     }
 
@@ -49,7 +41,7 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
     }
 
     @Override
-    public T iParam(final String paramName) {
+    public T iParam(final CharSequence paramName) {
         return nextForSingleOperand(builder.iParam(paramName));
     }
 
@@ -59,7 +51,7 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
     }
 
     @Override
-    public T prop(final String propertyName) {
+    public T prop(final CharSequence propertyName) {
         return nextForSingleOperand(builder.prop(propertyName));
     }
 
@@ -69,23 +61,13 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
     }
 
     @Override
-    public T prop(final IConvertableToPath propertyName) {
-        return prop(propertyName.toPath());
-    }
-
-    @Override
-    public T extProp(final String propertyName) {
+    public T extProp(final CharSequence propertyName) {
         return nextForSingleOperand(builder.extProp(propertyName));
     }
 
     @Override
     public T extProp(final Enum propertyName) {
         return extProp(propertyName.toString());
-    }
-
-    @Override
-    public T extProp(final IConvertableToPath propertyName) {
-        return extProp(propertyName.toPath());
     }
 
     @Override

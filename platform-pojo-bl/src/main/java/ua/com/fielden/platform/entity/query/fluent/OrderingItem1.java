@@ -32,7 +32,7 @@ class OrderingItem1<ET extends AbstractEntity<?>>
     }
 
     @Override
-    public ISingleOperandOrderable<ET> yield(final String yieldAlias) {
+    public ISingleOperandOrderable<ET> yield(final CharSequence yieldAlias) {
         return new SingleOperandOrderable<>(builder.yield(yieldAlias));
     }
 

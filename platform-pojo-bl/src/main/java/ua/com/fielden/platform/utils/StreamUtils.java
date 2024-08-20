@@ -6,8 +6,12 @@ import ua.com.fielden.platform.types.tuples.T2;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.*;
+import java.util.stream.BaseStream;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+
+import static java.util.Collections.unmodifiableList;
 
 /**
  * A set of convenient APIs for working with {@link Stream}.
@@ -174,10 +178,10 @@ public class StreamUtils {
      * @param combine
      * @return
      */
-    public static <A, B, Z> Stream<Z> zip(final Stream<? extends A> xs, final Stream<? extends B> ys, final BiFunction<? super A, ? super B, ? extends Z> combine) {
+    public static <X, Y, Z> Stream<Z> zip(final BaseStream<? extends X, ?> xs, final BaseStream<? extends Y, ?> ys, final BiFunction<? super X, ? super Y, ? extends Z> combine) {
         Objects.requireNonNull(combine);
-        final Spliterator<? extends A> xsSpliterator = Objects.requireNonNull(xs).spliterator();
-        final Spliterator<? extends B> ysSpliterator = Objects.requireNonNull(ys).spliterator();
+        final Spliterator<? extends X> xsSpliterator = Objects.requireNonNull(xs).spliterator();
+        final Spliterator<? extends Y> ysSpliterator = Objects.requireNonNull(ys).spliterator();
 
         // zipping should lose DISTINCT and SORTED characteristics
         final int characteristics = xsSpliterator.characteristics() & ysSpliterator.characteristics() &
@@ -189,8 +193,8 @@ public class StreamUtils {
                 : -1;
 
         // making new iterators to be used as the basis for a new splitterator
-        final Iterator<A> xsIterator = Spliterators.iterator(xsSpliterator);
-        final Iterator<B> ysIterator = Spliterators.iterator(ysSpliterator);
+        final Iterator<X> xsIterator = Spliterators.iterator(xsSpliterator);
+        final Iterator<Y> ysIterator = Spliterators.iterator(ysSpliterator);
         final Iterator<Z> zsIterator = new Iterator<Z>() {
             @Override
             public boolean hasNext() {
@@ -212,11 +216,18 @@ public class StreamUtils {
     /**
      * Constructs a zipped stream.
      */
-    public static <A, B, Z> Stream<Z> zip(
-            final Collection<? extends A> xs, final Collection<? extends B> ys,
-            final BiFunction<? super A, ? super B, ? extends Z> combine)
+    public static <X, Y, Z> Stream<Z> zip(
+            final Collection<? extends X> xs, final Collection<? extends Y> ys,
+            final BiFunction<? super X, ? super Y, ? extends Z> combine)
     {
         return zip(xs.stream(), ys.stream(), combine);
+    }
+
+    /**
+     * Constructs a zipped stream.
+     */
+    public static <X, Y, Z> Stream<Z> zip(final X[] xs, final Y[] ys, final BiFunction<? super X, ? super Y, ? extends Z> combine) {
+        return zip(Arrays.stream(xs), Arrays.stream(ys), combine);
     }
 
     /**
@@ -250,14 +261,14 @@ public class StreamUtils {
     /**
      * Creates a filtering function that accepts only instances of the given type. Intended to be passed to {@link Stream#mapMulti(BiConsumer)}.
      * It replaces the following pattern:
-     * <pre>{@code
+     * {@snippet :
      *     stream.map(x -> x instanceof Y y ? y : null)
      *           .filter(y -> y != null)
-     * }</pre>
+     * }
      * with:
-     * <pre>{@code
+     * {@snippet :
      *     stream.mapMulti(typeFilter(Y.class))
-     * }</pre>
+     * }
      *
      * <b>NOTE</b>: this method, unlike {@code instanceof}, can be used to test incompatible types. As such, it sacrifices
      * the benefit of compile-time detection of "meaningless" filtering for succinctness.
@@ -304,6 +315,134 @@ public class StreamUtils {
         else {
             return Stream.generate(supplier);
         }
+    }
+
+    /**
+     * Given a collection of streams, returns a stream of lists where each list is formed by consuming the next element
+     * from each input stream.
+     * This operation can be thought of as matrix transposition where the input streams are rows and the output lists are columns.
+     * <p>
+     * One caveat is that the resulting stream will be as long as the shortest input stream, which is possible only if
+     * the "input matrix" has "rows" of different length.
+     * <p>
+     *
+     * @see #transpose(Collection, Function)
+     * @see #transpose(Collection)
+     */
+    public static <T> Stream<List<T>> transposeBase(final Collection<? extends BaseStream<T, ?>> source) {
+        if (source.isEmpty()) {
+            return Stream.empty();
+        }
+
+        final int n = source.size();
+        final List<? extends Spliterator<T>> spliterators = source.stream().map(BaseStream::spliterator).toList();
+        final long minSize = spliterators.stream().mapToLong(Spliterator::estimateSize).min().orElse(Long.MAX_VALUE);
+        final int characteristics = spliterators.stream().mapToInt(Spliterator::characteristics).reduce(~Spliterator.SORTED, (x, y) -> x & y);
+
+        final var spliterator = new Spliterators.AbstractSpliterator<List<T>>(minSize, characteristics) {
+            @Override
+            public boolean tryAdvance(final Consumer<? super List<T>> consumer) {
+                final List<T> elements = new ArrayList<>(n);
+
+                for (final var spliterator : spliterators) {
+                    final boolean advanced = spliterator.tryAdvance(elements::add);
+                    // shortest end reached
+                    if (!advanced) {
+                        return false;
+                    }
+                }
+
+                consumer.accept(unmodifiableList(elements));
+                return true;
+            }
+        };
+
+        return StreamSupport.stream(spliterator, false);
+    }
+
+    /**
+     * @see #transposeBase(Collection)
+     */
+    public static <T> Stream<List<T>> transpose(final Collection<? extends Collection<T>> source) {
+        return transpose(source, Collection::stream);
+    }
+
+    /**
+     * @see #transposeBase(Collection)
+     */
+    public static <T, R> Stream<List<R>> transpose(final Collection<T> source, final Function<? super T, ? extends BaseStream<R, ?>> mapper) {
+        return transposeBase(source.stream().map(mapper).toList());
+    }
+
+    /**
+     * Tests whether a stream contains a single element.
+     * This is a <b>terminal</b> operation on the stream.
+     */
+    public static boolean isSingleElementStream(final BaseStream<?, ?> stream) {
+        final var it = stream.iterator();
+        int i = 0;
+        while (i < 2 && it.hasNext()) {
+            it.next();
+            i += 1;
+        }
+
+        return i == 1;
+    }
+
+    /**
+     * Tests whether a stream contains more than one element.
+     * This is a <b>terminal</b> operation on the stream.
+     */
+    public static boolean isMultiElementStream(final BaseStream<?, ?> stream) {
+        final var it = stream.iterator();
+        int i = 0;
+        while (i < 2 && it.hasNext()) {
+            it.next();
+            i += 1;
+        }
+
+        return i > 1;
+    }
+
+    /**
+     * Tests whether all integers in a stream are equal. If the stream is empty, returns an empty optional.
+     * <p>
+     * This method is more efficient than the usage of {@link IntStream#distinct()} because the implementation of the latter
+     * uses boxing.
+     */
+    public static Optional<Boolean> areAllEqual(final IntStream stream) {
+        final PrimitiveIterator.OfInt it = stream.iterator();
+        if (!it.hasNext()) {
+            return Optional.empty();
+        }
+
+        final int n = it.next();
+        while (it.hasNext()) {
+            if (n != it.next()) {
+                return OPTIONAL_FALSE;
+            }
+        }
+
+        return OPTIONAL_TRUE;
+    }
+    // where
+    private static final Optional<Boolean> OPTIONAL_FALSE = Optional.of(Boolean.FALSE);
+    private static final Optional<Boolean> OPTIONAL_TRUE = Optional.of(Boolean.TRUE);
+
+    /**
+     * Constructs a stream by zipping the given stream with a sequential ascending stream of integers (step = 1).
+     *
+     * @param start  starting point of the integer stream
+     */
+    public static <R, T> Stream<R> enumerated(final BaseStream<T, ?> stream, final int start, final BiFunction<? super Integer, ? super T, R> combiner) {
+        return zip(IntStream.iterate(start, n -> n + 1), stream, combiner);
+    }
+
+    /**
+     * Like {@link #enumerated(BaseStream, int, BiFunction)} but always starts from 0.
+     */
+    public static <R, T> Stream<R> enumerated(final BaseStream<T, ?> stream, final BiFunction<? super Integer, ? super T, R> combiner) {
+        return zip(IntStream.iterate(0, n -> n + 1), stream, combiner);
     }
 
 }

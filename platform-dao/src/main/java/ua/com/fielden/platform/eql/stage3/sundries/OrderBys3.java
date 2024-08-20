@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.eql.stage3.sundries;
 
 import com.google.common.collect.ImmutableList;
-import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.Limit;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.stage3.queries.AbstractQuery3;
 
 import java.util.List;
@@ -40,12 +40,12 @@ public class OrderBys3 {
         return limit;
     }
 
-    public String sql(final DbVersion dbVersion, final AbstractQuery3 enclosingQuery) {
-        final var modelsStr = models.stream().map(y -> y.sql(dbVersion)).collect(joining(", "));
+    public String sql(final EqlDomainMetadata metadata, final AbstractQuery3 enclosingQuery) {
+        final var modelsStr = models.stream().map(y -> y.sql(metadata)).collect(joining(", "));
 
         final var sb = new StringBuilder();
 
-        switch (dbVersion) {
+        switch (metadata.dbVersion) {
             // PostgreSQL supports shorter syntax (MySQL too)
             case POSTGRESQL, MYSQL -> {
                 sb.append(modelsStr);

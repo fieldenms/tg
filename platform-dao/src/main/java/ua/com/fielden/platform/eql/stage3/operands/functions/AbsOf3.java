@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.stage3.operands.functions;
 
 import static java.lang.String.format;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
@@ -13,14 +13,14 @@ public class AbsOf3 extends SingleOperandFunction3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion) {
-        switch (dbVersion) {
+    public String sql(final EqlDomainMetadata metadata) {
+        switch (metadata.dbVersion) {
         case H2:
         case MSSQL:
         case POSTGRESQL:
-            return format("ABS(%s)", operand.sql(dbVersion));
+            return format("ABS(%s)", operand.sql(metadata));
         default:
-            return super.sql(dbVersion);
+            return super.sql(metadata);
         }
     }
 

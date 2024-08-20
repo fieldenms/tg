@@ -13,7 +13,7 @@ final class FromAlias<ET extends AbstractEntity<?>> //
     }
 
     @Override
-    public IJoin<ET> as(final String alias) {
+    public IJoin<ET> as(final CharSequence alias) {
         return new Join<ET>(builder.joinAlias(alias));
     }
 

@@ -1,12 +1,14 @@
 package ua.com.fielden.platform.eql.stage3.conditions;
 
-import static java.lang.String.format;
+import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
+import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
-import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
+import static ua.com.fielden.platform.eql.dbschema.HibernateToJdbcSqlTypeCorrespondence.sqlCastTypeName;
 
 public class ComparisonPredicate3 implements ICondition3 {
     public final ISingleOperand3 leftOperand;
@@ -20,8 +22,23 @@ public class ComparisonPredicate3 implements ICondition3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion) {
-        return format("%s %s %s", leftOperand.sql(dbVersion), operator, rightOperand.sql(dbVersion));
+    public String sql(final EqlDomainMetadata metadata) {
+        if (metadata.dbVersion == POSTGRESQL) {
+            return format("%s %s %s",
+                    operandToSqlWithCast(leftOperand, rightOperand, metadata),
+                    operator,
+                    operandToSqlWithCast(rightOperand, leftOperand, metadata));
+        } else {
+            return format("%s %s %s", leftOperand.sql(metadata), operator, rightOperand.sql(metadata));
+        }
+    }
+
+    private static String operandToSqlWithCast(final ISingleOperand3 operand, final ISingleOperand3 other, final EqlDomainMetadata metadata) {
+        if (operand.type().isNull() && other.type().isNotNull()) {
+            return metadata.dbVersion.castSql(operand.sql(metadata), sqlCastTypeName(other.type().hibType(), metadata.dialect));
+        } else {
+            return operand.sql(metadata);
+        }
     }
 
     @Override
@@ -43,11 +60,12 @@ public class ComparisonPredicate3 implements ICondition3 {
         if (!(obj instanceof ComparisonPredicate3)) {
             return false;
         }
-        
+
         final ComparisonPredicate3 other = (ComparisonPredicate3) obj;
-        
+
         return Objects.equals(leftOperand, other.leftOperand) &&
                 Objects.equals(rightOperand, other.rightOperand) &&
                 Objects.equals(operator, other.operator);
-   }
+    }
+
 }

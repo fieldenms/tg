@@ -81,8 +81,9 @@ public enum Accessor {
      * 
      * @return
      */
-    public String getName(final String propertyName) {
-        return startsWith + propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1);
+    public String getName(final CharSequence propertyName) {
+        final String name = propertyName.toString();
+        return startsWith + name.substring(0, 1).toUpperCase() + name.substring(1);
     }
 
     Accessor(final String startsWith) {

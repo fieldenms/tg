@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.stage3.sundries;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
 public class GroupBy3 {
@@ -12,10 +13,10 @@ public class GroupBy3 {
         this.operand = operand;
     }
 
-    public String sql(final DbVersion dbVersion) {
-        return operand.sql(dbVersion);
+    public String sql(final EqlDomainMetadata metadata) {
+        return operand.sql(metadata);
     }
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -33,9 +34,10 @@ public class GroupBy3 {
         if (!(obj instanceof GroupBy3)) {
             return false;
         }
-        
+
         final GroupBy3 other = (GroupBy3) obj;
-        
+
         return Objects.equals(operand, other.operand);
     }
+
 }
