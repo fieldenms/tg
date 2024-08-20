@@ -29,10 +29,6 @@ public class CaseWhen1 extends AbstractFunction1<CaseWhen2> {
         this.typeCast = typeCast;
     }
 
-    public CaseWhen1(final List<T2<ICondition1<? extends ICondition2<?>>, ISingleOperand1<? extends ISingleOperand2<?>>>> whenThenPairs, final ITypeCast typeCast) {
-        this(whenThenPairs, null, typeCast);
-    }
-
     @Override
     public CaseWhen2 transform(final TransformationContextFromStage1To2 context) {
         final List<T2<ICondition2<? extends ICondition3>, ISingleOperand2<? extends ISingleOperand3>>> transformedWhenThenPairs = new ArrayList<>();

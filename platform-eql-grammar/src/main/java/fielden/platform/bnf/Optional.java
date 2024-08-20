@@ -1,16 +1,17 @@
 package fielden.platform.bnf;
 
+import java.util.Objects;
 import java.util.function.Function;
 
-public record Optional(Term term, TermMetadata metadata) implements Quantifier {
+public record Optional(Term term, Metadata metadata) implements Quantifier {
 
-    public Optional(Term term) {
-        this(term, TermMetadata.EMPTY_METADATA);
+    public Optional(final Term term) {
+        this(term, Metadata.EMPTY_METADATA);
     }
 
     @Override
-    public <V> Optional annotate(TermMetadata.Key<V> key, V value) {
-        return new Optional(term, TermMetadata.merge(metadata(), key, value));
+    public Optional annotate(final Metadata.Annotation annotation) {
+        return new Optional(term, Metadata.merge(metadata(), annotation));
     }
 
     @Override
@@ -24,8 +25,23 @@ public record Optional(Term term, TermMetadata metadata) implements Quantifier {
     }
 
     @Override
+    public Optional map(final Function<? super Term, ? extends Term> mapper) {
+        return new Optional(mapper.apply(term), metadata);
+    }
+
+    @Override
     public String toString() {
         return "{%s}?".formatted(term);
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        return this == obj || obj instanceof Optional that && term.equals(that.term());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(term);
     }
 
 }

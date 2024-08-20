@@ -32,8 +32,9 @@ public final class HibernateHelpers {
      * @see #getDbVersion(Dialect)
      */
     public static Dialect getDialect(final DbVersion dbVersion) {
+        // TODO Identify correct dialog based on application property "hibernate.dialog", which can be injected statically.
         return switch (dbVersion) {
-            case MSSQL -> new SQLServerDialect();
+            case MSSQL -> new SQLServer2012Dialect();
             case ORACLE -> new Oracle8iDialect();
             case MYSQL -> new MySQLDialect();
             case H2 -> new H2Dialect();

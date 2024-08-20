@@ -4,6 +4,7 @@ import ua.com.fielden.platform.entity.query.model.OrderingModel;
 
 import java.util.Objects;
 
+import static java.util.Objects.requireNonNull;
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.ORDER;
 import static ua.com.fielden.platform.eql.antlr.tokens.util.TokensFormatter.getInstance;
 
@@ -13,7 +14,7 @@ public final class OrderToken extends AbstractParameterisedEqlToken {
 
     public OrderToken(final OrderingModel model) {
         super(ORDER, "order");
-        this.model = model;
+        this.model = requireNonNull(model);
     }
 
     @Override

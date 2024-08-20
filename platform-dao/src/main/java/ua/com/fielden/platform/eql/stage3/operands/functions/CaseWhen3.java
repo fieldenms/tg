@@ -6,7 +6,6 @@ import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
-import ua.com.fielden.platform.eql.stage3.utils.TypeCastToSql;
 import ua.com.fielden.platform.types.tuples.T2;
 
 import java.util.ArrayList;
@@ -61,8 +60,7 @@ public class CaseWhen3 extends AbstractFunction3 {
         if (typeCast == null) {
             final boolean hasNonNull = streamAllOperands().map(ISingleOperand3::type).anyMatch(PropType::isNotNull);
             if (!hasNonNull) {
-                throw new EqlStage3ProcessingException(
-                        "Illegal 'caseWhen' expression: at least one returned value must be non-null or a type cast must be specified.");
+                throw new EqlStage3ProcessingException("Illegal [caseWhen] expression: at least one returned value must be non-null or a type cast must be specified.");
             }
         }
     }

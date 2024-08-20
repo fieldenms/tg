@@ -1,42 +1,31 @@
 package ua.com.fielden.platform.reflection;
 
+import org.apache.commons.lang3.StringUtils;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.titles.Subtitles;
+import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
+import ua.com.fielden.platform.utils.Pair;
+
+import java.lang.reflect.Method;
+import java.util.Optional;
+import java.util.*;
+import java.util.stream.Stream;
+
 import static java.util.Arrays.asList;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.joining;
-import static org.apache.commons.lang3.StringUtils.capitalize;
-import static org.apache.commons.lang3.StringUtils.join;
-import static org.apache.commons.lang3.StringUtils.splitByCharacterTypeCamelCase;
+import static org.apache.commons.lang3.StringUtils.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotationOptionally;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.firstAndRest;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penultAndLast;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.*;
+import static ua.com.fielden.platform.utils.EntityUtils.isCriteriaEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.laxSplitPropPathToArray;
 import static ua.com.fielden.platform.utils.Pair.pair;
-
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Stream;
-
-import org.apache.commons.lang3.StringUtils;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.DescRequired;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.EntityTitle;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.Required;
-import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.annotation.titles.Subtitles;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
-import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
-import ua.com.fielden.platform.utils.Pair;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalPropertyName;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalType;
 
 /**
  * This is a helper class to provide methods related to property/entity titles/descs determination.
@@ -62,7 +51,7 @@ public class TitlesDescsGetter {
      * @return
      */
     private static Pair<List<String>, List<String>> getPropertyTitlesAndDescriptionsPath(final Class<?> type, final String dotNotationExp) {
-        final String[] properties = dotNotationExp.split(Reflector.DOT_SPLITTER);
+        final String[] properties = laxSplitPropPathToArray(dotNotationExp);
         Class<?> ownerType = type;
         final List<String> pathOfTitles = new ArrayList<>();
         final List<String> pathOfDescs = new ArrayList<>();
@@ -121,20 +110,10 @@ public class TitlesDescsGetter {
      * @param entityType -- a type that holds the first property in {@code propPath}
      * @return
      */
-    public static Pair<String, String> getTitleAndDesc(final String propPath, final Class<?> entityType) {
-            return processSubtitles(propPath, entityType).orElseGet(() -> processTitles(propPath, entityType));
+    public static Pair<String, String> getTitleAndDesc(final CharSequence propPath, final Class<?> entityType) {
+            return processSubtitles(propPath.toString(), entityType).orElseGet(() -> processTitles(propPath.toString(), entityType));
     }
 
-    /**
-     * The same as {@link #getTitleAndDesc(String, Class)}, but with {@link IConvertableToPath} {@code prop} argument.
-     *
-     * @param prop
-     * @param entityType
-     * @return
-     */
-    public static Pair<String, String> getTitleAndDesc(final IConvertableToPath prop, final Class<?> entityType) {
-        return getTitleAndDesc(prop.toPath(), entityType);
-    }
     /**
      * Determines property titles and desc without analysing {@link Subtitles}. Effectively this represents the logic before subtitles were introduced.
      * This method should not be used directly and therefore it is private.
@@ -257,6 +236,9 @@ public class TitlesDescsGetter {
     }
 
     public static String processReqErrorMsg(final String propName, final Class<? extends AbstractEntity<?>> entityType) {
+        if (isCriteriaEntityType(entityType)) {
+            return processReqErrorMsg(getOriginalPropertyName(entityType, propName), getOriginalType(entityType));
+        }
         String errorMsg = "";
         if (AbstractEntity.KEY.equals(propName)) {
             if (AnnotationReflector.isAnnotationPresentForClass(KeyTitle.class, entityType)) {

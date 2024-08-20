@@ -4,6 +4,7 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 
 import java.util.Objects;
 
+import static java.util.Objects.requireNonNull;
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.EXPR;
 import static ua.com.fielden.platform.eql.antlr.tokens.util.TokensFormatter.getInstance;
 
@@ -13,7 +14,7 @@ public final class ExprToken extends AbstractParameterisedEqlToken {
 
     public ExprToken(final ExpressionModel model) {
         super(EXPR, "expr");
-        this.model = model;
+        this.model = requireNonNull(model);
     }
 
     @Override

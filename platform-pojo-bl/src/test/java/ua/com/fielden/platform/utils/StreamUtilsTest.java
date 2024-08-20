@@ -1,15 +1,8 @@
 package ua.com.fielden.platform.utils;
 
-import static java.util.stream.Collectors.toList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.Test;
+import ua.com.fielden.platform.types.tuples.T2;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertOptEquals;
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
-import static ua.com.fielden.platform.utils.Pair.pair;
-import static ua.com.fielden.platform.utils.StreamUtils.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,10 +11,12 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import org.junit.Test;
-
+import static java.util.stream.Collectors.toList;
+import static org.junit.Assert.*;
 import ua.com.fielden.platform.test_utils.TestUtils;
-import ua.com.fielden.platform.types.tuples.T2;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.utils.Pair.pair;
+import static ua.com.fielden.platform.utils.StreamUtils.*;
 
 public class StreamUtilsTest {
 
@@ -186,11 +181,17 @@ public class StreamUtilsTest {
     
     @Test
     public void can_zip_streams_of_different_size() {
-        assertEquals(listOf(0, 2, 4), zip(Stream.of(0, 1, 2), Stream.of(0, 1, 2, 3), (x, y) -> x+y).collect(toList()));
-        assertEquals(listOf(0, 2, 4), zip(Stream.of(0, 1, 2, 3), Stream.of(0, 1, 2), (x, y) -> x+y).collect(toList()));
-        assertEquals(listOf(), zip(Stream.<Integer>empty(), Stream.of(0, 1, 2), (x, y) -> x+y).collect(toList()));
-        assertEquals(listOf(), zip(Stream.of(0, 1, 2), Stream.<Integer>empty(), (x, y) -> x+y).collect(toList()));
-        
+        assertEquals(listOf(0, 2, 4), zip(Stream.of(0, 1, 2), Stream.of(0, 1, 2, 3), (x, y) -> x+y).toList());
+        assertEquals(listOf(0, 2, 4), zip(Stream.of(0, 1, 2, 3), Stream.of(0, 1, 2), (x, y) -> x+y).toList());
+        assertEquals(listOf(), zip(Stream.<Integer>empty(), Stream.of(0, 1, 2), (x, y) -> x+y).toList());
+        assertEquals(listOf(), zip(Stream.of(0, 1, 2), Stream.<Integer>empty(), (x, y) -> x+y).toList());
+    }
+
+    @Test
+    public void can_zip_finite_with_infinite() {
+        final AtomicInteger ai = new AtomicInteger(0);
+        assertEquals(listOf(0, 2, 4), zip(Stream.of(0, 1, 2), Stream.generate(ai::getAndIncrement), (x, y) -> x+y).toList());
+        assertEquals(listOf(1, 2, 3), zip(Stream.generate(() -> 1), Stream.of(0, 1, 2), (x, y) -> x+y).toList());
     }
 
     @Test
@@ -260,7 +261,20 @@ public class StreamUtilsTest {
     }
 
     @Test
-    public void transpose_returns_an_mxn_matrix_given_nxm_matrix() {
+    public void supplyIfEmpty_returns_equivalent_stream_if_original_is_not_empty() {
+        final var xs = CollectionUtil.listOf(1, 2);
+        final var xsEquivalent = StreamUtils.supplyIfEmpty(xs.stream(), () -> 0).toList();
+        assertEquals(xs, xsEquivalent);
+    }
+
+    @Test
+    public void supplyIfEmpty_returns_alternative_stream_if_original_is_empty() {
+        final var xsAlternative = StreamUtils.supplyIfEmpty(Stream.empty(), () -> 0).limit(3).toList();
+        assertEquals(CollectionUtil.listOf(0, 0, 0), xsAlternative);
+    }
+
+    @Test
+    public void transpose_returns_MxN_matrix_given_NxM_matrix() {
         final var matrix = List.of(List.of(1, 2), List.of(3, 4), List.of(5, 6));
         assertEquals(
                 List.of(List.of(1, 3, 5), List.of(2, 4, 6)),

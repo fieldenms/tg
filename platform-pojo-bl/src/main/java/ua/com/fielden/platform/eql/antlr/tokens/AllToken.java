@@ -4,6 +4,7 @@ import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 
 import java.util.Objects;
 
+import static java.util.Objects.requireNonNull;
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.ALL;
 import static ua.com.fielden.platform.eql.antlr.tokens.util.TokensFormatter.getInstance;
 
@@ -13,7 +14,7 @@ public final class AllToken extends AbstractParameterisedEqlToken {
 
     public AllToken(final SingleResultQueryModel model) {
         super(ALL, "all");
-        this.model = model;
+        this.model = requireNonNull(model);
     }
 
     @Override

@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.antlr.tokens;
 
 import com.google.common.collect.ImmutableList;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -12,7 +13,7 @@ public final class PropsToken extends AbstractParameterisedEqlToken {
 
     public final List<String> props;
 
-    public PropsToken(final List<String> props) {
+    public PropsToken(final Collection<String> props) {
         super(PROPS, "props");
         this.props = ImmutableList.copyOf(props);
     }

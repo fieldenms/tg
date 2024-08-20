@@ -72,7 +72,7 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
     
     /**
      * Checks whether {@code entityType} can be executed by current user and returns error if not.
-     * Otherwise, finds an uninstrumented reader for the {@link #entityType} and retrieves first {@link #PAGE_CAPACITY} entities.<p>
+     * Otherwise, finds an uninstrumented reader for the {@link #entityType} and retrieves first {@link FieldSchema#PAGE_CAPACITY} entities.<p>
      * {@inheritDoc}
      */
     @Override
@@ -84,7 +84,9 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
             environment.getVariables(),
             environment.getFragmentsByName(),
             entityType,
-            environment.getGraphQLSchema()
+            environment.getGraphQLSchema(),
+            environment.getGraphQlContext(),
+            environment.getLocale()
         ).apply(dates);
         final Builder<List<T>> result = DataFetcherResult.<List<T>>newResult().data(coFinder.findAsReader(entityType, true).getPage( // reader must be uninstrumented
             warningAndModel._2,
@@ -93,6 +95,8 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
                 t2(rootArguments._2, rootArguments._3),
                 environment.getVariables(),
                 environment.getGraphQLSchema().getCodeRegistry(),
+                environment.getGraphQlContext(),
+                environment.getLocale(),
                 0
             ).orElse(DEFAULT_PAGE_NUMBER),
             extractValue(
@@ -100,6 +104,8 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
                 t2(rootArguments._2, rootArguments._3),
                 environment.getVariables(),
                 environment.getGraphQLSchema().getCodeRegistry(),
+                environment.getGraphQlContext(),
+                environment.getLocale(),
                 1
             ).orElse(DEFAULT_PAGE_CAPACITY)
         ).data());

@@ -4,6 +4,7 @@ import ua.com.fielden.platform.entity.query.model.QueryModel;
 
 import java.util.Objects;
 
+import static java.util.Objects.requireNonNull;
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.NOTEXISTS;
 import static ua.com.fielden.platform.eql.antlr.tokens.util.TokensFormatter.getInstance;
 
@@ -13,7 +14,7 @@ public final class NotExistsToken extends AbstractParameterisedEqlToken {
 
     public NotExistsToken(final QueryModel model) {
         super(NOTEXISTS, "notExists");
-        this.model = model;
+        this.model = requireNonNull(model);
     }
 
     @Override

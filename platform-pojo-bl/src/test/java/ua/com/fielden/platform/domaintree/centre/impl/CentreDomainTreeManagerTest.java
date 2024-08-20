@@ -129,7 +129,7 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 
                 assertEquals("", 3, dtm().getFirstTick().getColumnsNumber());
 
-                System.out.println("=========== " + dtm().getFirstTick().checkedProperties(MasterEntity.class));
+                // System.out.println("=========== " + dtm().getFirstTick().checkedProperties(MasterEntity.class));
 
                 assertTrue("Should contain placeholder. In this case it means that even 'checked by contract' properties are added interactively"
                         + " using all necessary custom actions (e.g. placeholder management etc.)", containsPlaceHolder(dtm().getFirstTick().checkedProperties(MasterEntity.class)));
@@ -143,7 +143,7 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     }
 
     private boolean containsPlaceHolder(final List<String> checkedProperties) {
-        System.out.println("\t\t\t" + checkedProperties);
+        // System.out.println("\t\t\t" + checkedProperties);
         for (final String name : checkedProperties) {
             if (AbstractDomainTree.isPlaceholder(name)) {
                 return true;

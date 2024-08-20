@@ -30,8 +30,7 @@ import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.security.AbstractWebResourceGuard;
-import ua.com.fielden.platform.web.test.IWebDrivenTestCaseConfiguration;
-import ua.com.fielden.platform.web.test.WebBasedTestCase;
+import ua.com.fielden.platform.web.test.TestWebApplication;
 
 /**
  * A test case to ensure correct HTTP responses (HTTP codes and cookies) to requests for accessing guarded web resources.
@@ -44,7 +43,7 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
     private final UserSessionDao coSession = (UserSessionDao) co$(UserSession.class);
     private final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
     private final WebResourceGuardTestWebApplication webApp = getInstance(WebResourceGuardTestWebApplication.class);
-    private final String baseUri = format("http://localhost:%s/v1", IWebDrivenTestCaseConfiguration.PORT);
+    private final String baseUri = format("http://localhost:%s/v1", TestWebApplication.PORT);
     private final Client client = new Client(Protocol.HTTP);
     private IUser coUser = co$(User.class);
 
@@ -52,12 +51,12 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
     public void startUp() {
         coSession.getCache().invalidateAll();
         webApp.setCurrUser(coUser.findByKey(User.system_users.UNIT_TEST_USER.name()));
-        WebBasedTestCase.attachWebApplication("/v1", webApp);
+        TestWebApplication.attachWebApplication("/v1", webApp);
     }
 
     @After
     public void tearDown() {
-        WebBasedTestCase.detachWebApplication(webApp);
+        TestWebApplication.detachWebApplication(webApp);
     }
 
     @Test

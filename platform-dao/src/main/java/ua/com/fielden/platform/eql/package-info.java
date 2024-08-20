@@ -5,7 +5,7 @@
 */
 
 /**
- * <h2> Extending / Modifying EQL </h2>
+ * <h2> Extending / Modifying EQL syntax </h2>
  *
  * <h3> 1. EQL AST (stages 1-3) </h3>
  *
