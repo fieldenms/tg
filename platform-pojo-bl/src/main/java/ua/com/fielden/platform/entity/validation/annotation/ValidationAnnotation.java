@@ -36,13 +36,22 @@ public enum ValidationAnnotation {
 
     /**
      * Looks for enumeration value associated with the specified validation annotation type.
-     *
-     * @param annotation
-     * @return
      */
     public static ValidationAnnotation getValueByType(final Annotation annotation) {
         for (final ValidationAnnotation value : values()) {
             if (value.getType() == annotation.annotationType()) {
+                return value;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Looks for enumeration value associated with the specified validation annotation type.
+     */
+    public static ValidationAnnotation getValueByType(final Class<? extends Annotation> type) {
+        for (final ValidationAnnotation value : values()) {
+            if (value.getType() == type) {
                 return value;
             }
         }

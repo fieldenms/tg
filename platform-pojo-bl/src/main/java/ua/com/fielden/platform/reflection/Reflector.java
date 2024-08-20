@@ -294,7 +294,7 @@ public final class Reflector {
     public static Pair<Integer, Integer> extractValidationLimits(final AbstractEntity<?> entity, final String propertyName) {
         final Field field = Finder.findFieldByName(entity.getType(), propertyName);
         Integer min = null, max = null;
-        final Set<Annotation> propertyValidationAnotations = entity.extractValidationAnnotationForProperty(field, PropertyTypeDeterminator.determinePropertyType(entity.getType(), propertyName), false);
+        final Set<Annotation> propertyValidationAnotations = entity.findValidationAnnotationsForProperty(field, PropertyTypeDeterminator.determinePropertyType(entity.getType(), propertyName));
         for (final Annotation annotation : propertyValidationAnotations) {
             if (annotation instanceof GreaterOrEqual) {
                 min = ((GreaterOrEqual) annotation).value();
