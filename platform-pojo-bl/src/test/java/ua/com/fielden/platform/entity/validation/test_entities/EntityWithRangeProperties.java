@@ -39,9 +39,11 @@ public class EntityWithRangeProperties extends AbstractEntity<String> {
     private Double toDouble;
 
     @IsProperty
+    @LeProperty("toDate")
     @Dependent("toDate")
     private Date fromDate;
     @IsProperty
+    @GeProperty("fromDate")
     @Dependent("fromDate")
     private Date toDate;
 
@@ -53,9 +55,11 @@ public class EntityWithRangeProperties extends AbstractEntity<String> {
     private DateTime toDateTime;
 
     @IsProperty
+    @LeProperty("toMoney")
     @Dependent("toMoney")
     private Money fromMoney;
     @IsProperty
+    @GeProperty("fromMoney")
     @Dependent("fromMoney")
     private Money toMoney;
 
@@ -84,7 +88,6 @@ public class EntityWithRangeProperties extends AbstractEntity<String> {
     }
 
     @Observable
-    @LeProperty("toDate")
     public void setFromDate(final Date fromDate) {
         this.fromDate = fromDate;
     }
@@ -94,7 +97,6 @@ public class EntityWithRangeProperties extends AbstractEntity<String> {
     }
 
     @Observable
-    @GeProperty("fromDate")
     public void setToDate(final Date toDate) {
         this.toDate = toDate;
     }
@@ -104,7 +106,6 @@ public class EntityWithRangeProperties extends AbstractEntity<String> {
     }
 
     @Observable
-    @LeProperty("toMoney")
     public void setFromMoney(final Money fromMoney) {
         this.fromMoney = fromMoney;
     }
@@ -114,7 +115,6 @@ public class EntityWithRangeProperties extends AbstractEntity<String> {
     }
 
     @Observable
-    @GeProperty("fromMoney")
     public void setToMoney(final Money toMoney) {
         this.toMoney = toMoney;
     }
