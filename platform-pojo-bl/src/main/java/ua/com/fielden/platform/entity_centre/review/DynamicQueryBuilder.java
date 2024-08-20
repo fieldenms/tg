@@ -19,13 +19,7 @@ import static ua.com.fielden.platform.reflection.Finder.getFields;
 import static ua.com.fielden.platform.reflection.Finder.getPropertyDescriptors;
 import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
-import static ua.com.fielden.platform.utils.EntityUtils.isDate;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
-import static ua.com.fielden.platform.utils.EntityUtils.isRangeType;
-import static ua.com.fielden.platform.utils.EntityUtils.isString;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.MiscUtilities.prepare;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
@@ -74,6 +68,7 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
@@ -328,14 +323,14 @@ public class DynamicQueryBuilder {
          * @return
          */
         protected boolean hasEmptyValue() {
-            if (EntityUtils.isBoolean(type)) {
+            if (isBoolean(type)) {
                 if (single) { // boolean single cannot have an empty value, therefore return false
                     return false;
                 }
                 final boolean is = (Boolean) value;
                 final boolean isNot = (Boolean) value2;
                 return is && isNot || !is && !isNot; // both true and both false will be indicated as default
-            } else if (EntityUtils.isRangeType(type)) { // both values should be "empty" to be indicated as default
+            } else if (isRangeType(type)) { // both values should be "empty" to be indicated as default
                 return valueEqualsToEmpty(value, type, single) && valueEqualsToEmpty(value2, type, single);
             } else {
                 return valueEqualsToEmpty(value, type, single);
@@ -345,7 +340,7 @@ public class DynamicQueryBuilder {
         private static boolean valueEqualsToEmpty(final Object value, final Class<?> type, final boolean single) {
             // due to Web UI changes were empty value for String is always null, need to treat string nulls as empty
             // for Swing UI this was different, whereby value "" was treated at an empty string while null was NOT treated as an empty value
-            return (String.class == type && value == null) || EntityUtils.equalsEx(value, getEmptyValue(type, single));
+            return ((String.class == type || RichText.class == type) && value == null) || equalsEx(value, getEmptyValue(type, single));
         }
 
         /**
@@ -794,17 +789,17 @@ public class DynamicQueryBuilder {
      * @return
      */
     public static Object getEmptyValue(final Class<?> type, final boolean single) {
-        if (EntityUtils.isEntityType(type)) {
+        if (isEntityType(type)) {
             if (single) {
                 return null;
             } else {
                 return new ArrayList<String>();
             }
-        } else if (EntityUtils.isString(type)) {
+        } else if (isString(type) || isRichText(type)) {
             return "";
-        } else if (EntityUtils.isBoolean(type)) {
+        } else if (isBoolean(type)) {
             return true;
-        } else if (EntityUtils.isRangeType(type)) {
+        } else if (isRangeType(type)) {
             return null;
         } else {
             throw new UnsupportedTypeException(type);
@@ -885,7 +880,7 @@ public class DynamicQueryBuilder {
      * @return
      */
     private static boolean isSupported(final Class<?> type) {
-        return EntityUtils.isEntityType(type) || EntityUtils.isString(type) || EntityUtils.isBoolean(type) || EntityUtils.isRangeType(type) || EntityUtils.isDynamicEntityKey(type);
+        return isEntityType(type) || isString(type) || isRichText(type) || isBoolean(type) || isRangeType(type) || isDynamicEntityKey(type);
     }
 
     /**
@@ -1051,7 +1046,7 @@ public class DynamicQueryBuilder {
     @SuppressWarnings("unchecked")
     private static <ET extends AbstractEntity<?>> ConditionModel buildAtomicCondition(final QueryProperty property, final String propertyName, final IDates dates) {
         if (property.isSingle()) {
-            if (isString(property.getType())) {
+            if (isString(property.getType()) || isRichText(property.getType())) {
                 return cond().prop(propertyName).iLike().val(prepCritValuesForSingleStringTypedProp((String)property.getValue())).model();
             }
             return propertyEquals(propertyName, property.getValue()); // this covers the PropertyDescriptor case too
@@ -1077,7 +1072,7 @@ public class DynamicQueryBuilder {
             final boolean is = (Boolean) property.getValue();
             final boolean isNot = (Boolean) property.getValue2();
             return is && !isNot ? cond().prop(propertyName).eq().val(true).model() : !is && isNot ? cond().prop(propertyName).eq().val(false).model() : null;
-        } else if (isString(property.getType())) {
+        } else if (isString(property.getType()) || isRichText(property.getType())) {
             return cond().prop(propertyName).iLike().anyOfValues((Object[]) prepCritValuesForStringTypedProp((String) property.getValue())).model();
         } else if (isEntityType(property.getType())) {
             return isPropertyDescriptor(property.getType())

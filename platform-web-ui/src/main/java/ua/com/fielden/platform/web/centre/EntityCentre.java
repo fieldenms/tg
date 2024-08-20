@@ -17,15 +17,7 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getProperty
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
-import static ua.com.fielden.platform.utils.EntityUtils.fetchNone;
-import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
-import static ua.com.fielden.platform.utils.EntityUtils.isDate;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isInteger;
-import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
-import static ua.com.fielden.platform.utils.EntityUtils.isRangeType;
-import static ua.com.fielden.platform.utils.EntityUtils.isString;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.createEmptyCentre;
@@ -535,7 +527,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         if (isCritOnlySingle(managedType, property)) {
             if (isEntityType(propertyType)) {
                 provideDefaultsEntitySingle(() -> dslDefaultConfig.getDefaultSingleValuesForEntitySelectionCriteria(), () -> dslDefaultConfig.getDefaultSingleValueAssignersForEntitySelectionCriteria(), dslProperty, cdtmae, entityType, injector);
-            } else if (isString(propertyType)) {
+            } else if (isString(propertyType) || isRichText(propertyType)) {
                 provideDefaultsSingle(() -> dslDefaultConfig.getDefaultSingleValuesForStringSelectionCriteria(), () -> dslDefaultConfig.getDefaultSingleValueAssignersForStringSelectionCriteria(), dslProperty, cdtmae, entityType, injector);
             } else if (isBoolean(propertyType)) {
                 provideDefaultsSingle(() -> dslDefaultConfig.getDefaultSingleValuesForBooleanSelectionCriteria(), () -> dslDefaultConfig.getDefaultSingleValueAssignersForBooleanSelectionCriteria(), dslProperty, cdtmae, entityType, injector);
@@ -549,8 +541,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 throw new UnsupportedOperationException(String.format("The single-crit type [%s] is currently unsupported.", propertyType));
             }
         } else {
-            if (isEntityType(propertyType) || isString(propertyType)) {
-                provideDefaultsEntityOrString(() -> dslDefaultConfig.getDefaultMultiValuesForEntityAndStringSelectionCriteria(), () -> dslDefaultConfig.getDefaultMultiValueAssignersForEntityAndStringSelectionCriteria(), dslProperty, cdtmae, isString(propertyType), entityType, injector);
+            if (isEntityType(propertyType) || isString(propertyType) || isRichText(propertyType)) {
+                provideDefaultsEntityOrString(() -> dslDefaultConfig.getDefaultMultiValuesForEntityAndStringSelectionCriteria(), () -> dslDefaultConfig.getDefaultMultiValueAssignersForEntityAndStringSelectionCriteria(), dslProperty, cdtmae, isString(propertyType) || isRichText(propertyType), entityType, injector);
             } else if (isBoolean(propertyType)) {
                 provideDefaultsBoolean(() -> dslDefaultConfig.getDefaultMultiValuesForBooleanSelectionCriteria(), () -> dslDefaultConfig.getDefaultMultiValueAssignersForBooleanSelectionCriteria(), dslProperty, cdtmae, entityType, injector);
             } else if (isInteger(propertyType)) {
@@ -1494,7 +1486,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     if (EntityUtils.isEntityType(propertyType)) {
                         final List<Pair<String, Boolean>> additionalProps = dslDefaultConfig.getAdditionalPropsForAutocompleter(critProp);
                         criterionWidget = new EntitySingleCriterionWidget(root, managedType, critProp, additionalProps, getCentreContextConfigFor(critProp));
-                    } else if (EntityUtils.isString(propertyType)) {
+                    } else if (EntityUtils.isString(propertyType) || EntityUtils.isRichText(propertyType)) {
                         criterionWidget = new StringSingleCriterionWidget(root, managedType, critProp);
                     } else if (EntityUtils.isBoolean(propertyType)) {
                         criterionWidget = new BooleanSingleCriterionWidget(root, managedType, critProp);
@@ -1513,7 +1505,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     if (EntityUtils.isEntityType(propertyType)) {
                         final List<Pair<String, Boolean>> additionalProps = dslDefaultConfig.getAdditionalPropsForAutocompleter(critProp);
                         criterionWidget = new EntityCriterionWidget(root, managedType, critProp, additionalProps, getCentreContextConfigFor(critProp));
-                    } else if (EntityUtils.isString(propertyType)) {
+                    } else if (EntityUtils.isString(propertyType) || EntityUtils.isRichText(propertyType)) {
                         criterionWidget = new StringCriterionWidget(root, managedType, critProp);
                     } else if (EntityUtils.isBoolean(propertyType)) {
                         criterionWidget = new BooleanCriterionWidget(root, managedType, critProp);

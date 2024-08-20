@@ -23,6 +23,7 @@ import java.util.Optional;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
+import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.single;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.*;
@@ -72,8 +73,8 @@ public class TgEntityWithRichTextPropWebUiConfig {
                 .addTopAction(standardDeleteAction).also()
                 .addTopAction(standardSortAction).also()
                 .addTopAction(standardExportAction)
-                .addCrit("this").asMulti().autocompleter(TgEntityWithRichTextProp.class).also()
-                .addCrit("richTextProp").asMulti().text().setDefaultValue(multi().string().setValues("KE*").value())
+                .addCrit("this").asMulti().autocompleter(TgEntityWithRichTextProp.class)/*.setDefaultValue(multi().string().setValues("RICH_TEXT_KEY1").value())*/.also()
+                .addCrit("richTextProp").asMulti().text()/*.setDefaultValue(multi().string().setValues("key1").value())*/
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
                 .setLayoutFor(Device.TABLET, Optional.empty(), layout)
                 .setLayoutFor(Device.MOBILE, Optional.empty(), layout)
