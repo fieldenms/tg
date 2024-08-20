@@ -839,7 +839,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             case 0 -> throw new IllegalArgumentException("Expected a non-empty sequence.");
             case 1 -> annotations.getFirst();
             default -> switch (annotations.getFirst()) {
-                case BeforeChange $ -> (A) BeforeChangeAnnotation.merge(annotations.toArray(BeforeChange[]::new));
+                case BeforeChange $ -> (A) BeforeChangeAnnotation.merge((SequencedCollection<BeforeChange>) annotations);
                 // provide more branches if necessary
                 default -> throw new EntityDefinitionException(
                         "Non-repeatable annotation [%s] cannot be applied more than once."
