@@ -38,7 +38,7 @@ public class TgEntityWithRichTextPropWebUiConfig {
             .withStyle("min-height", "fit-content")
             .withStyle("padding", MARGIN_PIX).end();
 
-    //public final EntityCentre<TgEntityWithRichTextProp> centre;
+    public final EntityCentre<TgEntityWithRichTextProp> centre;
     public final EntityMaster<TgEntityWithRichTextProp> master;
 
     public static TgEntityWithRichTextPropWebUiConfig register(final Injector injector, final IWebUiBuilder builder) {
@@ -46,8 +46,8 @@ public class TgEntityWithRichTextPropWebUiConfig {
     }
 
     private TgEntityWithRichTextPropWebUiConfig(final Injector injector, final IWebUiBuilder builder) {
-//        centre = createCentre(injector);
-//        builder.register(centre);
+        centre = createCentre(injector);
+        builder.register(centre);
         master = createMaster(injector);
         builder.register(master);
     }
@@ -58,37 +58,37 @@ public class TgEntityWithRichTextPropWebUiConfig {
      * @param injector
      * @return created entity centre
      */
-//    private EntityCentre<TgEntityWithRichTextProp> createCentre(final Injector injector) {
-//        final String layout = LayoutComposer.mkGridForCentre(1, 2);
-//
-//        final EntityActionConfig standardNewAction = StandardActions.NEW_ACTION.mkAction(TgEntityWithRichTextProp.class);
-//        final EntityActionConfig standardDeleteAction = StandardActions.DELETE_ACTION.mkAction(TgEntityWithRichTextProp.class);
-//        final EntityActionConfig standardExportAction = StandardActions.EXPORT_ACTION.mkAction(TgEntityWithRichTextProp.class);
-//        final EntityActionConfig standardEditAction = StandardActions.EDIT_ACTION.mkAction(TgEntityWithRichTextProp.class);
-//        final EntityActionConfig standardSortAction = CentreConfigurationWebUiConfig.CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction();
-//
-//        final EntityCentreConfig<TgEntityWithRichTextProp> ecc = EntityCentreBuilder.centreFor(TgEntityWithRichTextProp.class)
-//                .addTopAction(standardNewAction).also()
-//                .addTopAction(standardDeleteAction).also()
-//                .addTopAction(standardSortAction).also()
-//                .addTopAction(standardExportAction)
-//                .addCrit("this").asMulti().autocompleter(TgEntityWithRichTextProp.class).also()
-//                .addCrit("richTextProp").asMulti().text().setDefaultValue(multi().string().setValues("KE*").value())
-//                .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
-//                .setLayoutFor(Device.TABLET, Optional.empty(), layout)
-//                .setLayoutFor(Device.MOBILE, Optional.empty(), layout)
-//
-//                .addProp("this").order(1).asc().width(100)
-//                    .withSummary("total_count_", "COUNT(SELF)", "Count:The total number of matching TgGeneratedEntity.")
-//                    .withAction(standardEditAction).also()
-//                .addProp("desc").minWidth(400).also()
-//                .addProp("richTextProp").minWidth(400)
-//                .addPrimaryAction(standardEditAction)
-//                .build();
-//
-//        final EntityCentre<TgEntityWithRichTextProp> entityCentre = new EntityCentre<>(MiTgEntityWithRichTextProp.class, "MiTgEntityWithRichTextProp", ecc, injector, null);
-//        return entityCentre;
-//    }
+    private EntityCentre<TgEntityWithRichTextProp> createCentre(final Injector injector) {
+        final String layout = LayoutComposer.mkGridForCentre(1, 2);
+
+        final EntityActionConfig standardNewAction = StandardActions.NEW_ACTION.mkAction(TgEntityWithRichTextProp.class);
+        final EntityActionConfig standardDeleteAction = StandardActions.DELETE_ACTION.mkAction(TgEntityWithRichTextProp.class);
+        final EntityActionConfig standardExportAction = StandardActions.EXPORT_ACTION.mkAction(TgEntityWithRichTextProp.class);
+        final EntityActionConfig standardEditAction = StandardActions.EDIT_ACTION.mkAction(TgEntityWithRichTextProp.class);
+        final EntityActionConfig standardSortAction = CentreConfigurationWebUiConfig.CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction();
+
+        final EntityCentreConfig<TgEntityWithRichTextProp> ecc = EntityCentreBuilder.centreFor(TgEntityWithRichTextProp.class)
+                .addTopAction(standardNewAction).also()
+                .addTopAction(standardDeleteAction).also()
+                .addTopAction(standardSortAction).also()
+                .addTopAction(standardExportAction)
+                .addCrit("this").asMulti().autocompleter(TgEntityWithRichTextProp.class).also()
+                .addCrit("richTextProp").asMulti().text().setDefaultValue(multi().string().setValues("KE*").value())
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
+                .setLayoutFor(Device.TABLET, Optional.empty(), layout)
+                .setLayoutFor(Device.MOBILE, Optional.empty(), layout)
+
+                .addProp("this").order(1).asc().width(100)
+                    .withSummary("total_count_", "COUNT(SELF)", "Count:The total number of matching TgGeneratedEntity.")
+                    .withAction(standardEditAction).also()
+                .addProp("desc").minWidth(400).also()
+                .addProp("richTextProp").minWidth(400)
+                .addPrimaryAction(standardEditAction)
+                .build();
+
+        final EntityCentre<TgEntityWithRichTextProp> entityCentre = new EntityCentre<>(MiTgEntityWithRichTextProp.class, "MiTgEntityWithRichTextProp", ecc, injector, null);
+        return entityCentre;
+    }
 
     private EntityMaster<TgEntityWithRichTextProp> createMaster(final Injector injector) {
         final String layout = cell(
