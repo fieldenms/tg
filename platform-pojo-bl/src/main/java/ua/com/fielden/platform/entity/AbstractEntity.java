@@ -66,9 +66,7 @@ import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.ICustomValidator;
 import ua.com.fielden.platform.entity.validation.KeyMemberChangeValidator;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
-import ua.com.fielden.platform.entity.validation.annotation.Final;
-import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
+import ua.com.fielden.platform.entity.validation.annotation.*;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
@@ -996,6 +994,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         getAnnotationOptionally(field, BeforeChange.class).ifPresent(annotations::add);
         getAnnotationOptionally(field, Unique.class).ifPresent(annotations::add);
         getAnnotationOptionally(field, Final.class).ifPresent(annotations::add);
+        getAnnotationOptionally(field, LeProperty.class).ifPresent(annotations::add);
+        getAnnotationOptionally(field, GeProperty.class).ifPresent(annotations::add);
         return annotations.build();
     }
 
