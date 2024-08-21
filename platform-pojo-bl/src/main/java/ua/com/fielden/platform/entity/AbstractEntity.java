@@ -10,6 +10,7 @@ import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_LENGT
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_PRECISION;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_SCALE;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_TRAILING_ZEROS;
+import static ua.com.fielden.platform.entity.annotation.SkipDefaultStringKeyMemberValidation.ALL_DEFAULT_STRING_KEY_VALIDATORS;
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.COLLECTIONAL_PROP_MISSING_LINK_MSG;
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.COLLECTIONAL_PROP_MISSING_TYPE_MSG;
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_FOR_PRECITION_AND_SCALE_MSG;
@@ -27,7 +28,6 @@ import static ua.com.fielden.platform.reflection.Finder.isKeyOrKeyMember;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isNumeric;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.CollectionUtil.*;
 import static ua.com.fielden.platform.utils.EntityUtils.isHyperlink;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 
@@ -78,6 +78,7 @@ import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.utils.StreamUtils;
 
 import javax.annotation.Nullable;
 
@@ -878,13 +879,11 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             // special validation of String-typed key or String-typed key-members
             if (String.class.equals(propField.getType()) || String.class.equals(this.getKeyType())) {
                 final var skipAnnot = propField.getAnnotation(SkipDefaultStringKeyMemberValidation.class);
-                final Set<Class<? extends IBeforeChangeEventHandler<String>>> allDefaultStringValidators = linkedSetOf(SkipDefaultStringKeyMemberValidation.ALL_DEFAULT_STRING_KEY_VALIDATORS);
-                allDefaultStringValidators.removeAll(skipAnnot == null ? emptySet() : setOf(skipAnnot.value()));
-
-                if (!allDefaultStringValidators.isEmpty()) {
-                    final Handler[] handlers = allDefaultStringValidators.stream()
-                            .map(bce -> new HandlerAnnotation(bce).newInstance())
-                            .toArray(Handler[]::new);
+                final var handlers = StreamUtils.removeAll(Arrays.stream(ALL_DEFAULT_STRING_KEY_VALIDATORS),
+                                                           skipAnnot == null ? List.of() : Arrays.asList(skipAnnot.value()))
+                        .map(bce -> new HandlerAnnotation(bce).newInstance())
+                        .toArray(Handler[]::new);
+                if (handlers.length > 0) {
                     annotations.add(BeforeChangeAnnotation.newInstance(handlers));
                 }
             }
