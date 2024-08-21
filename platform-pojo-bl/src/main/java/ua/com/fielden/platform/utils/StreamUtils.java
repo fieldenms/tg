@@ -10,6 +10,8 @@ import java.util.function.*;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import static ua.com.fielden.platform.entity.exceptions.InvalidArgumentException.requireNonNull;
+
 /**
  * A set of convenient APIs for working with {@link Stream}.
  * 
@@ -176,9 +178,9 @@ public class StreamUtils {
      * @return
      */
     public static <A, B, Z> Stream<Z> zip(final Stream<? extends A> xs, final Stream<? extends B> ys, final BiFunction<? super A, ? super B, ? extends Z> combine) {
-        Objects.requireNonNull(combine);
-        final Spliterator<? extends A> xsSpliterator = Objects.requireNonNull(xs).spliterator();
-        final Spliterator<? extends B> ysSpliterator = Objects.requireNonNull(ys).spliterator();
+        requireNonNull(combine, "combine");
+        final Spliterator<? extends A> xsSpliterator = requireNonNull(xs, "xs").spliterator();
+        final Spliterator<? extends B> ysSpliterator = requireNonNull(ys, "ys").spliterator();
 
         // zipping should lose DISTINCT and SORTED characteristics
         final int characteristics = xsSpliterator.characteristics() & ysSpliterator.characteristics() &
@@ -280,6 +282,10 @@ public class StreamUtils {
      * @param test  returns {@code true} if an {@code x} matches a {@code y} and should be removed from the stream
      */
     public static <X, Y> Stream<X> removeAll(final Stream<X> xs, final Iterable<Y> ys, final BiPredicate<? super X, ? super Y> test) {
+        requireNonNull(xs, "xs");
+        requireNonNull(ys, "ys");
+        requireNonNull(test, "test");
+
         if (ys instanceof Collection<Y> ysColl) {
             return removeAll(xs, ysColl, test);
         } else {
@@ -291,6 +297,10 @@ public class StreamUtils {
      * @see #removeAll(Stream, Iterable, BiPredicate)
      */
     public static <X, Y> Stream<X> removeAll(final Stream<X> xs, final Collection<Y> ys, final BiPredicate<? super X, ? super Y> test) {
+        requireNonNull(xs, "xs");
+        requireNonNull(ys, "ys");
+        requireNonNull(test, "test");
+
         if (ys.isEmpty()) {
             return xs;
         } else {
