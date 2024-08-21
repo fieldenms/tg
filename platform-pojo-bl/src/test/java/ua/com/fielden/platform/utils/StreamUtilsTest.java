@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
@@ -268,6 +269,43 @@ public class StreamUtilsTest {
     public void supplyIfEmpty_returns_alternative_stream_if_original_is_empty() {
         final var xsAlternative = StreamUtils.supplyIfEmpty(Stream.empty(), () -> 0).limit(3).toList();
         assertEquals(CollectionUtil.listOf(0, 0, 0), xsAlternative);
+    }
+
+    @Test
+    public void removeAll_returns_a_stream_with_specified_elements_removed() {
+        assertEquals(IntStream.rangeClosed(6, 10).boxed().toList(),
+                     StreamUtils.removeAll(IntStream.rangeClosed(1, 10).boxed(),
+                                           IntStream.rangeClosed(1, 5).boxed().toList())
+                             .toList());
+
+        assertEquals(List.of("b"),
+                     StreamUtils.removeAll(Stream.of("a", "b", "c"), List.of("A", ".", "C"), String::equalsIgnoreCase)
+                             .toList());
+    }
+
+    @Test
+    public void removeAll_doesnt_remove_anything_if_items_to_remove_are_empty() {
+        assertEquals(List.of("a", "b"),
+                     StreamUtils.removeAll(Stream.of("a", "b"), List.of()).toList());
+
+        assertEquals(List.of("a", "b"),
+                     StreamUtils.removeAll(Stream.of("a", "b"), List.of(), String::equalsIgnoreCase)
+                             .toList());
+    }
+
+    @Test
+    public void removeAll_returns_an_empty_stream_given_an_empty_stream() {
+        assertEquals(List.of(),
+                     StreamUtils.removeAll(Stream.of(), List.of("a")).toList());
+
+        assertEquals(List.of(),
+                     StreamUtils.removeAll(Stream.of(), List.of("a"), String::equalsIgnoreCase).toList());
+    }
+
+    @Test
+    public void removeAll_with_default_predicate_allows_nulls_and_treats_them_like_other_objects() {
+        assertEquals(List.of("a"),
+                     StreamUtils.removeAll(Stream.of("a", null, null, "b"), listOf("b", null)).toList());
     }
 
 }
