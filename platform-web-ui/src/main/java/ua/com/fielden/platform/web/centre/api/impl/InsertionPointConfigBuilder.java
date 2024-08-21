@@ -1,13 +1,5 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
-import static java.lang.String.format;
-import static java.util.Optional.ofNullable;
-import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.mkInsertionPoint;
-import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig.configInsertionPoint;
-import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints.ALTERNATIVE_VIEW;
-
-import java.util.Optional;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.IWithRightSplitterPosition;
@@ -17,6 +9,14 @@ import ua.com.fielden.platform.web.centre.api.alternative_view.IAlternativeViewP
 import ua.com.fielden.platform.web.centre.api.insertion_points.*;
 import ua.com.fielden.platform.web.centre.api.insertion_points.exception.InsertionPointConfigException;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
+
+import java.util.Optional;
+
+import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
+import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.mkInsertionPoint;
+import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig.configInsertionPoint;
+import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints.ALTERNATIVE_VIEW;
 
 /**
  * Implementation for insertion point APIs.
@@ -118,6 +118,10 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
 
     @Override
     public IAlternativeView<T> withCustomisableLayout() {
+        resultSetBuilder.addInsertionPoint(configInsertionPoint(mkInsertionPoint(this.insertionPointAction, this.whereToInsertView))
+                .setPreferred(preferred)
+                .setNoResizing(noResizing)
+                .setToolbar(toolbarConfig));
         return resultSetBuilder.withCustomisableLayout();
     }
 }
