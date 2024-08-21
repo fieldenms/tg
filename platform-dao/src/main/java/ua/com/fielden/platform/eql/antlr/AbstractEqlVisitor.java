@@ -5,14 +5,13 @@ import ua.com.fielden.platform.eql.antlr.exceptions.EqlSyntaxException;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
+import ua.com.fielden.platform.persistence.HibernateConstants;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.N;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.Y;
 import static ua.com.fielden.platform.eql.stage1.operands.Value1.nullValue;
 import static ua.com.fielden.platform.eql.stage1.operands.Value1.value;
 
@@ -74,7 +73,7 @@ abstract class AbstractEqlVisitor<T> extends StrictEQLBaseVisitor<T> {
     /** Ensures that values of boolean types are converted properly. */
     protected static Object preprocessScalarValue(final Object value) {
         if (value instanceof Boolean) {
-            return (boolean) value ? Y : N;
+            return (boolean) value ? HibernateConstants.Y : HibernateConstants.N;
         }
         return value;
     }

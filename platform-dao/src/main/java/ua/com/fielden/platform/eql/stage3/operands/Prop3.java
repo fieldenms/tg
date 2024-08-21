@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.eql.stage3.operands;
 
-import java.util.Objects;
-
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+
+import java.util.Objects;
 
 public class Prop3 extends AbstractSingleOperand3 {
 
@@ -26,7 +26,7 @@ public class Prop3 extends AbstractSingleOperand3 {
     }
 
     @Override
-    public String sql(final EqlDomainMetadata metadata) {
+    public String sql(final IDomainMetadata metadata) {
         return source.column(name);
     }
 

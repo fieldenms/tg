@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.eql.stage3.conditions;
 
-import java.util.Objects;
-
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.stage3.operands.ISetOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+
+import java.util.Objects;
 
 public class SetPredicate3 implements ICondition3 {
     public final ISingleOperand3 leftOperand;
@@ -18,7 +18,7 @@ public class SetPredicate3 implements ICondition3 {
     }
 
     @Override
-    public String sql(final EqlDomainMetadata metadata) {
+    public String sql(final IDomainMetadata metadata) {
         return leftOperand.sql(metadata) + (negated ? " NOT IN " : " IN ") + rightOperand.sql(metadata);
     }
 

@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.eql.stage3.operands.functions;
 
-import static java.lang.String.format;
-
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+
+import static java.lang.String.format;
 
 public class IfNull3 extends TwoOperandsFunction3 {
 
@@ -13,7 +13,7 @@ public class IfNull3 extends TwoOperandsFunction3 {
     }
 
     @Override
-    public String sql(final EqlDomainMetadata metadata) {
+    public String sql(final IDomainMetadata metadata) {
         return format("COALESCE(%s, %s)", operand1.sql(metadata), operand2.sql(metadata));
     }
 

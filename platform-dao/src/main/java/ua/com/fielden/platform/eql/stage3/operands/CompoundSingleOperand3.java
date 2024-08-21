@@ -1,8 +1,7 @@
 package ua.com.fielden.platform.eql.stage3.operands;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator;
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 
 import java.util.Objects;
 
@@ -15,7 +14,7 @@ public class CompoundSingleOperand3 {
         this.operator = operator;
     }
 
-    public String sql(final EqlDomainMetadata metadata) {
+    public String sql(final IDomainMetadata metadata) {
         return operator.value + operand.sql(metadata);
     }
 

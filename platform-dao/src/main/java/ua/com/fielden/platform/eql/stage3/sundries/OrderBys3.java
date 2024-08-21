@@ -1,13 +1,12 @@
 package ua.com.fielden.platform.eql.stage3.sundries;
 
-import static java.util.Collections.unmodifiableList;
-import static java.util.stream.Collectors.joining;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 
 import java.util.List;
 import java.util.Objects;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
+import static java.util.Collections.unmodifiableList;
+import static java.util.stream.Collectors.joining;
 
 public class OrderBys3 {
     private final List<OrderBy3> models;
@@ -20,7 +19,7 @@ public class OrderBys3 {
         return unmodifiableList(models);
     }
 
-    public String sql(final EqlDomainMetadata metadata) {
+    public String sql(final IDomainMetadata metadata) {
         return models.stream().map(o -> o.sql(metadata)).collect(joining(", "));
     }
 

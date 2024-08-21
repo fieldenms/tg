@@ -2,10 +2,10 @@ package ua.com.fielden.platform.eql.stage3.operands.functions;
 
 import ua.com.fielden.platform.entity.query.fluent.ITypeCast;
 import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.types.tuples.T2;
 
 import java.util.ArrayList;
@@ -31,7 +31,7 @@ public class CaseWhen3 extends AbstractFunction3 {
     }
 
     @Override
-    public String sql(final EqlDomainMetadata metadata) {
+    public String sql(final IDomainMetadata metadata) {
         final StringBuffer sb = new StringBuffer();
         sb.append("CASE");
         for (final T2<ICondition3, ISingleOperand3> whenThen : whenThenPairs) {
@@ -44,7 +44,7 @@ public class CaseWhen3 extends AbstractFunction3 {
         return sb.toString();
     }
     
-    private String getOperandSql(final ISingleOperand3 operand, final EqlDomainMetadata metadata) {
+    private String getOperandSql(final ISingleOperand3 operand, final IDomainMetadata metadata) {
         return typeCast == null ? operand.sql(metadata) : typeCastToSql(operand.sql(metadata), typeCast, metadata);
     }
 

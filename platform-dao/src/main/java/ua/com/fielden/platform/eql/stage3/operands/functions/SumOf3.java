@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.eql.stage3.operands.functions;
 
-import static java.lang.String.format;
-
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+
+import static java.lang.String.format;
 
 public class SumOf3 extends SingleOperandFunction3 {
     private final boolean distinct;
@@ -15,7 +15,7 @@ public class SumOf3 extends SingleOperandFunction3 {
     }
     
     @Override
-    public String sql(final EqlDomainMetadata metadata) {
+    public String sql(final IDomainMetadata metadata) {
         final String distinctClause = distinct ? "DISTINCT " : "";
         return format("SUM(%s %s)", distinctClause, operand.sql(metadata));
     }

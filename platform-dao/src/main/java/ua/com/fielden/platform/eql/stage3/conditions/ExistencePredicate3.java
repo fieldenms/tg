@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.eql.stage3.conditions;
 
-import java.util.Objects;
-
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.stage3.queries.SubQueryForExists3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+
+import java.util.Objects;
 
 public class ExistencePredicate3 implements ICondition3 {
     private final boolean negated;
@@ -15,7 +15,7 @@ public class ExistencePredicate3 implements ICondition3 {
     }
 
     @Override
-    public String sql(final EqlDomainMetadata metadata) {
+    public String sql(final IDomainMetadata metadata) {
         return (negated ? "NOT" : "") + " EXISTS (" + subQuery.sql(metadata) + ")";
     }
 
