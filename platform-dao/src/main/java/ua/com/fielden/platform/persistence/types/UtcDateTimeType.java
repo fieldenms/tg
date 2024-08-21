@@ -17,7 +17,7 @@ import static java.util.Objects.requireNonNull;
  */
 public final class UtcDateTimeType extends OffsetDateTimeType implements IUtcDateTimeType {
 
-    private static final TimeZone UTC = requireNonNull(TimeZone.getTimeZone("UTC"), "Couldn't obtain UTC time zone.");
+    private static final TimeZone UTC = requireNonNull(TimeZone.getTimeZone("UTC"), "Could not obtain time zone UTC.");
 
     public static final UtcDateTimeType INSTANCE = new UtcDateTimeType();
 

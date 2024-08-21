@@ -54,18 +54,21 @@ class OffsetDateTimeType extends AbstractSingleColumnStandardBasicType<Date> imp
                 });
     }
 
+
+    /**
+     * This name acts as a type mapping lookup key. It will be used during registration of the mapping.
+     * Hibernate documentation does not specify what this value should be to override the standard mapping.
+     * Name {@code "java.util.Date"} works (before it was simply {@code "date"}).
+     * See <a href='https://docs.jboss.org/hibernate/orm/5.4/userguide/html_single/Hibernate_User_Guide.html#basic-provided'>Hibernate 5.4 User Guide, 2.3.1. Hibernate-provided BasicTypes, Table 1. Standard BasicTypes</a> for more details.
+     */
     @Override
     public String getName() {
-        /* This name acts as a type mapping lookup key. It will be used during registration of the mapping.
-         * Hibernate documentation does not specify what this value should be to override the standard mapping.
-         * java.util.Date works.
-         * See Hibernate 5.4 User Guide, 2.3.1. Hibernate-provided BasicTypes, Table 1. Standard BasicTypes */
         return Date.class.getCanonicalName();
     }
 
     @Override
-    public Date stringToObject(final String xml) throws Exception {
-        return getJavaTypeDescriptor().fromString(xml); //  DateFormat.getDateInstance().parse(xml)
+    public Date stringToObject(final String xml) {
+        return getJavaTypeDescriptor().fromString(xml);
     }
 
     @Override

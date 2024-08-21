@@ -100,9 +100,9 @@ public class HibernateConfigurationFactory {
 
         final String generatedMappings = HibernateMappingsGenerator.generateMappings(domainMetadata.eqlDomainMetadata);
 
-        // TODO use delarative style
+        // TODO use declarative style
         // Register our custom type mapping so that Hibernate uses it during the binding of query parameters.
-        cfg.registerTypeContributor(((typeContributions, $) -> typeContributions.contributeType(DateTimeType.INSTANCE)));
+        cfg.registerTypeContributor((typeContributions, $) -> typeContributions.contributeType(DateTimeType.INSTANCE));
 
         try {
             cfg.addInputStream(new ByteArrayInputStream(generatedMappings.getBytes("UTF8")));
