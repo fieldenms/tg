@@ -858,7 +858,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         // order matters
         final var annotations = new LinkedHashSet<Annotation>();
 
-        // implicit key validators is applied before any declared (via @BeforeChange) ones
+        // implicit key validators are applied before any declared (via @BeforeChange) ones
         annotations.addAll(collectValidationAnnotationsForKey(propField, isEntityPersistent, shouldNotSkipKeyChangeValidation));
         annotations.addAll(findValidationAnnotationsForProperty(propField, propType));
 
