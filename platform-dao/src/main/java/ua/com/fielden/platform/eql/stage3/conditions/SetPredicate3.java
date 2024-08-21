@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.stage3.conditions;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.stage3.operands.ISetOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
@@ -18,8 +18,8 @@ public class SetPredicate3 implements ICondition3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion) {
-        return leftOperand.sql(dbVersion) + (negated ? " NOT IN " : " IN ") + rightOperand.sql(dbVersion);
+    public String sql(final EqlDomainMetadata metadata) {
+        return leftOperand.sql(metadata) + (negated ? " NOT IN " : " IN ") + rightOperand.sql(metadata);
     }
 
     @Override
@@ -41,11 +41,12 @@ public class SetPredicate3 implements ICondition3 {
         if (!(obj instanceof SetPredicate3)) {
             return false;
         }
-        
+
         final SetPredicate3 other = (SetPredicate3) obj;
-        
+
         return Objects.equals(leftOperand, other.leftOperand) &&
                 Objects.equals(rightOperand, other.rightOperand) &&
                 (negated == other.negated);
     }
+
 }

@@ -7,10 +7,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperat
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
-import static ua.com.fielden.platform.eql.meta.PropType.DATETIME_PROP_TYPE;
-import static ua.com.fielden.platform.eql.meta.PropType.INTEGER_PROP_TYPE;
-import static ua.com.fielden.platform.eql.meta.PropType.LONG_PROP_TYPE;
-import static ua.com.fielden.platform.eql.meta.PropType.STRING_PROP_TYPE;
+import static ua.com.fielden.platform.eql.meta.PropType.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -123,7 +120,7 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
     }
 
     protected static ISingleOperand3 entityProp(final String name, final ISource3 source, final Class<? extends AbstractEntity<?>> entityType) {
-        return new Prop3(name, source, new PropType(entityType, H_LONG));
+        return new Prop3(name, source, propType(entityType, H_LONG));
     }
 
     protected static ISingleOperand3 idProp(final ISource3 source) {
@@ -351,7 +348,7 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
     }
 
     protected static Yield3 yieldEntity(final String propName, final ISource3 source, final String alias, final Class<? extends AbstractEntity<?>> propType) {
-        return new Yield3(entityProp(propName, source, propType), alias, nextSqlId(), new PropType(propType, H_LONG));
+        return new Yield3(entityProp(propName, source, propType), alias, nextSqlId(), propType(propType, H_LONG));
     }
 
     protected static Yield3 yieldString(final String propName, final ISource3 source, final String alias) {

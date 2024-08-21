@@ -109,12 +109,12 @@ public class AbstractEntityTest {
         // try to assign null
         entity.setFirstProperty(null);
         assertFalse("Property validation failed.", entity.getProperty("firstProperty").isValid());
-        assertEquals("Value assignment should have been prevented by the validator,", new Integer(60), entity.getFirstProperty());
+        assertEquals("Value assignment should have been prevented by the validator,", Integer.valueOf(60), entity.getFirstProperty());
         // try to assign value less than 50
         entity.setFirstProperty(23);
         assertFalse("Property validation failed.", entity.getProperty("firstProperty").isValid());
-        assertEquals("Value assignment should have been prevented by the validator,", new Integer(60), entity.getFirstProperty());
-        assertEquals("Incorrect value for last invalid value.", new Integer(23), entity.getProperty("firstProperty").getLastInvalidValue());
+        assertEquals("Value assignment should have been prevented by the validator,", Integer.valueOf(60), entity.getFirstProperty());
+        assertEquals("Incorrect value for last invalid value.", Integer.valueOf(23), entity.getProperty("firstProperty").getLastInvalidValue());
     }
 
     @Test

@@ -1058,8 +1058,7 @@ Polymer({
     selectEntity: function (entity, select) {
         const entityIndex = this._findEntity(entity, this.filteredEntities);
         if (entityIndex >= 0 && this.egiModel[entityIndex].selected !== select) {
-            this.set("egiModel." + entityIndex + ".selected", select);
-            this._processEntitySelection(this.filteredEntities[entityIndex], select);
+            this._processModelSelection(entityIndex, select);
             this.fire("tg-entity-selected", {
                 shouldScrollToSelected: false,
                 entities: [{
@@ -1181,8 +1180,7 @@ Polymer({
             const selectionDetails = [];
             for (let i = 0; i < this.egiModel.length; i += 1) {
                 if (this.egiModel[i].selected !== checked) {
-                    this.set("egiModel." + i + ".selected", checked);
-                    this._processEntitySelection(this.filteredEntities[i], checked);
+                    this._processModelSelection(i, checked);
                     selectionDetails.push({
                         entity: this.filteredEntities[i],
                         select: checked
@@ -1231,10 +1229,33 @@ Polymer({
     },
 
     /**
-     * Clears the selection on current page.
+     * Unselects entities on current page, specified with entityIds. If entityIds is not specified then all entities will be unselected.
+     * 
+     * @param {Array} entityIds - ids of entities to unselect on current page
      */
-    clearPageSelection: function () {
-        this.selectAll(false);
+    clearPageSelection: function (entityIds) {
+        if (this.egiModel && entityIds) {
+            const selectionDetails = [];
+            entityIds.forEach(id => {
+                const entityIndex = this.filteredEntities.findIndex(entity => entity.get('id') === id);
+                if (entityIndex >= 0 && this.egiModel[entityIndex].selected === true) {
+                    this._processModelSelection(entityIndex, false);
+                    selectionDetails.push({
+                        entity: this.filteredEntities[entityIndex],
+                        select: false
+                    });
+                } 
+            });
+            updateSelectAll(this, this.egiModel);
+            if (selectionDetails.length > 0) {
+                this.fire("tg-entity-selected", {
+                    shouldScrollToSelected: false,
+                    entities: selectionDetails
+                });
+            }
+        } else {
+            this.selectAll(false);
+        }
     },
 
     /**
@@ -1489,8 +1510,7 @@ Polymer({
             if (target.checked && this._rangeSelection && this._lastSelectedIndex >= 0) {
                 this._selectRange(this._lastSelectedIndex, index);
             } else {
-                this.set("egiModel." + index + ".selected", target.checked);
-                this._processEntitySelection(this.filteredEntities[index], target.checked);
+                this._processModelSelection(index, target.checked);
                 this.fire("tg-entity-selected", {
                     shouldScrollToSelected: false,
                     entities: [{
@@ -2052,8 +2072,7 @@ Polymer({
         newSelection.entities.forEach(entitySelection => {
             const entityIndex = this._findEntity(entitySelection.entity, this.filteredEntities);
             if (entityIndex >= 0 && this.egiModel[entityIndex].selected !== entitySelection.select) {
-                this.set("egiModel." + entityIndex + ".selected", entitySelection.select);
-                this._processEntitySelection(this.filteredEntities[entityIndex], entitySelection.select);
+                this._processModelSelection(entityIndex, entitySelection.select);
             } else {
                 const hiddenEntityIndex = this._findEntity(entitySelection.entity, this.entities);
                 if (hiddenEntityIndex >= 0) {
@@ -2231,14 +2250,24 @@ Polymer({
         }
     },
 
+    /**
+     * Updates selction model of egi and updates checkbox for specified entity. The selection process is based on visible entities (i.e. filteredEntities model)
+     * 
+     * @param {Number} entityIdx entity index to process selction for
+     * @param {Boolean} select determines whether entity should be selected or not
+     */
+    _processModelSelection: function (entityIdx, select) {
+        this.set(`egiModel.${entityIdx}.selected`, select);
+        this._processEntitySelection(this.filteredEntities[entityIdx], select);
+    },
+
     _selectRange: function (fromIndex, toIndex) {
         const from = fromIndex < toIndex ? fromIndex : toIndex;
         const to = fromIndex < toIndex ? toIndex : fromIndex;
         const selectionDetails = [];
         for (let i = from; i <= to; i++) {
             if (!this.egiModel[i].selected) {
-                this.set("egiModel." + i + ".selected", true);
-                this._processEntitySelection(this.filteredEntities[i], true);
+                this._processModelSelection(i, true);
                 selectionDetails.push({
                     entity: this.filteredEntities[i],
                     select: true

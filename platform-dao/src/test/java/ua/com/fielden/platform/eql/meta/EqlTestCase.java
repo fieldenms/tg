@@ -1,21 +1,10 @@
 package ua.com.fielden.platform.eql.meta;
 
-import static java.util.Collections.emptyMap;
-import static ua.com.fielden.platform.entity.query.DbVersion.H2;
-
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.YesNoType;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.generation.ioc.HelperIocModule;
@@ -24,33 +13,22 @@ import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.IDomainMetadata;
-import ua.com.fielden.platform.persistence.types.ColourType;
-import ua.com.fielden.platform.persistence.types.DateTimeType;
-import ua.com.fielden.platform.persistence.types.HyperlinkType;
-import ua.com.fielden.platform.persistence.types.PropertyDescriptorType;
-import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
-import ua.com.fielden.platform.sample.domain.TeVehicle;
-import ua.com.fielden.platform.sample.domain.TeVehicleFinDetails;
-import ua.com.fielden.platform.sample.domain.TeVehicleFuelUsage;
-import ua.com.fielden.platform.sample.domain.TeVehicleMake;
-import ua.com.fielden.platform.sample.domain.TeVehicleModel;
-import ua.com.fielden.platform.sample.domain.TeWorkOrder;
-import ua.com.fielden.platform.sample.domain.TgAuthor;
-import ua.com.fielden.platform.sample.domain.TgBogie;
-import ua.com.fielden.platform.sample.domain.TgFuelUsage;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
-import ua.com.fielden.platform.sample.domain.TgPersonName;
-import ua.com.fielden.platform.sample.domain.TgWagonSlot;
-import ua.com.fielden.platform.sample.domain.TgWorkshop;
+import ua.com.fielden.platform.persistence.types.*;
+import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.IDates;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import static java.util.Collections.emptyMap;
+import static ua.com.fielden.platform.entity.query.DbVersion.H2;
 
 public abstract class EqlTestCase {
     protected static final Class<TeWorkOrder> WORK_ORDER = TeWorkOrder.class;

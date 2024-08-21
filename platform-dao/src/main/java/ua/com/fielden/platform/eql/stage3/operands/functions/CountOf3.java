@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.stage3.operands.functions;
 
 import static java.lang.String.format;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
@@ -15,9 +15,9 @@ public class CountOf3 extends SingleOperandFunction3 {
     }
     
     @Override
-    public String sql(final DbVersion dbVersion) {
+    public String sql(final EqlDomainMetadata metadata) {
         final String distinctClause = distinct ? "DISTINCT " : "";
-        return format("COUNT(%s %s)", distinctClause, operand.sql(dbVersion));
+        return format("COUNT(%s %s)", distinctClause, operand.sql(metadata));
     }
 
     @Override

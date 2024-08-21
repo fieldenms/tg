@@ -19,16 +19,16 @@ public class LevelAllocatingVisitorIndividualMethodsTest {
     @Test
     public void test_calc_of_name_node_level_with_collectional_property() throws SemanticException {
         final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(EntityLevel1.class);
-        assertEquals("Incorrect level", new Integer(2), visitor.determineLevelForProperty("selfProperty.collectional.intProperty"));
-        assertEquals("Incorrect level", new Integer(2), visitor.determineLevelForProperty("selfProperty.selfProperty.collectional.intProperty"));
+        assertEquals("Incorrect level", Integer.valueOf(2), visitor.determineLevelForProperty("selfProperty.collectional.intProperty"));
+        assertEquals("Incorrect level", Integer.valueOf(2), visitor.determineLevelForProperty("selfProperty.selfProperty.collectional.intProperty"));
 
     }
 
     @Test
     public void test_calc_of_name_node_level_without_property() throws SemanticException {
         final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(EntityLevel1.class);
-        assertEquals("Incorrect level", new Integer(1), visitor.determineLevelForProperty("selfProperty.strProperty"));
-        assertEquals("Incorrect level", new Integer(1), visitor.determineLevelForProperty("selfProperty.selfProperty.entityProperty.intProperty"));
+        assertEquals("Incorrect level", Integer.valueOf(1), visitor.determineLevelForProperty("selfProperty.strProperty"));
+        assertEquals("Incorrect level", Integer.valueOf(1), visitor.determineLevelForProperty("selfProperty.selfProperty.entityProperty.intProperty"));
     }
 
     @Test
@@ -61,7 +61,7 @@ public class LevelAllocatingVisitorIndividualMethodsTest {
         plusNode.addChild(intNode).addChild(propNode);
 
         final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(EntityLevel1.class);
-        assertEquals("Incorrect level", new Integer(1), visitor.determineLevelBasedOnOperands(plusNode));
+        assertEquals("Incorrect level", Integer.valueOf(1), visitor.determineLevelBasedOnOperands(plusNode));
     }
 
     @Test
@@ -112,7 +112,7 @@ public class LevelAllocatingVisitorIndividualMethodsTest {
         avgNode.addChild(operandNode);
 
         final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(EntityLevel1.class);
-        assertEquals("Incorrect level", new Integer(1), visitor.determineLevelForAggregationOperations(avgNode));
+        assertEquals("Incorrect level", Integer.valueOf(1), visitor.determineLevelForAggregationOperations(avgNode));
     }
 
     @Test
@@ -126,7 +126,7 @@ public class LevelAllocatingVisitorIndividualMethodsTest {
         avgNode.addChild(operandNode);
 
         final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(EntityLevel1.class);
-        assertEquals("Incorrect level", new Integer(0), visitor.determineLevelForAggregationOperations(avgNode));
+        assertEquals("Incorrect level", Integer.valueOf(0), visitor.determineLevelForAggregationOperations(avgNode));
     }
 
 }

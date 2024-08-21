@@ -8,6 +8,7 @@ import static java.util.stream.Collectors.toSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
@@ -32,6 +33,10 @@ public class OrderBys1 {
 
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return models.isEmpty() ? emptySet() : models.stream().filter(el -> el.operand != null).map(el -> el.operand.collectEntityTypes()).flatMap(Set::stream).collect(toSet());
+    }
+
+    public Stream<OrderBy1> models() {
+        return models.stream();
     }
     
     @Override

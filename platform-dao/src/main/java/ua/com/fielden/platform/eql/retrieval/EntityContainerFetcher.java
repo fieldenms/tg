@@ -125,7 +125,7 @@ public class EntityContainerFetcher {
     protected static <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(final QueryProcessingModel<E, ?> qem, final DbVersion dbVersion, final IFilter filter, final String username, final IDates dates, final IDomainMetadata domainMetadata) {
         final TransformationResultFromStage2To3<ResultQuery3> tr = transform(qem, filter, username, dates, domainMetadata);
         final ResultQuery3 entQuery3 = tr.item;
-        final String sql = entQuery3.sql(dbVersion);
+        final String sql = entQuery3.sql(eqlDomainMetadata);
         return new QueryModelResult<E>((Class<E>) entQuery3.resultType, sql, getYieldedColumns(entQuery3.yields), tr.updatedContext.getSqlParamValues(), qem.fetchModel);
     }
 

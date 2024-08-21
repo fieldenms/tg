@@ -4,20 +4,20 @@ import com.google.inject.Guice;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.Dialect;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.persistence.HibernateHelpers;
+import ua.com.fielden.platform.persistence.types.DateTimeType;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-
-import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 /**
  * Hibernate configuration factory. All Hibernate specific properties should be passed as {@link Properties} values. The following list of properties is supported:
@@ -84,7 +84,7 @@ public class HibernateConfigurationFactory {
             final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes) {
         this.props = props;
 
-        final var dbVersion = determineDbVersion(props);
+        final var dbVersion = HibernateHelpers.getDbVersion(getDialect(props));
         domainMetadata = new DomainMetadataBuilder(defaultHibernateTypes,
                                                    Guice.createInjector(new HibernateUserTypesModule()),
                                                    applicationEntityTypes,
@@ -95,6 +95,10 @@ public class HibernateConfigurationFactory {
 
         final String generatedMappings = new HibernateMappingsGenerator(domainMetadata).generateMappings();
 
+        // TODO use declarative style
+        // Register our custom type mapping so that Hibernate uses it during the binding of query parameters.
+        cfg.registerTypeContributor((typeContributions, $) -> typeContributions.contributeType(DateTimeType.INSTANCE));
+
         try {
             cfg.addInputStream(new ByteArrayInputStream(generatedMappings.getBytes("UTF8")));
             cfgManaged.addInputStream(new ByteArrayInputStream(generatedMappings.getBytes("UTF8")));
@@ -103,25 +107,13 @@ public class HibernateConfigurationFactory {
         }
     }
 
-    public static DbVersion determineDbVersion(final Properties props) {
-        return determineDbVersion(props.getProperty(DIALECT));
-    }
-
-    public static DbVersion determineDbVersion(final String dialect) {
-        if (isEmpty(dialect)) {
-            throw new IllegalStateException("Hibernate dialect was not provided, but is required");
-        }
-        if (dialect.equals("org.hibernate.dialect.H2Dialect")) {
-            return DbVersion.H2;
-        } else if (dialect.equals("org.hibernate.dialect.PostgreSQLDialect")) {
-            return DbVersion.POSTGRESQL;
-        } else if (dialect.contains("SQLServer")) {
-            return DbVersion.MSSQL;
-        } else if (dialect.equals("org.hibernate.dialect.OracleDialect")) {
-            return DbVersion.ORACLE;
+    private static Dialect getDialect(final Properties props) {
+        final String dialect = props.getProperty(DIALECT, "");
+        if (dialect.isEmpty()) {
+            throw new IllegalStateException("Required property [%s] was not specified.".formatted(DIALECT));
         }
 
-        throw new IllegalStateException("Could not determine DB version based on the provided Hibernate dialect \"" + dialect + "\".");
+        return HibernateHelpers.getDialect(dialect);
     }
 
     public Configuration build() {
