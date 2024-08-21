@@ -2,19 +2,17 @@ package ua.com.fielden.eql;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import org.hibernate.Hibernate;
 import org.hibernate.type.YesNoType;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.infra.Blackhole;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.generation.ioc.HelperIocModule;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.meta.SimpleUserFilter;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
-import ua.com.fielden.platform.persistence.HibernateHelpers;
+import ua.com.fielden.platform.meta.DomainMetadataBuilder;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.types.*;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
@@ -314,8 +312,7 @@ public abstract class AbstractEqlBenchmark {
     protected static final IDates dates = injector.getInstance(IDates.class);
     protected static final IFilter filter = new SimpleUserFilter();
 
-    protected static final DomainMetadata DOMAIN_METADATA;
-    protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER;
+    protected static final IDomainMetadata DOMAIN_METADATA;
 
     static {
         hibTypeDefaults.put(boolean.class, YesNoType.class);
@@ -326,8 +323,9 @@ public abstract class AbstractEqlBenchmark {
         hibTypeDefaults.put(Colour.class, ColourType.class);
         hibTypeDefaults.put(Hyperlink.class, HyperlinkType.class);
 
-        DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, injector, PlatformTestDomainTypes.entityTypes, HibernateHelpers.getDialect(H2));
-        DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
+        DOMAIN_METADATA = new DomainMetadataBuilder(
+                hibTypeDefaults, injector, PlatformTestDomainTypes.entityTypes, H2)
+                .build();
     }
 
     protected static final EqlRandomGenerator ELQ_GENERATOR = new EqlRandomGenerator(new Random(9375679861L));
