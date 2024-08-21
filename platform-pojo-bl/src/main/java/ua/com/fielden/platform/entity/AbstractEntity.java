@@ -777,6 +777,9 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
 
     /**
      * Analyses property definition to collect and instantiate all property validators.
+     * Among the returned annotations and validators are both explicit (i.e., directly present on a property) and
+     * implicit ones. An example of implicit validation is the standard validation of {@code String}-typed property {@code key}
+     * (see {@link SkipDefaultStringKeyMemberValidation}).
      *
      * @return  a pair of validation annotations that apply to the property and a map {@code {ValidationAnnotation : {validator : result}}}
      */
