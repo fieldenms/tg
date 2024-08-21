@@ -5,7 +5,6 @@ import '/resources/components/tg-rich-text-input.js';
 import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js';
-import { allDefined } from '/resources/reflection/tg-polymer-utils.js';
 
 const additionalTemplate = html`
     <style>
@@ -25,7 +24,9 @@ const customInputTemplate = html`
         tooltip-text$="[[_getTooltip(_editingValue, entity)]]"
         disabled$="[[_disabled]]" 
         value="{{_editingValue}}"
-        change-event-handler="[[_onChange]]">
+        change-event-handler="[[_onChange]]"
+        min-height="100px"
+        height="500px">
     </tg-rich-text-input>`;
 const propertyActionTemplate = html`<slot id="actionSlot" name="property-action"></slot>`;
 
