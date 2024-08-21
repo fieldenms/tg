@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.reflection;
 
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
@@ -26,6 +27,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
+import com.google.common.collect.ImmutableSet;
 import org.apache.logging.log4j.Logger;
 
 import com.google.common.cache.Cache;
@@ -232,22 +234,12 @@ public final class AnnotationReflector {
     }
 
     /**
-     * Return a list of validation annotations as determined by {@link ValidationAnnotation} enumeration associated with the specified mutator.
-     *
-     * @param mutator
-     * @return
+     * Return validation annotations associated with the given mutator and defined by {@link ValidationAnnotation}.
      */
     public static Set<Annotation> getValidationAnnotations(final Method mutator) {
-        final Set<Annotation> validationAnnotations = new HashSet<>();
-        for (final Annotation annotation : getAnnotations(mutator)) { // and through all annotation on the method
-            for (final ValidationAnnotation annotationKey : ValidationAnnotation.values()) { // iterate through all validation annotations
-                if (annotation.annotationType() == annotationKey.getType()) { // to find matches
-                    validationAnnotations.add(annotation);
-                    break;
-                }
-            }
-        }
-        return validationAnnotations;
+        return getAnnotations(mutator).stream()
+                .filter(at -> ValidationAnnotation.getValueByType(at) != null)
+                .collect(toImmutableSet());
     }
 
     // //////////////////////////////////CLASS RELATED ////////////////////////////////////////
