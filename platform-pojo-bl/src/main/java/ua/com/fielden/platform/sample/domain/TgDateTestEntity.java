@@ -28,6 +28,7 @@ public class TgDateTestEntity extends AbstractEntity<String> {
     @MapTo
     @DateOnly
     @Dependent("toDateProp")
+    @LeProperty("toDateProp")
     @Title("From Date Property")
     private Date fromDateProp;
 
@@ -35,11 +36,11 @@ public class TgDateTestEntity extends AbstractEntity<String> {
     @MapTo
     @DateOnly
     @Dependent("fromDateProp")
+    @GeProperty("fromDateProp")
     @Title("To Date Property")
     private Date toDateProp;
 
     @Observable
-    @LeProperty("toDateProp")
     public TgDateTestEntity setFromDateProp(final Date fromDateProp) {
         this.fromDateProp = fromDateProp;
         return this;
@@ -50,7 +51,6 @@ public class TgDateTestEntity extends AbstractEntity<String> {
     }
 
     @Observable
-    @GeProperty("fromDateProp")
     public TgDateTestEntity setToDateProp(final Date toDateProp) {
         this.toDateProp = toDateProp;
         return this;

@@ -26,21 +26,25 @@ public class EntityWithRangeProperties extends AbstractEntity<String> {
 
     @IsProperty
     @Dependent("toInt")
+    @LeProperty("toInt")
     private Integer fromInt;
     @IsProperty
     @Dependent("fromInt")
+    @GeProperty("fromInt")
     private Integer toInt;
 
     @IsProperty
     @Dependent("toDouble")
+    @LeProperty("toDouble")
     private Double fromDouble;
     @IsProperty
     @Dependent("fromDouble")
+    @GeProperty("fromDouble")
     private Double toDouble;
 
     @IsProperty
-    @LeProperty("toDate")
     @Dependent("toDate")
+    @LeProperty("toDate")
     private Date fromDate;
     @IsProperty
     @GeProperty("fromDate")
@@ -49,9 +53,11 @@ public class EntityWithRangeProperties extends AbstractEntity<String> {
 
     @IsProperty
     @Dependent("toDateTime")
+    @LeProperty("toDateTime")
     private DateTime fromDateTime;
     @IsProperty
     @Dependent("fromDateTime")
+    @GeProperty("fromDateTime")
     private DateTime toDateTime;
 
     @IsProperty
@@ -68,7 +74,6 @@ public class EntityWithRangeProperties extends AbstractEntity<String> {
     }
 
     @Observable
-    @LeProperty("toInt")
     public void setFromInt(final Integer fromInt) {
         this.fromInt = fromInt;
     }
@@ -78,7 +83,6 @@ public class EntityWithRangeProperties extends AbstractEntity<String> {
     }
 
     @Observable
-    @GeProperty("fromInt")
     public void setToInt(final Integer toInt) {
         this.toInt = toInt;
     }
@@ -124,7 +128,6 @@ public class EntityWithRangeProperties extends AbstractEntity<String> {
     }
 
     @Observable
-    @LeProperty("toDouble")
     public void setFromDouble(final Double fromDouble) {
         this.fromDouble = fromDouble;
     }
@@ -134,7 +137,6 @@ public class EntityWithRangeProperties extends AbstractEntity<String> {
     }
 
     @Observable
-    @GeProperty("fromDouble")
     public void setToDouble(final Double toDouble) {
         this.toDouble = toDouble;
     }
@@ -144,7 +146,6 @@ public class EntityWithRangeProperties extends AbstractEntity<String> {
     }
 
     @Observable
-    @LeProperty("toDateTime")
     public void setFromDateTime(final DateTime fromDateTime) {
         this.fromDateTime = fromDateTime;
     }
@@ -154,7 +155,6 @@ public class EntityWithRangeProperties extends AbstractEntity<String> {
     }
 
     @Observable
-    @GeProperty("fromDateTime")
     public void setToDateTime(final DateTime toDateTime) {
         this.toDateTime = toDateTime;
     }
