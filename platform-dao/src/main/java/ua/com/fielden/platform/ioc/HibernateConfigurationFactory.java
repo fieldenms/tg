@@ -21,6 +21,7 @@ import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
 import ua.com.fielden.platform.persistence.HibernateHelpers;
+import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 
 /**
@@ -98,6 +99,10 @@ public class HibernateConfigurationFactory {
         idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata.eqlDomainMetadata);
 
         final String generatedMappings = HibernateMappingsGenerator.generateMappings(domainMetadata.eqlDomainMetadata);
+
+        // TODO use declarative style
+        // Register our custom type mapping so that Hibernate uses it during the binding of query parameters.
+        cfg.registerTypeContributor((typeContributions, $) -> typeContributions.contributeType(DateTimeType.INSTANCE));
 
         try {
             cfg.addInputStream(new ByteArrayInputStream(generatedMappings.getBytes("UTF8")));
