@@ -1,7 +1,8 @@
 package ua.com.fielden.platform.meta;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.types.either.Either;
 
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -45,14 +46,33 @@ public interface IDomainMetadata {
     Optional<TypeMetadata.Composite> forComposite(Class<?> javaType);
 
     /**
-     * Empty optional is returned if either of the following holds:
+     * A non-throwing alternative to {@link #forProperty(Class, CharSequence)}.
+     */
+    Optional<PropertyMetadata> forPropertyOpt(Class<?> enclosingType, CharSequence propPath);
+
+    /**
+     * Provides access to property metadata.
+     * An exception will be thrown if either of the following holds:
      * <ul>
      *   <li>a property with the given name cannot be found in the given type's metadata
      *   <li>the given type is not part of the domain, hence there is no metadata associated with it
      * </ul>
      *
+     * {@link #forPropertyOpt(Class, CharSequence)} is a non-throwing alternative.
+     *
      * @param propPath  property path (dot-notation supported)
      */
-    Optional<PropertyMetadata> forProperty(Class<?> enclosingType, CharSequence propPath);
-    
+    PropertyMetadata forProperty(Class<?> enclosingType, CharSequence propPath);
+
+    /**
+     * Returns metadata for a property represented by the given meta-property.
+     * <ul>
+     *   <li> If the property has metadata, returns an optional describing it.
+     *   <li> If the property doesn't have metadata but satisfies {@link AbstractEntity#isAlwaysMetaProperty(String)},
+     *   returns an empty optional.
+     *   <li> Otherwise, returns an error.
+     * </ul>
+     */
+    Either<RuntimeException, Optional<PropertyMetadata>> forProperty(MetaProperty<?> metaProperty);
+
 }

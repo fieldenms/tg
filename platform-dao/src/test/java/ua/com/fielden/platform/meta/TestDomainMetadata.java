@@ -21,11 +21,11 @@ public class TestDomainMetadata {
     }
 
     /**
-     * Forwards to {@link IDomainMetadata#forProperty(Class, CharSequence)}} and asserts the result's presence.
+     * Forwards to {@link IDomainMetadata#forPropertyOpt(Class, CharSequence)}} and asserts the result's presence.
      */
     // raw AbstractEntity is used to accept generic types
     public PropertyA<PropertyMetadata> forProperty(final Class<? extends AbstractEntity> entityType, final CharSequence propPath) {
-        final var propertyMetadata = domainMetadata.forProperty(entityType, propPath)
+        final var propertyMetadata = domainMetadata.forPropertyOpt(entityType, propPath)
                 .orElseThrow(() -> new AssertionError(format("Expected metadata to be generated for entity [%s]",
                                                              entityType.getTypeName())));
         return PropertyA.of(propertyMetadata);

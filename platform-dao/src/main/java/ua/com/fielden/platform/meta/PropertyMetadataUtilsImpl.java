@@ -92,7 +92,7 @@ final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
         final var compositeHibType = (ICompositeUserTypeInstantiate) hibType;
 
         return zip(stream(compositeHibType.getPropertyNames()), stream(compositeHibType.getPropertyTypes()), (subPropName, subHibType) -> {
-            final var subProp = compositeTypeMetadata.property(subPropName)
+            final var subProp = compositeTypeMetadata.propertyOpt(subPropName)
                     .orElseThrow(() -> new DomainMetadataGenerationException(
                             format("Missing property [%s] in [%s]. Expected by [%s].", subPropName, compositeTypeMetadata, compositeHibType)));
 
@@ -113,7 +113,7 @@ final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
         final Class<?> compositeJavaType = compositeTypeMetadata.javaType();
 
         return zip(stream(subPropNames), stream(compositeHibType.getPropertyTypes()), (subPropName, subHibType) -> {
-            final var subProp = compositeTypeMetadata.property(subPropName)
+            final var subProp = compositeTypeMetadata.propertyOpt(subPropName)
                     .orElseThrow(() -> new DomainMetadataGenerationException(
                             format("Missing property [%s] in [%s]. Expected by [%s].", subPropName, compositeTypeMetadata, compositeHibType)));
 
@@ -139,7 +139,7 @@ final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
         final var compositeHibType = (ICompositeUserTypeInstantiate) prop.hibType();
 
         return zip(stream(compositeHibType.getPropertyNames()), stream(compositeHibType.getPropertyTypes()), (subPropName, subHibType) -> {
-            final var subProp = compositeTypeMetadata.property(subPropName)
+            final var subProp = compositeTypeMetadata.propertyOpt(subPropName)
                     .orElseThrow(() -> new DomainMetadataGenerationException(
                             format("Missing property [%s] in [%s]. Expected by [%s].", subPropName, compositeTypeMetadata, compositeHibType)));
             return calculatedProp(subPropName, subProp.type(), subHibType, prop.data()).build();

@@ -13,7 +13,8 @@ import ua.com.fielden.platform.expression.exception.semantic.IncompatibleOperand
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 import ua.com.fielden.platform.expression.exception.semantic.TypeCompatibilityException;
 import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.Reflector;
+
+import static ua.com.fielden.platform.utils.EntityUtils.laxSplitPropPathToArray;
 
 /**
  * Allocates expression level to each visited AST node. Some nodes such as literal representing nodes are level agnostic and thus have value of level equal <code>null</code>.
@@ -139,11 +140,11 @@ public class LevelAllocatingVisitor extends AbstractAstVisitor {
      * @return
      */
     public final Integer determineLevelForProperty(final String text) {
-        return determineLevel(relative2AbsoluteInverted(text).split(Reflector.DOT_SPLITTER), getContextPropertyType());
+        return determineLevel(laxSplitPropPathToArray(relative2AbsoluteInverted(text)), getContextPropertyType());
     }
 
     private final Integer determineContextLevel(final String text) {
-        return determineLevel(text.split(Reflector.DOT_SPLITTER), getHigherOrderType());
+        return determineLevel(laxSplitPropPathToArray(text), getHigherOrderType());
     }
 
     private int determineLevel(final String[] parts, final Class<?> type) {

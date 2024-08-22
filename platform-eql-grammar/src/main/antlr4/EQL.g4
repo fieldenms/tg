@@ -1,9 +1,11 @@
+// This grammar was generated. Timestamp: 2024-08-12T13:27:50.096302183+03:00[Europe/Kyiv]
+
 grammar EQL;
 
 start : query EOF;
 
 query :
-      select=SELECT alias=AS? join? where? groupBy? selectEnd  # Select
+      select=SELECT alias=AS? join? where? groupBy? selectEnd # Select
     | EXPR first=yieldOperand (operators+=arithmeticalOperator rest+=yieldOperand)* MODEL # StandaloneExpression
     | COND standaloneCondition MODEL # StandaloneCondExpr
     | ORDERBY operands+=orderByOperand+ MODEL # OrderBy
@@ -19,30 +21,20 @@ where :
 ;
 
 condition :
-      predicate                          # PredicateCondition
-      // by specifying AND first we give it implicit precedence over OR
+      predicate # PredicateCondition
     | left=condition AND right=condition # AndCondition
-    | left=condition OR right=condition  # OrCondition
-    | BEGIN condition END                # CompoundCondition
-    | NOTBEGIN condition END             # NegatedCompoundCondition
+    | left=condition OR right=condition # OrCondition
+    | BEGIN condition END # CompoundCondition
+    | NOTBEGIN condition END # NegatedCompoundCondition
 ;
 
-// this rule has the largest lookahead, consider refactoring it if performance is bad
 predicate :
       left=comparisonOperand unaryComparisonOperator # UnaryPredicate
     | left=comparisonOperand comparisonOperator right=comparisonOperand # ComparisonPredicate
     | left=comparisonOperand comparisonOperator quantifiedOperand # QuantifiedComparisonPredicate
     | left=comparisonOperand likeOperator right=comparisonOperand # LikePredicate
     | left=comparisonOperand membershipOperator membershipOperand # MembershipPredicate
-    | (token=EXISTS
-     | token=NOTEXISTS
-     | token=EXISTSANYOF
-     | token=NOTEXISTSANYOF
-     | token=EXISTSALLOF
-     | token=NOTEXISTSALLOF
-     | token=CRITCONDITION
-     | token=CONDITION
-     | token=NEGATEDCONDITION) # SingleConditionPredicate
+    | (token=EXISTS | token=NOTEXISTS | token=EXISTSANYOF | token=NOTEXISTSANYOF | token=EXISTSALLOF | token=NOTEXISTSALLOF | token=CRITCONDITION | token=CONDITION | token=NEGATEDCONDITION) # SingleConditionPredicate
 ;
 
 unaryComparisonOperator :
@@ -97,9 +89,7 @@ singleOperand :
     | token=EXTPROP # ExtProp
     | (token=VAL | token=IVAL) # Val
     | (token=PARAM | token=IPARAM) # Param
-    // expr(ExpressionModel)
     | token=EXPR # SingleOperand_Expr
-    // model(SingleResultQueryModel)
     | token=MODEL # SingleOperand_Model
     | funcName=unaryFunctionName argument=singleOperand # UnaryFunction
     | IFNULL nullable=singleOperand THEN other=singleOperand # IfNull
@@ -107,15 +97,8 @@ singleOperand :
     | COUNT unit=dateIntervalUnit BETWEEN endDate=singleOperand AND startDate=singleOperand # DateDiffInterval
     | ADDTIMEINTERVALOF left=singleOperand unit=dateIntervalUnit TO right=singleOperand # DateAddInterval
     | ROUND singleOperand to=TO # Round
-
-    | CONCAT operands+=singleOperand (WITH operands+=singleOperand)* END
-    # Concat
-
-    | CASEWHEN whens+=condition THEN thens+=singleOperand
-      (WHEN whens+=condition THEN thens+=singleOperand)*
-      (OTHERWISE otherwiseOperand=singleOperand)? caseWhenEnd
-    # CaseWhen
-
+    | CONCAT operands+=singleOperand (WITH operands+=singleOperand)* END # Concat
+    | CASEWHEN whens+=condition THEN thens+=singleOperand (WHEN whens+=condition THEN thens+=singleOperand)* (OTHERWISE otherwiseOperand=singleOperand)? caseWhenEnd # CaseWhen
     | BEGINEXPR exprBody ENDEXPR # Expr
 ;
 
@@ -200,7 +183,7 @@ anyYield :
     | YIELD firstYield=yieldOperand yieldTail # YieldSome
 ;
 
-yieldTail:
+yieldTail :
       yield1Model # Yield1Tail
     | firstAlias=yieldAlias restYields+=aliasedYield* yieldManyModel # YieldManyTail
 ;
@@ -211,7 +194,6 @@ aliasedYield :
 
 yieldOperand :
       singleOperand # YieldOperand_SingleOperand
-      // use {BEGIN,END}YIELDEXPR instead of {BEGIN,END}EXPR to avoid ambiguity with singleOperand
     | BEGINYIELDEXPR first=yieldOperand (operators+=arithmeticalOperator rest+=yieldOperand)* ENDYIELDEXPR # YieldOperandExpr
     | COUNTALL # YieldOperand_CountAll
     | funcName=yieldOperandFunctionName argument=singleOperand # YieldOperandFunction
@@ -252,7 +234,7 @@ model :
 standaloneCondition :
       predicate # StandaloneCondition_Predicate
     | left=standaloneCondition AND right=standaloneCondition # AndStandaloneCondition
-    | left=standaloneCondition OR right=standaloneCondition  # OrStandaloneCondition
+    | left=standaloneCondition OR right=standaloneCondition # OrStandaloneCondition
 ;
 
 orderByOperand :

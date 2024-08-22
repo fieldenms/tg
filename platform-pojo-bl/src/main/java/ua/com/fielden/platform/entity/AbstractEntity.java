@@ -48,6 +48,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import com.google.common.collect.ImmutableSet;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 
@@ -85,7 +86,7 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
-import ua.com.fielden.platform.types.RichText;
+import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
@@ -691,16 +692,26 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * @return
      */
     private Set<Field> fieldsForProperties() {
-        final Set<Field> fields = Finder.streamRealProperties((Class<? extends AbstractEntity<?>>) getClass()).collect(toCollection(LinkedHashSet::new));
+        final Class<? extends AbstractEntity<?>> thisType = (Class<? extends AbstractEntity<?>>) getClass();
+        final Set<Field> fields = Finder.streamRealProperties(thisType).collect(toCollection(LinkedHashSet::new));
         try {
-            fields.add(Finder.getFieldByName(this.getClass(), KEY));
-            fields.add(Finder.getFieldByName(this.getClass(), DESC));
+            ALWAYS_PRESENT_META_PROPERTIES.forEach(prop -> fields.add(Finder.getFieldByName(thisType, prop)));
         } catch (final Exception ex) {
-            final String error = "Could not get fields for KEY or DESC.";
+            final String error = "Could not get field for one of [%s].".formatted(CollectionUtil.toString(ALWAYS_PRESENT_META_PROPERTIES, ", "));
             logger.error(error, ex);
             throw new ReflectionException(error, ex);
         }
         return fields;
+    }
+
+    private static final Set<String> ALWAYS_PRESENT_META_PROPERTIES = ImmutableSet.of(KEY, DESC);
+
+    /**
+     * Indicates whether a property is such that a {@link MetaProperty} always exists for it, regardless of the type that
+     * declares the property.
+     */
+    public static boolean isAlwaysMetaProperty(final String property) {
+        return ALWAYS_PRESENT_META_PROPERTIES.contains(property);
     }
 
     /**
@@ -740,7 +751,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
 
         }
 
-        if (!isString(type) && !isHyperlink(type) && !RichText.class.isAssignableFrom(type) && !type.isArray() && isPropertyAnnotation.length() != DEFAULT_LENGTH) {
+        if (!isString(type) && !isHyperlink(type) && !type.isArray() && isPropertyAnnotation.length() != DEFAULT_LENGTH) {
             final String error = format(INVALID_USE_OF_PARAM_LENGTH_MSG, propName, getType().getName());
             logger.error(error);
             throw new EntityDefinitionException(error);

@@ -721,7 +721,7 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
                     final BigDecimal value = new BigDecimal(leftOperand.getValue().toString()).add(new BigDecimal(rightOperand.getValue().toString()));
                     return value;
                 } else if (Integer.class.isAssignableFrom(node.getType())) {
-                    final Integer value = new Integer(leftOperand.getValue().toString()) + new Integer(rightOperand.getValue().toString());
+                    final Integer value = Integer.valueOf(leftOperand.getValue().toString()) + Integer.valueOf(rightOperand.getValue().toString());
                     return value;
                 } else if (String.class.isAssignableFrom(node.getType())) {
                     final String value = DBL_QUOTE + StringUtils.remove(leftOperand.getValue().toString(), DBL_QUOTE) + StringUtils.remove(rightOperand.getValue().toString(), DBL_QUOTE) + DBL_QUOTE;
@@ -739,7 +739,7 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
                     final BigDecimal value = new BigDecimal(leftOperand.getValue().toString()).subtract(new BigDecimal(rightOperand.getValue().toString()));
                     return value;
                 } else if (Integer.class.isAssignableFrom(node.getType())) {
-                    final Integer value = new Integer(leftOperand.getValue().toString()) - new Integer(rightOperand.getValue().toString());
+                    final Integer value = Integer.valueOf(leftOperand.getValue().toString()) - Integer.valueOf(rightOperand.getValue().toString());
                     return value;
                 } else if (Day.class.isAssignableFrom(node.getType())) {
                     return ((Integer) leftOperand.getValue()) - ((Integer) rightOperand.getValue());
@@ -755,7 +755,7 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
                     final BigDecimal value = new BigDecimal(leftOperand.getValue().toString()).multiply(new BigDecimal(rightOperand.getValue().toString()));
                     return value;
                 } else if (Integer.class.isAssignableFrom(node.getType())) {
-                    final Integer value = new Integer(leftOperand.getValue().toString()) * new Integer(rightOperand.getValue().toString());
+                    final Integer value = Integer.valueOf(leftOperand.getValue().toString()) * Integer.valueOf(rightOperand.getValue().toString());
                     return value;
                 }
                 break;

@@ -2,6 +2,9 @@ package ua.com.fielden.platform.meta;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.exceptions.NoSuchPropertyException;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.types.either.Either;
 
 import java.util.Collection;
 import java.util.Map;
@@ -10,6 +13,9 @@ import java.util.Optional;
 
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static java.util.function.Function.identity;
+import static ua.com.fielden.platform.entity.exceptions.NoSuchPropertyException.noSuchPropertyException;
+import static ua.com.fielden.platform.types.either.Either.left;
+import static ua.com.fielden.platform.types.either.Either.right;
 
 abstract class EntityMetadataImpl<N extends EntityNature, D extends EntityNature.Data<N>> {
 
@@ -34,8 +40,34 @@ abstract class EntityMetadataImpl<N extends EntityNature, D extends EntityNature
         return properties.values();
     }
 
-    public Optional<PropertyMetadata> property(final String name) {
+    public Optional<PropertyMetadata> propertyOpt(final String name) {
         return Optional.ofNullable(properties.get(name));
+    }
+
+    public PropertyMetadata property(final String name) {
+        final var property = properties.get(name);
+        if (property == null) {
+            throw noSuchPropertyException(javaType, name);
+        }
+        return property;
+    }
+
+    /**
+     * Returns metadata for a property represented by the given meta-property.
+     * <ul>
+     *   <li> If the property has metadata, returns an optional describing it.
+     *   <li> If the property doesn't have metadata but satisfies {@link AbstractEntity#isAlwaysMetaProperty(String)},
+     *   returns an empty optional.
+     *   <li> Otherwise, returns an error.
+     * </ul>
+     */
+    public Either<RuntimeException, Optional<PropertyMetadata>> property(final MetaProperty<?> metaProperty) {
+        final var propertyOpt = propertyOpt(metaProperty.getName());
+        return propertyOpt.isPresent()
+                ? right(propertyOpt)
+                : AbstractEntity.isAlwaysMetaProperty(metaProperty.getName())
+                ? right(Optional.empty())
+                : left(noSuchPropertyException(javaType, metaProperty.getName()));
     }
 
     public N nature() {

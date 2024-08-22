@@ -69,7 +69,7 @@ public class EntityContainerEnhancer {
             } else {
                 if (fetchModel.getEntityType() != EntityAggregates.class) {
                     // @formatter:off
-                    domainMetadata.forProperty(fetchModel.getEntityType(), propName)
+                    domainMetadata.forPropertyOpt(fetchModel.getEntityType(), propName)
                         .ifPresentOrElse(pm -> {
                              if (pm.type().isCollectional()) {
                                  enhanceCollectional(session, entities, fetchModel, paramValues, propName, propFetchModel);

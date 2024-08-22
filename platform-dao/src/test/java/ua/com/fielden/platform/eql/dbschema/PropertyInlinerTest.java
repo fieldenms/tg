@@ -28,7 +28,7 @@ public class PropertyInlinerTest extends AbstractDaoTestCase {
 
     @Test
     public void Money_property_is_replaced_by_properties_of_Money() {
-        final var propMoney = metadata.forEntity(EntityWithMoney.class).property("money").flatMap(PropertyMetadata::asPersistent).orElseThrow();
+        final var propMoney = metadata.forEntity(EntityWithMoney.class).property("money").asPersistent().orElseThrow();
         assertEquals(Money.class, propMoney.type().javaType());
 
         assertInlined(propMoney,
@@ -39,7 +39,7 @@ public class PropertyInlinerTest extends AbstractDaoTestCase {
     @Test
     public void property_typed_with_union_entity_is_replaced_by_properties_of_the_union_entity() {
         assertTrue(metadata.forEntity(TgBogieLocation.class).isUnion());
-        final var propLocation = metadata.forEntity(TgBogie.class).property("location").flatMap(PropertyMetadata::asPersistent).orElseThrow();
+        final var propLocation = metadata.forEntity(TgBogie.class).property("location").asPersistent().orElseThrow();
         assertEquals(TgBogieLocation.class, propLocation.type().javaType());
 
         assertInlined(propLocation,
@@ -49,14 +49,14 @@ public class PropertyInlinerTest extends AbstractDaoTestCase {
 
     @Test
     public void primitive_properties_are_not_inlined() {
-        final var propSurname = metadata.forEntity(TgAuthor.class).property("surname").flatMap(PropertyMetadata::asPersistent).orElseThrow();
+        final var propSurname = metadata.forEntity(TgAuthor.class).property("surname").asPersistent().orElseThrow();
         assertTrue(propSurname.type().isPrimitive());
         assertNotInlined(propSurname);
     }
 
     @Test
     public void properties_typed_with_entities_other_than_union_are_not_inlined() {
-        final var propReplacedBy = metadata.forEntity(TgVehicle.class).property("replacedBy").flatMap(PropertyMetadata::asPersistent).orElseThrow();
+        final var propReplacedBy = metadata.forEntity(TgVehicle.class).property("replacedBy").asPersistent().orElseThrow();
         assertTrue(propReplacedBy.type().isEntity());
         assertFalse(metadata.propertyMetadataUtils().isPropEntityType(propReplacedBy, EntityMetadata::isUnion));
         assertNotInlined(propReplacedBy);

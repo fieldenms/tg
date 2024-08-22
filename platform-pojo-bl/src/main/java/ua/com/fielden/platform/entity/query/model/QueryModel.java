@@ -12,13 +12,22 @@ public abstract class QueryModel<T extends AbstractEntity<?>> extends AbstractMo
     private final Class<T> resultType;
     private boolean filterable = false;
     private final boolean yieldAll;
-    public boolean shouldMaterialiseCalcPropsAsColumnsInSqlQuery;
+    private boolean shouldMaterialiseCalcPropsAsColumnsInSqlQuery;
 
     public QueryModel(final ListTokenSource tokens, final Class<T> resultType, final boolean yieldAll) {
         super(tokens);
         this.resultType = resultType;
         this.yieldAll = yieldAll;
         this.shouldMaterialiseCalcPropsAsColumnsInSqlQuery = false;
+    }
+
+    public boolean shouldMaterialiseCalcPropsAsColumnsInSqlQuery() {
+        return shouldMaterialiseCalcPropsAsColumnsInSqlQuery;
+    }
+
+    protected QueryModel<T> setShouldMaterialiseCalcPropsAsColumnsInSqlQuery(final boolean value) {
+        this.shouldMaterialiseCalcPropsAsColumnsInSqlQuery = value;
+        return this;
     }
 
     public Class<T> getResultType() {

@@ -11,11 +11,11 @@ public class BnfToText {
 
     public BnfToText() {}
 
-    public String bnfToText(BNF bnf) {
+    public String bnfToText(final BNF bnf) {
         return bnf.rules().stream().map(this::toString).collect(joining("\n\n"));
     }
 
-    protected String toString(Rule rule) {
+    protected String toString(final Rule rule) {
         final int prefixLen = rule.lhs().name().length();
         return rule.rhs().options().stream()
                 .map(this::toString)
@@ -26,7 +26,7 @@ public class BnfToText {
         return body.stream().map(this::toString).collect(joining(" "));
     }
 
-    protected String toString(Term term) {
+    protected String toString(final Term term) {
         return switch (term) {
             case Symbol symbol -> toString(symbol);
             case Sequence sequence -> toString(sequence);
@@ -34,25 +34,25 @@ public class BnfToText {
         };
     }
 
-    protected String toString(Symbol symbol) {
+    protected String toString(final Symbol symbol) {
         return switch (symbol) {
             case Terminal terminal -> toString(terminal);
             case Variable variable -> toString(variable);
         };
     }
 
-    protected String toString(Variable variable) {
+    protected String toString(final Variable variable) {
         return variable.name();
     }
 
-    protected String toString(Terminal terminal) {
+    protected String toString(final Terminal terminal) {
         return switch (terminal) {
             case Token token -> toString(token);
             default -> terminalToString(terminal);
         };
     }
 
-    protected String toString(Token token) {
+    protected String toString(final Token token) {
         if (!token.hasParameters()) {
             return terminalToString(token);
         }
@@ -70,31 +70,31 @@ public class BnfToText {
         };
     }
 
-    protected String toString(NormalParameter parameter) {
+    protected String toString(final NormalParameter parameter) {
         return wrapParameter(parameter.type().getSimpleName());
     }
 
-    protected String toString(VarArityParameter parameter) {
+    protected String toString(final VarArityParameter parameter) {
         return "%s*".formatted(wrapParameter(parameter.type().getSimpleName()));
     }
 
-    private static String wrapParameter(String text) {
+    private static String wrapParameter(final String text) {
         return "<%s>".formatted(text);
     }
     
-    protected String toString(Notation notation) {
+    protected String toString(final Notation notation) {
         return switch (notation) {
             case Alternation alternation -> toString(alternation);
             case Quantifier quantifier -> toString(quantifier);
         };
     }
 
-    protected String toString(Alternation alternation) {
+    protected String toString(final Alternation alternation) {
         return alternation.options().stream().map(this::toString).collect(joining(" | "));
     }
 
-    protected String toString(Quantifier quantifier) {
-        String q = switch (quantifier) {
+    protected String toString(final Quantifier quantifier) {
+        final var q = switch (quantifier) {
             case ZeroOrMore $ -> "*";
             case OneOrMore $ -> "+";
             case Optional $ -> "?";

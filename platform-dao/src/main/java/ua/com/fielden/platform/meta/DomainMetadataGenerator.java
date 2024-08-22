@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.meta;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import org.apache.logging.log4j.Logger;
@@ -22,10 +24,13 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import javax.annotation.Nullable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
+import java.time.Duration;
 import java.util.Optional;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
@@ -49,9 +54,9 @@ import static ua.com.fielden.platform.meta.PropertyTypeMetadata.COMPOSITE_KEY;
 import static ua.com.fielden.platform.persistence.HibernateConstants.*;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.*;
 import static ua.com.fielden.platform.reflection.Finder.*;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isRequiredByDefinition;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.*;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
-import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
+import static ua.com.fielden.platform.utils.StreamUtils.*;
 
 /* General verification rules for entities:
  * - Synthetic based on Persistent - can't have an entity-typed key.
@@ -96,24 +101,70 @@ final class DomainMetadataGenerator {
     private final HibernateTypeGenerator hibTypeGenerator;
     private final Map<String, PropColumn> specialPropColumns;
 
+    /** Long-lasting (but not necessarily permanent) cache for entity types. */
+    private final Cache<Class<? extends AbstractEntity>, EntityMetadata> entityMetadataCache;
+    /** Temporary cache for entity types. */
+    private final Cache<Class<? extends AbstractEntity>, EntityMetadata> tmpEntityMetadataCache;
+    /** Permanent cache for composite types. */
+    private final Cache<Class<?>, TypeMetadata.Composite> compositeTypeMetadataCache;
+
     DomainMetadataGenerator(final HibernateTypeMappings hibernateTypeMappings, final IDbVersionProvider dbVersionProvider) {
         // some columns are DB-dependent
         this.specialPropColumns = Map.of(
                 ID, new PropColumn(dbVersionProvider.dbVersion().idColumnName()),
                 VERSION, new PropColumn(dbVersionProvider.dbVersion().versionColumnName()));
         this.hibTypeGenerator = new HibernateTypeGenerator(hibernateTypeMappings);
+        this.entityMetadataCache = CacheBuilder.newBuilder()
+                .concurrencyLevel(50)
+                .maximumSize(8192)
+                .expireAfterAccess(Duration.ofDays(1))
+                .build();
+        this.tmpEntityMetadataCache = CacheBuilder.newBuilder()
+                .concurrencyLevel(50)
+                .maximumSize(8192)
+                .weakKeys()
+                .expireAfterAccess(Duration.ofMinutes(5))
+                .build();
+        this.compositeTypeMetadataCache = CacheBuilder.newBuilder()
+                .concurrencyLevel(50)
+                .maximumSize(128)
+                .build();
+    }
+
+    Stream<TypeMetadata> allTypes() {
+        return Stream.concat(entityMetadataCache.asMap().values().stream(), compositeTypeMetadataCache.asMap().values().stream());
+    }
+
+    <T extends TypeMetadata> Stream<T> allTypes(final Class<T> metadataType) {
+        if (metadataType == EntityMetadata.class) {
+            return (Stream<T>) entityMetadataCache.asMap().values().stream();
+        }
+        else if (metadataType == TypeMetadata.Composite.class) {
+            return (Stream<T>) compositeTypeMetadataCache.asMap().values().stream();
+        }
+        else {
+            return entityMetadataCache.asMap().values().stream()
+                    .mapMulti(typeFilter(metadataType));
+        }
     }
 
     // ****************************************
     // * Composite Type Metadata
 
     public Optional<TypeMetadata.Composite> forComposite(final Class<?> type) {
+        final var cached = compositeTypeMetadataCache.getIfPresent(type);
+        if (cached != null) {
+            return Optional.of(cached);
+        }
+
         if (!TypeRegistry.COMPOSITE_TYPES.contains(type)) {
             return Optional.empty();
         }
 
         final var builder = new CompositeTypeMetadataImpl.Builder(type);
-        return Optional.of(builder.properties(buildProperties(builder)).build());
+        final var metadata = builder.properties(buildProperties(builder)).build();
+        compositeTypeMetadataCache.put(type, metadata);
+        return Optional.of(metadata);
     }
 
     /**
@@ -157,43 +208,104 @@ final class DomainMetadataGenerator {
     // * Entity Metadata
 
     public Optional<EntityMetadata> forEntity(final Class<? extends AbstractEntity<?>> entityType) {
+        final var cached = getCachedEntityMetadata(entityType);
+        if (cached != null) {
+            return Optional.of(cached);
+        }
+
+        final EntityMetadata metadata;
         try {
-            return forEntity_(entityType);
+            metadata = forEntity_(entityType);
         } catch (final Exception e) {
             // rethrow to facilitate debugging
             throw new DomainMetadataGenerationException("Failed to generate metadata for entity [%s]".formatted(entityType), e);
         }
+
+        if (metadata == null) {
+            return Optional.empty();
+        }
+
+        entityCacheFor(entityType).put(entityType, metadata);
+        return Optional.of(metadata);
     }
 
-    private Optional<EntityMetadata> forEntity_(final Class<? extends AbstractEntity<?>> entityType) {
-        final Optional<EntityMetadataBuilder<?, ?>> entityBuilder;
+    private EntityMetadata requireForEntity(final Class<? extends AbstractEntity<?>> entityType) {
+        return forEntity(entityType).orElseThrow(() -> new DomainMetadataGenerationException(
+                "Could not generate metadata for entity [%s].".formatted(entityType.getTypeName())));
+    }
 
+    private @Nullable EntityMetadata getCachedEntityMetadata(final Class<? extends AbstractEntity<?>> entityType) {
+        final var cached = entityMetadataCache.getIfPresent(entityType);
+        if (cached != null) {
+            return cached;
+        }
+        return tmpEntityMetadataCache.getIfPresent(entityType);
+    }
+
+    private Cache<Class<? extends AbstractEntity>, EntityMetadata> entityCacheFor(final Class<? extends AbstractEntity<?>> entityType) {
+        if (isProxied(entityType) || isMockNotFoundType(entityType)) {
+            return tmpEntityMetadataCache;
+        }
+        return entityMetadataCache;
+    }
+
+    private @Nullable EntityMetadata forEntity_(final Class<? extends AbstractEntity<?>> entityType) {
+        final EntityMetadataBuilder<?, ?> entityBuilder;
+
+        // if this is a generated entity type with the same nature as its original type, we can reuse the original's nature data
         switch (inferEntityNature(entityType)) {
             case EntityNature.Union $ -> {
                 final var unionEntityType = (Class<? extends AbstractUnionEntity>) entityType;
-                entityBuilder = Optional.of(EntityMetadataBuilder.unionEntity(
-                        unionEntityType, EntityNature.Union.data(produceUnionEntityModels(unionEntityType))));
+                entityBuilder = EntityMetadataBuilder.unionEntity(
+                        unionEntityType,
+                        metadataForParentOfGenerated(entityType).flatMap(EntityMetadata::asUnion).map(EntityMetadata.Union::data)
+                                .orElseGet(() -> EntityNature.Union.data(produceUnionEntityModels(unionEntityType))));
             }
             case EntityNature.Persistent $ ->
-                entityBuilder = Optional.of(EntityMetadataBuilder.persistentEntity(
-                        entityType, EntityNature.Persistent.data(mkTableName(entityType))));
-            case EntityNature.Synthetic $ -> {
-                final var modelField = requireNonNull(findSyntheticModelFieldFor(entityType),
-                                                      () -> format("Synthetic entity [%s] has no model field.", entityType.getTypeName()));
-                entityBuilder = Optional.of(EntityMetadataBuilder.syntheticEntity(
+                entityBuilder = EntityMetadataBuilder.persistentEntity(
                         entityType,
-                        EntityNature.Synthetic.data(getEntityModelsOfQueryBasedEntityType(entityType, modelField))));
+                        metadataForParentOfGenerated(entityType).flatMap(EntityMetadata::asPersistent).map(EntityMetadata.Persistent::data)
+                                .orElseGet(() -> EntityNature.Persistent.data(mkTableName(entityType))));
+            case EntityNature.Synthetic $ -> {
+                final var data = metadataForParentOfGenerated(entityType).flatMap(EntityMetadata::asSynthetic).map(EntityMetadata.Synthetic::data)
+                        .orElseGet(() -> {
+                            final var modelField = requireNonNull(
+                                    findSyntheticModelFieldFor(entityType),
+                                    () -> format("Synthetic entity [%s] has no model field.", entityType.getTypeName()));
+                            return EntityNature.Synthetic.data(getEntityModelsOfQueryBasedEntityType(entityType, modelField));
+                        });
+                entityBuilder = EntityMetadataBuilder.syntheticEntity(entityType, data);
             }
-            case EntityNature.Other $ -> entityBuilder = Optional.empty();
+            case EntityNature.Other $ -> entityBuilder = null;
         }
 
-        return entityBuilder.map(b -> b.properties(buildProperties(b)).build());
+        return entityBuilder == null ? null : entityBuilder.properties(buildProperties(entityBuilder)).build();
+    }
+
+    /**
+     * If entity type is generated, returns the metadata for its parent type, otherwise returns an empty optional.
+     */
+    private Optional<EntityMetadata> metadataForParentOfGenerated(final Class<? extends AbstractEntity<?>> entityType) {
+        if (isGenerated(entityType)) {
+            final var parentEntityType = (Class<? extends AbstractEntity<?>>) entityType.getSuperclass();
+            return Optional.of(requireForEntity(parentEntityType));
+        }
+
+        return Optional.empty();
+    }
+
+    private Iterable<? extends PropertyMetadata> buildProperties(final EntityMetadataBuilder<?, ?> entityBuilder) {
+        // if an entity type is generated and has the same nature as its parent entity type, we can reuse parent's properties metadata
+        return metadataForParentOfGenerated(entityBuilder.getJavaType())
+                .filter(parentEntityMetadata -> parentEntityMetadata.nature().equals(entityBuilder.getNature()))
+                .map(parentEntityMetadata -> buildPropertiesForGeneratedEntity(entityBuilder, parentEntityMetadata))
+                .orElseGet(() -> buildPropertiesFull(entityBuilder));
     }
 
     /**
      * Builds metadata for properties of a given entity.
      */
-    private Iterable<? extends PropertyMetadata> buildProperties(final EntityMetadataBuilder<?, ?> entityBuilder) {
+    private Iterable<PropertyMetadata> buildPropertiesFull(final EntityMetadataBuilder<?, ?> entityBuilder) {
         // DO NOT MODIFY THE GIVEN BUILDER
         switch (entityBuilder) {
             case EntityMetadataBuilder.Union u -> {
@@ -221,6 +333,19 @@ final class DomainMetadataGenerator {
                 return props.build();
             }
         }
+    }
+
+    private Iterable<PropertyMetadata> buildPropertiesForGeneratedEntity(final EntityMetadataBuilder<?, ?> entityBuilder,
+                                                                         final EntityMetadata parentEntityMetadata) {
+        return distinct(Stream.concat(
+                        streamDeclaredProperties(entityBuilder.getJavaType())
+                                .filter(field -> !SPECIAL_PROPS.contains(field.getName()))
+                                .map(field -> mkProp(field, entityBuilder))
+                                .flatMap(Optional::stream)
+                                .map(PropertyMetadataImpl.Builder::build),
+                        parentEntityMetadata.properties().stream()),
+                PropertyMetadata::name)
+                .collect(toImmutableList());
     }
 
     private Optional<PropertyMetadata> mkPropVersion(final EntityMetadataBuilder<?, ?> entityBuilder) {
@@ -695,6 +820,14 @@ final class DomainMetadataGenerator {
 
     static boolean hasAnyNature(final Class<? extends AbstractEntity<?>> entityType, final Iterable<? extends EntityNature> natures) {
         return Iterables.any(natures, nature -> hasNature(entityType, nature));
+    }
+
+    private static boolean isGenerated(final Class<?> type) {
+        // NOTE it would be nice if all generated types implemented a marker interface (e.g., IGenerated)
+        return DynamicEntityClassLoader.isGenerated(type)
+                || isInstrumented(type)
+                || isProxied(type)
+                || isMockNotFoundType(type);
     }
 
 }
