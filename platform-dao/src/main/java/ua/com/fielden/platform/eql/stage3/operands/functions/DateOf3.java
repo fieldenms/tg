@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.eql.stage3.operands.functions;
 
-import static java.lang.String.format;
-
-import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+
+import static java.lang.String.format;
 
 public class DateOf3 extends SingleOperandFunction3 {
 
@@ -13,16 +13,16 @@ public class DateOf3 extends SingleOperandFunction3 {
     }
     
     @Override
-    public String sql(final DbVersion dbVersion) {
-        switch (dbVersion) {
+    public String sql(final IDomainMetadata metadata) {
+        switch (metadata.dbVersion()) {
         case H2:
-            return format("CAST(%s AS DATE)", operand.sql(dbVersion));
+            return format("CAST(%s AS DATE)", operand.sql(metadata));
         case MSSQL:
-            return format("DATEADD(dd, DATEDIFF(dd, 0, %s), 0)", operand.sql(dbVersion));
+            return format("DATEADD(dd, DATEDIFF(dd, 0, %s), 0)", operand.sql(metadata));
         case POSTGRESQL:
-            return format("DATE_TRUNC('day', cast (%s as timestamp))", operand.sql(dbVersion));
+            return format("DATE_TRUNC('day', cast (%s as timestamp))", operand.sql(metadata));
         default:
-            return super.sql(dbVersion);
+            return super.sql(metadata);
         }    
     }
     

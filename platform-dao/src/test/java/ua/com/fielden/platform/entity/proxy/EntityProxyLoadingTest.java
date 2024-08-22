@@ -243,7 +243,7 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
         final Either<Exception, TgVehicle> setStationResult = Try(() -> vehicle.setStation(station51));
         assertTrue(setStationResult instanceof Left);
         final Left<Exception, TgVehicle> setError = (Left<Exception, TgVehicle>) setStationResult;
-        assertTrue(setError.value instanceof StrictProxyException);
+        assertTrue(setError.value() instanceof StrictProxyException);
     }
 
     @Test
@@ -278,12 +278,12 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
         final Either<Exception, TgOrgUnit5> getStationResult = Try(() -> vehicle.getStation());
         assertTrue(getStationResult instanceof Left);
         final Left<Exception, TgOrgUnit5> getError = (Left<Exception, TgOrgUnit5>) getStationResult;
-        assertTrue(getError.value instanceof StrictProxyException);
+        assertTrue(getError.value() instanceof StrictProxyException);
 
         final Either<Exception, TgVehicle> setStationResult = Try(() -> vehicle.setStation(null));
         assertTrue(setStationResult instanceof Left);
         final Left<Exception, TgVehicle> setError = (Left<Exception, TgVehicle>) setStationResult;
-        assertTrue(setError.value instanceof StrictProxyException);
+        assertTrue(setError.value() instanceof StrictProxyException);
     }
     
     @Test

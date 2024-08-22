@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.eql.stage3.sundries;
 
-import java.util.Objects;
-
-import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+
+import java.util.Objects;
 
 public class OrderBy3 {
     public final ISingleOperand3 operand;
@@ -15,15 +15,15 @@ public class OrderBy3 {
         this.yield = null;
         this.isDesc = isDesc;
     }
-    
+
     public OrderBy3(final Yield3 yield, final boolean isDesc) {
         this.operand = null;
         this.yield = yield;
         this.isDesc = isDesc;
     }
 
-    public String sql(final DbVersion dbVersion) {
-        return (operand != null ? operand.sql(dbVersion) : yield.column) +  (isDesc ? " DESC" : " ASC");
+    public String sql(final IDomainMetadata metadata) {
+        return (operand != null ? operand.sql(metadata) : yield.column) + (isDesc ? " DESC" : " ASC");
     }
 
     @Override
@@ -45,9 +45,10 @@ public class OrderBy3 {
         if (!(obj instanceof OrderBy3)) {
             return false;
         }
-        
+
         final OrderBy3 other = (OrderBy3) obj;
 
         return (isDesc == other.isDesc) && Objects.equals(operand, other.operand) && Objects.equals(yield, other.yield);
     }
+
 }

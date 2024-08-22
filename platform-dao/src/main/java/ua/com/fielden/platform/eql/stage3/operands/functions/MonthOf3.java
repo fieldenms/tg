@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.eql.stage3.operands.functions;
 
-import static java.lang.String.format;
-
-import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+
+import static java.lang.String.format;
 
 public class MonthOf3 extends SingleOperandFunction3 {
 
@@ -13,15 +13,15 @@ public class MonthOf3 extends SingleOperandFunction3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion) {
-        switch (dbVersion) {
+    public String sql(final IDomainMetadata metadata) {
+        switch (metadata.dbVersion()) {
         case H2:
         case MSSQL:
-            return format("MONTH(%s)", operand.sql(dbVersion));
+            return format("MONTH(%s)", operand.sql(metadata));
         case POSTGRESQL:
-            return format("CAST(EXTRACT(MONTH FROM %s \\:\\:timestamp) AS INT)", operand.sql(dbVersion));
+            return format("CAST(EXTRACT(MONTH FROM %s \\:\\:timestamp) AS INT)", operand.sql(metadata));
         default:
-            return super.sql(dbVersion);
+            return super.sql(metadata);
         }
     }
 

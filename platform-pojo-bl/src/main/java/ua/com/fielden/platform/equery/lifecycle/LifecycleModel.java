@@ -162,7 +162,7 @@ public abstract class LifecycleModel<T extends AbstractEntity<?>> {
         }
         maxSummaryAvailability = max;
         minSummaryAvailability = min;
-        averageSummaryAvailability = new Double(sum) / boundaries().toDurationMillis();
+        averageSummaryAvailability = Double.valueOf(sum) / boundaries().toDurationMillis();
 
         //	System.out.println("5. EPL colors and category durations => " + new DateTime());
 

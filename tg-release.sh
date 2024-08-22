@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+
+# Ensure all parameters are provided
+if [ "$#" -ne 4 ]; then
+    echo "Usage: $0 <release-version> <next-development-version> <database-uri-prefix> <fork-count>"
+    exit 1
+fi
+
+RELEASE_VERSION=$1
+NEXT_DEVELOPMENT_VERSION=$2
+DATABASE_URI_PREFIX=$3
+FORK_COUNT=$4
+
+###########################
+###### Definitions ########
+###########################
+if test -t 1; then
+    ncolours=$(tput colors)
+    if test -n "$ncolours" && test $ncolours -ge 8; then
+        # Define colours
+        RED="$(tput setaf 1)"
+        GREEN="$(tput setaf 2)"
+        YELLOW="$(tput setaf 3)"
+        BLUE="$(tput setaf 4)"
+        # Define styles
+        BOLD="$(tput bold)"
+        UNDERLINE="$(tput smul)"
+        # Reset style
+        NORMAL="$(tput sgr0)"
+    fi
+fi
+
+# Function to report errors
+error() {
+    echo -e "[${RED}${BOLD}ERROR${NORMAL}] $1"
+}
+
+# Function to report success
+success() {
+    echo -e "[${GREEN}${BOLD}SUCCESS${NORMAL}] $1"
+}
+
+# Function to report warnings
+warn() {
+    echo -e "[${YELLOW}${BOLD}WARN${NORMAL}] $1"
+}
+
+# Function to report info messages
+info() {
+    echo -e "[${BLUE}${BOLD}INFO${NORMAL}] $1"
+}
+
+# Function to abort release process
+abort_release() {
+  error "Aborting release process."
+  git checkout develop
+  git branch -D release-${RELEASE_VERSION}
+  # a tag may or may not be created at this stage, but just in case we need to try to delete it
+  git tag -d ${RELEASE_VERSION}
+  exit 1
+}
+
+###########################
+####### Releasing #########
+###########################
+
+info "Fetch latest changes"
+git checkout develop && git pull origin develop || { error "Failed to fetch latest changes"; exit 1; }
+
+info "Start the release branch"
+git checkout -b release-${RELEASE_VERSION} || { error "Failed to create release branch"; exit 1; }
+
+info "Update module versions to release version ${RELEASE_VERSION}"
+mvn versions:set -DnewVersion=${RELEASE_VERSION} -DprocessAllModules=true -DgenerateBackupPoms=false && \
+    mvn versions:commit -DgenerateBackupPoms=false || { error "Failed to update version to release version"; abort_release; }
+
+info "Commit the changes"
+git add pom.xml **/pom.xml && git commit -m "Update versions for release ${RELEASE_VERSION}" || { error "Failed to commit version changes"; abort_release; }
+
+info "Merge release branch into master and tag the release ${RELEASE_VERSION}"
+git checkout master && git pull origin master && \
+    git merge --no-ff release-${RELEASE_VERSION} || { error "Failed to merge release branch into master"; abort_release; }
+git tag -a ${RELEASE_VERSION} -m "Release ${RELEASE_VERSION}" || { error "Failed to tag the release"; abort_release; }
+
+info "Deploy the release"
+if ! mvn clean deploy -DdatabaseUri.prefix=${DATABASE_URI_PREFIX} -Dfork.count=${FORK_COUNT}; then
+  error "Failed to deploy. Please inspect the output for errors."
+  abort_release
+fi
+
+info "Merge release branch back into develop"
+git checkout develop && git pull origin develop && \
+    git merge --no-ff release-${RELEASE_VERSION} || { error "Failed to merge release branch back into develop"; abort_release; }
+
+info "Update version to next development version ${NEXT_DEVELOPMENT_VERSION}"
+mvn versions:set -DnewVersion=${NEXT_DEVELOPMENT_VERSION} -DprocessAllModules=true -DgenerateBackupPoms=false && \
+    mvn versions:commit -DgenerateBackupPoms=false || { error "Failed to update version to next development version"; abort_release; }
+
+info "Commit the changes"
+git add pom.xml **/pom.xml && git commit -m "Update versions to ${NEXT_DEVELOPMENT_VERSION}" || { error "Failed to commit next development version changes"; abort_release; }
+
+info "Delete the release branch ${RELEASE_VERSION}"
+git branch -d release-${RELEASE_VERSION} || { error "Failed to delete the release branch"; exit 1; }
+
+info "Push changes to remote"
+git push origin develop && git push origin master && git push origin --tags || { error "Failed to push changes to remote"; exit 1; }
+
+success "Successfully released ${RELEASE_VERSION}"
+

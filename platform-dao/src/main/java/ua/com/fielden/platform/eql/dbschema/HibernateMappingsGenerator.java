@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.dbschema;
 import com.google.inject.Inject;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
@@ -76,9 +75,7 @@ public class HibernateMappingsGenerator {
                 });
         sb.append("</hibernate-mapping>");
 
-        final String result = sb.toString();
-        LOGGER.debug("\n\n" + result + "\n\n");
-        return result;
+        return sb.toString();
     }
 
     private String generateEntityIdMapping(final String name, final String columnName, final String hibTypeName) {
@@ -145,7 +142,7 @@ public class HibernateMappingsGenerator {
         final String propNameClause = "\t<property name=\"" + propName + "\"";
         final String typeClause = hibTypeName == null ? "" : " type=\"" + hibTypeName + "\"";
         final String endClause = "/>\n";
-        return column.unfold(
+        return column.fold(
                 singleCol -> {
                     final String columnClause = " column=\"" + singleCol.name + "\"";
                     final String lengthClause = singleCol.length == null ? "" : " length=\"" + singleCol.length + "\"";

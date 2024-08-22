@@ -13,6 +13,7 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.eql.meta.PropType;
+import ua.com.fielden.platform.utils.CollectionUtil;
 
 public abstract class AbstractSingleOperand2 {
     public final PropType type;
@@ -45,7 +46,7 @@ public abstract class AbstractSingleOperand2 {
         } else if (types.contains(STRING_PROP_TYPE)){
             return STRING_PROP_TYPE;
         } else {
-            throw new EqlException("Can't determine type with the highest precedence for set " + types);
+            throw new EqlException("Can't determine type with highest precedence among {%s}".formatted(CollectionUtil.toString(types, ", ")));
         }
     }
 

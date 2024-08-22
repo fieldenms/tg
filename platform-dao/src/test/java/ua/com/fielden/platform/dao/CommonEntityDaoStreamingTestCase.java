@@ -110,7 +110,7 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
             }});
         
         assertTrue(result instanceof Left);
-        assertEquals("stream has already been operated upon or closed", ((Left<Exception, Long>) result).value.getMessage());
+        assertEquals("stream has already been operated upon or closed", ((Left<Exception, Long>) result).value().getMessage());
     }
 
     @Test

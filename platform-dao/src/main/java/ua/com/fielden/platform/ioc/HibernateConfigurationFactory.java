@@ -3,15 +3,12 @@ package ua.com.fielden.platform.ioc;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
-import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
-import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.persistence.types.DateTimeType;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Properties;
-
-import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 /**
  * Hibernate configuration factory. All Hibernate specific properties should be passed as {@link Properties} values. The following list of properties is supported:
@@ -66,41 +63,22 @@ public class HibernateConfigurationFactory {
     private static final String CONNECTION_PASWD = "hibernate.connection.password";
 
     private final Properties props;
-
     private final Configuration cfg = new Configuration();
     private final Configuration cfgManaged = new Configuration();
 
     public HibernateConfigurationFactory(final Properties props, final HibernateMappingsGenerator generator) {
         this.props = props;
-        final String generatedMappings = generator.generateMappings();
+        // TODO use declarative style
+        // Register our custom type mapping so that Hibernate uses it during the binding of query parameters.
+        cfg.registerTypeContributor((typeContributions, $) -> typeContributions.contributeType(DateTimeType.INSTANCE));
 
+        final String generatedMappings = generator.generateMappings();
         try {
             cfg.addInputStream(new ByteArrayInputStream(generatedMappings.getBytes("UTF8")));
             cfgManaged.addInputStream(new ByteArrayInputStream(generatedMappings.getBytes("UTF8")));
         } catch (final MappingException | UnsupportedEncodingException e) {
             throw new HibernateException("Could not add mappings.", e);
         }
-    }
-
-    public static DbVersion determineDbVersion(final Properties props) {
-        return determineDbVersion(props.getProperty(DIALECT));
-    }
-
-    public static DbVersion determineDbVersion(final String dialect) {
-        if (isEmpty(dialect)) {
-            throw new IllegalStateException("Hibernate dialect was not provided, but is required");
-        }
-        if (dialect.equals("org.hibernate.dialect.H2Dialect")) {
-            return DbVersion.H2;
-        } else if (dialect.equals("org.hibernate.dialect.PostgreSQLDialect")) {
-            return DbVersion.POSTGRESQL;
-        } else if (dialect.contains("SQLServer")) {
-            return DbVersion.MSSQL;
-        } else if (dialect.equals("org.hibernate.dialect.OracleDialect")) {
-            return DbVersion.ORACLE;
-        }
-
-        throw new IllegalStateException("Could not determine DB version based on the provided Hibernate dialect \"" + dialect + "\".");
     }
 
     public Configuration build() {

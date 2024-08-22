@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.eql.stage3.operands.functions;
 
-import static java.lang.String.format;
-
-import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+
+import static java.lang.String.format;
 
 public class AverageOf3 extends SingleOperandFunction3 {
     private final boolean distinct;
@@ -15,13 +15,13 @@ public class AverageOf3 extends SingleOperandFunction3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion) {
+    public String sql(final IDomainMetadata metadata) {
         final String distinctClause = distinct ? "DISTINCT " : "";
-        switch (dbVersion) {
+        switch (metadata.dbVersion()) {
         case H2:
-            return format("AVG(%s CAST (%s AS FLOAT))", distinctClause, operand.sql(dbVersion));
+            return format("AVG(%s CAST (%s AS FLOAT))", distinctClause, operand.sql(metadata));
         default:
-            return format("AVG(%s %s)", distinctClause, operand.sql(dbVersion));
+            return format("AVG(%s %s)", distinctClause, operand.sql(metadata));
         }
     }
     

@@ -1,15 +1,12 @@
 package ua.com.fielden.platform.eql.stage3.conditions;
 
-import static java.lang.String.format;
+import ua.com.fielden.platform.entity.query.fluent.LikeOptions;
+import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 
-import java.util.Date;
 import java.util.Objects;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.fluent.LikeOptions;
-import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
-import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
-import ua.com.fielden.platform.eql.stage3.operands.functions.AbstractFunction3;
+import static ua.com.fielden.platform.eql.stage3.utils.OperandToSqlAsString.operandToSqlAsString;
 
 public class LikePredicate3 implements ICondition3 {
     public final ISingleOperand3 leftOperand;
@@ -23,34 +20,8 @@ public class LikePredicate3 implements ICondition3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion) {
-        return dbVersion.likeSql(options.negated, leftOperandSql(dbVersion), rightOperand.sql(dbVersion), options.caseInsensitive);
-    }
-
-    private String leftOperandSql(final DbVersion dbVersion) {
-        return options.withCast ? leftOperandWithTypecastingSql(dbVersion) : leftOperand.sql(dbVersion);
-    }
-
-    private String leftOperandWithTypecastingSql(final DbVersion dbVersion) {
-        if (leftOperand.type() != null && Integer.class == leftOperand.type().javaType()) {
-            return format("CAST(%s AS VARCHAR(11))", leftOperand.sql(dbVersion));
-        }
-        else if (leftOperand.type() == null || String.class == leftOperand.type().javaType()) {
-            return leftOperand.sql(dbVersion);
-        }
-        else if (leftOperand.type() != null && Date.class == leftOperand.type().javaType()) {
-            if (DbVersion.POSTGRESQL == dbVersion) {
-                return AbstractFunction3.getConvertToStringSqlForPostgresql(dbVersion, leftOperand);
-            }
-            else if (DbVersion.MSSQL == dbVersion) {
-                return AbstractFunction3.getConvertToStringSqlForMsSql2005(dbVersion, leftOperand);
-            }
-            else {
-                throw new EqlStage3ProcessingException("Left operand type [%s] is not supported for operand LIKE for [%s].".formatted(leftOperand.type()));
-            }
-        } else {
-            throw new EqlStage3ProcessingException(format("Left operand type [%s] is not supported for operand LIKE.", leftOperand.type()));
-        }
+    public String sql(final IDomainMetadata metadata) {
+        return metadata.dbVersion().likeSql(options.negated, operandToSqlAsString(metadata, leftOperand), rightOperand.sql(metadata), options.caseInsensitive);
     }
 
     @Override
@@ -79,4 +50,5 @@ public class LikePredicate3 implements ICondition3 {
                 Objects.equals(rightOperand, other.rightOperand) &&
                 Objects.equals(options, other.options);
     }
+
 }

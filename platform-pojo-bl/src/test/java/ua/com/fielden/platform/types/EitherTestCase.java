@@ -27,7 +27,7 @@ public class EitherTestCase {
         final Result failure = failure("some error");
         final Left<Exception, String> left = Either.left(failure);
         assertNotNull(left);
-        assertEquals(failure, left.value);
+        assertEquals(failure, left.value());
     }
 
     @Test
@@ -35,7 +35,7 @@ public class EitherTestCase {
         final String value = "some value";
         final Right<Exception, String> right = Either.right(value);
         assertNotNull(right);
-        assertEquals(value, right.value);
+        assertEquals(value, right.value());
     }
 
     @Test
