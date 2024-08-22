@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage3.operands;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 
@@ -24,8 +25,13 @@ public class Expression3 extends AbstractSingleOperand3 {
     }
 
     @Override
-    public String sql(final IDomainMetadata metadata) {
-        return isSingleOperandExpression() ? firstOperand.sql(metadata) : "(" + firstOperand.sql(metadata) + otherOperands.stream().map(co -> co.sql(metadata)).collect(joining()) +")";
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
+        return isSingleOperandExpression()
+                ? firstOperand.sql(metadata, dbVersion)
+                : "("
+                  + firstOperand.sql(metadata, dbVersion)
+                  + otherOperands.stream().map(co -> co.sql(metadata, dbVersion)).collect(joining())
+                  + ")";
     }
 
     @Override

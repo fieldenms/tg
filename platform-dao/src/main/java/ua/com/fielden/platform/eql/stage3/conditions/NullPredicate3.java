@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage3.conditions;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 
@@ -15,8 +16,8 @@ public class NullPredicate3 implements ICondition3 {
     }
 
     @Override
-    public String sql(final IDomainMetadata metadata) {
-        return operand.sql(metadata) + " IS " + (negated ? "NOT" : "") + " NULL";
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
+        return operand.sql(metadata, dbVersion) + " IS " + (negated ? "NOT" : "") + " NULL";
     }
 
     @Override

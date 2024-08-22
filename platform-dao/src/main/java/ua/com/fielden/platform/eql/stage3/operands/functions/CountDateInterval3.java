@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage3.operands.functions;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit;
 import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 import ua.com.fielden.platform.eql.meta.PropType;
@@ -20,10 +21,10 @@ public class CountDateInterval3 extends TwoOperandsFunction3 {
     }
 
     @Override
-    public String sql(final IDomainMetadata metadata) {
-        final String op1Sql = operand1.sql(metadata);
-        final String op2Sql = operand2.sql(metadata);
-        switch (metadata.dbVersion()) {
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
+        final String op1Sql = operand1.sql(metadata, dbVersion);
+        final String op2Sql = operand2.sql(metadata, dbVersion);
+        switch (dbVersion) {
         case H2:
             return sqlForH2(op1Sql, op2Sql);
         case MSSQL:
@@ -31,7 +32,7 @@ public class CountDateInterval3 extends TwoOperandsFunction3 {
         case POSTGRESQL:
             return sqlForPostgres(op1Sql, op2Sql);
         default:
-            return super.sql(metadata);
+            return super.sql(metadata, dbVersion);
         }
     }
 

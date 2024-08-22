@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage3.operands.functions;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
@@ -13,8 +14,8 @@ public class MaxOf3 extends SingleOperandFunction3 {
     }
 
     @Override
-    public String sql(final IDomainMetadata metadata) {
-        return format("MAX(%s)", operand.sql(metadata));
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
+        return format("MAX(%s)", operand.sql(metadata, dbVersion));
     }
     
     @Override

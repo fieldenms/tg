@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage3.operands.functions;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.AbstractSingleOperand3;
@@ -12,8 +13,8 @@ public abstract class AbstractFunction3 extends AbstractSingleOperand3 {
     }
 
     @Override
-    public String sql(final IDomainMetadata metadata) {
-        throw new EqlStage3ProcessingException("Function [%s] is not yet implemented for RDBMS [%s]!".formatted(getClass().getSimpleName(), metadata.dbVersion()));
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
+        throw new EqlStage3ProcessingException("Function [%s] is not yet implemented for RDBMS [%s]!".formatted(getClass().getSimpleName(), dbVersion));
     }
 
 }
