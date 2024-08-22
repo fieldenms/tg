@@ -88,8 +88,7 @@ public class HibernateConfigurationFactory {
         domainMetadata = new DomainMetadataBuilder(defaultHibernateTypes,
                                                    Guice.createInjector(new HibernateUserTypesModule()),
                                                    applicationEntityTypes,
-                                                   dbVersion)
-                .build();
+                                                   dbVersion).build();
 
         idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata);
 

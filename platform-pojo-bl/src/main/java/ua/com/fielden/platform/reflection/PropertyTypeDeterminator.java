@@ -133,9 +133,9 @@ public class PropertyTypeDeterminator {
     }
 
     /**
-     * If method return type is collectional then it returns type of collection elements.
+     * If the {@code method} return type is collectional then it returns type of that collection elements.
      *
-     * @param field
+     * @param method
      * @return
      */
     private static Class<?> determineElementClassForMethod(final Method method) {
@@ -301,7 +301,7 @@ public class PropertyTypeDeterminator {
     }
 
     /**
-     * Returns <code>true</code> if the specified class is proxied, <code>false</code> otherwise.
+     * Returns {@code true} if the specified class is proxied, {@code false} otherwise.
      *
      * @param clazz
      * @return
@@ -311,10 +311,10 @@ public class PropertyTypeDeterminator {
     }
 
     /**
-     * Returns <code>true</code> if the specified class is instrumented by Guice, and thus instances of this type should be fully initialised
-     * from TG perspective (having meta-properties, fitted with ACE/BCE interceptors etc.).
+     * Returns {@code true} if the specified class is instrumented by Guice, and thus instances of this type should be fully initialised
+     * from TG perspective (having meta-properties, fitted with ACE/BCE interceptors, etc.).
      *
-     * @param klass
+     * @param clazz
      * @return
      */
     public static boolean isInstrumented(final Class<?> clazz) {

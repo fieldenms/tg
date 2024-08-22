@@ -323,9 +323,7 @@ public abstract class AbstractEqlBenchmark {
         hibTypeDefaults.put(Colour.class, ColourType.class);
         hibTypeDefaults.put(Hyperlink.class, HyperlinkType.class);
 
-        DOMAIN_METADATA = new DomainMetadataBuilder(
-                hibTypeDefaults, injector, PlatformTestDomainTypes.entityTypes, H2)
-                .build();
+        DOMAIN_METADATA = new DomainMetadataBuilder(hibTypeDefaults, injector, PlatformTestDomainTypes.entityTypes, H2).build();
     }
 
     protected static final EqlRandomGenerator ELQ_GENERATOR = new EqlRandomGenerator(new Random(9375679861L));
