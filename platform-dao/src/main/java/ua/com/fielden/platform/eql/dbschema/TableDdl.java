@@ -35,6 +35,7 @@ import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Unique;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.ioc.HibernateConfigurationFactory;
+import ua.com.fielden.platform.persistence.HibernateHelpers;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
 /**
@@ -110,7 +111,7 @@ public class TableDdl {
      * @return
      */
     public List<String> createIndicesSchema(final Dialect dialect) {
-        final Map<Boolean, List<ColumnDefinition>> uniqueAndNot = columns.stream().collect(Collectors.partitioningBy(cd -> cd.unique));
+        final Map<Boolean, List<ColumnDefinition>> uniqueAndNot = columns.stream().collect(Collectors.partitioningBy(ColumnDefinition::unique));
         final List<String> result = new LinkedList<>();
         if (isCompositeEntity(entityType)) {
             result.add(createUniqueCompositeIndicesSchema(columns.stream(), dialect));
@@ -125,29 +126,29 @@ public class TableDdl {
 
         final String tableName = tableName(entityType);
         final String keyMembersStr = cols
-                .filter(col -> col.compositeKeyMemberOrder.isPresent())
-                .sorted((col1, col2) -> Integer.compare(col1.compositeKeyMemberOrder.get(), col2.compositeKeyMemberOrder.get()))
-                .map(col -> col.name)
+                .filter(col -> col.compositeKeyMemberOrder().isPresent())
+                .sorted((col1, col2) -> Integer.compare(col1.compositeKeyMemberOrder().get(), col2.compositeKeyMemberOrder().get()))
+                .map(ColumnDefinition::name)
                 .collect(Collectors.joining(", "));
         sb.append(format("CREATE UNIQUE INDEX KUI_%s ON %s(%s);", tableName, tableName, keyMembersStr));
         return sb.toString();
     }
 
     private List<String> createUniqueIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
-        final DbVersion dbVersion = HibernateConfigurationFactory.determineDbVersion(dialect.getClass().getName());
+        final DbVersion dbVersion = HibernateHelpers.getDbVersion(dialect);
         return cols.map(col -> {
             // for now we only know how to create unique indexes for nullable column in case of SQL Server
-            if (col.nullable && MSSQL != dbVersion && POSTGRESQL != dbVersion) {
+            if (col.nullable() && MSSQL != dbVersion && POSTGRESQL != dbVersion) {
                 return null;
             }
             
             // otherwise, let's create unique index with the nullable clause if required
             final String tableName = tableName(entityType);
-            final String indexName = "KEY_".equals(col.name) ? format("KUI_%s", tableName) : format("UI_%s_%s", tableName, col.name);
+            final String indexName = "KEY_".equals(col.name()) ? format("KUI_%s", tableName) : format("UI_%s_%s", tableName, col.name());
             final StringBuilder sb = new StringBuilder();
-            sb.append(format("CREATE UNIQUE INDEX %s ON %s(%s)", indexName, tableName, col.name));
-            if (col.nullable) {
-                sb.append(format(" WHERE (%s IS NOT NULL)", col.name));
+            sb.append(format("CREATE UNIQUE INDEX %s ON %s(%s)", indexName, tableName, col.name()));
+            if (col.nullable()) {
+                sb.append(format(" WHERE (%s IS NOT NULL)", col.name()));
             }
             sb.append(";");
             return sb.toString();
@@ -155,11 +156,11 @@ public class TableDdl {
     }
 
     private List<String> createNonUniqueIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
-        return cols.filter(col -> isPersistedEntityType(col.javaType)).map(col -> {
+        return cols.filter(col -> col.requiresIndex() || isPersistedEntityType(col.javaType())).map(col -> {
             final StringBuilder sb = new StringBuilder();
 
             final String tableName = tableName(entityType);
-            sb.append(format("CREATE INDEX I_%s_%s ON %s(%s);", tableName, col.name, tableName, col.name));
+            sb.append(format("CREATE INDEX I_%s_%s ON %s(%s);", tableName, col.name(), tableName, col.name()));
             return sb.toString();
         }).collect(toList());
     }
@@ -190,11 +191,11 @@ public class TableDdl {
         // This statement should be suitable for majority of SQL dialogs
         final String thisTableName = tableName(entityType);
         final List<String> ddl = columns.stream()
-                .filter(cd -> isPersistedEntityType(cd.javaType))
+                .filter(cd -> isPersistedEntityType(cd.javaType()))
                 .map(cd -> {
                     final StringBuilder sb = new StringBuilder();
-                    final String thatTableName = tableName((Class<? extends AbstractEntity<?>>) cd.javaType);
-                    fkConstraint(dialect, thisTableName, cd.name, sb, thatTableName);
+                    final String thatTableName = tableName((Class<? extends AbstractEntity<?>>) cd.javaType());
+                    fkConstraint(dialect, thisTableName, cd.name(), sb, thatTableName);
                     return sb.toString();
         
                 }).collect(toList());

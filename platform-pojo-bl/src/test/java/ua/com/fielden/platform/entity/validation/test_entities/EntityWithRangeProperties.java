@@ -3,6 +3,7 @@
  */
 package ua.com.fielden.platform.entity.validation.test_entities;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 import org.joda.time.DateTime;
@@ -34,13 +35,13 @@ public class EntityWithRangeProperties extends AbstractEntity<String> {
     private Integer toInt;
 
     @IsProperty
-    @Dependent("toDouble")
-    @LeProperty("toDouble")
-    private Double fromDouble;
+    @Dependent("toNumber")
+    @LeProperty("toNumber")
+    private BigDecimal fromNumber;
     @IsProperty
-    @Dependent("fromDouble")
-    @GeProperty("fromDouble")
-    private Double toDouble;
+    @Dependent("fromNumber")
+    @GeProperty("fromNumber")
+    private BigDecimal toNumber;
 
     @IsProperty
     @Dependent("toDate")
@@ -123,22 +124,22 @@ public class EntityWithRangeProperties extends AbstractEntity<String> {
         this.toMoney = toMoney;
     }
 
-    public Double getFromDouble() {
-        return fromDouble;
+    public BigDecimal getFromNumber() {
+        return fromNumber;
     }
 
     @Observable
-    public void setFromDouble(final Double fromDouble) {
-        this.fromDouble = fromDouble;
+    public void setFromNumber(final BigDecimal fromNumber) {
+        this.fromNumber = fromNumber;
     }
 
-    public Double getToDouble() {
-        return toDouble;
+    public BigDecimal getToNumber() {
+        return toNumber;
     }
 
     @Observable
-    public void setToDouble(final Double toDouble) {
-        this.toDouble = toDouble;
+    public void setToNumber(final BigDecimal toNumber) {
+        this.toNumber = toNumber;
     }
 
     public DateTime getFromDateTime() {

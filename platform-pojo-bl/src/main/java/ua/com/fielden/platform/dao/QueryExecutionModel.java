@@ -1,26 +1,25 @@
 package ua.com.fielden.platform.dao;
 
-import static org.apache.logging.log4j.LogManager.getLogger;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.logging.log4j.Logger;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.ValuePreprocessor;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
-import ua.com.fielden.platform.entity.query.model.QueryModel;
+import ua.com.fielden.platform.entity.query.model.*;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.query.model.FillModels.emptyFillModel;
 
 public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends QueryModel<T>> {
     private final Q queryModel;
     private final OrderingModel orderModel;
     private final fetch<T> fetchModel;
+    private final FillModel fillModel;
     private final Map<String, Object> paramValues;
     private final boolean lightweight;
     private final ValuePreprocessor valuePreprocessor = new ValuePreprocessor();
@@ -30,14 +29,16 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
         queryModel = null;
         orderModel = null;
         fetchModel = null;
+        fillModel = null;
         paramValues = null;
         lightweight = false;
     }
     
-    protected QueryExecutionModel(final Q queryModel, final OrderingModel orderModel, final fetch<T> fetchModel, final Map<String, Object> paramValues, final boolean lightweight) {
+    protected QueryExecutionModel(final Q queryModel, final OrderingModel orderModel, final fetch<T> fetchModel, final FillModel fillModel, final Map<String, Object> paramValues, final boolean lightweight) {
         this.queryModel = queryModel;
         this.orderModel = orderModel;
         this.fetchModel = fetchModel;
+        this.fillModel = fillModel;
         this.paramValues = new HashMap<>();
         this.paramValues.putAll(paramValues);
         this.lightweight = lightweight;
@@ -47,6 +48,7 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
         queryModel = builder.queryModel;
         orderModel = builder.orderModel;
         fetchModel = builder.fetchModel;
+        fillModel = builder.fillModel;
         paramValues = preprocessParamValues(builder.paramValues);
         lightweight = builder.lightweight;
         logger.debug(this);
@@ -58,20 +60,21 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
      * @return
      */
     public QueryExecutionModel<T, Q> copy() {
-        return new QueryExecutionModel<>(this.queryModel, this.orderModel, this.fetchModel, this.paramValues, this.lightweight);
+        return new QueryExecutionModel<>(this.queryModel, this.orderModel, this.fetchModel, this.fillModel, this.paramValues, this.lightweight);
     }
 
     @Override
     public String toString() {
-        return new StringBuilder()
-        .append("\nQEM")
-        .append("\n  fetch:").append(fetchModel != null ? fetchModel : "")
-        .append("\n  query:").append(queryModel)
-        .append("\n  order:").append(orderModel != null ? orderModel : "")
-        .append("\n  param:").append(paramValues.size() > 0 ? paramValues : "")
-        .append("\n  light: ").append(lightweight)
-        .append("\n")
-        .toString();
+        final var sb = new StringBuilder(64);
+        sb.append("QEM {\n");
+        if (fetchModel != null) { sb.append("  fetch: "); sb.append(fetchModel); sb.append('\n'); }
+        if (fillModel != null && !fillModel.isEmpty()) { sb.append("  fill: "); sb.append(fillModel); sb.append('\n'); }
+        if (queryModel != null) { sb.append("  query: "); sb.append(queryModel); sb.append('\n'); }
+        if (orderModel != null) { sb.append("  order: "); sb.append(orderModel); sb.append('\n'); }
+        if (paramValues != null && !paramValues.isEmpty()) { sb.append("  params: "); sb.append(paramValues); sb.append('\n'); }
+        sb.append("  light: "); sb.append(lightweight);
+        sb.append("\n}");
+        return sb.toString();
     }
 
     private Map<String, Object> preprocessParamValues(final Map<String, Object> paramValues) {
@@ -94,6 +97,10 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
         return fetchModel;
     }
 
+    public FillModel getFillModel() {
+        return fillModel;
+    }
+
     public Map<String, Object> getParamValues() {
         return Collections.unmodifiableMap(paramValues);
     }
@@ -111,13 +118,14 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
     }
 
     public QueryExecutionModel<T, Q> lightweight() {
-        return new QueryExecutionModel<>(this.queryModel, this.orderModel, this.fetchModel, this.paramValues, true);
+        return new QueryExecutionModel<>(this.queryModel, this.orderModel, this.fetchModel, this.fillModel, this.paramValues, true);
     }
     
     public static class Builder<T extends AbstractEntity<?>, Q extends QueryModel<T>> {
         private Q queryModel;
         private OrderingModel orderModel;
         private fetch<T> fetchModel;
+        private FillModel fillModel = emptyFillModel();
         private Map<String, Object> paramValues = new HashMap<>();
         private boolean lightweight = false;
 
@@ -143,6 +151,11 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
             return this;
         }
 
+        public Builder<T, Q> with(final FillModel fillModel) {
+            this.fillModel = fillModel;
+            return this;
+        }
+
         public Builder<T, Q> with(final Map<String, Object> val) {
             paramValues.putAll(val);
             return this;
@@ -157,61 +170,27 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
             lightweight = true;
             return this;
         }
+
+        public Builder<T, Q> lightweight(final boolean value) {
+            lightweight = value;
+            return this;
+        }
     }
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((fetchModel == null) ? 0 : fetchModel.hashCode());
-        result = prime * result + (lightweight ? 1231 : 1237);
-        result = prime * result + ((orderModel == null) ? 0 : orderModel.hashCode());
-        result = prime * result + ((paramValues == null) ? 0 : paramValues.hashCode());
-        result = prime * result + ((queryModel == null) ? 0 : queryModel.hashCode());
-        return result;
+        return Objects.hash(fetchModel, fillModel, lightweight, orderModel, paramValues, queryModel);
     }
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (!(obj instanceof QueryExecutionModel)) {
-            return false;
-        }
-
-        final QueryExecutionModel<?, ?> that = (QueryExecutionModel<?, ?>) obj;
-        if (fetchModel == null) {
-            if (that.fetchModel != null) {
-                return false;
-            }
-        } else if (!fetchModel.equals(that.fetchModel)) {
-            return false;
-        }
-        if (lightweight != that.lightweight) {
-            return false;
-        }
-        if (orderModel == null) {
-            if (that.orderModel != null) {
-                return false;
-            }
-        } else if (!orderModel.equals(that.orderModel)) {
-            return false;
-        }
-        if (paramValues == null) {
-            if (that.paramValues != null) {
-                return false;
-            }
-        } else if (!paramValues.equals(that.paramValues)) {
-            return false;
-        }
-        if (queryModel == null) {
-            if (that.queryModel != null) {
-                return false;
-            }
-        } else if (!queryModel.equals(that.queryModel)) {
-            return false;
-        }
-        return true;
+        return this == obj ||
+               obj instanceof QueryExecutionModel that
+               && lightweight == that.lightweight
+               && Objects.equals(orderModel, that.orderModel)
+               && Objects.equals(queryModel, that.queryModel)
+               && Objects.equals(fetchModel, that.fetchModel)
+               && Objects.equals(fillModel, that.fillModel)
+               && Objects.equals(paramValues, that.paramValues);
     }
 }

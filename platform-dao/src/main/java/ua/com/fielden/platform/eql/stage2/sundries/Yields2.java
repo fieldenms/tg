@@ -1,21 +1,5 @@
 package ua.com.fielden.platform.eql.stage2.sundries;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptySet;
-import static java.util.Collections.unmodifiableCollection;
-import static java.util.Collections.unmodifiableSortedMap;
-import static java.util.stream.Collectors.toSet;
-import static ua.com.fielden.platform.eql.stage0.YieldBuilder.ABSENT_ALIAS;
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
@@ -24,13 +8,20 @@ import ua.com.fielden.platform.eql.stage2.operands.Value2;
 import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
 
+import java.util.*;
+
+import static java.util.Collections.*;
+import static java.util.stream.Collectors.toSet;
+import static ua.com.fielden.platform.eql.stage1.sundries.Yield1.ABSENT_ALIAS;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+
 public class Yields2 {
     public static final Yields2 EMPTY_YIELDS = new Yields2(emptyList());
     
     private final SortedMap<String, Yield2> yieldsMap = new TreeMap<String, Yield2>();
     public final boolean allGenerated;
     
-    public static Yields2 nullYields = new Yields2(listOf(new Yield2(new Value2(null), ABSENT_ALIAS, false))); 
+    public static Yields2 nullYields = new Yields2(listOf(new Yield2(new Value2(null), ABSENT_ALIAS, false)));
 
     public Yields2(final List<Yield2> yields, final boolean allGenerated) {
         this.allGenerated = allGenerated;

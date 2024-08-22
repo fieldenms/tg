@@ -4,19 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.companion.PersistentEntityWithAllKindsOfProperties;
+import ua.com.fielden.platform.sample.domain.TrivialPersistentEntity;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.model.EntityToFill;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamicRequiredness;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.composite.EntityWithSingleMemberDynamicCompositeKey;
-import ua.com.fielden.platform.persistence.types.EntityBasedOnAbstractPersistentEntity;
-import ua.com.fielden.platform.persistence.types.EntityBasedOnAbstractPersistentEntity2;
-import ua.com.fielden.platform.persistence.types.EntityWithAutoAssignableProperties;
-import ua.com.fielden.platform.persistence.types.EntityWithExTaxAndTaxMoney;
-import ua.com.fielden.platform.persistence.types.EntityWithMoney;
-import ua.com.fielden.platform.persistence.types.EntityWithSimpleMoney;
-import ua.com.fielden.platform.persistence.types.EntityWithSimpleTaxMoney;
-import ua.com.fielden.platform.persistence.types.EntityWithTaxMoney;
+import ua.com.fielden.platform.persistence.types.*;
 import ua.com.fielden.platform.sample.domain.EntityOne;
 import ua.com.fielden.platform.sample.domain.EntityTwo;
 import ua.com.fielden.platform.sample.domain.EntityWithUnionEntityWithSkipExistsValidation;
@@ -95,6 +91,15 @@ import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.sample.domain.UnionEntity;
 import ua.com.fielden.platform.sample.domain.UnionEntityWithSkipExistsValidation;
+import ua.com.fielden.platform.persistence.types.EntityBasedOnAbstractPersistentEntity;
+import ua.com.fielden.platform.persistence.types.EntityBasedOnAbstractPersistentEntity2;
+import ua.com.fielden.platform.persistence.types.EntityWithAutoAssignableProperties;
+import ua.com.fielden.platform.persistence.types.EntityWithExTaxAndTaxMoney;
+import ua.com.fielden.platform.persistence.types.EntityWithMoney;
+import ua.com.fielden.platform.persistence.types.EntityWithSimpleMoney;
+import ua.com.fielden.platform.persistence.types.EntityWithSimpleTaxMoney;
+import ua.com.fielden.platform.persistence.types.EntityWithTaxMoney;
+import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityChild;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityDetail;
@@ -184,6 +189,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(EntityWithDynamicCompositeKey.class);
         add(EntityWithSingleMemberDynamicCompositeKey.class);
         add(EntityWithAutoAssignableProperties.class);
+        add(EntityWithRichText.class);
         add(EntityBasedOnAbstractPersistentEntity.class);
         add(EntityBasedOnAbstractPersistentEntity2.class);
         add(TgAverageFuelUsage.class);
@@ -208,6 +214,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgDateTestEntity.class);
         add(EntityWithDynamicRequiredness.class);
         add(TgEntityWithManyPropTypes.class);
+        add(TgEntityWithTimeZoneDates.class);
         add(EntityOne.class);
         add(EntityTwo.class);
         add(UnionEntity.class);
@@ -215,6 +222,9 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgUnionType1.class);
         add(TgUnionType2.class);
         add(TgUnionCommonType.class);
+        add(PersistentEntityWithAllKindsOfProperties.class);
+        add(TrivialPersistentEntity.class);
+        add(EntityToFill.class);
     }
 
     @Override

@@ -7,42 +7,43 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IExprOperand0;
 
 abstract class CaseWhenFunctionLastArgument<T, ET extends AbstractEntity<?>> //
-		extends ExprOperand<ICaseWhenFunctionEnd<T>, IExprOperand0<ICaseWhenFunctionEnd<T>, ET>, ET> //
-		implements ICaseWhenFunctionLastArgument<T, ET> {
+        extends ExprOperand<ICaseWhenFunctionEnd<T>, IExprOperand0<ICaseWhenFunctionEnd<T>, ET>, ET> //
+        implements ICaseWhenFunctionLastArgument<T, ET> {
 
-    protected CaseWhenFunctionLastArgument(final Tokens tokens) {
-        super(tokens);
+    protected CaseWhenFunctionLastArgument(final EqlSentenceBuilder builder) {
+        super(builder);
     }
-    
-	protected abstract T nextForCaseWhenFunctionLastArgument(final Tokens tokens);
 
-	@Override
-	protected IExprOperand0<ICaseWhenFunctionEnd<T>, ET> nextForExprOperand(final Tokens tokens) {
-		return new ExprOperand0<ICaseWhenFunctionEnd<T>, ET>(tokens) {
-			@Override
-			protected ICaseWhenFunctionEnd<T> nextForExprOperand0(final Tokens tokens) {
-				return new CaseWhenFunctionEnd<T>(tokens) {
+    protected abstract T nextForCaseWhenFunctionLastArgument(final EqlSentenceBuilder builder);
 
-					@Override
-					protected T nextForCaseWhenFunctionEnd(final Tokens tokens) {
-						return CaseWhenFunctionLastArgument.this.nextForCaseWhenFunctionLastArgument(tokens);
-					}
+    @Override
+    protected IExprOperand0<ICaseWhenFunctionEnd<T>, ET> nextForExprOperand(final EqlSentenceBuilder builder) {
+        return new ExprOperand0<ICaseWhenFunctionEnd<T>, ET>(builder) {
+            @Override
+            protected ICaseWhenFunctionEnd<T> nextForExprOperand0(final EqlSentenceBuilder builder) {
+                return new CaseWhenFunctionEnd<T>(builder) {
 
-				};
-			}
+                    @Override
+                    protected T nextForCaseWhenFunctionEnd(final EqlSentenceBuilder builder) {
+                        return CaseWhenFunctionLastArgument.this.nextForCaseWhenFunctionLastArgument(builder);
+                    }
 
-		};
-	}
+                };
+            }
 
-	@Override
-	protected ICaseWhenFunctionWhen<T, ET> nextForSingleOperand(final Tokens tokens) {
-		return new CaseWhenFunctionWhen<T, ET>(tokens) {
+        };
+    }
 
-			@Override
-			protected T nextForCaseWhenFunctionEnd(final Tokens tokens) {
-				return CaseWhenFunctionLastArgument.this.nextForCaseWhenFunctionLastArgument(tokens);
-			}
+    @Override
+    protected ICaseWhenFunctionWhen<T, ET> nextForSingleOperand(final EqlSentenceBuilder builder) {
+        return new CaseWhenFunctionWhen<T, ET>(builder) {
 
-		};
-	}
+            @Override
+            protected T nextForCaseWhenFunctionEnd(final EqlSentenceBuilder builder) {
+                return CaseWhenFunctionLastArgument.this.nextForCaseWhenFunctionLastArgument(builder);
+            }
+
+        };
+    }
+
 }

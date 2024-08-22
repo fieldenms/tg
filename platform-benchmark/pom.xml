@@ -6,7 +6,7 @@
     <parent>
         <groupId>fielden</groupId>
         <artifactId>platform-parent</artifactId>
-        <version>1.5.1-SNAPSHOT</version>
+        <version>2.0.0-SNAPSHOT</version>
     </parent>
 
     <name>Trident Genesis Platform Microbenckmarks</name>
@@ -28,53 +28,68 @@
         <uberjar.name>benchmarks</uberjar.name>
     </properties>
 
-    <dependencies>
-        <!-- platform dependencies -->
-        <dependency>
-            <groupId>fielden</groupId>
-            <artifactId>platform-dao</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>fielden</groupId>
-            <artifactId>platform-dao</artifactId>
-            <version>${project.version}</version>
-            <type>test-jar</type>
-        </dependency>
-        <!-- other dependencies -->
-        <!-- Java Microbenchmark Harness -->
-        <!-- https://mvnrepository.com/artifact/org.openjdk.jmh/jmh-core -->
-        <dependency>
-            <groupId>org.openjdk.jmh</groupId>
-            <artifactId>jmh-core</artifactId>
-            <version>${jmh.version}</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/org.openjdk.jmh/jmh-generator-annprocess -->
-        <dependency>
-            <groupId>org.openjdk.jmh</groupId>
-            <artifactId>jmh-generator-annprocess</artifactId>
-            <version>${jmh.version}</version>
-            <scope>provided</scope>
-        </dependency>
+	<dependencies>
+		<!-- platform dependencies -->
+		<dependency>
+			<groupId>fielden</groupId>
+			<artifactId>platform-dao</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>fielden</groupId>
+			<artifactId>platform-dao</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+		</dependency>
+		<dependency>
+			<groupId>fielden</groupId>
+			<artifactId>platform-pojo-bl</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+		</dependency>
+		<!-- other dependencies -->
+		<!-- Java Microbenchmark Harness -->
+		<!-- https://mvnrepository.com/artifact/org.openjdk.jmh/jmh-core -->
+		<dependency>
+			<groupId>org.openjdk.jmh</groupId>
+			<artifactId>jmh-core</artifactId>
+			<version>${jmh.version}</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.openjdk.jmh/jmh-generator-annprocess -->
+		<dependency>
+			<groupId>org.openjdk.jmh</groupId>
+			<artifactId>jmh-generator-annprocess</artifactId>
+			<version>${jmh.version}</version>
+			<scope>provided</scope>
+		</dependency>
 
-    </dependencies>
-    <build>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <excludes>
-                    <exclude>**/log4j.xml</exclude>
-                </excludes>
-            </resource>
-            <resource>
-                <directory>src/main/java</directory>
-                <excludes>
-                    <exclude>**/*.java</exclude>
-                </excludes>
-            </resource>
-        </resources>
-        <plugins>
-            <plugin>
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <version>${posgresql.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+  </dependencies>
+
+	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<excludes>
+					<exclude>**/log4j.xml</exclude>
+				</excludes>
+			</resource>
+			<resource>
+				<directory>src/main/java</directory>
+				<excludes>
+					<exclude>**/*.java</exclude>
+				</excludes>
+			</resource>
+		</resources>
+
+		<plugins>
+
+			<plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.2.4</version>
@@ -109,6 +124,18 @@
                     </execution>
                 </executions>
             </plugin>
-        </plugins>
-    </build>
+
+            <!-- disable maven-enforcer-plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+
+		</plugins>
+
+	</build>
 </project>

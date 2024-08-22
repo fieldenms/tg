@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity;
 
 import static java.lang.String.format;
 import static java.util.Collections.*;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.*;
@@ -33,7 +34,6 @@ import static ua.com.fielden.platform.utils.EntityUtils.isString;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Stream;
@@ -52,6 +52,7 @@ import ua.com.fielden.platform.entity.annotation.factory.BeforeChangeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
+import ua.com.fielden.platform.entity.exceptions.DynamicPropertyAccessGraveError;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -62,6 +63,7 @@ import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.MetaPropertyFull;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.proxy.IIdOnlyProxyEntity;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.ICustomValidator;
@@ -76,7 +78,11 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
+import ua.com.fielden.platform.types.RichText;
+import ua.com.fielden.platform.types.try_wrapper.FailableComputation;
+import ua.com.fielden.platform.types.try_wrapper.FailableRunnable;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.StreamUtils;
 
@@ -302,6 +308,9 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     	STRICT_MODEL_VERIFICATION = true;
     }
 
+    @Inject
+    private static DynamicPropertyAccess dynamicPropertyAccess;
+
     /**
      * Holds meta-properties for entity properties.
      */
@@ -317,6 +326,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     private boolean ignoreEditableState = false;
 
     private final Class<K> keyType;
+    /** Type of this entity with all non-structural enhancements removed. */
     private final Class<? extends AbstractEntity<?>> actualEntityType;
     /**
      * A reference to the application specific {@link EntityFactory} instance responsible for instantiation of this and other entities. It is also used for entity cloning.
@@ -523,17 +533,28 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             throw new StrictProxyException(format("Cannot get value for proxied property [%s] of entity [%s].", propertyName, getType().getName()));
         }
         try {
-            return Finder.findFieldValueByName(this, propertyName);
-        } catch (final Exception e) {
-            // there are cases where this.toString() may fail such as for non-initialized union entities
-            // need to degrade gracefully in order to to hide the original exception...
-            String thisToString;
-            try {
-                thisToString = this.toString();
-            } catch (final Exception ex) {
-                thisToString = "this.toString()";
+            return (T) dynamicPropertyAccess.getProperty(this, propertyName);
+        } catch (final Throwable e) {
+            // There are cases where this.toString() may fail such as for non-initialized union entities. Need to degrade
+            // gracefully in order to to hide the original exception. Also, don't try toString() if dynamic property access
+            // fails gravely since toString() itself may require it (e.g., with DynamicEntityKey).
+            @Nullable String thisToString;
+            if (e instanceof DynamicPropertyAccessGraveError) {
+                thisToString = null;
             }
-            throw new EntityException(format("Could not get the value for property [%s] in instance [%s]@[%s].", propertyName , thisToString, getType().getName()), e);
+            else {
+                try {
+                    thisToString = this.toString();
+                } catch (final Exception ex) {
+                    thisToString = null;
+                }
+            }
+            throw new EntityException(format("Could not get the value for property [%s] in instance %s.",
+                                             propertyName,
+                                             thisToString == null
+                                                     ? '[' + getType().getTypeName() + ']'
+                                                     : "[%s]@[%s]".formatted(thisToString, getType().getTypeName())),
+                                      e);
         }
     }
 
@@ -555,31 +576,15 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      */
     public AbstractEntity<K> set(final String propertyName, final Object value) {
         try {
-            final Class<?> propertyType = Finder.findFieldByName(getType(), propertyName).getType();
-            final String setterName = Mutator.SETTER.getName(propertyName);
-            final Method setter = Reflector.getMethod(this, setterName, propertyType);
-            Object valueToInvokeOn = this;
-            if (!setter.getDeclaringClass().isAssignableFrom(getType()) && AbstractUnionEntity.class.isAssignableFrom(getType())) {
-                valueToInvokeOn = ((AbstractUnionEntity) this).activeEntity();
-            }
-            // making method accessible if it isn't
-            final boolean isAccessible = setter.isAccessible();
-            setter.setAccessible(true);
-            setter.invoke(valueToInvokeOn, value);
-            // reverting changes to 'accessible' property of Method class
-            setter.setAccessible(isAccessible);
+            dynamicPropertyAccess.setProperty(this, propertyName, value);
             return this;
-        } catch (final Exception e) {
-            // let's be a little more intelligent about handling instances of InvocationTargetException to report errors without the unnecessary nesting
-            if (e instanceof InvocationTargetException && e.getCause() != null) {
-                // the cause of type Result should be reported as is
-                if (e.getCause() instanceof Result) {
-                    throw (Result) e.getCause();
-                } else { // otherwise wrap the cause in EntityException
-                    throw new EntityException(format("Error setting value [%s] into property [%s] for entity [%s]@[%s].", value, propertyName, this, getType().getName()), e.getCause());
-                }
-            } else {
-                throw new EntityException(format("Error setting value [%s] into property [%s] for entity [%s]@[%s].", value, propertyName, this, getType().getName()), e);
+        } catch (final Throwable e) {
+            if (e instanceof Result result) {
+                throw result;
+            }
+            else {
+                throw new EntityException(format("Error setting value [%s] into property [%s] for entity [%s]@[%s].",
+                                                 value, propertyName, this, getType().getName()), e);
             }
         }
     }
@@ -686,16 +691,26 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * @return
      */
     private Set<Field> fieldsForProperties() {
-        final Set<Field> fields = Finder.streamRealProperties((Class<? extends AbstractEntity<?>>) getClass()).collect(toCollection(LinkedHashSet::new));
+        final Class<? extends AbstractEntity<?>> thisType = (Class<? extends AbstractEntity<?>>) getClass();
+        final Set<Field> fields = Finder.streamRealProperties(thisType).collect(toCollection(LinkedHashSet::new));
         try {
-            fields.add(Finder.getFieldByName(this.getClass(), KEY));
-            fields.add(Finder.getFieldByName(this.getClass(), DESC));
+            ALWAYS_PRESENT_META_PROPERTIES.forEach(prop -> fields.add(Finder.getFieldByName(thisType, prop)));
         } catch (final Exception ex) {
-            final String error = "Could not get fields for KEY or DESC.";
+            final String error = "Could not get field for one of [%s].".formatted(CollectionUtil.toString(ALWAYS_PRESENT_META_PROPERTIES, ", "));
             logger.error(error, ex);
             throw new ReflectionException(error, ex);
         }
         return fields;
+    }
+
+    private static final Set<String> ALWAYS_PRESENT_META_PROPERTIES = ImmutableSet.of(KEY, DESC);
+
+    /**
+     * Indicates whether a property is such that a {@link MetaProperty} always exists for it, regardless of the type that
+     * declares the property.
+     */
+    public static boolean isAlwaysMetaProperty(final String property) {
+        return ALWAYS_PRESENT_META_PROPERTIES.contains(property);
     }
 
     /**
@@ -735,7 +750,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
 
         }
 
-        if (!isString(type) && !isHyperlink(type) && !type.isArray() && isPropertyAnnotation.length() != DEFAULT_LENGTH) {
+        if (!isString(type) && !isHyperlink(type) && !RichText.class.isAssignableFrom(type) && !type.isArray() && isPropertyAnnotation.length() != DEFAULT_LENGTH) {
             final String error = format(INVALID_USE_OF_PARAM_LENGTH_MSG, propName, getType().getName());
             logger.error(error);
             throw new EntityDefinitionException(error);
@@ -1282,6 +1297,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         return nonProxiedProperties().filter(mp -> !mp.isCalculated() && mp.isDirty()).collect(toList());
     }
 
+    public final Stream<MetaProperty<?>> streamDirtyProperties() {
+        return nonProxiedProperties().filter(mp -> !mp.isCalculated() && mp.isDirty());
+    }
+
     public AbstractEntity<?> resetMetaState() {
         nonProxiedProperties().forEach(MetaProperty::resetState);
         return this;
@@ -1484,6 +1503,47 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     }
 
     /**
+     * Runs the computation in an environment where the editable state of this entity may be ignored. The editable state
+     * prior to this call is restored after the computation completes or even if it throws an exception. In the latter
+     * case the exception is rethrown.
+     *
+     * @param ignore  whether to ignore the editable state while running the computation
+     * @see #setIgnoreEditableState(boolean)
+     */
+    public <T> T withIgnoreEditableState(final boolean ignore, final FailableComputation<T> computation) {
+        requireNonNull(computation, "computation");
+
+        final boolean prevState = this.ignoreEditableState;
+        this.ignoreEditableState = ignore;
+        final T result;
+        try {
+            result = computation.get();
+        } catch (final Exception ex) {
+            throw ex instanceof RuntimeException rex ? rex : new RuntimeException(ex);
+        } finally {
+            this.ignoreEditableState = prevState;
+        }
+        return result;
+    }
+
+    /**
+     * Equivalent to {@link #withIgnoreEditableState(boolean, FailableComputation)} but does not return any value.
+     */
+    public void withIgnoreEditableState(final boolean ignore, final FailableRunnable runnable) {
+        requireNonNull(runnable, "runnable");
+
+        final boolean prevIgnore = this.ignoreEditableState;
+        this.ignoreEditableState = ignore;
+        try {
+            runnable.run();
+        } catch (final Exception ex) {
+            throw ex instanceof RuntimeException rex ? rex : new RuntimeException(ex);
+        } finally {
+            this.ignoreEditableState = prevIgnore;
+        }
+    }
+
+    /**
      * Returns a list of proxied properties. Could return an empty set.
      * This method should not be final due to the need for interception.
      *
@@ -1493,12 +1553,15 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         return emptySet();
     }
 
+    public static final String PROXIED_PROPERTY_NAMES_METHOD_NAME = "proxiedPropertyNames";
+
     /**
      * Indicates whether this instance represents a proxied id-only value.
      *
      * @return
      */
     public boolean isIdOnlyProxy() {
-        return proxiedPropertyNames().contains(VERSION);
+        return this instanceof IIdOnlyProxyEntity;
     }
+
 }

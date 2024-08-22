@@ -5,8 +5,9 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_ENTITY;
+import static ua.com.fielden.platform.persistence.HibernateConstants.H_ENTITY;
 import static ua.com.fielden.platform.eql.meta.PropType.LONG_PROP_TYPE;
+import static ua.com.fielden.platform.eql.meta.PropType.propType;
 
 import java.util.List;
 import java.util.Objects;
@@ -95,7 +96,7 @@ public class JoinLeafNode2 implements IJoinNode2<IJoinNode3> {
         final ISingleOperand3 leftOperand;
 
         if (helperNode.expr == null) {
-            leftOperand = new Prop3(helperNode.name, rootSource, new PropType(helperNode.source.sourceType(), H_ENTITY));
+            leftOperand = new Prop3(helperNode.name, rootSource, propType(helperNode.source.sourceType(), H_ENTITY));
         } else {
             final TransformationResultFromStage2To3<Expression3> exprTransRes = helperNode.expr.transform(currentContext);
             leftOperand = exprTransRes.item.isSingleOperandExpression() ? exprTransRes.item.firstOperand : exprTransRes.item;

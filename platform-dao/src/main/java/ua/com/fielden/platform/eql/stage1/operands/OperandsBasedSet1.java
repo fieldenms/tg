@@ -13,9 +13,9 @@ import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.OperandsBasedSet2;
 
 public class OperandsBasedSet1 implements ISetOperand1<OperandsBasedSet2> {
-    private final List<ISingleOperand1<? extends ISingleOperand2<?>>> operands;
+    private final List<? extends ISingleOperand1<? extends ISingleOperand2<?>>> operands;
 
-    public OperandsBasedSet1(final List<ISingleOperand1<? extends ISingleOperand2<?>>> operands) {
+    public OperandsBasedSet1(final List<? extends ISingleOperand1<? extends ISingleOperand2<?>>> operands) {
         this.operands = operands;
     }
 

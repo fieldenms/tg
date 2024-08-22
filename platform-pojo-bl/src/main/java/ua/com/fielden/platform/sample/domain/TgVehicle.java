@@ -104,7 +104,7 @@ public class TgVehicle extends AbstractEntity<String> {
     @Calculated
     @Title("Last fuel usage")
     private TgFuelUsage lastFuelUsage;
-    protected static final ExpressionModel lastFuelUsage_ = expr().model(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("id").and().notExists(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("vehicle").and().prop("date").gt().extProp("date").model()).model()).model();
+    public static final ExpressionModel lastFuelUsage_ = expr().model(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("id").and().notExists(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("vehicle").and().prop("date").gt().extProp("date").model()).model()).model();
 
     @IsProperty
     @Calculated

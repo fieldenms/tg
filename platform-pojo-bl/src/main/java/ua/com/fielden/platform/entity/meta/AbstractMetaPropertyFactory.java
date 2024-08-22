@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.google.inject.Inject;
 import org.joda.time.DateTime;
 
 import com.google.common.cache.Cache;
@@ -66,13 +67,24 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
 
     private Injector injector;
 
-    protected final DomainValidationConfig domainConfig;
-    protected final DomainMetaPropertyConfig domainMetaConfig;
-    private final IDates dates;
+    protected DomainValidationConfig domainConfig;
+    protected DomainMetaPropertyConfig domainMetaConfig;
+    private IDates dates;
 
-    public AbstractMetaPropertyFactory(final DomainValidationConfig domainConfig, final DomainMetaPropertyConfig domainMetaConfig, final IDates dates) {
+    protected AbstractMetaPropertyFactory() {}
+
+    @Inject
+    void setDomainConfig(final DomainValidationConfig domainConfig) {
         this.domainConfig = domainConfig;
+    }
+
+    @Inject
+    void setDomainMetaConfig(final DomainMetaPropertyConfig domainMetaConfig) {
         this.domainMetaConfig = domainMetaConfig;
+    }
+
+    @Inject
+    void setDates(final IDates dates) {
         this.dates = dates;
     }
 
@@ -511,8 +523,9 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         return propHandler;
     }
 
-    @Override
+    @Inject
     public void setInjector(final Injector injector) {
         this.injector = injector;
     }
+
 }

@@ -16,6 +16,7 @@ import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Hyperlink;
+import ua.com.fielden.platform.types.RichText;
 
 /**
  * A test case for validation with {@link MaxLengthValidator}.
@@ -203,6 +204,18 @@ public class MaxLengthValidatorTest {
         final String uri = "https://www.google.com";
         entity.setPropHyperlink(new Hyperlink(uri));
         assertTrue(mpPropHyperlink.isValid());
+    }
+
+    @Test
+    public void RichText_coreText_cannot_be_longer_than_limit() {
+        final var entity = factory.newEntity(EntityWithMaxLengthValidation.class);
+        final var mpRichText = entity.getProperty("richText");
+        entity.setRichText(RichText.fromMarkdown("hello *world*"));
+        assertFalse(mpRichText.isValid());
+        assertEquals(format(MaxLengthValidator.ERR_VALUE_SHOULD_NOT_EXCEED_MAX_LENGTH, 5), mpRichText.getFirstFailure().getMessage());
+
+        entity.setRichText(RichText.fromMarkdown("a"));
+        assertTrue(mpRichText.isValid());
     }
 
 }

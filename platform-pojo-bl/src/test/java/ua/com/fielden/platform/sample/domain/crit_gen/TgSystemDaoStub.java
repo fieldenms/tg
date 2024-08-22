@@ -11,6 +11,7 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.FillModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.sample.domain.ITgSystem;
 import ua.com.fielden.platform.sample.domain.TgSystem;
@@ -45,7 +46,7 @@ public class TgSystemDaoStub implements ITgSystem {
     }
 
     @Override
-    public TgSystem findById(final boolean filtered, final Long id, final fetch<TgSystem> fetchModel) {
+    public TgSystem findById(final boolean filtered, final Long id, final fetch<TgSystem> fetchModel, final FillModel fillModel) {
         return null;
     }
 

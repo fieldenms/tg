@@ -5,15 +5,16 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperationAndClose;
 
 public final class StandAloneExpOperand //
-		extends YieldedItem<IStandAloneExprOperationAndClose, AbstractEntity<?>> //
-		implements IStandAloneExprOperand {
+        extends YieldedItem<IStandAloneExprOperationAndClose, AbstractEntity<?>> //
+        implements IStandAloneExprOperand {
 
-    public StandAloneExpOperand(final Tokens tokens) {
-        super(tokens);
+    public StandAloneExpOperand(final EqlSentenceBuilder builder) {
+        super(builder);
     }
-    
-	@Override
-	protected IStandAloneExprOperationAndClose nextForSingleOperand(final Tokens tokens) {
-		return new StandAloneExpOperationAndClose(tokens);
-	}
+
+    @Override
+    protected IStandAloneExprOperationAndClose nextForSingleOperand(final EqlSentenceBuilder builder) {
+        return new StandAloneExpOperationAndClose(builder);
+    }
+
 }

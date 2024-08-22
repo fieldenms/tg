@@ -20,20 +20,20 @@ public class LevelAllocatingVisitorWithContextIndividualMethodsTest {
     @Test
     public void test_calc_of_name_node_level_with_collectional_property() throws SemanticException {
         final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(EntityLevel1.class, "selfProperty");
-        assertEquals("Incorrect level", new Integer(2), visitor.determineLevelForProperty("collectional.intProperty"));
-        assertEquals("Incorrect level", new Integer(2), visitor.determineLevelForProperty("selfProperty.collectional.intProperty"));
+        assertEquals("Incorrect level", Integer.valueOf(2), visitor.determineLevelForProperty("collectional.intProperty"));
+        assertEquals("Incorrect level", Integer.valueOf(2), visitor.determineLevelForProperty("selfProperty.collectional.intProperty"));
     }
 
     @Test
     public void one2one_asociation_should_not_increment_level() throws SemanticException {
         final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(MasterEntityWithOneToOneAssociation.class, "one2oneAssociation");
-        assertEquals("Incorrect level", new Integer(1), visitor.determineLevelForProperty("←.intProp"));
+        assertEquals("Incorrect level", Integer.valueOf(1), visitor.determineLevelForProperty("←.intProp"));
     }
 
     @Test
     public void one2one_asociation_should_not_increment_level_even_if_its_one2many_is_a_context() throws SemanticException {
         final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(MasterEntityWithOneToOneAssociation.class, "one2oneAssociation.one2ManyAssociation");
-        assertEquals("Incorrect level", new Integer(2), visitor.determineLevelForProperty("←.←.intProp"));
+        assertEquals("Incorrect level", Integer.valueOf(2), visitor.determineLevelForProperty("←.←.intProp"));
     }
 
     @Test
@@ -50,7 +50,7 @@ public class LevelAllocatingVisitorWithContextIndividualMethodsTest {
         plusNode.addChild(intNode).addChild(propNode);
 
         final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(EntityLevel1.class, "selfProperty");
-        assertEquals("Incorrect level", new Integer(1), visitor.determineLevelBasedOnOperands(plusNode));
+        assertEquals("Incorrect level", Integer.valueOf(1), visitor.determineLevelBasedOnOperands(plusNode));
     }
 
     @Test
@@ -100,7 +100,7 @@ public class LevelAllocatingVisitorWithContextIndividualMethodsTest {
         avgNode.addChild(operandNode);
 
         final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(EntityLevel1.class, "selfProperty");
-        assertEquals("Incorrect level", new Integer(1), visitor.determineLevelForAggregationOperations(avgNode));
+        assertEquals("Incorrect level", Integer.valueOf(1), visitor.determineLevelForAggregationOperations(avgNode));
     }
 
     @Test
@@ -114,7 +114,7 @@ public class LevelAllocatingVisitorWithContextIndividualMethodsTest {
         avgNode.addChild(operandNode);
 
         final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(EntityLevel1.class, "selfProperty");
-        assertEquals("Incorrect level", new Integer(0), visitor.determineLevelForAggregationOperations(avgNode));
+        assertEquals("Incorrect level", Integer.valueOf(0), visitor.determineLevelForAggregationOperations(avgNode));
     }
 
 }

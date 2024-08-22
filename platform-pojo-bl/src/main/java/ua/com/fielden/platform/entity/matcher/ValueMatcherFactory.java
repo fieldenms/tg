@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.inject.Singleton;
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.basic.autocompleter.EntityQueryValueMatcher;
 import ua.com.fielden.platform.basic.autocompleter.EnumValueMatcher;
@@ -29,6 +30,7 @@ import com.google.inject.Inject;
  *
  */
 @Deprecated
+@Singleton
 public class ValueMatcherFactory implements IValueMatcherFactory {
     private final Map<Class, Map<String, IValueMatcher>> map = new HashMap<Class, Map<String, IValueMatcher>>();
     private final ICompanionObjectFinder coFinder;

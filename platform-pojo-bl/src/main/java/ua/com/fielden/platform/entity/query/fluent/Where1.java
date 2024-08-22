@@ -7,25 +7,26 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere2;
 
 final class Where1<ET extends AbstractEntity<?>> //
-		extends Where<IComparisonOperator1<ET>, ICompoundCondition1<ET>, IWhere2<ET>, ET> //
-		implements IWhere1<ET> {
+        extends Where<IComparisonOperator1<ET>, ICompoundCondition1<ET>, IWhere2<ET>, ET> //
+        implements IWhere1<ET> {
 
-    public Where1(final Tokens tokens) {
-        super(tokens);
+    public Where1(final EqlSentenceBuilder builder) {
+        super(builder);
     }
-    
-	@Override
-	protected IWhere2<ET> nextForWhere(final Tokens tokens) {
-		return new Where2<ET>(tokens);
-	}
 
-	@Override
-	protected ICompoundCondition1<ET> nextForConditionalOperand(final Tokens tokens) {
-		return new CompoundCondition1<ET>(tokens);
-	}
+    @Override
+    protected IWhere2<ET> nextForWhere(final EqlSentenceBuilder builder) {
+        return new Where2<ET>(builder);
+    }
 
-	@Override
-	protected IComparisonOperator1<ET> nextForSingleOperand(final Tokens tokens) {
-		return new ComparisonOperator1<ET>(tokens);
-	}
+    @Override
+    protected ICompoundCondition1<ET> nextForConditionalOperand(final EqlSentenceBuilder builder) {
+        return new CompoundCondition1<ET>(builder);
+    }
+
+    @Override
+    protected IComparisonOperator1<ET> nextForSingleOperand(final EqlSentenceBuilder builder) {
+        return new ComparisonOperator1<ET>(builder);
+    }
+
 }

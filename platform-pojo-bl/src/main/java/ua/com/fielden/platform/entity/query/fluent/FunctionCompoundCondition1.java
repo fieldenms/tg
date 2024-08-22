@@ -6,36 +6,37 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionWhere1;
 
 abstract class FunctionCompoundCondition1<T, ET extends AbstractEntity<?>> //
-		extends CompoundCondition<IFunctionWhere1<T, ET>, IFunctionCompoundCondition0<T, ET>> //
-		implements IFunctionCompoundCondition1<T, ET> {
+        extends CompoundCondition<IFunctionWhere1<T, ET>, IFunctionCompoundCondition0<T, ET>> //
+        implements IFunctionCompoundCondition1<T, ET> {
 
-    protected FunctionCompoundCondition1(final Tokens tokens) {
-        super(tokens);
+    protected FunctionCompoundCondition1(final EqlSentenceBuilder builder) {
+        super(builder);
     }
-    
-	protected abstract T nextForFunctionCompoundCondition1(final Tokens tokens);
 
-	@Override
-	protected IFunctionWhere1<T, ET> nextForLogicalCondition(final Tokens tokens) {
-		return new FunctionWhere1<T, ET>(tokens) {
+    protected abstract T nextForFunctionCompoundCondition1(final EqlSentenceBuilder builder);
 
-			@Override
-			protected T nextForFunctionWhere1(final Tokens tokens) {
-				return FunctionCompoundCondition1.this.nextForFunctionCompoundCondition1(tokens);
-			}
+    @Override
+    protected IFunctionWhere1<T, ET> nextForLogicalCondition(final EqlSentenceBuilder builder) {
+        return new FunctionWhere1<T, ET>(builder) {
 
-		};
-	}
+            @Override
+            protected T nextForFunctionWhere1(final EqlSentenceBuilder builder) {
+                return FunctionCompoundCondition1.this.nextForFunctionCompoundCondition1(builder);
+            }
 
-	@Override
-	protected IFunctionCompoundCondition0<T, ET> nextForCompoundCondition(final Tokens tokens) {
-		return new FunctionCompoundCondition0<T, ET>(tokens) {
+        };
+    }
 
-			@Override
-			protected T nextForFunctionCompoundCondition0(final Tokens tokens) {
-				return FunctionCompoundCondition1.this.nextForFunctionCompoundCondition1(tokens);
-			}
+    @Override
+    protected IFunctionCompoundCondition0<T, ET> nextForCompoundCondition(final EqlSentenceBuilder builder) {
+        return new FunctionCompoundCondition0<T, ET>(builder) {
 
-		};
-	}
+            @Override
+            protected T nextForFunctionCompoundCondition0(final EqlSentenceBuilder builder) {
+                return FunctionCompoundCondition1.this.nextForFunctionCompoundCondition1(builder);
+            }
+
+        };
+    }
+
 }

@@ -6,11 +6,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import jakarta.inject.Singleton;
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.FillModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.security.user.User;
 
@@ -20,6 +22,7 @@ import ua.com.fielden.platform.security.user.User;
  * @author TG Team
  *
  */
+@Singleton
 public class TgPersistentEntityWithPropertiesDaoStub implements ITgPersistentEntityWithProperties {
 
     @Override
@@ -58,7 +61,7 @@ public class TgPersistentEntityWithPropertiesDaoStub implements ITgPersistentEnt
     }
 
     @Override
-    public TgPersistentEntityWithProperties findById(final boolean filtered, final Long id, final fetch<TgPersistentEntityWithProperties> fetchModel) {
+    public TgPersistentEntityWithProperties findById(final boolean filtered, final Long id, final fetch<TgPersistentEntityWithProperties> fetchModel, final FillModel fillModel) {
         return null;
     }
 

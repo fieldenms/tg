@@ -1,12 +1,13 @@
 package ua.com.fielden.platform.eql.stage3.sources;
 
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-
-import java.util.Objects;
-
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+
+import java.util.Objects;
+
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 public class JoinInnerNode3 implements IJoinNode3 {
     public final IJoinNode3 leftNode;
@@ -22,13 +23,19 @@ public class JoinInnerNode3 implements IJoinNode3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion) {
-        final String joinConditionsSql = joinConditions.sql(dbVersion);
-        return joinNodeSql(dbVersion, leftNode) + "\n  " + joinType + "\n" + joinNodeSql(dbVersion, rightNode) + (isNotEmpty(joinConditionsSql) ? "  ON " : "") + joinConditionsSql;
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
+        final String joinConditionsSql = joinConditions.sql(metadata, dbVersion);
+        return joinNodeSql(metadata, dbVersion, leftNode)
+               + "\n  "
+               + joinType
+               + "\n"
+               + joinNodeSql(metadata, dbVersion, rightNode)
+               + (isNotEmpty(joinConditionsSql) ? "  ON " : "")
+               + joinConditionsSql;
     }
     
-    private String joinNodeSql(final DbVersion dbVersion, IJoinNode3 joinNode) {
-        return joinNode.needsParentheses() ? "(" + joinNode.sql(dbVersion) + ")" : joinNode.sql(dbVersion); 
+    private String joinNodeSql(final IDomainMetadata metadata, final DbVersion dbVersion, IJoinNode3 joinNode) {
+        return joinNode.needsParentheses() ? "(" + joinNode.sql(metadata, dbVersion) + ")" : joinNode.sql(metadata, dbVersion);
      }
     
     @Override
