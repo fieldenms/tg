@@ -226,7 +226,7 @@ public final class Reflector {
      * @return
      * @throws Exception
      */
-    public static Method obtainPropertyAccessor(final Class<?> entityClass, final String propertyName) {
+    public static Method obtainPropertyAccessor(final Class<?> entityClass, final CharSequence propertyName) {
         try {
             return Reflector.getMethod(entityClass, Accessor.GET.getName(propertyName));
         } catch (final Exception e1) {
@@ -247,8 +247,8 @@ public final class Reflector {
      * @throws NoSuchMethodException
      * @throws Exception
      */
-    public static Method obtainPropertySetter(final Class<?> entityClass, final String dotNotationExp) {
-        if (StringUtils.isEmpty(dotNotationExp) || dotNotationExp.contains("()")) {
+    public static Method obtainPropertySetter(final Class<?> entityClass, final CharSequence dotNotationExp) {
+        if (StringUtils.isEmpty(dotNotationExp) || dotNotationExp.toString().contains("()")) {
             throw new IllegalArgumentException("DotNotationExp could not be empty or could not define construction with methods.");
         }
         final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(entityClass, dotNotationExp);

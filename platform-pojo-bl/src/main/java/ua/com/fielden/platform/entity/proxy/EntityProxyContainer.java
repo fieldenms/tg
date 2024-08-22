@@ -52,14 +52,14 @@ public class EntityProxyContainer {
      * @param interfaces  interfaces for the proxied type to implement
      */
     public static <T extends AbstractEntity<?>>
-    Class<? extends T> proxy(final Class<T> entityType, final Collection<String> propNames,
+    Class<? extends T> proxy(final Class<T> entityType, final Collection<? extends CharSequence> propNames,
                              final List<? extends Class> interfaces) {
         // if there is nothing to proxy then we can simply return the same type
         if (propNames.isEmpty()) {
             return entityType;
         }
 
-        final Set<String> uniquePropNames = ImmutableSet.copyOf(propNames);
+        final Set<CharSequence> uniquePropNames = ImmutableSet.copyOf(propNames);
 
         final var typeKey = makeTypeKey(uniquePropNames, interfaces);
         // let's try to find the generated type in the cache
@@ -79,7 +79,7 @@ public class EntityProxyContainer {
 
         buddy = buddy.implement(interfaces);
 
-        for (final String propName: uniquePropNames) {
+        for (final CharSequence propName: uniquePropNames) {
             final Method accessor = Reflector.obtainPropertyAccessor(entityType, propName);
             final Method setter = Reflector.obtainPropertySetter(entityType, propName);
     
@@ -110,7 +110,7 @@ public class EntityProxyContainer {
      * @param propNames -- the names of properties to be proxied
      */
     public static <T extends AbstractEntity<?>>
-    Class<? extends T> proxy(final Class<T> entityType, final Collection<String> propNames) {
+    Class<? extends T> proxy(final Class<T> entityType, final Collection<? extends CharSequence> propNames) {
         return proxy(entityType, propNames, List.of());
     }
 
@@ -120,7 +120,7 @@ public class EntityProxyContainer {
      * @param entityType -- entity that is the owner of the properties to be proxied
      * @param propNames -- the names of properties to be proxied
      */
-    public static <T extends AbstractEntity<?>> Class<? extends T> proxy(final Class<T> entityType, final String... propNames) {
+    public static <T extends AbstractEntity<?>> Class<? extends T> proxy(final Class<T> entityType, final CharSequence... propNames) {
         return proxy(entityType, Arrays.asList(propNames), List.of());
     }
 
@@ -139,8 +139,8 @@ public class EntityProxyContainer {
      * @param properties  properties to be proxied in the type
      * @param interfaces  interfaces for the type to implement
      */
-    protected static Object makeTypeKey(Collection<String> properties, Collection<? extends Class> interfaces) {
-        final String propertiesKey = properties.stream().distinct().sorted(String::compareTo).collect(joining(","));
+    protected static Object makeTypeKey(Collection<? extends CharSequence> properties, Collection<? extends Class> interfaces) {
+        final String propertiesKey = properties.stream().distinct().sorted(CharSequence::compare).collect(joining(","));
         final String interfacesKey = interfaces.stream().distinct().map(Class::getCanonicalName).sorted(String::compareTo).collect(joining(","));
         return Stream.of(propertiesKey, interfacesKey).filter(s -> !s.isEmpty()).collect(joining(":"));
     }
