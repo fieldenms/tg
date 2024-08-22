@@ -45,10 +45,7 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
 
     @Override
     public EntityCentreConfig<T> build() {
-        resultSetBuilder.addInsertionPoint(configInsertionPoint(mkInsertionPoint(this.insertionPointAction, this.whereToInsertView))
-                .setPreferred(preferred)
-                .setNoResizing(noResizing)
-                .setToolbar(toolbarConfig));
+        addInsertionPointToBuilder();
         return resultSetBuilder.build();
     }
 
@@ -60,10 +57,7 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
 
     @Override
     public IInsertionPointConfig0<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
-        resultSetBuilder.addInsertionPoint(configInsertionPoint(mkInsertionPoint(this.insertionPointAction, this.whereToInsertView))
-                .setPreferred(preferred)
-                .setNoResizing(noResizing)
-                .setToolbar(toolbarConfig));
+        addInsertionPointToBuilder();
         return new InsertionPointConfigBuilder<>(resultSetBuilder, actionConfig, whereToInsertView);
     }
 
@@ -80,19 +74,13 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
 
     @Override
     public IWithRightSplitterPosition<T> withLeftSplitterPosition(final int percentage) {
-        resultSetBuilder.addInsertionPoint(configInsertionPoint(mkInsertionPoint(this.insertionPointAction, this.whereToInsertView))
-                .setPreferred(preferred)
-                .setNoResizing(noResizing)
-                .setToolbar(toolbarConfig));
+        addInsertionPointToBuilder();
         return resultSetBuilder.withLeftSplitterPosition(percentage);
     }
 
     @Override
     public IInsertionPointsWithCustomLayout<T> withRightSplitterPosition(final int percentage) {
-        resultSetBuilder.addInsertionPoint(configInsertionPoint(mkInsertionPoint(this.insertionPointAction, this.whereToInsertView))
-                .setPreferred(preferred)
-                .setNoResizing(noResizing)
-                .setToolbar(toolbarConfig));
+        addInsertionPointToBuilder();
         return resultSetBuilder.withRightSplitterPosition(percentage);
     }
 
@@ -109,19 +97,25 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
 
     @Override
     public IAlternativeViewPreferred<T> addAlternativeView(final EntityActionConfig actionConfig) {
-        resultSetBuilder.addInsertionPoint(configInsertionPoint(mkInsertionPoint(this.insertionPointAction, this.whereToInsertView))
-                .setPreferred(preferred)
-                .setNoResizing(noResizing)
-                .setToolbar(toolbarConfig));
+        addInsertionPointToBuilder();
         return new AlternativeViewConfigBuilder<>(resultSetBuilder, actionConfig);
     }
 
     @Override
     public IAlternativeView<T> withCustomisableLayout() {
+        addInsertionPointToBuilder();
+        return resultSetBuilder.withCustomisableLayout();
+    }
+
+    /**
+     * Adds last insertion point configuration into {@link ResultSetBuilder}.<br>
+     * This concludes insertion point configuration and either next insertion point will be added or splitter/customisable layout/alternative view will be configured next.
+     */
+    private void addInsertionPointToBuilder() {
         resultSetBuilder.addInsertionPoint(configInsertionPoint(mkInsertionPoint(this.insertionPointAction, this.whereToInsertView))
                 .setPreferred(preferred)
                 .setNoResizing(noResizing)
                 .setToolbar(toolbarConfig));
-        return resultSetBuilder.withCustomisableLayout();
     }
+
 }
