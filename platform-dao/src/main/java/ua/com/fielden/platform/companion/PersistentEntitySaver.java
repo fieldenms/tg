@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.joda.time.DateTime;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -345,7 +346,13 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             logger.error(msg, ex);
             throw new EntityWasUpdatedOrDeletedConcurrently(msg, ex);
         } finally {
-            session.clear();
+            // We can only clear a session if the transaction is active. Otherwise, an exception is thrown.
+            // However, we cannot simply check session.getTransaction().isActive() because Hibernate considers active transactions that are going to be rolled back.
+            // And at the same time, Hibernate does not permit clearing a session for transactions that are marked to be rolled back.
+            // Hence, the need to check transaction status directly.
+            if (session.getTransaction().getStatus() == TransactionStatus.ACTIVE) {
+                session.clear();
+            }
         }
 
         return t2(persistedEntity.getId(),

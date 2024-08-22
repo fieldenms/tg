@@ -3,9 +3,11 @@ package ua.com.fielden.platform.ioc;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
-import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.persistence.HibernateHelpers;
+import ua.com.fielden.platform.persistence.types.DateTimeType;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
@@ -66,14 +68,16 @@ public class HibernateConfigurationFactory {
     private static final String CONNECTION_PASWD = "hibernate.connection.password";
 
     private final Properties props;
-
     private final Configuration cfg = new Configuration();
     private final Configuration cfgManaged = new Configuration();
 
     public HibernateConfigurationFactory(final Properties props, final HibernateMappingsGenerator generator) {
         this.props = props;
-        final String generatedMappings = generator.generateMappings();
+        // TODO use declarative style
+        // Register our custom type mapping so that Hibernate uses it during the binding of query parameters.
+        cfg.registerTypeContributor((typeContributions, $) -> typeContributions.contributeType(DateTimeType.INSTANCE));
 
+        final String generatedMappings = generator.generateMappings();
         try {
             cfg.addInputStream(new ByteArrayInputStream(generatedMappings.getBytes("UTF8")));
             cfgManaged.addInputStream(new ByteArrayInputStream(generatedMappings.getBytes("UTF8")));
@@ -88,19 +92,9 @@ public class HibernateConfigurationFactory {
 
     public static DbVersion determineDbVersion(final String dialect) {
         if (isEmpty(dialect)) {
-            throw new IllegalStateException("Hibernate dialect was not provided, but is required");
+            throw new InvalidArgumentException("Hibernate dialect was not provided, but is required");
         }
-        if (dialect.equals("org.hibernate.dialect.H2Dialect")) {
-            return DbVersion.H2;
-        } else if (dialect.equals("org.hibernate.dialect.PostgreSQLDialect")) {
-            return DbVersion.POSTGRESQL;
-        } else if (dialect.contains("SQLServer")) {
-            return DbVersion.MSSQL;
-        } else if (dialect.equals("org.hibernate.dialect.OracleDialect")) {
-            return DbVersion.ORACLE;
-        }
-
-        throw new IllegalStateException("Could not determine DB version based on the provided Hibernate dialect \"" + dialect + "\".");
+        return HibernateHelpers.getDbVersion(HibernateHelpers.getDialect(dialect));
     }
 
     public Configuration build() {

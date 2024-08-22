@@ -5,26 +5,27 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IExprOperand0;
 
 abstract class ExpRightSideConditionalOperand<T, ET extends AbstractEntity<?>> //
-		extends RightSideOperand<T, ET> //
-		implements IComparisonQuantifiedOperand<T, ET> {
-    
-    protected ExpRightSideConditionalOperand(final Tokens tokens) {
-        super(tokens);
+        extends RightSideOperand<T, ET> //
+        implements IComparisonQuantifiedOperand<T, ET> {
+
+    protected ExpRightSideConditionalOperand(final EqlSentenceBuilder builder) {
+        super(builder);
     }
-    
-	@Override
-	public IExprOperand0<T, ET> beginExpr() {
-		return createExprOperand0(getTokens().beginExpression());
-	}
 
-	private ExprOperand0<T, ET> createExprOperand0(final Tokens tokens) {
-		return new ExprOperand0<T, ET>(tokens) {
+    @Override
+    public IExprOperand0<T, ET> beginExpr() {
+        return createExprOperand0(builder.beginExpression());
+    }
 
-			@Override
-			protected T nextForExprOperand0(final Tokens tokens) {
-				return ExpRightSideConditionalOperand.this.nextForSingleOperand(tokens);
-			}
+    private ExprOperand0<T, ET> createExprOperand0(final EqlSentenceBuilder builder) {
+        return new ExprOperand0<T, ET>(builder) {
 
-		};
-	}
+            @Override
+            protected T nextForExprOperand0(final EqlSentenceBuilder builder) {
+                return ExpRightSideConditionalOperand.this.nextForSingleOperand(builder);
+            }
+
+        };
+    }
+
 }

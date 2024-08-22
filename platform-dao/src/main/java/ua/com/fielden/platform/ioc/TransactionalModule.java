@@ -44,6 +44,7 @@ public abstract class TransactionalModule extends EntityModule {
     private final Properties props;
 
     public TransactionalModule(final Properties props) {
+        super(props);
         this.props = props;
     }
 

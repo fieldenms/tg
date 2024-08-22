@@ -56,7 +56,7 @@ public class ResultSetBuilderWrapperForEditors<T extends AbstractEntity<?>> impl
     }
 
     @Override
-    public IWithSummary<T> withTooltip(final String propertyName) {
+    public IWithSummary<T> withTooltip(final CharSequence propertyName) {
         return builder.withTooltip(propertyName);
     }
 

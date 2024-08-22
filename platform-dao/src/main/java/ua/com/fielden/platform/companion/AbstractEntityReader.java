@@ -294,21 +294,26 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
     /**
      * A private helper method.
      *
-     * @param filtered  <code>true</code> to turn filtering on.
+     * @param filtered controls whether user-filtering is on
      */
     private T fetchOneEntityInstance(final boolean filtered, final Long id, final fetch<T> fetchModel, final FillModel fillModel) {
         if (id == null) {
-            throw new EntityCompanionException(format(ERR_MISSING_ID_VALUE, getEntityType().getName()));
+            throw new EntityCompanionException(ERR_MISSING_ID_VALUE.formatted(getEntityType().getName()));
         }
+
+        final var query = select(getEntityType()).where().prop(ID).eq().val(id).model()
+                          .setFilterable(filtered);
+        final var qem = from(query).with(fetchModel).with(fillModel).lightweight(!instrumented()).model();
         try {
-            final EntityResultQueryModel<T> query = select(getEntityType()).where().prop(ID).eq().val(id).model();
-            query.setFilterable(filtered);
-            return getEntity(from(query).with(fetchModel).with(fillModel).lightweight(!instrumented()).model());
+            return getEntity(qem);
         } catch (final Exception e) {
-            throw new EntityCompanionException(format("Could not fetch one entity of type [%s].", getEntityType().getName()), e);
+            throw new EntityCompanionException("""
+                    Could not fetch one entity of type [%s].
+                    Query: %s\
+                    """.formatted(getEntityType().getName(), qem), e);
         }
     }
-    
+
     /**
      * Implements pagination based on the provided query.
      *

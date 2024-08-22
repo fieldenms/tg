@@ -79,7 +79,7 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
         return isNaturalOrderDescending(companion.getEntityType()) ? prop.desc().model() : prop.asc().model();
     }
 
-    private OrderingModel composeOrderingModelForQuery(final String searchString) {
+    protected final OrderingModel composeOrderingModelForQuery(final String searchString) {
         return "%".equals(searchString) ? makeOrderingModel(searchString)
                 : orderBy().expr(makeSearchResultOrderingPriority(companion.getEntityType(), searchString)).asc().order(makeOrderingModel(searchString)).model();
     }

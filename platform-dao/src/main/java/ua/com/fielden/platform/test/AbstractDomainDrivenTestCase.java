@@ -135,7 +135,8 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     }
 
     /**
-     * Converts string representation {@code dateTime} to an instance of {@link Date}.
+     * Converts a date string to a {@link Date} using system's default time zone.
+     * <p>
      * Supported formats:
      * <ul>
      *     <li>yyyy-MM-dd</li>
@@ -143,9 +144,6 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
      *     <li>yyyy-MM-dd HH:mm:ss</li>
      *     <li>yyyy-MM-dd HH:mm:ss.SSS</li>
      * </ul>
-     *
-     * @param dateTime
-     * @return
      */
     @Override
     public final Date date(final String dateTime) {
@@ -167,7 +165,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
                 return DATE_FORMAT.parse(dateTime);
             }
         } catch (ParseException e) {
-            throw new DomainDriventTestException(format("Could not parse value [%s].", dateTime));
+            throw new DomainDriventTestException(format("Could not parse date [%s].", dateTime));
         }
     }
 

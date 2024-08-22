@@ -12,6 +12,7 @@ import org.hibernate.cfg.Environment;
 
 /**
  * Basic Hibernate helper class for Hibernate configuration and startup.
+ * For a typical <i>utility</i> class see {@link HibernateHelpers}.
  * <p>
  * Uses an initialiser to read startup options and initialise <tt>Configuration</tt> and <tt>SessionFactory</tt>.
  * </p>

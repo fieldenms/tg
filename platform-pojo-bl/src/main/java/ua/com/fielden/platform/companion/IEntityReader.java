@@ -18,6 +18,8 @@ import ua.com.fielden.platform.entity.query.model.FillModel;
 import ua.com.fielden.platform.entity.query.model.FillModels;
 import ua.com.fielden.platform.pagination.IPage;
 
+import javax.annotation.Nullable;
+
 /**
  * The reader contract for entity companion objects, which should be implemented by companions of persistent or synthetic entities.
  * It provides various methods to read entities from a persistent data store.
@@ -51,7 +53,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
     <C extends IEntityReader<E>, E extends AbstractEntity<?>> C co(final Class<E> type);
 
     /**
-     * Returns default {@link FetchProvider} for the entity.
+     * Returns the default fetch provider for the entity.
      * <p>
      * This fetch provider represents the 'aggregated' variant of all fetch providers needed mainly for entity master actions (and potentially others): <br>
      * <br>
@@ -146,7 +148,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @param keyValues
      * @return
      */
-    T findByKey(final Object... keyValues);
+    @Nullable T findByKey(final Object... keyValues);
 
     default Optional<T> findByKeyOptional(final Object... keyValues) {
         return Optional.ofNullable(findByKey(keyValues));

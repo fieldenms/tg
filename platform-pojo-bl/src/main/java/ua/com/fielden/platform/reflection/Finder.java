@@ -125,7 +125,7 @@ public class Finder {
      * @throws RuntimeException
      */
     public static List<MetaProperty<?>> findMetaProperties(final AbstractEntity<?> entity, final String dotNotationExp) {
-        final String[] properties = dotNotationExp.split(Reflector.DOT_SPLITTER);
+        final String[] properties = laxSplitPropPathToArray(dotNotationExp);
         final List<MetaProperty<?>> metaProperties = new ArrayList<>();
         Object owner = entity;
         for (final String propertyName : properties) {
@@ -154,27 +154,18 @@ public class Finder {
      * The first part of the expression should correspond to a property in the provided entity.
      * <p>
      * The last part should correspond to a property for which meta-property is being determined.
-     *
-     * @param entity
-     * @param dotNotationExp
-     * @return
-     * @throws RuntimeException
      */
     public static MetaProperty<?> findMetaProperty(final AbstractEntity<?> entity, final String dotNotationExp) {
         final List<MetaProperty<?>> metaProperties = findMetaProperties(entity, dotNotationExp);
-        if (dotNotationExp.split(Reflector.DOT_SPLITTER).length > metaProperties.size()) {
+        if (laxSplitPropPathToArray(dotNotationExp).length > metaProperties.size()) {
             return null;
         } else {
-            return metaProperties.get(metaProperties.size() - 1);
+            return metaProperties.getLast();
         }
     }
 
     /**
      * Obtains a set of meta-properties from an entity, sorted in a natural order as defined by {@link MetaProperty}.
-     *
-     * @param entity
-     * @return
-     * @throws RuntimeException
      */
     public static SortedSet<MetaProperty<?>> getMetaProperties(final AbstractEntity<?> entity) {
         final List<Field> properties = findRealProperties(entity.getType());
@@ -236,6 +227,11 @@ public class Finder {
         return getFieldsAnnotatedWith(entityType, true, IsProperty.class, annotations);
     }
 
+    public static Stream<Field> streamDeclaredProperties(final Class<?> entityType) {
+        return streamDeclaredFields(entityType)
+                .filter(field -> AnnotationReflector.isAnnotationPresent(field, IsProperty.class));
+    }
+
     /**
      * Returns "real" properties (fields annotated with {@link IsProperty}) for <code>entityType</code> that are also annotated with specified <code>annotations</code> (if any).
      * Refer issue <a href='https://github.com/fieldenms/tg/issues/1729'>#1729</a> for more details.
@@ -270,11 +266,6 @@ public class Finder {
         return getFieldsAnnotatedWith(entityType, false, IsProperty.class, annotations)
                .filter(f -> (hasDesc          && !isUnion || !DESC.equals(f.getName()))  // if not hasDesc     or isUnion then exclude DESC
                          && (!hasCompositeKey && !isUnion || !KEY.equals(f.getName()))); // if hasCompositeKey or isUnion then exclude KEY
-    }
-
-    public static Stream<Field> streamDeclaredProperties(final Class<?> entityType) {
-        return streamDeclaredFields(entityType)
-                .filter(field -> AnnotationReflector.isAnnotationPresent(field, IsProperty.class));
     }
 
     /**
@@ -439,7 +430,7 @@ public class Finder {
     public static Optional<Field> getFieldByNameOptionally(final Class<?> type, final String name) {
         final Either<Exception, Field> result = Try(() -> getFieldByName(type, name));
         if (result instanceof Right) {
-            return Optional.of(((Right<Exception, Field>) result).value);
+            return Optional.of(((Right<Exception, Field>) result).value());
         } else {
             return Optional.empty();
         }
@@ -460,22 +451,22 @@ public class Finder {
      *            -- dot-notation field/method definition (e.g. "prop1.prop2", "prop1.method2()", "method1().prop2", "method1().method2()")
      * @return
      */
-    public static Field findFieldByName(final Class<?> type, final String dotNotationExp) {
+    public static Field findFieldByName(final Class<?> type, final CharSequence dotNotationExp) {
         return findFieldByNameWithOwningType(type, dotNotationExp)._2;
     }
 
     /**
-     * The same as {@link #findFieldByName(Class, String)}, but the returned tuple includes the type, where the last property or method in the {@code dotNotationExp} belongs.
+     * The same as {@link #findFieldByName(Class, CharSequence)}, but the returned tuple includes the type, where the last property or method in the {@code dotNotationExp} belongs.
      * This could a declaring type, but also the last type reached during the path traversal.
      *
      * @param type
      * @param dotNotationExpr
      * @return
      */
-    public static T2<Class<?>, Field> findFieldByNameWithOwningType(final Class<?> type, final String dotNotationExpr) {
+    public static T2<Class<?>, Field> findFieldByNameWithOwningType(final Class<?> type, final CharSequence dotNotationExpr) {
         // check if passed "dotNotationExpr" is correct:
         PropertyTypeDeterminator.determinePropertyType(type, dotNotationExpr);
-        if (dotNotationExpr.endsWith("()")) {
+        if (dotNotationExpr.toString().endsWith("()")) {
             throw new MethodFoundException("Illegal situation : a method was found from the dot-notation expression == [" + dotNotationExpr + "]");
         }
         final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(type, dotNotationExpr);
@@ -483,7 +474,7 @@ public class Finder {
     }
 
     /**
-     * The same as {@link Finder#findFieldByName(Class, String)}, but side effect free.
+     * The same as {@link Finder#findFieldByName(Class, CharSequence)}, but side effect free.
      *
      * @param type
      * @param dotNotationExp
@@ -492,25 +483,20 @@ public class Finder {
     public static Optional<Field> findFieldByNameOptionally(final Class<?> type, final String dotNotationExp) {
         final Either<Exception, Field> result = Try(() -> findFieldByName(type, dotNotationExp));
         if (result instanceof Right) {
-            return Optional.of(((Right<Exception, Field>) result).value);
+            return Optional.of(((Right<Exception, Field>) result).value());
         } else {
             return Optional.empty();
         }
     }
 
     /**
-     * This method is similar to {@link #findFieldByName(Class, String)}, but returns property values rather than type information.
-     *
-     * @param entity
-     * @param dotNotationExp
-     * @return
-     * @throws Exception
+     * This method is similar to {@link #findFieldByName(Class, CharSequence)}, but returns property values rather than type information.
      */
     public static <T> T findFieldValueByName(final AbstractEntity<?> entity, final String dotNotationExp) {
         if (entity == null) {
             return null;
         }
-        final String[] propNames = dotNotationExp.split(Reflector.DOT_SPLITTER);
+        final String[] propNames = splitPropPathToArray(dotNotationExp);
         Object value = entity;
         for (final String propName : propNames) {
             value = getPropertyValue((AbstractEntity<?>) value, propName);
@@ -819,6 +805,11 @@ public class Finder {
 
     // ========================================================================================================
     /////////////////////////////// Miscellaneous utilities ///////////////////////////////////////////////////
+
+    public static Stream<Class<? extends AbstractEntity<?>>> streamUnionMembers(final Class<? extends AbstractUnionEntity> unionEntityType) {
+        return unionProperties(unionEntityType).stream()
+                .map(field -> (Class<AbstractEntity<?>>) field.getType());
+    }
 
     /**
      * Returns a set of properties that are present in all of the types passed into the method.

@@ -8,7 +8,7 @@ import ua.com.fielden.platform.exceptions.AbstractPlatformRuntimeException;
  * @author TG Team
  *
  */
-public class EntityDeserialisationException extends AbstractPlatformRuntimeException {
+public class EntityDeserialisationException extends DeserialisationException {
 
     private static final long serialVersionUID = 1L;
 

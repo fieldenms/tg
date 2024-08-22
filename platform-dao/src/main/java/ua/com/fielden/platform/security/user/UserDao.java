@@ -171,7 +171,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         }
 
         // save menu item invisibility for a user, this may require fetching the user in case savedUser is only an ID (i.e. left).
-        final User menuOwner = savedUser.isLeft() ? co(User.class).findById(savedUser.asLeft().value, WebMenuItemInvisibilityCo.FETCH_PROVIDER.<User>fetchFor("owner").fetchModel()) : savedUser.asRight().value;
+        final User menuOwner = savedUser.isLeft() ? co(User.class).findById(savedUser.asLeft().value(), WebMenuItemInvisibilityCo.FETCH_PROVIDER.<User>fetchFor("owner").fetchModel()) : savedUser.asRight().value();
         saveMenuItemInvisibility(menuItemsToSave, menuOwner);
 
         return savedUser;

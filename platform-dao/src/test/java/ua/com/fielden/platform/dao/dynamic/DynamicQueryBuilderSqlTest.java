@@ -23,8 +23,8 @@ import ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum;
 import ua.com.fielden.platform.entity_centre.mnemonics.DateRangeSelectorEnum;
 import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
-import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.*;
 import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
+import ua.com.fielden.platform.eql.dbschema.PropertyInlinerImpl;
 import ua.com.fielden.platform.eql.meta.EqlTables;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
@@ -115,7 +115,8 @@ public class DynamicQueryBuilderSqlTest {
                 .build();
         try {
             hibConf.addInputStream(new ByteArrayInputStream(
-                    new HibernateMappingsGenerator(domainMetadata, dbVersionProvider, new EqlTables(domainMetadata))
+                    new HibernateMappingsGenerator(domainMetadata, dbVersionProvider, new EqlTables(domainMetadata),
+                                                   new PropertyInlinerImpl(domainMetadata))
                             .generateMappings().getBytes("UTF8")));
         } catch (final MappingException | UnsupportedEncodingException e) {
             throw new HibernateException("Could not add mappings.", e);
