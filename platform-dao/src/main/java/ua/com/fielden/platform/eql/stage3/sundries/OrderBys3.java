@@ -1,9 +1,10 @@
 package ua.com.fielden.platform.eql.stage3.sundries;
 
 import com.google.common.collect.ImmutableList;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.Limit;
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.stage3.queries.AbstractQuery3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 
 import java.util.List;
 import java.util.Objects;
@@ -40,16 +41,16 @@ public class OrderBys3 {
         return limit;
     }
 
-    public String sql(final EqlDomainMetadata metadata, final AbstractQuery3 enclosingQuery) {
-        final var modelsStr = models.stream().map(y -> y.sql(metadata)).collect(joining(", "));
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion, final AbstractQuery3 enclosingQuery) {
+        final var modelsStr = models.stream().map(o -> o.sql(metadata, dbVersion)).collect(joining(", "));
 
         final var sb = new StringBuilder();
 
-        switch (metadata.dbVersion) {
+        switch (dbVersion) {
             // PostgreSQL supports shorter syntax (MySQL too)
             case POSTGRESQL, MYSQL -> {
                 sb.append(modelsStr);
-                if (limit instanceof Limit.Count (long count)) {
+                if (limit instanceof Limit.Count(long count)) {
                     sb.append(" LIMIT ").append(count).append(' ');
                 }
                 if (offset != NO_OFFSET) {
@@ -63,7 +64,7 @@ public class OrderBys3 {
                 // SQL Server will reject ORDER BY in a subquery without OFFSET or TOP.
                 if (offset != NO_OFFSET || limit instanceof Limit.Count || isSubQuery(enclosingQuery)) {
                     sb.append(" OFFSET ").append(offset).append(" ROWS ");
-                    if (limit instanceof Limit.Count (long count)) {
+                    if (limit instanceof Limit.Count(long count)) {
                         sb.append(" FETCH FIRST ").append(count).append(" ROWS ONLY ");
                     }
                 }
@@ -76,7 +77,7 @@ public class OrderBys3 {
                 if (offset != NO_OFFSET || limit instanceof Limit.Count) {
                     sb.append(" OFFSET ").append(offset).append(" ROWS ");
                 }
-                if (limit instanceof Limit.Count (long count)) {
+                if (limit instanceof Limit.Count(long count)) {
                     sb.append(" FETCH FIRST ").append(count).append(" ROWS ONLY ");
                 }
             }

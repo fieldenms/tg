@@ -1,11 +1,12 @@
 package ua.com.fielden.platform.eql.stage3.sources;
 
 import com.google.common.collect.ImmutableList;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.queries.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.StreamUtils;
 
 import java.util.Collection;
@@ -15,6 +16,7 @@ import java.util.Objects;
 
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
+import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
 import static ua.com.fielden.platform.eql.stage3.sundries.Yield3.NO_EXPECTED_TYPE;
 import static ua.com.fielden.platform.utils.StreamUtils.enumerated;
 import static ua.com.fielden.platform.utils.StreamUtils.transpose;
@@ -49,23 +51,21 @@ public class Source3BasedOnQueries extends AbstractSource3 {
     }
 
     @Override
-    public String sql(final EqlDomainMetadata metadata) {
-        return switch (metadata.dbVersion) {
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
+        if (dbVersion == POSTGRESQL) {
             // 1. Issue #2313 - PostgreSQL requires explicit type casts
             // 2. a SELECT with an ORDER BY inside a UNION must be enclosed in parentheses, although this inner ordering
             // is not guaranteed to have an effect on the results of UNION
             // https://www.postgresql.org/docs/16/sql-select.html#SQL-UNION
-            case POSTGRESQL -> {
-                final List<PropType> types = expectedYieldTypes();
-                yield "("
-                      + models.stream().map(m -> '(' + m.sql(metadata, types) + ')').collect(joining("\n UNION ALL \n"))
-                      + ") AS " + sqlAlias;
-            }
-            default ->
-                    "("
-                    + models.stream().map(m -> m.sql(metadata)).collect(joining("\n UNION ALL \n"))
-                    + ") AS " + sqlAlias;
-        };
+            final List<PropType> types = expectedYieldTypes();
+            return "("
+                  + models.stream().map(m -> '(' + m.sql(metadata, dbVersion, types) + ')').collect(joining("\n UNION ALL \n"))
+                  + ") AS " + sqlAlias;
+        } else {
+            return "("
+            + models.stream().map(m -> m.sql(metadata, dbVersion)).collect(joining("\n UNION ALL \n"))
+            + ") AS " + sqlAlias;
+        }
     }
 
     /**

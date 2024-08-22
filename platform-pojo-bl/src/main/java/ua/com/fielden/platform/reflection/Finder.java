@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.reflection;
 
+import static java.util.stream.Collectors.toSet;
+import static ua.com.fielden.platform.utils.CollectionUtil.first;
+import java.util.stream.Collectors;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.apache.commons.lang3.StringUtils;
@@ -224,6 +227,11 @@ public class Finder {
         return getFieldsAnnotatedWith(entityType, true, IsProperty.class, annotations);
     }
 
+    public static Stream<Field> streamDeclaredProperties(final Class<?> entityType) {
+        return streamDeclaredFields(entityType)
+                .filter(field -> AnnotationReflector.isAnnotationPresent(field, IsProperty.class));
+    }
+
     /**
      * Returns "real" properties (fields annotated with {@link IsProperty}) for <code>entityType</code> that are also annotated with specified <code>annotations</code> (if any).
      * Refer issue <a href='https://github.com/fieldenms/tg/issues/1729'>#1729</a> for more details.
@@ -422,7 +430,7 @@ public class Finder {
     public static Optional<Field> getFieldByNameOptionally(final Class<?> type, final String name) {
         final Either<Exception, Field> result = Try(() -> getFieldByName(type, name));
         if (result instanceof Right) {
-            return Optional.of(((Right<Exception, Field>) result).value);
+            return Optional.of(((Right<Exception, Field>) result).value());
         } else {
             return Optional.empty();
         }
@@ -475,7 +483,7 @@ public class Finder {
     public static Optional<Field> findFieldByNameOptionally(final Class<?> type, final String dotNotationExp) {
         final Either<Exception, Field> result = Try(() -> findFieldByName(type, dotNotationExp));
         if (result instanceof Right) {
-            return Optional.of(((Right<Exception, Field>) result).value);
+            return Optional.of(((Right<Exception, Field>) result).value());
         } else {
             return Optional.empty();
         }
@@ -659,6 +667,10 @@ public class Finder {
         return streamFieldsAnnotatedWith(getFields(type, withUnion), allAnnotations);
     }
 
+    private static Stream<Field> streamDeclaredFields(final Class<?> type) {
+        return Arrays.stream(type.getDeclaredFields());
+    }
+
     /**
      * Returns value of the {@link AbstractUnionEntity} field specified with property.
      *
@@ -794,6 +806,11 @@ public class Finder {
     // ========================================================================================================
     /////////////////////////////// Miscellaneous utilities ///////////////////////////////////////////////////
 
+    public static Stream<Class<? extends AbstractEntity<?>>> streamUnionMembers(final Class<? extends AbstractUnionEntity> unionEntityType) {
+        return unionProperties(unionEntityType).stream()
+                .map(field -> (Class<AbstractEntity<?>>) field.getType());
+    }
+
     /**
      * Returns a set of properties that are present in all of the types passed into the method.
      *
@@ -801,30 +818,16 @@ public class Finder {
      * @return
      */
     public static Set<String> findCommonProperties(final List<Class<? extends AbstractEntity<?>>> entityTypes) {
-        final List<List<Field>> propertiesSet = new ArrayList<>();
-        for (int classIndex = 0; classIndex < entityTypes.size(); classIndex++) {
-            final List<Field> fields = new ArrayList<>();
-            for (final Field propertyField : findRealProperties(entityTypes.get(classIndex))) {
-                fields.add(propertyField);
-            }
-            propertiesSet.add(fields);
-        }
-        final Set<String> commonProperties = new LinkedHashSet<>();
-        if (propertiesSet.size() > 0) {
-            for (final Field property : propertiesSet.get(0)) {
-                boolean common = true;
-                for (int setIndex = 1; setIndex < propertiesSet.size(); setIndex++) {
-                    if (!isPropertyPresent(property, entityTypes.get(0), propertiesSet.get(setIndex), entityTypes.get(setIndex))) {
-                        common = false;
-                        break;
-                    }
-                }
-                if (common) {
-                    commonProperties.add(property.getName());
-                }
-            }
-        }
-        return commonProperties;
+        // (EntityType, Properties)
+        final var pairs = entityTypes.stream().map(t -> t2(t, findRealProperties(t))).toList();
+
+        return first(pairs).map(fstPair -> {
+                    final var restPairs = pairs.subList(1, pairs.size());
+                    final var fstType = fstPair._1;
+                    return fstPair._2.stream()
+                            .filter(prop -> restPairs.stream().allMatch(pair -> isPropertyPresent(prop, fstType, pair._2, pair._1)));
+                }).orElseGet(Stream::of)
+                .map(Field::getName).collect(toSet());
     }
 
     /**

@@ -2,9 +2,10 @@ package ua.com.fielden.platform.utils;
 
 import org.junit.Test;
 import ua.com.fielden.platform.types.tuples.T2;
-import static ua.com.fielden.platform.test_utils.TestUtils.assertOptEquals;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -13,7 +14,8 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.*;
-import ua.com.fielden.platform.test_utils.TestUtils;
+import static ua.com.fielden.platform.test_utils.TestUtils.assertEmpty;
+import static ua.com.fielden.platform.test_utils.TestUtils.assertOptEquals;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.utils.StreamUtils.*;
@@ -178,7 +180,23 @@ public class StreamUtilsTest {
         assertEquals(List.of(pair("one", 1), pair("two", 2)), 
                 StreamUtils.distinct(elements.stream(), Pair::getKey).toList());
     }
-    
+
+    @Test
+    public void distinct_returns_a_stream_whose_spliterator_provides_distinct_elements() {
+        final var splitr = StreamUtils.distinct(Stream.of("fun", "proc", "function", "routine"), s -> s.charAt(0)).spliterator();
+        final var distinct = new ArrayList<String>();
+        splitr.forEachRemaining(distinct::add);
+        assertEquals(List.of("fun", "proc", "routine"), distinct);
+    }
+
+    @Test
+    public void distinct_returns_a_stream_whose_iterator_provides_distinct_elements() {
+        final var iter = StreamUtils.distinct(Stream.of("fun", "proc", "function", "routine"), s -> s.charAt(0)).iterator();
+        final var distinct = new ArrayList<String>();
+        iter.forEachRemaining(distinct::add);
+        assertEquals(List.of("fun", "proc", "routine"), distinct);
+    }
+
     @Test
     public void can_zip_streams_of_different_size() {
         assertEquals(listOf(0, 2, 4), zip(Stream.of(0, 1, 2), Stream.of(0, 1, 2, 3), (x, y) -> x+y).toList());
@@ -261,6 +279,22 @@ public class StreamUtilsTest {
     }
 
     @Test
+    public void foldLeft_returns_empty_optional_for_empty_stream() {
+        assertEmpty(foldLeft(IntStream.of(), Integer::sum));
+    }
+
+    @Test
+    public void foldLeft_returns_present_optional_for_non_empty_stream() {
+        assertOptEquals(1, foldLeft(IntStream.of(1), Integer::sum));
+        assertOptEquals(3, foldLeft(IntStream.of(1, 2), Integer::sum));
+    }
+
+    @Test
+    public void foldLeft_processes_stream_elements_sequentially_from_left_to_right() {
+        assertEquals("one-two-three", foldLeft(Stream.of("two-", "three"), "one-", String::concat));
+    }
+
+    @Test
     public void supplyIfEmpty_returns_equivalent_stream_if_original_is_not_empty() {
         final var xs = CollectionUtil.listOf(1, 2);
         final var xsEquivalent = StreamUtils.supplyIfEmpty(xs.stream(), () -> 0).toList();
@@ -274,6 +308,30 @@ public class StreamUtilsTest {
     }
 
     @Test
+    public void collectToImmutableMap_terminates_upon_reaching_the_shorter_stream() {
+        assertEquals(Map.of("a", 1), collectToImmutableMap(Stream.of("a", "b"), Stream.of(1)));
+        assertEquals(Map.of(), collectToImmutableMap(Stream.of(), Stream.of(1)));
+    }
+
+    @Test
+    public void collectToImmutableMap_applies_given_functions_to_produce_keys_and_values() {
+        assertEquals(Map.of("", 0, "cdecde", 6),
+                     collectToImmutableMap(Stream.of("ab", "cde"), Stream.of(0, 2),
+                                           (s, i) -> s.repeat(i), (s, i) -> i * s.length()));
+    }
+
+    @Test
+    public void enumerate_pairs_each_stream_element_with_its_sequential_number_starting_from_0_by_default() {
+        assertEquals(List.of("0:a", "1:b"),
+                     enumerate(Stream.of("a", "b"), (x, i) -> "%s:%s".formatted(i, x)).toList());
+    }
+
+    @Test
+    public void enumerate_pairs_each_stream_element_with_its_sequential_number_starting_from_the_given_one() {
+        assertEquals(List.of("4:a", "5:b"),
+                     enumerate(Stream.of("a", "b"), 4, (x, i) -> "%s:%s".formatted(i, x)).toList());
+    }
+
     public void transpose_returns_MxN_matrix_given_NxM_matrix() {
         final var matrix = List.of(List.of(1, 2), List.of(3, 4), List.of(5, 6));
         assertEquals(

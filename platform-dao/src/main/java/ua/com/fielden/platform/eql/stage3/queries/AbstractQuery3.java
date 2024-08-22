@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage3.queries;
 
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.QueryComponents3;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
@@ -9,6 +9,7 @@ import ua.com.fielden.platform.eql.stage3.sundries.GroupBys3;
 import ua.com.fielden.platform.eql.stage3.sundries.OrderBys3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 
 import java.util.Collections;
 import java.util.List;
@@ -34,17 +35,17 @@ public abstract class AbstractQuery3 {
         this.resultType = resultType;
     }
 
-    public String sql(final EqlDomainMetadata metadata) {
-        return sql(metadata, Collections.nCopies(yields.getYields().size(), Yield3.NO_EXPECTED_TYPE));
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
+        return sql(metadata, dbVersion, Collections.nCopies(yields.getYields().size(), Yield3.NO_EXPECTED_TYPE));
     }
 
-    public String sql(final EqlDomainMetadata metadata, final List<PropType> expectedYieldTypes) {
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion, final List<PropType> expectedYieldTypes) {
         final StringBuffer sb = new StringBuffer();
-        sb.append(yields.sql(metadata, expectedYieldTypes));
-        sb.append(joinRoot != null ? "\nFROM\n" + joinRoot.sql(metadata) : (metadata.dbVersion == ORACLE ? " FROM DUAL " : ""));
-        sb.append(whereConditions != null ? "\nWHERE " + whereConditions.sql(metadata) : "");
-        sb.append(groups != null ? "\nGROUP BY " + groups.sql(metadata) : "");
-        sb.append(orderings != null ? "\nORDER BY " + orderings.sql(metadata, this) : "");
+        sb.append(yields.sql(metadata, dbVersion, expectedYieldTypes));
+        sb.append(joinRoot != null ? "\nFROM\n" + joinRoot.sql(metadata, dbVersion) : (dbVersion == ORACLE ? " FROM DUAL " : ""));
+        sb.append(whereConditions != null ? "\nWHERE " + whereConditions.sql(metadata, dbVersion) : "");
+        sb.append(groups != null ? "\nGROUP BY " + groups.sql(metadata, dbVersion) : "");
+        sb.append(orderings != null ? "\nORDER BY " + orderings.sql(metadata, dbVersion, this) : "");
         return sb.toString();
     }
 

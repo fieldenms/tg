@@ -5,12 +5,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import jakarta.inject.Singleton;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.pagination.IPage;
 
+@Singleton
 public class GeneratedEntityControllerStub<T extends AbstractEntity<?>> implements IGeneratedEntityController<T> {
 
     @Override

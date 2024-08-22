@@ -1,9 +1,10 @@
 package ua.com.fielden.platform.eql.stage3.operands;
 
-import java.util.Objects;
-
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.PropType;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+
+import java.util.Objects;
 
 public class Value3 implements ISingleOperand3 {
     public final Object value; // can be 'null' in case of yield stmt
@@ -21,7 +22,7 @@ public class Value3 implements ISingleOperand3 {
     }
 
     @Override
-    public String sql(final EqlDomainMetadata metadata) {
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         if (value == null) {
             return " NULL ";
         } else {

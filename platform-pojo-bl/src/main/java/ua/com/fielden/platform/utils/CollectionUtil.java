@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.utils;
 
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
@@ -57,7 +59,17 @@ public final class CollectionUtil {
      * An alternative of {@link List#copyOf(Collection)} that allows the given collection to contain nulls.
      */
     public static <T> List<T> listCopy(final Collection<? extends T> collection) {
-        return collection.isEmpty() ? List.of() : unmodifiableList(new ArrayList<>(collection));
+        if (collection.isEmpty()) {
+            return ImmutableList.of();
+        }
+        else if (collection instanceof ImmutableCollection<? extends T> immCol) {
+            return ImmutableList.copyOf(immCol);
+        }
+        else {
+            final ArrayList<? extends T> list = new ArrayList<>(collection);
+            list.trimToSize();
+            return unmodifiableList(list);
+        }
     }
 
     /**
@@ -93,6 +105,62 @@ public final class CollectionUtil {
             result.addAll(collection);
         }
         return result;
+    }
+
+    /**
+     * Returns an immutable set that results from concatenating given iterables.
+     */
+    @SafeVarargs
+    public static <X> ImmutableSet<X> concatSet(final Iterable<? extends X>... iterables) {
+        if (iterables.length == 0) {
+            return ImmutableSet.of();
+        }
+        else if (iterables.length == 1) {
+            return ImmutableSet.copyOf(iterables[0]);
+        }
+
+        // don't Stream to be a little bit more efficient
+        int size = 0;
+        for (final var iter : iterables) {
+            if (iter instanceof Collection<?> c) {
+                size += c.size();
+            }
+        }
+
+        final var builder = ImmutableSet.<X>builderWithExpectedSize(size);
+        for (final var iter : iterables) {
+            builder.addAll(iter);
+        }
+
+        return builder.build();
+    }
+
+    /**
+     * Returns an immutable list that results from concatenating given iterables.
+     */
+    @SafeVarargs
+    public static <X> ImmutableList<X> concatList(final Iterable<? extends X>... iterables) {
+        if (iterables.length == 0) {
+            return ImmutableList.of();
+        }
+        else if (iterables.length == 1) {
+            return ImmutableList.copyOf(iterables[0]);
+        }
+
+        // don't Stream to be a little bit more efficient
+        int size = 0;
+        for (final var iter : iterables) {
+            if (iter instanceof Collection<?> c) {
+                size += c.size();
+            }
+        }
+
+        final var builder = ImmutableList.<X>builderWithExpectedSize(size);
+        for (final var iter : iterables) {
+            builder.addAll(iter);
+        }
+
+        return builder.build();
     }
 
     @SafeVarargs
@@ -262,10 +330,51 @@ public final class CollectionUtil {
     }
 
     /**
+     * If a collection is not empty, returns its first element, which must not be null.
+     *
+     * @throws InvalidArgumentException  if the first element is null
+     * @see #firstNullable(Collection)
+     */
+    public static <E> Optional<E> first(final Collection<E> xs) {
+        if (xs.isEmpty()) {
+            return Optional.empty();
+        }
+
+        // creating a new iterator bears a cost, try to avoid it
+        final E elt = xs instanceof SequencedCollection<E> seq ? seq.getFirst() : xs.iterator().next();
+        if (elt == null) {
+            throw new InvalidArgumentException("Collection's first element must not be null.");
+        }
+
+        return Optional.of(elt);
+    }
+
+    /**
+     * If a collection is not empty, returns its first element.
+     * If the first element is null, an empty optional is returned.
+     *
+     * @see #firstNullable(Collection)
+     */
+    public static <E> Optional<E> firstNullable(final Collection<E> xs) {
+        if (xs.isEmpty()) {
+            return Optional.empty();
+        }
+        // creating a new iterator bears a cost, try to avoid it
+        final E elt = xs instanceof SequencedCollection<E> seq ? seq.getFirst() : xs.iterator().next();
+        return Optional.ofNullable(elt);
+    }
+
+    public static <X> ImmutableList<X> append1(final Iterable<? extends X> xs, final X x) {
+        final var builder = ImmutableList.<X> builderWithExpectedSize(
+                (xs instanceof Collection<?> c ? c.size() : 0) + 1);
+        return builder.addAll(xs).add(x).build();
+    }
+
+    /**
      * Transforms a map into another map by applying provided transformations to its entries.
      * <p>
      * Disallows duplicates among resulting keys.
-     * Diallows {@code null} as a resulting key.
+     * Disallows {@code null} as a resulting key.
      *
      * @param keyMapper  returns a key of the resulting map, accepts both key and value of the input's map entry
      * @param valueMapper returns a value of the resulting map, accepts both key and value of the input's map entry

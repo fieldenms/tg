@@ -1,12 +1,13 @@
 package ua.com.fielden.platform.eql.stage3.conditions;
 
-import java.util.Objects;
-
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.enums.Quantifier;
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.queries.SubQuery3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+
+import java.util.Objects;
 
 public class QuantifiedPredicate3 implements ICondition3 {
     public final ISingleOperand3 leftOperand;
@@ -22,8 +23,8 @@ public class QuantifiedPredicate3 implements ICondition3 {
     }
 
     @Override
-    public String sql(final EqlDomainMetadata metadata) {
-        return leftOperand.sql(metadata) + " " + operator + " " + quantifier + " " + rightOperand.sql(metadata);
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
+        return leftOperand.sql(metadata, dbVersion) + " " + operator + " " + quantifier + " " + rightOperand.sql(metadata, dbVersion);
     }
 
     @Override

@@ -9,6 +9,8 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 
+import java.math.BigDecimal;
+
 @KeyType(String.class)
 @DescTitle("Description")
 @CompanionObject(IEntityOne.class)
@@ -21,7 +23,7 @@ public class EntityOne extends AbstractEntity<String> {
 
     @IsProperty
     @MapTo
-    private Double doubleProperty;
+    private BigDecimal bigDecimalProperty;
 
     public String getStringProperty() {
         return stringProperty;
@@ -33,13 +35,13 @@ public class EntityOne extends AbstractEntity<String> {
         return this;
     }
 
-    public Double getDoubleProperty() {
-        return doubleProperty;
+    public BigDecimal getBigDecimalProperty() {
+        return bigDecimalProperty;
     }
 
     @Observable
-    public EntityOne setDoubleProperty(final Double doubleProperty) {
-        this.doubleProperty = doubleProperty;
+    public EntityOne setBigDecimalProperty(final BigDecimal bigDecimalProperty) {
+        this.bigDecimalProperty = bigDecimalProperty;
         return this;
     }
 

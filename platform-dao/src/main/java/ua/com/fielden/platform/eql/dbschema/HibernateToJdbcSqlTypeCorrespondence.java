@@ -5,9 +5,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.type.Type;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
-import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
-import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.utils.Pair;
 
 import java.sql.Types;

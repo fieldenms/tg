@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
-import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
@@ -21,10 +20,8 @@ import java.util.*;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.lang.String.format;
 import static java.util.Collections.emptySortedMap;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_ENTITY;
-import static ua.com.fielden.platform.eql.meta.PropType.NULL_TYPE;
+import static ua.com.fielden.platform.persistence.HibernateConstants.H_ENTITY;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries> {

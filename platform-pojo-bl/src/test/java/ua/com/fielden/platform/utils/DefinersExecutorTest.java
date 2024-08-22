@@ -16,6 +16,8 @@ import ua.com.fielden.platform.sample.domain.TgDefinersExecutorCompositeKeyMembe
 import ua.com.fielden.platform.sample.domain.TgDefinersExecutorParent;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+
+import static ua.com.fielden.platform.utils.DefinersExecutor.definersExecutor;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static org.junit.Assert.assertEquals;
 
@@ -42,7 +44,7 @@ public class DefinersExecutorTest {
         parent.setKeyMember1(grandParent);
         parent.setKeyMember2("parent1");
         
-        DefinersExecutor.execute(parent);
+        definersExecutor().execute(parent);
         
         assertEquals(
                     Arrays.asList(
@@ -80,7 +82,7 @@ public class DefinersExecutorTest {
         collectionWithHandler.add(child2);
         parent.setCollectionWithHandler(collectionWithHandler);
         
-        DefinersExecutor.execute(parent);
+        definersExecutor().execute(parent);
         
         assertEquals(
                     Arrays.asList(
@@ -106,7 +108,7 @@ public class DefinersExecutorTest {
         parent.setKeyMember1(grandParent);
         parent.setKeyMember2("parent1");
         
-        DefinersExecutor.execute(parent);
+        definersExecutor().execute(parent);
         
         assertEquals(
                     Arrays.asList(
@@ -131,7 +133,7 @@ public class DefinersExecutorTest {
         parent.setKeyMember2("parent1");
         parent.setCritOnlySinglePropWithHandler("CritOnlySinglePropWithHandler value");
         
-        DefinersExecutor.execute(parent);
+        definersExecutor().execute(parent);
         
         assertEquals(
                     Arrays.asList(

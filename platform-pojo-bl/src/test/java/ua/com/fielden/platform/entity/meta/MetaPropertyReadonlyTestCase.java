@@ -65,13 +65,13 @@ public class MetaPropertyReadonlyTestCase {
         assertNull(entity.getReadonlyIntProp());
         final Either<Exception, EntityForReadOnlyTesting> res1 = Try(() -> entity.setReadonlyIntProp(42));
         assertTrue(res1 instanceof Left);
-        assertEquals(NOT_EDITABLE_REASON, ((Left<Exception, EntityForReadOnlyTesting>) res1).value.getMessage());
+        assertEquals(NOT_EDITABLE_REASON, ((Left<Exception, EntityForReadOnlyTesting>) res1).value().getMessage());
         assertNull(entity.getReadonlyIntProp());
         
         assertNull(entity.getIntProp());
         final Either<Exception, EntityForReadOnlyTesting> res2 = Try(() -> entity.setIntProp(42));
         assertTrue(res2 instanceof Left);
-        assertEquals(NOT_EDITABLE_REASON, ((Left<Exception, EntityForReadOnlyTesting>) res2).value.getMessage());
+        assertEquals(NOT_EDITABLE_REASON, ((Left<Exception, EntityForReadOnlyTesting>) res2).value().getMessage());
         assertNull(entity.getIntProp());
     }
 

@@ -348,23 +348,23 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         if (isRunning(customObject)) {
             final Either<IPage<T>, Pair<List<T>, T>> resultData = run(retrieveAll, updatedPreviouslyRunCriteriaEntity);
             if (resultData.isLeft()) {
-                page = resultData.asLeft().value;
+                page = resultData.asLeft().value();
                 resultantCustomObject.put("summary", page.summary());
                 data = page.data();
             } else {
-                final Pair<List<T>, T> runData = resultData.asRight().value;
+                final Pair<List<T>, T> runData = resultData.asRight().value();
                 data = runData.getKey();
                 resultantCustomObject.put("summary", runData.getValue());
             }
         } else if (isRefreshing(customObject)) {
             final Either<Pair<IPage<T>, T>, Pair<List<T>, T>> resultData = refresh(retrieveAll, pageNumber, updatedPreviouslyRunCriteriaEntity);
             if (resultData.isLeft()) {
-                final Pair<IPage<T>, T> refreshedData = resultData.asLeft().value;
+                final Pair<IPage<T>, T> refreshedData = resultData.asLeft().value();
                 page = refreshedData.getKey();
                 data = page.data();
                 resultantCustomObject.put("summary", refreshedData.getValue());
             } else {
-                final Pair<List<T>, T> refreshedData = resultData.asRight().value;
+                final Pair<List<T>, T> refreshedData = resultData.asRight().value();
                 data = refreshedData.getKey();
                 resultantCustomObject.put("summary", refreshedData.getValue());
             }

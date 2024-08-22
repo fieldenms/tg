@@ -3,11 +3,9 @@ package ua.com.fielden.platform.ioc;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.Stage;
+import com.google.inject.*;
 
+import com.google.inject.Module;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.ioc.IModuleWithInjector;
 
@@ -25,10 +23,18 @@ public final class ApplicationInjectorFactory {
 
     private final Workflows workflow;
     private Injector injector;
-    private final Set<Module> modules = new HashSet<>();
+    private final Set<Module> modules;
 
     public ApplicationInjectorFactory(final Workflows workflow) {
         this.workflow = workflow;
+        this.modules = new HashSet<>();
+
+        modules.add(new AbstractModule() {
+            @Override
+            protected void configure() {
+                bind(Workflows.class).toInstance(workflow);
+            }
+        });
     }
     
     public ApplicationInjectorFactory() {

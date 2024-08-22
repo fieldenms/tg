@@ -7,13 +7,8 @@ import static ua.com.fielden.platform.utils.EntityUtils.laxSplitPropPathToArray;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.lang.reflect.*;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -119,7 +114,7 @@ public final class Reflector {
      * @return
      * @throws NoSuchMethodException
      */
-    protected static Method getMethodForClass(final Class<?> startWithClass, final String methodName, final Class<?>... arguments) throws NoSuchMethodException {
+    public static Method getMethodForClass(final Class<?> startWithClass, final String methodName, final Class<?>... arguments) throws NoSuchMethodException {
         Class<?> klass = startWithClass;
         while (klass != Object.class) { // need to iterated thought hierarchy in
             // order to retrieve fields from above
@@ -565,6 +560,54 @@ public final class Reflector {
         } catch (final Exception ex) {
             throw new ReflectionException("Could not assign value to a static field.", ex);
         }
+    }
+
+    public static ParameterizedType newParameterizedType(final Class<?> rawType, final Type... typeArguments) {
+        final Type owner = rawType.getDeclaringClass();
+
+        return new ParameterizedType() {
+            @Override public Class<?> getRawType() { return rawType; }
+            @Override public Type getOwnerType() { return owner; }
+            @Override public Type[] getActualTypeArguments() { return typeArguments; }
+            @Override
+            public String toString() {
+                final StringBuilder sb = new StringBuilder();
+                if (owner != null) {
+                    sb.append(owner.getTypeName());
+                    sb.append('$');
+                    sb.append(rawType.getSimpleName());
+                }
+                else {
+                    sb.append(rawType.getName());
+                }
+
+                final StringJoiner sj = new StringJoiner(", ", "<", ">").setEmptyValue("");
+                for (final Type arg : typeArguments) {
+                    sj.add(arg.getTypeName());
+                }
+
+                return sb.append(sj.toString()).toString();
+            }
+
+            @Override
+            public boolean equals(final Object obj) {
+                return this == obj
+                       || obj instanceof ParameterizedType that
+                          && Objects.equals(rawType, that.getRawType())
+                          && Objects.equals(owner, that.getOwnerType())
+                          && Arrays.equals(typeArguments, that.getActualTypeArguments());
+            }
+
+            @Override
+            public int hashCode() {
+                final int prime = 31;
+                int result = 1;
+                result = prime * result + Objects.hashCode(rawType);
+                result = prime * result + Objects.hashCode(owner);
+                result = prime * result + Arrays.hashCode(typeArguments);
+                return result;
+            }
+        };
     }
 
 }

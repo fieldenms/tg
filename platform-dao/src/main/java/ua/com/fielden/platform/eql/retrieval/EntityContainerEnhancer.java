@@ -1,57 +1,59 @@
 package ua.com.fielden.platform.eql.retrieval;
 
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedSet;
-
-import org.apache.logging.log4j.Logger;
-import org.joda.time.DateTime;
-import org.joda.time.Period;
-
+import org.hibernate.Session;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
-import ua.com.fielden.platform.entity.query.CollectionContainer;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.EntityContainer;
-import ua.com.fielden.platform.entity.query.EntityRetrievalModel;
-import ua.com.fielden.platform.entity.query.IRetrievalModel;
-import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
-import ua.com.fielden.platform.entity.query.QueryProcessingModel;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
-import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
+import ua.com.fielden.platform.entity.query.*;
+import ua.com.fielden.platform.eql.retrieval.exceptions.EntityRetrievalException;
+import ua.com.fielden.platform.meta.EntityMetadata;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.meta.PropertyMetadataUtils;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
 
-public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
-    private final EntityContainerFetcher fetcher;
-    private final DomainMetadataAnalyser domainMetadataAnalyser;
-    private final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
-    private static final Logger logger = getLogger(EntityContainerEnhancer.class);
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.StreamSupport;
 
-    protected EntityContainerEnhancer(final EntityContainerFetcher fetcher, final DomainMetadataAnalyser domainMetadataAnalyser, final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
+import static com.google.common.collect.Iterables.partition;
+import static java.util.Spliterator.NONNULL;
+import static java.util.Spliterators.spliterator;
+import static java.util.stream.Collectors.*;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.EntityUtils.findCollectionalProperty;
+
+public class EntityContainerEnhancer {
+
+    private static final Integer BATCH_SIZE = 990;
+    // private static final Logger logger = getLogger(EntityContainerEnhancer.class);
+
+    private final IEntityContainerFetcher fetcher;
+    private final IDomainMetadata domainMetadata;
+    private final PropertyMetadataUtils propMetadataUtils;
+    private final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
+
+    protected EntityContainerEnhancer(
+            final IEntityContainerFetcher fetcher,
+            final IDomainMetadata domainMetadata,
+            final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache)
+    {
         this.fetcher = fetcher;
-        this.domainMetadataAnalyser = domainMetadataAnalyser;
         this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
+        this.domainMetadata = domainMetadata;
+        this.propMetadataUtils = domainMetadata.propertyMetadataUtils();
     }
 
     /**
      * Enhances a list of entity containers.
-     * 
-     * @param entities
-     * @param fetchModel
-     * @return
-     * @throws Exception
      */
-    protected List<EntityContainer<E>> enhance(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel, final Map<String, Object> paramValues) {
+    protected <E extends AbstractEntity<?>> List<EntityContainer<E>> enhance(
+            final Session session, final List<EntityContainer<E>> entities,
+            final IRetrievalModel<E> fetchModel, final Map<String, Object> paramValues)
+    {
         if (entities.isEmpty() || fetchModel == null) {
             return entities;
         }
@@ -66,37 +68,33 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
                 assignIdOnlyProxiedResultTypeToIdOnlyEntityProperty(entities, propName, propFetchModel.getEntityType());
             } else {
                 if (fetchModel.getEntityType() != EntityAggregates.class) {
-                    final PropertyMetadata ppi = domainMetadataAnalyser.getPropPersistenceInfoExplicitly(fetchModel.getEntityType(), propName);
-                    //System.out.println("*** ENHANCING entity [" + fetchModel.getEntityType().getSimpleName() + "] property [" + propName +"] with fetch: " + propFetchModel + " ppi = " + ppi.getType());
-
-                    if (ppi == null || ppi.isCollection()) {
-                        // TODO replace with EntityTree metadata (wrt collectional properties retrieval)
-                        final List<Field> collProps = EntityUtils.getCollectionalProperties(fetchModel.getEntityType());
-                        for (final Field field : collProps) {
-                            if (field.getName().equals(propName)) {
-                                //final String linkPropName = field.getAnnotation(IsProperty.class).linkProperty();
-                                final String linkPropName = Finder.findLinkProperty(fetchModel.getEntityType(), propName);
-                                enhanceCollectional(entities, propName, field.getType(), linkPropName, propFetchModel, paramValues);
-                            }
-                        }
-                    } else {
-                        if (ppi.isUnionEntity()) {
-                            enhanceProperty(entities, propName, propFetchModel, paramValues);
-                        } else {
-                            try {
-                                final String linkPropName = Finder.findLinkProperty(fetchModel.getEntityType(), propName);
-                                enhancePropertyWithLinkToParent(entities, propName, propFetchModel, linkPropName, paramValues);
-                            } catch (final Exception e) {
-                                if (ppi.isEntityOfPersistedType() || ppi.isOne2OneId()) {
-                                    enhanceProperty(entities, propName, propFetchModel, paramValues);
-                                } else {
-                                    // logger.debug(format("Property [%s] of type [%s] can't be fetched with model: %s.", propName, fetchModel.getEntityType(), entry.getValue()));
-                                }
-                            }
-                        }
-                    }
+                    // @formatter:off
+                    domainMetadata.forPropertyOpt(fetchModel.getEntityType(), propName)
+                        .ifPresentOrElse(pm -> {
+                             if (pm.type().isCollectional()) {
+                                 enhanceCollectional(session, entities, fetchModel, paramValues, propName, propFetchModel);
+                             }
+                             else if (propMetadataUtils.isPropEntityType(pm.type(), EntityMetadata::isUnion)) {
+                                 enhanceProperty(session, entities, propName, propFetchModel, paramValues);
+                             }
+                             else {
+                                 try {
+                                     final String linkPropName = Finder.findLinkProperty(fetchModel.getEntityType(), propName);
+                                     enhancePropertyWithLinkToParent(session, entities, propName, propFetchModel, linkPropName, paramValues);
+                                 } catch (final Exception e) {
+                                     if (propMetadataUtils.isPropEntityType(pm.type(), em -> em.isPersistent() || EntityUtils.isOneToOne(em.javaType()))) {
+                                         enhanceProperty(session, entities, propName, propFetchModel, paramValues);
+                                     } else {
+                                         // logger.debug(format("Property [%s] of type [%s] can't be fetched with model: %s.", propName, fetchModel.getEntityType(), entry.getValue()));
+                                     }
+                                 }
+                             }
+                         },
+                         // TODO Why is absence of property metadata a valid condition? Platform tests show no such occurences
+                         () -> enhanceCollectional(session, entities, fetchModel, paramValues, propName, propFetchModel));
+                    // @formatter:on
                 } else {
-                    enhanceProperty(entities, propName, propFetchModel, paramValues);
+                    enhanceProperty(session, entities, propName, propFetchModel, paramValues);
                 }
             }
         }
@@ -107,7 +105,25 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
         return entities;
     }
 
-    private void assignInstrumentationSetting(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel) {
+    private <E extends AbstractEntity<?>> void enhanceCollectional(
+            final Session session,
+            final List<EntityContainer<E>> entities,
+            final IRetrievalModel<E> fetchModel,
+            final Map<String, Object> paramValues,
+            final String propName,
+            final EntityRetrievalModel<? extends AbstractEntity<?>> propFetchModel)
+    {
+        // TODO replace with EntityTree metadata (wrt collectional properties retrieval)
+        // TODO if the property is missing, consider throwing an exception instead of silently doing nothing
+        findCollectionalProperty(fetchModel.getEntityType(), propName).ifPresent(prop -> {
+            final String linkPropName = Finder.findLinkProperty(fetchModel.getEntityType(), propName);
+            enhanceCollectional(session, entities, propName, prop.getType(), linkPropName, propFetchModel, paramValues);
+        });
+    }
+
+    private <E extends AbstractEntity<?>> void assignInstrumentationSetting(
+            final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel)
+    {
         if (fetchModel.isInstrumented()) {
             for (final EntityContainer<E> entityContainer : entities) {
                 entityContainer.mkInstrumented();
@@ -116,79 +132,88 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
     }
 
     private <T extends AbstractEntity<?>> Class<? extends T> determineProxiedResultTypeFromFetchModel(final IRetrievalModel<T> fetchModel) {
-        final DateTime st = new DateTime();
-        final Class<? extends T>  proxiedType = EntityProxyContainer.proxy(fetchModel.getEntityType(), fetchModel.getProxiedProps().toArray(new String[] {}));
-        final Period pd = new Period(st, new DateTime());
+//        final DateTime st = new DateTime();
+        final Class<? extends T> proxiedType = EntityProxyContainer.proxy(fetchModel.getEntityType(), fetchModel.getProxiedProps());
+//        final Period pd = new Period(st, new DateTime());
         // logger.debug(format("Constructing proxy type [" + fetchModel.getEntityType().getSimpleName() + "] duration: %s m %s s %s ms.", pd.getMinutes(), pd.getSeconds(), pd.getMillis()));
         return proxiedType;
     }
 
-    private void assignProxiedResultTypeToContainers(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel) {
+    private <E extends AbstractEntity<?>> void assignProxiedResultTypeToContainers(
+            final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel)
+    {
         if (fetchModel.getEntityType() != EntityAggregates.class) {
             final Class<? extends E> proxiedResultType = determineProxiedResultTypeFromFetchModel(fetchModel);
-
-            for (final EntityContainer<E> entContainer : entities) {
-                entContainer.setProxiedResultType(proxiedResultType);
-            }
+            entities.forEach(e -> e.setProxiedResultType(proxiedResultType));
         }
     }
 
-    private <T extends AbstractEntity<?>> void assignIdOnlyProxiedResultTypeToIdOnlyEntityProperty(final List<EntityContainer<E>> entities, final String propName, final Class<T> originalPropertyResultType) {
-        if (originalPropertyResultType != EntityAggregates.class) {
-            final Class<? extends T> proxiedResultType = idOnlyProxiedEntityTypeCache.getIdOnlyProxiedTypeFor(originalPropertyResultType);
-            for (final EntityContainer<E> entContainer : entities) {
-                final EntityContainer<T> propContainer = (EntityContainer<T>) entContainer.getEntities().get(propName);
+    private <E extends AbstractEntity<?>, T extends AbstractEntity<?>> void assignIdOnlyProxiedResultTypeToIdOnlyEntityProperty(
+            final List<EntityContainer<E>> entities,
+            final String propName, final Class<T> propType)
+    {
+        if (propType != EntityAggregates.class) {
+            final Class<? extends T> proxiedPropType = idOnlyProxiedEntityTypeCache.getIdOnlyProxiedTypeFor(propType);
+            for (final EntityContainer<E> entity : entities) {
+                final EntityContainer<T> propContainer = (EntityContainer<T>) entity.getEntities().get(propName);
                 if (propContainer != null) {
-                    propContainer.setProxiedResultType(proxiedResultType);
+                    propContainer.setProxiedResultType(proxiedPropType);
                 }
             }
         }
     }
 
-    private Map<Long, List<EntityContainer<E>>> getEntityPropertyIds(final List<EntityContainer<E>> entities, final String propertyName) {
-        final Map<Long, List<EntityContainer<E>>> propValuesMap = new HashMap<>();
-        for (final EntityContainer<E> entity : entities) {
-            if (entity.isEmpty()) {
-                throw new IllegalStateException("Entity is null!");
-            }
-            if (entity.getEntities() == null) {
-                throw new IllegalStateException("Entity.getEntities() is null!");
-            }
-            final EntityContainer<? extends AbstractEntity<?>> propEntity = entity.getEntities().get(propertyName);
-            if (propEntity != null && !propEntity.isEmpty() && propEntity.getId() != null) {
-                if (!propValuesMap.containsKey(propEntity.getId())) {
-                    propValuesMap.put(propEntity.getId(), new ArrayList<EntityContainer<E>>());
-                }
-                propValuesMap.get(propEntity.getId()).add(entity);
-            }
-        }
-        return propValuesMap;
+    /**
+     * Entity containers are scanned for inner entity containers (IEC) associated with the given property.
+     * The result is a grouping of input containers by IDs of IEC.
+     * Depth of scanning is limited to a single level.
+     */
+    private <E extends AbstractEntity<?>> Map<Long, List<EntityContainer<E>>> getEntityPropertyIds(
+            final List<EntityContainer<E>> entities, final String propertyName)
+    {
+        return entities.stream()
+                .peek(entity -> {
+                    if (entity.isEmpty()) {
+                        throw new EntityContainerEnhancementException(
+                                """
+                                Refusing to process empty entity container.
+                                Property: %s
+                                Container: %s\
+                                """.formatted(propertyName, entity));
+                    }
+                })
+                // (entityContainer, propertyContainer)
+                .map(entity -> t2(entity, entity.getEntities().get(propertyName)))
+                .filter(e_p -> e_p._2 != null && !e_p._2.isEmpty() && e_p._2.getId() != null)
+                .collect(groupingBy(e_p -> e_p._2.getId(), mapping(e_p -> e_p._1, toList())));
     }
 
-    private <T extends AbstractEntity<?>> List<EntityContainer<T>> getRetrievedPropertyInstances(final List<EntityContainer<E>> entities, final String propName) {
-        final List<EntityContainer<T>> propValues = new ArrayList<>();
-        for (final EntityContainer<E> entity : entities) {
-            final EntityContainer<T> prop = (EntityContainer<T>) entity.getEntities().get(propName);
-            if (prop != null && !prop.isEmpty() && !prop.notYetInitialised()) {
-                propValues.add(prop);
-            }
-        }
-        return propValues;
+    private <E extends AbstractEntity<?>, T extends AbstractEntity<?>> List<EntityContainer<T>> getRetrievedPropertyInstances(
+            final List<EntityContainer<E>> entities, final String propName) {
+        return entities.stream()
+                .map(entity -> (EntityContainer<T>) entity.getEntities().get(propName))
+                .filter(prop -> prop != null && !prop.isEmpty() && !prop.notYetInitialised())
+                .toList();
     }
 
-    private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhancePropertyWithLinkToParent(final List<EntityContainer<E>> entities, final String propertyName, final EntityRetrievalModel<T> fetchModel, final String linkPropName, final Map<String, Object> paramValues)
-            throws Exception {
+    private <E extends AbstractEntity<?> ,T extends AbstractEntity<?>> List<EntityContainer<E>> enhancePropertyWithLinkToParent(
+            final Session session,
+            final List<EntityContainer<E>> entities,
+            final String propertyName,
+            final EntityRetrievalModel<T> fetchModel,
+            final String linkPropName,
+            final Map<String, Object> paramValues)
+    {
         // Obtaining map between property id and list of entities where this property occurs
         final Map<Long, List<EntityContainer<E>>> propertyValuesIds = getEntityPropertyIds(entities, propertyName);
 
-        if (propertyValuesIds.size() > 0) {
+        if (!propertyValuesIds.isEmpty()) {
             // Constructing model for retrieving property instances based on the provided fetch model and list of instances ids
             final List<EntityContainer<T>> retrievedPropertyInstances = getRetrievedPropertyInstances(entities, propertyName);
             // IMPORTANT: it is assumed that EntityContainer can contain either only id or all props at once. Such assumption relied on fact that once join to property has been made all its columns had been yielded automatically.
-            final List<EntityContainer<T>> enhancedPropInstances = (retrievedPropertyInstances.size() == 0) ? //
-            getDataInBatches(new ArrayList<Long>(propertyValuesIds.keySet()), fetchModel, paramValues)
-                    : //
-                    new EntityContainerEnhancer<T>(fetcher, domainMetadataAnalyser, idOnlyProxiedEntityTypeCache).enhance(retrievedPropertyInstances, fetchModel, paramValues);
+            final List<EntityContainer<T>> enhancedPropInstances = retrievedPropertyInstances.isEmpty()
+                    ? getDataInBatches(session, propertyValuesIds.keySet(), ID, fetchModel, paramValues)
+                    : enhance(session, retrievedPropertyInstances, fetchModel, paramValues);
 
             // Replacing in entities the proxies of properties with properly enhanced property instances.
             for (final EntityContainer<? extends AbstractEntity<?>> enhancedPropInstance : enhancedPropInstances) {
@@ -206,18 +231,28 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
         return entities;
     }
 
-    private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhanceProperty(final List<EntityContainer<E>> entities, final String propertyName, final EntityRetrievalModel<T> fetchModel, final Map<String, Object> paramValues) {
+    /**
+     * @param entities  containers to enhance
+     * @param propertyName  name of the property to enhance
+     * @param fetchModel  fetch model for the property
+     */
+    private <E extends AbstractEntity<?>, T extends AbstractEntity<?>> List<EntityContainer<E>> enhanceProperty(
+            final Session session,
+            final List<EntityContainer<E>> entities,
+            final String propertyName,
+            final EntityRetrievalModel<T> fetchModel,
+            final Map<String, Object> paramValues)
+    {
         // Obtaining map between property id and list of entities where this property occurs
         final Map<Long, List<EntityContainer<E>>> propertyValuesIds = getEntityPropertyIds(entities, propertyName);
 
-        if (propertyValuesIds.size() > 0) {
+        if (!propertyValuesIds.isEmpty()) {
             // Constructing model for retrieving property instances based on the provided fetch model and list of instances ids
             final List<EntityContainer<T>> retrievedPropertyInstances = getRetrievedPropertyInstances(entities, propertyName);
             // IMPORTANT: it is assumed that EntityContainer can contain either only id or all props at once. Such assumption relied on fact that once join to property has been made all its columns had been yielded automatically.
-            final List<EntityContainer<T>> enhancedPropInstances = (retrievedPropertyInstances.size() == 0) ? //
-            getDataInBatches(new ArrayList<Long>(propertyValuesIds.keySet()), fetchModel, paramValues)
-                    : //
-                    new EntityContainerEnhancer<T>(fetcher, domainMetadataAnalyser, idOnlyProxiedEntityTypeCache).enhance(retrievedPropertyInstances, fetchModel, paramValues);
+            final List<EntityContainer<T>> enhancedPropInstances = retrievedPropertyInstances.isEmpty()
+                    ? getDataInBatches(session, propertyValuesIds.keySet(), ID, fetchModel, paramValues)
+                    : enhance(session, retrievedPropertyInstances, fetchModel, paramValues);
 
             // Replacing in entities the proxies of properties with properly enhanced property instances.
             for (final EntityContainer<? extends AbstractEntity<?>> enhancedPropInstance : enhancedPropInstances) {
@@ -231,89 +266,80 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
         return entities;
     }
 
-    private <T extends AbstractEntity<?>> List<EntityContainer<T>> getDataInBatches(final List<Long> ids, final EntityRetrievalModel<T> fetchModel, final Map<String, Object> paramValues) {
-        final List<EntityContainer<T>> result = new ArrayList<EntityContainer<T>>();
-        final Long[] allParentIds = new ArrayList<Long>(ids).toArray(new Long[] {});
+    /**
+     * Enhances entity containers by populating collectional property {@code collPropName}.
+     * This method mutates the containers it is given.
+     * <p>
+     * There are 2 entities at play here:
+     * <ol>
+     * <li> master entity (<i>ME</i>) -- the one being enhanced and owning the collectional property;
+     * <li> detail entity (<i>DE</i>) -- the type of the collectional property's elements;
+     * </ol>
+     *
+     * Both ME and DE containers are enhanced by populating the respective sides of their one-to-many relationhsip.
+     *
+     * @param masterEntities  ME containers that will be enhanced
+     * @param collPropName  name of the collectional property
+     * @param collPropType  type of the collectional property
+     * @param linkPropName  name of the link property, i.e., property of DE typed with ME
+     * @param fetchModel  fetch model for DE
+     * @param paramValues  query parameters for DE
+     *
+     * @return  ME containers enhanced with collectional property by populating it with DE containers which are also
+     *          enhanced by populating the link property with the corresponding ME
+     */
+    private <E extends AbstractEntity<?>, T extends AbstractEntity<?>> List<EntityContainer<E>> enhanceCollectional(
+            final Session session,
+            final List<EntityContainer<E>> masterEntities,
+            final String collPropName, final Class<?> collPropType,
+            final String linkPropName,
+            final EntityRetrievalModel<T> fetchModel,
+            final Map<String, Object> paramValues)
+    {
+        final Map<Long, EntityContainer<E>> idToMaster = masterEntities.stream()
+                .collect(toImmutableMap(EntityContainer::getId, Function.identity()));
+        // DE containers where the value of link property is contained in master IDs
+        final List<EntityContainer<T>> details = getDataInBatches(session, idToMaster.keySet(), linkPropName, fetchModel, paramValues);
+        // group DE containers by master's id
+        final Map<Long, List<EntityContainer<T>>> masterIdToDetails = details.stream()
+                .collect(groupingBy(det -> det.getEntities().get(linkPropName).getId()));
+        // mutate DE containers by assigning the corresponding ME container instance
+        masterIdToDetails.forEach((masterId, dets) ->
+                                    dets.forEach(det -> det.getEntities().put(linkPropName, idToMaster.get(masterId))));
 
-        final Integer batchSize = 990;
-        Integer from = 0;
-        Integer to = batchSize;
-        boolean endReached = false;
-        while (!endReached) {
-            if (to >= allParentIds.length) {
-                endReached = true;
-                to = allParentIds.length;
-            }
-            final Long[] batch = Arrays.copyOfRange(allParentIds, from, to);
-            final EntityResultQueryModel<T> currTypePropertyModel = select(fetchModel.getEntityType()).where().prop(AbstractEntity.ID).in().values(batch).model();
-            final QueryProcessingModel<T, ?> qpm = new QueryProcessingModel<>(currTypePropertyModel, null, fetchModel, paramValues/*emptyMap()*/, false);
-            final List<EntityContainer<T>> properties = fetcher.listAndEnhanceContainers(qpm, null, null);
-            result.addAll(properties);
-            from = to;
-            to = to + batchSize;
+        if (!(SortedSet.class.equals(collPropType) || Set.class.equals(collPropType))) {
+            throw new EntityRetrievalException(
+                    "Fetching of collectional property type [%s] is not supported.".formatted(collPropType.getTypeName()));
         }
 
-        return result;
+        // populate ME containers with associated DE containers
+        masterIdToDetails.forEach((masterId, dets) ->
+                                    idToMaster.get(masterId).getCollections().put(collPropName, new CollectionContainer<>(dets)));
+
+        return masterEntities;
     }
 
-    private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhanceCollectional(final List<EntityContainer<E>> entitiesToBeEnhanced, final String propertyName, final Class propType, final String parentPropName, final EntityRetrievalModel<T> fetchModel, final Map<String, Object> paramValues) {
-        // collect parental ids
-        final Map<Long, EntityContainer<E>> parentIds = new HashMap<Long, EntityContainer<E>>();
-        for (final EntityContainer<E> parentEntity : entitiesToBeEnhanced) {
-            parentIds.put(parentEntity.getId(), parentEntity);
-        }
-        final List<EntityContainer<T>> properties = getCollectionalDataInBatches(parentIds.keySet(), parentPropName, fetchModel, paramValues);
-
-        // group retrieved collections by parents
-        final Map<Long, List<EntityContainer<T>>> results = new HashMap<Long, List<EntityContainer<T>>>();
-        for (final EntityContainer<T> collectionalItem : properties) {
-            final Long currentParentId = collectionalItem.getEntities().get(parentPropName).getId();
-            if (!results.containsKey(currentParentId)) {
-                results.put(currentParentId, new ArrayList<EntityContainer<T>>());
-            }
-            // assign collectional item parent property reference to its already fetched parent
-            collectionalItem.getEntities().put(parentPropName, parentIds.get(currentParentId));
-            results.get(currentParentId).add(collectionalItem);
-        }
-
-        // set the retrieved data for those entities where collectional property is not empty
-        for (final Map.Entry<Long, List<EntityContainer<T>>> resultEntry : results.entrySet()) {
-            // assigns initialised collection to parent collectional property (lazy-collection is already evicted)
-            final EntityContainer<E> entity = parentIds.get(resultEntry.getKey());
-            if (SortedSet.class.equals(propType) || Set.class.equals(propType)) {
-                entity.getCollections().put(propertyName, new CollectionContainer<T>(resultEntry.getValue()));
-            } else {
-                throw new UnsupportedOperationException("Fetching via models for collections of type [" + propType + "] is not yet supported.");
-            }
-        }
-
-        return entitiesToBeEnhanced;
+    /**
+     * Retrieves and enhances entity containers that match given entity IDs.
+     * The type of retrieved entities is derived from the fetch model.
+     *
+     * @param idProp  name of the property against which IDs should be matched
+     * @param fetchModel  fetch model to apply during retrieval
+     */
+    private <T extends AbstractEntity<?>> List<EntityContainer<T>> getDataInBatches(
+            final Session session,
+            final Collection<Long> ids, final String idProp, final EntityRetrievalModel<T> fetchModel, final Map<String, Object> paramValues)
+    {
+        // TODO need to optimise -- WagonClass in WagonClassCompatibility is re-retrieved, while already available
+        // this ceremony with spliterators is needed to accept any Collection
+        return StreamSupport.stream(spliterator(partition(ids, BATCH_SIZE).iterator(), BATCH_SIZE, NONNULL), false)
+                // TODO remove once Collections are supported by EQL fluent API
+                .map(batch -> batch.toArray(Long[]::new))
+                .flatMap(batch -> {
+                    final var model = select(fetchModel.getEntityType()).where().prop(idProp).in().values(batch).model();
+                    final var qpm = new QueryProcessingModel<>(model, null, fetchModel, paramValues, false);
+                    return fetcher.streamAndEnhanceContainers(session, qpm, Optional.empty()).flatMap(Collection::stream);
+                }).toList();
     }
-
-    private <T extends AbstractEntity<?>> List<EntityContainer<T>> getCollectionalDataInBatches(final Set<Long> parentIds, final String parentPropName, final EntityRetrievalModel<T> fetchModel, final Map<String, Object> paramValues) {
-        final List<EntityContainer<T>> result = new ArrayList<EntityContainer<T>>();
-        final String idProp = parentPropName;
-        final Long[] allParentIds = new ArrayList<Long>(parentIds).toArray(new Long[] {});
-
-        final Integer batchSize = 990;
-        Integer from = 0;
-        Integer to = batchSize;
-        boolean endReached = false;
-        while (!endReached) {
-            if (to >= allParentIds.length) {
-                endReached = true;
-                to = allParentIds.length;
-            }
-            final Long[] batch = Arrays.copyOfRange(allParentIds, from, to);
-            final EntityResultQueryModel<T> currTypePropertyModel = select(fetchModel.getEntityType()).where().prop(idProp).in().values(batch).model();
-            final QueryProcessingModel<T, ?> qpm = new QueryProcessingModel<>(currTypePropertyModel, null, fetchModel, paramValues, false);
-            final List<EntityContainer<T>> properties = fetcher.listAndEnhanceContainers(qpm, null, null);
-            result.addAll(properties);
-            // TODO need to optimise -- WagonClass in WagonClassCompatibility is re-retrieved, while already available
-            from = to;
-            to = to + batchSize;
-        }
-
-        return result;
-    }
+    
 }

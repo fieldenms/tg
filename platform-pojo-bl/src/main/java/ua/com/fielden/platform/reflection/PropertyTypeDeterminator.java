@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.reflection;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
@@ -13,6 +15,7 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -24,11 +27,16 @@ import ua.com.fielden.platform.entity.annotation.DescRequired;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Required;
+import ua.com.fielden.platform.entity.proxy.IIdOnlyProxyEntity;
+import ua.com.fielden.platform.entity.proxy.IProxyEntity;
 import ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+
+import javax.annotation.Nullable;
 
 /**
  * Contains methods for property type determination. Methods traverses through 1. class hierarchy 2. dot-notation expression.
@@ -126,9 +134,9 @@ public class PropertyTypeDeterminator {
     }
 
     /**
-     * If method return type is collectional then it returns type of collection elements.
+     * If the {@code method} return type is collectional then it returns type of that collection elements.
      *
-     * @param field
+     * @param method
      * @return
      */
     private static Class<?> determineElementClassForMethod(final Method method) {
@@ -253,10 +261,8 @@ public class PropertyTypeDeterminator {
     }
 
     /**
-     * Returns class without enhancements if present.
-     *
-     * @param clazz
-     * @return
+     * If the given type is non-structurally enhanced, recursively finds its base type, otherwise returns the type itself.
+     * The base type is determined recursively, so the returned type may be more than one superclass away from the given one.
      */
     public static Class<?> stripIfNeeded(final Class<?> clazz) {
         if (clazz == null) {
@@ -268,11 +274,9 @@ public class PropertyTypeDeterminator {
     }
 
     /**
-     * A convenient function to identify the closest real type (i.e. not dynamically generated) that is the bases for the specified entity type.
-     * It is simular to {@link #stripIfNeeded(Class)}, but in addition it handles generated types that have suffix {@link DynamicTypeNamingService#APPENDIX} in their name.
-     *
-     * @param type
-     * @return
+     * If the type is enhanced, recursively finds its base type, otherwise returns the type itself.
+     * This method is similar to {@link #stripIfNeeded(Class)}, but also removes structural enhancements (indicated by
+     * suffix {@link DynamicTypeNamingService#APPENDIX} in the type name).
      */
     public static Class<? extends AbstractEntity<?>> baseEntityType(final Class<? extends AbstractEntity<?>> type) {
         final Class<? extends AbstractEntity<?>> strippedType = (Class<? extends AbstractEntity<?>>) stripIfNeeded(type);
@@ -294,20 +298,24 @@ public class PropertyTypeDeterminator {
     }
 
     /**
-     * Returns <code>true</code> if the specified class is proxied, <code>false</code> otherwise.
+     * Returns {@code true} if the specified class is proxied, {@code false} otherwise.
      *
      * @param clazz
      * @return
      */
     public static boolean isProxied(final Class<?> clazz) {
-        return clazz.getName().contains("$ByteBuddy$");
+        return IProxyEntity.class.isAssignableFrom(clazz);
+    }
+
+    public static boolean isIdOnlyProxy(final Class<?> clazz) {
+        return IIdOnlyProxyEntity.class.isAssignableFrom(clazz);
     }
 
     /**
-     * Returns <code>true</code> if the specified class is instrumented by Guice, and thus instances of this type should be fully initialised
-     * from TG perspective (having meta-properties, fitted with ACE/BCE interceptors etc.).
+     * Returns {@code true} if the specified class is instrumented by Guice, and thus instances of this type should be fully initialised
+     * from TG perspective (having meta-properties, fitted with ACE/BCE interceptors, etc.).
      *
-     * @param klass
+     * @param clazz
      * @return
      */
     public static boolean isInstrumented(final Class<?> clazz) {
@@ -376,6 +384,47 @@ public class PropertyTypeDeterminator {
     public static boolean isCollectional(final Class<?> entityType, final String doNotationExp) {
         final Field field = Finder.findFieldByName(entityType, doNotationExp);
         return EntityUtils.isCollectional(field.getType());
+    }
+
+    /**
+     * Given a collectional property, returns a pair (raw collectional type, collectional element type).
+     * <p>
+     * This method does not check the property definition's correctness.
+     * <p>
+     * The element type must be specified with {@link IsProperty}. If it's missing, the first type parameter will be used.
+     * This lax behaviour might become stricter in the future.
+     * <pre>{@code
+     * @IsProperty(Vehicle.class)
+     * List<Vehicle> vehicles;
+     * => (List.class, Vehicle.class)
+     *
+     * @IsProperty
+     * List<Vehicle> vehicles;
+     * => (List.class, Vehicle.class)
+     *
+     * @IsProperty
+     * String name;
+     * => ()
+     * }</pre>
+     */
+    public static Optional<T2<Class<?>, Class<?>>> collectionalType(final Field field) {
+        if (field.getGenericType() instanceof ParameterizedType paramType) {
+            if (paramType.getRawType() instanceof Class<?> rawClass && EntityUtils.isCollectional(rawClass)) {
+                final @Nullable Class<?> eltClass;
+                final IsProperty atIsProperty = getAnnotation(field, IsProperty.class);
+                if (atIsProperty != null && atIsProperty.value() != IsProperty.DEFAULT_VALUE) {
+                    eltClass = atIsProperty.value();
+                } else if (paramType.getActualTypeArguments().length == 1) {
+                    eltClass = classFrom(paramType.getActualTypeArguments()[0]);
+                } else {
+                    eltClass = null;
+                }
+
+                return eltClass == null ? Optional.empty() : Optional.of(t2(rawClass, eltClass));
+            }
+        }
+
+        return Optional.empty();
     }
 
     /**
